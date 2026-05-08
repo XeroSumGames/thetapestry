@@ -1,5 +1,12 @@
 # Tapestry — To Do & Backlog
 
+## 🔲 Flagged 2026-05-08 — Rules coverage
+
+- [ ] **Infection audit** - verify Infection condition/progression/treatment is fully implemented against the SRD.
+- [ ] **Armor system** - build armor into character sheet (slots/worn), damage calc (DR), and inventory. Needs SRD rules-extract first.
+
+---
+
 ## ✅ Shipped 2026-05-08 — /moderate redesign + visit-alert fix
 
 - [x] **/moderate user-row redesign** — commit `397c6ec feat(moderate): user-row redesign + Track activity dossier`. Two visual rows: top = username + role chip + suspended chip; bottom = action buttons in one line (Make Survivor/Thriver, Message, Characters, Track, Suspend…/Unsuspend, Delete). New TRACK button opens the activity dossier. Per-user `Joined` and `Last login` dates surfaced.

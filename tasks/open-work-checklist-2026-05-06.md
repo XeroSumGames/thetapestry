@@ -82,6 +82,19 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 
 ---
 
+## RULES COVERAGE — Verify / Build
+
+- [ ] **Infection rules coverage audit.** Verify that the Infection
+      subsystem (condition, progression, treatment) is fully implemented
+      on the platform. Check against the SRD. Flagged 2026-05-08.
+
+- [ ] **Armor system.** Build armor into the platform - likely affects
+      the character sheet (armor slots / worn items), damage calculation
+      (damage reduction), and inventory. Needs rules-extract from SRD
+      before building. Flagged 2026-05-08.
+
+---
+
 ## OLDER BUGS — Genuinely open
 
 - [ ] **Gut Instinct results presentation needs rework.**
