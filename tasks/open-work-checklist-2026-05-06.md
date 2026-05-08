@@ -82,6 +82,62 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 
 ---
 
+## CANON PROMOTIONS — Quickstart v1.0.03 audit (queued)
+
+Tracked from the Distemper Quickstart v1.0.03 audit. Canon > SRD >
+Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
++ `app/rules/*`), not edits to the Quickstart document.
+
+### Ready to ship (no blockers)
+
+- [ ] **Stabilise duration FIX.** Current canon says `16 - PHY AMod`
+      rounds; QS p.33 has the correct formula `1d6 - PHY AMod` rounds
+      (min 1), then recover with 1 WP + 1 RP. Pure correctness fix.
+
+- [ ] **Add "Dice Check" combat action (18th entry).** Alphabetised
+      list reads: Aim, Attack, Charge, Coordinate, Cover Fire, Defend,
+      Dice Check, Distract, Fire from Cover, Grapple, Inspire, Move,
+      Rapid Fire, Ready Weapon, Reposition, Sprint, Subdue, Take Cover.
+      1 action; "Use to make any Attribute or Skill check."
+
+- [ ] **Subsistence Damage** — Day 1: no impact. Day 2+: 1 WP + 1 RP /
+      day. RP=0 → Incapacitated. WP=0 → must be fed to Stabilise else
+      Dies. Recovery: 1 WP + 1 RP / day until full. *Pairs with Rations.*
+
+- [ ] **Rations promote** — QS Table 16: Standard (Common, ENC 0.5),
+      Luxury (Common, ENC 0.5), Military Grade (Uncommon, ENC 0.25).
+      Each = 1 day food + water. Confirm character creation default
+      (2 starting). *Ships with Subsistence Damage.*
+
+### Needs design call from Xero (parked)
+
+- [ ] **Special / Explosive Weapons** — 8 entries from QS Table 13
+      (grenades x3, mortar, rocket launcher, flame-thrower, molotov,
+      tranq gun). Open Qs: are QS Table 13 stats final or do they need
+      a balancing pass against existing Ranged? Is Explosive its own
+      category or a trait on existing weapons?
+
+- [ ] **Armor system** — 8 entries from QS Table 8 (chainmail through
+      tactical). DM applies to attack chance + damage; armor stacks;
+      Upkeep Check after combat or drop a Condition level. Open Qs:
+      drop Chainmail (off-tone for post-apoc) or keep / replace with
+      Improvised? Riot Gear + Riot Shield both -2 DM intentional or
+      differentiate?
+
+### Verify first (may already exist — investigation only)
+
+- [ ] **Lasting Wounds Table 12.** QS p.33 references it; Xero said
+      it lives in another file. Check `lib/xse-schema.ts` + combat
+      pages; if absent, flag back to Xero for the source table.
+
+- [ ] **Item Condition Table 10.** Pristine / Used / Worn / Damaged /
+      Broken + Upkeep Check transitions (success stay, failure drop,
+      Wild Success / Moment of High Insight up [cap Used], Dire Failure
+      / Moment of Low Insight → Broken; Broken repairs up to Worn max).
+      Check schema; promote if absent.
+
+---
+
 ## RULES COVERAGE — Verify / Build
 
 - [ ] **Infection rules coverage audit.** Verify that the Infection
