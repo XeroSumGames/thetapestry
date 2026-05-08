@@ -768,42 +768,39 @@ export default function ModerationPage() {
                   borderRadius: '4px', padding: '10px 1.25rem',
                   display: 'flex', flexDirection: 'column', gap: '8px',
                 }}>
-                  {/* TOP: identity row — username + role/suspended chips
-                      on the left, joined + last-login dates on the right.
-                      Username gets ellipsis on overflow so chips/dates
-                      stay anchored. */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                      <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-                        {u.username}
+                  {/* TOP: identity row — username + chips on their own
+                      line. The OLD layout put email inline with username
+                      and ellipsized the whole row, which silently hid
+                      emails behind long random usernames (the wEpAfxk…
+                      bug Xero reported 2026-05-08). Email moves to its
+                      own muted line below alongside the dates so it can
+                      never get cropped out of view. */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '320px' }}>
+                      {u.username}
+                    </span>
+                    <span style={{
+                      fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                      letterSpacing: '.08em', textTransform: 'uppercase',
+                      padding: '3px 8px', borderRadius: '2px',
+                      background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
+                      color: u.role?.toLowerCase() === 'thriver' ? '#f5a89a' : '#7ab3d4',
+                      border: `1px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
+                      flexShrink: 0,
+                    }}>
+                      {u.role}
+                    </span>
+                    {isSuspended && (
+                      <span title={u.suspended_reason ?? undefined}
+                        style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27', flexShrink: 0 }}>
+                        {isPermanent ? 'Suspended (perm)' : `Suspended → ${until!.toLocaleDateString()}`}
                       </span>
-                      {u.email && (
-                        <span style={{ color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {u.email}
-                        </span>
-                      )}
-                      <span style={{
-                        fontSize: '13px', fontFamily: 'Carlito, sans-serif',
-                        letterSpacing: '.08em', textTransform: 'uppercase',
-                        padding: '3px 8px', borderRadius: '2px',
-                        background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
-                        color: u.role?.toLowerCase() === 'thriver' ? '#f5a89a' : '#7ab3d4',
-                        border: `1px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
-                        flexShrink: 0,
-                      }}>
-                        {u.role}
-                      </span>
-                      {isSuspended && (
-                        <span title={u.suspended_reason ?? undefined}
-                          style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27', flexShrink: 0 }}>
-                          {isPermanent ? 'Suspended (perm)' : `Suspended → ${until!.toLocaleDateString()}`}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>
-                      <span><span style={{ color: '#7a8a9a' }}>Joined </span>{formatDate(u.created_at)}</span>
-                      <span><span style={{ color: '#7a8a9a' }}>Last login </span>{lastLogin ? formatDate(lastLogin.toISOString()) : 'never'}</span>
-                    </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexWrap: 'wrap' }}>
+                    {u.email && <span>{u.email}</span>}
+                    <span><span style={{ color: '#7a8a9a' }}>Joined </span>{formatDate(u.created_at)}</span>
+                    <span><span style={{ color: '#7a8a9a' }}>Last login </span>{lastLogin ? formatDate(lastLogin.toISOString()) : 'never'}</span>
                   </div>
 
                   {/* BOTTOM: action row — every button on a single line,

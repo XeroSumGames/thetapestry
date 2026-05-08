@@ -32,16 +32,12 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Check if this session already has a log entry (for email throttling)
-    const { data: existing } = await supabase
-      .from('visitor_logs')
-      .select('id')
-      .eq('session_id', session_id)
-      .limit(1)
-
-    const isFirstVisit = !existing || existing.length === 0
-
-    // Count prior visits from this IP hash
+    // Count prior visits from this IP hash. visitNumber === 1 means
+    // we've never seen this hash before; that's the gate the email
+    // alert uses (see below). The per-session "first visit" check
+    // that used to live here was dropped 2026-05-08 — it sent on
+    // every new browser session, which spammed the inbox for repeat
+    // visitors.
     let visitNumber = 1
     if (ip_hash) {
       const { count } = await supabase
@@ -73,16 +69,19 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     })
 
-    // Send email on first visit per session (non-blocking — runs after response)
-    // Skip emails from known bot/cloud locations.
+    // Email gate (Xero pref 2026-05-08): fire ONLY on the very first
+    // visit from a brand-new ip_hash. The old rule sent on every new
+    // browser session and added an isRepeatSurvivor cap at >5 visits;
+    // in practice that meant returning visitors still got hit on each
+    // fresh session, while Xero's own daily traffic + a long tail of
+    // logged-in repeat visitors ran the visitNumber so high that
+    // emails went silent. New rule is binary: visitNumber === 1, no
+    // session-level retries, no signed-in/ghost split. Bot suppression
+    // by city stays — ip_hash 1 from Ashburn is still a bot.
     const suppressedCities = ['san jose', 'ashburn', 'boardman', 'council bluffs']
     const isSuppressedCity = city && suppressedCities.includes(city.toLowerCase())
-    // Skip emails for signed-in users after their 5th visit — keeps ongoing
-    // dev/test sessions from spamming the inbox while still alerting on
-    // genuine new survivors. Ghost visitors keep getting emails.
-    const isRepeatSurvivor = !!user_id && visitNumber > 5
-    const isSuppressed = isSuppressedCity || isRepeatSurvivor
-    if (isFirstVisit && RESEND_API_KEY && THRIVER_EMAIL && !isSuppressed) {
+    const isNewVisitor = visitNumber === 1
+    if (isNewVisitor && RESEND_API_KEY && THRIVER_EMAIL && !isSuppressedCity) {
       const isGhost = !user_id
       const locationParts = [city, region, country_code].filter(Boolean)
       const location = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown'
