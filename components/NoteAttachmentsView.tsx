@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { Z_INDEX } from '../lib/style-helpers'
 
 export interface NoteAttachment {
   name: string
@@ -85,7 +86,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
       {lightbox && (
         <div
           onClick={() => setLightbox(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 10010, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '2rem' }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: Z_INDEX.criticalModalOver, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '2rem' }}
         >
           <img
             src={lightbox.url}
