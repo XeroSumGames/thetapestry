@@ -71,6 +71,11 @@ export default function Page() {
             full. Each <Term>Ration</Term> covers one day of food and
             water (see <a href="/rules/equipment/rations" style={{ color: '#7ab3d4' }}>§07 Rations</a>).
           </P>
+          <P>
+            See also: <a href="/rules/combat/infection" style={{ color: '#7ab3d4' }}>Infection, Sickness &amp; Disease</a> for the
+            day-by-day track triggered by combat wounds or toxic
+            exposure.
+          </P>
         </RuleSection>
         <RuleSection id="falling" title="Falling" level={3}>
           <P>

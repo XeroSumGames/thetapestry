@@ -95,6 +95,7 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'damage', label: 'Damage' },
       { id: 'incapacitation', label: 'Incapacitation' },
       { id: 'stress', label: 'Stress & Breaking Point' },
+      { id: 'infection', label: 'Infection' },
     ],
   },
   {
