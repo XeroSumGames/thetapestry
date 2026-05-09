@@ -68,6 +68,12 @@ export default function ModerationPage() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const [acting, setActing] = useState<string | null>(null)
   const [users, setUsers] = useState<Profile[]>([])
+  // Multi-select state for the bulk-delete affordance. When this set
+  // has any ids, a sticky action bar appears with "Delete N selected".
+  // bulkActing is true while the bulk op is in flight (disables further
+  // selection / re-clicks until done).
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
+  const [bulkActing, setBulkActing] = useState(false)
   const [usersLoading, setUsersLoading] = useState(false)
   const [worldNpcs, setWorldNpcs] = useState<any[]>([])
   const [npcsLoading, setNpcsLoading] = useState(false)
@@ -568,11 +574,86 @@ export default function ModerationPage() {
       const result = await res.json()
       if (!res.ok) { alert(result.error || 'Failed to delete user'); return }
       setUsers(prev => prev.filter(u => u.id !== id))
+      // If they were in the selection set, drop them from it too so the
+      // selected-count doesn't show stale numbers.
+      setSelectedUserIds(prev => {
+        if (!prev.has(id)) return prev
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     } catch (err: any) {
       alert('Failed to delete user: ' + (err?.message || String(err)))
     } finally {
       setActing(null)
     }
+  }
+
+  // Bulk-delete every user currently in selectedUserIds. Reuses the
+  // single-user edge-function endpoint via Promise.all so we don't have
+  // to maintain a parallel batch endpoint. Each call is independent;
+  // if one fails the rest still proceed, and we surface a tally at the
+  // end (e.g. "Deleted 4 of 5; 1 failed.").
+  async function handleBulkDelete() {
+    const ids = Array.from(selectedUserIds)
+    if (ids.length === 0 || bulkActing) return
+    if (!confirm(`Permanently delete ${ids.length} account${ids.length === 1 ? '' : 's'}? This cannot be undone.`)) return
+
+    setBulkActing(true)
+    const { user } = await getCachedAuth()
+    const { data: { session } } = await supabase.auth.getSession()
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`
+
+    const results = await Promise.all(ids.map(async id => {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ user_id: id, caller_id: user?.id }),
+        })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          return { id, ok: false, error: body.error || `HTTP ${res.status}` }
+        }
+        return { id, ok: true }
+      } catch (err: any) {
+        return { id, ok: false, error: err?.message || String(err) }
+      }
+    }))
+
+    const succeeded = new Set(results.filter(r => r.ok).map(r => r.id))
+    const failed = results.filter(r => !r.ok)
+
+    setUsers(prev => prev.filter(u => !succeeded.has(u.id)))
+    setSelectedUserIds(new Set())  // clear all selection after a bulk op
+    setBulkActing(false)
+
+    if (failed.length === 0) {
+      // Quiet success — list updated, no need to interrupt with a dialog.
+    } else {
+      const sample = failed.slice(0, 3).map(f => `• ${f.id.slice(0, 8)}: ${f.error}`).join('\n')
+      const more = failed.length > 3 ? `\n…and ${failed.length - 3} more` : ''
+      alert(`Deleted ${succeeded.size} of ${ids.length}.\n\n${failed.length} failed:\n${sample}${more}`)
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  function selectAllVisible() {
+    setSelectedUserIds(new Set(users.map(u => u.id)))
+  }
+
+  function clearSelection() {
+    setSelectedUserIds(new Set())
   }
 
   async function handleAction(id: string, action: 'approved' | 'rejected') {
@@ -761,7 +842,7 @@ export default function ModerationPage() {
       {/* ── USERS ── */}
       {section === 'users' && (
         <>
-          <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', letterSpacing: '.04em', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', letterSpacing: '.04em', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <span>{users.length} registered user{users.length !== 1 ? 's' : ''}</span>
             {users.length > 0 && (
               <a href={`mailto:?bcc=${users.map(u => u.email).filter(Boolean).join(',')}`}
@@ -769,7 +850,44 @@ export default function ModerationPage() {
                 Email All Users
               </a>
             )}
+            {users.length > 0 && (
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedUserIds.size === users.length && users.length > 0}
+                  ref={el => { if (el) el.indeterminate = selectedUserIds.size > 0 && selectedUserIds.size < users.length }}
+                  onChange={() => (selectedUserIds.size === users.length ? clearSelection() : selectAllVisible())}
+                  disabled={bulkActing}
+                />
+                Select all
+              </label>
+            )}
           </div>
+
+          {/* Bulk-action bar — only renders when at least one user is
+              checked. Position:sticky keeps it visible while scrolling
+              long lists. */}
+          {selectedUserIds.size > 0 && (
+            <div style={{
+              position: 'sticky', top: '0', zIndex: 10,
+              background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '4px',
+              padding: '8px 12px', marginBottom: '8px',
+              display: 'flex', alignItems: 'center', gap: '12px',
+              fontFamily: 'Carlito, sans-serif', fontSize: '13px',
+            }}>
+              <span style={{ color: '#f5a89a', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                {selectedUserIds.size} selected
+              </span>
+              <button onClick={handleBulkDelete} disabled={bulkActing}
+                style={actionBtn('#7a1f16', '#f5a89a')}>
+                {bulkActing ? 'Deleting…' : `Delete ${selectedUserIds.size}`}
+              </button>
+              <button onClick={clearSelection} disabled={bulkActing}
+                style={actionBtn('#3a3a3a', '#cce0f5')}>
+                Clear
+              </button>
+            </div>
+          )}
 
           {usersLoading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}
 
@@ -782,21 +900,39 @@ export default function ModerationPage() {
               const isSuspended = !!(until && until.getTime() > Date.now())
               const isPermanent = isSuspended && until!.getFullYear() >= 2099
               const lastLogin = u.last_sign_in_at ? new Date(u.last_sign_in_at) : null
+              const checked = selectedUserIds.has(u.id)
               return (
                 <div key={u.id} style={{
-                  background: '#1a1a1a', border: '1px solid #2e2e2e',
+                  background: checked ? '#2a1210' : '#1a1a1a',
+                  border: `1px solid ${checked ? '#7a1f16' : '#2e2e2e'}`,
                   borderLeft: `3px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#3a3a3a'}`,
                   borderRadius: '4px', padding: '10px 1.25rem',
                   display: 'flex', flexDirection: 'column', gap: '8px',
+                  position: 'relative',
                 }}>
+                  {/* Bulk-select checkbox. Absolutely positioned at the
+                      left edge so it doesn't shift the existing layout
+                      grid (which the rest of the row still owns). The
+                      row background changes to a muted red when checked
+                      to mirror the danger/delete affordance. */}
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleSelect(u.id)}
+                    disabled={bulkActing}
+                    title="Select for bulk delete"
+                    style={{ position: 'absolute', left: '8px', top: '14px', cursor: bulkActing ? 'not-allowed' : 'pointer' }}
+                  />
                   {/* TOP: identity row — username + chips on their own
                       line. The OLD layout put email inline with username
                       and ellipsized the whole row, which silently hid
                       emails behind long random usernames (the wEpAfxk…
                       bug Xero reported 2026-05-08). Email moves to its
                       own muted line below alongside the dates so it can
-                      never get cropped out of view. */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      never get cropped out of view. The marginLeft on
+                      this row clears the absolutely-positioned checkbox
+                      at the row's left edge. */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginLeft: '20px' }}>
                     <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '320px' }}>
                       {u.username}
                     </span>
@@ -818,7 +954,7 @@ export default function ModerationPage() {
                       </span>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexWrap: 'wrap', marginLeft: '20px' }}>
                     {u.email && <span>{u.email}</span>}
                     <span><span style={{ color: '#7a8a9a' }}>Joined </span>{formatDate(u.created_at)}</span>
                     <span><span style={{ color: '#7a8a9a' }}>Last login </span>{lastLogin ? formatDate(lastLogin.toISOString()) : 'never'}</span>
@@ -828,7 +964,7 @@ export default function ModerationPage() {
                       left-aligned. Wraps only if the viewport is too narrow.
                       Order: role-flip, Message, Characters, Track,
                       Suspend/Unsuspend, Delete. */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginLeft: '20px' }}>
                     {u.role?.toLowerCase() === 'thriver' ? (
                       <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}
                         title="Demote to Survivor">
