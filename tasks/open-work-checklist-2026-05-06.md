@@ -162,9 +162,15 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ## RULES COVERAGE — Verify / Build
 
-- [ ] **Infection rules coverage audit.** Verify that the Infection
-      subsystem (condition, progression, treatment) is fully implemented
-      on the platform. Check against the SRD. Flagged 2026-05-08.
+- [x] **Infection rules coverage audit.** SHIPPED 2026-05-09 —
+      CRB v0.9.2 p.114-115 extracted to `tasks/rules-extract-infection.md`,
+      design decisions locked, rules page live at
+      `/rules/combat/infection`, schema applied via
+      `sql/infection-2026-05-09.sql`, GM "Infection" button +
+      Treat Infection dropdown wired. Canon pinned in
+      `memory/project_infection_canon.md`. **Still open:** -2 CMod
+      on physical checks while sick (deferred to own commit since
+      it touches roll-mod composition).
 
 - [ ] **Armor system.** Build armor into the platform - likely affects
       the character sheet (armor slots / worn items), damage calculation
