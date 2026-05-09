@@ -388,6 +388,20 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       grid-only by default was wrong — code was already free-form;
       this just adds the missing snap-to-grid path.)
 
+- [ ] **Token / character spawn returns to top-left now that the
+      FOG bar is mobile.** Flagged 2026-05-09. Spawn was already
+      at `grid_x: 1, grid_y: 1` per
+      `components/TacticalMap.tsx:3707`, but the previous fixed-
+      position FOG bar was visually hiding the spawn area, so new
+      tokens were essentially invisible until dragged. With the
+      FOG bar now movable, top-left is freed up and the existing
+      spawn coordinates should work as designed. Verify on the
+      next playtest that newly-added PCs / NPCs / objects appear
+      at (1,1) and aren't covered by any other UI overlay.
+      Likely no code change — investigation + visual confirmation.
+      If something else moved the spawn point, restore to (1,1)
+      per the locked memory entry.
+
 ### Lv4 Skill Traits — Xero-blocked, ships together
 
 - [ ] **Inspiration Lv4 "Beacon of Hope"** — auto +4 to Morale.
