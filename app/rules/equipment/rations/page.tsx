@@ -58,8 +58,8 @@ export default function Page() {
       </RuleTable>
 
       <P>
-        Characters begin play with <Term>2 Rations</Term> by default. The
-        type is the player's choice during character creation.
+        Characters begin play with <Term>2 Rations</Term> by default.
+        Unless otherwise stated by the GM, these are Standard Rations.
       </P>
     </>
   )
