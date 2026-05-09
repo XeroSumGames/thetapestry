@@ -5565,7 +5565,7 @@ export default function TablePage() {
       <div data-header-menu={id}
         onMouseEnter={() => { if (!isMenuPinned) setOpenHeaderMenu(id) }}
         onMouseLeave={() => { if (!isMenuPinned) setOpenHeaderMenu(prev => prev === id ? null : prev) }}
-        style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+        style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', zIndex: isOpen ? 10100 : undefined }}>
         <button onClick={() => {
           // Clicking the trigger toggles a pinned state — stays open
           // even when the mouse wanders off, until clicked again or
