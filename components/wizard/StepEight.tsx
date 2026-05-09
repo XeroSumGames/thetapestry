@@ -457,9 +457,9 @@ export default function StepEight({ state, onChange }: Props) {
       <div style={sh}>Rations — choose one (optional)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '1rem' }}>
         {[
-          { name: 'Standard Rations',      rarity: 'Common',   enc: 0.5,  notes: '1 day food supply' },
-          { name: 'Luxury Rations',         rarity: 'Uncommon', enc: 0.5,  notes: '1 day; morale bonus' },
-          { name: 'Military Grade Rations', rarity: 'Uncommon', enc: 0.25, notes: 'Compact; 1 day supply' },
+          { name: 'Standard Rations',      rarity: 'Common',   enc: 0.5,  notes: '1 day food + water' },
+          { name: 'Luxury Rations',         rarity: 'Common',   enc: 0.5,  notes: '1 day; small morale bump' },
+          { name: 'Military Grade Rations', rarity: 'Uncommon', enc: 0.25, notes: 'Compact; 1 day food + water' },
         ].map(item => {
           const sel = state.rations === item.name
           const rarityColor = RARITY_ACCENT[item.rarity] ?? '#cce0f5'

@@ -20,6 +20,7 @@ const COMBAT_ACTIONS: Array<[string, string, string]> = [
   ['Coordinate', '1', "Tactics* check; allies in Close get +2 CMod vs target. On Wild Success, allies also get +1 CMod on their attack."],
   ['Cover Fire', '1', "Expend ammo to suppress an Attacker. Subjects take −2 CMod on their next attack, dodge, or move."],
   ['Defend', '1', '+2 to MDM/RDM against the next attack on this character. Cleared after one hit.'],
+  ['Dice Check', '1', 'Use to make any Attribute or Skill check.'],
   ['Distract', '1', 'Steal 1 Combat Action from a target via an Opposed Check (skill or attribute as agreed). On Wild Success, steal 2 actions.'],
   ['Fire from Cover', '2', "Attack from cover; keep the cover's defensive bonus."],
   ['Grapple', '1', 'Opposed Physicality + Unarmed Combat. Winner restrains or takes 1 RP from the loser.'],

@@ -68,7 +68,7 @@ export default function Page() {
         </P>
         <P>
           Once Stabilised, the character remains Incapacitated for{' '}
-          <Term>16 − PHY AMod rounds</Term> (minimum 1 round). They then
+          <Term>1d6 − PHY AMod rounds</Term> (minimum 1 round). They then
           regain consciousness with 1 WP and 1 RP.
         </P>
       </RuleSection>

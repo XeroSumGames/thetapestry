@@ -876,7 +876,7 @@ function CharacterCardImpl({
               </button>
               <button onClick={() => {
                 if (!localState) return
-                const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP)\n3 = Subsistence (1 RP/day)')
+                const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP)\n3 = Subsistence (1 WP + 1 RP/day, day 2+)')
                 if (type === '1') {
                   const ft = parseInt(prompt('How many feet fallen?') ?? '0', 10)
                   const dmg = Math.floor(ft / 10) * 3
@@ -890,8 +890,9 @@ function CharacterCardImpl({
                   onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - 3))
                   alert('Drowning: 3 WP and 3 RP damage')
                 } else if (type === '3') {
+                  onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - 1))
                   onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - 1))
-                  alert('Subsistence: 1 RP damage')
+                  alert('Subsistence: 1 WP and 1 RP damage')
                 }
               }}
                 style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>

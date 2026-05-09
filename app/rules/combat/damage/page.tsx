@@ -52,17 +52,24 @@ export default function Page() {
       </RuleSection>
 
       <RuleSection id="environmental" title="Environmental Damage">
-        <RuleSection id="starvation" title="Starvation & Dehydration" level={3}>
+        <RuleSection id="subsistence" title="Subsistence Damage" level={3}>
           <P>
             A character can go without food and water for one day without
-            harm. After that, they lose <Term>1 RP per day</Term>. If a
-            character drops to 0 RP from starvation, they are too weak to
-            move and start losing <Term>1 WP per day</Term> until another
-            character tends to them. Untended, they die.
+            harm. From the second day onward, they lose{' '}
+            <Term>1 WP and 1 RP per day</Term>.
           </P>
           <P>
-            With a regular food and water supply, a character heals at{' '}
-            <Term>1 WP and 1 RP per day</Term>.
+            If <Term>RP reaches 0</Term> from Subsistence Damage, they are
+            <Term> Incapacitated</Term> until another character tends to
+            them. If <Term>WP reaches 0</Term>, they are{' '}
+            <Term>Mortally Wounded</Term> and must be fed to{' '}
+            <Term>Stabilise</Term> them, or they die.
+          </P>
+          <P>
+            Once a regular food and water supply is restored, the
+            character recovers at <Term>1 WP and 1 RP per day</Term> until
+            full. Each <Term>Ration</Term> covers one day of food and
+            water (see <a href="/rules/equipment/rations" style={{ color: '#7ab3d4' }}>§07 Rations</a>).
           </P>
         </RuleSection>
         <RuleSection id="falling" title="Falling" level={3}>

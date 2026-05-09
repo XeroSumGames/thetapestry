@@ -90,24 +90,31 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ### Ready to ship (no blockers)
 
-- [ ] **Stabilise duration FIX.** Current canon says `16 - PHY AMod`
-      rounds; QS p.33 has the correct formula `1d6 - PHY AMod` rounds
-      (min 1), then recover with 1 WP + 1 RP. Pure correctness fix.
+- [x] **Stabilise duration FIX.** SHIPPED 2026-05-08D — rules page
+      copy in `app/rules/combat/incapacitation/page.tsx:71` updated
+      from `16 − PHY AMod` to `1d6 − PHY AMod`. The engine was
+      already correct (`app/stories/[id]/table/page.tsx:5076`).
 
-- [ ] **Add "Dice Check" combat action (18th entry).** Alphabetised
-      list reads: Aim, Attack, Charge, Coordinate, Cover Fire, Defend,
-      Dice Check, Distract, Fire from Cover, Grapple, Inspire, Move,
-      Rapid Fire, Ready Weapon, Reposition, Sprint, Subdue, Take Cover.
-      1 action; "Use to make any Attribute or Skill check."
+- [x] **Add "Dice Check" combat action (18th entry).** SHIPPED
+      2026-05-08D — inserted alphabetically between Defend and
+      Distract in `app/rules/combat/combat-rounds/page.tsx`.
 
-- [ ] **Subsistence Damage** — Day 1: no impact. Day 2+: 1 WP + 1 RP /
-      day. RP=0 → Incapacitated. WP=0 → must be fed to Stabilise else
-      Dies. Recovery: 1 WP + 1 RP / day until full. *Pairs with Rations.*
+- [x] **Subsistence Damage** — SHIPPED 2026-05-08D — Starvation &
+      Dehydration sub-section in `app/rules/combat/damage/page.tsx`
+      renamed to **Subsistence Damage** (anchor `subsistence`); copy
+      now Day 1 free / Day 2+ 1 WP + 1 RP per day; RP=0 → Incapacitated,
+      WP=0 → Mortally Wounded; recovery 1 WP + 1 RP / day. GM card
+      Env. Damage prompt + alert text in `components/CharacterCard.tsx`
+      bumped to deduct WP+RP (was RP-only).
 
-- [ ] **Rations promote** — QS Table 16: Standard (Common, ENC 0.5),
-      Luxury (Common, ENC 0.5), Military Grade (Uncommon, ENC 0.25).
-      Each = 1 day food + water. Confirm character creation default
-      (2 starting). *Ships with Subsistence Damage.*
+- [x] **Rations promote** — PARTIAL SHIPPED 2026-05-08D — new
+      `/rules/equipment/rations` page (Standard / Luxury / Military
+      Grade with corrected rarities + ENC); equipment sub-nav anchor
+      added. Wizard StepEight rarity fix: Luxury Uncommon → Common.
+      **Still open:** `2 starting Rations` data-model change — current
+      `XSECharacter.rations` is a single string; promoting to
+      `{ type, count }` requires wizard + persistence + edit-page +
+      DB migration on existing characters. Tracked separately below.
 
 ### Needs design call from Xero (parked)
 
@@ -126,15 +133,30 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ### Verify first (may already exist — investigation only)
 
-- [ ] **Lasting Wounds Table 12.** QS p.33 references it; Xero said
-      it lives in another file. Check `lib/xse-schema.ts` + combat
-      pages; if absent, flag back to Xero for the source table.
+- [x] **Lasting Wounds Table 12.** VERIFIED 2026-05-08D — fully
+      shipped. Data lives at `lib/xse-schema.ts:572` (LASTING_WOUNDS,
+      11 rolls 2-12) and is rendered on
+      `/rules/combat/incapacitation` under §06.
 
-- [ ] **Item Condition Table 10.** Pristine / Used / Worn / Damaged /
-      Broken + Upkeep Check transitions (success stay, failure drop,
-      Wild Success / Moment of High Insight up [cap Used], Dire Failure
-      / Moment of Low Insight → Broken; Broken repairs up to Worn max).
-      Check schema; promote if absent.
+- [x] **Item Condition Table 10.** VERIFIED 2026-05-08D — fully
+      shipped. Data: `lib/xse-schema.ts:13` (5-state union) +
+      `lib/weapons.ts:24` (CMod table). Rules pages:
+      `/rules/equipment/item-condition` (5-state CMod table) and
+      `/rules/equipment/upkeep` (Upkeep Check transitions table —
+      success stay, failure drop, Wild Success / High Insight up to
+      Used, Dire Failure / Low Insight → Broken). Upkeep button
+      already on `CharacterCard.tsx:751`.
+
+### Carry-over from Rations promote
+
+- [ ] **Rations: 2-starting + structured count.** Promote
+      `XSECharacter.rations` from `string` to `{ type: string; count:
+      number }`. Wizard, edit page, character display, print sheet,
+      random character flow, and DB migration for existing rows. Once
+      structured, the GM Env-Damage Subsistence option could decrement
+      `count` instead of just deducting WP/RP. Design call needed for
+      whether the wizard hands out 2 of one type or lets the player
+      mix-and-match.
 
 ---
 
