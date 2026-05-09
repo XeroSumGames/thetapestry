@@ -2063,7 +2063,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           // sit visually above the wall flow. Colors brightened for
           // contrast against the warm-tan wall palette. Endpoint
           // dots draw below to signal "this segment terminates here,
-          // it's a thing" — walls stay clean.
+          // it's a thing" — walls stay clean. Windows additionally
+          // draw a dashed white halo first so they pop unambiguously
+          // against the wall palette (especially the closed-amber
+          // state which would otherwise blend into the tan walls).
           let strokeColor = '#a08e75'
           if (seg.kind === 'wall') {
             ctx.strokeStyle = '#a08e75'
@@ -2080,7 +2083,20 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             // as "see-through frame." CLOSED = blinds drawn, renders
             // as a solid amber line that visually "blocks" the view
             // (matches the mechanical vision-block when closed).
+            // Both states get a dashed white halo first; the colored
+            // stroke draws on top, leaving white edges visible
+            // perpendicular to the segment that read as a "window
+            // frame" iconography regardless of state.
             const winOpen = seg.door_open !== false  // default = open
+            ctx.save()
+            ctx.strokeStyle = '#ffffff'
+            ctx.lineWidth = winOpen ? 9 : 10
+            ctx.setLineDash([4, 4])
+            ctx.beginPath()
+            ctx.moveTo(x1, y1)
+            ctx.lineTo(x2, y2)
+            ctx.stroke()
+            ctx.restore()
             strokeColor = winOpen ? '#5dc4e3' : '#d4a04a'
             ctx.strokeStyle = strokeColor
             ctx.lineWidth = winOpen ? 5 : 6
