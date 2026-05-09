@@ -3961,18 +3961,34 @@ export default function TablePage() {
         (activeEntry.npc_id && t.npc_id === activeEntry.npc_id)
       )
       if (!attackerTok) return null
-      // Score every other token: distance, plus whether the weapon can hit it.
-      let bestInRange: { name: string; dist: number } | null = null
-      let bestAny: { name: string; dist: number } | null = null
+      // PC attackers prefer NPC targets over teammate PCs (or objects) — even
+      // when a teammate is closer. Stops the modal landing on "Frankie
+      // Gibblets" when there's an NPC also in range. NPC attackers fall
+      // through to the original closest-by-distance pick. Sticky targeting
+      // (last_attack_target) and explicit map selection still win above
+      // this auto-pick — see the chosenTarget chain below.
+      const attackerIsPC = !activeEntry.is_npc
+      type Cand = { name: string; dist: number; isNpc: boolean }
+      function preferred(cur: Cand | null, c: Cand): Cand {
+        if (!cur) return c
+        if (attackerIsPC) {
+          if (c.isNpc && !cur.isNpc) return c
+          if (!c.isNpc && cur.isNpc) return cur
+        }
+        return c.dist < cur.dist ? c : cur
+      }
+      let bestInRange: Cand | null = null
+      let bestAny: Cand | null = null
       for (const t of mapTokens) {
         if (t.id === attackerTok.id) continue
         if (!isNameValidLiveTarget(t.name)) continue
         const dist = Math.max(Math.abs(t.grid_x - attackerTok.grid_x), Math.abs(t.grid_y - attackerTok.grid_y))
-        if (!bestAny || dist < bestAny.dist) bestAny = { name: t.name, dist }
+        const cand: Cand = { name: t.name, dist, isNpc: !!t.npc_id }
+        bestAny = preferred(bestAny, cand)
         if (weapon) {
           const band = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, t.name)
           if (band && isInRange(weapon.weaponName, band)) {
-            if (!bestInRange || dist < bestInRange.dist) bestInRange = { name: t.name, dist }
+            bestInRange = preferred(bestInRange, cand)
           }
         }
       }
