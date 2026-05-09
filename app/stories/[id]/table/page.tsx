@@ -1506,7 +1506,7 @@ export default function TablePage() {
     return () => window.removeEventListener('keydown', handleEsc)
   }, [pendingRoll, selectedEntry, showEndSessionModal])
 
-  async function handleStatUpdate(stateId: string, field: string, value: number) {
+  async function handleStatUpdate(stateId: string, field: string, value: number | string | boolean | null) {
     // Optimistic flip first so the UI responds instantly. If the
     // server write fails (RLS denial / network), we surface the error
     // and force a reload of entries so the local state converges with
@@ -5147,6 +5147,71 @@ export default function TablePage() {
       }
     }
 
+    // Infection result — write infection_state, days_left, lasting_risk
+    // based on the outcome. Two label shapes:
+    //   "<name> — Infection Check (Wound)"     post-combat wound infection
+    //   "<name> — Infection Check (Sickness)"  environmental progression
+    // See /rules/combat/infection + memory/project_infection_canon.md.
+    let infectionResult = ''
+    if (pendingRoll.label.includes('Infection Check (')) {
+      const infName = pendingRoll.label.split(' — ')[0]
+      const isWound = pendingRoll.label.includes('(Wound)')
+      const kind: 'wound' | 'sickness' = isWound ? 'wound' : 'sickness'
+      const targetEntry = entries.find(e => e.character.name === infName)
+      const targetNpcInf = !targetEntry ? campaignNpcs.find((n: any) => n.name === infName) : null
+      // Outcome → state. Low Insight = Dire Failure, High Insight = Wild
+      // Success per locked canon.
+      const isFail = outcome === 'Failure'
+      const isDire = outcome === 'Dire Failure' || outcome === 'Low Insight'
+      let infectionState: 'wound' | 'sickness' | null = null
+      let daysLeft = 0
+      let lastingRisk = false
+      let summary = ''
+      if (isFail) {
+        infectionState = kind
+        // Failure: 1d3 days for both branches.
+        daysLeft = Math.floor(Math.random() * 3) + 1
+        lastingRisk = true
+        summary = `${infName} failed the Infection check — sick for ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Lasting Damage risk.`
+      } else if (isDire) {
+        infectionState = kind
+        // Dire Failure: 1d6 days. For Wound, Lasting Damage applies
+        // automatically on Day 0 (no risk gate, the wound's already in).
+        // For Sickness, the Day-0 mortal-wound drop is the worst part —
+        // Lasting Damage check still fires on top.
+        daysLeft = Math.floor(Math.random() * 6) + 1
+        lastingRisk = true
+        summary = `${infName} dire-failed the Infection check — sick for ${daysLeft} days. ${kind === 'wound' ? 'Auto Lasting Damage on Day 0.' : 'Will progress to Mortally Wounded on Day 0.'}`
+      } else {
+        summary = `${infName} shrugged off the Infection check.`
+      }
+      // Apply to the patient's row (PC or NPC).
+      if (infectionState && targetEntry) {
+        const updates: any = {
+          infection_state: infectionState,
+          infection_days_left: daysLeft,
+          infection_lasting_risk: lastingRisk,
+          infection_started_at: new Date().toISOString(),
+        }
+        const { error: infErr } = await supabase.from('character_states').update(updates).eq('id', targetEntry.stateId)
+        if (infErr) console.error('[infection] PC update error:', infErr.message)
+        setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...updates } } : e))
+      } else if (infectionState && targetNpcInf) {
+        const updates: any = {
+          infection_state: infectionState,
+          infection_days_left: daysLeft,
+          infection_lasting_risk: lastingRisk,
+          infection_started_at: new Date().toISOString(),
+        }
+        const { error: infErr } = await supabase.from('campaign_npcs').update(updates).eq('id', targetNpcInf.id)
+        if (infErr) console.error('[infection] NPC update error:', infErr.message)
+        setCampaignNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } : n))
+        setRosterNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } : n))
+        setViewingNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } as CampaignNpc : n))
+      }
+      infectionResult = summary
+    }
+
     // Sprint result — failure = winded next round
     // Log trimming: we embed the raw Athletics-roll dice/mods into the
     // sprint outcome entry's damage_json as a `trimmedRoll` blob, and
@@ -5360,7 +5425,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
       diceRolled: insightDiceRolled,
     } as any)
 

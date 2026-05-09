@@ -94,7 +94,7 @@ interface Props {
   // GMs can dismiss the modal during testing or to course-correct
   // mid-session).
   isGM?: boolean
-  onStatUpdate?: (stateId: string, field: string, value: number) => void
+  onStatUpdate?: (stateId: string, field: string, value: number | string | boolean | null) => void
   onDelete?: (id: string) => void
   onDuplicate?: (c: any) => void
   onRoll?: (label: string, amod: number, smod: number, weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number; traitCmod?: number; traitLabel?: string; traits?: string[] }) => void
@@ -489,6 +489,63 @@ function CharacterCardImpl({
                       }
                     }
                   }} style={btn('#c0392b', '#f5a89a')}>Env. Damage</button>
+                  {/* Infection — single button that does the right thing
+                      based on current state (no nested dropdown). When
+                      infection_state is null, prompts for which check to
+                      roll (Wound vs. Sickness Progression) and routes
+                      through onRoll. When already sick, prompts for Tick
+                      Day or Resolve. See /rules/combat/infection. */}
+                  <button onClick={() => {
+                    if (!localState) return
+                    const ls = localState as any
+                    const phyAmod = c.data?.rapid?.PHY ?? 0
+                    if (ls.infection_state) {
+                      const days = ls.infection_days_left ?? 0
+                      const choice = prompt(
+                        `Currently sick (${ls.infection_state}, ${days} day${days === 1 ? '' : 's'} left).\n\n` +
+                        `1 = Tick Day (-1 day)\n` +
+                        `2 = Resolve / Clear (treat as Day 0 reached)\n` +
+                        `3 = Treat with Medicine* (medic rolls separately — not yet wired here)`,
+                      )
+                      if (choice === '1' || choice === '2') {
+                        const newDays = choice === '2' ? 0 : Math.max(0, days - 1)
+                        onStatUpdate?.(localState.id, 'infection_days_left', newDays as any)
+                        if (newDays === 0) {
+                          // Day-0 resolution: fire Lasting Damage roll if
+                          // risk is set; sickness branch also drops to mortal.
+                          if (ls.infection_lasting_risk && onRoll) {
+                            onRoll(`${c.name} — Infection Lasting-Damage Check`, phyAmod, 0)
+                          }
+                          if (ls.infection_state === 'sickness' && onStatUpdate) {
+                            const dc = Math.max(1, 4 + phyAmod)
+                            onStatUpdate(localState.id, 'wp_current', 0)
+                            onStatUpdate(localState.id, 'death_countdown', dc as any)
+                            alert(`${c.name} has progressed to Mortally Wounded. Death countdown: ${dc} rounds.`)
+                          }
+                          // Clear infection state regardless.
+                          onStatUpdate?.(localState.id, 'infection_state', null as any)
+                          onStatUpdate?.(localState.id, 'infection_lasting_risk', false as any)
+                          onStatUpdate?.(localState.id, 'infection_started_at', null as any)
+                          onStatUpdate?.(localState.id, 'infection_infected_by', null as any)
+                        }
+                      }
+                    } else {
+                      const choice = prompt(
+                        `Roll Infection check:\n\n` +
+                        `1 = Wound Infection (post-combat: shot/stab/cut)\n` +
+                        `2 = Sickness Progression (environmental: corpse pit etc.)`,
+                      )
+                      if (choice === '1' || choice === '2') {
+                        const kind = choice === '1' ? 'Wound' : 'Sickness'
+                        const source = prompt(
+                          `Source / cause? (free text — e.g. "Frankie's Sword", "Corpse pit", "Sewer wade")`,
+                          '',
+                        )?.trim() || ''
+                        if (source) onStatUpdate?.(localState.id, 'infection_infected_by', source as any)
+                        if (onRoll) onRoll(`${c.name} — Infection Check (${kind})`, phyAmod, 0)
+                      }
+                    }
+                  }} style={btn('#5a2e5a', '#d48bd4')} title="Roll Infection / progress sick state">Infection</button>
                   <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')}>Rest</button>
                 </>
               )}

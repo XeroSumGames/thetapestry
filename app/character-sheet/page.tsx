@@ -98,7 +98,7 @@ export default function CharacterSheetPage() {
         showButtons={true}
         isMySheet={isMySheet}
         isGM={isGM}
-        onStatUpdate={stateId ? async (_sid: string, field: string, value: number) => {
+        onStatUpdate={stateId ? async (_sid: string, field: string, value: number | string | boolean | null) => {
           await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
         } : undefined}
         onRoll={(campaignId && (isMySheet || isGM || isThriver)) ? (label, amod, smod, weapon) => {
