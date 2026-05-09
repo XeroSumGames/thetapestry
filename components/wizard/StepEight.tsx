@@ -9,6 +9,7 @@ import {
   RARITY_DESCRIPTION,
   RANGE_BAND_DESCRIPTIONS,
 } from '../../lib/help-text'
+import { RARITY_COLOR as RARITY_ACCENT_CANONICAL } from '../../lib/rarity-colors'
 
 // What They Have — character-creation step 8. Redesigned 2026-05-01:
 //
@@ -53,7 +54,6 @@ const CATEGORY_ACCENT: Record<WeaponCategory, { bg: string; fg: string; border: 
 
 // Re-export of the canonical rarity palette from `lib/rarity-colors.ts`.
 // Locked 2026-05-09: Common = #7fc458 (was #cce0f5 here pre-2026-05-09).
-import { RARITY_COLOR as RARITY_ACCENT_CANONICAL } from '../../lib/rarity-colors'
 const RARITY_ACCENT: Record<string, string> = RARITY_ACCENT_CANONICAL
 
 // Incidentals — sentimental keepsakes / pre-Distemper anchors. Pure
