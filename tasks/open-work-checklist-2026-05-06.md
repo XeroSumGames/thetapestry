@@ -376,6 +376,18 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 - [ ] **Line of sight Phase 3** (polygon vision mask). Audit
       scheduled 2026-05-10.
 
+- [ ] **FOG wall/door/window drawing — SHIFT to snap.** Flagged
+      2026-05-09. Today the wall drawing in `components/TacticalMap.tsx`
+      snaps from grid-intersection to grid-intersection by default
+      (see `wallDrawStart` / `wallDrawHover`). Inversion: drawing
+      should be free-form (mouse position becomes the endpoint),
+      and **holding SHIFT** snaps the endpoint to the nearest grid
+      intersection. Lets the GM draw arbitrary angles for organic
+      shapes (curves, irregular rooms) but still hit grid corners
+      cleanly when matching room outlines. Same SHIFT-modifier
+      pattern is widely understood (Photoshop, Figma, etc.).
+      Apply to walls, doors, and windows uniformly.
+
 ### Lv4 Skill Traits — Xero-blocked, ships together
 
 - [ ] **Inspiration Lv4 "Beacon of Hope"** — auto +4 to Morale.
