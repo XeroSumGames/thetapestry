@@ -1983,9 +1983,12 @@ export default function TablePage() {
             })
           }
         }
-        // RP recovery: conscious characters below max RP recover 1 per round
+        // RP recovery: conscious characters below max RP recover 1 per round.
+        // Sick characters (infection_state set) recover up to half-max only —
+        // the half-max cap is the ceiling until they recover.
         if (ls.rp_current > 0 && ls.rp_current < e.liveState.rp_max && ls.wp_current > 0 && (ls.incap_rounds == null || ls.incap_rounds <= 0)) {
-          updates.rp_current = Math.min(e.liveState.rp_max, (updates.rp_current ?? ls.rp_current) + 1)
+          const cap = ls.infection_state ? Math.floor(e.liveState.rp_max / 2) : e.liveState.rp_max
+          updates.rp_current = Math.min(cap, (updates.rp_current ?? ls.rp_current) + 1)
         }
         if (Object.keys(updates).length > 0) {
           pcUpdates.push(supabase.from('character_states').update(updates).eq('id', e.stateId))
@@ -2032,12 +2035,13 @@ export default function TablePage() {
             })
           }
         }
-        // RP recovery
+        // RP recovery — sick NPCs cap at half-max same as PCs.
         const npcWP = npc.wp_current ?? npc.wp_max ?? 10
         const npcRP = npc.rp_current ?? npc.rp_max ?? 6
         const npcRPMax = npc.rp_max ?? 6
         if (npcRP > 0 && npcRP < npcRPMax && npcWP > 0 && (npc.incap_rounds == null || npc.incap_rounds <= 0)) {
-          updates.rp_current = Math.min(npcRPMax, (updates.rp_current ?? npcRP) + 1)
+          const npcCap = (npc as any).infection_state ? Math.floor(npcRPMax / 2) : npcRPMax
+          updates.rp_current = Math.min(npcCap, (updates.rp_current ?? npcRP) + 1)
         }
         if (Object.keys(updates).length > 0) {
           npcUpdates.push(supabase.from('campaign_npcs').update(updates).eq('id', npcId))
@@ -5185,23 +5189,31 @@ export default function TablePage() {
       } else {
         summary = `${infName} shrugged off the Infection check.`
       }
-      // Apply to the patient's row (PC or NPC).
+      // Apply to the patient's row (PC or NPC). Sick state also caps
+      // RP at half-max (round down) per locked canon — clamp here.
       if (infectionState && targetEntry) {
+        const ls: any = targetEntry.liveState
+        const rpMax: number = ls?.rp_max ?? 6
+        const cappedRp = Math.min(ls?.rp_current ?? rpMax, Math.floor(rpMax / 2))
         const updates: any = {
           infection_state: infectionState,
           infection_days_left: daysLeft,
           infection_lasting_risk: lastingRisk,
           infection_started_at: new Date().toISOString(),
+          rp_current: cappedRp,
         }
         const { error: infErr } = await supabase.from('character_states').update(updates).eq('id', targetEntry.stateId)
         if (infErr) console.error('[infection] PC update error:', infErr.message)
         setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...updates } } : e))
       } else if (infectionState && targetNpcInf) {
+        const npcRpMax: number = targetNpcInf.rp_max ?? 6
+        const npcCappedRp = Math.min(targetNpcInf.rp_current ?? npcRpMax, Math.floor(npcRpMax / 2))
         const updates: any = {
           infection_state: infectionState,
           infection_days_left: daysLeft,
           infection_lasting_risk: lastingRisk,
           infection_started_at: new Date().toISOString(),
+          rp_current: npcCappedRp,
         }
         const { error: infErr } = await supabase.from('campaign_npcs').update(updates).eq('id', targetNpcInf.id)
         if (infErr) console.error('[infection] NPC update error:', infErr.message)
@@ -5210,6 +5222,64 @@ export default function TablePage() {
         setViewingNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } as CampaignNpc : n))
       }
       infectionResult = summary
+    }
+
+    // Treat Infection result — medic's Medicine* check on a sick patient.
+    // Wild Success: half remaining days (round up) + clear lasting risk.
+    // Success:     clear lasting risk only.
+    // Failure:     no-op (patient cannot be re-treated this incident; we
+    //              leave that gate to the GM since the schema doesn't
+    //              currently track an "already treated" flag).
+    // Dire Failure: +1 to days_left.
+    // Insight: standard mapping (Low = Dire, High = Wild Success).
+    let treatInfectionResult = ''
+    if (pendingRoll.label.includes('Treat Infection ')) {
+      const tiTargetName = pendingRoll.label.split('Treat Infection ')[1]
+      const tiTargetEntry = entries.find(e => e.character.name === tiTargetName)
+      const tiTargetNpc = !tiTargetEntry ? campaignNpcs.find((n: any) => n.name === tiTargetName) : null
+      const sourceLs: any = tiTargetEntry?.liveState ?? tiTargetNpc
+      if (!sourceLs?.infection_state) {
+        treatInfectionResult = `${tiTargetName} isn't sick — Treat Infection is a no-op.`
+      } else {
+        const days = sourceLs.infection_days_left ?? 0
+        const updates: any = {}
+        if (outcome === 'Wild Success' || outcome === 'High Insight') {
+          updates.infection_days_left = Math.max(1, Math.ceil(days / 2))
+          updates.infection_lasting_risk = false
+          treatInfectionResult = `${tiTargetName} treated — ${days} day${days === 1 ? '' : 's'} cut to ${updates.infection_days_left}, Lasting Damage risk cleared.`
+        } else if (outcome === 'Success') {
+          updates.infection_lasting_risk = false
+          treatInfectionResult = `${tiTargetName} treated — Lasting Damage risk cleared.`
+        } else if (outcome === 'Dire Failure' || outcome === 'Low Insight') {
+          updates.infection_days_left = days + 1
+          treatInfectionResult = `${tiTargetName} botched care — ${days} day${days === 1 ? '' : 's'} extended to ${updates.infection_days_left}.`
+        } else {
+          treatInfectionResult = `${tiTargetName} got no help from the treatment.`
+        }
+        if (Object.keys(updates).length > 0) {
+          if (tiTargetEntry) {
+            const { error: tiErr } = await supabase.from('character_states').update(updates).eq('id', tiTargetEntry.stateId)
+            if (tiErr) console.error('[treat-infection] PC update error:', tiErr.message)
+            setEntries(prev => prev.map(e => e.stateId === tiTargetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...updates } } : e))
+          } else if (tiTargetNpc) {
+            const { error: tiErr } = await supabase.from('campaign_npcs').update(updates).eq('id', tiTargetNpc.id)
+            if (tiErr) console.error('[treat-infection] NPC update error:', tiErr.message)
+            setCampaignNpcs(prev => prev.map(n => n.id === tiTargetNpc.id ? { ...n, ...updates } : n))
+            setRosterNpcs(prev => prev.map(n => n.id === tiTargetNpc.id ? { ...n, ...updates } : n))
+            setViewingNpcs(prev => prev.map(n => n.id === tiTargetNpc.id ? { ...n, ...updates } as CampaignNpc : n))
+          }
+        }
+        // Low Insight: medic earns 1 Stress pip per locked canon.
+        if (outcome === 'Low Insight') {
+          const medicEntry = entries.find(e => e.character.name === pendingRoll.label.split(' — ')[0])
+          if (medicEntry?.liveState) {
+            const newStress = Math.min(5, (medicEntry.liveState.stress ?? 0) + 1)
+            await supabase.from('character_states').update({ stress: newStress }).eq('id', medicEntry.stateId)
+            setEntries(prev => prev.map(e => e.stateId === medicEntry.stateId ? { ...e, liveState: { ...e.liveState, stress: newStress } } : e))
+            treatInfectionResult += ' Medic gains 1 Stress pip.'
+          }
+        }
+      }
     }
 
     // Sprint result — failure = winded next round
@@ -5425,7 +5495,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
       diceRolled: insightDiceRolled,
     } as any)
 
@@ -6633,6 +6703,76 @@ export default function TablePage() {
                     '🩸 Stabilize',
                     items,
                     actBtn('#1a2e10', '#7fc458', '#2d5a1b'),
+                  )
+                })()}
+
+                {/* Treat Infection — parallel to Stabilize. Lists sick
+                    targets (infection_state set AND days_left > 0) within
+                    engaged range. Medic rolls Medicine* (RSN + Medicine
+                    SMod). Outcomes resolve in executeRoll. See
+                    /rules/combat/infection. */}
+                {(() => {
+                  const aTok = mapTokens.find(t => (activeEntry.character_id && t.character_id === activeEntry.character_id) || (activeEntry.npc_id && t.npc_id === activeEntry.npc_id))
+                  const getDistFeet = (targetCharId?: string, targetNpcId?: string): number | null => {
+                    if (!aTok || mapTokens.length === 0) return null
+                    const tTok = mapTokens.find(t => (targetCharId && t.character_id === targetCharId) || (targetNpcId && t.npc_id === targetNpcId))
+                    if (!tTok) return null
+                    const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
+                    return dist * mapCellFeet
+                  }
+                  type TreatTarget = { kind: 'pc' | 'npc'; name: string; charId?: string; npcId?: string; distFeet: number | null }
+                  const targets: TreatTarget[] = []
+                  for (const e of entries) {
+                    if (!e.liveState) continue
+                    const ls = e.liveState as any
+                    if (ls.infection_state && (ls.infection_days_left ?? 0) > 0) {
+                      targets.push({ kind: 'pc', name: e.character.name, charId: e.character.id, distFeet: getDistFeet(e.character.id, undefined) })
+                    }
+                  }
+                  for (const n of campaignNpcs as any[]) {
+                    if (n.infection_state && (n.infection_days_left ?? 0) > 0) {
+                      targets.push({ kind: 'npc', name: n.name, npcId: n.id, distFeet: getDistFeet(undefined, n.id) })
+                    }
+                  }
+                  const inRange = targets.filter(t => t.distFeet === null || t.distFeet <= 20)
+                  if (inRange.length === 0) return null
+                  const fireTreat = (t: TreatTarget) => async () => {
+                    let amod = 0, smod = 0
+                    if (charEntry) {
+                      const rapid = charEntry.character.data?.rapid ?? {}
+                      amod = rapid.RSN ?? 0
+                      smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine*')?.level
+                        ?? charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level
+                        ?? 0
+                    } else {
+                      const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+                      if (npcRoller) {
+                        amod = npcRoller.reason ?? 0
+                        const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
+                        smod = npcSkills.find((s: any) => s.name === 'Medicine*')?.level
+                          ?? npcSkills.find((s: any) => s.name === 'Medicine')?.level
+                          ?? 0
+                      }
+                    }
+                    handleRollRequest(`${activeEntry.character_name} — Treat Infection ${t.name}`, amod, smod)
+                    actionPreConsumedRef.current = true
+                    await consumeAction(activeEntry.id)
+                  }
+                  const items = inRange.map(t => {
+                    const notEngaged = t.distFeet !== null && t.distFeet > 5
+                    return {
+                      label: `${t.name}${notEngaged ? ' (not engaged)' : ''}`,
+                      color: notEngaged ? '#EF9F27' : '#d48bd4',
+                      onClick: notEngaged
+                        ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${t.name} to treat them. Move closer first.`)
+                        : fireTreat(t),
+                    }
+                  })
+                  return renderHeaderMenu(
+                    'treat-infection-action',
+                    '💊 Treat Infection',
+                    items,
+                    actBtn('#2a1a3e', '#d48bd4', '#5a2e5a'),
                   )
                 })()}
                 </>}
