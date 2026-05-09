@@ -53,7 +53,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const suffix = r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label
   const hit = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
   const wild = r.outcome === 'Wild Success' || r.outcome === 'High Insight'
-  const outcomeTag = wild ? ' (critical)' : r.outcome === 'Low Insight' ? ' (critical failure)' : ''
+  const outcomeTag = wild ? ' (critical)' : r.outcome === 'Low Insight' ? ', but failed miserably' : ''
 
   // Aim action — no dice, no target.
   if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
