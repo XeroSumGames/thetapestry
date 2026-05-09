@@ -892,6 +892,23 @@ export default function LfgPage() {
                                 style={{ padding: '3px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
                                 💬 Message
                               </a>
+                              <button onClick={async () => {
+                                if (!confirm(`Kick ${u.username} from this post's interested list?`)) return
+                                const { error } = await supabase
+                                  .from('lfg_interests')
+                                  .delete()
+                                  .eq('post_id', p.id)
+                                  .eq('interested_user_id', u.user_id)
+                                if (error) { alert('Error: ' + error.message); return }
+                                setInterestsByPost(prev => ({
+                                  ...prev,
+                                  [p.id]: (prev[p.id] ?? []).filter(x => x.user_id !== u.user_id),
+                                }))
+                              }}
+                                title={`Remove ${u.username} from this post's interested list`}
+                                style={{ padding: '3px 10px', background: '#2a1010', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                                ✕ Kick
+                              </button>
                               {/* Invite picker. Hidden if the GM has no
                                   campaigns to invite to (avoids teasing
                                   a dead button). Anchored relative to the
