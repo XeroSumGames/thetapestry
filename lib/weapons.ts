@@ -1,4 +1,14 @@
 // XSE SRD Weapon Database
+//
+// Stun-weapon canon (locked 2026-05-09):
+//   - Taser:       1 WP / 4 RP per hit (rpPercent 400) + Stun trait.
+//   - Cattle Prod: 2 WP / 8 RP per hit (rpPercent 400) + Stun trait.
+//   The "WP / RP" pair is what the target *takes* before defensive
+//   mods. Stun-tagged weapons compute RP from RAW WP, not mitigated
+//   WP, so the impact still rocks the target even when the wound is
+//   deflected. The Stun trait then zeroes WP via the trait branch
+//   in app/stories/[id]/table/page.tsx (Stun = "no wound, all jolt").
+//   See lib/damage.ts `calculateDamage(..., { rpFromRaw: isStun })`.
 
 export type WeaponCategory = 'melee' | 'ranged' | 'explosive' | 'heavy'
 export type Range = 'Engaged' | 'Close' | 'Medium' | 'Long' | 'Distant'

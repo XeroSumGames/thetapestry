@@ -4290,7 +4290,7 @@ export default function TablePage() {
       const targetDefBonus = targetInitEntry?.defense_bonus ?? 0
       const defensiveMod = targetObject ? 0 : ((isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus)
 
-      let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
+      let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod, { rpFromRaw: isStun })
       // Subdue: full RP but 50% WP
       if (pendingRoll.label.includes('Subdue')) {
         finalWP = Math.max(1, Math.floor(finalWP / 2))

@@ -49,11 +49,24 @@ export function rollDamage(damageStr: string, phyAmod = 0, isMelee = false): {
 
 /**
  * Calculate final damage after defensive modifier and RP.
+ *
+ * Canon (locked 2026-05-09): for `Stun`-tagged weapons (Taser,
+ * Cattle Prod), RP is computed from RAW WP, not mitigated WP. The
+ * stun's whole purpose is to deal RP - the impact rocks the body
+ * even when the wound itself was deflected. Without `rpFromRaw`,
+ * a Taser hit on anyone with DEX>=1 collapses to 0/0 because
+ * mitigation zeroes WP and the cascade kills RP too. Pass
+ * `rpFromRaw: true` when the attacking weapon's traits include
+ * `Stun` (and when adding any future weapon whose RP is meant to
+ * apply regardless of mitigation, e.g. concussion grenades). For
+ * all other weapons, RP scales with mitigated WP per the standard
+ * SRD damage flow.
  */
 export function calculateDamage(
   rawWP: number,
   rpPercent: number,
-  defensiveModifier: number
+  defensiveModifier: number,
+  options?: { rpFromRaw?: boolean }
 ): {
   finalWP: number
   finalRP: number
@@ -61,6 +74,7 @@ export function calculateDamage(
 } {
   const mitigated = Math.max(0, defensiveModifier)
   const finalWP = Math.max(0, rawWP - mitigated)
-  const finalRP = Math.floor(finalWP * (rpPercent / 100))
+  const rpSource = options?.rpFromRaw ? rawWP : finalWP
+  const finalRP = Math.floor(rpSource * (rpPercent / 100))
   return { finalWP, finalRP, mitigated }
 }
