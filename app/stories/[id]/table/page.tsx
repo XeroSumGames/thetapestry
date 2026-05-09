@@ -40,7 +40,7 @@ import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
-import { rollDamage, calculateDamage } from '../../../../lib/damage'
+import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
 import { appendProgressionEntry } from '../../../../lib/progression-log'
@@ -50,7 +50,7 @@ import { triangleBreakdown } from '../../../../lib/populate-triangle'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
-import { SKILLS, MOTIVATIONS, COMPLICATIONS } from '../../../../lib/xse-schema'
+import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
 interface Campaign {
@@ -4310,7 +4310,37 @@ export default function TablePage() {
       const targetDefBonus = targetInitEntry?.defense_bonus ?? 0
       const defensiveMod = targetObject ? 0 : ((isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus)
 
-      let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod, { rpFromRaw: isStun })
+      // Armor pull — defender's worn armor pieces contribute their DM
+      // to mitigation. Reactive (melee-only) pieces filter out when the
+      // attacker isn't melee/unarmed. Source data: defender's
+      // inventory[] with worn===true; armor catalog lives in
+      // lib/xse-schema.ts:ARMOR. Object targets and unrevealed NPC
+      // fallbacks have empty inventory so this is a no-op for them.
+      const armorPieces: ArmorPiece[] = []
+      if (!targetObject) {
+        const defenderInv: any[] = targetEntry
+          ? (targetEntry.character.data?.inventory ?? [])
+          : ((targetNpc as any)?.inventory ?? [])
+        for (const inv of defenderInv) {
+          if (!inv?.worn) continue
+          const armorRow = ARMOR.find(a => a.name === inv.name)
+          if (!armorRow) continue
+          armorPieces.push({
+            dm: armorRow.dm,
+            reactive_melee_only: armorRow.traits.includes('reactive_melee_only'),
+          })
+        }
+      }
+      const attackerCategory: AttackerCategory | undefined =
+        weapon.weaponName === 'Unarmed' ? 'unarmed'
+        : isMelee ? 'melee'
+        : (getWeaponByName(weapon.weaponName)?.category as AttackerCategory | undefined)
+
+      let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod, {
+        rpFromRaw: isStun,
+        armor: armorPieces,
+        attackerCategory,
+      })
       // Subdue: full RP but 50% WP
       if (pendingRoll.label.includes('Subdue')) {
         finalWP = Math.max(1, Math.floor(finalWP / 2))

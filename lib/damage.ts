@@ -48,31 +48,56 @@ export function rollDamage(damageStr: string, phyAmod = 0, isMelee = false): {
 }
 
 /**
- * Calculate final damage after defensive modifier and RP.
+ * Calculate final damage after defensive modifier, armor, and RP.
  *
- * Canon (locked 2026-05-09): for `Stun`-tagged weapons (Taser,
- * Cattle Prod), RP is computed from RAW WP, not mitigated WP. The
- * stun's whole purpose is to deal RP - the impact rocks the body
- * even when the wound itself was deflected. Without `rpFromRaw`,
- * a Taser hit on anyone with DEX>=1 collapses to 0/0 because
- * mitigation zeroes WP and the cascade kills RP too. Pass
- * `rpFromRaw: true` when the attacking weapon's traits include
- * `Stun` (and when adding any future weapon whose RP is meant to
- * apply regardless of mitigation, e.g. concussion grenades). For
- * all other weapons, RP scales with mitigated WP per the standard
- * SRD damage flow.
+ * Canon (locked 2026-05-09):
+ *
+ * 1. Stun-tagged weapons (Taser, Cattle Prod) compute RP from
+ *    RAW WP, not mitigated WP. The stun's whole purpose is to
+ *    deal RP — the impact rocks the body even when the wound is
+ *    deflected. Pass `rpFromRaw: true` when the attacking weapon's
+ *    traits include `Stun` (or any future weapon whose RP should
+ *    apply regardless of mitigation).
+ *
+ * 2. Armor DMs stack additively with the defender's PHY/DEX
+ *    defensive modifier. Pass the defender's currently-worn armor
+ *    via `armor`. Pieces tagged `reactive_melee_only` (Riot Shield)
+ *    only contribute when `attackerCategory` is `melee` or
+ *    `unarmed` — a bullet ignores the shield entirely. See
+ *    `lib/xse-schema.ts:ARMOR` for the canonical armor catalog
+ *    and `tasks/rules-extract-armor-explosives.md` for the spec.
+ *
+ * `mitigated` in the return value is the FINAL summed defensive
+ * value (PHY/DEX + applicable armor DMs) — useful for log
+ * narration ("3 mitigated").
  */
+export interface ArmorPiece {
+  dm: number
+  reactive_melee_only?: boolean
+}
+
+export type AttackerCategory = 'melee' | 'unarmed' | 'ranged' | 'explosive' | 'heavy'
+
 export function calculateDamage(
   rawWP: number,
   rpPercent: number,
   defensiveModifier: number,
-  options?: { rpFromRaw?: boolean }
+  options?: {
+    rpFromRaw?: boolean
+    armor?: ArmorPiece[]
+    attackerCategory?: AttackerCategory
+  }
 ): {
   finalWP: number
   finalRP: number
   mitigated: number
 } {
-  const mitigated = Math.max(0, defensiveModifier)
+  const isMeleeOrUnarmed = options?.attackerCategory === 'melee' || options?.attackerCategory === 'unarmed'
+  const armorDm = (options?.armor ?? []).reduce((sum, piece) => {
+    if (piece.reactive_melee_only && !isMeleeOrUnarmed) return sum
+    return sum + Math.max(0, piece.dm)
+  }, 0)
+  const mitigated = Math.max(0, defensiveModifier) + armorDm
   const finalWP = Math.max(0, rawWP - mitigated)
   const rpSource = options?.rpFromRaw ? rawWP : finalWP
   const finalRP = Math.floor(rpSource * (rpPercent / 100))
