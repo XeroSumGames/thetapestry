@@ -1254,6 +1254,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           }
         }
       }
+      // Whether the scene has any vision-blocking geometry. Drives
+      // both the painted-fog defeasibility rule and the auto-fog
+      // gate below — see the comment block at the painted-fog loop.
+      const hasBlockers = visionSegs.length > 0 || cellBlockers.size > 0
       // Standard "do two segments cross" test (proper intersection,
       // touching endpoints don't count). Used for both segment LoS
       // and segment-based movement validation.
@@ -1295,53 +1299,63 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return false
       }
       const visible = new Set<string>()
-      // Day mode: unbounded sight (only walls block). We sweep a
-      // radius equal to the scene's diagonal so every cell is
-      // candidate-visible; LoS check then trims to wall-bounded
-      // visibility. Night mode: per-token sight_radius governs.
+      // Vision sweep only runs if the scene has authored blockers
+      // (walls / closed doors / closed windows / wall-tagged tokens).
+      // On a no-blocker scene — building drawn into the background
+      // image, no segments authored — day-mode unbounded sight would
+      // mark every cell visible, defeating both painted fog and the
+      // auto-fog blanket below. Skipping the sweep here means
+      // `visible` stays empty, painted fog renders absolute, and
+      // auto-fog is gated off (see below). Once the GM authors any
+      // walls/doors/windows, vision becomes meaningful and both
+      // painted fog and auto-fog become LoS-driven.
       const isDay = (s.lighting_mode ?? 'day') === 'day'
       const dayRadius = Math.max(s.grid_cols, s.grid_rows)
-      for (const tok of pcVisionTokens) {
-        const gw = tok.grid_w ?? 1
-        const gh = tok.grid_h ?? 1
-        // Per-token override (column added in
-        // sql/scene-tokens-sight-radius.sql); falls back to the
-        // default constant for legacy rows.
-        const r = isDay ? dayRadius : (tok.sight_radius_cells ?? VISION_RADIUS_CELLS)
-        for (let fx = 0; fx < gw; fx++) {
-          for (let fy = 0; fy < gh; fy++) {
-            const ox = tok.grid_x + fx
-            const oy = tok.grid_y + fy
-            for (let dx = -r; dx <= r; dx++) {
-              for (let dy = -r; dy <= r; dy++) {
-                if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
-                const tx = ox + dx
-                const ty = oy + dy
-                if (losBlocked(ox, oy, tx, ty)) continue
-                visible.add(`${tx},${ty}`)
+      if (hasBlockers) {
+        for (const tok of pcVisionTokens) {
+          const gw = tok.grid_w ?? 1
+          const gh = tok.grid_h ?? 1
+          // Per-token override (column added in
+          // sql/scene-tokens-sight-radius.sql); falls back to the
+          // default constant for legacy rows.
+          const r = isDay ? dayRadius : (tok.sight_radius_cells ?? VISION_RADIUS_CELLS)
+          for (let fx = 0; fx < gw; fx++) {
+            for (let fy = 0; fy < gh; fy++) {
+              const ox = tok.grid_x + fx
+              const oy = tok.grid_y + fy
+              for (let dx = -r; dx <= r; dx++) {
+                for (let dy = -r; dy <= r; dy++) {
+                  if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
+                  const tx = ox + dx
+                  const ty = oy + dy
+                  if (losBlocked(ox, oy, tx, ty)) continue
+                  visible.add(`${tx},${ty}`)
+                }
               }
             }
           }
         }
       }
       const effective: Record<string, boolean> = {}
-      // GM-painted fog: ALWAYS rendered. The original commit message
-      // (29e7f25) called this "force fog on top" — painted fog is
-      // absolute, not LoS-defeasible. The pre-fix code had
-      // `!visible.has(k)` here, which let PC LoS punch through painted
-      // fog. On scenes where the GM hadn't authored wall segments
-      // (the floor plan lives in the background image), day-mode's
-      // unbounded sight cleared every painted cell — players saw
-      // through the GM's fog completely. Reverted to absolute.
+      // GM-painted fog: defeasible by PC LoS *when* the scene has
+      // authored blockers — opening a window or door extends LoS
+      // through that opening and clears painted fog along the path,
+      // which is the GM's intuitive workflow. On no-blocker scenes
+      // the `visible` set stays empty (we skipped the sweep above),
+      // so painted fog renders absolute. This is the compromise
+      // between two earlier attempts: pure-LoS-defeasible nuked
+      // painted fog on no-blocker maps; pure-absolute broke
+      // open-window-clears-fog on properly-authored maps.
       for (const k of Object.keys(rawFog)) {
-        if (rawFog[k]) effective[k] = true
+        if (rawFog[k] && !visible.has(k)) effective[k] = true
       }
-      // Auto-fog: when at least one PC is on the scene, every cell
-      // outside the PC LoS is also fogged. This is what makes
-      // "closing a door re-hides what was beyond" work without the
-      // GM painting fog there manually. Without PCs (e.g. GM staging
-      // tokens before play starts), fog is purely manual.
-      if (hasPCs) {
+      // Auto-fog: every cell outside any PC's LoS is fogged. Only
+      // meaningful when blockers exist — otherwise "outside LoS"
+      // would be the empty set (with unbounded day-sight) or the
+      // edge of the radius (in night mode), neither of which the
+      // GM is likely to want as a default. So gate on hasBlockers
+      // alongside hasPCs.
+      if (hasPCs && hasBlockers) {
         for (let x = 0; x < s.grid_cols; x++) {
           for (let y = 0; y < s.grid_rows; y++) {
             const k = `${x},${y}`
