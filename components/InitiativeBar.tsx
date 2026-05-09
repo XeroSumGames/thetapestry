@@ -209,7 +209,7 @@ function InitiativeBarImpl({
   // that the parent can also fit the action-buttons row inside the
   // same shared chrome.
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', rowGap: '6px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexWrap: 'wrap', rowGap: '6px' }}>
         {/* Sticky left pane — "⚔️ Initiative" label + active pill */}
         <div style={{ position: 'sticky', left: 0, zIndex: 10, background: '#0d0d0d', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #2e2e2e', marginRight: '4px', flexShrink: 0 }}>
           <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>

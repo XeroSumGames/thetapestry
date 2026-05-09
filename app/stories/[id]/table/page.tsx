@@ -6144,7 +6144,7 @@ export default function TablePage() {
                     if (pc) { setSelectedEntry(pc); setViewingNpcs([]); setSheetPos(null) }
                   }
                 }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>🎲 Dice Check</button>
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Dice Check</button>
 
                 {/* ── DISTRACT: opens the standard roll modal directly — the
                     modal already includes a Target dropdown when combat is
