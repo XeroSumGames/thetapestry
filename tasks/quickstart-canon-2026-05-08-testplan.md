@@ -64,10 +64,16 @@ sub-section renamed to `Subsistence Damage`, anchor id changed from
    `/rules/equipment/rations` without 404.
 
 **GM tool spot-check:**
-1. Open a campaign table page → any PC card → **Env. Damage** button.
-2. Confirm the prompt option `3` reads
+1. On the table page, click a PC's row to open their inline
+   character sheet. (You can also click `🎲 Dice Check` in the
+   action bar during their turn — same sheet opens.)
+2. Scroll to the bottom row labeled `GM Actions: Rest, Stress,
+   Environmental Damage`. The three buttons are
+   **Rest | Reduce Stress | Env. Damage**.
+3. Click **Env. Damage** → prompt asks 1=Falling / 2=Drowning /
+   3=Subsistence. Confirm option 3 reads
    `Subsistence (1 WP + 1 RP/day, day 2+)`.
-3. Pick option 3 — confirm the PC loses **both** 1 WP and 1 RP
+4. Pick option 3 — confirm the PC loses **both** 1 WP and 1 RP
    (previously only RP was deducted).
 
 ---
@@ -83,8 +89,8 @@ gets a new `rations` anchor in the `equipment` section.
    the end (after Item Condition, Item Traits, Upkeep).
 2. Click into `Rations`. Confirm 3 rows in the table:
    - Standard Rations — Common — ENC 0.5
-   - Luxury Rations — Common — ENC 0.5
-   - Military Grade Rations — Uncommon — ENC 0.25
+   - Luxury Rations — Uncommon — ENC 0.5
+   - Military Grade Rations — Rare — ENC 0.25
 3. Confirm the closing paragraph notes `2 Rations` as the starting
    default.
 
@@ -99,9 +105,8 @@ gets a new `rations` anchor in the `equipment` section.
 1. Open `/characters/new` → walk through to **Step 8 (Equipment)**.
 2. Scroll to the Rations row. Confirm:
    - Standard Rations chip header: green `COMMON`.
-   - Luxury Rations chip header: **green `COMMON`** (was blue
-     `UNCOMMON`).
-   - Military Grade chip header: blue `UNCOMMON`.
+   - Luxury Rations chip header: blue `UNCOMMON`.
+   - Military Grade chip header: amber `RARE`.
 
 ---
 
