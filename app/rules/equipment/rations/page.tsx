@@ -13,8 +13,8 @@ export const metadata = { title: 'Rations — XSE SRD §07' }
 
 const RATIONS: Array<[string, string, string, string]> = [
   ['Standard Rations',       'Common',   '0.5',  '1 day food + water.'],
-  ['Luxury Rations',         'Common',   '0.5',  '1 day food + water; small morale bump.'],
-  ['Military Grade Rations', 'Uncommon', '0.25', 'Compact, calorie-dense; 1 day food + water.'],
+  ['Luxury Rations',         'Uncommon', '0.5',  '1 day food + water; small morale bump.'],
+  ['Military Grade Rations', 'Rare',     '0.25', 'Compact, calorie-dense; 1 day food + water.'],
 ]
 
 export default function Page() {
@@ -49,7 +49,7 @@ export default function Page() {
           {RATIONS.map(([name, rarity, enc, notes]) => (
             <tr key={name}>
               <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', fontWeight: 700, color: '#f5f2ee' }}>{name}</td>
-              <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: rarity === 'Uncommon' ? '#7ab3d4' : '#7fc458' }}>{rarity}</td>
+              <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: rarity === 'Rare' ? '#EF9F27' : rarity === 'Uncommon' ? '#7ab3d4' : '#7fc458' }}>{rarity}</td>
               <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{enc}</td>
               <td style={ruleTableTdStyle}>{notes}</td>
             </tr>
