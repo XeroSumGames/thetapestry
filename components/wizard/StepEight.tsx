@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { WizardState } from '../../lib/xse-engine'
 import { ALL_WEAPONS, TRAIT_DESCRIPTIONS, type Weapon, type WeaponCategory } from '../../lib/weapons'
-import { EQUIPMENT } from '../../lib/xse-schema'
+import { EQUIPMENT, RATIONS } from '../../lib/xse-schema'
 import HelpTooltip from '../HelpTooltip'
 import {
   ENCUMBRANCE_DESCRIPTION,
@@ -51,11 +51,10 @@ const CATEGORY_ACCENT: Record<WeaponCategory, { bg: string; fg: string; border: 
   explosive: { bg: '#2a1010', fg: '#f5a89a', border: '#7a1f16' },
 }
 
-const RARITY_ACCENT: Record<string, string> = {
-  Common: '#cce0f5',
-  Uncommon: '#7ab3d4',
-  Rare: '#c4a7f0',
-}
+// Re-export of the canonical rarity palette from `lib/rarity-colors.ts`.
+// Locked 2026-05-09: Common = #7fc458 (was #cce0f5 here pre-2026-05-09).
+import { RARITY_COLOR as RARITY_ACCENT_CANONICAL } from '../../lib/rarity-colors'
+const RARITY_ACCENT: Record<string, string> = RARITY_ACCENT_CANONICAL
 
 // Incidentals — sentimental keepsakes / pre-Distemper anchors. Pure
 // flavor; ENC 0 effective; not stored in EQUIPMENT (the original 10
@@ -453,14 +452,10 @@ export default function StepEight({ state, onChange }: Props) {
           placeholder="e.g. a worn photograph, a lucky coin..." />
       </div>
 
-      {/* Rations */}
+      {/* Rations — canon source: lib/xse-schema.ts:RATIONS. */}
       <div style={sh}>Rations — choose one (optional)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '1rem' }}>
-        {[
-          { name: 'Standard Rations',      rarity: 'Common',   enc: 0.5,  notes: '1 day food + water' },
-          { name: 'Luxury Rations',         rarity: 'Uncommon', enc: 0.5,  notes: '1 day; small morale bump' },
-          { name: 'Military Grade Rations', rarity: 'Rare',     enc: 0.25, notes: 'Compact; 1 day food + water' },
-        ].map(item => {
+        {RATIONS.map(item => {
           const sel = state.rations === item.name
           const rarityColor = RARITY_ACCENT[item.rarity] ?? '#cce0f5'
           return (

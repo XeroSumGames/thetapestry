@@ -467,9 +467,12 @@ export default function LfgPage() {
       // Phase 4B: LFG has no campaign scope (it's cross-campaign by
       // definition), so every post queues for thriver review. Edits
       // re-queue too — content changed, prior approval no longer holds.
-      moderation_status: 'pending',
-      approved_by: null,
-      approved_at: null,
+      // Thriver-authored content auto-approves (locked 2026-05-09):
+      // Thrivers ARE the moderation layer; making them queue their own
+      // posts behind themselves is needless friction.
+      moderation_status: isThriver ? 'approved' : 'pending',
+      approved_by: isThriver ? myId : null,
+      approved_at: isThriver ? new Date().toISOString() : null,
     }
     if (editingId) {
       const { error } = await supabase.from('lfg_posts').update(payload).eq('id', editingId)

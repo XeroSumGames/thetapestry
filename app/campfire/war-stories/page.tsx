@@ -341,16 +341,18 @@ export default function WarStoriesPage() {
     // setting/global queue for moderation. Editing an existing story
     // from setting → campaign re-approves; campaign → setting re-queues.
     const isCampaignScope = draft.scope === 'campaign' && !!draft.campaign_id
+    // Auto-approve when (a) campaign-internal scope, OR (b) author is a
+    // Thriver. Thrivers ARE the moderation layer; making them queue
+    // their own posts behind themselves is needless friction.
+    const autoApprove = isCampaignScope || isThriver
     const payload: Record<string, any> = {
       title: draft.title.trim(),
       body: draft.body.trim(),
       campaign_id: draft.scope === 'campaign' ? (draft.campaign_id || null) : null,
       setting: draft.scope === 'setting' ? draft.setting : null,
-      moderation_status: isCampaignScope ? 'approved' : 'pending',
-      approved_at: isCampaignScope ? new Date().toISOString() : null,
-      // Clear approved_by when re-queueing so the moderator sees a
-      // fresh review.
-      approved_by: isCampaignScope ? null : null,
+      moderation_status: autoApprove ? 'approved' : 'pending',
+      approved_at: autoApprove ? new Date().toISOString() : null,
+      approved_by: isThriver ? myId : null,
     }
 
     // Determine the story id we'll upload attachments under. For edits the

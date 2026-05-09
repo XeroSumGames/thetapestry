@@ -81,6 +81,7 @@ export default function ForumsIndexPage() {
   const router = useRouter()
 
   const [myId, setMyId] = useState<string | null>(null)
+  const [isThriver, setIsThriver] = useState(false)
   const [threads, setThreads] = useState<ThreadWithAuthor[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
@@ -113,6 +114,8 @@ export default function ForumsIndexPage() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      if (profile && (profile.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
       // Fetch the user's campaigns once for the Campaign scope picker.
       // Mirrors the War Stories pattern: pulled via campaign_members so
       // player-role campaigns appear, not just GM-owned ones. Cheap; no
@@ -260,7 +263,11 @@ export default function ForumsIndexPage() {
     // global has both NULL. Phase 4B: campaign-internal posts skip
     // review (instant approve), setting/global queue for thriver.
     const isCampaignScope = draft.scope === 'campaign' && !!draft.campaign_id
-    const moderation_status = isCampaignScope ? 'approved' : 'pending'
+    // Auto-approve when (a) campaign-internal scope, OR (b) author is a
+    // Thriver — Thrivers ARE the moderation layer; making them queue
+    // their own posts behind themselves is needless friction.
+    const autoApprove = isCampaignScope || isThriver
+    const moderation_status = autoApprove ? 'approved' : 'pending'
     const { data, error } = await supabase.from('forum_threads').insert({
       author_user_id: myId,
       category: draft.category,
@@ -269,9 +276,8 @@ export default function ForumsIndexPage() {
       campaign_id: draft.scope === 'campaign' ? (draft.campaign_id || null) : null,
       setting: draft.scope === 'setting' ? draft.setting : null,
       moderation_status,
-      approved_at: isCampaignScope ? new Date().toISOString() : null,
-      // approved_by stays null for self-publish — only Thriver review
-      // sets approved_by. Convention matches world_communities.
+      approved_at: autoApprove ? new Date().toISOString() : null,
+      approved_by: isThriver ? myId : null,
     }).select('id').single()
     if (data && !error) {
       void logEvent('forum_thread_created', {

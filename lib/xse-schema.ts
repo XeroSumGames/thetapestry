@@ -298,6 +298,30 @@ export const EQUIPMENT: EquipmentItem[] = [
 ];
 
 // ----------------------------
+// RATIONS (Quickstart Table 16) — canon
+// ----------------------------
+// Locked 2026-05-09 by Xero. Three rarity tiers; each ration covers
+// one day of food + water for one character. Used by:
+//   - app/rules/equipment/rations/page.tsx (rules-page table)
+//   - components/wizard/StepEight.tsx (character creation chip)
+// Both call sites import from here so the ladder can never drift.
+// Default starting allotment is 2 Rations; unless the GM specifies
+// otherwise, those are Standard.
+
+export interface RationItem {
+  name: string
+  rarity: ItemRarity
+  enc: number
+  notes: string
+}
+
+export const RATIONS: RationItem[] = [
+  { name: 'Standard Rations',       rarity: 'Common',   enc: 0.5,  notes: '1 day food + water.' },
+  { name: 'Luxury Rations',         rarity: 'Uncommon', enc: 0.5,  notes: '1 day food + water; small morale bump.' },
+  { name: 'Military Grade Rations', rarity: 'Rare',     enc: 0.25, notes: 'Compact, calorie-dense; 1 day food + water.' },
+]
+
+// ----------------------------
 // PARADIGMS (Appendix D)
 // ----------------------------
 
