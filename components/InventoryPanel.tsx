@@ -4,6 +4,7 @@ import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
 import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
 import { computeEncumbrance, BASE_ENC_LIMIT } from '../lib/encumbrance'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import { RARITY_COLOR, RARITY_BG, RARITY_BORDER } from '../lib/rarity-colors'
 
 // Combined inventory catalog — SRD equipment + all weapons.
 // Weapons are normalized into the EquipmentItem shape (name/enc/rarity/notes)
@@ -66,10 +67,11 @@ interface Props {
   onGiveToVehicle?: (item: InventoryItem, targetVehicleId: string, qty: number) => void
 }
 
+// Canonical palette per Xero (2026-05-09); see lib/rarity-colors.ts.
 const RARITY_COLORS: Record<string, { color: string; bg: string; border: string }> = {
-  Common: { color: '#d4cfc9', bg: '#242424', border: '#3a3a3a' },
-  Uncommon: { color: '#7fc458', bg: '#1a2e10', border: '#2d5a1b' },
-  Rare: { color: '#EF9F27', bg: '#2a2010', border: '#5a4a1b' },
+  Common: { color: RARITY_COLOR.Common, bg: RARITY_BG.Common, border: RARITY_BORDER.Common },
+  Uncommon: { color: RARITY_COLOR.Uncommon, bg: RARITY_BG.Uncommon, border: RARITY_BORDER.Uncommon },
+  Rare: { color: RARITY_COLOR.Rare, bg: RARITY_BG.Rare, border: RARITY_BORDER.Rare },
 }
 
 type InventorySortKey = 'manual' | 'name' | 'enc-desc' | 'rarity'

@@ -8,6 +8,7 @@ import {
 } from '../../../components/rules/RuleSection'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS } from '../../../lib/weapons'
 import { EQUIPMENT } from '../../../lib/xse-schema'
+import { rarityColor } from '../../../lib/rarity-colors'
 
 export const metadata = { title: 'Appendix C — Weapons & Equipment — XSE SRD' }
 
@@ -46,7 +47,7 @@ function WeaponTable({ weapons }: { weapons: WeaponLike[] }) {
             <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', fontWeight: 700, color: '#f5f2ee' }}>{w.name}</td>
             <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap' }}>{w.skill}</td>
             <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap' }}>{w.range}</td>
-            <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: w.rarity === 'Rare' ? '#EF9F27' : w.rarity === 'Uncommon' ? '#7ab3d4' : '#7fc458' }}>{w.rarity}</td>
+            <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: rarityColor(w.rarity) }}>{w.rarity}</td>
             <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', color: '#cce0f5' }}>{w.damage || '—'}</td>
             <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{w.rpPercent}%</td>
             <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{w.enc}</td>
@@ -111,7 +112,7 @@ export default function Page() {
             {EQUIPMENT.map(item => (
               <tr key={item.name}>
                 <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', fontWeight: 700, color: '#f5f2ee' }}>{item.name}</td>
-                <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: item.rarity === 'Rare' ? '#EF9F27' : item.rarity === 'Uncommon' ? '#7ab3d4' : '#7fc458' }}>{item.rarity}</td>
+                <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: rarityColor(item.rarity) }}>{item.rarity}</td>
                 <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{item.enc}</td>
                 <td style={ruleTableTdStyle}>{item.notes || '—'}</td>
               </tr>

@@ -22,13 +22,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { type InventoryItem } from '../lib/inventory'
 import { classifyRoll } from '../lib/community-logic'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import { RARITY_COLOR as RARITY_COLOR_CANONICAL } from '../lib/rarity-colors'
 
 const RARITY_WEIGHT: Record<string, number> = {
   Common: 1, Uncommon: 2, Rare: 4,
 }
-const RARITY_COLOR: Record<string, string> = {
-  Common: '#cce0f5', Uncommon: '#7fc458', Rare: '#EF9F27',
-}
+// Canonical palette per Xero (2026-05-09); see lib/rarity-colors.ts.
+const RARITY_COLOR: Record<string, string> = RARITY_COLOR_CANONICAL
 
 export interface TradeTarget {
   kind: 'npc' | 'community'

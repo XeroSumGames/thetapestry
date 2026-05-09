@@ -9,6 +9,7 @@ import { getWeaponByName } from '../../lib/weapons'
 import { rollDamage, calculateDamage } from '../../lib/damage'
 import { decrementInitiativeAction } from '../../lib/initiative-actions'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
+import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT } from '../../lib/xse-schema'
 
@@ -1019,7 +1020,7 @@ export default function VehiclePage() {
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                           <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{eq.name}</span>
                           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Enc {eq.enc}</span>
-                          <span style={{ fontSize: '13px', color: eq.rarity === 'Rare' ? '#c4a7f0' : eq.rarity === 'Uncommon' ? '#7ab3d4' : '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{eq.rarity}</span>
+                          <span style={{ fontSize: '13px', color: rarityColor(eq.rarity), fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{eq.rarity}</span>
                         </div>
                       ))}
                     </div>
