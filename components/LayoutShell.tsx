@@ -7,7 +7,7 @@ import { installDebugLog, setDebugContext } from '../lib/debug-log'
 import Sidebar from './Sidebar'
 
 // Pages that ghosts (unauthenticated users) can view
-const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random']
+const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random', '/campfire']
 // Path prefixes that ghosts can view (matches the path AND any subpath).
 // Used for the SRD rules viewer where every section gets its own subroute.
 const PUBLIC_PREFIXES = ['/rules']
