@@ -620,7 +620,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const isFirstLoad = lastSyncedSceneIdRef.current !== active.id
       if (isFirstLoad || !isGM) {
         if (active.cell_px) setCellPx(active.cell_px)
-        if (active.img_scale) setImgScale(active.img_scale)
+        // img_scale is trickier than cell_px. The bg-image-load
+        // effect (~line 780) runs a local auto-fit when the scene
+        // has no saved img_scale (null or default 1) — sets the
+        // player's local imgScale to fit-to-container width. That
+        // value is NOT persisted to the DB.
+        //
+        // If we re-apply `active.img_scale` on every loadScenes
+        // call (which fires on every tactical_scenes UPDATE — e.g.
+        // GM toggling a window or wall), the local auto-fit value
+        // (~0.6) gets clobbered back to the DB's default (1 or
+        // null), causing the player's view to zoom-jump on every
+        // GM action that touches the scene row.
+        //
+        // Only re-apply when the GM has set a non-default scale
+        // via the popout. The default (null/1) means "let the
+        // viewer auto-fit" — leave the local value alone.
+        if (active.img_scale && active.img_scale !== 1) setImgScale(active.img_scale)
       }
       if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
