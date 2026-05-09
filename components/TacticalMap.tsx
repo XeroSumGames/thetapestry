@@ -2058,30 +2058,53 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const y1 = offsetY + seg.y1 * cellH
           const x2 = offsetX + seg.x2 * cellW
           const y2 = offsetY + seg.y2 * cellH
+          // Visibility pass 2026-05-09: doors and windows now render
+          // THICKER (6px) than walls (4px) so interactive elements
+          // sit visually above the wall flow. Colors brightened for
+          // contrast against the warm-tan wall palette. Endpoint
+          // dots draw below to signal "this segment terminates here,
+          // it's a thing" — walls stay clean.
+          let strokeColor = '#a08e75'
           if (seg.kind === 'wall') {
             ctx.strokeStyle = '#a08e75'
             ctx.lineWidth = 4
             ctx.setLineDash([])
           } else if (seg.kind === 'door') {
             const open = seg.door_open ?? true
-            ctx.strokeStyle = open ? '#7fc458' : '#c0392b'
-            ctx.lineWidth = open ? 3 : 4
+            strokeColor = open ? '#8de066' : '#e74c3c'
+            ctx.strokeStyle = strokeColor
+            ctx.lineWidth = 6
             ctx.setLineDash(open ? [6, 4] : [])
           } else {
-            // window — OPEN (default) = thin sky-blue dashed line,
-            // reads as "see-through frame." CLOSED = blinds drawn,
-            // renders as a solid muted-amber line that visually
-            // "blocks" the view (matches the mechanical vision-block
-            // when closed).
+            // window — OPEN (default) = sky-blue dashed line, reads
+            // as "see-through frame." CLOSED = blinds drawn, renders
+            // as a solid amber line that visually "blocks" the view
+            // (matches the mechanical vision-block when closed).
             const winOpen = seg.door_open !== false  // default = open
-            ctx.strokeStyle = winOpen ? 'rgba(122,179,212,0.85)' : '#a8924a'
-            ctx.lineWidth = winOpen ? 2 : 4
+            strokeColor = winOpen ? '#5dc4e3' : '#d4a04a'
+            ctx.strokeStyle = strokeColor
+            ctx.lineWidth = winOpen ? 5 : 6
             ctx.setLineDash(winOpen ? [5, 3] : [])
           }
           ctx.beginPath()
           ctx.moveTo(x1, y1)
           ctx.lineTo(x2, y2)
           ctx.stroke()
+          // Endpoint dots — doors and windows only. Filled circle
+          // in the segment's accent color, ~3.5px radius. Walls
+          // skip this so a long run of walls stays a clean line.
+          if (seg.kind !== 'wall') {
+            ctx.save()
+            ctx.fillStyle = strokeColor
+            ctx.setLineDash([])
+            ctx.beginPath()
+            ctx.arc(x1, y1, 3.5, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.beginPath()
+            ctx.arc(x2, y2, 3.5, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+          }
           // Selection highlight — bright white glow around the
           // currently-selected segment so the GM can see exactly
           // which one the action panel is acting on. Drawn AFTER
@@ -2107,8 +2130,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const x2 = offsetX + wallDrawHover.x * cellW
           const y2 = offsetY + wallDrawHover.y * cellH
           ctx.strokeStyle = fogEditMode === 'wall' ? '#a08e75'
-            : fogEditMode === 'door' ? '#7fc458'
-            : '#7ab3d4'
+            : fogEditMode === 'door' ? '#8de066'
+            : '#5dc4e3'
           ctx.globalAlpha = 0.55
           ctx.lineWidth = 4
           ctx.setLineDash([4, 4])
