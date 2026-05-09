@@ -1325,10 +1325,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
       }
       const effective: Record<string, boolean> = {}
-      // GM-painted fog: rendered when not currently in any PC's LoS.
-      // (A PC standing in painted-fog cells punches through it.)
+      // GM-painted fog: ALWAYS rendered. The original commit message
+      // (29e7f25) called this "force fog on top" — painted fog is
+      // absolute, not LoS-defeasible. The pre-fix code had
+      // `!visible.has(k)` here, which let PC LoS punch through painted
+      // fog. On scenes where the GM hadn't authored wall segments
+      // (the floor plan lives in the background image), day-mode's
+      // unbounded sight cleared every painted cell — players saw
+      // through the GM's fog completely. Reverted to absolute.
       for (const k of Object.keys(rawFog)) {
-        if (rawFog[k] && !visible.has(k)) effective[k] = true
+        if (rawFog[k]) effective[k] = true
       }
       // Auto-fog: when at least one PC is on the scene, every cell
       // outside the PC LoS is also fogged. This is what makes
