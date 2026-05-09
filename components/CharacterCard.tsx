@@ -431,38 +431,26 @@ function CharacterCardImpl({
           </div>
           {showButtons && (
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {/* Button order is locked per Xero (2026-05-09):
+                    Edit > Inventory > Apprentice > Reduce Stress >
+                    Env. Damage > Rest > Evolution > Duplicate >
+                    Print > Delete. Map / Popout / Kick / Close are
+                    conditional and live at the edges (Map first if
+                    present; Popout / Kick / Close after Delete). */}
               {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#2a2010', '#EF9F27')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
-              {/* Evolution — opens the Character Evolution / CDP
-                  Calculator (spend CDP on RAPID raises, skill raises
-                  + new-skill learns; SRD-canonical costs; Lv 4 needs
-                  a Fill-In-The-Gaps narrative). Disabled when there's
-                  no campaign-scoped state row to deduct CDP from
-                  (e.g. browsing your own character outside a session).
-                  Purple to read as a "growth" surface. */}
-              <button onClick={() => setShowEvolution(true)} disabled={!localState}
-                title={!localState ? 'Open Evolution from inside a campaign session — your CDP balance lives there.' : 'Spend CDP on RAPID + skill raises'}
-                style={{ ...btn('#2a1a3e', '#c4a7f0'), opacity: localState ? 1 : 0.5, cursor: localState ? 'pointer' : 'not-allowed' }}>Evolution</button>
               {/* Apprentice placeholder — unwired for now. Will surface
                   the PC's Apprentice NPC card when clicked once the
                   picker/display is built. Matches Inventory styling
                   (green community-palette) so it reads as a paired
                   bond surface. */}
               <button onClick={() => alert('Apprentice view coming soon — check the Community roster for NPCs tagged ⇐ this PC.')} style={btn('#1a2e10', '#7fc458')}>Apprentice</button>
-              {campaignIdProp && (
-                <button onClick={() => openPopout(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, { w: 800, h: 800 })} title="Pop out" style={btn('#2a102a', '#d48bd4')}>Popout</button>
-              )}
-              <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
-              {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
-              {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
-              {/* GM-action trio (Rest / Reduce Stress / Env. Damage) lives
-                  on the same button row as the rest of the admin set so
-                  it's all one grouping. Gated on canEdit + localState
-                  because they only make sense in a campaign session. */}
+              {/* GM-action trio (Reduce Stress / Env. Damage / Rest)
+                  is gated on canEdit + localState because they only
+                  make sense in a campaign session. */}
               {canEdit && localState && (
                 <>
-                  <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')}>Rest</button>
                   <button onClick={() => {
                     if (!localState || localState.stress <= 0) { alert('Stress is already at 0.'); return }
                     if (confirm('Has this character had 8+ hours of uninterrupted rest doing something they enjoy?')) {
@@ -501,7 +489,24 @@ function CharacterCardImpl({
                       }
                     }
                   }} style={btn('#c0392b', '#f5a89a')}>Env. Damage</button>
+                  <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')}>Rest</button>
                 </>
+              )}
+              {/* Evolution — opens the Character Evolution / CDP
+                  Calculator (spend CDP on RAPID raises, skill raises
+                  + new-skill learns; SRD-canonical costs; Lv 4 needs
+                  a Fill-In-The-Gaps narrative). Disabled when there's
+                  no campaign-scoped state row to deduct CDP from
+                  (e.g. browsing your own character outside a session).
+                  Purple to read as a "growth" surface. */}
+              <button onClick={() => setShowEvolution(true)} disabled={!localState}
+                title={!localState ? 'Open Evolution from inside a campaign session — your CDP balance lives there.' : 'Spend CDP on RAPID + skill raises'}
+                style={{ ...btn('#2a1a3e', '#c4a7f0'), opacity: localState ? 1 : 0.5, cursor: localState ? 'pointer' : 'not-allowed' }}>Evolution</button>
+              {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
+              <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
+              {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
+              {campaignIdProp && (
+                <button onClick={() => openPopout(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, { w: 800, h: 800 })} title="Pop out" style={btn('#2a102a', '#d48bd4')}>Popout</button>
               )}
               {inline && onKick && <button onClick={onKick} style={btn('#7a1f16', '#f5a89a')}>Kick</button>}
               {inline && onClose && <button onClick={onClose} style={btn('#c0392b', '#f5a89a')}>Close</button>}
