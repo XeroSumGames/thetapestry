@@ -158,6 +158,27 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ---
 
+## SECURITY HARDENING — Linter follow-ups
+
+Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
+(~120 of ~130 linter warnings closed). Tier 3 remaining:
+
+- [ ] **HaveIBeenPwned password-leak protection** — Supabase dashboard
+      → Authentication → Attack Protection → toggle "Prevent use of
+      leaked passwords" ON. 1-click. Free. Closes the
+      `auth_leaked_password_protection` lint.
+
+- [ ] **Public-bucket SELECT policy tightening.** 9 storage buckets
+      (account-avatars, campaign-npcs, character-portraits,
+      module-covers, object-tokens, portrait-bank, session-attachments,
+      tactical-maps, war-stories) allow listing all files. URL access
+      still works without listing — listing exposes file inventory.
+      Per-bucket UX decision: do you need authors to see all their
+      published assets? If yes, scope to author. If no, drop SELECT
+      policy. Each bucket needs its own call.
+
+---
+
 ## OLDER BUGS — Genuinely open
 
 - [ ] **Gut Instinct results presentation needs rework.**
@@ -208,23 +229,14 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 - [ ] **Demo / sample campaign** for first-time GMs. ~2–3 hours.
 
-- [ ] **Domain verification spot-check on Resend.** FROM swap is in
-      code; confirm outbound mail still lands.
+- [x] ~~Domain verification spot-check on Resend.~~ **DONE 2026-05-08C** —
+      domain verified, MX/SPF/DKIM all green via Cloudflare DNS.
 
-- [ ] **Wire Resend as Supabase Auth SMTP provider.** Auth emails
-      (signup confirmation, password reset, magic link) currently use
-      Supabase's default service — 4 emails/hour cap, "dev only,"
-      poor deliverability. Resend is wired for the Edge Functions
-      (notify-thriver, log-visit) but not for Auth. Steps:
-      (a) Resend → add domain `mail.distemperverse.com` (subdomain
-      avoids the Wix root-MX limitation), add DKIM/SPF DNS in Wix.
-      (b) Supabase → Authentication → Emails → SMTP Settings →
-      Enable Custom SMTP. Host `smtp.resend.com`, port 465,
-      username `resend`, password = `RESEND_API_KEY`, sender
-      `noreply@mail.distemperverse.com`.
-      (c) Test signup with a fresh email; verify delivery in Resend
-      Logs. Free tier (3000 emails/mo) covers launch; no cost.
-      Blocks the email-confirmation gate from being usable.
+- [x] ~~Wire Resend as Supabase Auth SMTP provider.~~ **DONE 2026-05-08C** —
+      Cloudflare DNS migration replaced Wix; Resend domain verified;
+      Supabase Custom SMTP configured (smtp.resend.com:465, sender
+      `noreply@distemperverse.com`). Email-confirmation gate is now
+      live and delivering.
 
 - [ ] **End-to-end smoke pass** — signup → /firsttimers → /welcome
       → /characters/new → /map → first whisper.

@@ -68,10 +68,15 @@ CONTENT = [
     (-1, "Cost-containment alarm. Supabase 75% quota + Vercel bandwidth alert. ~30 min vendor-portal config.", None),
     (-1, "Demo / sample campaign for first-time GMs. ~2-3 hours.", None),
     (-1, "Beginners' guide /welcome links. docs/beginners-guide.{txt,docx} drafted on disk; commit + surface chapter links.", None),
-    (-1, "Domain verification spot-check on Resend. FROM swap is in code; confirm outbound mail still lands.", None),
-    (-1, "Wire Resend as Supabase Auth SMTP provider. Auth emails (signup, password reset) currently use Supabase default service - 4/hr cap, poor deliverability. Steps: (a) Resend add domain mail.distemperverse.com (subdomain avoids Wix root-MX limit), add DKIM/SPF DNS in Wix. (b) Supabase Auth -> Emails -> SMTP Settings -> Enable Custom SMTP, host smtp.resend.com:465, user 'resend', password = RESEND_API_KEY, sender noreply@mail.distemperverse.com. (c) Test signup, verify in Resend Logs. Free tier (3k/mo) covers launch. Blocks email-confirmation gate from being usable.", None),
+    (-1, "[DONE 2026-05-08C] Domain verification spot-check on Resend - verified via Cloudflare DNS, MX/SPF/DKIM all green.", None),
+    (-1, "[DONE 2026-05-08C] Wire Resend as Supabase Auth SMTP provider. Cloudflare DNS migration replaced Wix; Resend domain verified; Supabase Custom SMTP wired (smtp.resend.com:465). Email-confirmation gate live.", None),
     (-1, "End-to-end smoke pass — signup → /firsttimers → /welcome → /characters/new → /map → first whisper.", None),
     (-1, "Quick Reference card on /welcome. Placeholder needs CDP / WP-RP / Stress / Inspiration cheat sheet + SRD/CRB links.", None),
+
+    (1, "SECURITY HARDENING - Linter follow-ups", None),
+    (0, "Tier 1+2 cleared 2026-05-08C via sql/security-hardening-2026-05-08.sql (~120 of ~130 linter warnings closed). Tier 3 remaining:", None),
+    (-1, "HaveIBeenPwned password-leak protection. Supabase dashboard - Authentication - Attack Protection - toggle Prevent use of leaked passwords ON. 1-click. Free.", None),
+    (-1, "Public-bucket SELECT policy tightening. 9 storage buckets (account-avatars, campaign-npcs, character-portraits, module-covers, object-tokens, portrait-bank, session-attachments, tactical-maps, war-stories) allow listing all files. URL access still works without listing - listing exposes file inventory. Per-bucket UX decision needed.", None),
 
     (1, "PIN / MAP", None),
     (-1, "Pin-image migration from base64 → Supabase Storage. (Character-photo migration tool exists; pin equivalent doesn't.)", None),
