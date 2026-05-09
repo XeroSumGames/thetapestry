@@ -173,25 +173,6 @@ function CampfirePortal() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase' }}>
-            Setting context:
-          </span>
-          <select value={settingParam} onChange={e => handleSettingChange(e.target.value)}
-            style={{ padding: '5px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
-            <option value="">All settings</option>
-            {FEATURED_SETTING_SLUGS.map(slug => (
-              <option key={slug} value={slug}>{settingLabel(slug)}</option>
-            ))}
-            <option value="global">Global only</option>
-          </select>
-          {settingParam && (
-            <button onClick={() => handleSettingChange('')}
-              style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              Clear
-            </button>
-          )}
-        </div>
 
         <div style={{ marginBottom: '2.5rem' }}>
           <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px', borderBottom: '1px solid #2e2e2e', paddingBottom: '8px' }}>
