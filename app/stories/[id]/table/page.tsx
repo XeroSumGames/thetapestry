@@ -6127,6 +6127,25 @@ export default function TablePage() {
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend{(activeEntry.defense_bonus ?? 0) > 0 ? ` (+${activeEntry.defense_bonus})` : ''}</button>
 
+                {/* ── DICE CHECK: SRD §06 18th action — pop the active combatant's
+                    sheet so the player can roll any attribute / skill. The roll
+                    flow off the sheet already routes through handleRollRequest
+                    + closeRollModal, which consumes 1 action on commit. No
+                    pre-consume here — opening the sheet without rolling costs
+                    nothing. ── */}
+                <button onClick={() => {
+                  if (activeEntry.is_npc) {
+                    const npc = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+                    if (npc) setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev : [...prev, npc as CampaignNpc])
+                  } else {
+                    const pc = entries.find(e =>
+                      activeEntry.character_id ? e.character.id === activeEntry.character_id : e.character.name === activeEntry.character_name
+                    )
+                    if (pc) { setSelectedEntry(pc); setViewingNpcs([]); setSheetPos(null) }
+                  }
+                }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>🎲 Dice Check</button>
+
                 {/* ── DISTRACT: opens the standard roll modal directly — the
                     modal already includes a Target dropdown when combat is
                     active, so the prior 2-step picker → modal flow
