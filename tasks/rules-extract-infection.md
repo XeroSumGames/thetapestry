@@ -6,6 +6,11 @@ pages for the related Sickness & Disease branch). The XSE SRD
 v1.1.17 does **not** cover Infection — CRB is canon for this
 subsystem until / unless an SRD pass replaces it.
 
+**Status:** All design questions answered by Xero on 2026-05-09.
+Decisions are folded into the "Distilled mechanics" section
+below and pinned in `memory/project_infection_canon.md`. This
+doc is the source-of-truth spec for the platform implementation.
+
 ---
 
 ## Two related but distinct mechanics
@@ -68,16 +73,19 @@ that one schema can serve both.
 1. **Trigger**: combat ends; character took at least one wound
    that broke skin (shot / stab / cut). GM judges from the round's
    damage log.
-2. **Check**: Physicality check (per attacker hit, or once per
-   character per combat? — see Open Q1 below).
+2. **Check**: **one Physicality check per character per combat**
+   regardless of how many hits they took (locked).
 3. **Outcomes:**
-   - **Wild Success / Success**: no infection.
-   - **Failure**: sick **1d3 days**. Resting in warm + dry shelter
-     prevents Lasting Damage; otherwise Physicality check at the
-     end of the sick period to avoid Lasting Damage.
-   - **Dire Failure**: sick **1d6 days**, automatic Lasting Damage.
-   - **Moments of Insight (1+1 / 6+6)**: not specified by CRB —
-     see Open Q2.
+   - **High Insight (6+6)** → Wild Success outcome + 1 Insight Die.
+   - **Wild Success (14+)** → no infection.
+   - **Success (9-13)** → no infection.
+   - **Failure (4-8)** → sick **1d3 days**. Active care or rest in
+     warm + dry shelter prevents Lasting Damage; otherwise final
+     Physicality check at the end of the sick period to avoid
+     Lasting Damage.
+   - **Dire Failure (0-3)** → sick **1d6 days**, automatic Lasting
+     Damage on Day 0.
+   - **Low Insight (1+1)** → Dire Failure outcome + 1 Insight Die.
 
 ### Sickness & Disease — environmental
 
@@ -86,13 +94,52 @@ that one schema can serve both.
 2. **First Check**: Physicality check to avoid getting sick at
    all.
 3. **If sick**: second Physicality check to avoid progressing.
-   - **Success**: shake it off (no progression).
-   - **Failure**: progressively unwell for **1d6 days** → at end
-     of period, become **Mortally Wounded** (WP=0 + 4 + PHY AMod
-     death countdown).
-   - **Dire Failure**: not specified — see Open Q3.
+   - **Success / Wild Success / High Insight** → shake it off
+     (no progression).
+   - **Failure** → progressively unwell for **1d3 days** → on
+     final day, become **Mortally Wounded** (WP=0 + 4 + PHY AMod
+     death countdown). Note: shorter than CRB's 1d6 — Xero's call
+     2026-05-09 to flip the timeline so Dire Failure is the longer
+     slide, matching player intuition.
+   - **Dire Failure / Low Insight** → progressively unwell for
+     **1d6 days** → on final day, Mortally Wounded.
 4. **If Mortally Wounded**: third Physicality check to avoid
    Lasting Damage (parallel to combat mortal-wound flow).
+
+### "Sick" gameplay state — what it costs
+
+While `infection_state IS NOT NULL` and `infection_days_left > 0`:
+
+- **-2 CMod** on physical checks: Athletics, Melee Combat,
+  Ranged Combat, Stealth, Survival, Unarmed Combat.
+- **RP capped at half-max** (floor): if their RP max is 8, they
+  can't be above 4 RP for the duration. If they're already
+  above the cap when they get sick, current RP gets clamped down.
+- WP regen still works at the standard 1/day. RP regen still
+  works at the standard 1/round-out-of-combat — but the
+  half-max cap is the ceiling.
+
+When days_left ticks to 0, all sick-state penalties clear (RP
+cap lifts; CMod restored). Lasting Damage may still apply
+depending on `infection_lasting_risk`.
+
+### Treatment — Medicine\* check
+
+An ally with Medicine\* can attempt a single treatment per sick
+incident (not per day). One check, period. Outcomes:
+
+| Roll | Effect |
+|---|---|
+| **Wild Success** | Cuts remaining `infection_days_left` in half (round up). Clears `infection_lasting_risk`. |
+| **Success** | Clears `infection_lasting_risk`. Days unchanged. |
+| **Failure** | No help, no harm. (`infection_treated_at` is set so they can't try again.) |
+| **Dire Failure** | +1 to `infection_days_left` (botched care). |
+| **High Insight (6+6)** | Wild Success outcome + 1 IDie. |
+| **Low Insight (1+1)** | Dire Failure outcome + 1 IDie + medic earns 1 Stress pip. |
+
+**Note:** the Medicine\* attempt is GM-triggered from the medic's
+character sheet, not from the patient's. Targets the patient via
+the standard target picker. RLS pattern same as Stabilize.
 
 ### Shared shape
 
@@ -103,77 +150,51 @@ which is already in the platform as `LASTING_WOUNDS` Table 12 in
 
 ---
 
-## Open questions for Xero
+## Design decisions (locked 2026-05-09 by Xero)
 
-1. **Wound Infection roll cadence**: one Physicality check per
-   character per combat (regardless of how many hits they took)?
-   Or one check per discrete wound? CRB ambiguous; one-per-combat
-   is simpler and aligns with the implicit "single state flag"
-   model. Recommend one-per-combat.
-
-2. **Insight outcomes on Infection**: CRB doesn't spell out 1+1
-   (Low Insight) or 6+6 (High Insight) for the Infection check.
-   Defaults from the platform's existing checks:
-   - Low Insight: treat as Dire Failure (sick 1d6 + auto Lasting
-     Damage). Burns 1 Insight Die earned.
-   - High Insight: treat as Wild Success (no infection). +1 IDie
-     earned.
-
-3. **Dire Failure on the "progressively unwell" check** (Sickness
-   & Disease branch): CRB caps at "Failure → 1d6 days → Mortally
-   Wounded". Recommend Dire Failure compresses the timeline:
-   1d3 days instead of 1d6 (faster slide to mortal wound).
-
-4. **"Sick" as a state**: while sick, what's the gameplay impact?
-   CRB doesn't specify in-day effects. Recommend per-day -1 CMod
-   on physical checks (Athletics, Melee Combat, Ranged Combat,
-   Stealth, Survival, Unarmed Combat) until cleared. Keeps the
-   condition felt without WP/RP damage every day.
-
-5. **Healing pathway**: CRB says "warm + dry rest" prevents Lasting
-   Damage on Failure. Does that just mean GM-narrated rest, or
-   should there be a Medicine* check to actively treat? Recommend:
-   add an optional Medicine* check during the sick period — Wild
-   Success cuts duration in half (round up), Success removes the
-   Lasting Damage risk on Failure outcomes.
-
-6. **Auto-application vs. manual GM trigger**: should the platform
-   auto-fire a "wound check" prompt at combat-end for any PC who
-   took ≥1 hit? Or stay GM-driven (button on character sheet)?
-   Recommend: GM-driven button initially (matches the existing
-   Env. Damage / Stabilize pattern); auto-prompt later if it feels
-   noisy.
+| # | Question | Decision |
+|---|---|---|
+| 1 | Wound Infection roll cadence | One Physicality check per character per combat. |
+| 2 | Insight outcomes on Infection check | Standard XSE mapping. Low Insight = Dire Failure outcome, High Insight = Wild Success outcome. Insight Die awarded as standard. |
+| 3 | Dire Failure on Sickness & Disease "progressively unwell" check | Failure = 1d3 days, Dire Failure = 1d6 days. Dire is the longer slide to mortal wound. |
+| 4 | "Sick" gameplay state | -2 CMod on physical checks (Athletics / Melee Combat / Ranged Combat / Stealth / Survival / Unarmed Combat) + RP capped at half-max (floor) for duration. |
+| 5 | Healing pathway | Optional Medicine\* check, one per sick incident. Wild Success halves remaining days + clears Lasting risk. Success clears Lasting risk only. Dire Failure +1 day. |
+| 6 | Auto-fire vs. manual | GM-driven button on the character/NPC sheet. No auto-prompt at combat end. Revisit if noisy. |
 
 ---
 
-## Schema implications (preview for step 3)
+## Schema (locked 2026-05-09)
 
-Mirroring the existing `incap_rounds` / `death_countdown` pattern
-on `character_states` and `campaign_npcs`. Two columns each,
-covering both branches:
+Five new columns on **both** `character_states` and `campaign_npcs`:
 
 ```sql
--- New columns on character_states + campaign_npcs:
-infection_state    text NULL,       -- NULL | 'wound' | 'sickness'
-infection_days_left smallint NULL,  -- ticks down 1 per in-game day
+infection_state          text NULL,         -- NULL | 'wound' | 'sickness'
+infection_days_left      smallint NULL,     -- counts down per GM "Tick Day" click
+infection_lasting_risk   boolean NOT NULL DEFAULT false,
+                         -- true if a Failure was rolled and Medicine* hasn't cleared it
+infection_started_at     timestamptz NULL,  -- when the GM rolled the infection
+infection_infected_by    text NULL,         -- attacker name / source description (free text)
 ```
 
-Or normalize harder:
+Day-tick is **GM-driven** (matches existing Subsistence Damage
+pattern — GM clicks "Tick Day" / "Advance Day" and the counter
+decrements). No automated wallclock until the parked Campaign
+Calendar work lands.
 
-```sql
-infection_kind    text NULL,         -- NULL | 'wound' | 'sickness' | 'wound+sickness' (rare)
-infection_started_at timestamptz,    -- for day-based countdown if game-clock is wallclock
-infection_days_left smallint,        -- count-down if game-clock is GM-advanced
-infection_will_lasting boolean,      -- true if Failure was rolled and rest-treatment hasn't been done
-```
+When `infection_days_left` ticks to 0:
+- If `infection_lasting_risk` is true, fire the Lasting Damage
+  roll (Physicality check; failure rolls on `LASTING_WOUNDS`
+  Table 12).
+- Clear all infection columns (set state back to NULL).
+- For Sickness & Disease branch on Day 0: also drop the
+  character into the existing Mortally Wounded flow (set
+  `wp_current = 0`, `death_countdown = 4 + PHY AMod`). The
+  existing Stabilize machinery handles it from there.
 
-Open Q for the schema: does The Tapestry track game-clock at all?
-Subsistence Damage (already shipped) currently asks the GM "how
-many days?" via prompt — meaning there's no automated day tick
-yet. Cleanest match: same pattern. GM clicks "Advance day" or
-"Tick infection" and the column ticks. If/when a wallclock is
-added (the parked Campaign Calendar work), upgrade to
-`infection_started_at` and derive remaining days.
+`infection_infected_by` is free text so the GM can write
+anything: "Frankie's Sword", "Corpse pit at the Gibblets
+warehouse", "Dog flu mutation Q-7". Useful for narrative / pin
+backreferences later.
 
 ---
 
