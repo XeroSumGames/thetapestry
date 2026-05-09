@@ -5929,7 +5929,7 @@ export default function TablePage() {
 
       {/* Initiative Tracker — shown when combat is active */}
       {combatActive && (
-        <div style={{ borderBottom: '1px solid #2e2e2e', background: '#0d0d0d', padding: '8px 12px', flexShrink: 0, overflowX: 'auto' }}>
+        <div style={{ borderBottom: '1px solid #2e2e2e', background: '#0d0d0d', padding: '8px 12px', flexShrink: 0 }}>
           <InitiativeBar
             initiativeOrder={initiativeOrder}
             entries={entries}
