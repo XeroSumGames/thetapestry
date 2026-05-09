@@ -184,6 +184,27 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
       inventory item type, daily Subsistence Damage tick in GM Tools
       Time (alongside the existing encumbrance tick). Flagged 2026-05-08.
 
+- [ ] **Recruitment / Inspiration / Apprentice — disambiguate the four
+      mechanics in-game.** Flagged 2026-05-09. Current platform conflates
+      or under-models the distinctions; needs separate in-game treatment
+      so the player can tell which lever is being pulled:
+      - **Recruitment**: outcome tiers — **Cohort** vs. **Conscript** vs.
+        **Convert** (different commitment levels / community impact).
+        Verify whether the existing Recruit modal surfaces these.
+      - **First Impression**: applies as a **CMod** (one-shot social
+        modifier on subsequent rolls against the same NPC), not a flat
+        stat change. Verify the modifier propagates correctly.
+      - **Inspiration**: each skill level grants **+1 SMod / level** to
+        the target on whatever they're rolling, not a CMod. Verify the
+        SMod handoff path.
+      - **Apprentice**: the picker / unlock surface fires **only on a
+        Moment of High Insight (6+6)** during a Recruit roll — not on
+        Wild Success or any other outcome. Verify the gate is wired
+        correctly; spec out the rules-page entry if it's missing.
+      Likely needs a `tasks/rules-extract-recruitment-inspiration.md`
+      first (matching the Infection extract pattern), then targeted UI
+      / roll-flow changes.
+
 ---
 
 ## SECURITY HARDENING — Linter follow-ups
