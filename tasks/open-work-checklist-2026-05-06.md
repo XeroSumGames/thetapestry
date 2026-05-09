@@ -185,10 +185,10 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 (~120 of ~130 linter warnings closed). Tier 3 remaining:
 
-- [ ] **HaveIBeenPwned password-leak protection** — Supabase dashboard
-      → Authentication → Attack Protection → toggle "Prevent use of
-      leaked passwords" ON. 1-click. Free. Closes the
-      `auth_leaked_password_protection` lint.
+- [x] **HaveIBeenPwned password-leak protection.** DONE 2026-05-08D —
+      flipped ON in Supabase dashboard (Authentication → Sign In /
+      Providers → Email → "Prevent use of leaked passwords"). Closes
+      the `auth_leaked_password_protection` linter row.
 
 - [ ] **Public-bucket SELECT policy tightening.** 9 storage buckets
       (account-avatars, campaign-npcs, character-portraits,
