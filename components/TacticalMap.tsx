@@ -255,7 +255,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // editor instead of two competing toolbars. Name kept as
   // `fogEditMode` to avoid churning every callsite — it's "scene
   // edit mode" in spirit now.
-  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'rect-erase' | 'wall' | 'door' | 'window' | 'select' | null>(null)
+  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'rect-erase' | 'wall' | 'wall-rect' | 'door' | 'window' | 'select' | null>(null)
   // Selected segment id (set by clicking a wall/door/window in Select
   // mode). Drives the highlight in the draw routine and the
   // segment-info action panel that floats below the fog toolbar.
@@ -352,6 +352,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // overlaps and fog them in one batch.
   const [fogRectStart, setFogRectStart] = useState<{ x: number; y: number } | null>(null)
   const [fogRectEnd, setFogRectEnd] = useState<{ x: number; y: number } | null>(null)
+  // Wall-rect mode — drag from one corner to the opposite, commits 4
+  // walls forming a closed rectangle. Faster than 4 click-click chains
+  // for boxing in a square room. SHIFT honored via getSegmentEndpoint.
+  const [wallRectStart, setWallRectStart] = useState<{ x: number; y: number } | null>(null)
+  const [wallRectEnd, setWallRectEnd] = useState<{ x: number; y: number } | null>(null)
   // Segment authoring state. wallDrawStart = the first intersection
   // the GM clicked; wallDrawHover = current cursor intersection for
   // the live preview line. On second click we commit the segment;
@@ -557,6 +562,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (ev.key === 'Escape') {
         setWallDrawStart(null)
         setWallDrawHover(null)
+        setWallRectStart(null)
+        setWallRectEnd(null)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -833,7 +840,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, firingArcs, toggleLabel])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, wallRectStart, wallRectEnd, firingArcs, toggleLabel])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -2157,6 +2164,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.stroke()
           ctx.globalAlpha = 1
         }
+        // Wall-rect drag preview — dashed tan rectangle outline.
+        if (fogEditMode === 'wall-rect' && wallRectStart && wallRectEnd) {
+          const minX = Math.min(wallRectStart.x, wallRectEnd.x)
+          const maxX = Math.max(wallRectStart.x, wallRectEnd.x)
+          const minY = Math.min(wallRectStart.y, wallRectEnd.y)
+          const maxY = Math.max(wallRectStart.y, wallRectEnd.y)
+          ctx.save()
+          ctx.strokeStyle = '#a08e75'
+          ctx.globalAlpha = 0.55
+          ctx.lineWidth = 4
+          ctx.setLineDash([4, 4])
+          ctx.strokeRect(
+            offsetX + minX * cellW,
+            offsetY + minY * cellH,
+            (maxX - minX) * cellW,
+            (maxY - minY) * cellH,
+          )
+          ctx.restore()
+        }
         // Endpoint markers when in a draw mode — small dots at each
         // segment endpoint so the GM can see snap points.
         if (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') {
@@ -2496,6 +2522,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           return
         }
       }
+    }
+    // Wall-rect mode — drag from one corner to opposite corner.
+    // mouseup commits 4 walls forming a closed rectangle. SHIFT-snap
+    // honored automatically via getSegmentEndpoint. ESC cancels.
+    if (fogEditMode === 'wall-rect' && isGM && e.button === 0) {
+      const raw = getSegmentEndpoint(e)
+      if (!raw) return
+      setWallRectStart(raw)
+      setWallRectEnd(raw)
+      fogPaintingRef.current = true
+      return
     }
     // Wall/door/window segment authoring. First click = start point;
     // second click = end point (commit). The preview line follows the
@@ -2853,6 +2890,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // Rect mode just updates the preview end cell; commit happens
     // on mouseup.
     if (fogEditMode && fogPaintingRef.current && isGM) {
+      // Wall-rect drag: walls live on grid coordinates (not cells), so
+      // we use getSegmentEndpoint (honors SHIFT-snap) instead of the
+      // cell-based fog rect tracking.
+      if (fogEditMode === 'wall-rect') {
+        const raw = getSegmentEndpoint(e)
+        if (raw && (!wallRectEnd || wallRectEnd.x !== raw.x || wallRectEnd.y !== raw.y)) {
+          setWallRectEnd(raw)
+        }
+        return
+      }
       const pos = getGridPos(e)
       if (pos) {
         if (fogEditMode === 'rect' || fogEditMode === 'rect-erase') {
@@ -2952,6 +2999,34 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // bounds here as one bulk write.
     if (fogPaintingRef.current) {
       fogPaintingRef.current = false
+      // Wall-rect commit — 4 wall segments forming a closed rectangle.
+      if (fogEditMode === 'wall-rect' && wallRectStart && wallRectEnd) {
+        const minX = Math.min(wallRectStart.x, wallRectEnd.x)
+        const maxX = Math.max(wallRectStart.x, wallRectEnd.x)
+        const minY = Math.min(wallRectStart.y, wallRectEnd.y)
+        const maxY = Math.max(wallRectStart.y, wallRectEnd.y)
+        // Reject zero-area drags (just-a-click with no movement).
+        if (maxX - minX < 0.05 || maxY - minY < 0.05) {
+          setWallRectStart(null)
+          setWallRectEnd(null)
+          return
+        }
+        const newSegs: WallSegment[] = [
+          { id: crypto.randomUUID(), x1: minX, y1: minY, x2: maxX, y2: minY, kind: 'wall' },
+          { id: crypto.randomUUID(), x1: maxX, y1: minY, x2: maxX, y2: maxY, kind: 'wall' },
+          { id: crypto.randomUUID(), x1: maxX, y1: maxY, x2: minX, y2: maxY, kind: 'wall' },
+          { id: crypto.randomUUID(), x1: minX, y1: maxY, x2: minX, y2: minY, kind: 'wall' },
+        ]
+        setWallsLocal(prev => {
+          const next = [...prev, ...newSegs]
+          wallsLocalRef.current = next
+          return next
+        })
+        scheduleWallsPersist()
+        setWallRectStart(null)
+        setWallRectEnd(null)
+        return
+      }
       if ((fogEditMode === 'rect' || fogEditMode === 'rect-erase') && fogRectStart && fogRectEnd) {
         const minX = Math.min(fogRectStart.x, fogRectEnd.x)
         const maxX = Math.max(fogRectStart.x, fogRectEnd.x)
@@ -3478,6 +3553,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   title="Draw walls — click intersection-to-intersection. Right-click a segment to delete."
                   style={{ padding: '4px 10px', background: fogEditMode === 'wall' ? '#2a2010' : '#1a1a1a', border: `1px solid ${fogEditMode === 'wall' ? '#a08e75' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'wall' ? '#a08e75' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   🧱 Wall
+                </button>
+                <button onClick={() => { setFogEditMode('wall-rect'); setWallDrawStart(null); setWallRectStart(null); setWallRectEnd(null) }}
+                  title="Drag to draw a rectangular room — commits 4 wall segments at once. SHIFT to snap corners to grid."
+                  style={{ padding: '4px 10px', background: fogEditMode === 'wall-rect' ? '#2a2010' : '#1a1a1a', border: `1px solid ${fogEditMode === 'wall-rect' ? '#a08e75' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'wall-rect' ? '#a08e75' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  ⬛ Wall Rect
                 </button>
                 <button onClick={() => { setFogEditMode('door'); setWallDrawStart(null) }}
                   title="Draw doors. Players click them mid-game to open/close."
