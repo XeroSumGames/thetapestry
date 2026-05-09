@@ -2164,25 +2164,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.stroke()
           ctx.globalAlpha = 1
         }
-        // Wall-rect drag preview — dashed tan rectangle outline.
-        if (fogEditMode === 'wall-rect' && wallRectStart && wallRectEnd) {
-          const minX = Math.min(wallRectStart.x, wallRectEnd.x)
-          const maxX = Math.max(wallRectStart.x, wallRectEnd.x)
-          const minY = Math.min(wallRectStart.y, wallRectEnd.y)
-          const maxY = Math.max(wallRectStart.y, wallRectEnd.y)
-          ctx.save()
-          ctx.strokeStyle = '#a08e75'
-          ctx.globalAlpha = 0.55
-          ctx.lineWidth = 4
-          ctx.setLineDash([4, 4])
-          ctx.strokeRect(
-            offsetX + minX * cellW,
-            offsetY + minY * cellH,
-            (maxX - minX) * cellW,
-            (maxY - minY) * cellH,
-          )
-          ctx.restore()
-        }
         // Endpoint markers when in a draw mode — small dots at each
         // segment endpoint so the GM can see snap points.
         if (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') {
@@ -2205,6 +2186,30 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         ctx.setLineDash([])
         ctx.restore()
       }
+    }
+
+    // Wall-rect drag preview — dashed tan rectangle outline. Lives
+    // OUTSIDE the segments.length>0 block so it renders on empty
+    // scenes too (when boxing in the very first room).
+    if (fogEditMode === 'wall-rect' && wallRectStart && wallRectEnd && scene) {
+      const cellW = (scene.grid_cols * cellSize) / scene.grid_cols
+      const cellH = (scene.grid_rows * cellSize) / scene.grid_rows
+      const minX = Math.min(wallRectStart.x, wallRectEnd.x)
+      const maxX = Math.max(wallRectStart.x, wallRectEnd.x)
+      const minY = Math.min(wallRectStart.y, wallRectEnd.y)
+      const maxY = Math.max(wallRectStart.y, wallRectEnd.y)
+      ctx.save()
+      ctx.strokeStyle = '#a08e75'
+      ctx.globalAlpha = 0.55
+      ctx.lineWidth = 4
+      ctx.setLineDash([4, 4])
+      ctx.strokeRect(
+        offsetX + minX * cellW,
+        offsetY + minY * cellH,
+        (maxX - minX) * cellW,
+        (maxY - minY) * cellH,
+      )
+      ctx.restore()
     }
 
     // Rectangle marquee preview — draws while the GM is dragging
