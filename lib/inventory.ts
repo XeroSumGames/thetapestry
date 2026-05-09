@@ -12,6 +12,12 @@ export interface InventoryItem {
   notes: string
   qty: number
   custom: boolean
+  /** Armor only: true when the item is currently equipped (DM
+   *  applies to damage resolution). ENC does NOT change with
+   *  worn status — armor weighs the same on or off. Default false
+   *  for non-armor items and unset entries. See
+   *  `lib/xse-schema.ts:ARMOR` for the canonical armor catalog. */
+  worn?: boolean
 }
 
 // Tolerant normalizer for cargo / inventory entries that pre-date the
@@ -26,5 +32,6 @@ export function normalizeInventoryItem(raw: any): InventoryItem {
     notes: typeof raw?.notes === 'string' ? raw.notes : '',
     qty: typeof raw?.qty === 'number' && raw.qty > 0 ? raw.qty : 1,
     custom: typeof raw?.custom === 'boolean' ? raw.custom : true,
+    worn: typeof raw?.worn === 'boolean' ? raw.worn : false,
   }
 }

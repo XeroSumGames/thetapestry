@@ -108,6 +108,7 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'item-traits', label: 'Item Traits' },
       { id: 'upkeep', label: 'Upkeep' },
       { id: 'rations', label: 'Rations' },
+      { id: 'armor', label: 'Armor' },
     ],
   },
   {

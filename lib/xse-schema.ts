@@ -322,6 +322,52 @@ export const RATIONS: RationItem[] = [
 ]
 
 // ----------------------------
+// ARMOR (Quickstart Table 7) — canon
+// ----------------------------
+// Locked 2026-05-09 by Xero. 8 entries, 6 derived from QS Table 7
+// + 2 user overrides:
+//   - Chainmail dropped (off-tone for post-apoc); replaced with
+//     Improvised at the same stats.
+//   - Riot Shield knocked from DM 2 -> DM 1 + reactive_melee_only
+//     trait so it doesn't double-stack with Riot Gear in head-on
+//     ranged engagements.
+// Stacking is restricted by ENC capacity (a wearer encumbered
+// enough to drop their effective speed/CMod will feel it before
+// the DM stack gets out of hand). Multiple worn pieces sum DMs
+// at damage-resolution time. ENC stays the same regardless of
+// whether the item is currently `worn`. See:
+//   - tasks/rules-extract-armor-explosives.md (canonical spec)
+//   - app/rules/equipment/armor (player-facing rules)
+//   - lib/inventory.ts (`worn?: boolean` flag)
+
+export type ArmorTrait =
+  | 'reactive_melee_only'
+  | 'requires_phy_1_or_cmod_1'
+  | 'requires_phy_1_or_cmod_2'
+
+export interface ArmorItem {
+  name: string
+  rarity: ItemRarity
+  enc: number
+  /** Defensive Modifier — positive number, applied as `-dm` to
+   *  attacker's chance and to landed damage. */
+  dm: number
+  traits: ArmorTrait[]
+  notes: string
+}
+
+export const ARMOR: ArmorItem[] = [
+  { name: 'Improvised',      rarity: 'Uncommon', enc: 2, dm: 3, traits: ['requires_phy_1_or_cmod_1'], notes: 'Scrap-metal-and-leather lashed together. Requires PHY 1 to wear or -1 CMod to all actions.' },
+  { name: 'Leather',         rarity: 'Common',   enc: 1, dm: 1, traits: [], notes: 'Stitched hide. Light, common, and quiet.' },
+  { name: 'Makeshift Shield',rarity: 'Common',   enc: 1, dm: 1, traits: [], notes: 'A trash-can lid, a salvaged door panel, anything you can hide behind.' },
+  { name: 'Metal Helmet',    rarity: 'Uncommon', enc: 0, dm: 1, traits: [], notes: 'Stacks freely with body armor — covers a different part of you.' },
+  { name: 'Plate Steel',     rarity: 'Common',   enc: 3, dm: 4, traits: ['requires_phy_1_or_cmod_2'], notes: 'Heavy steel plates. Requires PHY 1 to wear or -2 CMod to all actions.' },
+  { name: 'Riot Gear',       rarity: 'Uncommon', enc: 2, dm: 2, traits: [], notes: 'Police-style body armor with kevlar, padding, and rigid plates.' },
+  { name: 'Riot Shield',     rarity: 'Uncommon', enc: 1, dm: 1, traits: ['reactive_melee_only'], notes: 'Reactive: only applies vs melee or unarmed attacks. Useless against gunfire.' },
+  { name: 'Tactical Armor',  rarity: 'Uncommon', enc: 1, dm: 2, traits: [], notes: 'Modern military / SWAT body armor — light enough to move in.' },
+]
+
+// ----------------------------
 // PARADIGMS (Appendix D)
 // ----------------------------
 
