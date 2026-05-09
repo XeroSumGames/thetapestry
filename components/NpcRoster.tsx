@@ -7,6 +7,7 @@ import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
+import { ANIMALS, type AnimalSeed } from '../lib/animals'
 import type { InventoryItem } from '../lib/inventory'
 import PortraitBankPicker from './PortraitBankPicker'
 import { openPopout } from '../lib/popout'
@@ -922,6 +923,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   const [showLibrary, setShowLibrary] = useState(false)
   const [libraryNpcs, setLibraryNpcs] = useState<any[]>([])
   const [libraryLoading, setLibraryLoading] = useState(false)
+  // Animal bestiary picker — drops a campaign_npcs row with the
+  // canonical CRB stats from `lib/animals.ts:ANIMALS`.
+  const [showAnimalPicker, setShowAnimalPicker] = useState(false)
+  const [animalSpawning, setAnimalSpawning] = useState<string | null>(null)
   const [importing, setImporting] = useState<string | null>(null)
 
   useEffect(() => {
@@ -982,6 +987,44 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     })
     await supabase.from('world_npcs').update({ import_count: (worldNpc.import_count ?? 0) + 1 }).eq('id', worldNpc.id)
     setImporting(null)
+    await loadNpcs()
+  }
+
+  // Drop a canonical animal into this campaign. Stats come straight
+  // from lib/animals.ts:ANIMALS (validated against CRB v0.9.2 p.194).
+  // Default npc_type='foe' since the bestiary is most useful when
+  // the GM wants a threat — a tame Dog or Horse can be flipped to
+  // 'bystander' on the NPC sheet after spawning.
+  async function spawnAnimal(animal: AnimalSeed) {
+    setAnimalSpawning(animal.name)
+    // Avoid name collisions when spawning multiples (a pack of
+    // wolves all named "Wolf" is hard to distinguish in initiative).
+    const baseName = animal.name
+    const existing = npcs.filter(n => n.name === baseName || n.name.startsWith(baseName + ' #'))
+    const finalName = existing.length === 0 ? baseName : `${baseName} #${existing.length + 1}`
+    const skills = {
+      entries: animal.skills.map(s => ({ name: s.name, level: s.level, specialized: s.specialized })),
+      text: animal.skills.map(s => `${s.name} ${s.level}`).join(', '),
+    }
+    await supabase.from('campaign_npcs').insert({
+      campaign_id: campaignId,
+      name: finalName,
+      reason: animal.rapid.RSN,
+      acumen: animal.rapid.ACU,
+      physicality: animal.rapid.PHY,
+      influence: animal.rapid.INF,
+      dexterity: animal.rapid.DEX,
+      wp_max: animal.wp_max,
+      rp_max: animal.rp_max,
+      wp_current: animal.wp_max,
+      rp_current: animal.rp_max,
+      skills,
+      notes: animal.description,
+      npc_type: 'foe',
+      status: 'active',
+    })
+    setAnimalSpawning(null)
+    setShowAnimalPicker(false)
     await loadNpcs()
   }
 
@@ -1048,6 +1091,11 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
           </button>
         )}
         <div style={{ flex: 1 }} />
+        <button onClick={() => setShowAnimalPicker(true)}
+          title="Spawn an animal from the canonical bestiary (CRB p.194)"
+          style={{ padding: '2px 8px', background: '#1a2a10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          🐺 Animal
+        </button>
         <button onClick={openLibrary}
           style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Library
@@ -2098,6 +2146,45 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       )}
 
       {/* Browse Library modal */}
+      {showAnimalPicker && (
+        <ModalBackdrop onClose={() => setShowAnimalPicker(false)} zIndex={Z_INDEX.criticalModal} opacity={0.9} padding="1rem">
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '560px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>🐺 Bestiary</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>Spawn Animal</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', lineHeight: 1.5 }}>
+              Drops a fully-statted NPC into this campaign with the canonical CRB stats. Default type is <span style={{ color: '#f5a89a' }}>foe</span> — flip to bystander on the NPC sheet if it's a tame Dog or Horse. Click any row to spawn; spawning the same animal twice creates "Wolf #2", etc.
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
+              {ANIMALS.map(animal => (
+                <button key={animal.name} onClick={() => spawnAnimal(animal)} disabled={animalSpawning !== null}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', background: animal.distemperInfected ? '#2a1010' : '#111', border: `1px solid ${animal.distemperInfected ? '#7a1f16' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '6px', cursor: animalSpawning ? 'wait' : 'pointer', fontFamily: 'Carlito, sans-serif', opacity: animalSpawning && animalSpawning !== animal.name ? 0.5 : 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: animal.distemperInfected ? '#f5a89a' : '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em' }}>{animal.name}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'monospace' }}>{animal.rapidCode}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>WP {animal.wp_max} · RP {animal.rp_max} · MDM {animal.mdm} · RDM {animal.rdm} · Init +{animal.init}</span>
+                    {animalSpawning === animal.name && <span style={{ fontSize: '13px', color: '#7fc458', marginLeft: 'auto' }}>spawning...</span>}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.45 }}>{animal.description}</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px' }}>
+                    {animal.skills.map((s, i) => (
+                      <span key={s.name}>
+                        {i > 0 && ' · '}
+                        {s.name} {s.level}
+                      </span>
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowAnimalPicker(false)}
+                style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Close
+              </button>
+            </div>
+          </div>
+        </ModalBackdrop>
+      )}
       {showLibrary && (
         <ModalBackdrop onClose={() => setShowLibrary(false)} zIndex={Z_INDEX.criticalModal} opacity={0.9} padding="1rem">
           <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
