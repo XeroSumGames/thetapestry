@@ -5,6 +5,7 @@ import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
 import { computeEncumbrance, BASE_ENC_LIMIT } from '../lib/encumbrance'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { RARITY_COLOR, RARITY_BG, RARITY_BORDER } from '../lib/rarity-colors'
+import { ARMOR } from '../lib/xse-schema'
 
 // Combined inventory catalog — SRD equipment + all weapons.
 // Weapons are normalized into the EquipmentItem shape (name/enc/rarity/notes)
@@ -32,6 +33,8 @@ export interface InventoryItem {
   notes: string
   qty: number
   custom: boolean
+  /** Armor only — see lib/inventory.ts for canon. */
+  worn?: boolean
 }
 // Re-export the shared shape from lib/inventory for non-component
 // callers. The interface above remains for back-compat with existing
@@ -259,18 +262,31 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
               }
               return sorted.map(({ item, idx }) => {
               const rc = RARITY_COLORS[item.rarity] ?? RARITY_COLORS.Common
+              const armorRow = ARMOR.find(a => a.name === item.name)
+              const isArmor = !!armorRow
+              const isWorn = isArmor && !!item.worn
               return (
-                <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '3px' }}>
+                <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 6px', background: isWorn ? '#0f1a2e' : '#111', border: `1px solid ${isWorn ? '#2e4a6b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '3px' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <span style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{item.name}</span>
                       {item.qty > 1 && <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>×{item.qty}</span>}
                       {item.custom && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>custom</span>}
+                      {isArmor && <span style={{ fontSize: '13px', color: '#cce0f5', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', padding: '0 4px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>−{armorRow!.dm} DM</span>}
+                      {isWorn && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', padding: '0 4px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>worn</span>}
                     </div>
                     {item.notes && <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.3 }}>{item.notes}</div>}
                   </div>
                   <span style={{ fontSize: '13px', color: rc.color, background: rc.bg, border: `1px solid ${rc.border}`, borderRadius: '2px', padding: '0 4px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>{item.rarity}</span>
                   <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', flexShrink: 0, minWidth: '24px', textAlign: 'center' }}>{item.enc > 0 ? `${item.enc}` : '—'}</span>
+                  {canEdit && isArmor && (
+                    <button
+                      onClick={() => onUpdate(inventory.map((i, j) => j === idx ? { ...i, worn: !i.worn } : i))}
+                      title={isWorn ? 'Take off' : 'Put on'}
+                      style={{ fontSize: '13px', padding: '0 6px', background: isWorn ? '#1a2e10' : '#1a1a2e', border: `1px solid ${isWorn ? '#2d5a1b' : '#2e2e5a'}`, borderRadius: '2px', color: isWorn ? '#7fc458' : '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      {isWorn ? 'Worn' : 'Wear'}
+                    </button>
+                  )}
                   {canEdit && onGiveTo && otherCharacters && otherCharacters.length > 0 && (
                     <button onClick={() => giveItem(idx)} style={{ fontSize: '13px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Give</button>
                   )}
