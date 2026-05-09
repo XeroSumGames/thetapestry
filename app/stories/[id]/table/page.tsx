@@ -1972,6 +1972,15 @@ export default function TablePage() {
             const dcActive = (ls as any).death_countdown != null && (ls as any).death_countdown > 0
             if (ls.wp_current === 0 && !dcActive) updates.wp_current = 1
             updates.incap_rounds = null
+            // Log the revival — paired with the "Lights out" Incapacitated
+            // banner from when they went down. Reuses deathLogRows for the
+            // same single-batch insert at the end of the round-tick.
+            deathLogRows.push({
+              campaign_id: id, user_id: userId,
+              character_name: 'Coming around',
+              label: `${e.character.name} has regained consciousness.`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'revive',
+            })
           }
         }
         // RP recovery: conscious characters below max RP recover 1 per round
@@ -2014,6 +2023,13 @@ export default function TablePage() {
             const npcDcActive = npc.death_countdown != null && npc.death_countdown > 0
             if ((npc.wp_current ?? 0) === 0 && !npcDcActive) updates.wp_current = 1
             updates.incap_rounds = null
+            // Revival log — see PC branch comment above.
+            deathLogRows.push({
+              campaign_id: id, user_id: userId,
+              character_name: 'Coming around',
+              label: `${npc.name} has regained consciousness.`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'revive',
+            })
           }
         }
         // RP recovery
