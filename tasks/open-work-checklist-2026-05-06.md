@@ -118,18 +118,27 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ### Needs design call from Xero (parked)
 
-- [ ] **Special / Explosive Weapons** — 8 entries from QS Table 13
-      (grenades x3, mortar, rocket launcher, flame-thrower, molotov,
-      tranq gun). Open Qs: are QS Table 13 stats final or do they need
-      a balancing pass against existing Ranged? Is Explosive its own
-      category or a trait on existing weapons?
+- [x] **Special / Explosive Weapons** — SHIPPED 2026-05-09. Tranq
+      Gun added to RANGED with Xero override stats (1d3 base × 400%
+      RP via Stun-aware path). Molotov rebalanced to QS Table 19
+      canon (1+1d3 Uncommon 50% RP + Tracking + Burning(1)).
+      Flame-Thrower already matched. Other explosives (Grenade /
+      Mortar / Shiv-Grenade / Flash-Bang / Rocket Launcher) left
+      unchanged — flagged for follow-up audit when a QS table for
+      those entries is available.
 
-- [ ] **Armor system** — 8 entries from QS Table 8 (chainmail through
-      tactical). DM applies to attack chance + damage; armor stacks;
-      Upkeep Check after combat or drop a Condition level. Open Qs:
-      drop Chainmail (off-tone for post-apoc) or keep / replace with
-      Improvised? Riot Gear + Riot Shield both -2 DM intentional or
-      differentiate?
+- [x] **Armor system** — SHIPPED 2026-05-09 (Phase 1). 8 entries
+      in `lib/xse-schema.ts:ARMOR` per QS Table 7 + Xero overrides
+      (Chainmail → Improvised; Riot Shield knocked DM 2 → DM 1 +
+      reactive_melee_only). Inventory-driven via `worn?: boolean`
+      flag. `lib/damage.ts:calculateDamage` aggregates worn-armor
+      DMs into mitigation, filtering reactive pieces by attacker
+      category. Wear / Worn toggle UI + DM chip in `InventoryPanel`.
+      Rules page at `/rules/equipment/armor`. Canon spec:
+      `tasks/rules-extract-armor-explosives.md`. **Phase 2 deferred:**
+      armor `condition` tracking (Pristine→Broken), manual Upkeep
+      button per worn armor, and auto-Upkeep on Moment of Low
+      Insight in combat.
 
 ### Verify first (may already exist — investigation only)
 
