@@ -56,6 +56,7 @@ export default function ForumThreadPage() {
   const supabase = createClient()
 
   const [myId, setMyId] = useState<string | null>(null)
+  const [isThriver, setIsThriver] = useState(false)
   const [thread, setThread] = useState<Thread | null>(null)
   const [replies, setReplies] = useState<Reply[]>([])
   const [authorNames, setAuthorNames] = useState<Record<string, string>>({})
@@ -72,6 +73,8 @@ export default function ForumThreadPage() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      if (profile && (profile.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
       await loadAll()
     }
     init()
@@ -194,7 +197,7 @@ export default function ForumThreadPage() {
     )
   }
 
-  const isMyThread = thread.author_user_id === myId
+  const isMyThread = thread.author_user_id === myId || isThriver
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif' }}>
@@ -268,7 +271,7 @@ export default function ForumThreadPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '1.25rem' }}>
         {replies.map(r => {
-          const isMine = r.author_user_id === myId
+          const isMine = r.author_user_id === myId || isThriver
           const editing = editingReplyId === r.id
           return (
             <div key={r.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px 14px' }}>

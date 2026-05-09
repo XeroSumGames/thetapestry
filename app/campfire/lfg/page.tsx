@@ -65,6 +65,7 @@ export default function LfgPage() {
   const router = useRouter()
 
   const [myId, setMyId] = useState<string | null>(null)
+  const [isThriver, setIsThriver] = useState(false)
   const [posts, setPosts] = useState<PostWithAuthor[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
@@ -119,6 +120,8 @@ export default function LfgPage() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      if (profile && (profile.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
       // Fetch the user's GM'd campaigns once. Used by the 🎟 Invite picker;
       // cheap query that doesn't change during a session, so no need to
       // refetch on every loadPosts call.
@@ -798,7 +801,7 @@ export default function LfgPage() {
                       </button>
                     )
                   })()}
-                  {isMine && (
+                  {(isMine || isThriver) && (
                     <>
                       <button onClick={() => startEdit(p)}
                         style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>

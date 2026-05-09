@@ -66,6 +66,7 @@ export default function WarStoriesPage() {
   const router = useRouter()
 
   const [myId, setMyId] = useState<string | null>(null)
+  const [isThriver, setIsThriver] = useState(false)
   const [stories, setStories] = useState<StoryWithMeta[]>([])
   const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
@@ -117,6 +118,8 @@ export default function WarStoriesPage() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      if (profile && (profile.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
       // Campaigns the user is a member of (GM or player) — used as the
       // optional campaign-tag dropdown on the composer. Pulled via
       // campaign_members to include campaigns where the user is a player,
@@ -695,7 +698,7 @@ export default function WarStoriesPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {visibleStories.map(s => {
-            const isMine = s.author_user_id === myId
+            const isMine = s.author_user_id === myId || isThriver
             return (
               <div key={s.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #b87333', borderRadius: '4px', padding: '1rem 1.25rem' }}>
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '6px' }}>
