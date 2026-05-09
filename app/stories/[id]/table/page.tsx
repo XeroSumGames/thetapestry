@@ -4426,6 +4426,12 @@ export default function TablePage() {
             update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
             update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
             stressReason = 'Incapacitated'
+            await supabase.from('roll_log').insert({
+              campaign_id: id, user_id: userId,
+              character_name: 'Lights out',
+              label: `${targetEntry.character.name} has been Incapacitated by ${characterName}.`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'incap',
+            })
           }
           if (stressReason) {
             await supabase.from('roll_log').insert({
@@ -4487,6 +4493,12 @@ export default function TablePage() {
         // Incapacitation — NPC loses consciousness when RP first hits 0
         if (newRP === 0 && npcRP > 0 && newWP > 0) {
           npcUpdate.incap_rounds = Math.max(1, 4 - (targetNpc.physicality ?? 0))
+          await supabase.from('roll_log').insert({
+            campaign_id: id, user_id: userId,
+            character_name: 'Lights out',
+            label: `${targetNpc.name} has been Incapacitated by ${characterName}.`,
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'incap',
+          })
         }
         const { error: npcUpdErr, data: npcUpdData } = await supabase
           .from('campaign_npcs')

@@ -299,6 +299,19 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
+  // incap (RP=0) — same shape as death but amber, less alarming.
+  if (r.outcome === 'incap' || r.character_name === 'Lights out') {
+    return (
+      <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1408', border: '1px solid #5a4218', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.character_name}</span>
+          <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+        </div>
+        <div style={{ fontSize: '15px', color: '#f5d8a0', fontFamily: 'Carlito, sans-serif' }}>{r.label}</div>
+      </div>
+    )
+  }
+
   // combat_end
   if (r.outcome === 'combat_end' && (r.damage_json as any)?.combatants) {
     return (
