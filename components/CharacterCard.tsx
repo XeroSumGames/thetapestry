@@ -430,7 +430,7 @@ function CharacterCardImpl({
             </a>
           </div>
           {showButtons && (
-            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#2a2010', '#EF9F27')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
@@ -456,6 +456,53 @@ function CharacterCardImpl({
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
               {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
+              {/* GM-action trio (Rest / Reduce Stress / Env. Damage) lives
+                  on the same button row as the rest of the admin set so
+                  it's all one grouping. Gated on canEdit + localState
+                  because they only make sense in a campaign session. */}
+              {canEdit && localState && (
+                <>
+                  <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')}>Rest</button>
+                  <button onClick={() => {
+                    if (!localState || localState.stress <= 0) { alert('Stress is already at 0.'); return }
+                    if (confirm('Has this character had 8+ hours of uninterrupted rest doing something they enjoy?')) {
+                      const newStress = Math.max(0, localState.stress - 1)
+                      onStatUpdate?.(localState.id, 'stress', newStress)
+                    }
+                  }} style={btn('#3a3a3a', '#EF9F27')}>Reduce Stress</button>
+                  <button onClick={() => {
+                    if (!localState) return
+                    const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP per round underwater)\n3 = Subsistence (1 WP + 1 RP/day, day 2+)')
+                    if (type === '1') {
+                      const ft = parseInt(prompt('How many feet fallen?') ?? '0', 10)
+                      const dmg = Math.floor(ft / 10) * 3
+                      if (dmg > 0) {
+                        onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
+                        onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmg))
+                        alert(`Falling: ${dmg} WP and ${dmg} RP damage`)
+                      }
+                    } else if (type === '2') {
+                      const rounds = parseInt(prompt('How many rounds underwater (after held breath)?') ?? '0', 10)
+                      const dmg = Math.max(0, rounds) * 3
+                      if (dmg > 0) {
+                        onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
+                        onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmg))
+                        alert(`Drowning: ${dmg} WP and ${dmg} RP damage (${rounds} round${rounds === 1 ? '' : 's'} × 3)`)
+                      }
+                    } else if (type === '3') {
+                      const days = parseInt(prompt('How many days without food/water? (Day 1 is free.)') ?? '0', 10)
+                      const dmgDays = Math.max(0, days - 1)
+                      if (dmgDays > 0) {
+                        onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmgDays))
+                        onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmgDays))
+                        alert(`Subsistence: ${dmgDays} WP and ${dmgDays} RP damage (${days} day${days === 1 ? '' : 's'} - 1 free = ${dmgDays})`)
+                      } else {
+                        alert(`No damage — day 1 is free.`)
+                      }
+                    }
+                  }} style={btn('#c0392b', '#f5a89a')}>Env. Damage</button>
+                </>
+              )}
               {inline && onKick && <button onClick={onKick} style={btn('#7a1f16', '#f5a89a')}>Kick</button>}
               {inline && onClose && <button onClick={onClose} style={btn('#c0392b', '#f5a89a')}>Close</button>}
             </div>
@@ -857,49 +904,6 @@ function CharacterCardImpl({
             />
           </div>
 
-          {/* GM Actions: Rest, Stress, Environmental Damage */}
-          {canEdit && localState && (
-            <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
-              <button onClick={() => setShowRestModal(true)}
-                style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Rest
-              </button>
-              <button onClick={() => {
-                if (!localState || localState.stress <= 0) { alert('Stress is already at 0.'); return }
-                if (confirm('Has this character had 8+ hours of uninterrupted rest doing something they enjoy?')) {
-                  const newStress = Math.max(0, localState.stress - 1)
-                  onStatUpdate?.(localState.id, 'stress', newStress)
-                }
-              }}
-                style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Reduce Stress
-              </button>
-              <button onClick={() => {
-                if (!localState) return
-                const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP)\n3 = Subsistence (1 WP + 1 RP/day, day 2+)')
-                if (type === '1') {
-                  const ft = parseInt(prompt('How many feet fallen?') ?? '0', 10)
-                  const dmg = Math.floor(ft / 10) * 3
-                  if (dmg > 0) {
-                    onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
-                    onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmg))
-                    alert(`Falling: ${dmg} WP and ${dmg} RP damage`)
-                  }
-                } else if (type === '2') {
-                  onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - 3))
-                  onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - 3))
-                  alert('Drowning: 3 WP and 3 RP damage')
-                } else if (type === '3') {
-                  onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - 1))
-                  onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - 1))
-                  alert('Subsistence: 1 WP and 1 RP damage')
-                }
-              }}
-                style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Env. Damage
-              </button>
-            </div>
-          )}
         </div>
 
       </div>
