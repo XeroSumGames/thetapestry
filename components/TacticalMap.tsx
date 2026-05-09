@@ -510,8 +510,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const cellSize = getCellSize()
     const mx = (e.clientX - rect.left) / zoom
     const my = (e.clientY - rect.top) / zoom
-    const x = Math.max(0, Math.min(scene.grid_cols, mx / cellSize))
-    const y = Math.max(0, Math.min(scene.grid_rows, my / cellSize))
+    let x = Math.max(0, Math.min(scene.grid_cols, mx / cellSize))
+    let y = Math.max(0, Math.min(scene.grid_rows, my / cellSize))
+    // SHIFT-to-snap. Free-form drawing by default lets the GM draw
+    // arbitrary angles for organic shapes (curves, irregular rooms).
+    // Holding SHIFT locks the endpoint to the nearest grid intersection
+    // so room outlines match the grid cleanly. Both click commits and
+    // hover-preview updates flow through this function, so the modifier
+    // is honored end-to-end. Same Photoshop / Figma idiom.
+    if (e.shiftKey) {
+      x = Math.round(x)
+      y = Math.round(y)
+    }
     return { x, y }
   }
 

@@ -376,17 +376,17 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 - [ ] **Line of sight Phase 3** (polygon vision mask). Audit
       scheduled 2026-05-10.
 
-- [ ] **FOG wall/door/window drawing — SHIFT to snap.** Flagged
-      2026-05-09. Today the wall drawing in `components/TacticalMap.tsx`
-      snaps from grid-intersection to grid-intersection by default
-      (see `wallDrawStart` / `wallDrawHover`). Inversion: drawing
-      should be free-form (mouse position becomes the endpoint),
-      and **holding SHIFT** snaps the endpoint to the nearest grid
-      intersection. Lets the GM draw arbitrary angles for organic
-      shapes (curves, irregular rooms) but still hit grid corners
-      cleanly when matching room outlines. Same SHIFT-modifier
-      pattern is widely understood (Photoshop, Figma, etc.).
-      Apply to walls, doors, and windows uniformly.
+- [x] **FOG wall/door/window drawing — SHIFT to snap.** SHIPPED
+      2026-05-09. `getSegmentEndpoint` at
+      `components/TacticalMap.tsx:507` honors `e.shiftKey` —
+      free-form by default, SHIFT rounds the endpoint to the
+      nearest grid intersection. Both click commits and hover
+      preview flow through the same function so the modifier
+      works end-to-end. Walls, doors, and windows behave the
+      same. Doors + windows still post-snap to nearest wall on
+      top of any grid snap. (Original assumption that drawing was
+      grid-only by default was wrong — code was already free-form;
+      this just adds the missing snap-to-grid path.)
 
 ### Lv4 Skill Traits — Xero-blocked, ships together
 
