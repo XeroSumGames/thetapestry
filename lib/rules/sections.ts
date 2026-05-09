@@ -39,7 +39,7 @@ export const RULE_SECTIONS: RuleSection[] = [
     slug: 'core-mechanics',
     number: '02',
     title: 'Core Mechanics',
-    summary: 'Dice Checks, modifiers, Insight Dice, Filling In The Gaps, Making The Case.',
+    summary: 'Dice Checks, modifiers, Insight Dice, Filling In The Gaps, Making The Case, Negotiations.',
     anchors: [
       { id: 'dice-check', label: 'Dice Check Outcomes' },
       { id: 'modifiers', label: 'Modifiers (AMod, SMod, CMod)' },
@@ -48,6 +48,7 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'making-the-case', label: 'Making The Case' },
       { id: 'attribute-checks', label: 'Attribute, Group, Opposed Checks' },
       { id: 'first-impressions', label: 'First Impressions' },
+      { id: 'negotiations', label: 'Negotiations' },
     ],
   },
   {

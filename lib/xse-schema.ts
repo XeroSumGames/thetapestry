@@ -317,7 +317,7 @@ export interface RationItem {
 
 export const RATIONS: RationItem[] = [
   { name: 'Standard Rations',       rarity: 'Common',   enc: 0.5,  notes: '1 day food + water.' },
-  { name: 'Luxury Rations',         rarity: 'Uncommon', enc: 0.5,  notes: '1 day food + water; small morale bump.' },
+  { name: 'Luxury Rations',         rarity: 'Uncommon', enc: 0.5,  notes: '1 day food + water; consume to drop Stress Level by 1.' },
   { name: 'Military Grade Rations', rarity: 'Rare',     enc: 0.25, notes: 'Compact, calorie-dense; 1 day food + water.' },
 ]
 

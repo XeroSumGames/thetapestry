@@ -29,6 +29,7 @@ export default function Page() {
         <li>Spend Insight Dice for a flashback, retcon, or anything else the player can <Term>Make The Case</Term> for.</li>
         <li>Spend an Insight Die to introduce a story element (e.g. trying the door again and finding it unlocked) — with GM approval and a successful Make The Case.</li>
         <li>Spend ALL available Insight Dice to recover 1 Wound Point + 1 Resilience Point per die and save the character from Death.</li>
+        <li>Stave off death by <Term>Subsistence Damage</Term> (starvation/dehydration) by surrendering Insight Dice — each die buys one additional day before WP loss begins.</li>
       </ul>
       <P>
         Once a player uses an Insight Die, they surrender it back to the

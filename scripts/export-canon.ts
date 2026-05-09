@@ -28,6 +28,7 @@ import {
   PARADIGMS,
   PROFESSIONS,
   RANGED_WEAPONS,
+  RATIONS,
   SKILL_LABELS,
   SKILLS,
 } from '../lib/xse-schema'
@@ -66,13 +67,15 @@ function header(): string {
     ``,
     `## Precedence rule`,
     ``,
-    `When auditing or rewriting rules content (e.g. the Distemper Quickstart):`,
+    `When auditing or rewriting rules content (Quickstart, SRD, or Core Rulebook):`,
     ``,
-    `> **Tapestry > SRD > Quickstart > Core Rulebook**`,
+    `> **Tapestry (this canon) > Quickstart > SRD > Core Rulebook**`,
     ``,
-    `If a term, table entry, or skill name appears in the Quickstart or CRB but is **not** in this`,
-    `canon file, it should be deleted from the Quickstart, not preserved. If something is in the`,
-    `SRD or this canon file but missing from the Quickstart, it should be added. Never invent new terms.`,
+    `Goal of any audit pass: Quickstart, SRD, and Core Rulebook all match the canon in this file.`,
+    ``,
+    `If a term, table entry, or skill name appears in the Quickstart, SRD, or CRB but is **not** in`,
+    `this canon file, it should be deleted from those documents, not preserved. If something is in`,
+    `this canon file but missing from a document being audited, it should be added. Never invent new terms.`,
   )
 }
 
@@ -213,6 +216,8 @@ function backstorySteps(): string {
     ``,
     `**Step Four** is the Profession step — pick a Profession from the table above, allocate 4 skill CDP to that Profession's bundle.`,
     `**Step Six** is Complications & Motivations — choose or roll 2d6.`,
+    ``,
+    `**+4 attribute exception**: at the GM's discretion, with a Fill In The Gaps narrative justification, a player may reassign **2 CDP from skills to a single RAPID attribute** to bring it from +3 (Exceptional) to +4 (Human Peak) at character creation. Represents intense lifelong training at the expense of skill breadth. One reassignment per character.`,
   )
 }
 
@@ -265,6 +270,8 @@ function lastingWounds(): string {
     ``,
     tableHeader(['2d6', 'Wound', 'Effect']),
     ...rows.map(([roll, w]) => tableRow([roll, w.name, w.effect])),
+    ``,
+    `**Compounded wounds**: a character can take Lasting Damage more than once over their career, and the same result can come up again. When that happens, the effects compound — a second roll of Brain Injury stacks the −2 Reason penalty (becoming −4 Reason); rolling Lost Eye twice means the character is blind.`,
   )
 }
 
@@ -327,6 +334,17 @@ function equipmentList(): string {
   )
 }
 
+function rationsList(): string {
+  return lines(
+    `### Rations (Quickstart Table 16) — canon`,
+    ``,
+    `Source: \`lib/xse-schema.ts\` RATIONS. Locked 2026-05-09. Each ration covers one day of food + water for one character. Default starting allotment is **2 Standard Rations**.`,
+    ``,
+    tableHeader(['Ration', 'Rarity', 'Enc', 'Notes']),
+    ...RATIONS.map(r => tableRow([r.name, r.rarity, r.enc, r.notes])),
+  )
+}
+
 // ----------------------------
 // Hard-coded prose blocks (sourced from app/rules/* JSX)
 // ----------------------------
@@ -351,6 +369,7 @@ Characters get **2 Insight Dice on creation** and gain an additional one each ti
 - Spend Insight Dice for a flashback, retcon, or anything else the player can Make The Case for.
 - Spend an Insight Die to introduce a story element (with GM approval and a successful Make The Case).
 - Spend ALL available Insight Dice to recover **1 Wound Point + 1 Resilience Point per die surrendered** and save the character from Death.
+- Stave off death by **Subsistence Damage** (starvation/dehydration) by surrendering Insight Dice — each die buys one additional day before WP loss begins.
 
 Restrictions: Insight Dice are non-transferable, cannot transfer between characters, and **cannot re-roll a Moment of Low Insight**. They carry over from session to session.
 
@@ -379,6 +398,32 @@ Uses **Influence + an appropriate skill (Manipulation, Streetwise, Psychology\\*
 ### Gut Instincts
 
 Uses the **Perception modifier**, or an appropriate skill (Psychology\\*, Streetwise, Tactics\\*).
+
+### Negotiations
+
+Source: \`app/rules/core-mechanics/negotiations/page.tsx\`.
+
+Negotiations are an Opposed Check resolved through **Gambit** and **Rebuttal**. Used for haggling, demands, threats, or persuasion.
+
+**Gambit**: rolled by the side leading the negotiation. Formula: \`2d6 + Influence AMod + skill SMod\`. Skill choice: **Barter**, **Inspiration**, **Manipulation**, or **Psychology\\***.
+
+| Gambit outcome | Effect on Rebuttal |
+|---|---|
+| Wild Success (14+) | Other side gets −3 CMod on their Rebuttal |
+| Success (9–13) | Other side gets −1 CMod on their Rebuttal |
+| Failure (4–8) | Other side gets +1 CMod on their Rebuttal |
+| Dire Failure (0–3) | Negotiation is over. Possibly hostile. |
+
+**Rebuttal**: rolled by the responding side. Formula: \`2d6 + Acumen AMod + skill SMod\`. Skill choice: **Barter**, **Inspiration**, **Manipulation**, **Psychology\\***, or **Tactics\\***.
+
+| Rebuttal outcome | Effect |
+|---|---|
+| Wild Success (14+) | Compelling counteroffer; other side very likely to consider |
+| Success (9–13) | Counter met favourably; deal can be reached |
+| Failure (4–8) | Cannot present a cogent counterargument; impasse |
+| Dire Failure (0–3) | Negotiation immediately over; situation could turn hostile |
+
+**Retry rule**: a failed Negotiation cannot be retried until the situation materially changes (different terms, new information, shifted leverage).
 `
 
 const PROSE_SECONDARY_STATS = `### Secondary Stats (Table 5)
@@ -469,6 +514,265 @@ Each attack deals **Wound Points (WP)** and **Resilience Points (RP)** damage. R
 Stress starts at 0, max 5. Rises by 1 on a failed Stress Check (2d6 + RSN + ACU AMod) or when entering 0 WP / 0 RP (Tapestry house rule). At 5, roll 2d6 on Table 13 — reaction lasts 1d6 rounds, then Stress resets to 0. **Cooling Off**: Stress drops by 1 per 8 uninterrupted in-game hours free from combat/conflict/threat doing something the character enjoys.
 `
 
+const PROSE_CHARACTER_EVOLUTION = `### Character Evolution (post-creation CDP costs)
+
+Source: \`app/rules/character-creation/character-evolution/page.tsx\`.
+
+At the end of each session, the GM has the discretion to award **2+ CDP** that players spend on improving their characters' attributes or skills. CDP saves across sessions. Spending costs use the same ladder as Backstory Generation:
+
+- **Learn a new skill** (Inept or Untrained → Beginner): **1 CDP**
+- **Raise a skill** (current + target level CDP):
+  - +1 → +2 = **3 CDP**
+  - +2 → +3 = **5 CDP**
+  - +3 → +4 = **7 CDP**
+- **Raise an attribute** (3× the level being raised):
+  - +1 → +2 = **6 CDP**
+  - +2 → +3 = **9 CDP**
+  - +3 → +4 = **12 CDP**
+
+CDP can be spent on a master PC's Apprentice instead of the PC themselves (see §08 → Apprentices).
+`
+
+const PROSE_SKILL_TRAITS = `## §05 Skills — Lv4 Traits & CRB Bonuses
+
+Source: \`app/rules/skills/inspiration/page.tsx\`, \`app/rules/skills/psychology/page.tsx\`, \`app/rules/communities/crb-additions/page.tsx\`.
+
+The platform implements two Lv4 Skill Traits and one per-level Inspiration bonus that show up only in the Communities subsystem:
+
+### Inspiration — +1 SMod per level on Recruitment Checks
+
+For each level in **Inspiration**, a PC gets a +1 SMod on any attempt to get NPCs behind an idea, including any NPC Recruitment Check. This stacks on top of whatever core skill is being used for the recruitment (Barter, Psychology\\*, Tactics\\*, etc.).
+
+### Inspiration Lv4 — Beacon of Hope
+
+At **Inspiration Level 4 (Life's Work)**, the character adds **+4 to any Community Morale Check** they participate in. They can also make rousing speeches that convince any community they are a part of to risk everything — including their own lives — for the good of the larger group.
+
+### Psychology* Lv4 — Insightful Counselor
+
+At **Psychology\\* Level 4 (Life's Work)**, a character who has spent time as part of a community is able to understand them and help the community leaders see what they need. They may add a **+3 CMod** to the community's weekly Morale Check. The bonus is gated on tenure with the community — the character must actually be a member long enough to know its rhythms.
+
+### Psychology* per-level — Stress recovery via Activity Block
+
+Source: \`app/rules/skills/psychology/page.tsx\`.
+
+A character with at least 1 level in **Psychology\\*** can spend a **Daily Activity Block** with another character to help them step back from their Breaking Point. On a successful Psychology\\* check, the patient's **Stress Level drops by 1** (minimum 0). One Psychology\\* recovery attempt per patient per day.
+
+> **Note**: only Inspiration and Psychology\\* currently have Lv4 Traits implemented. Other skills don't unlock additional mechanics at Lv4 beyond the standard +1 SMod.
+`
+
+const PROSE_INFECTION = `### Infection, Sickness & Disease
+
+Source: \`app/rules/combat/infection/page.tsx\`. Two related but distinct damage-over-time tracks. Both check **Physicality**, both resolve over days, both can end at Lasting Wounds (Table 12).
+
+#### Wound Infection (post-combat)
+
+Once combat ends, any character who took at least one shot/stab/cut wound makes a single **Physicality check** to see if their wounds become infected. One check per character per combat — regardless of how many hits they took.
+
+| Roll | Effect |
+|---|---|
+| Wild Success / High Insight | No infection. High Insight earns 1 Insight Die. |
+| Success | No infection. |
+| Failure | Sick for 1d3 days. Lasting Damage risk unless treated. |
+| Dire Failure / Low Insight | Sick for 1d6 days. **Automatic** Lasting Damage on Day 0. |
+
+#### Sickness & Disease (environmental)
+
+Characters exposed to particularly toxic conditions (a pit of dead bodies, a sewer wade, contaminated water) may need to make a Physicality check to avoid getting sick. The GM decides when the trigger fires.
+
+If the first check fails, the character makes a **second Physicality check** (Progression Check):
+
+| Progression Check | Effect |
+|---|---|
+| Wild Success / Success / High Insight | Shake it off. No progression. |
+| Failure | Progressively unwell for 1d3 days. On final day, Mortally Wounded. |
+| Dire Failure / Low Insight | Progressively unwell for 1d6 days. On final day, Mortally Wounded. |
+
+When a Sickness & Disease countdown reaches Day 0, the character drops to **WP = 0** and enters the standard Mortally Wounded flow.
+
+#### The Sick state
+
+While sick (either branch):
+
+- **−2 CMod** on physical checks: Athletics, Melee Combat, Ranged Combat, Stealth, Survival, Unarmed Combat.
+- **RP capped at half-max** (round down). Current RP clamped down if above the cap.
+- WP regen still works at 1 WP/day rest. RP regen still works, but half-max is the ceiling until recovery.
+
+When the day counter hits 0, all sick-state penalties clear. Lasting Damage may still apply.
+
+#### Treatment — Medicine\\* check
+
+An ally with Medicine\\* may attempt to treat a sick character. **One check per sick incident** — not per day.
+
+| Roll | Effect |
+|---|---|
+| Wild Success | Cuts remaining sick days in half (round up). Clears Lasting Damage risk. |
+| High Insight | Wild Success outcome plus 1 Insight Die. |
+| Success | Clears Lasting Damage risk. Days unchanged. |
+| Failure | No help, no harm. Patient cannot be treated again this incident. |
+| Dire Failure | +1 day to remaining sick duration (botched care). |
+| Low Insight | Dire Failure outcome plus the medic earns 1 Stress pip plus 1 Insight Die. |
+
+Medic must be at **Engaged** range to treat (matches Stabilise). A Doctor's Bag or First Aid Kit grants its listed bonus to the Medicine\\* check.
+
+#### Lasting Damage
+
+On Day 0 of a sick period, if Lasting Damage risk is still set (Failure was rolled and Medicine\\* didn't clear it), the character makes a final **Physicality check** to avoid Lasting Damage. Failure rolls 2d6 on Table 12: Lasting Wounds. Dire Failure on the original Infection check skips this step — Lasting Damage applies automatically.
+`
+
+const PROSE_COMMUNITIES = `## §08 Communities
+
+Source: \`app/rules/communities/*\`. The Communities subsystem governs how PCs build, maintain, and lose groups of NPC followers.
+
+### Group → Community threshold
+
+PCs working together are a **Group**. Players recruit NPCs to their Group via a Recruitment Check. If a Group grows to a combined total of **13 or more** PCs and NPCs, it becomes a **Community**. Communities require regular Morale Checks; Groups do not.
+
+### Recruitment Check
+
+Source: \`app/rules/communities/recruitment/page.tsx\`.
+
+A Recruitment Check uses a skill that aligns with the PCs' approach — most commonly **Barter**, **Psychology\\***, or **Tactics\\***. The First Impression a player made on the NPC applies as a CMod. The Inspiration +1-per-level bonus also applies (see §05 Skill Traits).
+
+The choice of approach sets commitment duration:
+
+| Approach | Basis | Commitment |
+|---|---|---|
+| Cohort | Shared interest or goal with the PC | Joins until next Morale Check |
+| Conscript | Coerced — requires a credible threat | While the coercion holds |
+| Convert | Shared belief, ideology, or vision | Probationary through first Morale Check |
+
+#### Cohort outcomes
+
+| Roll | Effect |
+|---|---|
+| Wild Success (14+) | NPC becomes a Cohort immediately (no probation). |
+| Moment of High Insight (6+6) | Same as Wild Success + may take the NPC as Apprentice. |
+| Success (9–13) | NPC joins until next Morale Check. |
+| Failure (4–8) | Does not join. Retry only if circumstances materially change. |
+| Dire Failure (0–3) | No interest in joining. |
+| Moment of Low Insight (1+1) | NPC alienated or offended. Possible escalation, including violent rejection. |
+
+#### Conscript outcomes
+
+| Roll | Effect |
+|---|---|
+| Wild Success (14+) | Joins willingly — fully committed, loyal follower. |
+| Moment of High Insight (6+6) | Wild Success + Apprentice option. |
+| Success (9–13) | Complies under duress. Will follow orders until next Morale Check. |
+| Failure (4–8) | Appears to comply but will attempt to escape at first opportunity. |
+| Dire Failure (0–3) | Steadfastly refuses to join. |
+| Moment of Low Insight (1+1) | Refuses + hostile or violent response possible. |
+
+#### Convert outcomes
+
+| Roll | Effect |
+|---|---|
+| Wild Success (14+) | Committed believer and follower. |
+| Moment of High Insight (6+6) | Wild Success + Apprentice option. |
+| Success (9–13) | Joins as probationary Convert. Commits after first Morale Check passes. |
+| Failure (4–8) | No interest. Retry allowed if PCs Fill In The Gaps on a different approach. |
+| Dire Failure (0–3) | Becomes wary and distances themselves from the PC. |
+| Moment of Low Insight (1+1) | So unwilling to join they may become hostile or violent. |
+
+### Community Structure
+
+Source: \`app/rules/communities/structure/page.tsx\`.
+
+For a community to function, a certain number of members must be dedicated to specific tasks:
+
+| Role | Minimum | Responsibility | Weekly check |
+|---|---|---|---|
+| Gatherers | 33% (round down) | Hunt, forage, farm, fish, scavenge — bring in Rations | Fed Check |
+| Maintainers | 20% (round down) | Collect Supplies, repair / maintain buildings, equipment, vehicles | Clothed Check |
+| Safety | 5–10% | Policing, patrol, firefighting, emergency services. Leadership comes from here. | Drives Morale modifiers only |
+
+#### Fed Check (Gatherers) — feeds next Morale Check as the Fed CMod
+
+| Roll | Effect | CMod |
+|---|---|---|
+| Moment of High Insight (6+6) | Enough luxury items found to give the community a real boost. | +2 |
+| Wild Success (14+) | Rations surplus. | +1 |
+| Success (9–13) | Baseline ration needs are met. | 0 |
+| Failure (4–8) | Shortfall in Rations leading to only 1 meal a day. | -1 |
+| Dire Failure (0–3) | Continuously hungry, sometimes days between Rations. | -2 |
+| Moment of Low Insight (1+1) | Food contamination, famine onset. | -3 |
+
+#### Clothed Check (Maintainers) — feeds next Morale Check as the Clothed CMod
+
+| Roll | Effect | CMod |
+|---|---|---|
+| Moment of High Insight (6+6) | Buildings and equipment in perfect working order; project goes well. | +2 |
+| Wild Success (14+) | Adequately repaired, maintained, even improved. | +1 |
+| Success (9–13) | All systems, buildings, and equipment adequately maintained. | 0 |
+| Failure (4–8) | Minor breakdowns, or a deficit in required Supplies. | -1 |
+| Dire Failure (0–3) | Continued breakdowns impacting the community. | -2 |
+| Moment of Low Insight (1+1) | Critical infrastructure damaged or destroyed. | -3 |
+
+#### Safety
+
+5–10% of any community is required for policing/patrol/firefighting/emergency services. This group is also where community leadership is drawn from. No weekly Safety check, but staffing affects Morale slots: **Someone To Watch Over Me** swings from -1 (Safety < 5%) to +1 (Safety ≥ 10%), and Safety counts toward **Enough Hands**.
+
+#### PC contribution
+
+Unless explicitly stated, Fed and Clothed Checks are assumed to be performed by NPCs. Players may choose to spend their time contributing and use their own AMods/SMods if they Fill In The Gaps on how they contributed.
+
+### Morale Check
+
+Source: \`app/rules/communities/morale/page.tsx\`.
+
+Each week, a Community must make a Morale Check to maintain cohesion. Formula:
+
+> **2d6 + leader's AMod + leader's SMod + six modifier slots**
+
+If leadership is co-equal, they make a **Group Check**.
+
+#### Modifier slots
+
+| Slot | Source |
+|---|---|
+| Mood Around The Campfire | From the previous Morale Check's outcome. If none: 0. |
+| Fed | From the weekly Fed Check (Gatherers). |
+| Clothed | From the weekly Clothed Check (Maintainers). |
+| Enough Hands | +1 if all role minimums met; else -1 per group short, max -3. |
+| A Clear Voice | 0 if a clear leader exists; -1 if leaderless. |
+| Someone To Watch Over Me | -1 if Safety < 5%; +1 if Safety ≥ 10%; otherwise 0. |
+| Adjusted CMods | GM- or player-Filled-In events: raids, miracles, plague, festivals. |
+
+#### Morale outcomes
+
+| Roll | Effect | Next Mood |
+|---|---|---|
+| Moment of High Insight (6+6) | Belief in leadership and the community is high. | +2 |
+| Wild Success (14+) | Morale stays strong or improves. | +1 |
+| Success (9–13) | Morale remains steady. | 0 |
+| Failure (4–8) | Morale slipping. **25%** of the community will leave unless stopped. | -1 |
+| Dire Failure (0–3) | Morale collapses. **50%** of the community leaves. | -2 |
+| Moment of Low Insight (1+1) | Infighting and violence. **75%** of the community leaves. | -3 |
+
+#### Dissolution & Retention
+
+After **three consecutive failures**, a community has degraded to the point of immediately and irreconcilably falling apart. A fast-acting leader wishing to retain fragments may make an **immediate Morale Check** using the result of the preceding Morale Check as the Mood Around The Campfire CMod.
+
+### Apprentices
+
+Source: \`app/rules/communities/apprentices/page.tsx\`.
+
+The Apprentice option is unlocked only by a **Moment of High Insight (6+6)** on a Recruitment Check. A plain Wild Success (total ≥ 14 without matching faces) does NOT unlock Apprentice. A player may also seek out a specific NPC and make a deliberate Recruitment attempt aimed at Apprenticeship — same roll, same threshold, still needs the double-six.
+
+Apprentices can undertake tasks and act as **proxy** for their PC. Each PC may have only **one Apprentice** at a time.
+
+On recruit, the player:
+
+- Names the Apprentice (if they don't already have one).
+- Rolls 2d6 on both the Motivation and Complication tables.
+- Works with the GM to Fill In The Gaps on background.
+- Spends **3 CDP** on RAPID Range Attributes.
+- Spends **5 CDP** on skills.
+- Picks one setting-appropriate **Paradigm** (Table 8).
+
+Over **1 month of game-time**, the PC can train the Apprentice in any single skill the PC has, up to **(PC skill level − 1)**. So a PC with Barter 3 can train their Apprentice up to Barter 2. If the PC earns CDP later, they may choose to spend those CDP on the Apprentice instead of themselves.
+`
+
 const PROSE_NOT_ON_PLATFORM = `## What's NOT on the platform
 
 Things the Distemper Quickstart historically referenced but **do not exist** on the platform — these should be deleted from any Quickstart audit.
@@ -515,13 +819,18 @@ function main() {
     motivationsTable(),
     professionsTable(),
     paradigms(),
+    PROSE_CHARACTER_EVOLUTION,
+    PROSE_SKILL_TRAITS,
     PROSE_COMBAT,
     lastingWounds(),
     breakingPoint(),
+    PROSE_INFECTION,
     `## §07 Weapons & Equipment`,
     meleeWeapons(),
     rangedWeapons(),
     equipmentList(),
+    rationsList(),
+    PROSE_COMMUNITIES,
     PROSE_NOT_ON_PLATFORM,
   ].join('\n')
 

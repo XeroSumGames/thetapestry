@@ -126,6 +126,13 @@ export default function Page() {
             ))}
           </tbody>
         </RuleTable>
+        <P>
+          <Term>Compounded wounds:</Term> a character can take Lasting Damage
+          more than once over their career, and the same result can come up
+          again. When that happens, the effects compound — a second roll of
+          Brain Injury stacks the −2 Reason penalty (becoming −4 Reason);
+          rolling Lost Eye twice means the character is blind.
+        </P>
       </RuleSection>
     </>
   )

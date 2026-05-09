@@ -29,6 +29,16 @@ export default function Page() {
         domestic conflict, or recognising a pattern of abuse.
       </P>
 
+      <RuleSection id="stress-recovery" title="Stress recovery — Activity Block">
+        <P>
+          A character with at least 1 level in <Term>Psychology*</Term> can
+          spend a <Term>Daily Activity Block</Term> with another character to
+          help them step back from their Breaking Point. On a successful
+          Psychology* check, the patient's <Term>Stress Level drops by 1</Term>{' '}
+          (minimum 0). One Psychology* recovery attempt per patient per day.
+        </P>
+      </RuleSection>
+
       <RuleSection id="lv4-trait" title="Level 4 — Insightful Counselor">
         <P>
           At <Term>Psychology* Level 4 (Life's Work)</Term>, a character

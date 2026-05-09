@@ -45,6 +45,16 @@ export default function Page() {
         <Term>+3 (Professional)</Term>.
       </P>
 
+      <P>
+        <Term>+4 attribute exception:</Term> at the GM's discretion, and if
+        the player can <Term>Fill In The Gaps</Term> as to why, a player may
+        reassign <Term>2 CDP from skills to a single RAPID attribute</Term>{' '}
+        to bring it from +3 (Exceptional) to +4 (Human Peak) at character
+        creation. This represents intense lifelong training or development at
+        the expense of additional skill breadth. One reassignment per
+        character, max.
+      </P>
+
       <RuleSection id="steps" title="The nine steps">
         <RuleTable>
           <thead>
