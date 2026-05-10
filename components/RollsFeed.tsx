@@ -497,6 +497,70 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
+  // group_check — bespoke multi-participant banner. Keyed off the label
+  // prefix (the row's outcome stays as the standard ladder so the row's
+  // border still picks up the right outcome color via the default-branch
+  // fall-through path... actually no, we render our own here). The
+  // participant list comes from damage_json.groupCheckParticipants which
+  // executeRoll folds in from groupCheckPayloadRef just before save.
+  if (r.label.startsWith('Group Check — ') && (r.damage_json as any)?.groupCheckParticipants) {
+    const dj = r.damage_json as any
+    const participants: string[] = dj.groupCheckParticipants
+    const skill: string = dj.groupCheckSkill
+    const outcomeColorVal = outcomeColor(r.outcome)
+    const wild = r.outcome === 'Wild Success' || r.outcome === 'High Insight'
+    const hit = wild || r.outcome === 'Success'
+    const adverb = wild
+      ? 'were Wildly Successful at'
+      : hit
+        ? 'were Successful at'
+        : r.outcome === 'Low Insight'
+          ? 'failed miserably at'
+          : r.outcome === 'Dire Failure'
+            ? 'failed badly at'
+            : 'failed their'
+    const skillTail = hit ? skill : `${skill} check`
+    // "A, B, C, and D" with Oxford serial comma when 3+; "A and B"
+    // for two; just "A" for solo.
+    const formatNames = (names: string[]) => {
+      if (names.length <= 1) return names[0] ?? ''
+      if (names.length === 2) return `${names[0]} and ${names[1]}`
+      return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
+    }
+    const isExpanded = expandedRollIds.has(r.id)
+    return (
+      <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${outcomeColorVal}33`, borderRadius: '3px', borderLeft: `3px solid ${outcomeColorVal}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: outcomeColorVal, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Group Check</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+            <button onClick={() => toggleExpanded(r.id)}
+              title={isExpanded ? 'Hide details' : 'View dice'}
+              style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
+              {isExpanded ? '▾' : '▸'}
+            </button>
+          </div>
+        </div>
+        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+          {formatNames(participants)} {adverb} {skillTail}
+          {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+        </div>
+        {isExpanded && (
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+            <div>
+              [{r.die1}+{r.die2}]
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              <span style={{ marginLeft: '8px', color: outcomeColorVal, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.outcome}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Default: skill / attribute / attack roll. Branches on `simple`:
   // - simple=false (rolls-only tab): Insight Die spent banner, label
   //   stripped of "<character> — " prefix, 14px damage box.

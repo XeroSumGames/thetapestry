@@ -355,16 +355,10 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       return `${r.character_name} looked through the remains of ${container} and found something`
     }
   }
-  // Group Check — label "Group Check — <Skill> (led by <Leader>)". The
-  // leader's name is in the parens; the row's character_name is the
-  // leader. Narrative trim reads as the group's collective effort, with
-  // the standard adverb pattern + crit/miserably tag.
-  const groupMatch = suffix.match(/^Group Check\s+—\s+(.+?)\s+\(led by\s+(.+?)\)$/)
-  if (groupMatch) {
-    const skill = groupMatch[1].trim()
-    return hit ? `${r.character_name}'s group succeeds at ${skill}${outcomeTag}`
-               : `${r.character_name}'s group fails at ${skill}${outcomeTag}`
-  }
+  // (Group Check moved to a bespoke Tier A banner in components/RollsFeed.tsx
+  // — keyed off label prefix + damage_json.groupCheckParticipants — so it
+  // can render the multi-participant body. compactRollSummary never sees
+  // these rows after the banner branch intercepts them.)
   // Barter — label "⚖ Trade · <rollSummary> · gave <give> got <get>"
   // written when the trade modal applies. Dice are real (Acumen + Barter
   // skill check). Narrative collapses to a one-liner with the give/got

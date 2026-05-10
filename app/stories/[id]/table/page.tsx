@@ -682,6 +682,11 @@ export default function TablePage() {
   // relationship CMod post-outcome.
   const [firstImpressionNpcId, setFirstImpressionNpcId] = useState<string>('')
   const firstImpressionTargetRef = useRef<{ characterId: string; npcId: string; npcName: string } | null>(null)
+  // Group Check stash — set by triggerGroupCheck just before the dice
+  // modal opens, read by executeRoll's saveRollToLog branch so the
+  // bespoke "Group Check" banner in RollsFeed has the full participant
+  // list (the label only carries the leader's name, not the supporters).
+  const groupCheckPayloadRef = useRef<{ participants: string[]; skill: string } | null>(null)
   const [showReadyWeaponModal, setShowReadyWeaponModal] = useState(false)
   const [showGrappleModal, setShowGrappleModal] = useState(false)
   // Two-step grapple flow: click a target → confirm + optionally spend
@@ -3751,6 +3756,14 @@ export default function TablePage() {
     const leader = scored[0]
     // Others contribute their AMod or SMod (whichever is used)
     const bonusMods = scored.slice(1).reduce((sum, p) => sum + p.smod, 0)
+    // Stash the full participant list so the saveRollToLog branch
+    // can attach it to damage_json and the bespoke banner can render
+    // "Cree Hask, Marv, and Wilson were Successful at Survival" rather
+    // than just the leader's name. Cleared on close (see executeRoll).
+    groupCheckPayloadRef.current = {
+      participants: scored.map(p => p.character.name),
+      skill: groupCheckSkill,
+    }
     handleRollRequest(`Group Check — ${groupCheckSkill} (led by ${leader.character.name})`, leader.amod, leader.smod + bonusMods)
     setShowSpecialCheck(null)
     setGroupCheckParticipants(new Set())
@@ -5477,7 +5490,20 @@ export default function TablePage() {
       // expanded line auto-formats as "Distract → <target>". Don't
       // mutate the label here or the target gets duplicated:
       // "Distract → <target> → <target>" (caught 2026-04-29).
-      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult, insightUsedValue)
+      // Group Check — fold the stashed participant list into damage_json
+      // so the bespoke banner can render the multi-name body. The
+      // damageResult slot is otherwise unused for these rolls; sharing
+      // it avoids a parallel column. Ref is cleared after the write.
+      let augmentedDamage: any = damageResult
+      if (pendingRoll.label.includes('Group Check —') && groupCheckPayloadRef.current) {
+        augmentedDamage = {
+          ...(damageResult ?? {}),
+          groupCheckParticipants: groupCheckPayloadRef.current.participants,
+          groupCheckSkill: groupCheckPayloadRef.current.skill,
+        }
+        groupCheckPayloadRef.current = null
+      }
+      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue)
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack
