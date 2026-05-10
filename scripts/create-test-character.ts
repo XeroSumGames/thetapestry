@@ -57,7 +57,7 @@ const TEST_CHARACTER = {
 
   equipment: ['Backpack'],
   incidentalItem: 'Dog tags from his unit',
-  rations: 'Standard',
+  rations: { type: 'Standard Rations', count: 2 },
 
   insightDice: 2,
   cdp: 0,

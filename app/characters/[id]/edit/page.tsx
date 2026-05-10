@@ -4,7 +4,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
-import { SKILLS } from '../../../../lib/xse-schema'
+import { SKILLS, normalizeRations } from '../../../../lib/xse-schema'
 import StepXero from '../../../../components/wizard/StepXero'
 import StepSix from '../../../../components/wizard/StepSix'
 import StepSeven from '../../../../components/wizard/StepSeven'
@@ -93,7 +93,7 @@ export default function EditCharacterPage() {
         secondaryAmmo: d.weaponSecondary?.ammoCurrent ?? 0,
         equipment: d.equipment?.[0] ?? '',
         incidentalItem: d.incidentalItem ?? '',
-        rations: d.rations ?? '',
+        rations: normalizeRations(d.rations).type,
         steps: [
           { attrKey: null, skillDeltas: {}, skillCDPSpent: 0 },
           { attrKey: null, skillDeltas: {}, skillCDPSpent: 0 },

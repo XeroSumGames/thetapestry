@@ -114,7 +114,7 @@ export default function RandomCharacterPage() {
       state.weight = randWeight()
       state.currentStep = 9
       state.threeWords = [pick(THREE_WORDS), pick(THREE_WORDS), pick(THREE_WORDS)]
-      state.rations = 'Standard'
+      state.rations = 'Standard Rations' // Wizard string; promoted to { type, count: 2 } at build time per locked canon.
 
       // Map paradigm RAPID onto step data via attrSpent
       state.steps[3] = {

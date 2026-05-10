@@ -241,7 +241,7 @@ export default function PrintSheet({ state, liveState }: Props) {
           <div style={{ fontSize: '6pt', color: '#000', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2pt' }}>Equipment & Gear</div>
           {state.equipment && <div style={{ fontSize: '7pt', fontWeight: 600, color: '#000' }}>{state.equipment}</div>}
           {state.incidentalItem && <div style={{ fontSize: '6pt', color: '#000' }}>Incidental: {state.incidentalItem}</div>}
-          {state.rations && <div style={{ fontSize: '6pt', color: '#000' }}>Rations: {state.rations}</div>}
+          {state.rations && <div style={{ fontSize: '6pt', color: '#000' }}>Rations: 2 × {state.rations}</div>}
           {!state.equipment && !state.incidentalItem && <div style={{ fontSize: '6pt', color: '#000' }}>None</div>}
         </div>
         {/* Relationships — pre-fills from npc_relationships when liveState

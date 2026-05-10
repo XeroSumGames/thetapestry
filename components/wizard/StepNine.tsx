@@ -226,7 +226,7 @@ export default function StepNine({ state, onChange }: Props) {
             ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : '—'],
             ['Equipment',        state.equipment],
             ['Incidental item',  state.incidentalItem],
-            ['Rations',          state.rations],
+            ['Rations',          state.rations ? `2 × ${state.rations}` : ''],
           ] as [string, string][]).map(([label, value]) => (
             <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               <label style={fieldLabel}>{label}</label>

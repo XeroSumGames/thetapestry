@@ -321,6 +321,57 @@ export const RATIONS: RationItem[] = [
   { name: 'Military Grade Rations', rarity: 'Rare',     enc: 0.25, notes: 'Compact, calorie-dense; 1 day food + water.' },
 ]
 
+// Rations stored on a character. Locked 2026-05-09 per Xero's
+// "characters begin play with 2 Rations" canon; promoted from a
+// single string to { type, count } on 2026-05-10.
+//
+// Legacy data: characters created before the promotion stored
+// `rations: string` (e.g. "Standard Rations" or empty). The
+// normalizer below accepts both shapes so old characters keep
+// rendering correctly. Never read `c.data.rations` directly —
+// always go through normalizeRations() so the count is right.
+export interface CharacterRations {
+  type: string  // empty string when no rations
+  count: number
+}
+
+/** Default starting allotment per locked canon. 2 × Standard
+ *  Rations unless the GM overrides during character creation. */
+export const DEFAULT_STARTING_RATIONS: CharacterRations = {
+  type: 'Standard Rations',
+  count: 2,
+}
+
+/** Tolerant normalizer for `c.data.rations`. Accepts:
+ *  - Legacy string ("Standard Rations") -> { type, count: 1 }
+ *  - Empty string / null / undefined    -> { type: '', count: 0 }
+ *  - Already-structured { type, count } -> passes through with
+ *    fallbacks for missing fields.
+ */
+export function normalizeRations(raw: unknown): CharacterRations {
+  if (raw == null) return { type: '', count: 0 }
+  if (typeof raw === 'string') {
+    if (!raw.trim()) return { type: '', count: 0 }
+    return { type: raw, count: 1 }
+  }
+  if (typeof raw === 'object') {
+    const obj = raw as { type?: unknown; count?: unknown }
+    const type = typeof obj.type === 'string' ? obj.type : ''
+    const count = typeof obj.count === 'number' && obj.count >= 0 ? obj.count : 0
+    if (!type) return { type: '', count: 0 }
+    return { type, count }
+  }
+  return { type: '', count: 0 }
+}
+
+/** Display formatter — "2 × Standard Rations", or "Standard
+ *  Rations" when count is 1, or empty when count is 0. */
+export function formatRations(r: CharacterRations): string {
+  if (!r.type || r.count <= 0) return ''
+  if (r.count === 1) return r.type
+  return `${r.count} × ${r.type}`
+}
+
 // ----------------------------
 // ARMOR (Quickstart Table 7) — canon
 // ----------------------------
@@ -756,7 +807,11 @@ export interface XSECharacter {
   // Equipment
   equipment: string[];
   incidentalItem: string;
-  rations: string;
+  /** See `CharacterRations` + `normalizeRations()`. Allowed to be
+   *  a legacy string for backwards compatibility with characters
+   *  created before the 2026-05-10 promotion. Always read via the
+   *  normalizer; never assume the shape directly. */
+  rations: string | CharacterRations;
 
   // Tracking
   insightDice: number;
@@ -821,7 +876,7 @@ export function createBlankCharacter(): XSECharacter {
     weaponSecondary: { weaponName: '', condition: 'Used', ammoCurrent: 0 },
     equipment: [],
     incidentalItem: '',
-    rations: '',
+    rations: { ...DEFAULT_STARTING_RATIONS },
     insightDice: 2,
     cdp: 0,
     stressLevel: 0,
@@ -894,7 +949,7 @@ export function buildCharacterFromPregen(seed: {
       : { weaponName: '', condition: 'Used', ammoCurrent: 0 },
     equipment: seed.equipment,
     incidentalItem: seed.incidentalItem ?? '',
-    rations: '',
+    rations: { ...DEFAULT_STARTING_RATIONS },
     insightDice: 2,
     cdp: 0,
     stressLevel: 0,

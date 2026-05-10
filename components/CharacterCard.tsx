@@ -15,7 +15,7 @@ import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition,
 import { computeEncumbrance } from '../lib/encumbrance'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
-import { SKILLS } from '../lib/xse-schema'
+import { SKILLS, normalizeRations } from '../lib/xse-schema'
 
 const ATTR_KEYS = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 
@@ -267,7 +267,7 @@ function CharacterCardImpl({
       secondaryAmmo: data.weaponSecondary?.ammoCurrent ?? 0,
       equipment: data.equipment?.[0] ?? '',
       incidentalItem: data.incidentalItem ?? '',
-      rations: data.rations ?? '',
+      rations: normalizeRations(data.rations).type,
       steps: [
         { attrKey: null, skillDeltas: {}, skillCDPSpent: 0, note: '', complication: data.complication, motivation: data.motivation },
         { attrKey: null, skillDeltas: {}, skillCDPSpent: 0, note: '' },

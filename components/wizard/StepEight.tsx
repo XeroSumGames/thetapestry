@@ -452,8 +452,12 @@ export default function StepEight({ state, onChange }: Props) {
           placeholder="e.g. a worn photograph, a lucky coin..." />
       </div>
 
-      {/* Rations — canon source: lib/xse-schema.ts:RATIONS. */}
-      <div style={sh}>Rations — choose one (optional)</div>
+      {/* Rations — canon source: lib/xse-schema.ts:RATIONS. Locked
+          canon: characters begin play with 2 Rations. The picker
+          chooses the TYPE; the count of 2 lands at character build
+          time (lib/xse-engine.ts buildXSECharacter). Unless the GM
+          says otherwise, Standard is the default. */}
+      <div style={sh}>Rations — pick a type (you start with 2)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '1rem' }}>
         {RATIONS.map(item => {
           const sel = state.rations === item.name
@@ -463,7 +467,13 @@ export default function StepEight({ state, onChange }: Props) {
               background: sel ? '#2a1210' : '#242424',
               border: `1px solid ${sel ? '#c0392b' : '#2e2e2e'}`,
               borderRadius: '3px', padding: '8px 10px', cursor: 'pointer',
+              position: 'relative',
             }}>
+              {sel && (
+                <span style={{ position: 'absolute', top: '4px', right: '6px', fontSize: '13px', color: '#7fc458', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                  × 2
+                </span>
+              )}
               <div style={{ fontSize: '13px', color: rarityColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '3px' }}>
                 {item.rarity}
               </div>

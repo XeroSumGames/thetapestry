@@ -105,6 +105,11 @@ export interface WizardState {
   secondaryAmmo: number
   equipment: string
   incidentalItem: string
+  /** Backwards-compat: still typed as string in the wizard state
+   *  because the StepEight chip picks one rations type; we layer
+   *  the structured `{ type, count }` shape onto the character
+   *  output in xse-schema's createBlankCharacter() / build flow.
+   *  See `lib/xse-schema.ts:CharacterRations` + `normalizeRations()`. */
   rations: string
 }
 
@@ -128,7 +133,7 @@ export function createWizardState(): WizardState {
     secondaryAmmo: 0,
     equipment: '',
     incidentalItem: '',
-    rations: '',
+    rations: 'Standard Rations', // 2 starting per locked canon; promoted to { type, count: 2 } when the character is built.
   }
 }
 
@@ -220,7 +225,11 @@ char.creationMethod = 'backstory'
   }
   char.equipment = state.equipment ? [state.equipment] : []
   char.incidentalItem = state.incidentalItem
+  // Promote the wizard's string pick to the structured shape with
+  // the locked default count of 2. Empty string -> no rations.
   char.rations = state.rations
+    ? { type: state.rations, count: 2 }
+    : { type: '', count: 0 }
 
   return char
 }

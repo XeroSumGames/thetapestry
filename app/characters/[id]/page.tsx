@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
-import { ATTRIBUTE_LABELS, AttributeName } from '../../../lib/xse-schema'
+import { ATTRIBUTE_LABELS, AttributeName, normalizeRations, formatRations } from '../../../lib/xse-schema'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -155,7 +155,7 @@ export default function CharacterViewPage() {
             ['Secondary Weapon', d.weaponSecondary?.weaponName],
             ['Equipment', d.equipment?.[0]],
             ['Incidental Item', d.incidentalItem],
-            ['Rations', d.rations],
+            ['Rations', formatRations(normalizeRations(d.rations))],
           ].filter(([, v]) => v).map(([label, value]) => (
             <div key={String(label)}>
               <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>{label}</div>
