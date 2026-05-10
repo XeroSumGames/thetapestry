@@ -444,7 +444,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
       : 'They were successful and residents have what they need.'
     const failBody = r.outcome === 'fed_check'
       ? 'They were unsuccessful - residents will go hungry this week.'
-      : 'They were unsuccessful - residents will go without.'
+      : 'They were unsuccessful, and residents will go without.'
     const body = isHit ? successBody : failBody
     const isExpanded = expandedRollIds.has(r.id)
     return (
