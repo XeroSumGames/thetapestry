@@ -577,14 +577,14 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     const hit = wild || r.outcome === 'Success'
     const adverb = wild
       ? 'were Wildly Successful at'
-      : hit
+      : r.outcome === 'Success'
         ? 'were Successful at'
         : r.outcome === 'Low Insight'
           ? 'failed miserably at'
           : r.outcome === 'Dire Failure'
             ? 'failed badly at'
-            : 'failed their'
-    const skillTail = hit ? skill : `${skill} check`
+            : 'were Unsuccessful at'
+    const skillTail = skill
     // "A, B, C, and D" with Oxford serial comma when 3+; "A and B"
     // for two; just "A" for solo.
     const formatNames = (names: string[]) => {
