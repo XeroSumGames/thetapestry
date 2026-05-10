@@ -6164,6 +6164,7 @@ export default function TablePage() {
             onAddNPC={addNPC}
             onGrantAction={handleGrantAction}
             onSkipTurn={handleSkipTurn}
+            combatRound={combatRound}
           />
           {/* Action buttons — shown for active combatant or GM */}
           {(() => {
@@ -6210,9 +6211,6 @@ export default function TablePage() {
 
             return (
               <div style={{ display: 'flex', gap: '3px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', marginTop: '6px' }}>
-                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '2px', lineHeight: 1 }}>
-                  Round {combatRound}
-                </span>
                 {/* ── GRAPPLED STATE: only Break Free available ── */}
                 {isGrappled && (
                   <>

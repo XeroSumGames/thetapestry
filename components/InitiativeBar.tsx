@@ -100,6 +100,10 @@ export interface InitiativeBarProps {
   onAddNPC: (name: string) => void | Promise<void>
   onGrantAction: (entry: any) => void | Promise<void>
   onSkipTurn: (entry: any) => void | Promise<void>
+  /** Current combat round number — appended to the "INITIATIVE"
+   *  label as "INITIATIVE · ROUND N" so round + initiative read
+   *  as one cohesive header instead of two stacked rows. */
+  combatRound?: number
 }
 
 function InitiativeBarImpl({
@@ -107,6 +111,7 @@ function InitiativeBarImpl({
   entries,
   campaignNpcs,
   userId,
+  combatRound,
   isGM,
   entrySceneTags,
   onNextTurn,
@@ -213,7 +218,7 @@ function InitiativeBarImpl({
         {/* Sticky left pane — "⚔️ Initiative" label + active pill */}
         <div style={{ position: 'sticky', left: 0, zIndex: 10, background: '#0d0d0d', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #2e2e2e', marginRight: '4px', flexShrink: 0 }}>
           <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
-            ⚔️ Initiative
+            ⚔️ Initiative{combatRound ? ` · Round ${combatRound}` : ''}
           </div>
           {active && (
             <div
