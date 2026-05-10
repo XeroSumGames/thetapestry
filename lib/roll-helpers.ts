@@ -61,9 +61,9 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // Die at the dice-engine layer, but the narrative tag matches the
   // user-facing wording in lessons.md.
   const outcomeTag = wild
-    ? ' and has a Moment of Insight as to why'
+    ? ' and has a Moment of Insight as to why it went so well'
     : r.outcome === 'Low Insight'
-      ? ', but has a Moment of Insight as to why they were unsuccessful'
+      ? ' and has a Moment of Insight as to why it went so badly'
       : ''
 
   // Aim action - no dice, no target.
