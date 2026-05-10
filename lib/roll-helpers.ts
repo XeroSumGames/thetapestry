@@ -63,7 +63,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const outcomeTag = wild
     ? ' and has a Moment of Insight as to why'
     : r.outcome === 'Low Insight'
-      ? ', but has a Moment of Insight as to why they failed'
+      ? ', but has a Moment of Insight as to why they were unsuccessful'
       : ''
 
   // Aim action - no dice, no target.
