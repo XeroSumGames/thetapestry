@@ -381,16 +381,19 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       auto-fogs every cell outside any PC's vision when walls are
       authored (line ~1381) and the token-render loop filters out
       tokens whose anchor cell is fogged for non-GM viewers (line
-      ~1443). Verified during 2026-05-10 audit; awaiting
-      playtest confirmation 2026-05-12. The "LoS-aware hiding is
-      Phase 3" comment in the source is stale and should be
-      removed when next touched. Caveats remaining as separate
-      polish:
-      - **Multi-cell token gap**: a 2×2 vehicle straddling a wall
-        only checks its anchor cell. A truck might be visible
-        when only its anchor is visible (or hidden when the anchor
-        is hidden but other cells are exposed). Fix: change the
-        filter to "visible if ANY footprint cell is in `visible`".
+      ~1443). **Confirmed 2026-05-10:** wall-between-PC-and-NPC
+      hides the NPC ✅; opening the door reveals the NPC ✅; PC
+      moving around a corner reveals previously-hidden tokens ✅.
+      Multi-cell straddling test deferred to 2026-05-12 playtest.
+      The "LoS-aware hiding is Phase 3" comment in the source is
+      stale and should be removed when next touched. Caveats
+      remaining as separate polish:
+      - **Multi-cell token gap** (awaiting playtest): a 2×2 vehicle
+        straddling a wall only checks its anchor cell. A truck
+        might be visible when only its anchor is visible (or
+        hidden when the anchor is hidden but other cells are
+        exposed). Fix: change the filter to "visible if ANY
+        footprint cell is in `visible`".
       - **Polygon vision mask** (cleaner rendering than per-cell
         black-rect fog): cosmetic polish, not required for the
         gameplay rule. Per-cell fog works correctly today; a
