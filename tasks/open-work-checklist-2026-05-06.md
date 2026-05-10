@@ -376,7 +376,19 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 ## TACTICAL MAP — Long-term
 
 - [ ] **Line of sight Phase 3** (polygon vision mask). Audit
-      scheduled 2026-05-10.
+      scheduled 2026-05-10. Two distinct sub-features cluster
+      under this:
+      - **Vision-masked FOG**: per-PC fog reshaped based on what
+        each token can see (rays / polygon traced from each PC's
+        position, blocked by walls + closed doors). Cells outside
+        the visible polygon render dark.
+      - **Token-visibility gating**: NPCs / objects / other PCs
+        that are inside the rendered map area but *behind* a
+        wall (or otherwise outside the active PC's LoS) should
+        not be drawn on that player's view at all. Currently
+        every token is visible through walls regardless of LoS.
+      The two share the LoS computation (ray-from-PC vs. wall
+      segments) so they should ship as one cohesive pass.
 
 - [x] **FOG wall/door/window drawing — SHIFT to snap.** SHIPPED
       2026-05-09. `getSegmentEndpoint` at
