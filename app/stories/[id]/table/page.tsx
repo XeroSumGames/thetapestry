@@ -5457,7 +5457,7 @@ export default function TablePage() {
             supabase.from('initiative_order').update({ coordinate_target: coordTarget, coordinate_bonus: bonus }).in('id', appliedAllyIds),
             supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId, character_name: 'System',
-              label: `🎯 ${activeInit?.character_name ?? 'A coordinator'}'s coordination against ${coordTarget} gives ${appliedTo.join(', ')} +${bonus} CMod when attacking`,
+              label: `🎯 ${activeInit?.character_name ?? 'A coordinator'} Successfully coordinated an attack against ${coordTarget} with ${appliedTo.join(', ')}`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
             }),
           ])
