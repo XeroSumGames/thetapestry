@@ -1958,7 +1958,7 @@ export default function TablePage() {
             deathLogRows.push({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
-              label: `💀 ${e.character.name} has fallen.`,
+              label: `💀 ${e.character.name} is gone.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
             if (e.character?.id) void appendProgressionLog(e.character.id, 'wound', '💀 Died.')
@@ -2015,7 +2015,7 @@ export default function TablePage() {
             deathLogRows.push({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
-              label: `💀 ${npc.name} has died.`,
+              label: `💀 ${npc.name} is gone.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
           }
