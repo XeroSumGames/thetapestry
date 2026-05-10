@@ -560,6 +560,13 @@ export default function NotificationBell() {
           background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 9999,
           boxSizing: 'border-box',
+          // Reset inherited typographic styles. The /table page wraps
+          // this bell in a header div with uppercase + tight letter-
+          // spacing; without this reset, notification bodies render
+          // ALL CAPS. Chip labels still set their own uppercase so
+          // they're unaffected.
+          textTransform: 'none',
+          letterSpacing: 'normal',
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>

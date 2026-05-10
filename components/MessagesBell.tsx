@@ -227,6 +227,16 @@ export default function MessagesBell() {
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
           zIndex: 9999,
           boxSizing: 'border-box',
+          // Reset inherited typographic styles. The /table page wraps
+          // this bell in a header div with `textTransform: uppercase`
+          // and `letterSpacing: .1em`, which cascaded into the message
+          // headlines and rendered them ALL CAPS — fine for the chip
+          // labels (which set their own uppercase), wrong for the
+          // sentence-case body. Resetting here lets children opt in
+          // explicitly. /dashboard never had this issue because its
+          // bell isn't wrapped in an uppercase header.
+          textTransform: 'none',
+          letterSpacing: 'normal',
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
