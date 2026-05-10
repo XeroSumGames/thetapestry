@@ -119,7 +119,7 @@ export default function Page() {
           mechanical penalties for the duration:
         </P>
         <ul style={{ margin: '0 0 1rem 1.25rem', color: '#d4cfc9', lineHeight: 1.65 }}>
-          <li><Term>-2 CMod</Term> on physical checks: Athletics, Melee Combat, Ranged Combat, Stealth, Survival, Unarmed Combat.</li>
+          <li><Term>-2 CMod</Term> on physical checks: Athletics, Melee Combat, Ranged Combat, Stealth, Survival, Unarmed Combat. Applied automatically by the platform — when the roll fires, a <Term>🤒 Sick</Term> note lands in the roll-feed traitNotes so the deduction is visible.</li>
           <li><Term>RP capped at half-max</Term> (round down). If the character was above the cap when they got sick, current RP gets clamped down.</li>
           <li>WP regen still works at the standard <Term>1 WP per day of rest</Term>. RP regen still works at the standard rate, but the half-max cap is the ceiling until they recover.</li>
         </ul>

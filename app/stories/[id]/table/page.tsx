@@ -4110,6 +4110,29 @@ export default function TablePage() {
     let cmodVal = parseInt(cmod, 10) || 0
     // Add range band CMod for weapon attacks
     if (pendingRoll.weapon) cmodVal += getRangeCMod()
+    // Infection — sick characters take -2 CMod on physical checks
+    // (Athletics / Melee Combat / Ranged Combat / Stealth / Survival
+    // / Unarmed Combat) per locked canon. Detect by both:
+    //   (a) skill name in the label (e.g. "Cree — Athletics")
+    //   (b) combat action that ALWAYS uses a physical skill behind
+    //       the scenes (Attack / Charge / Subdue / Sprint / Grapple
+    //       / Unarmed / Fire from Cover / Rapid Fire).
+    // Logged via infectionSickCmodNote so the player sees the -2
+    // appear in the roll-feed traitNotes alongside the result.
+    let infectionSickCmodNote = ''
+    {
+      const rollerEntry = entries.find(e => e.character.name === characterName)
+      const rollerNpc = campaignNpcs.find((n: any) => n.name === characterName)
+      const rollerInfection = (rollerEntry?.liveState as any)?.infection_state
+        ?? (rollerNpc as any)?.infection_state
+      if (rollerInfection) {
+        const PHYSICAL_LABEL_RE = /\b(Athletics|Melee Combat|Ranged Combat|Stealth|Survival|Unarmed Combat|Attack|Charge|Subdue|Sprint|Grapple|Unarmed|Fire from Cover|Rapid Fire)\b/i
+        if (PHYSICAL_LABEL_RE.test(pendingRoll.label)) {
+          cmodVal -= 2
+          infectionSickCmodNote = `🤒 Sick (${rollerInfection === 'wound' ? 'Wound Infection' : 'Sickness & Disease'}) — -2 CMod on physical check.`
+        }
+      }
+    }
     let die1: number, die2: number
     let preRollSpent = false
     // Populated only on 3d6 Insight rolls — carries all three dice so the
@@ -5525,7 +5548,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...(infectionSickCmodNote ? [infectionSickCmodNote] : []), ...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
       diceRolled: insightDiceRolled,
     } as any)
 

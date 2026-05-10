@@ -177,9 +177,11 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
       `/rules/combat/infection`, schema applied via
       `sql/infection-2026-05-09.sql`, GM "Infection" button +
       Treat Infection dropdown wired. Canon pinned in
-      `memory/project_infection_canon.md`. **Still open:** -2 CMod
-      on physical checks while sick (deferred to own commit since
-      it touches roll-mod composition).
+      `memory/project_infection_canon.md`. **-2 CMod on physical
+      checks while sick** wired in `executeRoll` 2026-05-10 — the
+      sick CMod note lands in the roll-feed traitNotes
+      (`🤒 Sick (...) — -2 CMod on physical check.`) so the
+      player sees the deduction every time it fires.
 
 - [ ] **Armor system.** Build armor into the platform - likely affects
       the character sheet (armor slots / worn items), damage calculation
