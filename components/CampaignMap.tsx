@@ -103,7 +103,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const measurePointsRef = useRef<Array<{ lat: number; lng: number }>>([])
   const measureMarkersRef = useRef<any[]>([])
   const measureLineRef = useRef<any>(null)
-  const measureLabelRef = useRef<any>(null)
+  const measureLabelsRef = useRef<any[]>([])
   const [measureMode, setMeasureMode] = useState(false)
   const [measureDistanceText, setMeasureDistanceText] = useState<string>('')
   useEffect(() => { measureModeRef.current = measureMode }, [measureMode])
@@ -208,6 +208,19 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const feet = meters * 3.28084
     return `${Math.round(feet)} ft (${Math.round(meters)} m)`
   }
+  // Walk time at 3 mph (≈ 80.47 m/min) — typical sustained foot pace
+  // for an unencumbered adult on flat ground. "23 min" for sub-hour
+  // legs, "2h 4m" once it crosses 60 minutes, "<1 min" for very
+  // short legs so the chip never reads "0 min."
+  function formatWalkTime(meters: number): string {
+    const MIN_PER_M = 1 / 80.4672
+    const minutes = meters * MIN_PER_M
+    if (minutes < 1) return '<1 min'
+    if (minutes < 60) return `${Math.round(minutes)} min`
+    const h = Math.floor(minutes / 60)
+    const m = Math.round(minutes - h * 60)
+    return m === 0 ? `${h}h` : `${h}h ${m}m`
+  }
   // Wipe every measure-tool layer + reset state. Used by the toggle
   // button, Esc keypress, and unmount cleanup.
   function clearMeasure() {
@@ -215,7 +228,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     measureMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
     measureMarkersRef.current = []
     if (measureLineRef.current) { try { map?.removeLayer(measureLineRef.current) } catch {} ; measureLineRef.current = null }
-    if (measureLabelRef.current) { try { map?.removeLayer(measureLabelRef.current) } catch {} ; measureLabelRef.current = null }
+    measureLabelsRef.current.forEach(l => { try { map?.removeLayer(l) } catch {} })
+    measureLabelsRef.current = []
     measurePointsRef.current = []
     setMeasureDistanceText('')
   }
@@ -238,19 +252,21 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const latlngs = measurePointsRef.current.map(p => [p.lat, p.lng]) as [number, number][]
       if (measureLineRef.current) { try { map.removeLayer(measureLineRef.current) } catch {} }
       measureLineRef.current = L.polyline(latlngs, { color: '#7ab3d4', weight: 3, opacity: 0.9, dashArray: '6,6' }).addTo(map)
-      // Distance label at midpoint of the FULL polyline's last leg —
-      // keeps the readout near the most recent click.
-      const mid = {
-        lat: (measurePointsRef.current[i - 1].lat + measurePointsRef.current[i - 2].lat) / 2,
-        lng: (measurePointsRef.current[i - 1].lng + measurePointsRef.current[i - 2].lng) / 2,
-      }
-      const total = totalMeters(measurePointsRef.current)
-      const text = formatDistance(total)
-      setMeasureDistanceText(text)
-      const labelHtml = `<div style="padding:3px 8px;background:rgba(15,15,15,0.92);border:1px solid #7ab3d4;border-radius:3px;color:#cce0f5;font-family:Carlito,sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5);">${text}</div>`
+      // Per-segment label — each leg gets its own distance + walk-time
+      // chip at its midpoint so multi-waypoint paths show the breakdown
+      // (not just the total). Walk time at 3 mph per `formatWalkTime`.
+      const prev = measurePointsRef.current[i - 2]
+      const cur = measurePointsRef.current[i - 1]
+      const segMeters = haversineMeters(prev, cur)
+      const mid = { lat: (prev.lat + cur.lat) / 2, lng: (prev.lng + cur.lng) / 2 }
+      const segText = `${formatDistance(segMeters)} · 🚶 ${formatWalkTime(segMeters)}`
+      const labelHtml = `<div style="padding:3px 8px;background:rgba(15,15,15,0.92);border:1px solid #7ab3d4;border-radius:3px;color:#cce0f5;font-family:Carlito,sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5);">${segText}</div>`
       const labelIcon = L.divIcon({ html: labelHtml, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
-      if (measureLabelRef.current) { try { map.removeLayer(measureLabelRef.current) } catch {} }
-      measureLabelRef.current = L.marker([mid.lat, mid.lng], { icon: labelIcon, interactive: false, keyboard: false, zIndexOffset: 9500 }).addTo(map)
+      const segLabel = L.marker([mid.lat, mid.lng], { icon: labelIcon, interactive: false, keyboard: false, zIndexOffset: 9500 }).addTo(map)
+      measureLabelsRef.current.push(segLabel)
+      // Toolbar shows the total path + total walk time.
+      const total = totalMeters(measurePointsRef.current)
+      setMeasureDistanceText(`${formatDistance(total)} · 🚶 ${formatWalkTime(total)} total`)
     } else {
       setMeasureDistanceText('Click a second point to measure…')
     }
@@ -508,7 +524,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       measureMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
       measureMarkersRef.current = []
       if (measureLineRef.current) { try { map?.removeLayer(measureLineRef.current) } catch {} ; measureLineRef.current = null }
-      if (measureLabelRef.current) { try { map?.removeLayer(measureLabelRef.current) } catch {} ; measureLabelRef.current = null }
+      measureLabelsRef.current.forEach(l => { try { map?.removeLayer(l) } catch {} })
+      measureLabelsRef.current = []
       measurePointsRef.current = []
       if (pingChannelRef.current) {
         try { supabase.removeChannel(pingChannelRef.current) } catch {}
