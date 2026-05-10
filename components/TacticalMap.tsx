@@ -1440,11 +1440,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // overlay is only 35% opacity above). Combined with the
       // auto-fog-outside-PC-LoS pass earlier in this render, this is
       // the LoS gating — tokens behind walls are auto-fogged and
-      // therefore filtered out here. For multi-cell tokens we still
-      // only check the anchor cell, so a 2x2 straddling a wall can
-      // pop on/off based on anchor visibility — fix is to test ANY
-      // footprint cell against `visible`.
-      .filter(t => isGM || !fogMap[`${t.grid_x},${t.grid_y}`])
+      // therefore filtered out here. For multi-cell tokens we scan
+      // the entire grid_w × grid_h footprint: a token is visible iff
+      // ANY of its cells is unfogged. (Anchor-only previously caused
+      // a 2×2 vehicle straddling a wall to pop in/out based on the
+      // top-left cell.)
+      .filter(t => {
+        if (isGM) return true
+        const gw = t.grid_w ?? 1
+        const gh = t.grid_h ?? 1
+        if (gw === 1 && gh === 1) return !fogMap[`${t.grid_x},${t.grid_y}`]
+        for (let dx = 0; dx < gw; dx++) {
+          for (let dy = 0; dy < gh; dy++) {
+            if (!fogMap[`${t.grid_x + dx},${t.grid_y + dy}`]) return true
+          }
+        }
+        return false
+      })
       .sort((a, b) => {
       const tier = (t: any) => t.token_type === 'object' ? 0 : t.token_type === 'npc' ? 1 : 2
       return tier(a) - tier(b)
