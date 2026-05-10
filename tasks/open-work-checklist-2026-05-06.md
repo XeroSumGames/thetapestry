@@ -375,20 +375,26 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 
 ## TACTICAL MAP — Long-term
 
-- [ ] **Line of sight Phase 3** (polygon vision mask). Audit
-      scheduled 2026-05-10. Two distinct sub-features cluster
-      under this:
-      - **Vision-masked FOG**: per-PC fog reshaped based on what
-        each token can see (rays / polygon traced from each PC's
-        position, blocked by walls + closed doors). Cells outside
-        the visible polygon render dark.
-      - **Token-visibility gating**: NPCs / objects / other PCs
-        that are inside the rendered map area but *behind* a
-        wall (or otherwise outside the active PC's LoS) should
-        not be drawn on that player's view at all. Currently
-        every token is visible through walls regardless of LoS.
-      The two share the LoS computation (ray-from-PC vs. wall
-      segments) so they should ship as one cohesive pass.
+- [x] **Line of sight — token visibility gating.** SHIPPED via
+      the existing `29e7f25 fix(tactical): auto-fog outside PC LoS
+      + PC-only vision lift` work. `components/TacticalMap.tsx`
+      auto-fogs every cell outside any PC's vision when walls are
+      authored (line ~1381) and the token-render loop filters out
+      tokens whose anchor cell is fogged for non-GM viewers (line
+      ~1443). Verified during 2026-05-10 audit; awaiting
+      playtest confirmation 2026-05-12. The "LoS-aware hiding is
+      Phase 3" comment in the source is stale and should be
+      removed when next touched. Caveats remaining as separate
+      polish:
+      - **Multi-cell token gap**: a 2×2 vehicle straddling a wall
+        only checks its anchor cell. A truck might be visible
+        when only its anchor is visible (or hidden when the anchor
+        is hidden but other cells are exposed). Fix: change the
+        filter to "visible if ANY footprint cell is in `visible`".
+      - **Polygon vision mask** (cleaner rendering than per-cell
+        black-rect fog): cosmetic polish, not required for the
+        gameplay rule. Per-cell fog works correctly today; a
+        polygon would just look smoother at the wall edges.
 
 - [x] **FOG wall/door/window drawing — SHIFT to snap.** SHIPPED
       2026-05-09. `getSegmentEndpoint` at
