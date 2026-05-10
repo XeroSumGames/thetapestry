@@ -146,12 +146,12 @@ interface RollResult {
   // When an Insight Die is spent for a 3d6 roll, we keep ALL three dice
   // per SRD. `diceRolled` surfaces every individual value so the modal
   // can render three boxes instead of two (die2 would otherwise display
-  // as d2+d3 — misleadingly as a single die value). Length 2 for normal
+  // as d2+d3 - misleadingly as a single die value). Length 2 for normal
   // rolls, length 3 for Insight-die 3d6 rolls.
   diceRolled?: number[]
 }
 
-// Apprentice bond — populated from community_members rows where
+// Apprentice bond - populated from community_members rows where
 // recruitment_type='apprentice' and apprentice_meta is set. Carries
 // just enough for NpcCard to render the wizard trigger and for the
 // wizard itself to find the right rows on save.
@@ -224,7 +224,7 @@ export default function TablePage() {
   const revealChannelRef = useRef<any>(null)
   const communityMembersChannelRef = useRef<any>(null)
   const myCharIdRef = useRef<string | null>(null)
-  // loadEntries sequence guard — see definition below.
+  // loadEntries sequence guard - see definition below.
   const loadEntriesSeqRef = useRef(0)
   const loadInitSeqRef = useRef(0)
 
@@ -234,12 +234,12 @@ export default function TablePage() {
   useEffect(() => { userIdRef.current = userId }, [userId])
 
   // Header-bar nested dropdowns (Checks / Community / GM Tools). Only
-  // one menu opens at a time — clicking another closes the previous;
+  // one menu opens at a time - clicking another closes the previous;
   // clicking outside closes whatever's open. Declared up here so the
   // outside-click useEffect below can reference it.
   const [openHeaderMenu, setOpenHeaderMenu] = useState<string | null>(null)
   // Pinned = user clicked the trigger (as opposed to just hovering).
-  // When pinned, mouse-leave does NOT collapse the menu — you have to
+  // When pinned, mouse-leave does NOT collapse the menu - you have to
   // click the trigger again or click outside. Fixes the "I'm chasing
   // the buttons" jitter where moving toward a child accidentally
   // crossed a dead zone and collapsed the menu.
@@ -271,7 +271,7 @@ export default function TablePage() {
       document.removeEventListener('keydown', handleKey)
     }
   }, [openHeaderMenu])
-  // Per-PC stress memory — used to detect the <5 → 5 transition at the
+  // Per-PC stress memory - used to detect the <5 → 5 transition at the
   // table-page level so the Stress Check modal fires even when the target's
   // CharacterCard sheet isn't mounted.
   const prevStressByStateIdRef = useRef<Map<string, number>>(new Map())
@@ -283,7 +283,7 @@ export default function TablePage() {
   const [isGM, setIsGM] = useState(false)
   // Thriver = app-level admin role. Gets full GM parity (godmode) so
   // they can run / debug / repair any campaign, not just their own.
-  // RLS already lets Thrivers read+write everywhere — see
+  // RLS already lets Thrivers read+write everywhere - see
   // sql/thriver-godmode-policies.sql. The UI matches by routing
   // gmLike (= isGM || isThriver) anywhere `isGM` gates an editable
   // affordance. Strict isGM is kept for label-only surfaces ("GM View",
@@ -299,9 +299,9 @@ export default function TablePage() {
   const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
   const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
-  const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
-  const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn — prevents races where realtime echo + optimistic call both advance, silently skipping a combatant
-  const consumeActionInFlightRef = useRef<Set<string>>(new Set())   // Per-entry lock for consumeAction — prevents double-click races from decrementing actions_remaining twice (e.g. Aim button hit twice fast burning both actions instead of one)
+  const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal - refs survive React batching
+  const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn - prevents races where realtime echo + optimistic call both advance, silently skipping a combatant
+  const consumeActionInFlightRef = useRef<Set<string>>(new Set())   // Per-entry lock for consumeAction - prevents double-click races from decrementing actions_remaining twice (e.g. Aim button hit twice fast burning both actions instead of one)
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
@@ -349,7 +349,7 @@ export default function TablePage() {
   // Persist per-campaign so a refresh keeps players on the tactical view
   // they were watching. Default false on first visit; flipped true by the
   // GM share broadcast, the combat_ended broadcast, the GM's own toggle
-  // button, etc. — every transition writes back to localStorage via the
+  // button, etc. - every transition writes back to localStorage via the
   // effect below.
   const [showTacticalMap, setShowTacticalMap] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
@@ -373,7 +373,7 @@ export default function TablePage() {
     let cancelled = false
     ;(async () => {
       // Pull every scene in THIS campaign first so we can scope the
-      // token query to those ids only — pre-fix, the scene_tokens
+      // token query to those ids only - pre-fix, the scene_tokens
       // SELECT was unfiltered, so a PC's character_id resolved to
       // whichever stale token row happened to be processed last
       // (e.g. one left over from a prior scene like "Canyon Lake
@@ -401,7 +401,7 @@ export default function TablePage() {
       if (cancelled) return
       // Build character_id → scene_id and npc_id → scene_id lookups.
       // When a PC has tokens on multiple scenes (very common with
-      // multi-scene campaigns), PREFER the active scene — that way
+      // multi-scene campaigns), PREFER the active scene - that way
       // the cross-scene chip only shows when the token is genuinely
       // off-stage. Pre-fix the last-write-wins behavior could pick
       // the off-stage scene by accident and falsely tag the PC.
@@ -435,7 +435,7 @@ export default function TablePage() {
   // Bump tokenScenesRefreshKey when a token moves between scenes
   // (the "→ Scene" button in TacticalMap mutates scene_tokens.scene_id
   // and broadcasts token_changed; postgres_changes on scene_tokens
-  // catches the row update directly here). Cheap — just flips a
+  // catches the row update directly here). Cheap - just flips a
   // counter that retriggers the scene-tags effect above.
   useEffect(() => {
     if (!id) return
@@ -455,7 +455,7 @@ export default function TablePage() {
 
   // Mode-aware sidebar tab default. Campaign map → Pins ("where are
   // we"); Tactical/Combat → NPCs ("who's on the field"). The flip only
-  // intervenes when the current tab is the OTHER mode's default —
+  // intervenes when the current tab is the OTHER mode's default -
   // explicit picks like Assets / Notes survive mode switches. Also
   // runs on mount, so a session starting in tactical mode lands on
   // NPCs rather than the Pins initial-state default.
@@ -488,7 +488,7 @@ export default function TablePage() {
   const [coordinateSelection, setCoordinateSelection] = useState('')
   const sprintPendingRef = useRef(false)
   // Set true between Sprint pre-consume and the Athletics roll resolving.
-  // While true, nextTurn's new-round branch holds back — if Frankie is the
+  // While true, nextTurn's new-round branch holds back - if Frankie is the
   // last combatant and his 2-action pre-consume would trigger a new round,
   // we want the Athletics check (and its log entry) to resolve FIRST so
   // the feed reads "sprinted … / Initiative reroll" instead of the reroll
@@ -502,7 +502,7 @@ export default function TablePage() {
   // move to a former active and silently failing to consume actions.
   //
   // EXCEPTION: Sprint pre-consumes 2 actions BEFORE the user clicks the
-  // target cell — which advances the turn immediately. Sprint then needs
+  // target cell - which advances the turn immediately. Sprint then needs
   // its target-cell click to commit the visible token move on the (now
   // former) active. Charge can in theory be mid-flight too. So skip the
   // clear if either ref is set.
@@ -521,7 +521,7 @@ export default function TablePage() {
   // is mounted, so opening Restore from the campaign-map view silently lost
   // every crate/barrel/vehicle.
   const [restoreObjects, setRestoreObjects] = useState<{ id: string; name: string; wp_max: number }[]>([])
-  // Reload — quick GM-Tools snapshot picker for "rewind the scene to a save point"
+  // Reload - quick GM-Tools snapshot picker for "rewind the scene to a save point"
   // without leaving the table. Picker fetches snapshots on open (small list,
   // ~dozens per campaign, single .select). Restoring runs via the same
   // restoreCampaignSnapshot helper used by the full Snapshots admin page.
@@ -538,7 +538,7 @@ export default function TablePage() {
   const [showPopulateModal, setShowPopulateModal] = useState(false)
   const [populateCount, setPopulateCount] = useState(5)
   const [populateBusy, setPopulateBusy] = useState(false)
-  // Advance Time (Encumbrance) — house-rule: -1 RP per hour for every
+  // Advance Time (Encumbrance) - house-rule: -1 RP per hour for every
   // overencumbered PC + NPC until they rest or drop something. The
   // modal previews who's affected and applies the deduction in a
   // single batch on Apply.
@@ -556,12 +556,12 @@ export default function TablePage() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
-  // Quick Add modal state — all pin/community form state now lives
+  // Quick Add modal state - all pin/community form state now lives
   // inside <QuickAddModal>. The table page only tracks open/close
   // plus the pin-only flag + seed lat/lng.
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [qaHideCommunity, setQaHideCommunity] = useState(false)
-  // Community Status modal — opens the full CampaignCommunity management
+  // Community Status modal - opens the full CampaignCommunity management
   // view (pending requests, member roles, PC/NPC roster, founder flows)
   // as an overlay on the table. Triggered via the Community ▾ → Status
   // dropdown item so players don't have to leave /table to inspect the
@@ -580,7 +580,7 @@ export default function TablePage() {
   const [qaPinLng, setQaPinLng] = useState<string>('')
 
   // Recruitment state lives separately from the Special Check modal
-  // because its UI doesn't fit the 380px wrapper — multi-step wizard.
+  // because its UI doesn't fit the 380px wrapper - multi-step wizard.
   // Opened by picking "Recruit" in the CHECKS dropdown (which dispatches
   // to setShowRecruit(true), not setShowSpecialCheck).
   type RecruitStep = 'pick' | 'roll' | 'result'
@@ -610,7 +610,7 @@ export default function TablePage() {
   } | null>(null)
   // recruitment_type table for enforcing 1-Apprentice-per-PC on the UI side
   const [apprenticeByCharacter, setApprenticeByCharacter] = useState<Record<string, { id: string; npcName: string } | undefined>>({})
-  // Apprentice bonds keyed by npc_id — populated by
+  // Apprentice bonds keyed by npc_id - populated by
   // loadPlayerNpcCommunityMap on mount + on community_members realtime.
   // Drives the "✨ Set Up Apprentice" button on NpcCard. setup_complete
   // flag distinguishes "needs wizard" from "already set up."
@@ -619,7 +619,7 @@ export default function TablePage() {
   // community_members; used to drive the "Deposit to community" option
   // in the InventoryPanel give-modal.
   const [pcCommunityMemberships, setPcCommunityMemberships] = useState<Record<string, { id: string; name: string }[]>>({})
-  // Trade modal target — when set, the TradeNegotiationModal mounts.
+  // Trade modal target - when set, the TradeNegotiationModal mounts.
   // Resolved against `campaignNpcs` (kind='npc') or fetched fresh from
   // community_stockpile_items (kind='community') at open time.
   const [tradeTarget, setTradeTarget] = useState<{ kind: 'npc' | 'community'; id: string } | null>(null)
@@ -671,10 +671,10 @@ export default function TablePage() {
   const [setupApprenticeNpcId, setSetupApprenticeNpcId] = useState<string | null>(null)
   // Communities available to recruit into (loaded when modal opens).
   const [recruitCommunityList, setRecruitCommunityList] = useState<{ id: string; name: string; member_count: number }[]>([])
-  // NPC memberships — which community (if any) each NPC is already in.
+  // NPC memberships - which community (if any) each NPC is already in.
   const [npcCommunityMap, setNpcCommunityMap] = useState<Record<string, { id: string; name: string; recruitment_type: string }>>({})
   // Lightweight community name map for all users (players + GM). Maps npc_id → community name.
-  // Loaded at startup so the player NPC list shows "Community — {name}" buckets.
+  // Loaded at startup so the player NPC list shows "Community - {name}" buckets.
   const [playerNpcCommunityMap, setPlayerNpcCommunityMap] = useState<Record<string, string>>({})
   // First Impression NPC picker: which NPC the check is TARGETED at.
   // Cleared when the modal closes. On roll-time the npcId is copied
@@ -682,7 +682,7 @@ export default function TablePage() {
   // relationship CMod post-outcome.
   const [firstImpressionNpcId, setFirstImpressionNpcId] = useState<string>('')
   const firstImpressionTargetRef = useRef<{ characterId: string; npcId: string; npcName: string } | null>(null)
-  // Group Check stash — set by triggerGroupCheck just before the dice
+  // Group Check stash - set by triggerGroupCheck just before the dice
   // modal opens, read by executeRoll's saveRollToLog branch so the
   // bespoke "Group Check" banner in RollsFeed has the full participant
   // list (the label only carries the leader's name, not the supporters).
@@ -691,11 +691,11 @@ export default function TablePage() {
   const [showGrappleModal, setShowGrappleModal] = useState(false)
   // Two-step grapple flow: click a target → confirm + optionally spend
   // an Insight Die (3d6 or +3 CMod) → roll. Previously the click rolled
-  // instantly which meant there was no window to spend insight — all
+  // instantly which meant there was no window to spend insight - all
   // other attack flows get that option at the pre-roll modal.
   const [grappleTarget, setGrappleTarget] = useState<InitiativeEntry | null>(null)
   const [grappleInsight, setGrappleInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
-  // Manual Conditional Modifier — same field the standard attack modal
+  // Manual Conditional Modifier - same field the standard attack modal
   // exposes. Stacks with the +3 CMod Insight option and any other
   // mods (PHY / Unarmed). Defaults to '0', stays as a string in state
   // so users can type "-2" or clear-and-retype without React stomping
@@ -704,7 +704,7 @@ export default function TablePage() {
   const [grappleResult, setGrappleResult] = useState<{
     attackerName: string; defenderName: string
     aDie1: number; aDie2: number; aTotal: number; aOutcome: string
-    aDiceRolled?: number[]  // populated when attacker spent a 3d6 Insight Die — surfaces all three dice in the result card
+    aDiceRolled?: number[]  // populated when attacker spent a 3d6 Insight Die - surfaces all three dice in the result card
     dDie1: number; dDie2: number; dTotal: number; dOutcome: string
     result: 'grappled' | 'failed' | 'no_victor'
     rpTarget: string | null
@@ -721,7 +721,7 @@ export default function TablePage() {
   // Default tab follows mode: Campaign map → Pins ("where are we"),
   // Tactical/Combat → NPCs ("who's on the field"). The auto-flip
   // useEffect below only intervenes when the user is on the OTHER
-  // mode's default — explicit picks like Assets or Notes survive
+  // mode's default - explicit picks like Assets or Notes survive
   // mode switches.
   const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('pins')
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
@@ -731,10 +731,10 @@ export default function TablePage() {
   // customScrollParent mode, sharing the scroll container that already
   // serves the Logs / Both tabs (rollsFeed.rollFeedRef). Virtuoso needs
   // the actual DOM node, not a ref, so we mirror it into state via a
-  // mount-time effect below — refs don't trigger re-renders on update.
+  // mount-time effect below - refs don't trigger re-renders on update.
   const [feedScrollEl, setFeedScrollEl] = useState<HTMLDivElement | null>(null)
   // Chat state (messages, channel, refetch, clear) lives in the
-  // useChatPanel hook in components/TableChat.tsx — this is just the
+  // useChatPanel hook in components/TableChat.tsx - this is just the
   // call-site. We keep the hook here (not inside <TableChat>) so the
   // parent can read `chat.messages` for the Both-tab merged feed and
   // call `chat.clear()` from session start/end. See that file's
@@ -760,11 +760,11 @@ export default function TablePage() {
   const [npcPositions, setNpcPositions] = useState<Record<string, { x: number; y: number }>>({})
   const npcDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
   // Per-card width/height overrides for the bottom-right resize handle.
-  // Session-only — not persisted across reloads. Default width is 250 px
+  // Session-only - not persisted across reloads. Default width is 250 px
   // (see card wrapper); height tracks content unless the user resizes.
   const [npcCardSizes, setNpcCardSizes] = useState<Record<string, { w: number; h: number }>>({})
   const npcResizeRef = useRef<{ id: string; startX: number; startY: number; origW: number; origH: number } | null>(null)
-  // Roll modal position — null means "use default centered placement". Once
+  // Roll modal position - null means "use default centered placement". Once
   // the user drags the roll panel, its position persists across re-opens so
   // attacks don't keep snapping back over the map.
   const [rollModalPos, setRollModalPos] = useState<{ x: number; y: number } | null>(null)
@@ -772,7 +772,7 @@ export default function TablePage() {
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
-    // Sequence guard — multiple realtime callbacks fire in quick succession
+    // Sequence guard - multiple realtime callbacks fire in quick succession
     // (character_states + campaign_members + others) and a slower earlier
     // call can finish AFTER a faster later one, overwriting good state with
     // stale data. Each call gets a sequence number; only the latest one
@@ -808,11 +808,11 @@ export default function TablePage() {
 
     // The strip-then-patch pattern below renders character cards without
     // their (potentially large) photoDataUrl base64 first, then patches
-    // photos in via a second setEntries — keeps Time-To-Interactive snappy
+    // photos in via a second setEntries - keeps Time-To-Interactive snappy
     // when the JSONB photo blob is heavy. We KEEP that pattern, but feed
     // both passes from the SAME initial fetch (line 530 already pulls the
     // full `data` column). Earlier code did a SECOND DB round-trip just to
-    // re-fetch photoDataUrl — wasteful, and a real cost during 4-browser
+    // re-fetch photoDataUrl - wasteful, and a real cost during 4-browser
     // simultaneous mounts where every redundant query stacks under
     // network contention.
     const charMap = Object.fromEntries((chars ?? []).map((c: any) => [c.id, c]))
@@ -829,7 +829,7 @@ export default function TablePage() {
     const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
     const missingChars = charIds.filter((cid: string) => !(cid in charMap))
     if (missingChars.length > 0) {
-      console.warn('[loadEntries] missing chars for ids — likely RLS blocking cross-user reads:', missingChars, 'returned chars:', chars?.map((c: any) => c.id))
+      console.warn('[loadEntries] missing chars for ids - likely RLS blocking cross-user reads:', missingChars, 'returned chars:', chars?.map((c: any) => c.id))
     }
 
     const newEntries: TableEntry[] = filteredStates.map((s: any) => ({
@@ -842,7 +842,7 @@ export default function TablePage() {
         wp_current: s.wp_current, wp_max: s.wp_max,
         rp_current: s.rp_current, rp_max: s.rp_max,
         stress: s.stress, insight_dice: s.insight_dice, morality: s.morality, cdp: s.cdp ?? 0,
-        // death_countdown / incap_rounds — without these the
+        // death_countdown / incap_rounds - without these the
         // mortally-wounded banner reads "Stabilize within ? rounds"
         // because every loadEntries call (which fires on turn_changed,
         // pc_damaged broadcast, etc.) wipes the countdown back to
@@ -856,7 +856,7 @@ export default function TablePage() {
     setEntries(newEntries)
     setEntriesLoading(false)
 
-    // Patch photos in from the data we ALREADY downloaded — no second
+    // Patch photos in from the data we ALREADY downloaded - no second
     // round-trip. setTimeout(0) yields to React so the lean cards paint
     // before the photo blob hydrates the `character.data.photoDataUrl`
     // field, preserving the original strip-then-patch UX intent.
@@ -871,7 +871,7 @@ export default function TablePage() {
     }, 0)
   }
 
-  // loadChat / sendChat moved to components/TableChat.tsx — accessed
+  // loadChat / sendChat moved to components/TableChat.tsx - accessed
   // via `chat.refetch()` and the <ChatComposer>'s internal send.
 
   async function loadPlayerNpcCommunityMap(campaignId: string) {
@@ -881,7 +881,7 @@ export default function TablePage() {
       .is('left_at', null)
       .eq('communities.campaign_id', campaignId)
     const map: Record<string, string> = {}
-    // Apprentice bonds keyed by npc_id — fuels the "Set Up Apprentice"
+    // Apprentice bonds keyed by npc_id - fuels the "Set Up Apprentice"
     // button on NpcCard. setup_complete=true means the wizard already
     // ran and the button hides.
     const bonds: Record<string, ApprenticeBond> = {}
@@ -911,7 +911,7 @@ export default function TablePage() {
   }
 
   async function loadRevealedNpcs(characterId: string | null, cnpcs: any[]) {
-    // Filter to THIS campaign's NPCs — earlier code queried the full
+    // Filter to THIS campaign's NPCs - earlier code queried the full
     // npc_relationships table without a campaign filter (RLS reduced
     // the visible set, but the query still scanned all rows the user
     // could see across every campaign they GM/play). For a GM with
@@ -943,7 +943,7 @@ export default function TablePage() {
       .select('*')
       .eq('campaign_id', campaignId)
       .order('roll', { ascending: false }).order('character_name', { ascending: true })
-    if (seq !== loadInitSeqRef.current) return // stale — a newer call is in flight
+    if (seq !== loadInitSeqRef.current) return // stale - a newer call is in flight
     const order = data ?? []
     setInitiativeOrder(order)
     setCombatActive(order.length > 0)
@@ -983,15 +983,15 @@ export default function TablePage() {
       if (primed && lastSeen != null && lastSeen < 5 && curStress >= 5) {
         const ownerUserId = e.userId
         if (ownerUserId && ownerUserId === userIdRef.current) {
-          // It's my PC — open the sheet so CharacterCard's effect fires the modal.
+          // It's my PC - open the sheet so CharacterCard's effect fires the modal.
           setSelectedEntry(e)
           setViewingNpcs([])
         } else if (isGM) {
           // GM-side notice. Player will see the modal on their own client.
-          console.warn(`[stress] ${e.character.name} hit 5 — Stress Check triggered for player`)
+          console.warn(`[stress] ${e.character.name} hit 5 - Stress Check triggered for player`)
         }
         // Log to the affected PC's progression log. Fires once per transition.
-        if (e.character?.id) void appendProgressionLog(e.character.id, 'stress', 'Stress reached 5 — Stress Check triggered')
+        if (e.character?.id) void appendProgressionLog(e.character.id, 'stress', 'Stress reached 5 - Stress Check triggered')
       }
       prev.set(stateId, curStress)
     }
@@ -1013,18 +1013,18 @@ export default function TablePage() {
     let cancelled = false
     async function load() {
       // ── Wave 1 ──────────────────────────────────────────────────
-      // auth + campaign load in parallel — neither depends on the
+      // auth + campaign load in parallel - neither depends on the
       // other, the prior sequential pair was paying ~one cold round-
       // trip per mount unnecessarily.
       //
-      // 2026-04-29 — switched the auth read from supabase.auth.getUser()
+      // 2026-04-29 - switched the auth read from supabase.auth.getUser()
       // to getCachedAuth(). The former takes the gotrue-js Web Lock
       // and round-trips GET /auth/v1/user; if any other tab is mid-
       // mount and holding the lock, this whole Promise.all hangs
       // (because Promise.all awaits ALL its inputs even if one is
       // stuck). The "Loading The Table..." screen sat indefinitely.
       // getCachedAuth() reads from getSession() which is a localStorage
-      // hit — no lock contention, no network call.
+      // hit - no lock contention, no network call.
       const [authSnapshot, campResult] = await Promise.all([
         getCachedAuth(),
         supabase.from('campaigns').select('*').eq('id', id).single(),
@@ -1047,7 +1047,7 @@ export default function TablePage() {
       setCampaign(camp)
       // Bump last_accessed_at so the My Stories list can sort by
       // most-recently-touched and surface "Last Run: <date>". Fire-and-
-      // forget — failure here doesn't block the table view.
+      // forget - failure here doesn't block the table view.
       supabase.from('campaigns').update({ last_accessed_at: new Date().toISOString() }).eq('id', id)
         .then(({ error }: any) => { if (error) console.warn('[table] last_accessed_at bump failed:', error.message) })
       setVehicles(camp.vehicles ?? [])
@@ -1064,7 +1064,7 @@ export default function TablePage() {
       if (camp.map_center_lng != null) setQaPinLng(String(camp.map_center_lng))
 
       // ── Wave 2 ──────────────────────────────────────────────────
-      // Everything that only needs id, user, or camp.gm_user_id —
+      // Everything that only needs id, user, or camp.gm_user_id -
       // fired together. Previously this was three sequential awaits:
       //   profiles.select(user.id) → Promise.all(gmProfile, members) →
       //   character_states kick check → Promise.all(loads + cnpcs +
@@ -1072,7 +1072,7 @@ export default function TablePage() {
       // Combining them into a single Promise.all collapses ~3 round-
       // trips of waterfall into one. Trade-off: a kicked player still
       // pays for the unused fetches before being redirected, but
-      // kick is a rare path — accepting that cost for the common-path
+      // kick is a rare path - accepting that cost for the common-path
       // win.
       const kickCheckPromise = amGM
         ? Promise.resolve({ data: null as { kicked: boolean | null } | null })
@@ -1110,7 +1110,7 @@ export default function TablePage() {
         // placed from a prior session.
         refreshMapTokenIds(),
         // Community-membership map for the player NPC list ("Community
-        // — <name>" buckets vs "Unfiled"). Independent of cnpcs.
+        // - <name>" buckets vs "Unfiled"). Independent of cnpcs.
         loadPlayerNpcCommunityMap(id),
         kickCheckPromise,
       ])
@@ -1122,7 +1122,7 @@ export default function TablePage() {
       setIsThriver(myProfile?.role === 'Thriver')
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
-      // Kick gate — handled after the parallel batch instead of mid-
+      // Kick gate - handled after the parallel batch instead of mid-
       // waterfall. Diagnostic log preserved for the silent-RLS pattern
       // that bit us before.
       if (!amGM) {
@@ -1146,7 +1146,7 @@ export default function TablePage() {
         }))
       if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
 
-      // Load revealed NPCs — GM sees all, players see their own
+      // Load revealed NPCs - GM sees all, players see their own
       if (camp.gm_user_id === user.id) {
         await loadRevealedNpcs(null, cnpcs)
         if (cancelled) return
@@ -1170,7 +1170,7 @@ export default function TablePage() {
       }
 
       if (cancelled) return
-      // Keep the community map fresh — when an NPC is recruited, the
+      // Keep the community map fresh - when an NPC is recruited, the
       // player roster should immediately show the community bucket.
       communityMembersChannelRef.current = supabase.channel(`community_members_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
@@ -1202,7 +1202,7 @@ export default function TablePage() {
         })
         .subscribe()
 
-      // Chat realtime channel now lives inside useChatPanel — no
+      // Chat realtime channel now lives inside useChatPanel - no
       // separate subscription needed here.
 
       if (cancelled) return
@@ -1228,7 +1228,7 @@ export default function TablePage() {
         // tactical-sharing on, every player's pane opens (or re-opens)
         // on the new scene so they automatically follow along. Without
         // this, a player whose pane was closed during a prior scene
-        // wouldn't see the GM's switch — they'd only catch up if they
+        // wouldn't see the GM's switch - they'd only catch up if they
         // re-opened the pane manually. Broadcast fires from the GM-side
         // activateScene paths in TacticalMap, /scene-controls-popout,
         // and the pin onOpenScene callback below.
@@ -1248,7 +1248,7 @@ export default function TablePage() {
           await loadInitiative(id)
         })
         .on('broadcast', { event: 'logs_cleared' }, () => {
-          // GM started/ended a session — clear local chat + roll state, then
+          // GM started/ended a session - clear local chat + roll state, then
           // refetch from DB so every client converges to the post-clear state.
           rollsFeed.clear()
           chat.clear()
@@ -1256,10 +1256,10 @@ export default function TablePage() {
           chat.refetch()
         })
         .on('broadcast', { event: 'npc_damaged' }, async (msg: any) => {
-          // Another client dealt damage to an NPC — apply the patch locally.
+          // Another client dealt damage to an NPC - apply the patch locally.
           // Two payload shapes:
-          //   - { npcId, patch } — single-target attack (legacy, fast path)
-          //   - {} (empty)       — coalesced multi-target broadcast (e.g.
+          //   - { npcId, patch } - single-target attack (legacy, fast path)
+          //   - {} (empty)       - coalesced multi-target broadcast (e.g.
           //                        grenade splash) where building per-target
           //                        patches at the sender side adds bytes
           //                        without value. In that case fall through
@@ -1273,7 +1273,7 @@ export default function TablePage() {
             setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
             setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
           } else {
-            // Empty payload — refetch campaign_npcs so coalesced multi-
+            // Empty payload - refetch campaign_npcs so coalesced multi-
             // target events (grenades, etc.) propagate to every client
             // even though the sender didn't enumerate per-target patches.
             const { data } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
@@ -1292,7 +1292,7 @@ export default function TablePage() {
           }
         })
         .on('broadcast', { event: 'pc_damaged' }, (msg: any) => {
-          // Another client dealt damage to a PC — apply optimistic patch then refresh
+          // Another client dealt damage to a PC - apply optimistic patch then refresh
           const { stateId: sid, patch } = msg.payload ?? {}
           if (sid && patch) {
             setEntries(prev => prev.map(e => e.stateId === sid ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
@@ -1300,7 +1300,7 @@ export default function TablePage() {
           loadEntries(id)
         })
         .on('broadcast', { event: 'inventory_transfer' }, () => {
-          // Another player gave an item — refresh entries to see updated inventory
+          // Another player gave an item - refresh entries to see updated inventory
           loadEntries(id)
         })
         .on('broadcast', { event: 'pc_mortal_wound' }, (msg: any) => {
@@ -1311,7 +1311,7 @@ export default function TablePage() {
           }
         })
         .on('broadcast', { event: 'pc_mortal_wound_resolved' }, () => {
-          // Another client resolved the insight save — close our modal and refresh
+          // Another client resolved the insight save - close our modal and refresh
           setInsightSavePrompt(null)
           loadEntries(id)
         })
@@ -1345,17 +1345,17 @@ export default function TablePage() {
         .subscribe()
 
       if (cancelled) return
-      // NPC roster realtime — without this, damage applied to an NPC updates
+      // NPC roster realtime - without this, damage applied to an NPC updates
       // the DB but the GM (and players) keep seeing the old HP because
       // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
       npcsChannelRef.current = supabase.channel(`campaign_npcs_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, (payload: any) => {
-          // For UPDATEs, apply the row from the payload directly — no round trip,
+          // For UPDATEs, apply the row from the payload directly - no round trip,
           // no race with the in-flight-ref guard. INSERT/DELETE fall through to
           // a full refetch since payload.new may be incomplete/absent.
           if (payload.eventType === 'UPDATE' && payload.new) {
             const row = payload.new
-            // Upsert (not just patch) — when hidden_from_players flips false,
+            // Upsert (not just patch) - when hidden_from_players flips false,
             // a player's RLS now exposes a row their local state never had,
             // and the UPDATE event is the only signal it exists. Plain
             // .map() would silently drop it.
@@ -1392,7 +1392,7 @@ export default function TablePage() {
         .subscribe()
 
       if (cancelled) return
-      // Presence — track how many users are on this table page
+      // Presence - track how many users are on this table page
       try {
         const presChannel = supabase.channel(`presence_table_${id}_${Date.now()}`, { config: { presence: { key: user.id } } })
         presChannel.on('presence', { event: 'sync' }, () => {
@@ -1433,7 +1433,7 @@ export default function TablePage() {
   // re-pull the state the mount effect originally hydrated, so the
   // moment the user returns the feed is in sync with the DB even if a
   // few realtime events were dropped during the background window.
-  // Channel rebuild is intentionally NOT done here — supabase-js
+  // Channel rebuild is intentionally NOT done here - supabase-js
   // reconnects internally on socket health checks. If staleness
   // persists for users after this, expand to a teardown+resubscribe.
   useEffect(() => {
@@ -1480,7 +1480,7 @@ export default function TablePage() {
   }, [id, isGM])
 
   // Roll requests broadcast from the /character-sheet popout window. The
-  // popout doesn't own the roll modal / initiative gates / CMod stack —
+  // popout doesn't own the roll modal / initiative gates / CMod stack -
   // it just posts {label, amod, smod, weapon} on a same-origin same-browser
   // BroadcastChannel and the table tab calls handleRollRequest as if the
   // user had clicked the in-table card. We use a ref to avoid tearing down
@@ -1551,11 +1551,11 @@ export default function TablePage() {
   }
 
   async function confirmStartCombat() {
-    // Sanity check — no players present AND no NPCs selected = nothing
+    // Sanity check - no players present AND no NPCs selected = nothing
     // to roll initiative for. Bail with a friendly alert instead of
     // silently inserting zero combatants. (entries.length-zero guard
     // moved here from the Start Combat button so a GM can solo-test
-    // with NPCs only — the per-button gate was blocking that intent.)
+    // with NPCs only - the per-button gate was blocking that intent.)
     if (entries.length === 0 && selectedNpcIds.size === 0) {
       alert('Pick at least one NPC to start combat (no players are present).')
       return
@@ -1568,7 +1568,7 @@ export default function TablePage() {
 
     // Refetch members + characters fresh from DB rather than reading `entries`,
     // because `entries` only includes PCs that already have a character_states
-    // row — a player who joined moments ago may not be in entries yet, but they
+    // row - a player who joined moments ago may not be in entries yet, but they
     // still belong in combat. Also ensure their state row exists so damage can
     // be applied to them later.
     const [, { data: rawMembers }] = await Promise.all([
@@ -1583,7 +1583,7 @@ export default function TablePage() {
     }
     // Filter out kicked players so they don't get re-added to initiative.
     // CRITICAL: scope by character_id, NOT just user_id. character_states
-    // has one row per (campaign, user, character) — if a player was once
+    // has one row per (campaign, user, character) - if a player was once
     // kicked while playing character A and then later rejoins with
     // character B, the stale kicked=true row on A would otherwise poison
     // B too. Pre-fix, that bit Shimmy Paint on 2026-05-04: TimTheLiar
@@ -1665,7 +1665,7 @@ export default function TablePage() {
     // they can't actually look up. The token-placement trigger in
     // sql/campaign-npcs-hidden-from-players.sql handles tokens on the
     // tactical map; this covers the initiative-roster path. Fire-and-
-    // forget — the table UPDATE doesn't block combat start.
+    // forget - the table UPDATE doesn't block combat start.
     const npcIdsToReveal = rosterNpcs
       .filter(n => selectedNpcIds.has(n.id) && (n as any).hidden_from_players === true)
       .map(n => n.id)
@@ -1686,7 +1686,7 @@ export default function TablePage() {
     if (dropCharacter) {
       const dropRow = allRows.find(r => r.character_name === dropCharacter)
       if (dropRow) {
-        // Insert ALL combatants — drop character gets 1 action, everyone else gets 0 (frozen)
+        // Insert ALL combatants - drop character gets 1 action, everyone else gets 0 (frozen)
         pendingCombatantsRef.current = allRows
         dropPhaseRef.current = true
 
@@ -1746,7 +1746,7 @@ export default function TablePage() {
       ])
       if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
       if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
-      // Optimistic local state — sorted by roll desc to match loadInitiative behavior.
+      // Optimistic local state - sorted by roll desc to match loadInitiative behavior.
       const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.character_name).localeCompare(String(b.character_name)))
       setInitiativeOrder(sortedInit)
       setCombatActive(sortedInit.length > 0)
@@ -1754,7 +1754,7 @@ export default function TablePage() {
     }
     setDropCharacter('')
 
-    // Auto-open NPC cards for all NPCs in combat (skip if tactical map is showing — cards block the map)
+    // Auto-open NPC cards for all NPCs in combat (skip if tactical map is showing - cards block the map)
     if (!showTacticalMap) {
       const combatNpcObjs = rosterNpcs.filter(n => selectedNpcIds.has(n.id))
       if (combatNpcObjs.length > 0) {
@@ -1784,9 +1784,9 @@ export default function TablePage() {
     // Re-entry guard: a rapid-fire consumeAction + realtime echo can fire two
     // nextTurn calls back-to-back. Without this guard, call #2 reads active
     // state that call #1 hasn't finished writing yet, then advances the turn
-    // a second time — silently skipping whoever call #1 just activated.
+    // a second time - silently skipping whoever call #1 just activated.
     if (nextTurnInFlightRef.current) {
-      console.warn('[nextTurn] already in flight — bailing to avoid double-advance')
+      console.warn('[nextTurn] already in flight - bailing to avoid double-advance')
       return
     }
     nextTurnInFlightRef.current = true
@@ -1843,14 +1843,14 @@ export default function TablePage() {
 
     // Guard: if no active entry found, forcibly activate the first alive combatant
     if (currentIdx < 0) {
-      console.warn('[nextTurn] no active entry found — activating first combatant as fallback')
+      console.warn('[nextTurn] no active entry found - activating first combatant as fallback')
       await supabase.from('initiative_order').update(activateUpdate(order[0])).eq('id', order[0].id)
       await loadInitiative(id)
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
     }
 
-    // Find next combatant who can act — skip dead, mortally wounded, and incapacitated.
+    // Find next combatant who can act - skip dead, mortally wounded, and incapacitated.
     // Done BEFORE the new-round check so the skip walk's wrap-around is detectable:
     // if the active combatant isn't the last in the order but every remaining entry
     // in this round is dead (e.g. Jules kills the tail-end NPC), the walk wraps via
@@ -1860,7 +1860,7 @@ export default function TablePage() {
     // Performance note (playtest #32): NPC + PC state fetches are BATCHED
     // up front via two bulk queries instead of one `.maybeSingle()` per PC
     // inside the loop. Before this change, a campaign with several PCs and a
-    // long skip chain triggered a sequential round trip for each PC — often
+    // long skip chain triggered a sequential round trip for each PC - often
     // ~200-500ms of perceived delay between turns on ordinary latency.
     // Two parallel bulk queries is one network wait regardless of combatant
     // count.
@@ -1908,33 +1908,33 @@ export default function TablePage() {
     }
 
     // New round only when the skip-walk FULLY lapped without finding a
-    // valid combatant — i.e. `attempts` hit `order.length`. The previous
+    // valid combatant - i.e. `attempts` hit `order.length`. The previous
     // `wrappedPastEnd` trigger also fired when the walk wrapped and THEN
     // found someone with actions left (common after a defer-to-tied-roll
     // or multi-defer), silently stranding that combatant's remaining
     // action into a new round. We only want new-round when nobody was
-    // found — `wrappedPastEnd && attempts >= order.length` collapses to
+    // found - `wrappedPastEnd && attempts >= order.length` collapses to
     // `attempts >= order.length` since the walk can only run out of
     // attempts by wrapping. Using `attempts` directly reads cleaner.
     const everyoneSkipped = attempts >= order.length
     // Keep wrappedPastEnd referenced so the old comment context stays
-    // anchored in diffs / git blame — cheap no-op.
+    // anchored in diffs / git blame - cheap no-op.
     void wrappedPastEnd
     // Sprint-Athletics race: if the active combatant was the last one
     // to act AND they did so via Sprint's 2-action pre-consume, their
     // Athletics check is still outstanding (pending the dice roll in
     // the modal). Firing the new-round reroll NOW would put the
-    // Initiative log ahead of the Sprint outcome in the feed — visible
+    // Initiative log ahead of the Sprint outcome in the feed - visible
     // to players as "new round started before I finished sprinting".
     // Defer: mark the pending-transition and return. The Sprint block
     // in executeRoll will re-invoke nextTurn after its log entry lands.
     if (everyoneSkipped && sprintAthleticsPendingRef.current) {
-      console.warn('[nextTurn] new round deferred — Sprint Athletics roll still pending')
+      console.warn('[nextTurn] new round deferred - Sprint Athletics roll still pending')
       sprintAthleticsRoundDeferredRef.current = true
       return
     }
     if (everyoneSkipped) {
-      // ── New-round bookkeeping — batched ──
+      // ── New-round bookkeeping - batched ──
       // Was: three nested for-await loops (PC state, NPC state, init reroll)
       // each firing N sequential UPDATEs. With 6 combatants at 150ms RTT,
       // that's ~2.7s of dead air at the round boundary. Now: build per-row
@@ -1969,7 +1969,7 @@ export default function TablePage() {
           updates.incap_rounds = ls.incap_rounds - 1
           if (ls.incap_rounds - 1 <= 0) {
             // Regain consciousness: 1 RP, and 1 WP if was stabilized (WP=0).
-            // Guard: do NOT bump WP if a death_countdown is still ticking —
+            // Guard: do NOT bump WP if a death_countdown is still ticking -
             // that would silently un-mortal-wound a PC who happens to also
             // be incapacitated, no stabilize roll required (Warren bug
             // 2026-04-27).
@@ -1977,7 +1977,7 @@ export default function TablePage() {
             const dcActive = (ls as any).death_countdown != null && (ls as any).death_countdown > 0
             if (ls.wp_current === 0 && !dcActive) updates.wp_current = 1
             updates.incap_rounds = null
-            // Log the revival — paired with the "Lights out" Incapacitated
+            // Log the revival - paired with the "Lights out" Incapacitated
             // banner from when they went down. Reuses deathLogRows for the
             // same single-batch insert at the end of the round-tick.
             deathLogRows.push({
@@ -1989,7 +1989,7 @@ export default function TablePage() {
           }
         }
         // RP recovery: conscious characters below max RP recover 1 per round.
-        // Sick characters (infection_state set) recover up to half-max only —
+        // Sick characters (infection_state set) recover up to half-max only -
         // the half-max cap is the ceiling until they recover.
         if (ls.rp_current > 0 && ls.rp_current < e.liveState.rp_max && ls.wp_current > 0 && (ls.incap_rounds == null || ls.incap_rounds <= 0)) {
           const cap = ls.infection_state ? Math.floor(e.liveState.rp_max / 2) : e.liveState.rp_max
@@ -2009,7 +2009,7 @@ export default function TablePage() {
         // Death countdown
         if ((npc.wp_current ?? npc.wp_max ?? 10) === 0 && npc.death_countdown != null && npc.death_countdown > 0) {
           updates.death_countdown = npc.death_countdown - 1
-          // NPC dies when countdown expires — mark status and log
+          // NPC dies when countdown expires - mark status and log
           if (npc.death_countdown - 1 <= 0) {
             updates.status = 'dead'
             deathLogRows.push({
@@ -2026,12 +2026,12 @@ export default function TablePage() {
           if (npc.incap_rounds - 1 <= 0) {
             updates.rp_current = Math.max(1, npc.rp_current ?? 0)
             // Guard against silently un-mortal-wounding an NPC whose
-            // death_countdown is still active — same Warren-bug fix as
+            // death_countdown is still active - same Warren-bug fix as
             // the PC branch above.
             const npcDcActive = npc.death_countdown != null && npc.death_countdown > 0
             if ((npc.wp_current ?? 0) === 0 && !npcDcActive) updates.wp_current = 1
             updates.incap_rounds = null
-            // Revival log — see PC branch comment above.
+            // Revival log - see PC branch comment above.
             deathLogRows.push({
               campaign_id: id, user_id: userId,
               character_name: 'Coming around',
@@ -2040,7 +2040,7 @@ export default function TablePage() {
             })
           }
         }
-        // RP recovery — sick NPCs cap at half-max same as PCs.
+        // RP recovery - sick NPCs cap at half-max same as PCs.
         const npcWP = npc.wp_current ?? npc.wp_max ?? 10
         const npcRP = npc.rp_current ?? npc.rp_max ?? 6
         const npcRPMax = npc.rp_max ?? 6
@@ -2078,7 +2078,7 @@ export default function TablePage() {
       // Log new round initiative
       const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
       const newRoundLogInsert = supabase.from('roll_log').insert({
-        campaign_id: id, user_id: userId, character_name: 'System', label: 'New Round — Initiative',
+        campaign_id: id, user_id: userId, character_name: 'System', label: 'New Round - Initiative',
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
         damage_json: { initiative: sortedReroll } as any,
       })
@@ -2086,7 +2086,7 @@ export default function TablePage() {
         ? supabase.from('roll_log').insert(deathLogRows)
         : Promise.resolve(null)
 
-      // Single parallel wave — three table updates + two log inserts.
+      // Single parallel wave - three table updates + two log inserts.
       await Promise.all([...pcUpdates, ...npcUpdates, ...initUpdates, newRoundLogInsert, deathLogInsert])
 
       // Apply NPC local patches once (was: setState N times inside the loop).
@@ -2099,7 +2099,7 @@ export default function TablePage() {
       setCombatRound(prev => prev + 1)
 
       // Re-sort and set first ALIVE combatant as active (PCs beat NPCs on ties).
-      // Two parallel fetches — initiative_order + campaign_npcs (different tables).
+      // Two parallel fetches - initiative_order + campaign_npcs (different tables).
       const [{ data: rerolled }, { data: freshNpcsForRound }] = await Promise.all([
         supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true }),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
@@ -2133,10 +2133,10 @@ export default function TablePage() {
     console.warn('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
     // Defense: if the skip-walk landed on the same combatant we're trying to
     // advance from (can happen if state is stale or every other combatant is
-    // dead), don't no-op advance — trigger a new round instead. Prevents an
+    // dead), don't no-op advance - trigger a new round instead. Prevents an
     // infinite "same combatant reactivates" loop.
     if (currentEntry && order[nextIdx] && currentEntry.id === order[nextIdx].id) {
-      console.warn('[nextTurn] nextIdx resolves to self — no-op (finally will release lock)')
+      console.warn('[nextTurn] nextIdx resolves to self - no-op (finally will release lock)')
       return
     }
     // Deactivate every row currently flagged active EXCEPT the one we're
@@ -2161,7 +2161,7 @@ export default function TablePage() {
 
   /** Thin wrapper around the shared lib/progression-log helper so the existing
    *  call sites in this file don't need to thread `supabase` themselves. The
-   *  Progression Log is a permanent journey journal — only durable life events
+   *  Progression Log is a permanent journey journal - only durable life events
    *  belong (memory rule: feedback_progression_log_curation.md). */
   async function appendProgressionLog(characterId: string, type: any, text: string) {
     return appendProgressionEntry(supabase, characterId, type, text)
@@ -2171,10 +2171,10 @@ export default function TablePage() {
     // Per-entry re-entry guard. A rapid double-click on Aim (or any action
     // button) previously raced two consumeAction calls that both read
     // actions_remaining=2 before either wrote, then both wrote a
-    // decrement — burning BOTH actions on a single click. The lock is
+    // decrement - burning BOTH actions on a single click. The lock is
     // scoped per entryId so other combatants aren't blocked.
     if (consumeActionInFlightRef.current.has(entryId)) {
-      console.warn('[consumeAction] already in flight for', entryId, '— ignoring duplicate call')
+      console.warn('[consumeAction] already in flight for', entryId, '- ignoring duplicate call')
       return
     }
     consumeActionInFlightRef.current.add(entryId)
@@ -2185,7 +2185,7 @@ export default function TablePage() {
     const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
     console.warn('[consumeAction] entryId:', entryId, 'entry:', entry, 'cost:', cost, 'label:', actionLabel)
     if (!entry) { console.warn('[consumeAction] no entry found, bailing'); return }
-    if ((entry.actions_remaining ?? 0) < cost) { console.warn('[consumeAction] actions_remaining', entry.actions_remaining, '< cost', cost, '— bailing'); return }
+    if ((entry.actions_remaining ?? 0) < cost) { console.warn('[consumeAction] actions_remaining', entry.actions_remaining, '< cost', cost, '- bailing'); return }
     const newRemaining = (entry.actions_remaining ?? 0) - cost
     console.warn('[consumeAction] newRemaining:', newRemaining)
 
@@ -2203,13 +2203,13 @@ export default function TablePage() {
     }
 
     // Clear aim bonus after a roll (no actionLabel = called from closeRollModal).
-    // Clear BOTH aim_bonus (the numeric +N CMod) and aim_active (the "Aimed —
+    // Clear BOTH aim_bonus (the numeric +N CMod) and aim_active (the "Aimed -
     // Attack or lose it" badge). Previously only aim_bonus was cleared, so
     // the badge lingered after the attack even though the bonus was already
-    // consumed — visually misleading.
+    // consumed - visually misleading.
     const clearAim = !actionLabel && entry.aim_bonus > 0
 
-    // Always persist the new action count to DB first — if nextTurn fails or
+    // Always persist the new action count to DB first - if nextTurn fails or
     // races, the DB is at least consistent with "this combatant is spent".
     // `.select()` so a silent RLS rejection (0 rows affected, no error) is
     // distinguishable from a real update.
@@ -2220,7 +2220,7 @@ export default function TablePage() {
     console.warn('[consumeAction] update', { entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
     if (updErr) console.warn('[consumeAction] update error:', updErr.message)
     if (!updErr && (!updData || updData.length === 0)) {
-      console.warn('[consumeAction] SILENT RLS FAIL — 0 rows updated, no error. entryId:', entryId)
+      console.warn('[consumeAction] SILENT RLS FAIL - 0 rows updated, no error. entryId:', entryId)
     }
 
     if (newRemaining <= 0) {
@@ -2242,10 +2242,10 @@ export default function TablePage() {
     if (!entry || entry.actions_remaining <= 0) return
     const newAim = (entry.aim_bonus ?? 0) + 2
     await supabase.from('initiative_order').update({ aim_bonus: newAim, aim_active: true }).eq('id', entryId)
-    await consumeAction(entryId, `${entry.character_name} — Aim (+${newAim} CMod). Must Attack next or Aim is lost.`)
+    await consumeAction(entryId, `${entry.character_name} - Aim (+${newAim} CMod). Must Attack next or Aim is lost.`)
   }
 
-  // Activate a combatant — handles winded (1 action instead of 2)
+  // Activate a combatant - handles winded (1 action instead of 2)
   function activateUpdate(entry: InitiativeEntry) {
     const actions = entry.winded ? 1 : 2
     return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, last_attack_target: null, coordinate_target: entry.coordinate_target, coordinate_bonus: entry.coordinate_bonus }
@@ -2271,9 +2271,9 @@ export default function TablePage() {
     if (hasTracking) {
       const newAim = (entry.aim_bonus ?? 0) + 1
       await supabase.from('initiative_order').update({ aim_bonus: newAim }).eq('id', entryId)
-      await consumeAction(entryId, `${entry.character_name} — Ready Weapon (Tracking +${newAim} CMod)`)
+      await consumeAction(entryId, `${entry.character_name} - Ready Weapon (Tracking +${newAim} CMod)`)
     } else {
-      await consumeAction(entryId, `${entry.character_name} — Ready Weapon`)
+      await consumeAction(entryId, `${entry.character_name} - Ready Weapon`)
     }
   }
 
@@ -2298,7 +2298,7 @@ export default function TablePage() {
     setViewingNpcs([])
     // Stay on tactical map after combat ends
     setShowTacticalMap(true)
-    // Parallel — independent fetches (different tables).
+    // Parallel - independent fetches (different tables).
     await Promise.all([rollsFeed.refetch(), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
@@ -2325,7 +2325,7 @@ export default function TablePage() {
   // joins the table after combat started and needs to be slotted in. Rolls
   // their initiative with ACU+DEX modifiers same as combat-start, inserts
   // an initiative_order row, broadcasts turn_changed so every client sees
-  // them on the bar. The PC is inactive by default — GM advances to them
+  // them on the bar. The PC is inactive by default - GM advances to them
   // when their turn comes up in sort order.
   async function addPCToCombat(charEntry: TableEntry) {
     if (!isGM) return
@@ -2363,7 +2363,7 @@ export default function TablePage() {
     // Soft-delete (stamp archived_at) instead of hard-delete so the
     // token's grid_x / grid_y / scale / rotation persist for the next
     // SHOW. Hard-delete loses position and the token reappears at
-    // (0,0) — what the playtest hit. Mirrors the pattern already used
+    // (0,0) - what the playtest hit. Mirrors the pattern already used
     // by unmapFolderFromMap.
     await supabase.from('scene_tokens')
       .update({ archived_at: new Date().toISOString() })
@@ -2387,10 +2387,10 @@ export default function TablePage() {
       return
     }
     // Three groups now exist for each NPC in the folder:
-    //   1. Live token (archived_at IS NULL) — already on map; skip.
-    //   2. Archived token (archived_at NOT NULL) — un-archive in place
+    //   1. Live token (archived_at IS NULL) - already on map; skip.
+    //   2. Archived token (archived_at NOT NULL) - un-archive in place
     //      to restore the GM's previous positioning.
-    //   3. No token at all — insert fresh at cluster position.
+    //   3. No token at all - insert fresh at cluster position.
     const npcIds = npcsToPlace.map(n => n.id)
     const { data: existing, error: existingErr } = await supabase
       .from('scene_tokens')
@@ -2428,7 +2428,7 @@ export default function TablePage() {
     }
 
     // Nothing left to insert (everything was either live already or
-    // restored from archive)? Done — no top-left cluster needed.
+    // restored from archive)? Done - no top-left cluster needed.
     if (fresh.length === 0) {
       setTokenRefreshKey(k => k + 1)
       await refreshMapTokenIds()
@@ -2676,7 +2676,7 @@ export default function TablePage() {
     if (inserts.length > 0) {
       await supabase.from('npc_relationships').insert(inserts)
     }
-    // Nudge the player clients to refetch — their postgres_changes subscription
+    // Nudge the player clients to refetch - their postgres_changes subscription
     // on npc_relationships doesn't reliably fire (see handler in initChannelRef
     // setup). Broadcast bypasses RLS/publication and always lands.
     initChannelRef.current?.send({ type: 'broadcast', event: 'npcs_revealed', payload: {} })
@@ -2716,14 +2716,14 @@ export default function TablePage() {
 
   async function handleInitiativeBarRemove(entry: InitiativeEntry) {
     if (!isGM) {
-      // Player ending their own active turn — × is gated to active+self
+      // Player ending their own active turn - × is gated to active+self
       // in the bar component, so we can just advance.
       await nextTurn()
       return
     }
     if (entry.is_active) {
       // Hand activity to the next combatant in roll-desc order WITHOUT
-      // calling nextTurn — that would wrap past end and fire "New
+      // calling nextTurn - that would wrap past end and fire "New
       // Round" which isn't what GM wants when just removing someone.
       const sorted = [...initiativeOrder].sort((a, b) => b.roll - a.roll || a.character_name.localeCompare(b.character_name))
       const idx = sorted.findIndex(e => e.id === entry.id)
@@ -2736,14 +2736,14 @@ export default function TablePage() {
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
-  // ── TacticalMap callbacks — stable identity, fresh closures ──
+  // ── TacticalMap callbacks - stable identity, fresh closures ──
   // Each is wrapped in useStableCallback so the function reference
   // never changes for the lifetime of this component. With the
   // memo'd <TacticalMap/> child, this means re-renders triggered by
   // unrelated parent state (chat updates, modal toggles, rolls
   // feed updates, etc.) skip the entire canvas component. Data
   // props (initiativeOrder, entries, campaignNpcs, vehicles) still
-  // trigger re-renders when their references change — that's
+  // trigger re-renders when their references change - that's
   // correct behavior. Stale-closure risk is eliminated by the
   // useStableCallback ref pattern (the wrapped fn always reads
   // the latest closure).
@@ -2756,7 +2756,7 @@ export default function TablePage() {
   const handleMapPlayerDragMove = useStableCallback((characterId: string) => {
     // Player dragged their own PC within the Move-action limit.
     // Consume 1 action via the owner's initiative row. No log
-    // label — the drag animation is self-evident.
+    // label - the drag animation is self-evident.
     const entry = initiativeOrder.find(e => e.character_id === characterId)
     if (entry) consumeAction(entry.id, undefined, 1)
   })
@@ -2800,7 +2800,7 @@ export default function TablePage() {
     } else if (token.character_id) {
       const entry = entries.find(e => e.character.id === token.character_id)
       if (entry) {
-        // Players can only open their OWN character sheet — seeing
+        // Players can only open their OWN character sheet - seeing
         // another PC's sheet leaks stats, inventory, and notes.
         // GM keeps full access.
         if (!isGM && entry.userId !== userId) return
@@ -2832,7 +2832,7 @@ export default function TablePage() {
   const handleMapMoveComplete = useStableCallback(async () => {
     // Vehicle / object-token moves: the token physically moved
     // via scene_tokens.grid_x/y, but no character/NPC consumed
-    // an action — vehicles aren't combatants. Bump the token's
+    // an action - vehicles aren't combatants. Bump the token's
     // current_speed (acceleration ramp), capped at the parent
     // vehicle's max Speed, so the next Move can cover more
     // ground. Then bail before the action-consume logic.
@@ -2853,7 +2853,7 @@ export default function TablePage() {
       }
       return
     }
-    // The mover is whoever moveMode references — NOT necessarily the
+    // The mover is whoever moveMode references - NOT necessarily the
     // current active combatant. Turn could auto-advance between Move
     // click and target-cell click, leaving stale active state, in
     // which case the visibly-moved token belongs to a former active.
@@ -2872,7 +2872,7 @@ export default function TablePage() {
     const charge = pendingChargeRef.current
     if (charge) {
       if (mover && charge.activeId && charge.activeId !== mover.id) {
-        console.warn('[charge] active combatant changed — aborting charge')
+        console.warn('[charge] active combatant changed - aborting charge')
         pendingChargeRef.current = null
         setMoveMode(null)
         return
@@ -2891,7 +2891,7 @@ export default function TablePage() {
         // Flag before consume so closeRollModal knows not to
         // double-consume when the Athletics roll finishes.
         // Pass `undefined` for actionLabel: we don't want a
-        // generic "— Sprint" log entry to land BEFORE the
+        // generic "- Sprint" log entry to land BEFORE the
         // Athletics roll resolves (playtest #4). The post-roll
         // handler (line ~2780) writes a single combined entry
         // with the final outcome: "sprinted successfully" or
@@ -2914,15 +2914,15 @@ export default function TablePage() {
         ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
         : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
       // bypassTurnGate=true: consumeAction above advanced the turn.
-      // The Athletics roll fires for the former active combatant —
+      // The Athletics roll fires for the former active combatant -
       // bypass the active-combatant check that would otherwise block it.
-      handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod, undefined, true)
+      handleRollRequest(`${mover?.character_name ?? 'Unknown'} - Sprint (Athletics)`, amod, smod, undefined, true)
     } else {
       // Only consume an action when the combatant we just moved is
       // actually the active one. GM-initiated "move this NPC" for an
       // off-turn combatant must not silently deduct from their next
       // real turn's action budget.
-      if (mover && mover.is_active) consumeAction(mover.id, `${mover.character_name} — Move`)
+      if (mover && mover.is_active) consumeAction(mover.id, `${mover.character_name} - Move`)
       setMoveMode(null)
     }
   })
@@ -2954,7 +2954,7 @@ export default function TablePage() {
 
   const handleMapThrowCancel = useStableCallback(() => setThrowMode(null))
 
-  // TacticalMap only cares about the five throw fields — the rest of
+  // TacticalMap only cares about the five throw fields - the rest of
   // the throwMode state (weapon, amod, smod, label) belongs to the
   // roll modal. Memoizing the projection keeps the prop reference
   // stable across re-renders that don't actually mutate throwMode,
@@ -2993,7 +2993,7 @@ export default function TablePage() {
         newCurrentRoll -= 1
       }
     }
-    // Optimistic local swap — the initiative bar repaints instantly instead
+    // Optimistic local swap - the initiative bar repaints instantly instead
     // of waiting for the DB round-trip + realtime fanout. Without this, a
     // slow network makes defer feel broken (the icon stays put for seconds).
     const activation = activateUpdate(next)
@@ -3002,7 +3002,7 @@ export default function TablePage() {
       if (e.id === next.id) return { ...e, roll: newNextRoll, ...(wasActive ? activation : {}) }
       return e
     }).sort((a, b) => b.roll - a.roll || a.character_name.localeCompare(b.character_name)))
-    // Persist the new roll values to the DB — playtest #7 fix: direct
+    // Persist the new roll values to the DB - playtest #7 fix: direct
     // value writes avoid manufacturing collisions with other combatants.
     const updates: Promise<any>[] = [
       supabase.from('initiative_order').update({ roll: newCurrentRoll }).eq('id', current.id),
@@ -3023,7 +3023,7 @@ export default function TablePage() {
     })
     await Promise.all([loadInitiative(id), rollsFeed.refetch()])
     // Always broadcast so other clients refresh whether or not the deferrer
-    // was active — previously non-active defers silently stranded other
+    // was active - previously non-active defers silently stranded other
     // viewers on the old order.
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
@@ -3040,8 +3040,8 @@ export default function TablePage() {
     setSessionStatus('active')
     setSessionCount(newCount)
     logEvent('session_started', { campaign_id: id, session_number: newCount })
-    console.warn('[startSession] kick-preserve build — kicks persist across sessions')
-    // Fire all four DB calls in parallel — none depend on each other.
+    console.warn('[startSession] kick-preserve build - kicks persist across sessions')
+    // Fire all four DB calls in parallel - none depend on each other.
     // Log delete errors explicitly so we notice if RLS silently blocks a cleanup.
     void Promise.all([
       supabase.from('campaigns').update({
@@ -3060,7 +3060,7 @@ export default function TablePage() {
       supabase.from('chat_messages').delete().eq('campaign_id', id).then(({ error }: any) => {
         if (error) console.warn('[startSession] chat_messages delete failed:', error.message)
       }),
-      // NOTE: no mass kicked=false reset — kick persists across sessions.
+      // NOTE: no mass kicked=false reset - kick persists across sessions.
       // Kicked players must manually Rejoin from the story overview page.
     ]).catch(err => console.error('[startSession] background error:', err))
     // Broadcast to every client so local chat/log state is force-cleared even
@@ -3092,7 +3092,7 @@ export default function TablePage() {
     setSessionActing(false)
     logEvent('session_ended', { campaign_id: id, session_number: endedCount })
 
-    // Fire all DB work in the background — UI is already updated
+    // Fire all DB work in the background - UI is already updated
     const now = new Date().toISOString()
     const bgWork = async () => {
       try {
@@ -3189,7 +3189,7 @@ export default function TablePage() {
   const [focusPin, setFocusPin] = useState<{ id: string; lat: number; lng: number } | null>(null)
 
   // Re-sync any open NpcCards (centered "viewing" cards) whenever the underlying
-  // campaignNpcs list refreshes from realtime — without this, an open card keeps
+  // campaignNpcs list refreshes from realtime - without this, an open card keeps
   // showing the snapshot HP from when it was first opened, even after damage lands.
   useEffect(() => {
     if (campaignNpcs.length === 0) return
@@ -3230,7 +3230,7 @@ export default function TablePage() {
     if (!charEntry) return
     const rapid = charEntry.character.data?.rapid ?? {}
     const perMod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
-    handleRollRequest(`${characterName} — Perception Check`, perMod, 0)
+    handleRollRequest(`${characterName} - Perception Check`, perMod, 0)
     setShowSpecialCheck(null)
   }
 
@@ -3239,19 +3239,19 @@ export default function TablePage() {
   //
   //   1. Single eligible PC. Player path (sees only own PC) and
   //      solo-test GM (one PC seeded). Picker would be a 1-button
-  //      modal — pure overhead.
+  //      modal - pure overhead.
   //   2. Combat is active AND a PC has the turn. The 99% case the
   //      GM hits during a fight: "the active PC just spotted
-  //      something — give me a Perception". Auto-pick the active
+  //      something - give me a Perception". Auto-pick the active
   //      combatant; GM keeps the picker for the rare "I want a
   //      different PC to roll" case via the menu (just call
-  //      setShowSpecialCheck directly if needed — but in practice
+  //      setShowSpecialCheck directly if needed - but in practice
   //      the active-PC autopick is what they want).
   //
   // Multi-PC GM out-of-combat (or NPC's turn) still gets the picker
-  // — there's a real choice to make there. Reported in last night's
+  // - there's a real choice to make there. Reported in last night's
   // playtest (2026-05-04 BUG-1: "Perception check has a redundant
-  // first modal — should go straight to the roll modal").
+  // first modal - should go straight to the roll modal").
   function shortCircuitForSpecialCheck(): { name: string } | null {
     const visible = entries.filter(e => isGM || e.userId === userId)
     if (visible.length === 1) return { name: visible[0].character.name }
@@ -3285,11 +3285,11 @@ export default function TablePage() {
     const subSkills = ['Psychology', 'Streetwise', 'Tactics']
     const bestSub = skills.filter((s: any) => subSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
     const smod = bestSub?.level ?? 0
-    handleRollRequest(`${characterName} — Gut Instinct`, perMod, smod)
+    handleRollRequest(`${characterName} - Gut Instinct`, perMod, smod)
     setShowSpecialCheck(null)
   }
 
-  // First Impression — rolled by a PC against a specific NPC. On outcome,
+  // First Impression - rolled by a PC against a specific NPC. On outcome,
   // writes `npc_relationships.relationship_cmod` so future Recruitment
   // Checks (and other social interactions) have the right CMod baked in.
   // See SRD §02 First Impressions + §08 Communities Recruitment Check.
@@ -3303,10 +3303,10 @@ export default function TablePage() {
     const bestSkill = skills.filter((s: any) => socialSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
     const smod = bestSkill?.level ?? 0
     // Stash the NPC target so executeRoll can write the relationship
-    // CMod when the outcome lands. Ref not state — executeRoll runs
+    // CMod when the outcome lands. Ref not state - executeRoll runs
     // inside a state update chain and would miss a re-render.
     firstImpressionTargetRef.current = { characterId: charEntry.character.id, npcId, npcName }
-    handleRollRequest(`${characterName} — First Impression (${npcName})`, infMod, smod)
+    handleRollRequest(`${characterName} - First Impression (${npcName})`, infMod, smod)
     setShowSpecialCheck(null)
   }
 
@@ -3314,7 +3314,7 @@ export default function TablePage() {
   // Flow: openRecruitModal() preps state + loads dependencies, then the
   // inline modal walks the player through pick → roll → result.
   // executeRecruitRoll() resolves the roll inside the modal (not via the
-  // standard handleRollRequest/executeRoll path — Recruitment is out-
+  // standard handleRollRequest/executeRoll path - Recruitment is out-
   // of-combat, has its own CMod stack and custom outcome application).
   // ── Quick Add helpers (state + entry points only; forms live inside
   //    the <QuickAddModal> component) ─────────────────────────────────
@@ -3431,7 +3431,7 @@ export default function TablePage() {
         inspiration = insp?.level ?? 0
       }
     }
-    // First Impression CMod — needs a fetch from npc_relationships;
+    // First Impression CMod - needs a fetch from npc_relationships;
     // we don't eagerly sync this into state. The UI preview just
     // falls through to 0 until the player rolls First Impression
     // separately (which writes the row). Future enhancement: fetch
@@ -3439,7 +3439,7 @@ export default function TablePage() {
     // For now, read from revealedNpcs which carries relationship_cmod.
     const revealed = revealedNpcs.find((n: any) => n.id === recruitNpcId)
     if (revealed && typeof revealed.relationship_cmod === 'number') firstImpression = revealed.relationship_cmod
-    // Poaching — if NPC is already in another community, apply -3.
+    // Poaching - if NPC is already in another community, apply -3.
     if (recruitNpcId && npcCommunityMap[recruitNpcId]) poaching = -3
     const total = firstImpression + inspiration + poaching + recruitGmCmod
     return { firstImpression, inspiration, poaching, gm: recruitGmCmod, total }
@@ -3453,13 +3453,13 @@ export default function TablePage() {
     const npc = campaignNpcs.find((n: any) => n.id === recruitNpcId)
     if (!npc) return
     // Conscription pressgang gate (CRB). Conscription explicitly
-    // requires a credible threat — coercion, leverage, weapons drawn,
+    // requires a credible threat - coercion, leverage, weapons drawn,
     // hostage, etc. Surface this at roll time so it can't be a
     // half-accidental click. SRD: "The PCs must present a credible
     // threat for Conscription to work."
     if (recruitApproach === 'conscript') {
       const ack = confirm(
-        `Conscription — pressgang.\n\n` +
+        `Conscription - pressgang.\n\n` +
         `This is coercion, not persuasion. The PC must have established a credible threat (weapons drawn, leverage held, escape cut off, etc.) before this roll can proceed.\n\n` +
         `Confirm the threat is credible and roll?`
       )
@@ -3499,7 +3499,7 @@ export default function TablePage() {
     const smod = (rollerEntry.character.data?.skills ?? []).find((s: any) => s.skillName === recruitSkill)?.level ?? 0
     // CMod: sum of First Impression + Inspiration + Poaching + GM.
     const cmods = computeRecruitCmods()
-    // Insight Die pre-roll — 3d6 keep-all, or +3 CMod flat. Deducts 1
+    // Insight Die pre-roll - 3d6 keep-all, or +3 CMod flat. Deducts 1
     // from the roller PC's insight_dice. Gracefully no-ops if the PC
     // has 0 (UI should already have hidden the option).
     let die1: number, die2: number
@@ -3539,7 +3539,7 @@ export default function TablePage() {
     const recruitmentType: RecruitApproach | 'apprentice' = applyApprentice ? 'apprentice' : recruitApproach
 
     // On success, INSERT community_members. If the NPC is currently in
-    // another community (poaching), leave that row alone — narratively
+    // another community (poaching), leave that row alone - narratively
     // the NPC is switching allegiance but the GM may want to retain
     // history. MVP behavior: just insert the new membership; GM can
     // manually remove old one if desired.
@@ -3569,7 +3569,7 @@ export default function TablePage() {
     // flavor: approach, community, apprentice flag, poaching, etc.
     const logLabel = isSuccess
       ? `🤝 ${rollerEntry.character.name} recruited ${npc.name}${applyApprentice ? ' as an Apprentice' : ` as a ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)}`} to ${finalCommunityName}`
-      : `🤝 ${rollerEntry.character.name} tried to recruit ${npc.name} — ${outcome}`
+      : `🤝 ${rollerEntry.character.name} tried to recruit ${npc.name} - ${outcome}`
     const { data: logRow } = await supabase.from('roll_log').insert({
       campaign_id: id,
       user_id: userId,
@@ -3671,7 +3671,7 @@ export default function TablePage() {
     let inserted = r.inserted
     let apprenticeApplied = r.apprenticeApplied
     if (wasSuccess && !nowSuccess && r.communityId) {
-      // Withdraw membership — the recruit no longer happened.
+      // Withdraw membership - the recruit no longer happened.
       await supabase.from('community_members')
         .delete()
         .eq('community_id', r.communityId)
@@ -3681,7 +3681,7 @@ export default function TablePage() {
     } else if (!wasSuccess && nowSuccess && r.communityId) {
       // Late-insert the member. Apprentice flag defers to the
       // post-roll Apprentice toggle (user clicks "Take as Apprentice"
-      // if they want it) — here we just land them as the normal
+      // if they want it) - here we just land them as the normal
       // recruitment type.
       const { error: memErr } = await supabase.from('community_members').insert({
         community_id: r.communityId,
@@ -3703,7 +3703,7 @@ export default function TablePage() {
     // Patch the existing roll_log row.
     const newLabel = nowSuccess
       ? `🤝 ${r.rollerName} recruited ${r.npcName}${apprenticeApplied ? ' as an Apprentice' : ` as a ${r.approach.charAt(0).toUpperCase() + r.approach.slice(1)}`} to ${r.communityName}`
-      : `🤝 ${r.rollerName} tried to recruit ${r.npcName} — ${outcome}`
+      : `🤝 ${r.rollerName} tried to recruit ${r.npcName} - ${outcome}`
     if (r.logRowId) {
       await supabase.from('roll_log')
         .update({
@@ -3732,7 +3732,7 @@ export default function TablePage() {
       inserted, apprenticeApplied,
     })
     await rollsFeed.refetch()
-    // Broadcast — reroll can flip membership state (added or removed)
+    // Broadcast - reroll can flip membership state (added or removed)
     // or just change the logged outcome; either way the chip needs a
     // refresh.
     if (typeof window !== 'undefined') {
@@ -3764,7 +3764,7 @@ export default function TablePage() {
       participants: scored.map(p => p.character.name),
       skill: groupCheckSkill,
     }
-    handleRollRequest(`Group Check — ${groupCheckSkill} (led by ${leader.character.name})`, leader.amod, leader.smod + bonusMods)
+    handleRollRequest(`Group Check - ${groupCheckSkill} (led by ${leader.character.name})`, leader.amod, leader.smod + bonusMods)
     setShowSpecialCheck(null)
     setGroupCheckParticipants(new Set())
     setGroupCheckSkill('')
@@ -3811,7 +3811,7 @@ export default function TablePage() {
       }).eq('id', stateId)
       setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 1, rp_current: 1, insight_dice: 0 } } : e))
     } else {
-      // Apply full damage — WP=0 with death countdown + Stress pip on entry
+      // Apply full damage - WP=0 with death countdown + Stress pip on entry
       // to mortal-wound (rule: any mortal/incap transition fills one pip).
       const deathCountdown = Math.max(1, 4 + phyAmod)
       const targetEntry = entries.find(e => e.stateId === stateId)
@@ -3846,15 +3846,15 @@ export default function TablePage() {
       const newBonus = (targetEntry.aim_bonus ?? 0) - 2
       const { data: cfRows, error: cfErr } = await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId).select('id, aim_bonus')
       if (cfErr) console.error('[applySocialAction] Cover Fire update error:', cfErr.message)
-      else if (!cfRows || cfRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL — Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
+      else if (!cfRows || cfRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL - Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
       else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
+      await consumeAction(activeEntry.id, `${activeEntry.character_name} - Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
     } else if (action === 'Distract') {
       // SRD: Intimidation/Psychology*/Tactics* check → target loses next
       // Combat Action on success. Auto-apply replaced with a real roll
       // 2026-04-29 so the modal matches the standard ATTACK ROLL shape +
       // failures don't punish the target. Active combatant burns one
-      // action either way (the attempt cost) — pre-consumed via the
+      // action either way (the attempt cost) - pre-consumed via the
       // actionPreConsumedRef gate, mirroring Stabilize.
       let amod = 0, smod = 0
       const distractCharEntry = entries.find(e => e.character.name === activeEntry.character_name)
@@ -3873,7 +3873,7 @@ export default function TablePage() {
         }
       }
       // Open roll modal FIRST (before consumeAction changes the active combatant)
-      handleRollRequest(`${activeEntry.character_name} — Distract → ${targetEntry.character_name}`, amod, smod)
+      handleRollRequest(`${activeEntry.character_name} - Distract → ${targetEntry.character_name}`, amod, smod)
       actionPreConsumedRef.current = true
       await consumeAction(activeEntry.id)
     } else if (action === 'Inspire') {
@@ -3885,9 +3885,9 @@ export default function TablePage() {
       const newActions = (targetEntry.actions_remaining ?? 0) + 1
       const { data: insRows, error: insErr } = await supabase.from('initiative_order').update({ actions_remaining: newActions, inspired_this_round: true }).eq('id', targetEntryId).select('id, actions_remaining')
       if (insErr) console.error('[applySocialAction] Inspire update error:', insErr.message)
-      else if (!insRows || insRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL — Inspire actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
+      else if (!insRows || insRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL - Inspire actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
       else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Inspire → ${targetEntry.character_name} (+1 action)`)
+      await consumeAction(activeEntry.id, `${activeEntry.character_name} - Inspire → ${targetEntry.character_name} (+1 action)`)
     }
     setSocialTarget(null)
   }
@@ -3896,19 +3896,19 @@ export default function TablePage() {
     // During active combat, ALL rolls (weapon + skill) are gated to the active
     // combatant with actions remaining.  Without this, a player whose turn ended
     // could still open a skill check, and closeRollModal would then consume an
-    // action from whichever OTHER combatant is now active — corrupting the turn.
+    // action from whichever OTHER combatant is now active - corrupting the turn.
     //
     // Bypass when:
     //   - bypassTurnGate=true (explicit, e.g. Sprint Athletics deferred roll), OR
     //   - actionPreConsumedRef.current=true (Sprint / Stabilize / any flow that
-    //     already consumed actions before requesting the roll — the turn may
+    //     already consumed actions before requesting the roll - the turn may
     //     have auto-advanced, so the gate would block the legitimate deferred
     //     roll. closeRollModal won't double-consume because the same ref tells
     //     it to skip the post-roll consume).
     if (combatActive && !bypassTurnGate && !actionPreConsumedRef.current) {
       const active = initiativeOrder.find(e => e.is_active)
       if (!active || (active.actions_remaining ?? 0) <= 0) {
-        alert('No actions remaining — wait for your next turn.')
+        alert('No actions remaining - wait for your next turn.')
         return
       }
 
@@ -3917,7 +3917,7 @@ export default function TablePage() {
       // Skill/other rolls: inferred from the roller's PC or GM-controlled NPC.
       let rollerName: string | null
       if (weapon) {
-        const firstPart = label.split(' — ')[0]
+        const firstPart = label.split(' - ')[0]
         const firstPartIsKnownName =
           campaignNpcs.some((n: any) => n.name === firstPart) ||
           entries.some(e => e.character.name === firstPart)
@@ -3930,16 +3930,16 @@ export default function TablePage() {
           rollerName = myChar?.character.name ?? null
         }
       } else {
-        // Non-weapon roll — figure out who is rolling.
-        // Label may start with "CharName — Skill" (NPC rolls from NpcCard).
-        const firstPart = label.split(' — ')[0]
+        // Non-weapon roll - figure out who is rolling.
+        // Label may start with "CharName - Skill" (NPC rolls from NpcCard).
+        const firstPart = label.split(' - ')[0]
         const firstPartIsKnownName =
           campaignNpcs.some((n: any) => n.name === firstPart) ||
           entries.some(e => e.character.name === firstPart)
         if (firstPartIsKnownName) {
           rollerName = firstPart
         } else if (isGM && active.is_npc) {
-          // GM rolling a skill for the active NPC — allow it
+          // GM rolling a skill for the active NPC - allow it
           rollerName = active.character_name
         } else if (isGM && selectedEntry) {
           rollerName = selectedEntry.character.name
@@ -3994,12 +3994,12 @@ export default function TablePage() {
         (activeEntry.npc_id && t.npc_id === activeEntry.npc_id)
       )
       if (!attackerTok) return null
-      // PC attackers prefer NPC targets over teammate PCs (or objects) — even
+      // PC attackers prefer NPC targets over teammate PCs (or objects) - even
       // when a teammate is closer. Stops the modal landing on "Frankie
       // Gibblets" when there's an NPC also in range. NPC attackers fall
       // through to the original closest-by-distance pick. Sticky targeting
       // (last_attack_target) and explicit map selection still win above
-      // this auto-pick — see the chosenTarget chain below.
+      // this auto-pick - see the chosenTarget chain below.
       const attackerIsPC = !activeEntry.is_npc
       type Cand = { name: string; dist: number; isNpc: boolean }
       function preferred(cur: Cand | null, c: Cand): Cand {
@@ -4104,13 +4104,13 @@ export default function TablePage() {
     }
     rollExecutedRef.current = true
     setRolling(true)
-    // Determine character name. Most labels containing " — " put the attacker
-    // name first (e.g. "Goon 1 — Attack (Pistol)", "David Battersby — Aim"),
-    // but the PC weapon-attack button builds its label as "Attack — <weapon>"
+    // Determine character name. Most labels containing " - " put the attacker
+    // name first (e.g. "Goon 1 - Attack (Pistol)", "David Battersby - Aim"),
+    // but the PC weapon-attack button builds its label as "Attack - <weapon>"
     // which previously made the code write the literal string "Attack" into
     // roll_log.character_name. Guard against that by only trusting the first
     // split-part when it actually matches a known PC or NPC name.
-    const labelParts = pendingRoll.label.split(' — ')
+    const labelParts = pendingRoll.label.split(' - ')
     const myEntry = entries.find(e => e.userId === userId)
     const firstPart = labelParts[0]
     const firstPartIsKnownName = labelParts.length > 1 && (
@@ -4123,10 +4123,10 @@ export default function TablePage() {
     let cmodVal = parseInt(cmod, 10) || 0
     // Add range band CMod for weapon attacks
     if (pendingRoll.weapon) cmodVal += getRangeCMod()
-    // Infection — sick characters take -2 CMod on physical checks
+    // Infection - sick characters take -2 CMod on physical checks
     // (Athletics / Melee Combat / Ranged Combat / Stealth / Survival
     // / Unarmed Combat) per locked canon. Detect by both:
-    //   (a) skill name in the label (e.g. "Cree — Athletics")
+    //   (a) skill name in the label (e.g. "Cree - Athletics")
     //   (b) combat action that ALWAYS uses a physical skill behind
     //       the scenes (Attack / Charge / Subdue / Sprint / Grapple
     //       / Unarmed / Fire from Cover / Rapid Fire).
@@ -4142,19 +4142,19 @@ export default function TablePage() {
         const PHYSICAL_LABEL_RE = /\b(Athletics|Melee Combat|Ranged Combat|Stealth|Survival|Unarmed Combat|Attack|Charge|Subdue|Sprint|Grapple|Unarmed|Fire from Cover|Rapid Fire)\b/i
         if (PHYSICAL_LABEL_RE.test(pendingRoll.label)) {
           cmodVal -= 2
-          infectionSickCmodNote = `🤒 Sick (${rollerInfection === 'wound' ? 'Wound Infection' : 'Sickness & Disease'}) — -2 CMod on physical check.`
+          infectionSickCmodNote = `🤒 Sick (${rollerInfection === 'wound' ? 'Wound Infection' : 'Sickness & Disease'}) - -2 CMod on physical check.`
         }
       }
     }
     let die1: number, die2: number
     let preRollSpent = false
-    // Populated only on 3d6 Insight rolls — carries all three dice so the
+    // Populated only on 3d6 Insight rolls - carries all three dice so the
     // modal render can show three boxes instead of two (die2 would
     // otherwise read as d2+d3, misleadingly as one die).
     let insightDiceRolled: number[] | undefined
 
     if (preRollInsight === '3d6' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
-      // Per SRD: roll 3d6 and KEEP ALL THREE dice (playtest #6 — do NOT
+      // Per SRD: roll 3d6 and KEEP ALL THREE dice (playtest #6 - do NOT
       // drop lowest). Fit into the existing die1/die2 storage columns by
       // putting the first die in die1 and the sum of the other two in
       // die2; total = die1+die2+mods = d1+d2+d3+mods. die2 is always ≥2
@@ -4182,9 +4182,9 @@ export default function TablePage() {
 
     const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
     const outcome = getOutcome(total, die1, die2, preRollInsight === '3d6' && preRollSpent)
-    // Award Insight Die — only to PCs, or Antagonist NPCs (Bystanders/Goons/Foes never get Insight Dice)
+    // Award Insight Die - only to PCs, or Antagonist NPCs (Bystanders/Goons/Foes never get Insight Dice)
     const isHighLow = outcome === 'Low Insight' || outcome === 'High Insight'
-    const isNPCRoll = isHighLow && pendingRoll.label.includes(' — ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
+    const isNPCRoll = isHighLow && pendingRoll.label.includes(' - ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
     const npcType = isNPCRoll ? (rosterNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? campaignNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? '') : ''
     const insightAwarded = isHighLow && !(isNPCRoll && npcType !== 'antagonist')
     if (insightAwarded && myEntry?.liveState) {
@@ -4204,7 +4204,7 @@ export default function TablePage() {
     // as a time-travel paradox to players.
     const pendingLootLogs: any[] = []
 
-    // Grenade fumbles — once the pin is pulled, the grenade detonates no
+    // Grenade fumbles - once the pin is pulled, the grenade detonates no
     // matter how the throwing roll lands. Failure/Dire scatter the impact
     // point in a random direction (like a fumbled shot); Low Insight has
     // the grenade going off in the thrower's own hand. The clean-throw
@@ -4219,7 +4219,7 @@ export default function TablePage() {
       const weapon = pendingRoll.weapon
       const w = getWeaponByName(weapon.weaponName)
       // 'Unarmed' is a pseudo-weapon fabricated inline by the CharacterCard
-      // Unarmed Attack button — it has no entry in getWeaponByName, so we
+      // Unarmed Attack button - it has no entry in getWeaponByName, so we
       // have to recognize it explicitly as melee. Without this, PHY AMod is
       // never added to damage (rollDamage skips phyBonus) and the defensive
       // mod uses DEX instead of PHY, easily producing 0 damage.
@@ -4233,7 +4233,7 @@ export default function TablePage() {
       const hasCloseUp = getTraitValue(traits, 'Close-Up') !== null
       const hasConeUp = getTraitValue(traits, 'Cone-Up') !== null
 
-      // Grenade fumble — compute the actual blast center now so it can
+      // Grenade fumble - compute the actual blast center now so it can
       // override the normal cell/token lookup in the AoE block below.
       // Push a descriptive log line into traitNotes so the expanded chat
       // entry shows what happened ("scattered NE 3 cells" etc.).
@@ -4259,12 +4259,12 @@ export default function TablePage() {
         if (outcome === 'Low Insight') {
           if (throwerTok) {
             blastCenterOverride = { gx: throwerTok.grid_x, gy: throwerTok.grid_y }
-            traitNotes.push(`💥 Moment of Low Insight — grenade detonates in hand at thrower's cell (${throwerTok.grid_x},${throwerTok.grid_y}).`)
+            traitNotes.push(`💥 Moment of Low Insight - grenade detonates in hand at thrower's cell (${throwerTok.grid_x},${throwerTok.grid_y}).`)
           } else {
-            traitNotes.push(`💥 Moment of Low Insight — grenade detonates, but the thrower has no map token, so no AoE applied.`)
+            traitNotes.push(`💥 Moment of Low Insight - grenade detonates, but the thrower has no map token, so no AoE applied.`)
           }
         } else {
-          // Failure / Dire Failure — find the intended cell, then scatter.
+          // Failure / Dire Failure - find the intended cell, then scatter.
           let intended: { gx: number; gy: number } | null = null
           if (grenadeTargetCell) {
             intended = { gx: grenadeTargetCell.gx, gy: grenadeTargetCell.gy }
@@ -4289,9 +4289,9 @@ export default function TablePage() {
             blastCenterOverride = { gx: newGx, gy: newGy }
             const ft = mapCellFeet || 3
             const tier = outcome === 'Dire Failure' ? '⚠️ Dire Failure' : '🎲 Wild throw'
-            traitNotes.push(`${tier} — scattered ${dir.name} ${distRoll} cell${distRoll !== 1 ? 's' : ''} (${distRoll * ft} ft). Impact: (${newGx},${newGy}).`)
+            traitNotes.push(`${tier} - scattered ${dir.name} ${distRoll} cell${distRoll !== 1 ? 's' : ''} (${distRoll * ft} ft). Impact: (${newGx},${newGy}).`)
           } else {
-            traitNotes.push(`🎲 Wild throw — but no valid origin cell, blast not resolved.`)
+            traitNotes.push(`🎲 Wild throw - but no valid origin cell, blast not resolved.`)
           }
         }
       }
@@ -4312,7 +4312,7 @@ export default function TablePage() {
       // Unarmed adds SMod to damage
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
 
-      // Find target — could be PC (in entries), NPC (in initiativeOrder + rosterNpcs), a non-combat NPC on the map, or object token (mapTokens with WP)
+      // Find target - could be PC (in entries), NPC (in initiativeOrder + rosterNpcs), a non-combat NPC on the map, or object token (mapTokens with WP)
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
       let targetNpc = !targetEntry
@@ -4326,7 +4326,7 @@ export default function TablePage() {
       // unrevealed rows. Without this fallback the damage path falls
       // through every if/else branch and silently no-ops (playtest:
       // "Cruz Zwick used an Assault Rifle to Successfully Attack Frankie
-      // Gibblets" — but Frankie took no damage). Server fetch by id
+      // Gibblets" - but Frankie took no damage). Server fetch by id
       // bypasses the local cache; if RLS still blocks at the DB level,
       // we surface it loudly so the GM knows to reveal the NPC or check
       // the policy.
@@ -4336,9 +4336,9 @@ export default function TablePage() {
         if (npcFetchErr) console.warn('[damage] NPC fallback fetch error:', npcFetchErr.message)
         if (freshNpc) {
           targetNpc = freshNpc as any
-          console.warn('[damage] NPC resolved via server fallback (local cache missed — likely RLS):', freshNpc.name)
+          console.warn('[damage] NPC resolved via server fallback (local cache missed - likely RLS):', freshNpc.name)
         } else {
-          console.error('[damage] NPC fallback fetch returned null — RLS is blocking server access too. Reveal the NPC or fix the campaign_npcs RLS policy.')
+          console.error('[damage] NPC fallback fetch returned null - RLS is blocking server access too. Reveal the NPC or fix the campaign_npcs RLS policy.')
         }
       }
       const targetObject = (!targetEntry && !targetNpc) ? mapTokens.find(t => t.token_type === 'object' && t.name === targetName && (t.wp_max ?? 0) > 0) : null
@@ -4346,7 +4346,7 @@ export default function TablePage() {
       const targetDefBonus = targetInitEntry?.defense_bonus ?? 0
       const defensiveMod = targetObject ? 0 : ((isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus)
 
-      // Armor pull — defender's worn armor pieces contribute their DM
+      // Armor pull - defender's worn armor pieces contribute their DM
       // to mitigation. Reactive (melee-only) pieces filter out when the
       // attacker isn't melee/unarmed. Source data: defender's
       // inventory[] with worn===true; armor catalog lives in
@@ -4380,7 +4380,7 @@ export default function TablePage() {
       // Subdue: full RP but 50% WP
       if (pendingRoll.label.includes('Subdue')) {
         finalWP = Math.max(1, Math.floor(finalWP / 2))
-        traitNotes.push(`Subdue — WP halved to ${finalWP}`)
+        traitNotes.push(`Subdue - WP halved to ${finalWP}`)
       }
       // After taking a hit, clear Defend bonus (one-time) but keep Take Cover bonus
       if (targetInitEntry && targetDefBonus > 0 && !targetInitEntry.has_cover) {
@@ -4390,7 +4390,7 @@ export default function TablePage() {
       // Stun: zero WP damage
       if (isStun) {
         finalWP = 0
-        traitNotes.push('Stun — no WP damage dealt')
+        traitNotes.push('Stun - no WP damage dealt')
         if (outcome === 'Wild Success' || outcome === 'High Insight') {
           const targetPhy = targetRapid.PHY ?? 0
           const stunRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - targetPhy)
@@ -4400,32 +4400,32 @@ export default function TablePage() {
 
       // Burst note
       if (useBurst && rolls > 1) {
-        traitNotes.push(`Automatic Burst — ${rolls} rounds fired`)
+        traitNotes.push(`Automatic Burst - ${rolls} rounds fired`)
       }
 
       // Blast Radius note + splash baseline
       // Per CRB p.71-72: "The damage is calculated once for the
       // explosion and the same amount is dealt to each person caught
       // in the blast." Splash uses the RAW rolled WP (before primary's
-      // mitigation) — splash victims don't inherit the primary's
+      // mitigation) - splash victims don't inherit the primary's
       // PHY/DEX defense. Primary is still mitigated as the named
       // attack recipient (handled separately above via calculateDamage).
       const blastRawWP = totalWP + unarmedBonus
       const blastRawRP = Math.floor(blastRawWP * (weapon.rpPercent / 100))
       if (hasBlast) {
         const halfWP = Math.floor(blastRawWP / 2)
-        traitNotes.push(`Blast Radius — Engaged: ${blastRawWP} WP | Close: ${halfWP} WP`)
+        traitNotes.push(`Blast Radius - Engaged: ${blastRawWP} WP | Close: ${halfWP} WP`)
       }
 
       // Burning note
       if (burningVal !== null && burningVal > 0) {
         const burnRounds = Math.floor(Math.random() * 3) + 1
-        traitNotes.push(`Burning — ${burningVal} WP/RP per round for ${burnRounds} round${burnRounds !== 1 ? 's' : ''}`)
+        traitNotes.push(`Burning - ${burningVal} WP/RP per round for ${burnRounds} round${burnRounds !== 1 ? 's' : ''}`)
       }
 
       // Close-Up / Cone-Up note
-      if (hasCloseUp) traitNotes.push('Close-Up — at Engaged range, 50% damage to bystanders')
-      if (hasConeUp) traitNotes.push('Cone-Up — at Engaged range, 50% damage to bystanders')
+      if (hasCloseUp) traitNotes.push('Close-Up - at Engaged range, 50% damage to bystanders')
+      if (hasConeUp) traitNotes.push('Cone-Up - at Engaged range, 50% damage to bystanders')
 
       damageResult = { base: totalBase, diceRoll: totalDice, diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc, phyBonus: totalPhy, totalWP: totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
@@ -4448,12 +4448,12 @@ export default function TablePage() {
       // Auto-apply damage to target (PC or NPC)
       console.warn('[damage] target lookup:', { targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
       if (isGrenadeFumble) {
-        // Grenade fumbles skip the named-target damage path entirely —
+        // Grenade fumbles skip the named-target damage path entirely -
         // there's no "primary" hit because the throw missed. Damage is
         // applied through the blast AoE below using blastCenterOverride.
-        console.warn('[damage] grenade fumble — primary skipped, blast AoE will resolve from override center', blastCenterOverride)
+        console.warn('[damage] grenade fumble - primary skipped, blast AoE will resolve from override center', blastCenterOverride)
       } else if (targetEntry?.liveState) {
-        // PC target — use character_states
+        // PC target - use character_states
         // Re-fetch fresh HP from DB to avoid stale closure values
         const { data: freshState } = await supabase.from('character_states').select('*').eq('id', targetEntry.stateId).single()
         const currentWP = freshState?.wp_current ?? targetEntry.liveState.wp_current
@@ -4477,7 +4477,7 @@ export default function TablePage() {
             phyAmod: targetEntry.character.data?.rapid?.PHY ?? 0,
             insightDice: currentInsight,
           }
-          // Show modal on the PLAYER's screen — they decide whether to trade insight
+          // Show modal on the PLAYER's screen - they decide whether to trade insight
           if (targetEntry.userId === userId) {
             setInsightSavePrompt(insightData)
           }
@@ -4486,7 +4486,7 @@ export default function TablePage() {
         } else {
           const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
           // Stress on entry to mortal-wound or incap. Per playtest rule
-          // 2026-04-27 — entering either state automatically fills a Stress
+          // 2026-04-27 - entering either state automatically fills a Stress
           // pip (capped at 5). Mortal preempts incap when both transitions
           // would fire on the same hit, so only one pip per event.
           let stressReason: string | null = null
@@ -4548,15 +4548,15 @@ export default function TablePage() {
           // Silent RLS failure pattern: no error, 0 rows affected. The
           // optimistic patch paints damage locally for a frame, then
           // loadEntries at the end of executeRoll re-fetches the DB's
-          // unchanged value and the bar snaps back to full — user sees
+          // unchanged value and the bar snaps back to full - user sees
           // "zero damage applied" with no diagnostic. Make it loud.
           if (!csErr && (!csData || csData.length === 0)) {
-            console.error('[damage] SILENT RLS FAIL — PC wp_current not updated. Run sql/character-states-rls-fix.sql in Supabase. stateId:', targetEntry.stateId)
-            alert(`Damage to ${targetEntry.character.name} was silently rejected by RLS — the row did not update.\n\nThe GM needs to run sql/character-states-rls-fix.sql in Supabase to allow GMs + campaign members to apply damage to PCs they don't own.\n\nUntil then, damage rolls against PCs will succeed visually but not persist.`)
+            console.error('[damage] SILENT RLS FAIL - PC wp_current not updated. Run sql/character-states-rls-fix.sql in Supabase. stateId:', targetEntry.stateId)
+            alert(`Damage to ${targetEntry.character.name} was silently rejected by RLS - the row did not update.\n\nThe GM needs to run sql/character-states-rls-fix.sql in Supabase to allow GMs + campaign members to apply damage to PCs they don't own.\n\nUntil then, damage rolls against PCs will succeed visually but not persist.`)
           }
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
           initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: update } })
-          // Mortally wounded / incapacitated — zero their actions and auto-advance if active
+          // Mortally wounded / incapacitated - zero their actions and auto-advance if active
           if (combatActive && (newWP === 0 || newRP === 0)) {
             const initEntry = initiativeOrder.find(e => e.character_id === targetEntry.character.id)
             if (initEntry) {
@@ -4570,14 +4570,14 @@ export default function TablePage() {
           }
         }
       } else if (targetNpc) {
-        // NPC target — use campaign_npcs
+        // NPC target - use campaign_npcs
         const npcWP = targetNpc.wp_current ?? targetNpc.wp_max ?? 10
         const npcRP = targetNpc.rp_current ?? targetNpc.rp_max ?? 6
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
         console.warn('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
         const npcUpdate: any = { wp_current: newWP, rp_current: newRP }
-        // Mortal wound — NPC enters death countdown when WP first hits 0
+        // Mortal wound - NPC enters death countdown when WP first hits 0
         if (newWP === 0 && npcWP > 0) {
           npcUpdate.death_countdown = Math.max(1, 4 + (targetNpc.physicality ?? 0))
           // Log the mortal wound to the game feed
@@ -4592,7 +4592,7 @@ export default function TablePage() {
             void appendProgressionLog(myEntry.character.id, 'kill', `Mortally wounded ${targetNpc.name} with ${weapon.weaponName}`)
           }
         }
-        // Incapacitation — NPC loses consciousness when RP first hits 0
+        // Incapacitation - NPC loses consciousness when RP first hits 0
         if (newRP === 0 && npcRP > 0 && newWP > 0) {
           npcUpdate.incap_rounds = Math.max(1, 4 - (targetNpc.physicality ?? 0))
           await supabase.from('roll_log').insert({
@@ -4621,7 +4621,7 @@ export default function TablePage() {
         // Without this, a player dealing damage only updates their own state.
         console.warn('[npc_damaged] SEND primary', { npcId, patch, channel: initChannelRef.current ? 'ready' : 'null' })
         initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId, patch } })
-        // Mortally wounded / incapacitated — zero their actions and auto-advance if active
+        // Mortally wounded / incapacitated - zero their actions and auto-advance if active
         if (combatActive && (newWP === 0 || newRP === 0)) {
           const initEntry = initiativeOrder.find(e => e.npc_id === npcId)
           if (initEntry) {
@@ -4634,7 +4634,7 @@ export default function TablePage() {
           }
         }
       } else if (targetObject) {
-        // Object token — update scene_tokens.wp_current. No RP, no death countdown, no initiative update.
+        // Object token - update scene_tokens.wp_current. No RP, no death countdown, no initiative update.
         const curWP = targetObject.wp_current ?? targetObject.wp_max ?? 0
         const newWP = Math.max(0, curWP - finalWP)
         console.warn('[damage] object target', targetObject.name, 'id:', targetObject.id, 'WP:', curWP, '→', newWP)
@@ -4652,15 +4652,15 @@ export default function TablePage() {
         // commit against a stale state. Surface it loudly so the GM
         // knows to run the SQL and re-attack.
         if (!objErr && (!objData || objData.length === 0)) {
-          console.error('[damage] SILENT RLS FAIL — scene_tokens.wp_current not updated. Run sql/scene-tokens-player-update-objects.sql. tokenId:', targetObject.id, 'tokenName:', targetObject.name)
-          alert(`Damage to "${targetObject.name}" was silently rejected by RLS — the token's WP did not update, so it won't show as destroyed and any loot inside won't drop.\n\nRun sql/scene-tokens-player-update-objects.sql in Supabase to allow players to damage object tokens in scenes they're part of.\n\nUntil then, players attacking barrels/crates will see damage in the log but the object stays full-health.`)
+          console.error('[damage] SILENT RLS FAIL - scene_tokens.wp_current not updated. Run sql/scene-tokens-player-update-objects.sql. tokenId:', targetObject.id, 'tokenName:', targetObject.name)
+          alert(`Damage to "${targetObject.name}" was silently rejected by RLS - the token's WP did not update, so it won't show as destroyed and any loot inside won't drop.\n\nRun sql/scene-tokens-player-update-objects.sql in Supabase to allow players to damage object tokens in scenes they're part of.\n\nUntil then, players attacking barrels/crates will see damage in the log but the object stays full-health.`)
         }
         setMapTokens(prev => prev.map(t => t.id === targetObject.id ? { ...t, wp_current: newWP } : t))
         // If this object token corresponds to a campaign vehicle (matched
         // by name within campaigns.vehicles JSONB), sync that vehicle's
         // wp_current so the /vehicle popout sheet reflects damage taken
         // on the map. Map and sheet were previously two disconnected
-        // sources of truth — Minnie would soak hits on the canvas but
+        // sources of truth - Minnie would soak hits on the canvas but
         // her sheet still showed full WP.
         //
         // Vehicles aren't a separate table; they're a JSONB array on
@@ -4738,7 +4738,7 @@ export default function TablePage() {
                 : e))
               // Clear contents from the destroyed object
               await supabase.from('scene_tokens').update({ contents: [] }).eq('id', targetObject.id)
-              // Defer log — inserted after saveRollToLog so feed order reads
+              // Defer log - inserted after saveRollToLog so feed order reads
               // attack → loot instead of loot → attack (see pendingLootLogs).
               pendingLootLogs.push({
                 campaign_id: id, user_id: userId, character_name: attackerEntry.character.name,
@@ -4746,7 +4746,7 @@ export default function TablePage() {
                 die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
               })
               initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
-              traitNotes.push(`Destroyed ${targetObject.name} — looted: ${lootedNames.join(', ')}`)
+              traitNotes.push(`Destroyed ${targetObject.name} - looted: ${lootedNames.join(', ')}`)
             } else if (attackerNpc) {
               const npcInv: InventoryItem[] = (attackerNpc as any).inventory ?? []
               let newInv = [...npcInv]
@@ -4762,7 +4762,7 @@ export default function TablePage() {
               }
               await supabase.from('campaign_npcs').update({ inventory: newInv }).eq('id', attackerNpc.id)
               await supabase.from('scene_tokens').update({ contents: [] }).eq('id', targetObject.id)
-              // Defer log — see pendingLootLogs declaration.
+              // Defer log - see pendingLootLogs declaration.
               pendingLootLogs.push({
                 campaign_id: id, user_id: userId, character_name: attackerNpc.name,
                 label: `🎒 ${attackerNpc.name} looted ${lootedNames.join(', ')} from ${targetObject.name}`,
@@ -4772,21 +4772,21 @@ export default function TablePage() {
               setCampaignNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, inventory: newInv } : n))
               setRosterNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, inventory: newInv } as CampaignNpc : n))
               initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
-              traitNotes.push(`Destroyed ${targetObject.name} — ${attackerNpc.name} looted: ${lootedNames.join(', ')}`)
+              traitNotes.push(`Destroyed ${targetObject.name} - ${attackerNpc.name} looted: ${lootedNames.join(', ')}`)
             }
           }
         }
       } else if (grenadeTargetCell) {
-        // Grenade thrown at an empty cell — no "primary target" to damage,
+        // Grenade thrown at an empty cell - no "primary target" to damage,
         // the blast block below picks up the cell coords and splashes
         // everyone in range. Intentional that damageResult still shows
         // the rolled WP/RP so the UI's damage card reads correctly.
-        console.warn('[damage] cell-throw — primary damage skipped, blast AoE will handle tokens around', grenadeTargetCell)
+        console.warn('[damage] cell-throw - primary damage skipped, blast AoE will handle tokens around', grenadeTargetCell)
       } else {
-        console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
+        console.warn('[damage] no target resolved - damage NOT applied. targetName was:', targetName)
       }
 
-      // Blast Radius AoE — apply scaled damage to nearby tokens on the
+      // Blast Radius AoE - apply scaled damage to nearby tokens on the
       // tactical map. Center is the target token by default, or the
       // cell the player clicked when it's a grenade throw-to-cell.
       if (hasBlast && mapTokens.length > 0 && (targetName || grenadeTargetCell || blastCenterOverride)) {
@@ -4812,7 +4812,7 @@ export default function TablePage() {
         if (targetTok) {
           const ft = mapCellFeet || 3
           // ── BATCHED BLAST APPLICATION ──
-          // Was: per-target sequential awaits — fresh-state SELECT + UPDATE
+          // Was: per-target sequential awaits - fresh-state SELECT + UPDATE
           // + stress-log INSERT for each PC, plus per-NPC and per-object
           // UPDATEs. With 4 PCs + 2 NPCs + 1 object in the blast that's
           // ~12 stacked round-trips. At 150ms RTT under 4-browser network
@@ -4826,7 +4826,7 @@ export default function TablePage() {
           // per-target update arrays, fire one Promise.all wave for the
           // table writes + a coalesced log insert + a single broadcast.
           const blastTargets: string[] = []
-          // Pass 1 — collect candidate tokens + compute splash damage per token
+          // Pass 1 - collect candidate tokens + compute splash damage per token
           type BlastJob =
             | { kind: 'pc'; tok: typeof mapTokens[number]; pc: NonNullable<ReturnType<typeof entries.find>>; splashWP: number; splashRP: number; rangeBand: string }
             | { kind: 'npc'; tok: typeof mapTokens[number]; npc: any; splashWP: number; splashRP: number; rangeBand: string }
@@ -4834,7 +4834,7 @@ export default function TablePage() {
           const jobs: BlastJob[] = []
           for (const tok of mapTokens) {
             // Include PC/NPC tokens AND destructible objects (wp_max != null)
-            // per playtest #17 — grenades should hit barrels/crates in the
+            // per playtest #17 - grenades should hit barrels/crates in the
             // blast area too, not just combatants. Indestructible tokens
             // (wp_max=null, decorative) are still skipped.
             const isCombatant = !!tok.character_id || !!tok.npc_id
@@ -4842,8 +4842,8 @@ export default function TablePage() {
             if (!isCombatant && !isDestructibleObject) continue
             // Skip primary target (already damaged via token path) and
             // attacker. For cell-throws (grenadeTargetCell) and grenade
-            // fumbles, there IS no primary — the impact is just empty
-            // ground — so tokens AT the center cell should take full
+            // fumbles, there IS no primary - the impact is just empty
+            // ground - so tokens AT the center cell should take full
             // blast damage instead of being skipped. isPrimary only
             // fires for clean token-targeted attacks.
             const isPrimary = !grenadeTargetCell && !isGrenadeFumble && (
@@ -4852,7 +4852,7 @@ export default function TablePage() {
               (targetObject && tok.id === targetObject.id) ||
               (tok.grid_x === targetTok.grid_x && tok.grid_y === targetTok.grid_y)
             )
-            // Per CRB p.71-72: the blast damages everyone in radius —
+            // Per CRB p.71-72: the blast damages everyone in radius -
             // no carve-out for the thrower. Standing in your own blast
             // is intentionally brutal (the throw modal warns first via
             // the friendly-fire confirm in TacticalMap). Only the
@@ -4867,7 +4867,7 @@ export default function TablePage() {
             // Close = nothing.
             if (feet > 30) continue
             const scale = feet <= 5 ? 1.0 : 0.5
-            // Splash uses raw blast WP/RP — see CRB note where blastRawWP
+            // Splash uses raw blast WP/RP - see CRB note where blastRawWP
             // is computed. Splash victims don't inherit primary's mitigation.
             const splashWP = Math.max(1, Math.floor(blastRawWP * scale))
             const splashRP = Math.max(0, Math.floor(blastRawRP * scale))
@@ -4881,7 +4881,7 @@ export default function TablePage() {
             }
           }
 
-          // Pass 2 — bulk-fetch fresh PC states (was: 1 SELECT per PC)
+          // Pass 2 - bulk-fetch fresh PC states (was: 1 SELECT per PC)
           const pcStateIds = jobs.filter(j => j.kind === 'pc').map(j => (j as any).pc.stateId as string)
           const stateById = new Map<string, any>()
           if (pcStateIds.length > 0) {
@@ -4889,7 +4889,7 @@ export default function TablePage() {
             for (const s of freshStates ?? []) stateById.set(s.id, s)
           }
 
-          // Pass 3 — build update operations + local patches + stress log rows
+          // Pass 3 - build update operations + local patches + stress log rows
           const tableUpdates: Promise<any>[] = []
           const stressLogRows: any[] = []
           const pcLocalPatches = new Map<string, any>()      // stateId → patch
@@ -4939,7 +4939,7 @@ export default function TablePage() {
               npcLocalPatches.set(job.npc.id, npcUpd)
               blastTargets.push(`${job.npc.name} (${job.rangeBand}): ${job.splashWP} WP, ${job.splashRP} RP`)
             } else {
-              // Object splash — barrels, crates, etc. get scaled WP damage
+              // Object splash - barrels, crates, etc. get scaled WP damage
               // same as combatants. No RP (objects only track integrity).
               // Per playtest #17.
               const curWP = job.tok.wp_current ?? job.tok.wp_max ?? 0
@@ -4950,7 +4950,7 @@ export default function TablePage() {
             }
           }
 
-          // Single parallel wave — table updates + coalesced stress log insert.
+          // Single parallel wave - table updates + coalesced stress log insert.
           const stressLogInsert = stressLogRows.length > 0
             ? supabase.from('roll_log').insert(stressLogRows)
             : Promise.resolve(null)
@@ -4972,7 +4972,7 @@ export default function TablePage() {
             setMapTokens(prev => prev.map(t => objLocalPatches.has(t.id) ? { ...t, wp_current: objLocalPatches.get(t.id)! } : t))
           }
 
-          // Coalesced broadcasts — one event per affected table instead
+          // Coalesced broadcasts - one event per affected table instead
           // of one per affected token. Other clients re-fetch on receipt.
           if (pcLocalPatches.size > 0) {
             initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
@@ -4996,7 +4996,7 @@ export default function TablePage() {
     // Ready Weapon modal can offer Unjam/Repair regardless of whether
     // the new condition is "Worn" or worse. Earlier the modal gated on
     // condIdx >= 2 only, which meant a Pristine→Used degrade left the
-    // weapon "jammed in spirit" but ungrayedoutable for Unjam — playtest
+    // weapon "jammed in spirit" but ungrayedoutable for Unjam - playtest
     // caught: Cree had a jam after a Low Insight roll on a Pristine
     // weapon, condition went to Used, Unjam button stayed grey.
     let weaponJammed = false
@@ -5013,7 +5013,7 @@ export default function TablePage() {
             const nextSlotData = { ...charData[slot], condition: newCondition, jammed: true }
             const newData = { ...charData, [slot]: nextSlotData }
             await supabase.from('characters').update({ data: newData }).eq('id', myEntry.character.id)
-            // Local optimistic patch — without this the Ready Weapon
+            // Local optimistic patch - without this the Ready Weapon
             // modal that opens on the next round would still see the
             // pre-Low-Insight slot data until the next loadEntries.
             setEntries(prev => prev.map(e => e.character.id === myEntry.character.id
@@ -5025,10 +5025,10 @@ export default function TablePage() {
       }
     }
 
-    // Upkeep Check result — adjust weapon condition
+    // Upkeep Check result - adjust weapon condition
     let upkeepResult = ''
-    if (pendingRoll.label.startsWith('Upkeep — ') && myEntry) {
-      const weaponName = pendingRoll.label.replace('Upkeep — ', '')
+    if (pendingRoll.label.startsWith('Upkeep - ') && myEntry) {
+      const weaponName = pendingRoll.label.replace('Upkeep - ', '')
       const charData = myEntry.character.data ?? {}
       const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
       const slots = ['weaponPrimary', 'weaponSecondary'] as const
@@ -5070,10 +5070,10 @@ export default function TablePage() {
       }
     }
 
-    // Unjam result — adjust weapon condition (same logic as Upkeep)
+    // Unjam result - adjust weapon condition (same logic as Upkeep)
     let unjamResult = ''
-    if (pendingRoll.label.startsWith('Unjam — ') && myEntry) {
-      const weaponName = pendingRoll.label.replace(/^Unjam — (.+?) \(.+\)$/, '$1')
+    if (pendingRoll.label.startsWith('Unjam - ') && myEntry) {
+      const weaponName = pendingRoll.label.replace(/^Unjam - (.+?) \(.+\)$/, '$1')
       const charData = myEntry.character.data ?? {}
       const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
       const slots = ['weaponPrimary', 'weaponSecondary'] as const
@@ -5083,8 +5083,8 @@ export default function TablePage() {
           let newIdx = currentIdx
           if (outcome === 'Wild Success') { newIdx = Math.max(1, currentIdx - 1); unjamResult = 'Condition improved by 1 level' }
           else if (outcome === 'High Insight') { newIdx = Math.max(1, currentIdx - 2); unjamResult = 'Condition improved by 2 levels' }
-          else if (outcome === 'Success') { newIdx = Math.max(currentIdx - 1, 2); unjamResult = currentIdx > 2 ? 'Unjammed — condition partially restored' : 'No change' }
-          else if (outcome === 'Failure') { unjamResult = 'Failed to unjam — no change' }
+          else if (outcome === 'Success') { newIdx = Math.max(currentIdx - 1, 2); unjamResult = currentIdx > 2 ? 'Unjammed - condition partially restored' : 'No change' }
+          else if (outcome === 'Failure') { unjamResult = 'Failed to unjam - no change' }
           else if (outcome === 'Dire Failure') { newIdx = 4; unjamResult = 'Weapon breaks!' }
           else if (outcome === 'Low Insight') {
             newIdx = 4; unjamResult = 'Weapon breaks! 1 WP damage.'
@@ -5109,9 +5109,9 @@ export default function TablePage() {
           // Clear the persistent jammed flag on any non-failure outcome
           // (Wild Success / High Insight / Success / no-change paths
           // that didn't break the weapon further). Failure / Dire / Low
-          // leave the jam in place — the weapon's still mechanically
+          // leave the jam in place - the weapon's still mechanically
           // gunked up. condIdx update handled below; the jammed flag
-          // clears even when condIdx didn't change so a "Success — no
+          // clears even when condIdx didn't change so a "Success - no
           // change" still removes the JAMMED chip.
           const clearJam = outcome === 'Wild Success' || outcome === 'High Insight' || outcome === 'Success'
           if (newIdx !== currentIdx || (clearJam && charData[slot]?.jammed)) {
@@ -5119,7 +5119,7 @@ export default function TablePage() {
             if (clearJam) updatedSlot.jammed = false
             const newData = { ...charData, [slot]: updatedSlot }
             await supabase.from('characters').update({ data: newData }).eq('id', myEntry.character.id)
-            // Local optimistic patch — Ready Weapon modal that's still
+            // Local optimistic patch - Ready Weapon modal that's still
             // open on this screen sees the cleared jam immediately.
             setEntries(prev => prev.map(e => e.character.id === myEntry.character.id
               ? { ...e, character: { ...e.character, data: newData } }
@@ -5130,7 +5130,7 @@ export default function TablePage() {
       }
     }
 
-    // Distract result — outcome scaling per CRB §06 Combat Actions:
+    // Distract result - outcome scaling per CRB §06 Combat Actions:
     //   Success                    → target loses 1 Combat Action
     //   Wild Success / High Insight → target loses BOTH Combat Actions
     //   Failure / Low Insight       → no effect (active still pays the
@@ -5141,7 +5141,7 @@ export default function TablePage() {
     // Target comes from the modal's targetName state (dropdown selection),
     // not from the label.
     let distractResult = ''
-    if (pendingRoll.label.endsWith(' — Distract')) {
+    if (pendingRoll.label.endsWith(' - Distract')) {
       const dtTargetName = targetName
       const dtTargetEntry = dtTargetName ? initiativeOrder.find(e => e.character_name === dtTargetName) : null
       if (dtTargetEntry) {
@@ -5152,7 +5152,7 @@ export default function TablePage() {
         else if (outcome === 'Dire Failure') delta = 1
         if (delta !== 0) {
           const newActions = Math.max(0, cur + delta)
-          // .select() echo so we can detect a silent RLS rejection — same
+          // .select() echo so we can detect a silent RLS rejection - same
           // pattern as consumeAction. Without this, an RLS gap on
           // initiative_order silently drops the update and Distract
           // looks like it did nothing.
@@ -5162,14 +5162,14 @@ export default function TablePage() {
             .eq('id', dtTargetEntry.id)
             .select('id, actions_remaining')
           if (distractErr) console.error('[distract] update error:', distractErr.message)
-          else if (!distractRows || distractRows.length === 0) console.warn('[distract] SILENT RLS FAIL — target actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
+          else if (!distractRows || distractRows.length === 0) console.warn('[distract] SILENT RLS FAIL - target actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
           else {
             // Broadcast turn_changed so all clients refresh immediately
             // even if the postgres_changes UPDATE is delayed.
             initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
             if (delta === -2) distractResult = `${dtTargetName} loses BOTH actions this turn.`
             else if (delta === -1) distractResult = `${dtTargetName} loses 1 action.`
-            else distractResult = `${dtTargetName} shrugs it off and gains an action — Inspired!`
+            else distractResult = `${dtTargetName} shrugs it off and gains an action - Inspired!`
           }
         } else {
           distractResult = `${dtTargetName} shrugged off the distraction.`
@@ -5177,7 +5177,7 @@ export default function TablePage() {
       }
     }
 
-    // Stabilize result — stop death countdown on success (PC or NPC)
+    // Stabilize result - stop death countdown on success (PC or NPC)
     let stabilizeResult = ''
     if (pendingRoll.label.includes('Stabilize ')) {
       const stTargetName = pendingRoll.label.split('Stabilize ')[1]
@@ -5190,10 +5190,10 @@ export default function TablePage() {
           const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
           const { data: stabRows, error: stabErr } = await supabase.from('character_states').update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select('id, death_countdown, incap_rounds')
           if (stabErr) console.error('[stabilize] character_states update error:', stabErr.message)
-          else if (!stabRows || stabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL — stabilize did not persist for', stTargetName, '— Run sql/character-states-rls-fix.sql.')
+          else if (!stabRows || stabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - stabilize did not persist for', stTargetName, '- Run sql/character-states-rls-fix.sql.')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any } : e))
           stabilizeResult = `${stTargetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
-          const medicName = pendingRoll.label.split(' — ')[0]
+          const medicName = pendingRoll.label.split(' - ')[0]
           if (targetEntry.character?.id) void appendProgressionLog(targetEntry.character.id, 'wound', `🩸 Stabilized by ${medicName}.`)
         } else {
           stabilizeResult = `Failed to stabilize ${stTargetName}.`
@@ -5205,7 +5205,7 @@ export default function TablePage() {
           const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
           const { data: nstabRows, error: nstabErr } = await supabase.from('campaign_npcs').update({ death_countdown: null, incap_rounds: incapRounds }).eq('id', targetNpcStab.id).select('id, death_countdown, incap_rounds')
           if (nstabErr) console.error('[stabilize] campaign_npcs update error:', nstabErr.message)
-          else if (!nstabRows || nstabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL — NPC stabilize did not persist for', stTargetName)
+          else if (!nstabRows || nstabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - NPC stabilize did not persist for', stTargetName)
           const npcPatch = { death_countdown: null, incap_rounds: incapRounds }
           setCampaignNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
           setRosterNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
@@ -5217,14 +5217,14 @@ export default function TablePage() {
       }
     }
 
-    // Infection result — write infection_state, days_left, lasting_risk
+    // Infection result - write infection_state, days_left, lasting_risk
     // based on the outcome. Two label shapes:
-    //   "<name> — Infection Check (Wound)"     post-combat wound infection
-    //   "<name> — Infection Check (Sickness)"  environmental progression
+    //   "<name> - Infection Check (Wound)"     post-combat wound infection
+    //   "<name> - Infection Check (Sickness)"  environmental progression
     // See /rules/combat/infection + memory/project_infection_canon.md.
     let infectionResult = ''
     if (pendingRoll.label.includes('Infection Check (')) {
-      const infName = pendingRoll.label.split(' — ')[0]
+      const infName = pendingRoll.label.split(' - ')[0]
       const isWound = pendingRoll.label.includes('(Wound)')
       const kind: 'wound' | 'sickness' = isWound ? 'wound' : 'sickness'
       const targetEntry = entries.find(e => e.character.name === infName)
@@ -5242,21 +5242,21 @@ export default function TablePage() {
         // Failure: 1d3 days for both branches.
         daysLeft = Math.floor(Math.random() * 3) + 1
         lastingRisk = true
-        summary = `${infName} failed the Infection check — sick for ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Lasting Damage risk.`
+        summary = `${infName} failed the Infection check - sick for ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Lasting Damage risk.`
       } else if (isDire) {
         infectionState = kind
         // Dire Failure: 1d6 days. For Wound, Lasting Damage applies
         // automatically on Day 0 (no risk gate, the wound's already in).
-        // For Sickness, the Day-0 mortal-wound drop is the worst part —
+        // For Sickness, the Day-0 mortal-wound drop is the worst part -
         // Lasting Damage check still fires on top.
         daysLeft = Math.floor(Math.random() * 6) + 1
         lastingRisk = true
-        summary = `${infName} dire-failed the Infection check — sick for ${daysLeft} days. ${kind === 'wound' ? 'Auto Lasting Damage on Day 0.' : 'Will progress to Mortally Wounded on Day 0.'}`
+        summary = `${infName} dire-failed the Infection check - sick for ${daysLeft} days. ${kind === 'wound' ? 'Auto Lasting Damage on Day 0.' : 'Will progress to Mortally Wounded on Day 0.'}`
       } else {
         summary = `${infName} shrugged off the Infection check.`
       }
       // Apply to the patient's row (PC or NPC). Sick state also caps
-      // RP at half-max (round down) per locked canon — clamp here.
+      // RP at half-max (round down) per locked canon - clamp here.
       if (infectionState && targetEntry) {
         const ls: any = targetEntry.liveState
         const rpMax: number = ls?.rp_max ?? 6
@@ -5290,7 +5290,7 @@ export default function TablePage() {
       infectionResult = summary
     }
 
-    // Treat Infection result — medic's Medicine* check on a sick patient.
+    // Treat Infection result - medic's Medicine* check on a sick patient.
     // Wild Success: half remaining days (round up) + clear lasting risk.
     // Success:     clear lasting risk only.
     // Failure:     no-op (patient cannot be re-treated this incident; we
@@ -5305,20 +5305,20 @@ export default function TablePage() {
       const tiTargetNpc = !tiTargetEntry ? campaignNpcs.find((n: any) => n.name === tiTargetName) : null
       const sourceLs: any = tiTargetEntry?.liveState ?? tiTargetNpc
       if (!sourceLs?.infection_state) {
-        treatInfectionResult = `${tiTargetName} isn't sick — Treat Infection is a no-op.`
+        treatInfectionResult = `${tiTargetName} isn't sick - Treat Infection is a no-op.`
       } else {
         const days = sourceLs.infection_days_left ?? 0
         const updates: any = {}
         if (outcome === 'Wild Success' || outcome === 'High Insight') {
           updates.infection_days_left = Math.max(1, Math.ceil(days / 2))
           updates.infection_lasting_risk = false
-          treatInfectionResult = `${tiTargetName} treated — ${days} day${days === 1 ? '' : 's'} cut to ${updates.infection_days_left}, Lasting Damage risk cleared.`
+          treatInfectionResult = `${tiTargetName} treated - ${days} day${days === 1 ? '' : 's'} cut to ${updates.infection_days_left}, Lasting Damage risk cleared.`
         } else if (outcome === 'Success') {
           updates.infection_lasting_risk = false
-          treatInfectionResult = `${tiTargetName} treated — Lasting Damage risk cleared.`
+          treatInfectionResult = `${tiTargetName} treated - Lasting Damage risk cleared.`
         } else if (outcome === 'Dire Failure' || outcome === 'Low Insight') {
           updates.infection_days_left = days + 1
-          treatInfectionResult = `${tiTargetName} botched care — ${days} day${days === 1 ? '' : 's'} extended to ${updates.infection_days_left}.`
+          treatInfectionResult = `${tiTargetName} botched care - ${days} day${days === 1 ? '' : 's'} extended to ${updates.infection_days_left}.`
         } else {
           treatInfectionResult = `${tiTargetName} got no help from the treatment.`
         }
@@ -5337,7 +5337,7 @@ export default function TablePage() {
         }
         // Low Insight: medic earns 1 Stress pip per locked canon.
         if (outcome === 'Low Insight') {
-          const medicEntry = entries.find(e => e.character.name === pendingRoll.label.split(' — ')[0])
+          const medicEntry = entries.find(e => e.character.name === pendingRoll.label.split(' - ')[0])
           if (medicEntry?.liveState) {
             const newStress = Math.min(5, (medicEntry.liveState.stress ?? 0) + 1)
             await supabase.from('character_states').update({ stress: newStress }).eq('id', medicEntry.stateId)
@@ -5348,22 +5348,22 @@ export default function TablePage() {
       }
     }
 
-    // Sprint result — failure = winded next round
+    // Sprint result - failure = winded next round
     // Log trimming: we embed the raw Athletics-roll dice/mods into the
     // sprint outcome entry's damage_json as a `trimmedRoll` blob, and
     // skip the normal saveRollToLog write (see `skipSaveRollToLog` flag
     // below). Renderers show the banner as the default view with a
     // "more info" expand toggle that unpacks trimmedRoll into the full
-    // breakdown. This is the prototype for the log-trimming pattern —
+    // breakdown. This is the prototype for the log-trimming pattern -
     // Stabilize / Coordinate / Unjam / etc. can reuse the same shape.
     let sprintResult = ''
     if (pendingRoll.label.includes('Sprint')) {
-      // Find the sprinting combatant by name (not active entry — turn may have advanced after pre-consume)
-      const sprintName = pendingRoll.label.split(' — ')[0]
+      // Find the sprinting combatant by name (not active entry - turn may have advanced after pre-consume)
+      const sprintName = pendingRoll.label.split(' - ')[0]
       const sprintInit = initiativeOrder.find(e => e.character_name === sprintName)
       const trimmedRoll = {
         die1, die2,
-        // Carry the full 3d6 breakdown when an Insight Die was spent —
+        // Carry the full 3d6 breakdown when an Insight Die was spent -
         // die2 stores d2+d3 as a sum, which reads wrong in the expand
         // view (e.g. "[6+10]" instead of "[6+6+4]"). Renderers pick
         // diceRolled over die1/die2 whenever it's present.
@@ -5389,7 +5389,7 @@ export default function TablePage() {
           damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
       }
-      // Sprint log written — release the pending-Athletics gate. If
+      // Sprint log written - release the pending-Athletics gate. If
       // nextTurn was holding a round reroll back because this check was
       // still open, fire it now so the Initiative log lands AFTER the
       // sprint outcome instead of before it.
@@ -5403,7 +5403,7 @@ export default function TablePage() {
       }
     }
 
-    // Coordinate result — apply +2 to allies within Close range when attacking that target
+    // Coordinate result - apply +2 to allies within Close range when attacking that target
     let coordinateResult = ''
     if (coordinateTargetRef.current && pendingRoll.label.includes('Coordinate')) {
       const coordTarget = coordinateTargetRef.current
@@ -5443,7 +5443,7 @@ export default function TablePage() {
         }
         if (appliedAllyIds.length > 0) {
           coordinateResult = `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
-          // Single batch UPDATE — every applied ally gets the same
+          // Single batch UPDATE - every applied ally gets the same
           // (coordinate_target, coordinate_bonus) values, so .in() collapses
           // N round-trips to 1. Log insert runs in parallel since it hits a
           // different table.
@@ -5465,7 +5465,7 @@ export default function TablePage() {
           coordinateResult = 'No allies within Close range to receive the bonus.'
         }
       } else {
-        coordinateResult = 'Coordination failed — no bonus applied.'
+        coordinateResult = 'Coordination failed - no bonus applied.'
       }
       coordinateTargetRef.current = null
     }
@@ -5473,7 +5473,7 @@ export default function TablePage() {
     // Log trimming (see Sprint block above): some actions consolidate their
     // dice breakdown INTO the outcome banner's damage_json instead of writing
     // a separate roll_log row. If this is one of those rolls, skip the
-    // standalone saveRollToLog write — otherwise the feed would show both
+    // standalone saveRollToLog write - otherwise the feed would show both
     // the raw Athletics check AND the sprint banner.
     const isTrimmedRoll = pendingRoll.label.includes('Sprint')
     // Capture the Insight Die spend kind (if any) so the extended log
@@ -5486,16 +5486,16 @@ export default function TablePage() {
     if (!isTrimmedRoll) {
       // Label is saved verbatim. The expanded log render appends
       // " → <target_name>" when target_name is set, so for Distract
-      // (label "<X> — Distract", target stored on r.target_name) the
+      // (label "<X> - Distract", target stored on r.target_name) the
       // expanded line auto-formats as "Distract → <target>". Don't
       // mutate the label here or the target gets duplicated:
       // "Distract → <target> → <target>" (caught 2026-04-29).
-      // Group Check — fold the stashed participant list into damage_json
+      // Group Check - fold the stashed participant list into damage_json
       // so the bespoke banner can render the multi-name body. The
       // damageResult slot is otherwise unused for these rolls; sharing
       // it avoids a parallel column. Ref is cleared after the write.
       let augmentedDamage: any = damageResult
-      if (pendingRoll.label.includes('Group Check —') && groupCheckPayloadRef.current) {
+      if (pendingRoll.label.includes('Group Check -') && groupCheckPayloadRef.current) {
         augmentedDamage = {
           ...(damageResult ?? {}),
           groupCheckParticipants: groupCheckPayloadRef.current.participants,
@@ -5514,7 +5514,7 @@ export default function TablePage() {
       if (lootErr) console.error('[auto-loot] log insert error:', lootErr.message)
     }
 
-    // First Impression — write outcome to npc_relationships.relationship_cmod.
+    // First Impression - write outcome to npc_relationships.relationship_cmod.
     // Outcome → CMod mapping (SRD v1.1.17 §07, canonical):
     //   Moment of High Insight (6+6) → +2  (+ Insight Die, auto-awarded
     //                                       by the generic HI handler
@@ -5528,7 +5528,7 @@ export default function TablePage() {
     //   Moment of Low Insight (1+1)  → -3  (+ Insight Die, auto-awarded
     //                                       by the generic LI handler)
     // Stacks atomically via bump_npc_relationship_cmod RPC (clamped ±3),
-    // not overwrite — the same NPC can be met multiple times and small
+    // not overwrite - the same NPC can be met multiple times and small
     // shifts accumulate. GM can hand-edit later via NpcRoster.
     // ladder fix 2026-05-10: prior code shifted every tier +1 (Success
     // gave +1 instead of 0, Low Insight gave -2 instead of -3, etc.).
@@ -5546,7 +5546,7 @@ export default function TablePage() {
         // Atomic accumulate-with-clamp via the bump_npc_relationship_cmod
         // RPC. Pre-fix this was select-then-insert/update which had two
         // races (unique-constraint blow-up + lost-update) AND silently
-        // overwrote relationship_cmod instead of stacking — so meeting
+        // overwrote relationship_cmod instead of stacking - so meeting
         // the same NPC twice erased the first roll's impact. Now the +/-
         // delta is added to whatever's already there (clamped to ±3),
         // matching the SRD First Impression intent.
@@ -5575,7 +5575,7 @@ export default function TablePage() {
           : cmodDelta === -1 ? 'rough start'
           : cmodDelta === -2 ? 'bad blood'
           : 'catastrophic first impression'
-        void appendProgressionLog(firstImpressionTarget.characterId, 'relationship', `Met ${npcName} — ${vibe} (CMod ${cmodDelta >= 0 ? '+' : ''}${cmodDelta}).`)
+        void appendProgressionLog(firstImpressionTarget.characterId, 'relationship', `Met ${npcName} - ${vibe} (CMod ${cmodDelta >= 0 ? '+' : ''}${cmodDelta}).`)
       } catch (err) {
         console.error('[first-impression] relationship upsert failed:', err)
       }
@@ -5590,7 +5590,7 @@ export default function TablePage() {
     } as any)
 
     setRolling(false)
-    // Clear the cell target AFTER the damage pass has consumed it — the
+    // Clear the cell target AFTER the damage pass has consumed it - the
     // next attack (even with the same grenade) starts fresh and the
     // player has to pick a new cell.
     setGrenadeTargetCell(null)
@@ -5612,10 +5612,10 @@ export default function TablePage() {
 
     const newDie1 = rerollDie === 'die2' ? rollResult.die1 : rollD6()
     const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
-    const rerollLabelParts = rollResult.label.split(' — ')
+    const rerollLabelParts = rollResult.label.split(' - ')
     const characterName = rerollLabelParts.length > 1 ? rerollLabelParts[0] : (myEntry.character.name ?? 'Unknown')
 
-    // Pre-compute outcome WITHOUT writing the log yet — the original code
+    // Pre-compute outcome WITHOUT writing the log yet - the original code
     // saved once now, then again at the bottom with damage_json populated,
     // which produced two duplicate log rows for any successful reroll
     // (visible doubling in the feed). We now compute outcome inline,
@@ -5702,7 +5702,7 @@ export default function TablePage() {
 
     }
 
-    // Single save for the reroll — carries damage_json when applicable.
+    // Single save for the reroll - carries damage_json when applicable.
     // Was: two saves (one without damage at the top, one with damage here)
     // produced duplicate roll_log rows on every successful reroll. The
     // duplicated entries visibly doubled the feed; the second row often
@@ -5724,7 +5724,7 @@ export default function TablePage() {
 
   async function closeRollModal() {
     // Use ref (synchronous, immune to React batching) to determine if a roll
-    // was actually executed — rollResult state can be stale in closures.
+    // was actually executed - rollResult state can be stale in closures.
     const didRoll = rollExecutedRef.current
     const preConsumed = actionPreConsumedRef.current
     const cost = actionCostRef.current
@@ -5781,7 +5781,7 @@ export default function TablePage() {
           }
           await consumeAction(activeEntry.id, undefined, cost)
         } else {
-          console.warn('[closeRollModal] not consuming — not my turn / not GM authority')
+          console.warn('[closeRollModal] not consuming - not my turn / not GM authority')
         }
       } else {
         console.warn('[closeRollModal] no active entry found')
@@ -5807,7 +5807,7 @@ export default function TablePage() {
   // inline to the right as sibling pill buttons. Click the trigger
   // also toggles (for touch/keyboard). Each sub-item keeps the same
   // pill style with its own text color; only the trigger has the
-  // chevron. No dropdown panel — feels like the buttons are physically
+  // chevron. No dropdown panel - feels like the buttons are physically
   // extending out of the trigger.
   const renderHeaderMenu = (
     id: string,
@@ -5824,7 +5824,7 @@ export default function TablePage() {
         onMouseLeave={() => { if (!isMenuPinned) setOpenHeaderMenu(prev => prev === id ? null : prev) }}
         style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', zIndex: isOpen ? 10100 : undefined }}>
         <button onClick={() => {
-          // Clicking the trigger toggles a pinned state — stays open
+          // Clicking the trigger toggles a pinned state - stays open
           // even when the mouse wanders off, until clicked again or
           // clicked outside.
           if (openHeaderMenu === id && isMenuPinned) {
@@ -5841,7 +5841,7 @@ export default function TablePage() {
         </button>
         {isOpen && (
           <div style={{
-            // `top: 100%` + `paddingTop: 4px` closes the hover gap —
+            // `top: 100%` + `paddingTop: 4px` closes the hover gap -
             // the wrapper's hover descendants now include the 4px
             // visual gap, so cursor travel trigger→child never exits
             // the hover zone.
@@ -5904,7 +5904,7 @@ export default function TablePage() {
         {isGM && sessionStatus === 'active' && (
           <button onClick={async () => {
             // Fetch any submitted player notes so the GM sees them in the modal.
-            // Only pull notes that were written DURING this session — notes from
+            // Only pull notes that were written DURING this session - notes from
             // prior sessions must not carry forward (see sql/player-notes-session-tag.sql).
             const { data } = await supabase
               .from('player_notes')
@@ -5957,11 +5957,11 @@ export default function TablePage() {
           </button>
         )}
         {isGM && showTacticalMap && (
-          // Map Setup — replaces the old inline 130px scene-controls
+          // Map Setup - replaces the old inline 130px scene-controls
           // sidebar. Pops out the controls panel into its own browser
           // window so the GM can park it on a 2nd monitor and let the
           // tactical map fill the full table-page width. State syncs
-          // between popout and main window via BroadcastChannel —
+          // between popout and main window via BroadcastChannel -
           // see lib/scene-controls-bus.ts.
           <button onClick={() => openPopout(`/scene-controls-popout?c=${id}`, `scene-controls-${id}`, { w: 250, h: 600 })}
             className="hdr-btn"
@@ -6012,11 +6012,11 @@ export default function TablePage() {
             { label: 'Status', onClick: () => openCommunityModal('status') },
             { label: 'New Community', onClick: () => openCommunityModal('create') },
             { label: 'Recruit', onClick: () => openRecruitModal(), hidden: sessionStatus !== 'active' },
-            // Apprentice placeholder — the apprentice card / picker UI isn't
+            // Apprentice placeholder - the apprentice card / picker UI isn't
             // wired yet. Menu entry reserved so the nav slot lands now and
             // the feature can drop in without a menu reshuffle later.
-            { label: 'Apprentice', onClick: () => alert('Apprentice view coming soon — for now, see the Apprentice NPC inside the Community roster (look for ⇐ <your PC name>).') },
-            // Dashboard — full-screen GM view with Morale history,
+            { label: 'Apprentice', onClick: () => alert('Apprentice view coming soon - for now, see the Apprentice NPC inside the Community roster (look for ⇐ <your PC name>).') },
+            // Dashboard - full-screen GM view with Morale history,
             // resource log, role distribution, recruitment stats.
             // Route: /stories/<id>/community. GM-only gated inside
             // the page itself (non-GMs see an access-denied block).
@@ -6041,7 +6041,7 @@ export default function TablePage() {
               hidden: sessionCount <= 0,
               // Header dropdowns navigate to other pages in a new tab so the
               // GM doesn't lose the live table session. DASHBOARD + EXIT are
-              // intentionally left as same-tab in the header bar — Exit is
+              // intentionally left as same-tab in the header bar - Exit is
               // an explicit "leave the table" affordance, Dashboard already
               // uses target="_blank" on its anchor.
               onClick: () => window.open(`/stories/${id}/sessions`, '_blank', 'noopener,noreferrer'),
@@ -6058,7 +6058,7 @@ export default function TablePage() {
           'GM Tools',
           [
             {
-              // GM Notes popout — comprehensive story overview window:
+              // GM Notes popout - comprehensive story overview window:
               // plot beats, scenes, NPC list, pins. Same popout the
               // GM Notes button on /stories/[id] opens. Lives in GM
               // Tools so the GM can pop it open mid-session without
@@ -6083,7 +6083,7 @@ export default function TablePage() {
                 }).map(n => `npc:${n.id}`)
                 const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
                   .map(e => `pc:${e.stateId}`)
-                // Fetch destructible scene_tokens from the DB directly — mapTokens
+                // Fetch destructible scene_tokens from the DB directly - mapTokens
                 // only exists when TacticalMap is mounted, so we can't read it
                 // from any other view. This scans ALL scenes in the campaign so
                 // a crate on an inactive scene still shows up.
@@ -6102,7 +6102,7 @@ export default function TablePage() {
               },
             },
             {
-              // Reload — pick a campaign_snapshot and restore it in place.
+              // Reload - pick a campaign_snapshot and restore it in place.
               // Quick "rewind the scene" affordance for GMs running scenarios
               // they've snapshotted; the full Snapshots admin page is still
               // available via the campaign edit screen for save / download /
@@ -6155,7 +6155,7 @@ export default function TablePage() {
         </a>
       </div>
 
-      {/* Incapacitation banner — playtest #21.
+      {/* Incapacitation banner - playtest #21.
           Shown to a PLAYER (not GM) when their own PC is mortally wounded
           (wp=0 with a countdown) or incapacitated (rp=0 while wp>0). Tells
           them plainly what happened, what they can still do (watch the
@@ -6173,8 +6173,8 @@ export default function TablePage() {
         if (isDead || (!isMortal && !isUnconscious)) return null
         const title = isMortal ? 'Mortally Wounded' : 'Incapacitated'
         const subtitle = isMortal
-          ? `You're bleeding out — someone needs to Stabilize you within ${ls.death_countdown ?? '?'} round${ls.death_countdown === 1 ? '' : 's'} or you die.`
-          : 'You\'re unconscious — you can\'t take actions until you come to (rest, first aid, or an ally\'s Medicine check).'
+          ? `You're bleeding out - someone needs to Stabilize you within ${ls.death_countdown ?? '?'} round${ls.death_countdown === 1 ? '' : 's'} or you die.`
+          : 'You\'re unconscious - you can\'t take actions until you come to (rest, first aid, or an ally\'s Medicine check).'
         return (
           <div style={{ background: '#2a1210', borderBottom: '1px solid #c0392b', padding: '8px 16px', fontFamily: 'Carlito, sans-serif', color: '#f5a89a', textAlign: 'center', flexShrink: 0 }}>
             <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a' }}>🩸 {title}</div>
@@ -6184,7 +6184,7 @@ export default function TablePage() {
         )
       })()}
 
-      {/* Initiative Tracker — shown when combat is active */}
+      {/* Initiative Tracker - shown when combat is active */}
       {combatActive && (
         <div style={{ borderBottom: '1px solid #2e2e2e', background: '#0d0d0d', padding: '8px 12px', flexShrink: 0 }}>
           <InitiativeBar
@@ -6203,7 +6203,7 @@ export default function TablePage() {
             onSkipTurn={handleSkipTurn}
             combatRound={combatRound}
           />
-          {/* Action buttons — shown for active combatant or GM */}
+          {/* Action buttons - shown for active combatant or GM */}
           {(() => {
             const activeEntry = initiativeOrder.find(e => e.is_active)
             if (!activeEntry || (activeEntry.actions_remaining ?? 0) <= 0) return null
@@ -6219,7 +6219,7 @@ export default function TablePage() {
             const w = weaponData ? getWeaponByName(weaponData.weaponName) : null
             const hasBurst = w ? getTraitValue(w.traits, 'Automatic Burst') !== null : false
             const isMelee = w?.category === 'melee'
-            // Ammo gate — block the Attack button on ranged weapons
+            // Ammo gate - block the Attack button on ranged weapons
             // when ammoCurrent has hit 0. Bow/Crossbow/Compact Bow (and
             // any other clip:1 weapon) effectively need a Reload action
             // between every shot once they're empty. PCs track ammo on
@@ -6283,7 +6283,7 @@ export default function TablePage() {
                     Distract, Fire from Cover, Grapple, Inspire, Move,
                     Rapid Fire, Ready Weapon, Reposition, Sprint, Subdue,
                     Take Cover, Unarmed. Modals (Social picker / Coordinate)
-                    live at the bottom — they're absolutely-positioned
+                    live at the bottom - they're absolutely-positioned
                     overlays so render order doesn't affect layout. */}
 
                 {/* ── AIM: +2 CMod, must Attack next or lost ── */}
@@ -6291,7 +6291,7 @@ export default function TablePage() {
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
                   Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
                 </button>
-                {activeEntry.aim_active && <span style={{ fontSize: '13px', padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Aimed — Attack or lose it</span>}
+                {activeEntry.aim_active && <span style={{ fontSize: '13px', padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Aimed - Attack or lose it</span>}
 
                 {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
@@ -6318,7 +6318,7 @@ export default function TablePage() {
                     // the player before lobbing a grenade onto their
                     // own teammates. Attacker themselves is excluded
                     // (their own PHY-mitigated splash is their problem
-                    // alone — no warning).
+                    // alone - no warning).
                     const hasBlast = (w.traits ?? []).some((t: string) => t.startsWith('Blast Radius'))
                     const friendlyCharacterIds = entries
                       .map(e => e.character.id)
@@ -6328,18 +6328,18 @@ export default function TablePage() {
                       attackerNpcId: activeEntry.npc_id,
                       weapon: weaponCtx,
                       amod, smod, rangeFeet,
-                      label: `${activeEntry.character_name} — Attack (${w.name})`,
+                      label: `${activeEntry.character_name} - Attack (${w.name})`,
                       hasBlast,
                       friendlyCharacterIds,
                     })
                     return
                   }
-                  handleRollRequest(`${activeEntry.character_name} — Attack (${w.name})`, amod, smod, weaponCtx)
+                  handleRollRequest(`${activeEntry.character_name} - Attack (${w.name})`, amod, smod, weaponCtx)
                 }}
                   style={(w && !outOfAmmo) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
                   disabled={!w || outOfAmmo}
-                  title={outOfAmmo ? `${w?.name ?? 'Weapon'} is empty — Reload via Ready Weapon` : undefined}>
-                  Attack{w ? ` (${w.name})` : ''}{outOfAmmo ? ' — empty, Reload' : ''}
+                  title={outOfAmmo ? `${w?.name ?? 'Weapon'} is empty - Reload via Ready Weapon` : undefined}>
+                  Attack{w ? ` (${w.name})` : ''}{outOfAmmo ? ' - empty, Reload' : ''}
                 </button>
 
                 {/* ── CHARGE: both actions, melee/unarmed attack (always available) ── */}
@@ -6359,7 +6359,7 @@ export default function TablePage() {
                         ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === chargeSkill)?.level ?? 0 : 0)
                         : charEntry?.character.data?.skills?.find((s: any) => s.skillName === chargeSkill)?.level ?? 0
                       // Store charge roll params and enter move mode (20ft = 2 moves)
-                      pendingChargeRef.current = { label: `${activeEntry.character_name} — Charge (${chargeWName})`, amod, smod, weapon: { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] }, activeId: activeEntry.id }
+                      pendingChargeRef.current = { label: `${activeEntry.character_name} - Charge (${chargeWName})`, amod, smod, weapon: { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] }, activeId: activeEntry.id }
                       setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 20 })
                     } : undefined} disabled={!has2Actions}
                       style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
@@ -6370,7 +6370,7 @@ export default function TablePage() {
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setShowCoordinateModal(true); setCoordinateSelection('') }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Coordinate</button>
 
-                {/* ── COVER FIRE — opens social-target picker (no roll, auto-applies) ── */}
+                {/* ── COVER FIRE - opens social-target picker (no roll, auto-applies) ── */}
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Cover Fire' ? null : { action: 'Cover Fire' }) }}
                   style={actBtn(socialTarget?.action === 'Cover Fire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Cover Fire' ? '#7fc458' : '#d4cfc9', socialTarget?.action === 'Cover Fire' ? '#2d5a1b' : '#3a3a3a')}>Cover Fire</button>
 
@@ -6378,15 +6378,15 @@ export default function TablePage() {
                 <button onClick={async () => {
                   clearAimIfActive(activeEntry.id)
                   await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2 }).eq('id', activeEntry.id)
-                  await consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend (+2 Defensive Modifier, next attack only)`)
+                  await consumeAction(activeEntry.id, `${activeEntry.character_name} - Defend (+2 Defensive Modifier, next attack only)`)
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend{(activeEntry.defense_bonus ?? 0) > 0 ? ` (+${activeEntry.defense_bonus})` : ''}</button>
 
-                {/* ── DICE CHECK: SRD §06 18th action — pop the active combatant's
+                {/* ── DICE CHECK: SRD §06 18th action - pop the active combatant's
                     sheet so the player can roll any attribute / skill. The roll
                     flow off the sheet already routes through handleRollRequest
                     + closeRollModal, which consumes 1 action on commit. No
-                    pre-consume here — opening the sheet without rolling costs
+                    pre-consume here - opening the sheet without rolling costs
                     nothing. ── */}
                 <button onClick={() => {
                   if (activeEntry.is_npc) {
@@ -6401,7 +6401,7 @@ export default function TablePage() {
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Dice Check</button>
 
-                {/* ── DISTRACT: opens the standard roll modal directly — the
+                {/* ── DISTRACT: opens the standard roll modal directly - the
                     modal already includes a Target dropdown when combat is
                     active, so the prior 2-step picker → modal flow
                     collapses into one. Cover Fire and Inspire still use
@@ -6411,7 +6411,7 @@ export default function TablePage() {
                   clearAimIfActive(activeEntry.id)
                   // Compute Distract roll mods from the active combatant.
                   // Per CRB: Intimidation / Inspiration / Tactics* /
-                  // Psychology* — take the highest level. ("Tactical*"
+                  // Psychology* - take the highest level. ("Tactical*"
                   // in the CRB is a typo per Xero; engine uses Tactics*.)
                   let amod = 0, smod = 0
                   const distractCharEntry = entries.find(e => e.character.name === activeEntry.character_name)
@@ -6478,10 +6478,10 @@ export default function TablePage() {
                     preselect = closest?.entry.character_name ?? null
                   }
                   // Open the standard roll modal. Action is NOT pre-
-                  // consumed — closeRollModal handles the consume only
+                  // consumed - closeRollModal handles the consume only
                   // when the user actually clicks ROLL (didRoll=true).
                   // Cancel = no roll fired = no action consumed.
-                  handleRollRequest(`${activeEntry.character_name} — Distract`, amod, smod)
+                  handleRollRequest(`${activeEntry.character_name} - Distract`, amod, smod)
                   if (preselect) setTargetName(preselect)
                 }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
 
@@ -6497,7 +6497,7 @@ export default function TablePage() {
                       : charEntry?.character.data?.skills?.find((s: any) => s.skillName === w.skill)?.level ?? 0
                     const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
                     actionCostRef.current = 2
-                    handleRollRequest(`${activeEntry.character_name} — Fire from Cover (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits })
+                    handleRollRequest(`${activeEntry.character_name} - Fire from Cover (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits })
                   } : undefined} disabled={!has2Actions}
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Fire from Cover</button>
                 ) : null}
@@ -6506,7 +6506,7 @@ export default function TablePage() {
                 <button onClick={() => { setGrappleResult(null); setShowGrappleModal(true) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Grapple</button>
 
-                {/* ── INSPIRE — opens social-target picker (no roll, auto-applies) ── */}
+                {/* ── INSPIRE - opens social-target picker (no roll, auto-applies) ── */}
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Inspire' ? null : { action: 'Inspire' }) }}
                   style={actBtn(socialTarget?.action === 'Inspire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Inspire' ? '#7fc458' : '#d4cfc9', socialTarget?.action === 'Inspire' ? '#2d5a1b' : '#3a3a3a')}>Inspire</button>
 
@@ -6550,7 +6550,7 @@ export default function TablePage() {
                       : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Ranged Combat')?.level ?? 0
                     const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
                     actionCostRef.current = 2
-                    handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name}) [-1 CMod, then -3]`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) - 1, traits: w.traits })
+                    handleRollRequest(`${activeEntry.character_name} - Rapid Fire (${w.name}) [-1 CMod, then -3]`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) - 1, traits: w.traits })
                   } : undefined} disabled={!has2Actions}
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Rapid Fire</button>
                 ) : (
@@ -6562,11 +6562,11 @@ export default function TablePage() {
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Ready Weapon</button>
 
                 {/* ── REPOSITION: end-of-round positioning ── */}
-                <button onClick={() => { clearAimIfActive(activeEntry.id); consumeAction(activeEntry.id, `${activeEntry.character_name} — Reposition (Resolution phase)`) }}
+                <button onClick={() => { clearAimIfActive(activeEntry.id); consumeAction(activeEntry.id, `${activeEntry.character_name} - Reposition (Resolution phase)`) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reposition</button>
 
                 {/* ── SPRINT: both actions, 3x move (30ft), then Athletics check ── */}
-                {/* Action consumption happens in onMoveComplete — NOT here. If we */}
+                {/* Action consumption happens in onMoveComplete - NOT here. If we */}
                 {/* pre-consumed and the player's cell click was rejected silently */}
                 {/* (too far / occupied / off-grid), actions would vanish with no   */}
                 {/* movement. Deferring consume to the success path makes the click */}
@@ -6590,7 +6590,7 @@ export default function TablePage() {
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === skillName)?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
-                  handleRollRequest(`${activeEntry.character_name} — Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, conditionCmod: 0 })
+                  handleRollRequest(`${activeEntry.character_name} - Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, conditionCmod: 0 })
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
 
@@ -6598,7 +6598,7 @@ export default function TablePage() {
                 <button onClick={!activeEntry.has_cover ? async () => {
                   clearAimIfActive(activeEntry.id)
                   await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2, has_cover: true }).eq('id', activeEntry.id)
-                  await consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover (+2 Defensive Modifier, all attacks this round)`)
+                  await consumeAction(activeEntry.id, `${activeEntry.character_name} - Take Cover (+2 Defensive Modifier, all attacks this round)`)
                 } : undefined} disabled={activeEntry.has_cover}
                   style={activeEntry.has_cover ? disabledBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover{activeEntry.has_cover ? ' ✓' : ''}</button>
 
@@ -6610,15 +6610,15 @@ export default function TablePage() {
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Unarmed Combat')?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
-                  handleRollRequest(`${activeEntry.character_name} — Unarmed`, amod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+                  handleRollRequest(`${activeEntry.character_name} - Unarmed`, amod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Unarmed</button>
 
                 {/* ── Modals (overlay-positioned; render order doesn't matter for layout) ── */}
                 {socialTarget && (() => {
-                  // Show all other combatants — GM/player picks the correct target.
+                  // Show all other combatants - GM/player picks the correct target.
                   // NPCs can be allies or enemies, so we can't filter by is_npc.
-                  // Filter out dead / mortally wounded combatants — they have
+                  // Filter out dead / mortally wounded combatants - they have
                   // no actions to lose (Distract) and no attacks to interfere
                   // with (Cover Fire / Inspire), so showing them is just
                   // visual noise and can lead to wasted clicks.
@@ -6639,7 +6639,7 @@ export default function TablePage() {
                   return (
                     <div onClick={() => setSocialTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', minWidth: '220px', maxWidth: '320px' }}>
-                        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>{socialTarget.action} — Select Target</div>
+                        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>{socialTarget.action} - Select Target</div>
                         {targets.length === 0 ? (
                           <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', padding: '1rem 0', textAlign: 'center' }}>No valid targets</div>
                         ) : (
@@ -6663,7 +6663,7 @@ export default function TablePage() {
 
                 {/* ── COORDINATE MODAL ── */}
                 {showCoordinateModal && (() => {
-                  // Same dead/mortal filter as the social-action picker —
+                  // Same dead/mortal filter as the social-action picker -
                   // coordinating against a corpse buys no one a CMod.
                   const allTargets = initiativeOrder.filter(e => {
                     if (e.id === activeEntry.id) return false
@@ -6707,7 +6707,7 @@ export default function TablePage() {
                             const smod = npcAttacker
                               ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Tactics')?.level ?? 0 : 0)
                               : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Tactics')?.level ?? 0
-                            handleRollRequest(`${activeEntry.character_name} — Coordinate (vs ${coordinateSelection})`, amod, smod)
+                            handleRollRequest(`${activeEntry.character_name} - Coordinate (vs ${coordinateSelection})`, amod, smod)
                             setShowCoordinateModal(false)
                           }}
                             style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
@@ -6717,7 +6717,7 @@ export default function TablePage() {
                   )
                 })()}
 
-                {/* Stabilize — single 🩸 STABILIZE ▾ trigger that cascades
+                {/* Stabilize - single 🩸 STABILIZE ▾ trigger that cascades
                     children for every mortally-wounded combatant (WP=0,
                     not yet dead) within 20ft of the active combatant.
                     Was an inline button-per-target row that ate horizontal
@@ -6751,7 +6751,7 @@ export default function TablePage() {
                       targets.push({ kind: 'npc', name: n.name, npcId: n.id, distFeet: getDistFeet(undefined, n.id) })
                     }
                   }
-                  // distFeet === null means "no map / no token" — preserve the
+                  // distFeet === null means "no map / no token" - preserve the
                   // pre-multi behavior of allowing the click in that case.
                   const inRange = targets.filter(t => t.distFeet === null || t.distFeet <= 20)
                   if (inRange.length === 0) return null
@@ -6772,7 +6772,7 @@ export default function TablePage() {
                         smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
                       }
                     }
-                    handleRollRequest(`${activeEntry.character_name} — Stabilize ${t.name}`, amod, smod)
+                    handleRollRequest(`${activeEntry.character_name} - Stabilize ${t.name}`, amod, smod)
                     actionPreConsumedRef.current = true
                     await consumeAction(activeEntry.id)
                   }
@@ -6794,7 +6794,7 @@ export default function TablePage() {
                   )
                 })()}
 
-                {/* Treat Infection — parallel to Stabilize. Lists sick
+                {/* Treat Infection - parallel to Stabilize. Lists sick
                     targets (infection_state set AND days_left > 0) within
                     engaged range. Medic rolls Medicine* (RSN + Medicine
                     SMod). Outcomes resolve in executeRoll. See
@@ -6842,7 +6842,7 @@ export default function TablePage() {
                           ?? 0
                       }
                     }
-                    handleRollRequest(`${activeEntry.character_name} — Treat Infection ${t.name}`, amod, smod)
+                    handleRollRequest(`${activeEntry.character_name} - Treat Infection ${t.name}`, amod, smod)
                     actionPreConsumedRef.current = true
                     await consumeAction(activeEntry.id)
                   }
@@ -6873,7 +6873,7 @@ export default function TablePage() {
       {/* Main area */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
-        {/* Left — Game Feed */}
+        {/* Left - Game Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
             <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
@@ -6921,11 +6921,11 @@ export default function TablePage() {
                 ))
               )
             )}
-            {/* Chat messages (Chat tab only) — render delegated. */}
+            {/* Chat messages (Chat tab only) - render delegated. */}
             {feedTab === 'chat' && (
               <ChatMessageList messages={chat.messages} viewerUserId={userId} entries={entries} formatTime={formatTime} scrollParent={feedScrollEl} />
             )}
-            {/* Both tab — merged chronological feed. Roll branches stay
+            {/* Both tab - merged chronological feed. Roll branches stay
                 inline (huge JSX with lots of parent-scope helpers); chat
                 branch delegates to <ChatMessageRow> for dedup with the
                 Chat-tab path above. */}
@@ -6957,7 +6957,7 @@ export default function TablePage() {
           </div>
           {/* Bottom: chat composer (textarea + Send + whisper indicator).
               Owns its own input state and the slash-command parsing
-              inside <ChatComposer> — see components/TableChat.tsx. */}
+              inside <ChatComposer> - see components/TableChat.tsx. */}
           <div style={{ borderTop: '1px solid #2e2e2e', flexShrink: 0 }}>
             {(feedTab === 'chat' || feedTab === 'both') && (
               <ChatComposer
@@ -6973,9 +6973,9 @@ export default function TablePage() {
           </div>
         </div>
 
-        {/* Center — Map always rendered, sheets float on top */}
+        {/* Center - Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
-          {/* Center map — tactical during combat or when toggled, campaign otherwise */}
+          {/* Center map - tactical during combat or when toggled, campaign otherwise */}
           {(combatActive || showTacticalMap || tacticalShared) ? (
             <TacticalMap
               campaignId={id}
@@ -7003,7 +7003,7 @@ export default function TablePage() {
           ) : (
             <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} onMapDoubleClick={(lat, lng) => openQuickAddPin(lat, lng)} />
           )}
-          {/* NPC Card(s) — grid overlay when out of combat, draggable inline when in combat */}
+          {/* NPC Card(s) - grid overlay when out of combat, draggable inline when in combat */}
           {viewingNpcs.length > 0 && !combatActive && !showTacticalMap && (
             <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>
               {viewingNpcs.map(npc => {
@@ -7091,7 +7091,7 @@ export default function TablePage() {
                     position: 'absolute',
                     left: pos?.x ?? 10 + i * 20,
                     top: pos?.y ?? 10 + i * 20,
-                    // Default 571×400 — Xero's spec for the in-combat /
+                    // Default 571×400 - Xero's spec for the in-combat /
                     // tactical-map double-click popup. Resize handle in
                     // the bottom-right still lets the GM grow either
                     // dimension; once dragged, the user-set size wins.
@@ -7099,7 +7099,7 @@ export default function TablePage() {
                     height: size?.h ?? 400,
                     maxHeight: size?.h ? undefined : '80vh',
                     overflow: 'auto',
-                    // Wrapper bg — without this, when NpcCard's natural
+                    // Wrapper bg - without this, when NpcCard's natural
                     // content height (~160px for a Foe) is shorter than
                     // the forced popup height, the empty strip at the
                     // bottom is transparent and shows the map terrain
@@ -7159,7 +7159,7 @@ export default function TablePage() {
                         : undefined}
                     />
                   )}
-                  {/* Resize handle — bottom-right corner. Drag to resize the
+                  {/* Resize handle - bottom-right corner. Drag to resize the
                       card. Constrained 200-700 px wide and 150 px to 95vh
                       tall. Session-only sizing (not persisted across reloads). */}
                   <div
@@ -7202,7 +7202,7 @@ export default function TablePage() {
             })
           })()}
 
-          {/* Object Card(s) — draggable inline, live WP from mapTokens */}
+          {/* Object Card(s) - draggable inline, live WP from mapTokens */}
           {viewingObjects.map((obj, i) => {
             const liveTok = mapTokens.find(t => t.id === obj.tokenId)
             const pos = objectPositions[obj.tokenId]
@@ -7275,11 +7275,11 @@ export default function TablePage() {
                   }}
                   onMove={(() => {
                     // GM can always reposition. Players can only move an object
-                    // they're listed in `controlled_by_character_ids` for —
+                    // they're listed in `controlled_by_character_ids` for -
                     // typically the driver(s) of a vehicle. No action burned
                     // (vehicles aren't combatants); the move mode picks a
                     // valid cell within the vehicle's CURRENT speed range
-                    // (which ramps up over consecutive Move actions —
+                    // (which ramps up over consecutive Move actions -
                     // see onMoveComplete).
                     const me = entries.find(e => e.userId === userId)
                     const controllers = (liveTok as any)?.controlled_by_character_ids
@@ -7306,7 +7306,7 @@ export default function TablePage() {
                   onRotate={(degrees) => {
                     // Optimistic local update so the GM (or driver) sees the
                     // rotation immediately. tokenRefreshKey bump triggers
-                    // TacticalMap.loadTokens() via its useEffect dep — the
+                    // TacticalMap.loadTokens() via its useEffect dep - the
                     // canonical re-fetch path that mirrors what the existing
                     // GM Edit Object panel uses. Belt + suspenders for the
                     // realtime postgres_changes round-trip.
@@ -7321,7 +7321,7 @@ export default function TablePage() {
             )
           })}
 
-          {/* Inline character sheet — full screen over map */}
+          {/* Inline character sheet - full screen over map */}
           {syncedSelectedEntry && sheetMode === 'inline' && (
             <div style={{
               position: 'absolute', inset: 0,
@@ -7348,7 +7348,7 @@ export default function TablePage() {
                   // Mark as kicked so they don't reload on refresh.
                   // Update by (campaign_id, user_id) rather than a cached stateId so a
                   // stale entry row (e.g. after a character reassignment) can't miss.
-                  // .select() returns the updated rows — a 0-length array here means
+                  // .select() returns the updated rows - a 0-length array here means
                   // RLS silently blocked the write (Supabase does not surface an error).
                   const { error: kickErr, data: kickData } = await supabase
                     .from('character_states')
@@ -7362,14 +7362,14 @@ export default function TablePage() {
                     return
                   }
                   if (!kickData || kickData.length === 0) {
-                    alert('Kick did not affect any rows — likely an RLS / permissions issue. Check console.')
+                    alert('Kick did not affect any rows - likely an RLS / permissions issue. Check console.')
                     return
                   }
                   // Broadcast for immediate redirect
                   if (initChannelRef.current) {
                     await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
                   }
-                  // Note: notification insert removed — RLS blocks cross-user inserts.
+                  // Note: notification insert removed - RLS blocks cross-user inserts.
                   // The kicked flag + broadcast handle the redirect.
                   setEntries(prev => prev.filter(e => e.userId !== kickUserId))
                   setSelectedEntry(null)
@@ -7388,7 +7388,7 @@ export default function TablePage() {
                     : [...targetInv, { ...item, qty }]
                   await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
                   initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: { targetCharId } })
-                  // Cross-user notification — RPC bypasses notifications
+                  // Cross-user notification - RPC bypasses notifications
                   // RLS via SECURITY DEFINER. from_label is the giver's
                   // character name so the receiver sees who handed it
                   // over without parsing the body.
@@ -7501,7 +7501,7 @@ export default function TablePage() {
           )}
         </div>
 
-        {/* Right — Asset panel. GM gets NPCs/Assets/GM Notes; players get
+        {/* Right - Asset panel. GM gets NPCs/Assets/GM Notes; players get
             NPCs (revealed only) and Assets (read-only). */}
         <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
@@ -7523,7 +7523,7 @@ export default function TablePage() {
               return <NpcRoster campaignId={id} isGM={gmLike} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}&gm=${gmLike ? 1 : 0}`, `npc-${npc.id}`, { w: 571, h: 400 }) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} onTacticalRefresh={async () => {
               // Final-pass refresh after the GM toggles SHOW/HIDE on a
               // folder. revealNpcsByIds in NpcRoster updates is_visible
-              // on scene_tokens but doesn't broadcast — without this
+              // on scene_tokens but doesn't broadcast - without this
               // nudge, players would have to refresh to see the new
               // visibility state on their canvas.
               setTokenRefreshKey(k => k + 1)
@@ -7544,7 +7544,7 @@ export default function TablePage() {
             })()}
             {gmTab === 'npcs' && !gmLike && (() => {
               // Merge revealed NPCs with any NPCs currently in combat,
-              // sorted in initiative order (active combatant first) — mirrors GM view.
+              // sorted in initiative order (active combatant first) - mirrors GM view.
               const revealedIds = new Set(revealedNpcs.map((n: any) => n.id))
               const activeIdx = initiativeOrder.findIndex(e => e.is_active)
               const rotated = activeIdx >= 0
@@ -7575,7 +7575,7 @@ export default function TablePage() {
                   </div>
                 )
               }
-              // Group by folder. Recruited NPCs go into "🏘 Community — {name}"
+              // Group by folder. Recruited NPCs go into "🏘 Community - {name}"
               // buckets (pinned after combat), others by GM-assigned folder.
               // "Unfiled" sorts last.
               type FolderBucket = { name: string; key: string; npcs: any[] }
@@ -7583,7 +7583,7 @@ export default function TablePage() {
               if (combatNpcsInOrder.length > 0) {
                 folders.push({ name: '⚔️ In Combat', key: '__combat__', npcs: combatNpcsInOrder })
               }
-              // Community buckets — NPC is recruited (in playerNpcCommunityMap) and not in combat
+              // Community buckets - NPC is recruited (in playerNpcCommunityMap) and not in combat
               const communityBuckets = new Map<string, any[]>()
               const byFolder = new Map<string, any[]>()
               for (const n of revealedNpcs) {
@@ -7601,7 +7601,7 @@ export default function TablePage() {
                 }
               }
               for (const [cname, cnpcs] of [...communityBuckets.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-                folders.push({ name: `🏘 Community — ${cname}`, key: `__community__${cname}`, npcs: cnpcs.sort((a, b) => a.name.localeCompare(b.name)) })
+                folders.push({ name: `🏘 Community - ${cname}`, key: `__community__${cname}`, npcs: cnpcs.sort((a, b) => a.name.localeCompare(b.name)) })
               }
               const folderNames = [...byFolder.keys()].sort((a, b) => {
                 if (a === 'Unfiled') return 1
@@ -7635,7 +7635,7 @@ export default function TablePage() {
                       // an older snapshot; freshNpc has the live state)
                       // so the ring follows the disposition picker
                       // instantly. Same getNpcRingColor helper as the
-                      // GM roster — both surfaces never disagree.
+                      // GM roster - both surfaces never disagree.
                       const ring = getNpcRingColor({
                         disposition: ((freshNpc as any)?.disposition ?? npc.disposition) ?? null,
                         npc_type: ((freshNpc as any)?.npc_type ?? npc.npc_type) ?? null,
@@ -7671,7 +7671,7 @@ export default function TablePage() {
               return (
               <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
                 {folders.map(bucket => {
-                  // Combat pseudo-folder is always open — you don't want
+                  // Combat pseudo-folder is always open - you don't want
                   // to hide the "it's your turn" indicator behind a click.
                   const isCombatBucket = bucket.key === '__combat__'
                   const isCommunityBucket = bucket.key.startsWith('__community__')
@@ -7716,7 +7716,7 @@ export default function TablePage() {
                   }}
                   onPlaceOnTacticalMap={async (pin) => {
                     // Drop the pin onto the active scene as a minimal
-                    // marker — token_type='pin' is rendered by
+                    // marker - token_type='pin' is rendered by
                     // TacticalMap as just the emoji at the grid center,
                     // no square background, no name label. Position is
                     // (1,1) per the top-left spawn convention; the GM
@@ -7730,7 +7730,7 @@ export default function TablePage() {
                       .eq('campaign_id', id)
                       .eq('is_active', true)
                       .single()
-                    if (!activeScene) { alert('No active tactical scene — open one from Map Setup first.'); return }
+                    if (!activeScene) { alert('No active tactical scene - open one from Map Setup first.'); return }
                     const emoji = getCategoryEmoji(pin.category)
                     const pinSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
                     const { error } = await supabase.from('scene_tokens').insert({
@@ -7750,7 +7750,7 @@ export default function TablePage() {
                     // markers from the active scene; the campaign_pin
                     // row survives so the user can re-stamp later via
                     // the 🗺️ button. Silent no-op when no markers
-                    // exist — clicking X without ever having stamped
+                    // exist - clicking X without ever having stamped
                     // shouldn't error.
                     const { data: activeScene } = await supabase
                       .from('tactical_scenes')
@@ -7814,7 +7814,7 @@ export default function TablePage() {
                       await Promise.all([loadEntries(id), rollsFeed.refetch()])
                     }}
                     onDuplicate={async (source) => {
-                      // Pull lootable too — the source object passed in only carries the
+                      // Pull lootable too - the source object passed in only carries the
                       // ObjectToken type fields; we read it fresh so the clone matches DB state.
                       const { data: full } = await supabase
                         .from('scene_tokens')
@@ -7880,7 +7880,7 @@ export default function TablePage() {
                         {vehicles.map((v: Vehicle) => (
                           <div key={v.id} style={{ marginBottom: '4px' }}>
                             {/* Vehicles render their full card directly inside
-                                the expanded Vehicles folder — no second click
+                                the expanded Vehicles folder - no second click
                                 needed. The compact "Recreational Vehicle · WP
                                 X/Y" row this used to be was a redundant gate
                                 given that the folder header already groups
@@ -7925,7 +7925,7 @@ export default function TablePage() {
                 loading="lazy"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={e => {
-                  // File missing or broken — swap to the text fallback so the
+                  // File missing or broken - swap to the text fallback so the
                   // circle never renders as a silent empty badge.
                   const parent = (e.currentTarget.parentElement as HTMLElement | null)
                   if (parent) {
@@ -7968,7 +7968,7 @@ export default function TablePage() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   {isGM && (combatActive || showTacticalMap) && (() => {
-                    // Read the actual token state — was checking initiativeOrder,
+                    // Read the actual token state - was checking initiativeOrder,
                     // which meant the button didn't flip color for PCs placed on
                     // the map outside of combat (or cleared but still in init).
                     const onMap = mapTokens.some(t => t.character_id === entry.character.id)
@@ -7976,7 +7976,7 @@ export default function TablePage() {
                       <div onClick={async e => {
                         e.stopPropagation()
                         if (onMap) {
-                          // Remove from map — find and delete the token
+                          // Remove from map - find and delete the token
                           const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
                           if (activeScene) {
                             await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', entry.character.name)
@@ -8011,7 +8011,7 @@ export default function TablePage() {
         })()}
       </div>
 
-      {/* Character sheet overlay — draggable floating window */}
+      {/* Character sheet overlay - draggable floating window */}
       {syncedSelectedEntry && sheetMode === 'overlay' && (
         <div onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 9999 }}>
           <div onClick={e => e.stopPropagation()} style={{
@@ -8061,7 +8061,7 @@ export default function TablePage() {
               onStatUpdate={handleStatUpdate}
               onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
               onWeaponChange={(slot, newWeapon) => {
-                // Same fix as the inline-mode card above — patch entries so
+                // Same fix as the inline-mode card above - patch entries so
                 // the combat bar's Attack button picks up the new weapon
                 // immediately. Without this, overlay-mode weapon swaps
                 // lagged behind by a loadEntries cycle.
@@ -8078,7 +8078,7 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Roll modal — draggable floating panel so the player can shove it aside
+      {/* Roll modal - draggable floating panel so the player can shove it aside
           to see the tactical map behind it. No backdrop: clicks pass through
           to the map so they can peek at token positions while deciding. The
           panel itself is stopPropagation-gated to keep its own clicks local. */}
@@ -8098,7 +8098,7 @@ export default function TablePage() {
             boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
           }}
         >
-          {/* Drag handle — grab strip across the top. */}
+          {/* Drag handle - grab strip across the top. */}
           <div
             onMouseDown={e => {
               const el = e.currentTarget.parentElement as HTMLElement
@@ -8164,7 +8164,7 @@ export default function TablePage() {
                     </button>
                   </div>
                 )}
-                {/* Range band auto-calculated in background — no manual selector */}
+                {/* Range band auto-calculated in background - no manual selector */}
                 {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && !pendingRoll.label.includes('Coordinate') && !pendingRoll.label.includes('Sprint') && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Target</div>
@@ -8212,7 +8212,7 @@ export default function TablePage() {
                             const pcEntry = entries.find(e => e.character.id === entry.character_id)
                             if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0) return false
                           }
-                          // Filter out targets the weapon can't hit at their range (skip for Charge — it includes movement)
+                          // Filter out targets the weapon can't hit at their range (skip for Charge - it includes movement)
                           if (pendingRoll.weapon && mapTokens.length > 0 && !pendingRoll.label.includes('Charge')) {
                             const active = initiativeOrder.find(ie => ie.is_active)
                             if (active) {
@@ -8224,7 +8224,7 @@ export default function TablePage() {
                           // per CRB §06). The active themselves was already
                           // excluded in the dead/alive checks above (it's the
                           // active's own entry id), but double-check.
-                          if (pendingRoll.label.endsWith(' — Distract') && mapTokens.length > 0) {
+                          if (pendingRoll.label.endsWith(' - Distract') && mapTokens.length > 0) {
                             const active = initiativeOrder.find(ie => ie.is_active)
                             if (active && entry.id === active.id) return false
                             if (active) {
@@ -8268,7 +8268,7 @@ export default function TablePage() {
                           {entry.character_name}{entry.is_npc ? ' (NPC)' : ''}
                         </option>
                       ))}
-                      {/* Non-initiative PCs + NPCs who have map tokens — lets the attacker target bystanders and creatures that haven't joined initiative */}
+                      {/* Non-initiative PCs + NPCs who have map tokens - lets the attacker target bystanders and creatures that haven't joined initiative */}
                       {mapTokens
                         .filter(t => {
                           if (t.token_type === 'object') return false
@@ -8287,7 +8287,7 @@ export default function TablePage() {
                             if (npc.wp_current != null && npc.wp_current <= 0) return false
                             if (npc.status === 'dead') return false
                           }
-                          // range filter (skip for Charge — it includes movement)
+                          // range filter (skip for Charge - it includes movement)
                           if (pendingRoll.weapon && !pendingRoll.label.includes('Charge')) {
                             const active = initiativeOrder.find(ie => ie.is_active)
                             if (active) {
@@ -8305,17 +8305,17 @@ export default function TablePage() {
                             </option>
                           )
                         })}
-                      {/* Object tokens — crates, doors, barrels, etc. Show EVERY
+                      {/* Object tokens - crates, doors, barrels, etc. Show EVERY
                           object on the map regardless of wp_max configuration;
                           the suffix tells the user WHY one can't be destroyed
                           ((indestructible) / (destroyed)) instead of silently
                           omitting it. Silent omission was the source of several
                           "I can see it right there but can't target it" reports
-                          during playtest — GMs assumed they'd placed the object
+                          during playtest - GMs assumed they'd placed the object
                           wrong (or mis-configured wp_max) because there was no
                           diagnostic.
-                          Distract excluded — you can't distract a crate. */}
-                      {!pendingRoll.label.endsWith(' — Distract') && (() => {
+                          Distract excluded - you can't distract a crate. */}
+                      {!pendingRoll.label.endsWith(' - Distract') && (() => {
                         const objs = mapTokens.filter(t => t.token_type === 'object')
                         if (objs.length > 0 && process.env.NODE_ENV !== 'production') {
                           console.warn('[target-dropdown] objects on map:', objs.map(o => ({
@@ -8325,7 +8325,7 @@ export default function TablePage() {
                         return objs
                           .filter(t => {
                             // Range filter (skip for Charge). An out-of-range
-                            // object still doesn't make the list — showing it
+                            // object still doesn't make the list - showing it
                             // selectable would let the user roll and then
                             // confusingly fail, same as for NPC targets.
                             if (pendingRoll.weapon && !pendingRoll.label.includes('Charge')) {
@@ -8444,7 +8444,7 @@ export default function TablePage() {
                   return (
                     <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'left', marginBottom: '8px' }}>
                       {total === 0 ? (
-                        <span>💥 Throwing into open ground — no targets in blast radius</span>
+                        <span>💥 Throwing into open ground - no targets in blast radius</span>
                       ) : (
                         <>
                           <div style={{ marginBottom: '4px' }}>💥 Blast will hit:</div>
@@ -8567,7 +8567,7 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Restore modal — NPCs and PCs */}
+      {/* Restore modal - NPCs and PCs */}
       {/* GM Loot Distribution Modal */}
       {showLootModal && (
         <div onClick={() => setShowLootModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -8581,7 +8581,7 @@ export default function TablePage() {
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '2px', fontSize: '13px' }}>
                   <span style={{ flex: 1, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                     {item.name}{item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
-                    {item.notes && <span style={{ color: '#5a5550', fontSize: '13px' }}> — {item.notes}</span>}
+                    {item.notes && <span style={{ color: '#5a5550', fontSize: '13px' }}> - {item.notes}</span>}
                   </span>
                   <button onClick={() => setLootItems(prev => prev.filter((_, i) => i !== idx))}
                     style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
@@ -8661,7 +8661,7 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Populate Modal — bulk-generate NPCs distributed across the
+      {/* Populate Modal - bulk-generate NPCs distributed across the
           triangle ratio (1 Antagonist : 2 Foes : 3 Goons : 4 Bystanders
           per 10). Shows the count input + the live breakdown so the
           GM knows exactly what they'll get before clicking Generate. */}
@@ -8675,7 +8675,7 @@ export default function TablePage() {
               <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Populate</div>
               <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>How many NPCs?</div>
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '14px', lineHeight: 1.5 }}>
-                Bulk-generates a mix of Antagonists, Foes, Goons, and Bystanders. Smaller groups skip the higher tiers — only 10+ generates an Antagonist.
+                Bulk-generates a mix of Antagonists, Foes, Goons, and Bystanders. Smaller groups skip the higher tiers - only 10+ generates an Antagonist.
               </div>
 
               {/* Count stepper */}
@@ -8715,7 +8715,7 @@ export default function TablePage() {
                   Cancel
                 </button>
                 <button onClick={async () => {
-                  // Build the tier list in insertion order — Bystanders
+                  // Build the tier list in insertion order - Bystanders
                   // first so they sort to the bottom of the roster after
                   // Antagonists (sort_order ascending = top → Antag).
                   setPopulateBusy(true)
@@ -8774,7 +8774,7 @@ export default function TablePage() {
         )
       })()}
 
-      {/* Advance Time (Encumbrance) Modal — house-rule: every
+      {/* Advance Time (Encumbrance) Modal - house-rule: every
           overencumbered PC + NPC loses 1 RP per hour over the limit
           until they rest or drop something. Modal previews who's
           affected, runs in one batch on Apply. RP=0 transitions still
@@ -8882,7 +8882,7 @@ export default function TablePage() {
                   ))
                   await Promise.all([...pcUpdates, ...npcUpdates])
 
-                  // Single roll_log summary entry — cleaner than one
+                  // Single roll_log summary entry - cleaner than one
                   // row per character. Format mirrors the Loot summary.
                   const summaryParts: string[] = []
                   for (const p of affectedPcs) summaryParts.push(`${p.name} (${p.cur}→${p.next})`)
@@ -8988,12 +8988,12 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Reload modal — GM-Tools shortcut to restore a campaign snapshot
+      {/* Reload modal - GM-Tools shortcut to restore a campaign snapshot
           without leaving the table. Single-target picker (one snapshot →
           confirm → restoreCampaignSnapshot). The full Snapshots admin
           page (save / download / delete / import) is still in campaign
           edit. Loading the modal triggers a one-shot fetch of the
-          snapshot list — no realtime subscription, no polling. */}
+          snapshot list - no realtime subscription, no polling. */}
       {showReloadPicker && (
         <div onClick={() => !reloadingSnapshotId && setShowReloadPicker(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -9002,7 +9002,7 @@ export default function TablePage() {
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Reload</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Restore from snapshot</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4, marginBottom: '12px' }}>
-              Pick a snapshot — its NPCs, pins, scenes, tactical tokens, and notes replace the current state. Initiative, roll log, and chat clear. Players at the table will see the reset.
+              Pick a snapshot - its NPCs, pins, scenes, tactical tokens, and notes replace the current state. Initiative, roll log, and chat clear. Players at the table will see the reset.
             </div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px' }}>
               {reloadSnapshots.length === 0 ? (
@@ -9046,7 +9046,7 @@ export default function TablePage() {
                         // hooks here.
                         window.location.reload()
                       } else {
-                        alert(`Partial restore — errors:\n${res.errors.join('\n')}`)
+                        alert(`Partial restore - errors:\n${res.errors.join('\n')}`)
                       }
                     }} disabled={!!reloadingSnapshotId}
                       style={{ marginTop: '8px', padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: reloadingSnapshotId ? 'wait' : 'pointer', opacity: reloadingSnapshotId ? 0.5 : 1 }}>
@@ -9078,7 +9078,7 @@ export default function TablePage() {
         const deadPCs = entries
           .filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
           .map(e => ({ key: `pc:${e.stateId}`, name: e.character.name, type: 'PC' }))
-        // Objects come from restoreObjects — a fresh snapshot taken when
+        // Objects come from restoreObjects - a fresh snapshot taken when
         // the modal opened, so they show up regardless of which view the GM
         // was on when they hit Restore.
         const damagedObjects = restoreObjects.map(t => ({ key: `obj:${t.id}`, name: t.name, type: 'OBJECT' }))
@@ -9105,7 +9105,7 @@ export default function TablePage() {
             )}
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
               {sections.length === 0 ? (
-                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem' }}>Nothing to restore — everyone is at full health.</div>
+                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem' }}>Nothing to restore - everyone is at full health.</div>
               ) : sections.map(section => {
                 const sectionKeys = section.items.map(i => i.key)
                 const sectionAllSelected = sectionKeys.every(k => restoreNpcIds.has(k))
@@ -9153,7 +9153,7 @@ export default function TablePage() {
                 setRestoring(true)
                 const selected = Array.from(restoreNpcIds)
                 const nowIso = new Date().toISOString()
-                // Build per-row UPDATEs — each row needs its own wp_max/rp_max
+                // Build per-row UPDATEs - each row needs its own wp_max/rp_max
                 // (NPCs have stat-derived totals; PC entries carry their own;
                 // objects have per-token wp_max). Different values per row =
                 // can't .in() batch into a single SQL statement. But we CAN
@@ -9166,7 +9166,7 @@ export default function TablePage() {
                 // Promise.all so the WP/RP bars fill in immediately. The GM
                 // sees instant feedback even if the DB round-trip is slow.
                 // Refetches now run in the background AFTER the modal closes
-                // — they were the actual "FOREVER" feel: loadEntries and the
+                // - they were the actual "FOREVER" feel: loadEntries and the
                 // campaign_npcs full-select were blocking the modal close.
                 // Realtime subscriptions on the player side catch up the
                 // same way they would for any in-flight UPDATE.
@@ -9193,7 +9193,7 @@ export default function TablePage() {
                   })
                   .filter(Boolean) as ReturnType<typeof supabase.from>[]
                 // Restore map objects (crates, barrels, etc.) to full WP. Loot
-                // contents are NOT magically restored — if a player already
+                // contents are NOT magically restored - if a player already
                 // looted the crate before you destroyed and restored it, the
                 // contents stay gone. Reset is just "this token is intact
                 // again" so it can be destroyed a second time.
@@ -9211,7 +9211,7 @@ export default function TablePage() {
                   })
                   .filter(Boolean) as ReturnType<typeof supabase.from>[]
 
-                // Optimistic local patch — bars fill instantly even on slow
+                // Optimistic local patch - bars fill instantly even on slow
                 // connections.
                 if (npcKeyToWpRp.size > 0) {
                   setCampaignNpcs(prev => prev.map((n: any) => {
@@ -9234,7 +9234,7 @@ export default function TablePage() {
                   }))
                 }
 
-                // Close the modal immediately after the writes return —
+                // Close the modal immediately after the writes return -
                 // refetches happen in the background. If a write fails the
                 // realtime subscription will correct local state on the
                 // next round, and a console.error trail surfaces it.
@@ -9243,7 +9243,7 @@ export default function TablePage() {
                   const errs = results.map((r: any) => r?.error).filter(Boolean)
                   if (errs.length > 0) {
                     console.error('[restore] some updates failed:', errs)
-                    alert(`${errs.length} update${errs.length === 1 ? '' : 's'} failed during restore. Check the console for details — affected entries may need a manual restore.`)
+                    alert(`${errs.length} update${errs.length === 1 ? '' : 's'} failed during restore. Check the console for details - affected entries may need a manual restore.`)
                   }
                 } finally {
                   setShowRestorePicker(false)
@@ -9251,7 +9251,7 @@ export default function TablePage() {
                   setRestoring(false)
                 }
 
-                // Background refetch + broadcast — runs after modal close so
+                // Background refetch + broadcast - runs after modal close so
                 // the GM doesn't wait on these.
                 ;(async () => {
                   initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
@@ -9294,7 +9294,7 @@ export default function TablePage() {
             <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>End Session</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1.25rem' }}>Session {sessionCount} Summary</div>
 
-            {/* Player submissions — notes the players flagged "Add to Session Summary". */}
+            {/* Player submissions - notes the players flagged "Add to Session Summary". */}
             {submittedPlayerNotes.length > 0 && (
               <div style={{ marginBottom: '1.25rem', padding: '10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
                 <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Player Submissions ({submittedPlayerNotes.length})</div>
@@ -9304,7 +9304,7 @@ export default function TablePage() {
                     {n.title && <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', marginBottom: '2px' }}>{n.title}</div>}
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4, marginBottom: '6px' }}>{n.content}</div>
                     <button onClick={() => {
-                      const titlePart = n.title ? ` — ${n.title}` : ''
+                      const titlePart = n.title ? ` - ${n.title}` : ''
                       const block = (sessionSummary.trim() ? '\n\n' : '') + `${n.character_name}${titlePart}: ${n.content}`
                       setSessionSummary(prev => prev + block)
                     }}
@@ -9322,7 +9322,7 @@ export default function TablePage() {
               <textarea
                 value={sessionSummary}
                 onChange={e => setSessionSummary(e.target.value)}
-                placeholder="Summarise the session — key events, decisions, outcomes."
+                placeholder="Summarise the session - key events, decisions, outcomes."
                 autoFocus
                 rows={6}
                 style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
@@ -9371,7 +9371,7 @@ export default function TablePage() {
                 <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Drop files here or click to browse
                 </div>
-                <div style={{ fontSize: '14px', color: '#cce0f5', marginTop: '4px' }}>Maps, handouts, references — images, PDFs, text, and Word docs</div>
+                <div style={{ fontSize: '14px', color: '#cce0f5', marginTop: '4px' }}>Maps, handouts, references - images, PDFs, text, and Word docs</div>
               </div>
               {sessionFiles.length > 0 && (
                 <div style={{ marginTop: '8px' }}>
@@ -9453,7 +9453,7 @@ export default function TablePage() {
                   const someInFolder = folderIds.some(id => selectedNpcIds.has(id))
                   return (
                     <div key={folderName} style={{ marginBottom: '8px' }}>
-                      {/* Folder header — checkbox toggles every NPC in
+                      {/* Folder header - checkbox toggles every NPC in
                           this folder. Uses indeterminate state when
                           some-but-not-all are selected. */}
                       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '2px', cursor: 'pointer' }}>
@@ -9527,7 +9527,7 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Quick Add modal — extracted to components/QuickAddModal.tsx
+      {/* Quick Add modal - extracted to components/QuickAddModal.tsx
           so /map and other surfaces share the UI. Pin-only on
           dblclick (qaHideCommunity=true), both panels via the
           Community header button. */}
@@ -9544,7 +9544,7 @@ export default function TablePage() {
         />
       )}
 
-      {/* Community Status — overlay modal wrapping <CampaignCommunity>.
+      {/* Community Status - overlay modal wrapping <CampaignCommunity>.
           Same management surface as /communities but docked on the table
           page so players can check pending requests / Apprentice links /
           role coverage without leaving their PC view. Click the backdrop
@@ -9599,7 +9599,7 @@ export default function TablePage() {
             const pe = entries.find(e => e.character.id === entry.character_id)
             if (pe?.liveState && pe.liveState.wp_current === 0) return false
           }
-          // Check engaged range (≤5ft) — require tokens on map
+          // Check engaged range (≤5ft) - require tokens on map
           if (aTok && mapTokens.length > 0) {
             const tTok = mapTokens.find(t => {
               const pe = entries.find(e => e.character.name === entry.character_name)
@@ -9624,7 +9624,7 @@ export default function TablePage() {
 
         function isSuccess(outcome: string) { return outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight' }
 
-        // Outcome tier — opposed-check ordering. Higher tier wins; same
+        // Outcome tier - opposed-check ordering. Higher tier wins; same
         // tier ties. Per Xero's reading: Wild Success > Success and
         // Dire Failure < Failure (so a Failure beats a Dire Failure
         // in an opposed check). Critical-roll variants (High Insight /
@@ -9652,10 +9652,10 @@ export default function TablePage() {
             : (defNpc && Array.isArray(defNpc.skills?.entries) ? defNpc.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
           const dSmod = Math.max(dUnarmed, dAthletics)
 
-          // Attacker roll — optional Insight Die spend. 3d6 rolls three dice
+          // Attacker roll - optional Insight Die spend. 3d6 rolls three dice
           // and keeps all three (total = d1+d2+d3+mods) per the SRD keep-all
           // rule; +3 CMod is a flat bonus on top of 2d6. Both deduct 1
-          // Insight Die from the PC attacker's state. Only PCs can spend —
+          // Insight Die from the PC attacker's state. Only PCs can spend -
           // NPCs don't maintain Insight Dice, so grappleInsight is gated in
           // the UI to PC attackers with insight_dice >= 1.
           let aDie1: number, aDie2: number
@@ -9685,7 +9685,7 @@ export default function TablePage() {
           }
           // Stack the user-entered Conditional Modifier on top of any
           // Insight-Die +3 bonus. Parse-fail or empty string both
-          // resolve to 0 — the input is text, so guard explicitly.
+          // resolve to 0 - the input is text, so guard explicitly.
           const manualCmod = parseInt(grappleCmod, 10) || 0
           const totalCmod = aBonusCmod + manualCmod
           const aTotal = aDie1 + aDie2 + aPhyMod + aUnarmed + totalCmod
@@ -9696,10 +9696,10 @@ export default function TablePage() {
           const dTotal = dDie1 + dDie2 + dPhyMod + dSmod
           const dOutcome = getOutcome(dTotal)
 
-          // Determine result by outcome tier — higher tier wins, same
+          // Determine result by outcome tier - higher tier wins, same
           // tier ties (no clear victor). Replaces the older binary
           // success/fail check that incorrectly tied "Wild Success vs
-          // Success" and "Failure vs Dire Failure" — Xero clarified
+          // Success" and "Failure vs Dire Failure" - Xero clarified
           // those should resolve in favor of the stronger tier.
           const aTier = outcomeTier(aOutcome)
           const dTier = outcomeTier(dOutcome)
@@ -9733,13 +9733,13 @@ export default function TablePage() {
           // Log to roll_log. cmod stores the COMBINED CMod (manual + Insight
           // +3 bonus) so the expanded log breakdown sums correctly back to
           // total. Splitting them across columns would require schema work
-          // we don't need yet — the label tells the user when an Insight
+          // we don't need yet - the label tells the user when an Insight
           // Die was spent.
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId, character_name: active.character_name,
-            label: `${active.character_name} — Grapple ${targetEntry.character_name}${insightSpent ? (insightMode === '3d6' ? ' (3d6 Insight)' : ' (+3 CMod Insight)') : ''}`,
+            label: `${active.character_name} - Grapple ${targetEntry.character_name}${insightSpent ? (insightMode === '3d6' ? ' (3d6 Insight)' : ' (+3 CMod Insight)') : ''}`,
             die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aUnarmed, cmod: totalCmod,
-            total: aTotal, outcome: result === 'grappled' ? 'Grappled!' : result === 'failed' ? 'Failed — 1 RP' : 'No clear victor',
+            total: aTotal, outcome: result === 'grappled' ? 'Grappled!' : result === 'failed' ? 'Failed - 1 RP' : 'No clear victor',
           })
 
           setGrappleResult({
@@ -9757,7 +9757,7 @@ export default function TablePage() {
         return (
           <div onClick={() => { if (!grappleResult) { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px' }}>
-              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Grapple — Opposed Check</div>
+              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Grapple - Opposed Check</div>
               <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{active.character_name}</div>
               <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem' }}>
                 PHY {aPhyMod >= 0 ? '+' : ''}{aPhyMod} · Unarmed {aUnarmed >= 0 ? '+' : ''}{aUnarmed}
@@ -9843,7 +9843,7 @@ export default function TablePage() {
                   <div style={{ padding: '8px 12px', marginBottom: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: grappleTarget.is_npc ? '#7fc458' : '#c0392b' }}>
                     {grappleTarget.character_name}{grappleTarget.is_npc ? ' (NPC)' : ''}
                   </div>
-                  {/* Conditional Modifier — manual numeric mod that stacks on
+                  {/* Conditional Modifier - manual numeric mod that stacks on
                       top of PHY + Unarmed + Insight-Die bonus. Mirrors the
                       input on the standard attack modal so GMs and players
                       have a consistent place to add ad-hoc CMods (e.g. "+2
@@ -9853,7 +9853,7 @@ export default function TablePage() {
                     <input type="number" value={grappleCmod} onChange={e => setGrappleCmod(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') executeGrapple(grappleTarget!, grappleInsight) }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                   </div>
-                  {/* Insight Die — PC attackers only, must have at least 1 die. Same
+                  {/* Insight Die - PC attackers only, must have at least 1 die. Same
                       two options as the main attack modal: 3d6 keep-all, or +3 CMod
                       on 2d6. See grapple flow comment above. */}
                   {charEntry?.liveState && charEntry.liveState.insight_dice >= 1 && (
@@ -9918,7 +9918,7 @@ export default function TablePage() {
           // Update local entries so combat bar reflects the new weapon immediately
           setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
           clearAimIfActive(active.id)
-          consumeAction(active.id, `${active.character_name} — Switch to ${secondary.weaponName}`)
+          consumeAction(active.id, `${active.character_name} - Switch to ${secondary.weaponName}`)
           setShowReadyWeaponModal(false)
         }
 
@@ -9933,8 +9933,8 @@ export default function TablePage() {
         //   - writes the inventory weapon into the chosen slot with Used
         //     condition, full clip, and rolled reloads
         //   - consumes the Ready Weapon action
-        // Nothing is ever lost — displaced weapons return to inventory.
-        // NPCs ignore the `slot` param — they only have a single
+        // Nothing is ever lost - displaced weapons return to inventory.
+        // NPCs ignore the `slot` param - they only have a single
         // weapon slot under skills.weapon.
         async function doEquipFromInventory(invItemName: string, slot: 'primary' | 'secondary' = 'primary') {
           const w = getWeaponByName(invItemName)
@@ -10001,11 +10001,11 @@ export default function TablePage() {
             return
           }
           clearAimIfActive(active.id)
-          consumeAction(active.id, `${active.character_name} — Ready ${invItemName}${charEntry && slot === 'secondary' ? ' (Secondary)' : ''}`)
+          consumeAction(active.id, `${active.character_name} - Ready ${invItemName}${charEntry && slot === 'secondary' ? ' (Secondary)' : ''}`)
           setShowReadyWeaponModal(false)
         }
 
-        // Unequip a weapon back to inventory (PC only — NPCs have a
+        // Unequip a weapon back to inventory (PC only - NPCs have a
         // single weapon slot and "unequipping" them would leave them
         // unarmed, which the combat bar doesn't model). The slot's
         // weapon stacks with a matching inventory entry if present;
@@ -10030,7 +10030,7 @@ export default function TablePage() {
           await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
           setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
           clearAimIfActive(active.id)
-          consumeAction(active.id, `${active.character_name} — Unequip ${target.weaponName}`)
+          consumeAction(active.id, `${active.character_name} - Unequip ${target.weaponName}`)
           setShowReadyWeaponModal(false)
         }
 
@@ -10041,7 +10041,7 @@ export default function TablePage() {
           await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
           setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
           clearAimIfActive(active.id)
-          consumeAction(active.id, `${active.character_name} — Reload ${primary.weaponName}`)
+          consumeAction(active.id, `${active.character_name} - Reload ${primary.weaponName}`)
           setShowReadyWeaponModal(false)
         }
 
@@ -10076,13 +10076,13 @@ export default function TablePage() {
           }
           const amod = (rapid as any)[bestAttr] ?? 0
           clearAimIfActive(active.id)
-          handleRollRequest(`Unjam — ${primary.weaponName} (${bestSkill})`, amod, bestLevel)
+          handleRollRequest(`Unjam - ${primary.weaponName} (${bestSkill})`, amod, bestLevel)
           actionPreConsumedRef.current = true
           await consumeAction(active.id)
           setShowReadyWeaponModal(false)
         }
 
-        // Tracking bonus — applied automatically
+        // Tracking bonus - applied automatically
         const hasTracking = primaryW ? getTraitValue(primaryW.traits, 'Tracking') !== null : false
 
         return (
@@ -10126,11 +10126,11 @@ export default function TablePage() {
 
               {hasTracking && (
                 <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
-                  Tracking weapon — Ready Weapon grants +1 CMod aim bonus
+                  Tracking weapon - Ready Weapon grants +1 CMod aim bonus
                 </div>
               )}
 
-              {/* Equip from Inventory — any weapon the character is carrying
+              {/* Equip from Inventory - any weapon the character is carrying
                   can be readied into the primary slot. Primary goes back to
                   inventory (no loss). Closes the loot→ready gap from
                   playtest #15. Reads PC inventory from characters.data or
@@ -10187,15 +10187,15 @@ export default function TablePage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <button onClick={canSwitch ? doSwitch : undefined} disabled={!canSwitch}
                   style={{ padding: '10px', background: canSwitch ? '#1a1a2e' : '#1a1a1a', border: `1px solid ${canSwitch ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: canSwitch ? '#7ab3d4' : '#3a3a3a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canSwitch ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Switch{secondary?.weaponName ? ` to ${secondary.weaponName}` : ''} {!canSwitch && <span style={{ fontSize: '13px', opacity: 0.5 }}>— no secondary</span>}
+                  Switch{secondary?.weaponName ? ` to ${secondary.weaponName}` : ''} {!canSwitch && <span style={{ fontSize: '13px', opacity: 0.5 }}>- no secondary</span>}
                 </button>
                 <button onClick={canReload ? doReload : undefined} disabled={!canReload}
                   style={{ padding: '10px', background: canReload ? '#2a2010' : '#1a1a1a', border: `1px solid ${canReload ? '#5a4a1b' : '#2e2e2e'}`, borderRadius: '3px', color: canReload ? '#EF9F27' : '#3a3a3a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canReload ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Reload{primaryW?.clip ? ` (${primary?.reloads ?? 0} remaining)` : ''} {!canReload && !primaryW?.clip && <span style={{ fontSize: '13px', opacity: 0.5 }}>— melee weapon</span>}{!canReload && primaryW?.clip && (primary?.reloads ?? 0) <= 0 && <span style={{ fontSize: '13px', opacity: 0.5 }}>— no reloads left</span>}
+                  Reload{primaryW?.clip ? ` (${primary?.reloads ?? 0} remaining)` : ''} {!canReload && !primaryW?.clip && <span style={{ fontSize: '13px', opacity: 0.5 }}>- melee weapon</span>}{!canReload && primaryW?.clip && (primary?.reloads ?? 0) <= 0 && <span style={{ fontSize: '13px', opacity: 0.5 }}>- no reloads left</span>}
                 </button>
                 <button onClick={canUnjam ? doUnjam : undefined} disabled={!canUnjam}
                   style={{ padding: '10px', background: canUnjam ? '#2a1210' : '#1a1a1a', border: `1px solid ${canUnjam ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: canUnjam ? '#f5a89a' : '#3a3a3a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canUnjam ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '13px', opacity: 0.5 }}>— not jammed or damaged</span>}
+                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '13px', opacity: 0.5 }}>- not jammed or damaged</span>}
                 </button>
               </div>
 
@@ -10260,7 +10260,7 @@ export default function TablePage() {
               return (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>First Impression</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets the Relationship CMod between the rolling PC and the target NPC — feeds future Recruitment / social checks.</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets the Relationship CMod between the rolling PC and the target NPC - feeds future Recruitment / social checks.</div>
 
                 {/* NPC target picker */}
                 <div style={{ marginBottom: '12px' }}>
@@ -10273,14 +10273,14 @@ export default function TablePage() {
                     <select value={firstImpressionNpcId} onChange={e => {
                       const npcId = e.target.value
                       setFirstImpressionNpcId(npcId)
-                      // Auto-fire when there's a clear single PC choice —
+                      // Auto-fire when there's a clear single PC choice -
                       // skips the second click on the PC button below.
                       // Same heuristic as Perception/Gut Instinct
                       // (shortCircuitForSpecialCheck): single eligible PC,
                       // or active combatant during combat. Otherwise fall
                       // through to the PC button list. Reported tonight
                       // as "First Impression goes to a redundant first
-                      // modal — should go to the standard roll modal".
+                      // modal - should go to the standard roll modal".
                       if (!npcId) return
                       const visibleNow = entries.filter(en => isGM || en.userId === userId)
                       let auto: typeof visibleNow[0] | undefined
@@ -10297,7 +10297,7 @@ export default function TablePage() {
                       }
                     }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                      <option value="">— pick an NPC —</option>
+                      <option value="">- pick an NPC -</option>
                       {eligibleNpcs.map((n: any) => (
                         <option key={n.id} value={n.id}>{n.name}</option>
                       ))}
@@ -10305,12 +10305,12 @@ export default function TablePage() {
                   )}
                 </div>
 
-                {/* PC roller buttons — players only see their own PC(s);
+                {/* PC roller buttons - players only see their own PC(s);
                     GMs can roll for any PC (they orchestrate NPC reactions
                     and may need to fire a First Impression on a PC's
                     behalf during an absent player's turn).
                     Hidden when the NPC-picker auto-fire path will catch
-                    this — i.e. exactly one eligible PC OR (combat-active
+                    this - i.e. exactly one eligible PC OR (combat-active
                     GM with a PC-active turn). Avoids visual redundancy. */}
                 {(() => {
                   const visibleNow = entries.filter(en => isGM || en.userId === userId)
@@ -10318,7 +10318,7 @@ export default function TablePage() {
                     visibleNow.length === 1 ||
                     (isGM && combatActive && initiativeOrder.find(ie => ie.is_active && !ie.is_npc && ie.character_id && visibleNow.some(en => en.character.id === ie.character_id)))
                   if (willAutoFireOnNpcPick) {
-                    // Show a thin hint instead of the PC button list — the
+                    // Show a thin hint instead of the PC button list - the
                     // moment they pick an NPC, the roll modal opens for
                     // the auto-picked PC.
                     return (
@@ -10389,7 +10389,7 @@ export default function TablePage() {
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Opposed Check</div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Both sides roll until one succeeds and the other fails. Use standard skill rolls for each side.</div>
                 <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textAlign: 'center', padding: '1rem' }}>
-                  Have each participant roll their relevant skill check normally. Compare outcomes — first to get Success while opponent gets Failure wins.
+                  Have each participant roll their relevant skill check normally. Compare outcomes - first to get Success while opponent gets Failure wins.
                 </div>
               </>
             )}
@@ -10402,7 +10402,7 @@ export default function TablePage() {
       )}
 
       {/* ── Recruitment Modal (Communities Phase B) ─────────────────── */}
-      {/* ── PICK STEP — bespoke recruitment setup (PC / NPC / community
+      {/* ── PICK STEP - bespoke recruitment setup (PC / NPC / community
           / approach / skill picker). Modal Unification Pass 2 keeps
           this picker as-is and delegates the RESULT step to the shared
           <RollModal> shell rendered separately below. */}
@@ -10414,7 +10414,7 @@ export default function TablePage() {
         const suggestedSkills = suggestedSkillsForApproach(recruitApproach)
         const hasAnyCommunity = recruitCommunityList.length > 0
         const resolvedCommunityName = recruitCommunityId === '__new__'
-          ? (recruitNewCommunityName.trim() || '— new community —')
+          ? (recruitNewCommunityName.trim() || '- new community -')
           : (recruitCommunityList.find(c => c.id === recruitCommunityId)?.name ?? '')
         const canRoll = !!rollerEntry && !!pickedNpc && !!recruitSkill && (
           recruitCommunityId === '__new__'
@@ -10433,7 +10433,7 @@ export default function TablePage() {
               </div>
 
               <>
-                {/* Roller PC — players only see their own PC; GMs
+                {/* Roller PC - players only see their own PC; GMs
                       see everyone (they may orchestrate on behalf of
                       an absent player). Stops Percy from rolling a
                       First Impression or Recruitment Check *as* Ada. */}
@@ -10441,7 +10441,7 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
                     <select value={recruitRollerId} onChange={e => setRecruitRollerId(e.target.value)}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                      <option value="">— pick a PC —</option>
+                      <option value="">- pick a PC -</option>
                       {entries.filter(e => isGM || e.userId === userId).map(e => (
                         <option key={e.character.id} value={e.character.id}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</option>
                       ))}
@@ -10458,10 +10458,10 @@ export default function TablePage() {
                     ) : (
                       <select value={recruitNpcId} onChange={e => setRecruitNpcId(e.target.value)}
                         style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                        <option value="">— pick an NPC —</option>
+                        <option value="">- pick an NPC -</option>
                         {eligibleNpcs.map((n: any) => {
                           const mem = npcCommunityMap[n.id]
-                          return <option key={n.id} value={n.id}>{n.name}{mem ? ` — already in ${mem.name}` : ''}</option>
+                          return <option key={n.id} value={n.id}>{n.name}{mem ? ` - already in ${mem.name}` : ''}</option>
                         })}
                       </select>
                     )}
@@ -10478,7 +10478,7 @@ export default function TablePage() {
                     {hasAnyCommunity ? (
                       <select value={recruitCommunityId} onChange={e => setRecruitCommunityId(e.target.value)}
                         style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                        <option value="">— pick a community —</option>
+                        <option value="">- pick a community -</option>
                         {recruitCommunityList.map(c => (
                           <option key={c.id} value={c.id}>{c.name} ({c.member_count} member{c.member_count === 1 ? '' : 's'})</option>
                         ))}
@@ -10486,7 +10486,7 @@ export default function TablePage() {
                       </select>
                     ) : (
                       <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
-                        No communities yet — this recruit will found a new one.
+                        No communities yet - this recruit will found a new one.
                         {(() => { if (recruitCommunityId !== '__new__') setRecruitCommunityId('__new__'); return null })()}
                       </div>
                     )}
@@ -10497,7 +10497,7 @@ export default function TablePage() {
                           style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                           <input type="checkbox" checked={recruitNewCommunityPublic} onChange={e => setRecruitNewCommunityPublic(e.target.checked)} />
-                          Make this community public (discoverable via LFG — coming soon)
+                          Make this community public (discoverable via LFG - coming soon)
                         </label>
                       </div>
                     )}
@@ -10510,7 +10510,7 @@ export default function TablePage() {
                       <HelpTooltip
                         title="Recruitment Approach"
                         text={
-                          'Cohort — cooperative. The NPC joins for a shared interest, goal, or perceived benefit. Best with Persuasion, Inspiration, or Charm. Probationary through the next Morale Check; the outcome decides whether they stick around or drift off.\n\nConscript — coercive. The PC must have already established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. Best with Intimidation or Bluff. Stays compliant only while the threat holds; the first Morale Check typically becomes an escape attempt.\n\nConvert — ideological. The NPC is brought in by shared belief, worldview, or cause. Best with Inspiration, Religion, or a relevant Ideology. Probationary through the first Morale Check; if they pass it, they become long-term committed.'
+                          'Cohort - cooperative. The NPC joins for a shared interest, goal, or perceived benefit. Best with Persuasion, Inspiration, or Charm. Probationary through the next Morale Check; the outcome decides whether they stick around or drift off.\n\nConscript - coercive. The PC must have already established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. Best with Intimidation or Bluff. Stays compliant only while the threat holds; the first Morale Check typically becomes an escape attempt.\n\nConvert - ideological. The NPC is brought in by shared belief, worldview, or cause. Best with Inspiration, Religion, or a relevant Ideology. Probationary through the first Morale Check; if they pass it, they become long-term committed.'
                         }
                       />
                     </div>
@@ -10523,11 +10523,11 @@ export default function TablePage() {
                       ))}
                     </div>
                     <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
-                      {recruitApproach === 'cohort' ? 'Shared interest or goal — joins until the next Morale Check.'
-                        : recruitApproach === 'conscript' ? 'Coerced by credible threat — follows orders while coercion holds.'
-                        : 'Shared belief or ideology — probationary through first Morale Check, then committed.'}
+                      {recruitApproach === 'cohort' ? 'Shared interest or goal - joins until the next Morale Check.'
+                        : recruitApproach === 'conscript' ? 'Coerced by credible threat - follows orders while coercion holds.'
+                        : 'Shared belief or ideology - probationary through first Morale Check, then committed.'}
                     </div>
-                    {/* Pressgang gate — explicit warning on Conscript so
+                    {/* Pressgang gate - explicit warning on Conscript so
                         the GM/players see this is coercion, not
                         persuasion, before rolling. A blocking confirm
                         fires on submit; this banner just makes it
@@ -10544,7 +10544,7 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skill</div>
                     <select value={recruitSkill} onChange={e => setRecruitSkill(e.target.value)}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                      <option value="">— pick a skill —</option>
+                      <option value="">- pick a skill -</option>
                       <optgroup label={`Suggested for ${recruitApproach}`}>
                         {suggestedSkills.map(s => {
                           const lvl = rollerEntry ? ((rollerEntry.character.data?.skills ?? []).find((sk: any) => sk.skillName === s)?.level ?? 0) : 0
@@ -10596,7 +10596,7 @@ export default function TablePage() {
                     </div>
                   </div>
 
-                  {/* Pre-roll Insight Die — show only if the roller has ≥1 */}
+                  {/* Pre-roll Insight Die - show only if the roller has ≥1 */}
                   {(() => {
                     const insightAvail = rollerEntry?.liveState?.insight_dice ?? 0
                     if (insightAvail < 1) return null
@@ -10641,7 +10641,7 @@ export default function TablePage() {
         )
       })()}
 
-      {/* ── RESULT STEP — unified <RollModal> shell. Apprentice toggle
+      {/* ── RESULT STEP - unified <RollModal> shell. Apprentice toggle
           + Insight Die rerolls live in renderOutcome since they're
           recruitment-specific (the shell's standard 2-die reroll
           plumbing doesn't cover the 3d6 Insight pre-roll case). */}
@@ -10701,7 +10701,7 @@ export default function TablePage() {
                   <>The attempt failed. <strong>{recruitResult.npcName}</strong> is not joining {recruitResult.communityName}.</>
                 )}
               </div>
-              {/* Reroll buttons (custom — supports up to 3 dice for the
+              {/* Reroll buttons (custom - supports up to 3 dice for the
                   3d6 Insight pre-roll case) */}
               {showRerolls && (
                 <div style={{ marginBottom: '1rem', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
@@ -10730,7 +10730,7 @@ export default function TablePage() {
                   </div>
                 </div>
               )}
-              {/* Apprentice toggle — High Insight only */}
+              {/* Apprentice toggle - High Insight only */}
               {isHighInsight && recruitResult.inserted && !recruitResult.apprenticeApplied && !pcHasApprentice && (
                 <div style={{ padding: '10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', marginBottom: '1rem' }}>
                   <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>⭐ Apprentice Eligible</div>
@@ -10763,7 +10763,7 @@ export default function TablePage() {
                     if (recruitRollerId) void appendProgressionLog(
                       recruitRollerId,
                       'community',
-                      `⭐ Took ${recruitResult.npcName} (age ${age}, ${threeWords.join(' / ')}) as your Apprentice — Motivation: ${motivation}, Complication: ${complication}.`,
+                      `⭐ Took ${recruitResult.npcName} (age ${age}, ${threeWords.join(' / ')}) as your Apprentice - Motivation: ${motivation}, Complication: ${complication}.`,
                     )
                     if (typeof window !== 'undefined') {
                       window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))
@@ -10783,7 +10783,7 @@ export default function TablePage() {
       {/* (legacy roll-step + result-step JSX consolidated above) */}
       {false && (() => null)()}
 
-      {/* Apprentice Creation Wizard — single instance, lifted from
+      {/* Apprentice Creation Wizard - single instance, lifted from
           NpcCard / PlayerNpcCard so multiple open NPC cards share it.
           Mounts only when an Apprentice has been targeted via
           setSetupApprenticeNpcId; saves write to campaign_npcs +
@@ -10792,7 +10792,7 @@ export default function TablePage() {
         const targetNpc = campaignNpcs.find((n: any) => n.id === setupApprenticeNpcId)
         const bond = apprenticeBondsByNpcId[setupApprenticeNpcId]
         if (!targetNpc || !bond) {
-          // Defensive — if the data drifted between trigger and render,
+          // Defensive - if the data drifted between trigger and render,
           // close the modal silently rather than rendering empty.
           setSetupApprenticeNpcId(null)
           return null
@@ -10816,7 +10816,7 @@ export default function TablePage() {
         )
       })()}
 
-      {/* Trade Negotiation modal — single-roll opposed Barter check.
+      {/* Trade Negotiation modal - single-roll opposed Barter check.
           Resolves against an NPC or a community stockpile; on apply,
           items move both ways via the existing inventory write paths. */}
       {tradeTarget && myEntry && (() => {
@@ -10834,7 +10834,7 @@ export default function TablePage() {
           const npcBarter = npcSkillEntries.find(s => s.name === 'Barter')?.level ?? 0
           target = { kind: 'npc', id: npc.id, name: npc.name, inventory: npcInv, barterSmod: npcBarter, subtext: npc.npc_type ? npc.npc_type.toUpperCase() : undefined }
         } else {
-          // Community target — resolved by the async useEffect above.
+          // Community target - resolved by the async useEffect above.
           // While the fetch is in flight, render nothing; the modal
           // pops in once the data lands.
           if (!tradeCommunityData) return null
@@ -10859,7 +10859,7 @@ export default function TablePage() {
             onRelationshipDamage={async () => {
               // PC rolled Dire Failure or Low Insight against an NPC.
               // Decrement (PC, NPC) relationship_cmod by 1, clamped to
-              // ±3. Atomic via the bump RPC — pre-fix this was a
+              // ±3. Atomic via the bump RPC - pre-fix this was a
               // select-then-insert/update with both a unique-constraint
               // race and a lost-update window.
               const { error: bumpErr } = await supabase
@@ -10931,7 +10931,7 @@ export default function TablePage() {
                   // Community stockpile target. PC gets items decrement
                   // existing stockpile rows (delete if qty hits 0); PC
                   // gives items insert/upsert by (name, custom). Each
-                  // step is error-checked — a mid-loop failure now
+                  // step is error-checked - a mid-loop failure now
                   // throws so the user sees it instead of leaving the
                   // stockpile in a half-applied state.
                   const communityId = tradeTarget!.id
@@ -11015,7 +11015,7 @@ export default function TablePage() {
               <strong>{insightSavePrompt.targetName}</strong> is mortally wounded!
             </div>
             {isMyPC ? (
-              /* Player's own PC — they choose */
+              /* Player's own PC - they choose */
               insightSavePrompt.insightDice > 0 ? (
                 <>
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem' }}>
@@ -11025,7 +11025,7 @@ export default function TablePage() {
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => handleInsightSave(true)}
                       style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Trade All Dice — Survive
+                      Trade All Dice - Survive
                     </button>
                     <button onClick={() => handleInsightSave(false)}
                       style={{ flex: 1, padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -11045,7 +11045,7 @@ export default function TablePage() {
                 </>
               )
             ) : (
-              /* GM or other player — read-only view */
+              /* GM or other player - read-only view */
               <>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem' }}>
                   {insightSavePrompt.insightDice > 0
@@ -11067,7 +11067,7 @@ export default function TablePage() {
   )
 }
 
-// Option B "subdued pill" — neutral dark bg, no border, 8px radius. The
+// Option B "subdued pill" - neutral dark bg, no border, 8px radius. The
 // three args are preserved for source compatibility, but only `color`
 // (text color) still affects the visual. `bg` / `border` are ignored in
 // favor of a unified `#1a1a1a` pill that hovers to `#242424` via the

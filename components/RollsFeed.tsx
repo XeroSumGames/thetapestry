@@ -1,6 +1,6 @@
 'use client'
 // Rolls-feed pieces extracted from the table page during the B2 perf pass.
-// Mirrors the shape of components/TableChat.tsx — the parent owns what
+// Mirrors the shape of components/TableChat.tsx - the parent owns what
 // it needs to interleave (the merged "Both" tab) and the hook owns the
 // state, the realtime channel, and the scroll-to-bottom logic.
 //
@@ -15,12 +15,12 @@
 //   - The realtime channel lives entirely inside the hook: subscribe on
 //     campaignId mount, removeChannel on cleanup. The parent never
 //     touches the rolls channel directly.
-//   - Includes the same DamageResult type the table page declares — this
+//   - Includes the same DamageResult type the table page declares - this
 //     module deliberately avoids importing from the page to keep the
 //     dependency direction one-way.
 //
 // Render block (the ~500 lines of variant-card JSX) stays in the table
-// page for this PR — extracting it touches both the rolls-only tab AND
+// page for this PR - extracting it touches both the rolls-only tab AND
 // the merged Both tab and is best done in a follow-up so the diff is
 // reviewable. Hook + state extraction here gives the bulk of the parse-
 // time win.
@@ -44,7 +44,7 @@ export interface DamageResult {
   notes?: string
   damageBreakdown?: string
   // Recruitment outcome carries structured metadata in the same column
-  // (single jsonb field) — cards branch on these flags.
+  // (single jsonb field) - cards branch on these flags.
   recruit?: {
     approach?: string
     community?: string
@@ -87,14 +87,14 @@ export interface UseRollsFeedArgs {
 export interface UseRollsFeedReturn {
   rolls: RollEntry[]
   refetch: () => Promise<void>
-  /** Optimistic local clear — for end-of-session / start-of-session
+  /** Optimistic local clear - for end-of-session / start-of-session
    *  transitions where the parent just wiped the DB rows and wants the
    *  feed to look empty immediately rather than wait for the realtime
    *  echo. Pair with a refetch() to converge. */
   clear: () => void
   expandedRollIds: Set<string>
   toggleExpanded: (id: string) => void
-  /** Attach to the parent's scroll container — the hook reads this ref
+  /** Attach to the parent's scroll container - the hook reads this ref
    *  to auto-scroll the feed to the bottom after a fresh load. */
   rollFeedRef: React.RefObject<HTMLDivElement | null>
   scrollToBottom: () => void
@@ -106,7 +106,7 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
   const [expandedRollIds, setExpandedRollIds] = useState<Set<string>>(new Set())
   const rollFeedRef = useRef<HTMLDivElement | null>(null)
   const channelRef = useRef<any>(null)
-  // Sequence guard — realtime callbacks on roll_log can fire in tight
+  // Sequence guard - realtime callbacks on roll_log can fire in tight
   // bursts (a multi-roll combat round, or chained turn_changed +
   // roll inserts). A slower earlier query can finish AFTER a faster
   // later one and clobber fresh state with stale data. Same defense
@@ -126,7 +126,7 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
       .limit(50)
-    // Drop stale results — a newer refetch already won.
+    // Drop stale results - a newer refetch already won.
     if (seq !== refetchSeqRef.current) return
     setRolls(((data ?? []) as RollEntry[]).reverse())
     setTimeout(() => scrollToBottom(), 50)
@@ -157,7 +157,7 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
     }
   }, [campaignId, refetch, supabase])
 
-  // Re-pull on tab return-to-visible — Chrome can pause the websocket
+  // Re-pull on tab return-to-visible - Chrome can pause the websocket
   // on backgrounded tabs, dropping postgres_changes events. Mirrors the
   // handler on useChatPanel and the table page (the GrumpyBattersby fix).
   useEffect(() => {
@@ -173,7 +173,7 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
 }
 
 // ---------------------------------------------------------------------------
-// <RollEntry> — single roll-feed card.
+// <RollEntry> - single roll-feed card.
 //
 // Dispatches by `r.outcome` and renders the matching variant. The Logs-only
 // tab on the table page maps every roll through this with `simple={false}`;
@@ -299,7 +299,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
-  // incap (RP=0) — same shape as death but amber, less alarming.
+  // incap (RP=0) - same shape as death but amber, less alarming.
   if (r.outcome === 'incap' || r.character_name === 'Lights out') {
     return (
       <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1408', border: '1px solid #5a4218', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
@@ -312,7 +312,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
-  // revive — paired with incap; green palette to read as recovery.
+  // revive - paired with incap; green palette to read as recovery.
   if (r.outcome === 'revive' || r.character_name === 'Coming around') {
     return (
       <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1f08', border: '1px solid #2d5a1b', borderRadius: '3px', borderLeft: '3px solid #7fc458' }}>
@@ -411,7 +411,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
                 {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
-                {dj.skillUsed && <span> — <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+                {dj.skillUsed && <span> - <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
               </div>
             )}
             <div>
@@ -437,14 +437,14 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     const title = r.outcome === 'fed_check' ? 'Gather Check' : 'Clothed Check'
     const color = outcomeColor(rollOutcome)
     const isHit = rollOutcome === 'Success' || rollOutcome === 'Wild Success' || rollOutcome === 'High Insight'
-    // Narrative bodies — trim shows what HAPPENED; the dice math +
+    // Narrative bodies - trim shows what HAPPENED; the dice math +
     // Next-Morale CMod live behind the ▸ expander.
     const successBody = r.outcome === 'fed_check'
       ? 'They were successful and residents will eat this week.'
       : 'They were successful and residents have what they need.'
     const failBody = r.outcome === 'fed_check'
-      ? 'They were unsuccessful — residents will go hungry this week.'
-      : 'They were unsuccessful — residents will go without.'
+      ? 'They were unsuccessful - residents will go hungry this week.'
+      : 'They were unsuccessful - residents will go without.'
     const body = isHit ? successBody : failBody
     const isExpanded = expandedRollIds.has(r.id)
     return (
@@ -523,7 +523,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
                 {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
-                {dj.skillUsed && <span> — <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+                {dj.skillUsed && <span> - <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
               </div>
             )}
             <div style={{ marginBottom: '4px' }}>
@@ -562,13 +562,13 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
-  // group_check — bespoke multi-participant banner. Keyed off the label
+  // group_check - bespoke multi-participant banner. Keyed off the label
   // prefix (the row's outcome stays as the standard ladder so the row's
   // border still picks up the right outcome color via the default-branch
   // fall-through path... actually no, we render our own here). The
   // participant list comes from damage_json.groupCheckParticipants which
   // executeRoll folds in from groupCheckPayloadRef just before save.
-  if (r.label.startsWith('Group Check — ') && (r.damage_json as any)?.groupCheckParticipants) {
+  if (r.label.startsWith('Group Check - ') && (r.damage_json as any)?.groupCheckParticipants) {
     const dj = r.damage_json as any
     const participants: string[] = dj.groupCheckParticipants
     const skill: string = dj.groupCheckSkill
@@ -628,7 +628,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
 
   // Default: skill / attribute / attack roll. Branches on `simple`:
   // - simple=false (rolls-only tab): Insight Die spent banner, label
-  //   stripped of "<character> — " prefix, 14px damage box.
+  //   stripped of "<character> - " prefix, 14px damage box.
   // - simple=true (Both tab): raw label, no Insight Die banner, 13px
   //   damage box. Compact-with-expand-toggle is identical in both.
   const compact = compactRollSummary(r)
@@ -659,25 +659,25 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           <div style={{ fontSize: '15px', color: '#d4cfc9', marginBottom: '4px' }}>
             {simple
               ? r.label
-              : (r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label)}
+              : (r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label)}
             {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
           </div>
-          {/* Insight Die pre-spend callout — explicit when
+          {/* Insight Die pre-spend callout - explicit when
               insight_used is recorded (post-2026-04-28
               schema bump), falls back to the die2 > 6
               heuristic for pre-bump rows so old 3d6 spends
               still get surfaced. +3 CMod spends from before
               the bump can't be detected and stay silent.
-              The Both tab's merged feed drops this banner —
+              The Both tab's merged feed drops this banner -
               less per-row vertical noise in the interleaved view. */}
           {!simple && (r.insight_used === '3d6' || (!r.insight_used && r.die2 > 6)) && (
             <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-              <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent — pre-rolled 3d6 (kept all three)</span>
+              <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - pre-rolled 3d6 (kept all three)</span>
             </div>
           )}
           {!simple && r.insight_used === '+3cmod' && (
             <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-              <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent — +3 CMod</span>
+              <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - +3 CMod</span>
             </div>
           )}
           {/* Hide the dice/mod breakdown for no-roll action rows (Ready
@@ -706,7 +706,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             // carries attack-resolution data (targetName + totalWP).
             // Vehicle driving / brew checks write damage_json with
             // metadata-only payloads (vehicleId, fuelDelta, etc.) and
-            // no damage fields — pre-fix that lit up an empty
+            // no damage fields - pre-fix that lit up an empty
             // "Damage → / = raw → WP / RP" line on every Driving check,
             // which read like a phantom hit on nothing.
             <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
