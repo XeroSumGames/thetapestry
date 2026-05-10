@@ -53,7 +53,18 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const suffix = r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label
   const hit = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
   const wild = r.outcome === 'Wild Success' || r.outcome === 'High Insight'
-  const outcomeTag = wild ? ' (critical)' : r.outcome === 'Low Insight' ? ', but failed miserably' : ''
+  // Canon-correct outcome suffix. (Was "(critical)" / "failed miserably"
+  // pre-2026-05-10 — Xero called the "(critical)" tag out of canon. XSE
+  // doesn't use "critical"; the right framing for HI/LI is the Moment-
+  // of-Insight die award.) Wild Success and High Insight are lumped here
+  // for the trim; Wild without dice 6+6 doesn't actually award an Insight
+  // Die at the dice-engine layer, but the narrative tag matches the
+  // user-facing wording in lessons.md.
+  const outcomeTag = wild
+    ? ' and has a Moment of Insight as to why'
+    : r.outcome === 'Low Insight'
+      ? ', but has a Moment of Insight as to why'
+      : ''
 
   // Aim action — no dice, no target.
   if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
@@ -77,21 +88,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   //   "Reload <weaponName>"         — clip reload
   //   "Unequip <weaponName>"        — slot → inventory
   if (r.outcome === 'action') {
+    // Possessive "their" on personal weapons — gender-neutral default
+    // since we don't track pronouns yet. (Generic "Ready Weapon" with
+    // no specific weapon falls back to "a weapon".)
     const readyMatch = suffix.match(/^Ready\s+(.+?)(?:\s+\(.+\))?$/)
     if (readyMatch) {
       const what = readyMatch[1].trim()
       if (/^weapon$/i.test(what)) return `${r.character_name} readies a weapon`
-      return `${r.character_name} readies ${what}`
+      return `${r.character_name} readies their ${what}`
     }
     const switchMatch = suffix.match(/^Switch to\s+(.+?)(?:\s+\(.+\))?$/)
-    if (switchMatch) return `${r.character_name} switches to ${switchMatch[1].trim()}`
+    if (switchMatch) return `${r.character_name} switches to their ${switchMatch[1].trim()}`
     const reloadMatch = suffix.match(/^Reload\s+(.+?)(?:\s+\(.+\))?$/)
-    if (reloadMatch) return `${r.character_name} reloads ${reloadMatch[1].trim()}`
+    if (reloadMatch) return `${r.character_name} reloads their ${reloadMatch[1].trim()}`
     const unequipMatch = suffix.match(/^Unequip\s+(.+?)(?:\s+\(.+\))?$/)
-    if (unequipMatch) return `${r.character_name} unequips ${unequipMatch[1].trim()}`
+    if (unequipMatch) return `${r.character_name} unequips their ${unequipMatch[1].trim()}`
     // Defend / Take Cover / Reposition — also no-roll actions.
     const defendMatch = suffix.match(/^Defend\b/)
-    if (defendMatch) return `${r.character_name} braces to Defend`
+    if (defendMatch) return `${r.character_name} prepares to Defend`
     const takeCoverMatch = suffix.match(/^Take Cover\b/)
     if (takeCoverMatch) return `${r.character_name} takes Cover`
     const repositionMatch = suffix.match(/^Reposition\b/)
@@ -149,10 +163,17 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       }
       if (/^(Attack|Charge|Subdue)$/.test(action)) {
         const adverb = hit ? 'Successfully' : 'Unsuccessfully'
-        return `${r.character_name} used ${article} ${weapon} to ${adverb} ${action} ${r.target_name}${outcomeTag}`
+        // "Unarmed" reads weirdly as a noun ("used an Unarmed to ...") —
+        // append "attack" so the sentence has a noun the verb can hang
+        // on. Doesn't apply to the standalone Unarmed branch below
+        // (label "<name> — Unarmed") which has its own phrasing.
+        const weaponLabel = /^unarmed$/i.test(weapon.trim()) ? `${weapon} attack` : weapon
+        const labelArticle = /^[aeiouAEIOU]/.test(weaponLabel.trim()) ? 'an' : 'a'
+        return `${r.character_name} used ${labelArticle} ${weaponLabel} to ${adverb} ${action} ${r.target_name}${outcomeTag}`
       }
-      // Rapid Fire / Fire from Cover — fall back to neutral phrasing
-      return `${r.character_name} used ${weapon} ${action} on ${r.target_name}`
+      // Rapid Fire / Fire from Cover — possessive "their" so the weapon
+      // reads as the character's gear rather than a free-floating noun.
+      return `${r.character_name} used their ${weapon} ${action} on ${r.target_name}${outcomeTag}`
     }
     // Bare action with no weapon in parens — rare (Unarmed has its own
     // branch below); keep the neutral form.
@@ -165,6 +186,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // "used Unarmed on X". Adverb makes hit/miss legible from the
   // narrative alone, matching the firearm/melee Attack branch above.
   if (/^Unarmed$/.test(suffix) && r.target_name) {
+    // High Insight has bespoke phrasing per Xero's wording: the moment-
+    // of-insight beat is woven into the verb, not appended as a tag.
+    if (r.outcome === 'High Insight') {
+      return `${r.character_name} had a Moment of Insight when using Unarmed Combat on ${r.target_name}`
+    }
     const adverb = hit ? 'Successfully' : 'Unsuccessfully'
     return `${r.character_name} ${adverb} used Unarmed Combat on ${r.target_name}${outcomeTag}`
   }
@@ -173,8 +199,8 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // Themselves"; miss (Failure) reads "fails to" and the Breaking Point
   // flow takes over.
   if (/^Stress Check\b/.test(suffix)) {
-    const adverb = hit ? 'Successfully' : 'Unsuccessfully'
-    return `${r.character_name} ${adverb} Calms Themselves${outcomeTag}`
+    if (hit) return `${r.character_name} Successfully Calms Themselves${outcomeTag}`
+    return `${r.character_name} Unsuccessfully Attempts to Calm Themselves${outcomeTag}`
   }
   // Stabilize — label "<name> — Stabilize <target>". Adverb pattern
   // matches the Attack / Unarmed branches so hit/miss is legible from
@@ -183,15 +209,20 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
   if (stabilizeMatch) {
     const tgt = stabilizeMatch[1]
-    const adverb = hit ? 'Successfully' : 'Unsuccessfully'
-    return `${r.character_name} ${adverb} Stabilizes ${tgt}${outcomeTag}`
+    // Bespoke HI phrasing per Xero's wording — the moment-of-insight
+    // beat is woven into "while doing so" rather than the generic tag.
+    if (r.outcome === 'High Insight') {
+      return `${r.character_name} Successfully Stabilizes ${tgt} and has a Moment of Insight while doing so`
+    }
+    if (hit) return `${r.character_name} Successfully Stabilizes ${tgt}${outcomeTag}`
+    return `${r.character_name} is Unsuccessful in attempting to Stabilize ${tgt}${outcomeTag}`
   }
   // Coordinate — "<name> — Coordinate (vs <target>)"
   const coordMatch = suffix.match(/^Coordinate\s*\(vs\s+([^)]+)\)/)
   if (coordMatch) {
     const tgt = coordMatch[1]
     return hit ? `${r.character_name} coordinates allies against ${tgt}${outcomeTag}`
-               : `${r.character_name} fails to coordinate against ${tgt}${outcomeTag}`
+               : `${r.character_name} fails to coordinate allies against ${tgt}${outcomeTag}`
   }
   // Coordinate-effect broadcast row — written by the apply step after a
   // successful Coordinate roll, label format
@@ -205,8 +236,8 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const unjamMatch = suffix.match(/^Unjam\s+—\s+(.+?)(?:\s*\(|$)/)
   if (unjamMatch) {
     const wName = unjamMatch[1].trim()
-    return hit ? `${r.character_name} unjams ${wName}${outcomeTag}`
-               : `${r.character_name} fails to unjam ${wName}${outcomeTag}`
+    return hit ? `${r.character_name} unjams their ${wName}${outcomeTag}`
+               : `${r.character_name} fails to unjam their ${wName}${outcomeTag}`
   }
   // Upkeep — "Upkeep — <weaponName>". Each outcome maps to its own
   // narrative because the mechanical effect varies (improve vs.
@@ -216,12 +247,12 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const upkeepMatch = suffix.match(/^Upkeep\s+—\s+(.+)$/)
   if (upkeepMatch) {
     const wName = upkeepMatch[1].trim()
-    if (r.outcome === 'Wild Success' || r.outcome === 'High Insight') return `${r.character_name} tunes up ${wName}${outcomeTag}`
-    if (r.outcome === 'Success') return `${r.character_name} maintains ${wName}`
-    if (r.outcome === 'Failure') return `${r.character_name} fails upkeep — ${wName} degrades`
-    if (r.outcome === 'Dire Failure') return `${r.character_name} breaks ${wName} during upkeep`
-    if (r.outcome === 'Low Insight') return `${r.character_name} breaks ${wName} during upkeep${outcomeTag}`
-    return `${r.character_name} attempts upkeep on ${wName}`
+    if (r.outcome === 'Wild Success' || r.outcome === 'High Insight') return `${r.character_name} tunes up their ${wName}${outcomeTag}`
+    if (r.outcome === 'Success') return `${r.character_name} maintains the condition of their ${wName}`
+    if (r.outcome === 'Failure') return `${r.character_name} fails to upkeep the condition of their ${wName} and it degrades`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} irreparably damages their ${wName} while performing upkeep`
+    if (r.outcome === 'Low Insight') return `${r.character_name} breaks their ${wName} while attempting to maintain its condition${outcomeTag}`
+    return `${r.character_name} attempts upkeep on their ${wName}`
   }
   // Grapple — label "<name> — Grapple <target>[ (insight tag)]". The
   // outcome here is a custom grapple-result string ('Grappled!',
@@ -233,11 +264,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const grappleMatch = suffix.match(/^Grapple\s+(.+?)(?:\s+\(.+\))?$/)
   if (grappleMatch) {
     const tgt = grappleMatch[1].trim()
-    if (r.outcome === 'Grappled!') return `${r.character_name} grapples ${tgt}`
-    if (r.outcome === 'Failed — 1 RP') return `${r.character_name} fails to grapple ${tgt}`
-    if (r.outcome === 'No clear victor') return `${r.character_name} unsuccessfully attempts to grapple ${tgt}`
+    if (r.outcome === 'Grappled!') return `${r.character_name} grapples with ${tgt}`
+    if (r.outcome === 'Failed — 1 RP') return `${r.character_name} fails to grapple with ${tgt}`
+    if (r.outcome === 'No clear victor') return `${r.character_name} unsuccessfully attempts to grapple with ${tgt}`
     // Fallback for any future grapple outcome we haven't handled.
-    return `${r.character_name} attempts to grapple ${tgt}`
+    return `${r.character_name} attempts to grapple with ${tgt}`
   }
   // Special narrative checks — Perception, Gut Instinct, First Impression.
   // Reads as a sentence rather than the mechanical "Name — Check" form,
@@ -247,15 +278,40 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const narrativeMatch = suffix.match(/^(Perception Check|Gut Instinct|First Impression)/)
   if (narrativeMatch) {
     const check = narrativeMatch[1]
-    const verbs: Record<string, { hit: string; miss: string }> = {
-      'Perception Check': { hit: 'successfully uses Perception',     miss: 'fails to use Perception' },
-      'Gut Instinct':     { hit: 'successfully uses Gut Instinct',   miss: 'fails to use Gut Instinct' },
-      'First Impression': { hit: 'makes a strong First Impression',  miss: 'fails to make a First Impression' },
+    // Bespoke phrasing per Xero's log-trimming pass (2026-05-10).
+    // Each check has its own metaphor — generic "successfully uses X"
+    // / "fails to use X" was placeholder. First Impression also has
+    // distinct copy per failure tier (plain Failure vs. Low Insight
+    // soft-pedal vs. catastrophic) per SRD First Impression flavor.
+    if (check === 'Perception Check') {
+      return hit
+        ? `${r.character_name} successfully Perceives something useful${outcomeTag}`
+        : `${r.character_name} does not Perceive anything useful${outcomeTag}`
     }
-    const v = verbs[check]
-    return v
-      ? `${r.character_name} ${hit ? v.hit : v.miss}${outcomeTag}`
-      : `${r.character_name} — ${check}${hit ? '' : ' (failed)'}${outcomeTag}`
+    if (check === 'Gut Instinct') {
+      return hit
+        ? `${r.character_name}'s Gut Instinct lets them know something is amiss${outcomeTag}`
+        : `${r.character_name}'s Gut Instinct is quiet${outcomeTag}`
+    }
+    if (check === 'First Impression') {
+      // Five outcome bands per SRD §07 ladder.
+      if (wild) {
+        return `${r.character_name} makes a strong First Impression${outcomeTag}`
+      }
+      if (r.outcome === 'Success') {
+        return `${r.character_name} makes a First Impression`
+      }
+      if (r.outcome === 'Failure') {
+        return `${r.character_name} makes a bad First Impression`
+      }
+      if (r.outcome === 'Dire Failure') {
+        return `${r.character_name} makes a terrible First Impression`
+      }
+      // Low Insight — bespoke tag wording matches Xero's playtest copy.
+      return `${r.character_name} made a terrible First Impression, but has a Moment of Insight why`
+    }
+    // Fallthrough — should never hit given the regex.
+    return `${r.character_name} — ${check}${hit ? '' : ' (failed)'}${outcomeTag}`
   }
   // Stress log — label "😰 <name> gains a Stress from being <reason>"
   // written by executeRoll's damage-application branches when a target
@@ -287,8 +343,29 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       }
       return `${name} tried to recruit ${target} but it didn't go well`
     }
-    // Success label is already narrative ("X recruited Y as Z to W");
-    // just strip the 🤝 emoji.
+    // Success label format:
+    //   "🤝 <recruiter> recruited <target> as <article> <type> to <community>"
+    // where <type> is Cohort | Conscript | Convert | Apprentice.
+    // Each type has bespoke flavor per Xero's playtest copy (2026-05-10).
+    const successMatch = r.label.match(/^🤝\s+(.+?)\s+recruited\s+(.+?)\s+as\s+(?:a|an)\s+(Cohort|Conscript|Convert|Apprentice)\s+to\s+(.+)$/)
+    if (successMatch) {
+      const recruiter = successMatch[1]
+      const target = successMatch[2]
+      const recType = successMatch[3]
+      const community = successMatch[4]
+      if (recType === 'Apprentice') {
+        return `${recruiter} takes ${target} as their Apprentice`
+      }
+      if (recType === 'Conscript') {
+        return `${recruiter} forced ${target} into service as a Conscript to ${community}`
+      }
+      if (recType === 'Convert') {
+        return `${recruiter} Converted ${target} as a recruit to ${community}`
+      }
+      // Cohort — keep the canonical phrasing.
+      return `${recruiter} recruited ${target} as a Cohort to ${community}`
+    }
+    // Unknown structure — strip the emoji and pass through.
     return r.label.replace(/^🤝\s*/, '')
   }
   // Community weekly checks — Fed / Clothed / Morale. The Logs tab has
@@ -304,6 +381,19 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // already narrative-friendly — just strip any leading emoji and keep
   // the rest. Lv 4 narrative quote stays inline if present.
   if (r.outcome === 'evolution') {
+    // Label format from CharacterEvolution:
+    //   "<character> — <Skill> Lv 2 → Lv 3 — 5 CDP."
+    // Rewrite to natural-sentence form with spend amount + level delta.
+    // Other shapes (attribute raise, trait pick) keep the pass-through.
+    const evoMatch = r.label.match(/^(?:📈\s*)?(.+?)\s+—\s+(.+?)\s+Lv\s+(\d+)\s+→\s+Lv\s+(\d+)\s+—\s+(\d+)\s+CDP\.?$/)
+    if (evoMatch) {
+      const charName = evoMatch[1].trim()
+      const what = evoMatch[2].trim()
+      const fromLv = evoMatch[3]
+      const toLv = evoMatch[4]
+      const cdp = evoMatch[5]
+      return `${charName} spent ${cdp} CDP raising ${what} from Lv ${fromLv} to Lv ${toLv}`
+    }
     return r.label.replace(/^📈\s*/, '')
   }
   // Vehicle mounted-weapon attack — label format from /vehicle popout:
@@ -359,18 +449,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // — keyed off label prefix + damage_json.groupCheckParticipants — so it
   // can render the multi-participant body. compactRollSummary never sees
   // these rows after the banner branch intercepts them.)
-  // Barter — label "⚖ Trade · <rollSummary> · gave <give> got <get>"
-  // written when the trade modal applies. Dice are real (Acumen + Barter
-  // skill check). Narrative collapses to a one-liner with the give/got
-  // payload preserved (this IS the interesting part of the trade) but
-  // the inline rollSummary stripped (the row already shows the outcome
-  // color on the left border).
+  // Barter — label format (post-2026-05-10):
+  //   "⚖ Trade with <partner> · <rollSummary> · gave <give> got <get>"
+  // Narrative collapses to one line with the partner + give/got intact
+  // (those are the interesting part) and the inline rollSummary
+  // stripped — the row's outcome color on the border already conveys
+  // hit/miss.
   if (r.outcome === 'barter') {
-    const tradeMatch = r.label.match(/^⚖\s+Trade\s+·\s+[^·]+·\s+gave\s+(.+?)\s+got\s+(.+)$/)
+    const tradeMatch = r.label.match(/^⚖\s+Trade\s+with\s+(.+?)\s+·\s+[^·]+·\s+gave\s+(.+?)\s+got\s+(.+)$/)
     if (tradeMatch) {
-      const gave = tradeMatch[1].trim()
-      const got = tradeMatch[2].trim()
-      return `${r.character_name} traded — gave ${gave}, got ${got}${outcomeTag}`
+      const partner = tradeMatch[1].trim()
+      const gave = tradeMatch[2].trim()
+      const got = tradeMatch[3].trim()
+      return `${r.character_name} traded with ${partner} — gave ${gave}, got ${got}${outcomeTag}`
+    }
+    // Legacy label (pre-partner-name bump) — best-effort fallback.
+    const legacyMatch = r.label.match(/^⚖\s+Trade\s+·\s+[^·]+·\s+gave\s+(.+?)\s+got\s+(.+)$/)
+    if (legacyMatch) {
+      return `${r.character_name} traded — gave ${legacyMatch[1].trim()}, got ${legacyMatch[2].trim()}${outcomeTag}`
     }
     return r.label.replace(/^⚖\s*/, '')
   }
@@ -380,9 +476,23 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     return r.label.replace(/^📚\s*/, '')
   }
   // Encumbrance tick — label "⏳ Time advances <N>h · overencumbered:
-  // <names>" (system row, dice are 0+0). Strip emoji; the rest reads
-  // cleanly.
+  // <name (cur→next)>, <name (cur→next)>, ...". The pre-trim form
+  // exposed the encumbrance numbers, which are visible on the
+  // character sheets and just clutter the feed. New form drops the
+  // numbers and uses a natural list ("X is overencumbered" /
+  // "X and Y are both overencumbered" / "X, Y, and Z are all
+  // overencumbered").
   if (r.outcome === 'encumbrance') {
+    const encMatch = r.label.match(/^⏳\s+Time advances\s+(\S+)\s+·\s+overencumbered:\s+(.+)$/)
+    if (encMatch) {
+      const timePart = encMatch[1]
+      const names = encMatch[2].split(/,\s*/).map(s => s.replace(/\s*\([^)]+\)\s*$/, '').trim()).filter(Boolean)
+      let nameList: string
+      if (names.length <= 1) nameList = `${names[0] ?? 'Someone'} is overencumbered`
+      else if (names.length === 2) nameList = `${names[0]} and ${names[1]} are both overencumbered`
+      else nameList = `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]} are all overencumbered`
+      return `Time advances ${timePart}, ${nameList}`
+    }
     return r.label.replace(/^⏳\s*/, '')
   }
   // Generic skill / attribute check — label "<skillName> (<attrKey>)" or "<attrKey> Check"
@@ -396,8 +506,18 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const attrMatch = suffix.match(/^([A-Z]{3})\s+Check$/)
   if (attrMatch) {
     const attr = attrMatch[1]
-    return hit ? `${r.character_name} succeeds at ${attr} check${outcomeTag}`
-               : `${r.character_name} fails ${attr} check${outcomeTag}`
+    // Map 3-letter key to lowercase full word for readability.
+    // RSN/ACU/PHY/INF/DEX is shorthand; the feed should narrate.
+    const ATTR_FULL: Record<string, string> = {
+      RSN: 'reason',
+      ACU: 'acumen',
+      PHY: 'physicality',
+      INF: 'influence',
+      DEX: 'dexterity',
+    }
+    const attrName = ATTR_FULL[attr] ?? attr.toLowerCase()
+    return hit ? `${r.character_name} succeeds at a ${attrName} check${outcomeTag}`
+               : `${r.character_name} fails at a ${attrName} check${outcomeTag}`
   }
   return null
 }

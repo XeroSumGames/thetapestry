@@ -1958,7 +1958,7 @@ export default function TablePage() {
             deathLogRows.push({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
-              label: `💀 ${e.character.name} has died.`,
+              label: `💀 ${e.character.name} has fallen.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
             if (e.character?.id) void appendProgressionLog(e.character.id, 'wound', '💀 Died.')
@@ -4497,7 +4497,7 @@ export default function TablePage() {
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
-              label: `${targetEntry.character.name} is mortally wounded by ${characterName} and will die if not stabilized in ${update.death_countdown} rounds.`,
+              label: `${targetEntry.character.name} has fallen, mortally wounded by ${characterName}. Will die if not stabilized in ${update.death_countdown} rounds.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
             // Auto-log mortal wound to progression log
@@ -4584,7 +4584,7 @@ export default function TablePage() {
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId,
             character_name: 'Death is in the air',
-            label: `${targetNpc.name} is mortally wounded by ${characterName} and will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
+            label: `${targetNpc.name} has fallen, mortally wounded by ${characterName}. Will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
           })
           // Kill log entry on the attacker's progression log (PCs only).
@@ -5376,7 +5376,7 @@ export default function TablePage() {
         sprintResult = `${characterName} seems to be out of breath.`
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
-          label: `🏃 ${characterName} sprinted and seems to be out of breath.`,
+          label: `🏃 ${characterName} sprints and looks winded`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
           damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
@@ -5384,7 +5384,7 @@ export default function TablePage() {
         sprintResult = `${characterName} does not seem to be winded.`
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
-          label: `🏃 ${characterName} sprinted and does not seem to be winded.`,
+          label: `🏃 ${characterName} sprints and does not look winded`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
           damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
@@ -5457,7 +5457,7 @@ export default function TablePage() {
             supabase.from('initiative_order').update({ coordinate_target: coordTarget, coordinate_bonus: bonus }).in('id', appliedAllyIds),
             supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId, character_name: 'System',
-              label: `🎯 ${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}`,
+              label: `🎯 ${activeInit?.character_name ?? 'A coordinator'}'s coordination against ${coordTarget} gives ${appliedTo.join(', ')} +${bonus} CMod when attacking`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
             }),
           ])
@@ -10979,7 +10979,7 @@ export default function TablePage() {
                 const getStr = pcGets.map(g => `${g.name}×${g.selectedQty}`).join(', ') || '(nothing)'
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: myEntry.character.name,
-                  label: `⚖ Trade · ${rollSummary} · gave ${giveStr} got ${getStr}`,
+                  label: `⚖ Trade with ${target!.name} · ${rollSummary} · gave ${giveStr} got ${getStr}`,
                   die1: outcome.pcDie1, die2: outcome.pcDie2,
                   amod: pcAcuMod, smod: pcBarter, cmod: 0,
                   total: outcome.pcTotal,

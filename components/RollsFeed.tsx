@@ -278,7 +278,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               <span style={{ marginLeft: '8px', color: outcomeColor(tr.rollOutcome), fontWeight: 700 }}>{tr.rollOutcome}</span>
             </div>
             <div style={{ marginTop: '4px', color: isWinded ? '#f5a89a' : '#7fc458', fontWeight: 600 }}>
-              {isWinded ? 'Winded — loses 1 Combat Action next round.' : 'Not winded — full 2 actions next round.'}
+              {isWinded ? 'Loses 1 Combat Action next round.' : 'Full 2 actions next round.'}
             </div>
           </div>
         )}
@@ -382,32 +382,48 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     const rollOutcome = dj.rollOutcome ?? 'Success'
     const survived = !!dj.survived
     const color = survived ? '#7fc458' : '#c0392b'
+    const leaderName = dj.leaderName || 'The leader'
+    const communityName = dj.communityName || 'the Community'
+    // Narrative body per Xero's log-trimming pass (2026-05-10).
+    // Trim shows the OUTCOME in plain prose; dice math lives behind
+    // the ▸ expander.
+    const narrative = survived
+      ? `✓ ${leaderName} rallied the survivors and the Community still exists`
+      : `✗ The fragments scatter in different directions, ${communityName} has dissolved.`
+    const isExpanded = expandedRollIds.has(r.id)
     return (
       <div style={{ marginBottom: '8px', padding: '10px', background: survived ? '#0f1a2e' : '#1a0a0a', border: `1px solid ${color}`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🙏 Week {dj.weekNumber} · {dj.communityName} · Retention</span>
-          <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+            <button onClick={() => toggleExpanded(r.id)}
+              title={isExpanded ? 'Hide details' : 'View dice'}
+              style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
+              {isExpanded ? '▾' : '▸'}
+            </button>
+          </div>
         </div>
-        {dj.leaderName && (
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
-            Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
-            {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
-            {dj.skillUsed && <span> — <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+        <div style={{ fontSize: '15px', color: survived ? '#c4e8a8' : '#f5a89a', fontFamily: 'Carlito, sans-serif', fontWeight: 600, lineHeight: 1.5 }}>{narrative}</div>
+        {isExpanded && (
+          <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+            {dj.leaderName && (
+              <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
+                Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
+                {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
+                {dj.skillUsed && <span> — <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+              </div>
+            )}
+            <div>
+              [{r.die1}+{r.die2}]
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              <span style={{ color: r.cmod < 0 ? '#f5a89a' : '#cce0f5' }}> {r.cmod >= 0 ? '+' : ''}{r.cmod} Mood</span>
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
+            </div>
           </div>
         )}
-        <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
-          [{r.die1}+{r.die2}]
-          {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
-          {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-          <span style={{ color: r.cmod < 0 ? '#f5a89a' : '#cce0f5' }}> {r.cmod >= 0 ? '+' : ''}{r.cmod} Mood</span>
-          <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
-          <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
-        </div>
-        <div style={{ fontSize: '13px', color: survived ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif', fontWeight: 600 }}>
-          {survived
-            ? `✓ ${dj.leaderName ?? 'The leader'} rallied the survivors. Community retained — consecutive failures reset to 2.`
-            : `✗ The fragments scatter. Community dissolved.`}
-        </div>
       </div>
     )
   }
@@ -416,25 +432,50 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     const dj = (r.damage_json ?? {}) as any
     const rollOutcome = dj.rollOutcome ?? 'Success'
     const emoji = r.outcome === 'fed_check' ? '🌾' : '🔧'
-    const title = r.outcome === 'fed_check' ? 'Fed Check' : 'Clothed Check'
+    // 'fed_check' stays as the DB key; display name was renamed to
+    // "Gather Check" per Xero's log-trimming pass (2026-05-10).
+    const title = r.outcome === 'fed_check' ? 'Gather Check' : 'Clothed Check'
     const color = outcomeColor(rollOutcome)
+    const isHit = rollOutcome === 'Success' || rollOutcome === 'Wild Success' || rollOutcome === 'High Insight'
+    // Narrative bodies — trim shows what HAPPENED; the dice math +
+    // Next-Morale CMod live behind the ▸ expander.
+    const successBody = r.outcome === 'fed_check'
+      ? 'They were successful and residents will eat this week.'
+      : 'They were successful and residents have what they need.'
+    const failBody = r.outcome === 'fed_check'
+      ? 'They were unsuccessful — residents will go hungry this week.'
+      : 'They were unsuccessful — residents will go without.'
+    const body = isHit ? successBody : failBody
+    const isExpanded = expandedRollIds.has(r.id)
     return (
       <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#111', border: `1px solid ${color}33`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{emoji} Week {dj.weekNumber} · {dj.communityName} · {title}</span>
-          <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+            <button onClick={() => toggleExpanded(r.id)}
+              title={isExpanded ? 'Hide details' : 'View dice'}
+              style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
+              {isExpanded ? '▾' : '▸'}
+            </button>
+          </div>
         </div>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
-          [{r.die1}+{r.die2}]
-          {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
-          {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-          {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
-          <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
-          <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
-        </div>
-        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '2px' }}>
-          → Next Morale CMod <span style={{ color: dj.cmodForNextMorale > 0 ? '#7fc458' : dj.cmodForNextMorale < 0 ? '#f5a89a' : '#cce0f5', fontWeight: 700 }}>{dj.cmodForNextMorale > 0 ? '+' : ''}{dj.cmodForNextMorale ?? 0}</span>
-        </div>
+        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{body}</div>
+        {isExpanded && (
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+            <div>
+              [{r.die1}+{r.die2}]
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
+            </div>
+            <div style={{ marginTop: '4px', color: '#cce0f5' }}>
+              → Next Morale CMod <span style={{ color: dj.cmodForNextMorale > 0 ? '#7fc458' : dj.cmodForNextMorale < 0 ? '#f5a89a' : '#cce0f5', fontWeight: 700 }}>{dj.cmodForNextMorale > 0 ? '+' : ''}{dj.cmodForNextMorale ?? 0}</span>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -447,50 +488,74 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     const color = willDissolve ? '#c0392b' : outcomeColor(rollOutcome)
     const fmt = (n: number) => n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0'
     const cmodClr = (n: number) => n > 0 ? '#7fc458' : n < 0 ? '#f5a89a' : '#cce0f5'
+    const isHit = rollOutcome === 'Success' || rollOutcome === 'Wild Success' || rollOutcome === 'High Insight'
+    const leaderName = dj.leaderName || 'The leader'
+    const communityName = dj.communityName || 'the Community'
+    // Narrative body per Xero's log-trimming pass (2026-05-10).
+    // Trim shows the OUTCOME in plain prose; dice + slot breakdown
+    // live behind the ▸ expander.
+    let narrative: string
+    if (willDissolve) {
+      narrative = `⚠ After 3 consecutive failures of confidence in ${leaderName}, ${communityName} has dissolved. All ${dj.membersBefore ?? '?'} members scattered.`
+    } else if (isHit) {
+      narrative = `${leaderName} inspired ${communityName} and morale was maintained. The Mood around the Campfire is good.`
+    } else {
+      narrative = `${leaderName} fails to inspire ${communityName}. Morale has dropped and people are leaving. The Mood around the Campfire is not good.`
+    }
+    const isExpanded = expandedRollIds.has(r.id)
     return (
       <div style={{ marginBottom: '8px', padding: '10px', background: willDissolve ? '#1a0a0a' : '#111', border: `1px solid ${color}`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>📊 Week {dj.weekNumber} · {dj.communityName} · Morale</span>
-          <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
-        </div>
-        {dj.leaderName && (
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
-            Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
-            {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
-            {dj.skillUsed && <span> — <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+            <button onClick={() => toggleExpanded(r.id)}
+              title={isExpanded ? 'Hide details' : 'View dice + slots'}
+              style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
+              {isExpanded ? '▾' : '▸'}
+            </button>
           </div>
-        )}
-        <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
-          [{r.die1}+{r.die2}]
-          {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
-          {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-          {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
-          <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
-          <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
         </div>
-        {slots && Object.keys(slots).length > 0 && (
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.6, marginBottom: '4px' }}>
-            <span style={{ color: '#5a5550' }}>Slots:</span>
-            {[['Mood', slots.mood], ['Fed', slots.fed], ['Clothed', slots.clothed], ['Hands', slots.enoughHands], ['Voice', slots.clearVoice], ['Watch', slots.safety]].map(([n, v]: any, i) => (
-              <span key={i}> · {n} <span style={{ color: cmodClr(v ?? 0), fontWeight: 700 }}>{fmt(v ?? 0)}</span></span>
-            ))}
-            {slots.additional !== 0 && slots.additional != null && (
-              <span> · Additional <span style={{ color: cmodClr(slots.additional), fontWeight: 700 }}>{fmt(slots.additional)}</span></span>
+        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{narrative}</div>
+        {isExpanded && (
+          <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+            {dj.leaderName && (
+              <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
+                Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
+                {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
+                {dj.skillUsed && <span> — <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+              </div>
             )}
-          </div>
-        )}
-        {willDissolve ? (
-          <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', fontWeight: 600 }}>
-            ⚠ Community dissolved — 3 consecutive failures. All {dj.membersBefore ?? '?'} members scattered.
-          </div>
-        ) : dj.departureCount > 0 ? (
-          <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif' }}>
-            {dj.departureCount} left: <span style={{ color: '#d4cfc9' }}>{(dj.departureNames ?? []).join(', ')}</span>
-            <span style={{ color: '#cce0f5' }}> · {dj.membersAfter}/{dj.membersBefore} remaining · {dj.consecutiveFailuresAfter}/3 failures</span>
-          </div>
-        ) : (
-          <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif' }}>
-            Morale holds. Next Morale CMod: <span style={{ fontWeight: 700 }}>{fmt(dj.cmodForNext ?? 0)}</span>
+            <div style={{ marginBottom: '4px' }}>
+              [{r.die1}+{r.die2}]
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
+            </div>
+            {slots && Object.keys(slots).length > 0 && (
+              <div style={{ color: '#cce0f5', lineHeight: 1.6, marginBottom: '4px' }}>
+                <span style={{ color: '#5a5550' }}>Slots:</span>
+                {[['Mood', slots.mood], ['Fed', slots.fed], ['Clothed', slots.clothed], ['Hands', slots.enoughHands], ['Voice', slots.clearVoice], ['Watch', slots.safety]].map(([n, v]: any, i) => (
+                  <span key={i}> · {n} <span style={{ color: cmodClr(v ?? 0), fontWeight: 700 }}>{fmt(v ?? 0)}</span></span>
+                ))}
+                {slots.additional !== 0 && slots.additional != null && (
+                  <span> · Additional <span style={{ color: cmodClr(slots.additional), fontWeight: 700 }}>{fmt(slots.additional)}</span></span>
+                )}
+              </div>
+            )}
+            {!willDissolve && dj.departureCount > 0 && (
+              <div style={{ color: '#EF9F27' }}>
+                {dj.departureCount} left: <span style={{ color: '#d4cfc9' }}>{(dj.departureNames ?? []).join(', ')}</span>
+                <span style={{ color: '#cce0f5' }}> · {dj.membersAfter}/{dj.membersBefore} remaining · {dj.consecutiveFailuresAfter}/3 failures</span>
+              </div>
+            )}
+            {!willDissolve && (
+              <div style={{ color: '#7fc458', marginTop: '4px' }}>
+                Next Morale CMod: <span style={{ fontWeight: 700 }}>{fmt(dj.cmodForNext ?? 0)}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
