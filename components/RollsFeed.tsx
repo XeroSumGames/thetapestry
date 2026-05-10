@@ -633,14 +633,23 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
   //   damage box. Compact-with-expand-toggle is identical in both.
   const compact = compactRollSummary(r)
   const isExpanded = expandedRollIds.has(r.id)
-  const useCompact = compact && !isExpanded
+  // Hide the ▸ pip when there's nothing meaningful to expand to. System
+  // rows (Evolution / CDP / Encumbrance / Loot / Coordinate-effect) all
+  // write die1 = die2 = 0 because no dice were rolled - clicking ▸
+  // there used to show "[0+0] +0 AMod = 0 -> evolution" which was just
+  // noise. Real rolls still get the pip. Also force useCompact for
+  // no-dice rows so a stale isExpanded entry can't flip them to the
+  // verbose card.
+  const hasRealDice = r.die1 > 0 || r.die2 > 0
+  const showExpandPip = compact && hasRealDice
+  const useCompact = compact && (!isExpanded || !hasRealDice)
   return (
     <div style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
         <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
           <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
-          {compact && (
+          {showExpandPip && (
             <button onClick={() => toggleExpanded(r.id)}
               title={isExpanded ? 'Hide details' : 'View more'}
               style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
