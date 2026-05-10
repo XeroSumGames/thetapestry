@@ -435,6 +435,24 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 
 ---
 
+## MODULE PUBLISHING
+
+- [ ] **Publish-new-version from a non-source campaign.** Today
+      `getModuleForCampaign` (`lib/modules.ts:574`) only matches
+      when `modules.source_campaign_id = current_campaign_id`,
+      so an author who loads their own published module into a
+      fresh campaign and edits there can't "push back" to v1.0.x+1
+      from that campaign — they have to dig up the original
+      source campaign and apply the changes there. Hit
+      2026-05-10 when Xero loaded Empty v1.0.0 into a playtest
+      campaign and tried to publish updates from it. Workarounds
+      today: find the source campaign and edit it directly, OR
+      snapshot-export from playtest + re-import into source.
+      Future: a "Publish as new version of <module>" affordance
+      from any author-owned campaign that contains the module's
+      content (snapshot fingerprint match, or explicit "this is
+      a working copy of Empty" flag).
+
 ## CODE HEALTH
 
 - [ ] **Split table page into subcomponents.** Currently 10,542
