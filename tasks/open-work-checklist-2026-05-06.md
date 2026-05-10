@@ -385,9 +385,10 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       hides the NPC ✅; opening the door reveals the NPC ✅; PC
       moving around a corner reveals previously-hidden tokens ✅.
       Multi-cell straddling test deferred to 2026-05-12 playtest.
-      The "LoS-aware hiding is Phase 3" comment in the source is
-      stale and should be removed when next touched. Caveats
-      remaining as separate polish:
+      Stale "LoS-aware hiding is Phase 3" comment in `TacticalMap.tsx`
+      replaced 2026-05-10 (`4657cff`) — comment now reflects that
+      auto-fog IS the gating, and flags the multi-cell anchor-only
+      caveat. Caveats remaining as separate polish:
       - **Multi-cell token gap** (awaiting playtest): a 2×2 vehicle
         straddling a wall only checks its anchor cell. A truck
         might be visible when only its anchor is visible (or
