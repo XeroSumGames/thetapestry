@@ -115,6 +115,11 @@ interface PendingRoll {
   amod: number
   smod: number
   weapon?: WeaponContext
+  // Initiative-order row id of the character who initiated the roll.
+  // Stashed by handleRollRequest so closeRollModal can decide whether to
+  // consume an action: consume only if this matches the active combatant.
+  // null when out of combat (no action accounting needed).
+  rollerInitId?: string | null
 }
 
 interface DamageResult {
@@ -3893,69 +3898,59 @@ export default function TablePage() {
   }
 
   function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext, bypassTurnGate = false) {
-    // During active combat, ALL rolls (weapon + skill) are gated to the active
-    // combatant with actions remaining.  Without this, a player whose turn ended
-    // could still open a skill check, and closeRollModal would then consume an
-    // action from whichever OTHER combatant is now active - corrupting the turn.
+    // 2026-05-10: turn gate REMOVED. Any character at /table can fire any
+    // check (skill / attribute / social / weapon attack) in or out of
+    // combat. Previously this function blocked non-active combatants
+    // from rolling during combat, with an "It's not X's turn" alert.
+    // That gate was protecting closeRollModal from consuming an action
+    // off whichever combatant happened to be active - corruption when
+    // a non-active player rolled. The fix is at the consume site: we
+    // now stash the roller's initiative_order id on pendingRoll, and
+    // closeRollModal only consumes an action when that id matches the
+    // active combatant. Out-of-turn rolls happen freely; the action
+    // economy stays intact.
     //
-    // Bypass when:
-    //   - bypassTurnGate=true (explicit, e.g. Sprint Athletics deferred roll), OR
-    //   - actionPreConsumedRef.current=true (Sprint / Stabilize / any flow that
-    //     already consumed actions before requesting the roll - the turn may
-    //     have auto-advanced, so the gate would block the legitimate deferred
-    //     roll. closeRollModal won't double-consume because the same ref tells
-    //     it to skip the post-roll consume).
-    if (combatActive && !bypassTurnGate && !actionPreConsumedRef.current) {
-      const active = initiativeOrder.find(e => e.is_active)
-      if (!active || (active.actions_remaining ?? 0) <= 0) {
-        alert('No actions remaining - wait for your next turn.')
-        return
-      }
+    // bypassTurnGate is retained as a parameter for backwards compat
+    // (sprint deferred-roll path passes true) but is now a no-op.
+    void bypassTurnGate
 
-      // Determine the roller's identity so we can verify it matches the active
-      // combatant.  Weapon attacks: inferred from label prefix or selected sheet.
-      // Skill/other rolls: inferred from the roller's PC or GM-controlled NPC.
-      let rollerName: string | null
-      if (weapon) {
-        const firstPart = label.split(' - ')[0]
-        const firstPartIsKnownName =
-          campaignNpcs.some((n: any) => n.name === firstPart) ||
-          entries.some(e => e.character.name === firstPart)
-        if (firstPartIsKnownName) {
-          rollerName = firstPart
-        } else if (isGM && selectedEntry) {
-          rollerName = selectedEntry.character.name
-        } else {
+    // Resolve the roller's initiative_order id so closeRollModal can
+    // gate its consume. Mirrors the old gate logic but stashes instead
+    // of blocking.
+    let rollerInitId: string | null = null
+    if (combatActive) {
+      const active = initiativeOrder.find(e => e.is_active)
+      const firstPart = label.split(' - ')[0]
+      const firstPartIsKnownName =
+        campaignNpcs.some((n: any) => n.name === firstPart) ||
+        entries.some(e => e.character.name === firstPart)
+      let rollerName: string | null = null
+      if (firstPartIsKnownName) {
+        rollerName = firstPart
+      } else if (weapon) {
+        // Weapon attacks default to selectedEntry (GM context) or my PC.
+        if (isGM && selectedEntry) rollerName = selectedEntry.character.name
+        else {
           const myChar = entries.find(e => e.userId === userId)
           rollerName = myChar?.character.name ?? null
         }
       } else {
-        // Non-weapon roll - figure out who is rolling.
-        // Label may start with "CharName - Skill" (NPC rolls from NpcCard).
-        const firstPart = label.split(' - ')[0]
-        const firstPartIsKnownName =
-          campaignNpcs.some((n: any) => n.name === firstPart) ||
-          entries.some(e => e.character.name === firstPart)
-        if (firstPartIsKnownName) {
-          rollerName = firstPart
-        } else if (isGM && active.is_npc) {
-          // GM rolling a skill for the active NPC - allow it
-          rollerName = active.character_name
-        } else if (isGM && selectedEntry) {
-          rollerName = selectedEntry.character.name
-        } else {
+        // Non-weapon roll - GM may be rolling for active NPC; otherwise
+        // it's the GM's selectedEntry or the player's PC.
+        if (isGM && active?.is_npc) rollerName = active.character_name
+        else if (isGM && selectedEntry) rollerName = selectedEntry.character.name
+        else {
           const myChar = entries.find(e => e.userId === userId)
           rollerName = myChar?.character.name ?? null
         }
       }
-
-      if (!rollerName || active.character_name !== rollerName) {
-        alert(`It's not ${rollerName ?? 'that character'}'s turn.`)
-        return
+      if (rollerName) {
+        const rollerInit = initiativeOrder.find(e => e.character_name === rollerName)
+        rollerInitId = rollerInit?.id ?? null
       }
     }
     rollExecutedRef.current = false
-    setPendingRoll({ label, amod, smod, weapon })
+    setPendingRoll({ label, amod, smod, weapon, rollerInitId })
     setRollResult(null)
     // Include aim bonus from Aim action or Tracking trait
     const activeEntry = combatActive ? initiativeOrder.find(e => e.is_active) : null
@@ -5748,12 +5743,22 @@ export default function TablePage() {
     // coords. executeRoll also clears this on success; this is the
     // cancel path.
     setGrenadeTargetCell(null)
+    // Snapshot the roller's initiative id BEFORE clearing pendingRoll - the
+    // consume-gate logic below needs it to decide whether this roll cost
+    // an action off the active combatant. Null means "out of combat" or
+    // "no roller could be resolved"; either way, no consume.
+    const rollerInitId = pendingRoll?.rollerInitId ?? null
+    const wasWeaponAttack = !!pendingRoll?.weapon
     setPendingRoll(null)
     setRollResult(null)
 
-    console.warn('[closeRollModal] didRoll:', didRoll, 'combatActive:', combatActive, 'preConsumed:', preConsumed, 'cost:', cost)
+    console.warn('[closeRollModal] didRoll:', didRoll, 'combatActive:', combatActive, 'preConsumed:', preConsumed, 'cost:', cost, 'rollerInitId:', rollerInitId)
     // Consume action(s) if a roll was actually executed.
-    // Skip if the action was already pre-consumed (Stabilize/Unjam).
+    // Skip if the action was already pre-consumed (Stabilize/Unjam) OR
+    // if the roller is NOT the active combatant (out-of-turn check, no
+    // action cost - the 2026-05-10 turn-gate removal allows any
+    // character at /table to fire any check, but action accounting
+    // must stay tied to the active combatant).
     if (didRoll && combatActive && !preConsumed) {
       // Re-fetch active entry from DB to avoid stale closure state
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
@@ -5761,27 +5766,25 @@ export default function TablePage() {
       const activeEntry = freshOrder?.[0]
       console.warn('[closeRollModal] activeEntry:', activeEntry?.character_name, 'user_id:', activeEntry?.user_id, 'me:', userId, 'isGM:', isGM, 'is_npc:', activeEntry?.is_npc)
       if (activeEntry) {
-        const isMyTurn = activeEntry.user_id === userId
-        const isGMRollingNPC = isGM && activeEntry.is_npc
-        const isGMRollingPC = isGM && !activeEntry.is_npc
-        if (isMyTurn || isGMRollingNPC || isGMRollingPC) {
+        // Only consume if the roller is the active combatant. Out-of-turn
+        // checks are free.
+        const rollerIsActive = rollerInitId != null && rollerInitId === activeEntry.id
+        if (rollerIsActive) {
           // Track last attack target for same-target +1 CMod bonus AND
           // for pre-selecting the same target on the next Attack modal
           // (playtest: "the next time they attack the Attack Modal should
           // automatically select the same target a second time").
-          if (pendingRoll?.weapon && targetName) {
+          if (wasWeaponAttack && targetName) {
             await supabase.from('initiative_order').update({ last_attack_target: targetName }).eq('id', activeEntry.id)
             // Clear any stale map-click target so the next Attack modal
             // open falls through to `last_attack_target` (the just-
             // attacked target) instead of re-using whatever token the
-            // player happened to click on the map before rolling. The
-            // map-selection priority was pre-empting same-target recall
-            // across consecutive attacks.
+            // player happened to click on the map before rolling.
             setSelectedMapTargetName(null)
           }
           await consumeAction(activeEntry.id, undefined, cost)
         } else {
-          console.warn('[closeRollModal] not consuming - not my turn / not GM authority')
+          console.warn('[closeRollModal] out-of-turn check - no action consumed (roller:', rollerInitId, 'active:', activeEntry.id, ')')
         }
       } else {
         console.warn('[closeRollModal] no active entry found')
