@@ -163,6 +163,18 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       }
       if (/^(Attack|Charge|Subdue)$/.test(action)) {
         const adverb = hit ? 'Successfully' : 'Unsuccessfully'
+        // Charge has its own narrative shape per Xero (2026-05-10):
+        // frame the Charge as movement that PRECEDES the attack, so the
+        // attack is the noun and Charge is the qualifying clause. Reads:
+        //   "X Unsuccessfully made an Unarmed attack after Charge at Y"
+        //   "X Successfully made a Pistol attack after Charge at Y"
+        if (action === 'Charge') {
+          // "Unarmed attack" reads as "Unarmed [adj] attack [noun]";
+          // other weapons read as "Pistol attack" / "Sword attack" etc.
+          const chargeNoun = `${weapon} attack`
+          const chargeArticle = /^[aeiouAEIOU]/.test(chargeNoun.trim()) ? 'an' : 'a'
+          return `${r.character_name} ${adverb} made ${chargeArticle} ${chargeNoun} after Charge at ${r.target_name}${outcomeTag}`
+        }
         // "Unarmed" reads weirdly as a noun ("with an Unarmed") - append
         // "attack" so the sentence has a noun. Doesn't apply to the
         // standalone Unarmed branch below (label "<name> - Unarmed")
@@ -170,9 +182,9 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         const weaponLabel = /^unarmed$/i.test(weapon.trim()) ? `${weapon} attack` : weapon
         const labelArticle = /^[aeiouAEIOU]/.test(weaponLabel.trim()) ? 'an' : 'a'
         // Past-tense restructure per Xero (2026-05-10): adverb before
-        // verb, target before weapon, "with" clause at the end. Reads
-        // closer to natural English than the prior "used a X to ...".
-        const PAST: Record<string, string> = { Attack: 'Attacked', Charge: 'Charged', Subdue: 'Subdued' }
+        // verb, target before weapon, "using" clause at the end. Applies
+        // to Attack + Subdue; Charge has its own shape above.
+        const PAST: Record<string, string> = { Attack: 'Attacked', Subdue: 'Subdued' }
         const pastAction = PAST[action] ?? action
         return `${r.character_name} ${adverb} ${pastAction} ${r.target_name} using ${labelArticle} ${weaponLabel}${outcomeTag}`
       }
@@ -299,9 +311,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         : `${r.character_name}'s Gut Instinct is quiet${outcomeTag}`
     }
     if (check === 'First Impression') {
-      // Five outcome bands per SRD §07 ladder.
+      // Five outcome bands per SRD §07 ladder. HI and LI use bespoke
+      // tags that override the global outcomeTag - the moment-of-
+      // insight beat reads more naturally with FI-specific phrasing
+      // ("why they did so well" / "what went wrong") than the generic
+      // "as to why they failed".
       if (wild) {
-        return `${r.character_name} makes a strong First Impression${outcomeTag}`
+        return `${r.character_name} makes a strong First Impression and has a Moment of Insight as to why they did so well`
       }
       if (r.outcome === 'Success') {
         return `${r.character_name} makes a First Impression`
@@ -312,8 +328,8 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       if (r.outcome === 'Dire Failure') {
         return `${r.character_name} makes a terrible First Impression`
       }
-      // Low Insight - bespoke tag wording matches Xero's playtest copy.
-      return `${r.character_name} made a terrible First Impression, but has a Moment of Insight why`
+      // Low Insight - bespoke phrasing per Xero (2026-05-10).
+      return `${r.character_name} made a terrible First Impression, but has a Moment of Insight as to what went wrong`
     }
     // Fallthrough - should never hit given the regex.
     return `${r.character_name} - ${check}${hit ? '' : ' (failed)'}${outcomeTag}`
