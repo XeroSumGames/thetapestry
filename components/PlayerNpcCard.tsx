@@ -425,16 +425,25 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
               </span>
             )}
             {/* First Impression — quick-fire button that skips the
-                special-check picker. Hidden when the viewing PC has
-                already rolled (cmod != null && cmod !== 0) so a
-                misclick doesn't overwrite the existing relationship.
-                Active state: button visible when onFirstImpression is
-                wired AND no recorded relationship exists yet. */}
-            {onFirstImpression && viewingCharacterId && (cmod == null || cmod === 0) && (
+                special-check picker. Always available when wired:
+                CRB allows a fresh First Impression check "after a
+                number of interactions" once the player Fills In The
+                Gaps about how their approach has changed. Re-rolls
+                STACK (atomic delta via bump_npc_relationship_cmod,
+                clamped +/-3) — they don't overwrite. So a Failure on
+                top of a +2 drops to +1, a Success on top of a +2
+                stays at +2 (clamp ceiling). Tooltip surfaces the
+                current value when one exists so the player knows
+                what they're risking. Gate-relaxation 2026-05-10. */}
+            {onFirstImpression && viewingCharacterId && (
               <button onClick={onFirstImpression}
-                title={`Roll a First Impression on ${npc.name} — INF + best of Manipulation / Streetwise / Psychology.`}
+                title={
+                  cmod != null && cmod !== 0
+                    ? `Re-roll First Impression on ${npc.name} (current: ${cmod > 0 ? '+' : ''}${cmod}). Result stacks with the existing CMod, clamped +/-3.`
+                    : `Roll a First Impression on ${npc.name} — INF + best of Manipulation / Streetwise / Psychology.`
+                }
                 style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
-                🤝 First Impression
+                🤝 {cmod != null && cmod !== 0 ? 'Re-roll 1st' : 'First Impression'}
               </button>
             )}
           </div>
