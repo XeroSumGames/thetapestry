@@ -29,6 +29,12 @@ export default function CampaignsPage() {
   // campaign_id → ISO string of latest activity. Used both for sort and
   // for the "Last Run" display label on each card.
   const [lastActivity, setLastActivity] = useState<Map<string, string>>(new Map())
+  // Map of campaign_id → module name when that campaign is the
+  // source for a published module. Drives the blue-bar treatment +
+  // "Template of <module>" body line + the extended delete confirm.
+  // See `lib/modules.ts:getModuleForCampaign` for the single-campaign
+  // version of this lookup; this batches across all GM-owned rows.
+  const [templateModules, setTemplateModules] = useState<Map<string, string>>(new Map())
   // Campaigns where a session is currently in flight (sessions row with
   // ended_at IS NULL). Used to surface a "Resume Active Session" banner
   // at the top of the page so a player landing on /stories mid-session
@@ -139,6 +145,24 @@ export default function CampaignsPage() {
 
       setGmCampaigns(sortByActivity(gmRaw ?? []))
       setPlayerCampaigns(sortByActivity(playerRaw))
+
+      // Mark any GM-owned campaign that's the source for a published
+      // module. One bulk query against `modules` rather than N
+      // per-campaign lookups. Archived modules included so the
+      // template hint sticks even after the GM hides their listing.
+      const gmIds = ((gmRaw ?? []) as Campaign[]).map(c => c.id)
+      if (gmIds.length > 0) {
+        const { data: tmpls } = await supabase
+          .from('modules')
+          .select('source_campaign_id, name')
+          .in('source_campaign_id', gmIds)
+        const map = new Map<string, string>()
+        for (const m of (tmpls ?? []) as { source_campaign_id: string; name: string }[]) {
+          if (m.source_campaign_id && m.name) map.set(m.source_campaign_id, m.name)
+        }
+        setTemplateModules(map)
+      }
+
       setLoading(false)
     }
     load()
@@ -223,8 +247,12 @@ export default function CampaignsPage() {
             Running as GM
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {gmCampaigns.map(c => (
-              <div key={c.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #c0392b' }}>
+            {gmCampaigns.map(c => {
+              const templateOf = templateModules.get(c.id)
+              const isTemplate = !!templateOf
+              const accent = isTemplate ? '#7ab3d4' : '#c0392b'
+              return (
+              <div key={c.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: `3px solid ${accent}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                   <div>
                     <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
@@ -232,11 +260,16 @@ export default function CampaignsPage() {
                       {SETTINGS[c.setting] ?? c.setting} &middot; Created {formatDate(c.created_at)}
                       {lastActivity.get(c.id) && <> &middot; <span style={{ color: '#7fc458' }}>Last Run: {formatDate(lastActivity.get(c.id)!)}</span></>}
                     </div>
+                    {isTemplate && (
+                      <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '6px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', fontWeight: 600 }}>
+                        📦 Template of <span style={{ color: '#cce0f5' }}>{templateOf}</span>
+                      </div>
+                    )}
                     {c.description && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>Invite Code</div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em' }}>{c.invite_code}</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: accent, fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em' }}>{c.invite_code}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
@@ -244,10 +277,18 @@ export default function CampaignsPage() {
                   <a href={`/stories/${c.id}`} style={{ padding: '5px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>GM Tools</a>
                   <a href={`/stories/${c.id}/edit`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Edit</a>
                   <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join/${c.invite_code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
-                  <button onClick={async () => { if (!confirm('Delete this story?')) return; await supabase.from('campaigns').delete().eq('id', c.id); setGmCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
+                  <button onClick={async () => {
+                    const msg = isTemplate
+                      ? `⚠️ This is the template for "${templateOf}".\n\nDeleting it disconnects the published module from its source — you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
+                      : 'Delete this story?'
+                    if (!confirm(msg)) return
+                    await supabase.from('campaigns').delete().eq('id', c.id)
+                    setGmCampaigns(prev => prev.filter(x => x.id !== c.id))
+                  }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

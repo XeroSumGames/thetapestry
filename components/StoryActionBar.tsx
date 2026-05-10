@@ -151,7 +151,17 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
   }
 
   async function handleDelete() {
-    if (!confirm('Permanently delete this story? This cannot be undone.')) return
+    // Stronger confirm when this campaign is the source for a
+    // published module — deleting it disconnects the module from
+    // its source, so the GM can't push new versions without
+    // re-linking a fresh source campaign. Surfacing the module
+    // name in the prompt makes the consequence explicit instead
+    // of silent. Companion to the dashboard list-view treatment
+    // (blue bar + "Template of <module>") in app/stories/page.tsx.
+    const msg = existingModule
+      ? `⚠️ This is the template for "${existingModule.name}".\n\nDeleting it disconnects the published module from its source — you won't be able to push new versions of "${existingModule.name}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
+      : 'Permanently delete this story? This cannot be undone.'
+    if (!confirm(msg)) return
     await supabase.from('campaigns').delete().eq('id', campaignId)
     router.push('/stories')
   }
