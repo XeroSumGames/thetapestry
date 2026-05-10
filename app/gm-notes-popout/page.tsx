@@ -233,7 +233,13 @@ export default function GMNotesPopoutPage() {
               multiline
               emptyPlaceholder="Add note content…"
               displayContent={renderRichText(n.content)}
-              textStyle={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, whiteSpace: 'pre-wrap', display: 'block', marginTop: '4px' }}
+              // 16px to match the /handout popout — this is a
+              // dedicated reading surface where plot-beat bodies
+              // often hold the entire Session-Zero text. 13px was
+              // readable at panel density but tight for long-form
+              // narrative. line-height 1.7 keeps multi-paragraph
+              // content scannable.
+              textStyle={{ fontSize: '16px', color: '#d4cfc9', lineHeight: 1.7, whiteSpace: 'pre-wrap', display: 'block', marginTop: '4px' }}
             />
           </Card>
         ))}
