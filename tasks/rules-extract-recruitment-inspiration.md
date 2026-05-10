@@ -215,8 +215,8 @@ These all flow from the canon audit above. Sizes are rough.
 
 ### Tier 1 — canon bugs (ship before next playtest)
 
-- 🐛 **First Impression outcome ladder fix.** One-block edit at `app/stories/[id]/table/page.tsx:5505-5510`. ~10 minutes including verification roll.
-- 🐛 **First Impression Insight Die award on HI / LI.** Hook into the existing HI/LI Insight Die path; verify it's not already firing. ~30 minutes.
+- ✅ **First Impression outcome ladder fix.** SHIPPED 2026-05-10. `app/stories/[id]/table/page.tsx:5505-5510` now matches SRD §07: HI=+2, Wild=+1, Success=0, Failure=-1, Dire=-2, LI=-3. Vibe labels and progression-log copy updated. RPC clamp ±3 already supports the -3 floor.
+- ✅ **First Impression Insight Die award on HI / LI.** No additional work needed — the generic HI/LI handler at `app/stories/[id]/table/page.tsx:4176-4181` already awards an Insight Die on any HI/LI roll for PCs, regardless of label.
 
 ### Tier 2 — disambiguation (clear up player confusion)
 

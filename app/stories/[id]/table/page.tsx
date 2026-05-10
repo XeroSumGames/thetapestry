@@ -5489,24 +5489,32 @@ export default function TablePage() {
     }
 
     // First Impression — write outcome to npc_relationships.relationship_cmod.
-    // Outcome → CMod mapping:
-    //   Moment of High Insight / Wild Success → +2
-    //   Success                              → +1
-    //   Failure                              →  0 (no change recorded, but
-    //     we still upsert revealed=true so the NPC appears in the PC's
-    //     sidebar going forward)
-    //   Dire Failure                         → -1
-    //   Moment of Low Insight                → -2
-    // Overwrites any existing row for (npc, character) — First Impression
-    // is the opening-scene vibe; a re-roll replaces. GM can hand-edit
-    // later via NpcRoster if they need to tune.
+    // Outcome → CMod mapping (SRD v1.1.17 §07, canonical):
+    //   Moment of High Insight (6+6) → +2  (+ Insight Die, auto-awarded
+    //                                       by the generic HI handler
+    //                                       earlier in this function)
+    //   Wild Success (14+)           → +1
+    //   Success (9-13)               →  0  (we still upsert revealed=true
+    //                                       so the NPC appears in the PC's
+    //                                       sidebar going forward)
+    //   Failure (4-8)                → -1
+    //   Dire Failure (0-3)           → -2
+    //   Moment of Low Insight (1+1)  → -3  (+ Insight Die, auto-awarded
+    //                                       by the generic LI handler)
+    // Stacks atomically via bump_npc_relationship_cmod RPC (clamped ±3),
+    // not overwrite — the same NPC can be met multiple times and small
+    // shifts accumulate. GM can hand-edit later via NpcRoster.
+    // ladder fix 2026-05-10: prior code shifted every tier +1 (Success
+    // gave +1 instead of 0, Low Insight gave -2 instead of -3, etc.).
+    // See tasks/rules-extract-recruitment-inspiration.md.
     const firstImpressionTarget = firstImpressionTargetRef.current
     if (firstImpressionTarget && pendingRoll.label.includes('First Impression')) {
-      const cmodDelta = (outcome === 'High Insight' || outcome === 'Wild Success') ? 2
-        : outcome === 'Success' ? 1
-        : outcome === 'Failure' ? 0
-        : outcome === 'Dire Failure' ? -1
-        : outcome === 'Low Insight' ? -2
+      const cmodDelta = outcome === 'High Insight' ? 2
+        : outcome === 'Wild Success' ? 1
+        : outcome === 'Success' ? 0
+        : outcome === 'Failure' ? -1
+        : outcome === 'Dire Failure' ? -2
+        : outcome === 'Low Insight' ? -3
         : 0
       try {
         // Atomic accumulate-with-clamp via the bump_npc_relationship_cmod
@@ -5533,11 +5541,14 @@ export default function TablePage() {
         // Progression log: a meeting that left a mark on the PC.
         const metNpc = campaignNpcs.find((n: any) => n.id === firstImpressionTarget.npcId)
         const npcName = metNpc?.name ?? 'an NPC'
-        const vibe = cmodDelta >= 2 ? 'great first impression'
+        // Vibe labels track the SRD ladder: +2 great / +1 good /
+        //  0 neutral / -1 rough / -2 bad / -3 catastrophic.
+        const vibe = cmodDelta === 2 ? 'great first impression'
           : cmodDelta === 1 ? 'good first impression'
           : cmodDelta === 0 ? 'neutral first impression'
           : cmodDelta === -1 ? 'rough start'
-          : 'bad blood'
+          : cmodDelta === -2 ? 'bad blood'
+          : 'catastrophic first impression'
         void appendProgressionLog(firstImpressionTarget.characterId, 'relationship', `Met ${npcName} — ${vibe} (CMod ${cmodDelta >= 0 ? '+' : ''}${cmodDelta}).`)
       } catch (err) {
         console.error('[first-impression] relationship upsert failed:', err)
