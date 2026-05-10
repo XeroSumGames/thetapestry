@@ -63,7 +63,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const outcomeTag = wild
     ? ' and has a Moment of Insight as to why'
     : r.outcome === 'Low Insight'
-      ? ', but has a Moment of Insight as to why'
+      ? ', but has a Moment of Insight as to why they failed'
       : ''
 
   // Aim action - no dice, no target.
@@ -163,13 +163,18 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       }
       if (/^(Attack|Charge|Subdue)$/.test(action)) {
         const adverb = hit ? 'Successfully' : 'Unsuccessfully'
-        // "Unarmed" reads weirdly as a noun ("used an Unarmed to ...") -
-        // append "attack" so the sentence has a noun the verb can hang
-        // on. Doesn't apply to the standalone Unarmed branch below
-        // (label "<name> - Unarmed") which has its own phrasing.
+        // "Unarmed" reads weirdly as a noun ("with an Unarmed") - append
+        // "attack" so the sentence has a noun. Doesn't apply to the
+        // standalone Unarmed branch below (label "<name> - Unarmed")
+        // which has its own phrasing.
         const weaponLabel = /^unarmed$/i.test(weapon.trim()) ? `${weapon} attack` : weapon
         const labelArticle = /^[aeiouAEIOU]/.test(weaponLabel.trim()) ? 'an' : 'a'
-        return `${r.character_name} used ${labelArticle} ${weaponLabel} to ${adverb} ${action} ${r.target_name}${outcomeTag}`
+        // Past-tense restructure per Xero (2026-05-10): adverb before
+        // verb, target before weapon, "with" clause at the end. Reads
+        // closer to natural English than the prior "used a X to ...".
+        const PAST: Record<string, string> = { Attack: 'Attacked', Charge: 'Charged', Subdue: 'Subdued' }
+        const pastAction = PAST[action] ?? action
+        return `${r.character_name} ${adverb} ${pastAction} ${r.target_name} using ${labelArticle} ${weaponLabel}${outcomeTag}`
       }
       // Rapid Fire / Fire from Cover - possessive "their" so the weapon
       // reads as the character's gear rather than a free-floating noun.
