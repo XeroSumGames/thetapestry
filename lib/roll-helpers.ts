@@ -193,6 +193,14 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     return hit ? `${r.character_name} coordinates allies against ${tgt}${outcomeTag}`
                : `${r.character_name} fails to coordinate against ${tgt}${outcomeTag}`
   }
+  // Coordinate-effect broadcast row — written by the apply step after a
+  // successful Coordinate roll, label format
+  // "🎯 <names> get(s) +<N> CMod when attacking <target>". The dice are
+  // 0+0 (no roll); narrative trim drops the emoji. Outcome value is
+  // 'coordinate'.
+  if (r.outcome === 'coordinate') {
+    return r.label.replace(/^🎯\s*/, '')
+  }
   // Unjam — "Unjam — <weaponName> (<skill>)"
   const unjamMatch = suffix.match(/^Unjam\s+—\s+(.+?)(?:\s*\(|$)/)
   if (unjamMatch) {
@@ -346,6 +354,42 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       const container = lootMatch[2]
       return `${r.character_name} looked through the remains of ${container} and found something`
     }
+  }
+  // Group Check — label "Group Check — <Skill> (led by <Leader>)". The
+  // leader's name is in the parens; the row's character_name is the
+  // leader. Narrative trim reads as the group's collective effort, with
+  // the standard adverb pattern + crit/miserably tag.
+  const groupMatch = suffix.match(/^Group Check\s+—\s+(.+?)\s+\(led by\s+(.+?)\)$/)
+  if (groupMatch) {
+    const skill = groupMatch[1].trim()
+    return hit ? `${r.character_name}'s group succeeds at ${skill}${outcomeTag}`
+               : `${r.character_name}'s group fails at ${skill}${outcomeTag}`
+  }
+  // Barter — label "⚖ Trade · <rollSummary> · gave <give> got <get>"
+  // written when the trade modal applies. Dice are real (Acumen + Barter
+  // skill check). Narrative collapses to a one-liner with the give/got
+  // payload preserved (this IS the interesting part of the trade) but
+  // the inline rollSummary stripped (the row already shows the outcome
+  // color on the left border).
+  if (r.outcome === 'barter') {
+    const tradeMatch = r.label.match(/^⚖\s+Trade\s+·\s+[^·]+·\s+gave\s+(.+?)\s+got\s+(.+)$/)
+    if (tradeMatch) {
+      const gave = tradeMatch[1].trim()
+      const got = tradeMatch[2].trim()
+      return `${r.character_name} traded — gave ${gave}, got ${got}${outcomeTag}`
+    }
+    return r.label.replace(/^⚖\s*/, '')
+  }
+  // CDP award — label "📚 +<N> CDP awarded to <names>" (system row, dice
+  // are 0+0). Already narrative-shaped; just strip the leading emoji.
+  if (r.outcome === 'cdp') {
+    return r.label.replace(/^📚\s*/, '')
+  }
+  // Encumbrance tick — label "⏳ Time advances <N>h · overencumbered:
+  // <names>" (system row, dice are 0+0). Strip emoji; the rest reads
+  // cleanly.
+  if (r.outcome === 'encumbrance') {
+    return r.label.replace(/^⏳\s*/, '')
   }
   // Generic skill / attribute check — label "<skillName> (<attrKey>)" or "<attrKey> Check"
   // These come in with no "<name> — " prefix when fired from CharacterCard.
