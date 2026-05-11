@@ -457,8 +457,8 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const vehicle = brewMatch[1].trim()
     const brewer  = brewMatch[2].trim()
     return hit
-      ? `${brewer} brews fuel in ${vehicle}${outcomeTag}`
-      : `${brewer} botches the brew in ${vehicle}${outcomeTag}`
+      ? `${brewer} brews fuel in ${vehicle}'s still${outcomeTag}`
+      : `${brewer} botches the brew in ${vehicle}'s still${outcomeTag}`
   }
   // Loot - label "🎒 <name> looted <items> from <container>". Narrative
   // compact banner hides WHAT was looted (keeps players reading the log
