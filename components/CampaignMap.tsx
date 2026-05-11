@@ -420,6 +420,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
     const clusterGroup = (leaflet as any).markerClusterGroup({
       maxClusterRadius: 40,
+      // Disable the default click-zooms-to-bounds so alt+click and
+      // measure-mode click can pass through to the ping / measure
+      // handlers instead. Plain-click still zooms — re-implemented in
+      // the clusterclick handler below.
+      zoomToBoundsOnClick: false,
       iconCreateFunction: (cluster: any) => {
         const count = cluster.getChildCount()
         const size = count < 10 ? 32 : count < 50 ? 40 : 48
@@ -482,6 +487,29 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       }
       clusterGroup.addLayer(marker)
       markersRef.current[pin.id] = marker
+    })
+
+    // Cluster click router. With zoomToBoundsOnClick: false above, the
+    // default zoom is suppressed and we decide here: alt -> ping at the
+    // cluster centroid; measure-mode -> add a waypoint at the centroid;
+    // plain -> the previous default (zoom to fit the cluster's pins).
+    // Without this, alt-clicking a cluster zooms in and the ping gets
+    // lost as the map re-centers.
+    clusterGroup.on('clusterclick', (a: any) => {
+      const oe = a.originalEvent
+      const center = a.layer.getLatLng()
+      if (measureModeRef.current) {
+        addMeasurePoint(center.lat, center.lng)
+        return
+      }
+      if (oe?.altKey) {
+        const color = isGM ? '#ff3a1d' : '#39ff14'
+        dropPing(center.lat, center.lng, color)
+        pingChannelRef.current?.send({ type: 'broadcast', event: 'cm_ping', payload: { lat: center.lat, lng: center.lng, color } })
+        return
+      }
+      const bounds = a.layer.getBounds?.()
+      if (bounds) map.fitBounds(bounds, { padding: [30, 30] })
     })
 
     clusterGroup.addTo(map)
