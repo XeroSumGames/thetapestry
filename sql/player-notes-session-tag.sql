@@ -32,3 +32,8 @@ DROP TRIGGER IF EXISTS player_notes_stamp_session ON public.player_notes;
 CREATE TRIGGER player_notes_stamp_session
   BEFORE INSERT ON public.player_notes
   FOR EACH ROW EXECUTE FUNCTION public.player_notes_set_session_number();
+
+-- PostgREST schema cache must reload to pick up the new column.
+-- Without this, INSERTs from the client silently strip session_number
+-- on the first request and rows land with NULL even mid-session.
+NOTIFY pgrst, 'reload schema';
