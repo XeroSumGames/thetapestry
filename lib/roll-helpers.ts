@@ -413,7 +413,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       const fromLv = evoMatch[3]
       const toLv = evoMatch[4]
       const cdp = evoMatch[5]
-      return `${charName} spent ${cdp} CDP raising ${what} from Lv ${fromLv} to Lv ${toLv}`
+      // "Character Development Points" spelled out per Xero (2026-05-10)
+      // - newcomers shouldn't have to decode "CDP" in the live feed.
+      // Pluralize 'Point' on counts != 1 for grammatical correctness.
+      const noun = cdp === '1' ? 'Character Development Point' : 'Character Development Points'
+      return `${charName} spent ${cdp} ${noun} raising ${what} from Lv ${fromLv} to Lv ${toLv}`
     }
     return r.label.replace(/^📈\s*/, '')
   }
