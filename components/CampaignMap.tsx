@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
+import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
 
 interface CampaignPin {
   id: string
@@ -431,15 +432,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
     visible.forEach((pin: any) => {
       const emoji = getCategoryEmoji(pin.category)
-      // The 👥 'group' silhouette emoji renders as dark purple on most
-      // platforms, which disappears against our near-black pin
-      // background. CSS color can't recolor emoji directly, but
-      // `filter: brightness(0) invert(1)` flattens the silhouette to
-      // pure white reliably across vendors. Only applied to 'group' —
-      // the other categories use full-color emoji that already pop.
-      const emojiHtml = pin.category === 'group'
-        ? `<span style="filter:brightness(0) invert(1);display:inline-block;line-height:1;">${emoji}</span>`
-        : emoji
+      // Group silhouette emoji disappears against the dark pin chrome;
+      // see lib/pin-categories.ts for the white-filter rationale.
+      const emojiHtml = wrapCategoryEmojiHtml(pin.category, emoji)
       const icon = leaflet.divIcon({
         html: `<div style="font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);${!pin.revealed && isGM ? 'opacity:0.4;border-color:#3a3a3a;box-shadow:none;' : ''}" title="${escapeHtml(pin.name)}">${emojiHtml}</div>`,
         className: '', iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -20],

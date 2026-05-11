@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logFirstEvent, logEvent } from '../lib/events'
-import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji } from '../lib/pin-categories'
+import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji, categoryNeedsWhiteFilter, wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE, LABEL_STYLE_LG, LABEL_STYLE_TIGHT, ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
@@ -679,6 +679,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       : data.filter((p: Pin) => p.category === 'world_event' || p.category === 'settlement')
     visibleData.forEach((pin: Pin) => {
       const emoji = pin.pin_type === 'rumor' ? '❓' : getCategoryEmoji(pin.category ?? 'location')
+      // Group silhouette emoji is unreadable against the dark pin
+      // chrome on most platforms; wrap with the shared white-filter.
+      const emojiHtml = pin.pin_type === 'rumor' ? emoji : wrapCategoryEmojiHtml(pin.category, emoji)
       const tier = getPinTier(pin)
       const ts = getTierStyles(tier)
       const isCanon = !!pin.user_id && thriverIds.has(pin.user_id)
@@ -689,7 +692,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         ? `<div title="Canon — published by The Tapestry team" style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;background:#EF9F27;border:1.5px solid #1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.6);">🛡️</div>`
         : ''
       const icon = leaflet.divIcon({
-        html: `<div style="position:relative;font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);" title="${pin.title}${isCanon ? ' (Canon)' : ''}">${emoji}${canonOverlay}</div>`,
+        html: `<div style="position:relative;font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);" title="${pin.title}${isCanon ? ' (Canon)' : ''}">${emojiHtml}${canonOverlay}</div>`,
         className: '', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -33],
       })
       const nearSetting = getNearSetting(pin.lat, pin.lng)
@@ -1440,7 +1443,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                             onMouseEnter={e => { if (expandedPinId !== p.id) e.currentTarget.style.background = '#1a1a1a' }}
                             onMouseLeave={e => { if (expandedPinId !== p.id) e.currentTarget.style.background = 'transparent' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ fontSize: '14px' }}>{getCategoryEmoji(p.category)}</span>
+                              <span style={{ fontSize: '14px', ...(categoryNeedsWhiteFilter(p.category) ? { filter: 'brightness(0) invert(1)', display: 'inline-block' } : {}) }}>{getCategoryEmoji(p.category)}</span>
                               <span style={{ fontSize: '13px', color: '#f5f2ee', overflow: expandedPinId === p.id ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: expandedPinId === p.id ? 'normal' : 'nowrap' }}>{p.name}</span>
                             </div>
                             {expandedPinId === p.id && p.notes && (

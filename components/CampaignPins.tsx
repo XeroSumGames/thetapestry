@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
-import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel } from '../lib/pin-categories'
+import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel, categoryNeedsWhiteFilter } from '../lib/pin-categories'
 import { openPopout } from '../lib/popout'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE_TIGHT } from '../lib/style-helpers'
@@ -388,7 +388,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                     title={pin.tactical_scene_id ? 'Double-click to open tactical map' : 'Show on map'}
                   >
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span title={getCategoryLabel(pin.category)} style={{ fontSize: '15px', lineHeight: 1, flexShrink: 0 }}>{getCategoryEmoji(pin.category)}</span>
+                      <span title={getCategoryLabel(pin.category)} style={{ fontSize: '15px', lineHeight: 1, flexShrink: 0, ...(categoryNeedsWhiteFilter(pin.category) ? { filter: 'brightness(0) invert(1)', display: 'inline-block' } : {}) }}>{getCategoryEmoji(pin.category)}</span>
                       {pin.name}
                       {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '13px', color: '#7ab3d4' }}>🗺️</span>}
                     </div>

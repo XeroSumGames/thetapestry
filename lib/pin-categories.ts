@@ -37,3 +37,22 @@ export function getCategoryEmoji(category: string | null | undefined): string {
 export function getCategoryLabel(category: string | null | undefined): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.label ?? 'Location'
 }
+
+// Categories whose default emoji renders as a dark silhouette on most
+// platforms (Windows in particular paints 👥 / 👤 in muted purple) and
+// disappears against the near-black pin chrome. CSS color can't recolor
+// emoji glyphs, but `filter: brightness(0) invert(1)` flattens any
+// silhouette to pure white reliably. Callers either spread
+// `categoryEmojiFilterStyle` onto a JSX span or wrap the emoji string
+// with `wrapCategoryEmojiHtml` before injecting into HTML.
+const DARK_SILHOUETTE_CATEGORIES = new Set(['group'])
+
+export function categoryNeedsWhiteFilter(category: string | null | undefined): boolean {
+  return !!category && DARK_SILHOUETTE_CATEGORIES.has(category)
+}
+
+export function wrapCategoryEmojiHtml(category: string | null | undefined, emoji: string): string {
+  return categoryNeedsWhiteFilter(category)
+    ? `<span style="filter:brightness(0) invert(1);display:inline-block;line-height:1;">${emoji}</span>`
+    : emoji
+}
