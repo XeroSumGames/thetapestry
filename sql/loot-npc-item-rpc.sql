@@ -19,7 +19,9 @@
 --      characters.data.inventory JSONB array, stacking when
 --      a matching name+custom-flag entry exists.
 --   6. Logs an audit row to roll_log so the table feed shows
---      "🎒 <Player> looted <Item> from <NPC>".
+--      "🎒 <Player> searched the corpse of <NPC> and looted <Item>".
+--      Distinct from the object-loot label so the trim renderer can
+--      distinguish a body-search from a crate-rummage.
 --
 -- All in one transaction with SECURITY DEFINER privileges so the
 -- RLS policies on campaign_npcs / characters / roll_log don't
@@ -195,9 +197,9 @@ begin
     v_npc.campaign_id,
     v_user_id,
     v_pc.name,
-    '🎒 ' || v_pc.name || ' looted ' || p_item_name ||
-      case when v_take > 1 then ' ×' || v_take else '' end ||
-      ' from ' || v_npc.name,
+    '🎒 ' || v_pc.name || ' searched the corpse of ' || v_npc.name ||
+      ' and looted ' || p_item_name ||
+      case when v_take > 1 then ' ×' || v_take else '' end,
     0, 0, 0, 0, 0, 0, 'loot'
   );
 

@@ -464,6 +464,15 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // compact banner hides WHAT was looted (keeps players reading the log
   // without spoiling everyone's hauls); ▸ expand reveals the full list.
   if (r.outcome === 'loot') {
+    // NPC corpse search - SQL label "🎒 <PC> searched the corpse of <NPC>
+    // and looted <Item>". Bespoke wording per Xero (2026-05-10): bodies
+    // and crates read differently.
+    const corpseMatch = r.label.match(/^🎒\s+(.+?)\s+searched the corpse of\s+(.+?)\s+and looted/)
+    if (corpseMatch) {
+      const npc = corpseMatch[2]
+      return `${r.character_name} searched the corpse of ${npc} and found something`
+    }
+    // Object/container loot - "🎒 <PC> looted <Item> from <Object>".
     const lootMatch = r.label.match(/^🎒\s+(.+?)\s+looted\s+.+\s+from\s+(.+)$/)
     if (lootMatch) {
       const container = lootMatch[2]

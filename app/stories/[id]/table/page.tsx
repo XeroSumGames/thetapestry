@@ -8974,9 +8974,10 @@ export default function TablePage() {
                   await supabase.from('characters').update({ data: { ...charData, progression_log: [{ date: new Date().toISOString(), type: 'cdp', text: `+${cdpAmount} CDP awarded` }, ...progLog] } }).eq('id', entry.character.id)
                   names.push(entry.character.name)
                 }
+                const cdpNoun = cdpAmount === 1 ? 'Character Development Point' : 'Character Development Points'
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
-                  label: `📚 +${cdpAmount} CDP awarded to ${names.join(', ')}`,
+                  label: `📚 +${cdpAmount} ${cdpNoun} awarded to ${names.join(', ')}`,
                   die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'cdp',
                 })
                 initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
