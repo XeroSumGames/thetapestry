@@ -210,22 +210,22 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     s.id = 'cm-ping-style'
     s.textContent = `
 @keyframes cm-ping-pulse {
-  0%   { transform: scale(0.3); opacity: 1; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0%   { transform: scale(0.25); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
 .cm-ping-ring {
-  width: 60px; height: 60px; border-radius: 50%;
-  border: 3px solid currentColor;
-  box-shadow: 0 0 12px currentColor;
-  animation: cm-ping-pulse 1.2s ease-out 2 both;
+  width: 110px; height: 110px; border-radius: 50%;
+  border: 5px solid currentColor;
+  box-shadow: 0 0 18px currentColor, 0 0 36px currentColor, inset 0 0 14px currentColor;
+  animation: cm-ping-pulse 1.2s ease-out 3 both;
   pointer-events: none;
 }
 .cm-ping-dot {
-  width: 12px; height: 12px; border-radius: 50%;
+  width: 22px; height: 22px; border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 8px currentColor;
-  position: absolute; left: 24px; top: 24px;
-  animation: cm-ping-pulse 1.2s ease-out 2 both;
+  box-shadow: 0 0 14px currentColor, 0 0 28px currentColor;
+  position: absolute; left: 44px; top: 44px;
+  animation: cm-ping-pulse 1.2s ease-out 3 both;
   pointer-events: none;
 }
 `
@@ -378,16 +378,16 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const L = (window as any).L
     const map = mapInstanceRef.current
     if (!L || !map) return
-    const html = `<div style="position:relative;width:60px;height:60px;color:${color};"><div class="cm-ping-ring"></div><div class="cm-ping-dot"></div></div>`
-    const icon = L.divIcon({ html, className: '', iconSize: [60, 60], iconAnchor: [30, 30] })
+    const html = `<div style="position:relative;width:110px;height:110px;color:${color};"><div class="cm-ping-ring"></div><div class="cm-ping-dot"></div></div>`
+    const icon = L.divIcon({ html, className: '', iconSize: [110, 110], iconAnchor: [55, 55] })
     const marker = L.marker([lat, lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9999 }).addTo(map)
     pingMarkersRef.current.push(marker)
-    // 1.2s × 2 iterations = 2.4s total. Add a small buffer so the last
-    // frame of the second pulse renders before we yank the DOM node.
+    // 1.2s × 3 iterations = 3.6s total. Add a small buffer so the last
+    // frame of the final pulse renders before we yank the DOM node.
     setTimeout(() => {
       try { map.removeLayer(marker) } catch {}
       pingMarkersRef.current = pingMarkersRef.current.filter(m => m !== marker)
-    }, 2600)
+    }, 3800)
   }
 
   async function loadPins(L?: any) {
@@ -606,7 +606,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           return
         }
         if (e?.originalEvent?.altKey) {
-          const color = isGM ? '#EF9F27' : '#7fc458'
+          const color = isGM ? '#ff3a1d' : '#39ff14'
           dropPing(e.latlng.lat, e.latlng.lng, color)
           pingChannelRef.current?.send({ type: 'broadcast', event: 'cm_ping', payload: { lat: e.latlng.lat, lng: e.latlng.lng, color } })
           return
@@ -641,7 +641,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           const p = msg?.payload ?? {}
           const lat = typeof p.lat === 'number' ? p.lat : p.payload?.lat
           const lng = typeof p.lng === 'number' ? p.lng : p.payload?.lng
-          const color = p.color ?? p.payload?.color ?? '#EF9F27'
+          const color = p.color ?? p.payload?.color ?? '#ff3a1d'
           if (typeof lat === 'number' && typeof lng === 'number') dropPing(lat, lng, color)
         })
         .subscribe()
