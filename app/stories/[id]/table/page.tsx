@@ -6954,8 +6954,15 @@ export default function TablePage() {
         {/* Left - Game Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', whiteSpace: 'nowrap' }}>
-              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span><MessagesBell /><NotificationBell /><BugReportButton />
+            <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span>
+              {/* Fixed-width cells so the three icons sit at evenly
+                  spaced visual centers regardless of each component's
+                  internal button padding. Same approach as the
+                  Sidebar's bottom-icon row (see Sidebar.tsx comment). */}
+              <div style={{ width: '32px', display: 'flex', justifyContent: 'center' }}><MessagesBell /></div>
+              <div style={{ width: '32px', display: 'flex', justifyContent: 'center' }}><NotificationBell /></div>
+              <div style={{ width: '32px', display: 'flex', justifyContent: 'center' }}><BugReportButton /></div>
             </div>
           </div>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
