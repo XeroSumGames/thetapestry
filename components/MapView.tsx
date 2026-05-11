@@ -920,22 +920,27 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     const map = mapInstanceRef.current
     if (!map) return
     if (tileLayerRef.current) tileLayerRef.current.remove()
-    // maxNativeZoom = the highest zoom level the provider actually
-    // serves tiles for. Above that, Leaflet upscales the maxNativeZoom
-    // tile (blurry but readable) instead of asking the provider for
-    // tiles it doesn't have. Without this, OpenTopoMap (z17 cap)
-    // returns a "max zoom layer = 17" placeholder image past z17.
-    const tiles: Record<string, { url: string, attribution: string, maxNativeZoom: number }> = {
-      street:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxNativeZoom: 19 },
-      satellite:    { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: '&copy; <a href="https://www.esri.com">Esri</a>', maxNativeZoom: 19 },
-      dark:         { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>', maxNativeZoom: 19 },
-      positron:     { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>', maxNativeZoom: 19 },
-      voyager:      { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>', maxNativeZoom: 19 },
-      topo:         { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a>', maxNativeZoom: 17 },
-      humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://hot.openstreetmap.org">HOT</a>', maxNativeZoom: 19 },
+    // maxZoom = the highest zoom level the provider actually serves
+    // tiles for, used as a hard cap on user zoom. Leaflet greys out
+    // the +/scroll-wheel zoom past this. Without the cap, OpenTopoMap
+    // (z17) returns a "max zoom layer = 17" placeholder image past
+    // its native max. Hard-cap blocks the action entirely.
+    const tiles: Record<string, { url: string, attribution: string, maxZoom: number }> = {
+      street:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19 },
+      satellite:    { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: '&copy; <a href="https://www.esri.com">Esri</a>', maxZoom: 19 },
+      dark:         { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>', maxZoom: 19 },
+      positron:     { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>', maxZoom: 19 },
+      voyager:      { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>', maxZoom: 19 },
+      topo:         { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a>', maxZoom: 17 },
+      humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://hot.openstreetmap.org">HOT</a>', maxZoom: 19 },
     }
     const t = tiles[layer] ?? tiles.street
-    tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: 19, maxNativeZoom: t.maxNativeZoom }).addTo(map)
+    tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: t.maxZoom }).addTo(map)
+    // Push the new layer's cap onto the map. If the user is currently
+    // zoomed past it (switching satellite z19 → topo z17), pull them
+    // back so the view doesn't show placeholder tiles for one frame.
+    map.setMaxZoom(t.maxZoom)
+    if (map.getZoom() > t.maxZoom) map.setZoom(t.maxZoom)
     setMapLayer(layer)
   }
 

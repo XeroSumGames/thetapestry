@@ -46,20 +46,20 @@ const SETTING_CENTERS: Record<string, { center: [number, number]; zoom: number }
   mongrels: { center: [38.0, -112.0], zoom: 5 },
 }
 
-// maxNativeZoom = the highest zoom level the provider actually serves
-// tiles for. Above that, Leaflet upscales the maxNativeZoom tile
-// (blurry but readable) instead of asking the provider for tiles it
-// doesn't have. Without this, OpenTopoMap (z17 cap) returns a
-// "max zoom layer = 17" placeholder image past z17 — that's the bug
-// users hit when zooming on the topo style.
-const TILE_LAYERS: Record<string, { url: string; attr: string; maxNativeZoom: number }> = {
-  street:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap', maxNativeZoom: 19 },
-  satellite:    { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri', maxNativeZoom: 19 },
-  dark:         { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxNativeZoom: 19 },
-  positron:     { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxNativeZoom: 19 },
-  voyager:      { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxNativeZoom: 19 },
-  topo:         { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attr: '© OpenTopoMap', maxNativeZoom: 17 },
-  humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '© HOT', maxNativeZoom: 19 },
+// maxZoom = the highest zoom level the provider actually serves
+// tiles for, used as a hard cap on user zoom. Leaflet greys out the
+// +/scroll-wheel zoom past this. Without the cap, OpenTopoMap (z17)
+// returns a "max zoom layer = 17" placeholder image past its native
+// max — users zooming in to inspect a pin got tiled with that
+// placeholder. Hard-cap blocks the action entirely.
+const TILE_LAYERS: Record<string, { url: string; attr: string; maxZoom: number }> = {
+  street:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap', maxZoom: 19 },
+  satellite:    { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri', maxZoom: 19 },
+  dark:         { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxZoom: 19 },
+  positron:     { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxZoom: 19 },
+  voyager:      { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxZoom: 19 },
+  topo:         { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attr: '© OpenTopoMap', maxZoom: 17 },
+  humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '© HOT', maxZoom: 19 },
 }
 
 const PIN_CATEGORIES = [
@@ -406,7 +406,15 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     if (!L) return
     tileLayerRef.current.remove()
     const t = TILE_LAYERS[layer] ?? TILE_LAYERS.street
-    tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19, maxNativeZoom: t.maxNativeZoom }).addTo(mapInstanceRef.current)
+    tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: t.maxZoom }).addTo(mapInstanceRef.current)
+    // Push the new layer's cap onto the map. If the user is currently
+    // zoomed past it (e.g. switching from satellite z19 → topo z17),
+    // pull them back to the cap so the view doesn't show placeholder
+    // tiles for one frame before they zoom out manually.
+    mapInstanceRef.current.setMaxZoom(t.maxZoom)
+    if (mapInstanceRef.current.getZoom() > t.maxZoom) {
+      mapInstanceRef.current.setZoom(t.maxZoom)
+    }
   }
 
   async function handleSearch(e: React.FormEvent) {
@@ -479,9 +487,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // zoom 3 — wide regional view that frames Europe + N Africa for any
       // campaign that hasn't picked a setting or set a custom center.
       const view = customCenter ?? settingView ?? { center: [38.6169, 15.2930] as [number, number], zoom: 3 }
-      const map = L.map(mapRef.current, { center: view.center, zoom: view.zoom, zoomControl: true, minZoom: 2, maxZoom: 19 })
-      const t = TILE_LAYERS[mapLayer]
-      tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19, maxNativeZoom: t.maxNativeZoom }).addTo(map)
+      const t = TILE_LAYERS[mapLayer] ?? TILE_LAYERS.street
+      const map = L.map(mapRef.current, { center: view.center, zoom: view.zoom, zoomControl: true, minZoom: 2, maxZoom: t.maxZoom })
+      tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: t.maxZoom }).addTo(map)
 
       mapInstanceRef.current = map
 
