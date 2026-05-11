@@ -241,11 +241,20 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     return hit ? `${r.character_name} coordinates allies against ${tgt}${outcomeTag}`
                : `${r.character_name} fails to coordinate allies against ${tgt}${outcomeTag}`
   }
-  // Coordinate-effect broadcast row - written by the apply step after a
-  // successful Coordinate roll, label format
-  // "🎯 <names> get(s) +<N> CMod when attacking <target>". The dice are
-  // 0+0 (no roll); narrative trim drops the emoji. Outcome value is
-  // 'coordinate'.
+  // Unified Coordinate success row (post-2026-05-10). Label format:
+  //   "🎯 <coordinator> Successfully coordinated an attack against
+  //    <target> with <allies>"
+  // The row carries the real dice + outcome (Success / Wild / HI);
+  // compactRollSummary just strips the emoji so the narrative reads
+  // naturally and the ▸ expand path renders the dice breakdown.
+  if (r.outcome !== 'action' && /^🎯\s+.+?\s+Successfully coordinated an attack against/.test(r.label)) {
+    return r.label.replace(/^🎯\s*/, '')
+  }
+  // Legacy Coordinate-effect broadcast row (pre-2026-05-10). Label
+  // format was "🎯 <names> get(s) +<N> CMod when attacking <target>"
+  // with outcome='coordinate' and 0+0 dice. Kept for backwards
+  // compatibility with historical roll_log rows; new rows go through
+  // the unified path above.
   if (r.outcome === 'coordinate') {
     return r.label.replace(/^🎯\s*/, '')
   }

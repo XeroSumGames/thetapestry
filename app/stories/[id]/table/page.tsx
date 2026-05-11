@@ -5438,22 +5438,39 @@ export default function TablePage() {
         }
         if (appliedAllyIds.length > 0) {
           coordinateResult = `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
-          // Single batch UPDATE - every applied ally gets the same
-          // (coordinate_target, coordinate_bonus) values, so .in() collapses
-          // N round-trips to 1. Log insert runs in parallel since it hits a
-          // different table.
-          // Log trimming: one summary row instead of one row per ally
-          // (used to write N rows for N allies, which cluttered the
-          // feed). Names are joined into a single banner; the underlying
-          // initiative_order.coordinate_bonus update is what actually
-          // grants the CMod, so dropping the per-ally rows is purely
-          // cosmetic.
+          // UNIFIED COORDINATE ROW (post-2026-05-10).
+          //
+          // Pattern: when a single mechanical event has both a dice-roll
+          // and a downstream effect-broadcast, write ONE row that
+          // carries both. The row's character_name is the actor, the
+          // label is the narrative outcome, the dice/AMod/SMod/CMod
+          // are the real roll, and the outcome is the real roll
+          // outcome. compactRollSummary trims to the narrative; ▸
+          // expands to the dice breakdown. NO separate "effect" row.
+          //
+          // Why this matters: the prior implementation wrote two rows
+          // (player Coordinate roll + System effect-broadcast). The
+          // System row had 0+0 dice, no expandable detail, and read
+          // as a duplicate. One row tells the whole story.
+          //
+          // Applied here for Coordinate; reuse this pattern for any
+          // future "actor rolls then propagates effect" mechanic.
+          const coordCmod = parseInt(cmod, 10) || 0
+          // Effect-row only writes on Success/Wild/HI, so only HI here.
+          const insightAwardedCoord = outcome === 'High Insight' && !!myEntry
           await Promise.all([
             supabase.from('initiative_order').update({ coordinate_target: coordTarget, coordinate_bonus: bonus }).in('id', appliedAllyIds),
             supabase.from('roll_log').insert({
-              campaign_id: id, user_id: userId, character_name: 'System',
+              campaign_id: id, user_id: userId,
+              character_name: activeInit?.character_name ?? 'A coordinator',
               label: `🎯 ${activeInit?.character_name ?? 'A coordinator'} Successfully coordinated an attack against ${coordTarget} with ${appliedTo.join(', ')}`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
+              die1, die2,
+              amod: pendingRoll.amod,
+              smod: pendingRoll.smod,
+              cmod: coordCmod,
+              total,
+              outcome,
+              insight_awarded: insightAwardedCoord,
             }),
           ])
         } else {
@@ -5470,7 +5487,13 @@ export default function TablePage() {
     // a separate roll_log row. If this is one of those rolls, skip the
     // standalone saveRollToLog write - otherwise the feed would show both
     // the raw Athletics check AND the sprint banner.
-    const isTrimmedRoll = pendingRoll.label.includes('Sprint')
+    // isTrimmedRoll: skip the standalone saveRollToLog write because
+    // the row was already written as part of the side-effect (Sprint
+    // banner / unified Coordinate row). See the UNIFIED ROW pattern
+    // comment in the Coordinate branch above.
+    const isCoordinateSuccess = pendingRoll.label.includes('Coordinate')
+      && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')
+    const isTrimmedRoll = pendingRoll.label.includes('Sprint') || isCoordinateSuccess
     // Capture the Insight Die spend kind (if any) so the extended log
     // card can render the right "🎲 Insight Die spent" banner reliably.
     // preRollSpent is true only when the spend actually fired; preRollInsight
