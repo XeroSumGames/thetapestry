@@ -1784,14 +1784,15 @@ export default function TablePage() {
   }
 
   async function nextTurn() {
-    console.warn('[nextTurn] called')
+    const __t0 = performance.now()
+    console.warn('[playtest-trace] [nextTurn] called at', new Date().toISOString())
 
     // Re-entry guard: a rapid-fire consumeAction + realtime echo can fire two
     // nextTurn calls back-to-back. Without this guard, call #2 reads active
     // state that call #1 hasn't finished writing yet, then advances the turn
     // a second time - silently skipping whoever call #1 just activated.
     if (nextTurnInFlightRef.current) {
-      console.warn('[nextTurn] already in flight - bailing to avoid double-advance')
+      console.warn('[playtest-trace] [nextTurn] already in flight - bailing to avoid double-advance')
       return
     }
     nextTurnInFlightRef.current = true
@@ -2155,10 +2156,22 @@ export default function TablePage() {
       .eq('is_active', true)
       .neq('id', order[nextIdx].id)
     if (deactErr) console.warn('[nextTurn] bulk deactivate error:', deactErr.message)
+    const __tDeactivated = performance.now()
     const { error: actErr } = await supabase.from('initiative_order').update(activateUpdate(order[nextIdx])).eq('id', order[nextIdx].id)
     if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
+    const __tActivated = performance.now()
     await Promise.all([loadInitiative(id), loadEntries(id)])
+    const __tReloaded = performance.now()
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+    const __tBroadcast = performance.now()
+    console.warn('[playtest-trace] [nextTurn] done', {
+      total_ms: Math.round(__tBroadcast - __t0),
+      deactivate_ms: Math.round(__tDeactivated - __t0),
+      activate_ms: Math.round(__tActivated - __tDeactivated),
+      reload_ms: Math.round(__tReloaded - __tActivated),
+      broadcast_ms: Math.round(__tBroadcast - __tReloaded),
+      activated_name: order[nextIdx]?.character_name,
+    })
     } finally {
       nextTurnInFlightRef.current = false
     }
@@ -2188,11 +2201,18 @@ export default function TablePage() {
     const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
     if (freshErr) console.warn('[consumeAction] fetch error:', freshErr.message)
     const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
-    console.warn('[consumeAction] entryId:', entryId, 'entry:', entry, 'cost:', cost, 'label:', actionLabel)
-    if (!entry) { console.warn('[consumeAction] no entry found, bailing'); return }
-    if ((entry.actions_remaining ?? 0) < cost) { console.warn('[consumeAction] actions_remaining', entry.actions_remaining, '< cost', cost, '- bailing'); return }
+    console.warn('[playtest-trace] [consumeAction] CALLED', {
+      entryId,
+      character: entry?.character_name,
+      actions_before: entry?.actions_remaining,
+      cost,
+      label: actionLabel,
+      call_site_via_stack: new Error().stack?.split('\n').slice(2, 5).join(' | '),
+    })
+    if (!entry) { console.warn('[playtest-trace] [consumeAction] no entry found, bailing'); return }
+    if ((entry.actions_remaining ?? 0) < cost) { console.warn('[playtest-trace] [consumeAction] actions_remaining', entry.actions_remaining, '< cost', cost, '- bailing'); return }
     const newRemaining = (entry.actions_remaining ?? 0) - cost
-    console.warn('[consumeAction] newRemaining:', newRemaining)
+    console.warn('[playtest-trace] [consumeAction] WROTE actions_remaining:', entry.actions_remaining, '->', newRemaining)
 
     // Log the action to game feed
     if (actionLabel) {
@@ -4372,6 +4392,23 @@ export default function TablePage() {
         armor: armorPieces,
         attackerCategory,
       })
+      console.warn('[playtest-trace] [damage-calc]', {
+        weapon: weapon.weaponName,
+        base: weapon.damage?.split('+')[0],
+        diceDesc: weapon.damage,
+        diceRoll,
+        phyBonus,
+        unarmedBonus,
+        totalWP_raw: totalWP + unarmedBonus,
+        rpPercent: weapon.rpPercent,
+        isStun,
+        defensiveMod,
+        armorPieces_count: armorPieces.length,
+        attackerCategory,
+        finalWP_after_calc: finalWP,
+        finalRP_after_calc: finalRP,
+        mitigated,
+      })
       // Subdue: full RP but 50% WP
       if (pendingRoll.label.includes('Subdue')) {
         finalWP = Math.max(1, Math.floor(finalWP / 2))
@@ -5775,7 +5812,14 @@ export default function TablePage() {
     setPendingRoll(null)
     setRollResult(null)
 
-    console.warn('[closeRollModal] didRoll:', didRoll, 'combatActive:', combatActive, 'preConsumed:', preConsumed, 'cost:', cost, 'rollerInitId:', rollerInitId)
+    console.warn('[playtest-trace] [closeRollModal] gate', {
+      didRoll,
+      combatActive,
+      preConsumed,
+      cost,
+      rollerInitId,
+      wasWeaponAttack,
+    })
     // Consume action(s) if a roll was actually executed.
     // Skip if the action was already pre-consumed (Stabilize/Unjam) OR
     // if the roller is NOT the active combatant (out-of-turn check, no
@@ -5787,11 +5831,19 @@ export default function TablePage() {
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
       if (foErr) console.warn('[closeRollModal] active fetch error:', foErr.message)
       const activeEntry = freshOrder?.[0]
-      console.warn('[closeRollModal] activeEntry:', activeEntry?.character_name, 'user_id:', activeEntry?.user_id, 'me:', userId, 'isGM:', isGM, 'is_npc:', activeEntry?.is_npc)
+      console.warn('[playtest-trace] [closeRollModal] activeEntry', {
+        name: activeEntry?.character_name,
+        actions_remaining: activeEntry?.actions_remaining,
+        user_id: activeEntry?.user_id,
+        me: userId,
+        isGM,
+        is_npc: activeEntry?.is_npc,
+      })
       if (activeEntry) {
         // Only consume if the roller is the active combatant. Out-of-turn
         // checks are free.
         const rollerIsActive = rollerInitId != null && rollerInitId === activeEntry.id
+        console.warn('[playtest-trace] [closeRollModal] rollerIsActive?', rollerIsActive, '(roller:', rollerInitId, 'active:', activeEntry.id, ')')
         if (rollerIsActive) {
           // Track last attack target for same-target +1 CMod bonus AND
           // for pre-selecting the same target on the next Attack modal
