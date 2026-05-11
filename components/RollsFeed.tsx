@@ -585,6 +585,11 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             ? 'failed badly at'
             : 'were Unsuccessful at'
     const skillTail = skill
+    // LI gets a group-flavored insight beat: the whole party shares
+    // the moment of insight, not just the leader.
+    const groupOutcomeTag = r.outcome === 'Low Insight'
+      ? ' but collectively had a Moment of Insight into why they failed'
+      : ''
     // "A, B, C, and D" with Oxford serial comma when 3+; "A and B"
     // for two; just "A" for solo.
     const formatNames = (names: string[]) => {
@@ -607,7 +612,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           </div>
         </div>
         <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-          {formatNames(participants)} {adverb} {skillTail}
+          {formatNames(participants)} {adverb} {skillTail}{groupOutcomeTag}
           {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
         </div>
         {isExpanded && (
