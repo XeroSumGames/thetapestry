@@ -62,6 +62,15 @@ const TILE_LAYERS: Record<string, { url: string; attr: string; maxZoom: number }
   humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '© HOT', maxZoom: 19 },
 }
 
+// Travel-mode lookup for the measure tool. mph drives time conversion;
+// emoji is the inline chip glyph; label shows in the dropdown. Add
+// modes here (horseback, boat, etc.) as the campaign evolves.
+const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }> = {
+  walking: { mph: 3,  label: 'Walking',  emoji: '🚶' },
+  bicycle: { mph: 10, label: 'Bicycle',  emoji: '🚴' },
+  minnie:  { mph: 32, label: 'Minnie',   emoji: '🚐' },
+}
+
 const PIN_CATEGORIES = [
   { value: 'location',   label: 'Location',   emoji: '📍' },
   { value: 'rumor',      label: 'Rumor',      emoji: '🎒' },
@@ -124,6 +133,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // on the per-segment chips out on the map.
   const [measureLegs, setMeasureLegs] = useState<string[]>([])
   const [measureTotalText, setMeasureTotalText] = useState<string>('')
+  // Travel mode for the measure tool. Walking = 3 mph (sustained foot
+  // pace), Bicycle = 10 mph (post-apoc mixed terrain), Minnie = 32 mph
+  // (midpoint of her 30-35 realistic cruise per the Mongrels doc).
+  // Session-scoped — no localStorage. Defaults to walking.
+  type TravelMode = 'walking' | 'bicycle' | 'minnie'
+  const [travelMode, setTravelMode] = useState<TravelMode>('walking')
+  const travelModeRef = useRef<TravelMode>('walking')
+  useEffect(() => { travelModeRef.current = travelMode }, [travelMode])
   useEffect(() => { measureModeRef.current = measureMode }, [measureMode])
   // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
   // dblclick handler registered in the init effect can always call the
@@ -231,19 +248,59 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const feet = meters * 3.28084
     return `${Math.round(feet)} ft (${Math.round(meters)} m)`
   }
-  // Walk time at 3 mph (≈ 80.47 m/min) — typical sustained foot pace
-  // for an unencumbered adult on flat ground. "23 min" for sub-hour
-  // legs, "2h 4m" once it crosses 60 minutes, "<1 min" for very
-  // short legs so the chip never reads "0 min."
-  function formatWalkTime(meters: number): string {
-    const MIN_PER_M = 1 / 80.4672
-    const minutes = meters * MIN_PER_M
+  // Travel time at the picked mode's mph. Walking is 3 mph (sustained
+  // foot pace, unencumbered, flat ground). Bicycle is 10 mph (mixed
+  // post-apoc terrain). Minnie is 32 mph (midpoint of her 30-35
+  // realistic cruise per `Minnie ^0 The Magnificent Mongrels v04.docx`).
+  // Output: "23 min" sub-hour, "2h 4m" once past 60 min, "<1 min" for
+  // very short legs so a chip never reads "0 min."
+  function formatTravelTime(meters: number, mph: number): string {
+    const metersPerMinute = mph * 1609.344 / 60
+    const minutes = meters / metersPerMinute
     if (minutes < 1) return '<1 min'
     if (minutes < 60) return `${Math.round(minutes)} min`
     const h = Math.floor(minutes / 60)
     const m = Math.round(minutes - h * 60)
     return m === 0 ? `${h}h` : `${h}h ${m}m`
   }
+  // Recompute every leg label + the TOTAL row using the current travel
+  // mode. Called when the user switches mode after dropping waypoints
+  // — the on-map midpoint chips get fresh icons via setIcon (no
+  // marker churn), the toolbar legs/total restate. Cheap loop over
+  // existing points; no re-fetch, no flicker.
+  function recomputeMeasureLabels() {
+    const L = (window as any).L
+    const pts = measurePointsRef.current
+    if (pts.length < 2 || !L) {
+      setMeasureLegs([])
+      setMeasureTotalText(pts.length === 1 ? 'Click a second point to measure…' : '')
+      return
+    }
+    const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
+    const nextLegs: string[] = []
+    for (let i = 1; i < pts.length; i++) {
+      const segMeters = haversineMeters(pts[i - 1], pts[i])
+      nextLegs.push(`Leg ${i}→${i + 1}: ${formatDistance(segMeters)} · ${mode.emoji} ${formatTravelTime(segMeters, mode.mph)}`)
+      // Update the on-map chip for this leg. measureLabelsRef[i-1]
+      // corresponds to the leg between pts[i-1] and pts[i].
+      const labelMarker = measureLabelsRef.current[i - 1]
+      if (labelMarker) {
+        const segText = `${formatDistance(segMeters)} · ${mode.emoji} ${formatTravelTime(segMeters, mode.mph)}`
+        const labelHtml = `<div style="padding:3px 8px;background:rgba(15,15,15,0.92);border:1px solid #7ab3d4;border-radius:3px;color:#cce0f5;font-family:Carlito,sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5);">${segText}</div>`
+        try { labelMarker.setIcon(L.divIcon({ html: labelHtml, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })) } catch {}
+      }
+    }
+    setMeasureLegs(nextLegs)
+    const total = totalMeters(pts)
+    setMeasureTotalText(`${formatDistance(total)} · ${mode.emoji} ${formatTravelTime(total, mode.mph)} total`)
+  }
+  // Recompute whenever the travel mode flips. No-op when measureMode
+  // is off or fewer than 2 points have been dropped.
+  useEffect(() => {
+    if (measurePointsRef.current.length >= 2) recomputeMeasureLabels()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [travelMode])
+
   // Wipe every measure-tool layer + reset state. Used by the toggle
   // button, Esc keypress, and unmount cleanup.
   function clearMeasure() {
@@ -283,16 +340,17 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const cur = measurePointsRef.current[i - 1]
       const segMeters = haversineMeters(prev, cur)
       const mid = { lat: (prev.lat + cur.lat) / 2, lng: (prev.lng + cur.lng) / 2 }
-      const segText = `${formatDistance(segMeters)} · 🚶 ${formatWalkTime(segMeters)}`
+      const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
+      const segText = `${formatDistance(segMeters)} · ${mode.emoji} ${formatTravelTime(segMeters, mode.mph)}`
       const labelHtml = `<div style="padding:3px 8px;background:rgba(15,15,15,0.92);border:1px solid #7ab3d4;border-radius:3px;color:#cce0f5;font-family:Carlito,sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5);">${segText}</div>`
       const labelIcon = L.divIcon({ html: labelHtml, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
       const segLabel = L.marker([mid.lat, mid.lng], { icon: labelIcon, interactive: false, keyboard: false, zIndexOffset: 9500 }).addTo(map)
       measureLabelsRef.current.push(segLabel)
       // Toolbar shows per-leg breakdown stacked vertically + a TOTAL
       // row at the bottom. Each leg line: "Leg N→N+1: <dist> · <time>".
-      setMeasureLegs(prev => [...prev, `Leg ${i - 1}→${i}: ${formatDistance(segMeters)} · 🚶 ${formatWalkTime(segMeters)}`])
+      setMeasureLegs(prev => [...prev, `Leg ${i - 1}→${i}: ${formatDistance(segMeters)} · ${mode.emoji} ${formatTravelTime(segMeters, mode.mph)}`])
       const total = totalMeters(measurePointsRef.current)
-      setMeasureTotalText(`${formatDistance(total)} · 🚶 ${formatWalkTime(total)} total`)
+      setMeasureTotalText(`${formatDistance(total)} · ${mode.emoji} ${formatTravelTime(total, mode.mph)} total`)
     } else {
       setMeasureLegs([])
       setMeasureTotalText('Click a second point to measure…')
@@ -659,6 +717,23 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
             {measureMode ? '✕ Stop' : '📏 Measure'}
           </button>
+          {/* Travel-mode picker — appears only while measure mode is
+              active. Switching mode recomputes every leg + the TOTAL
+              row in place, including the on-map midpoint chips, via
+              the recomputeMeasureLabels effect. Walking / Bicycle /
+              Minnie defined in TRAVEL_MODES at the module top.
+              Session-scoped (no localStorage). */}
+          {measureMode && (
+            <select value={travelMode} onChange={e => setTravelMode(e.target.value as TravelMode)}
+              title="How are the characters traveling? Affects time-of-travel display."
+              style={{ padding: '5px 8px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: '1px solid #7ab3d4', background: '#0f1a2e', color: '#cce0f5', letterSpacing: '.04em' }}>
+              {Object.entries(TRAVEL_MODES).map(([key, m]) => (
+                <option key={key} value={key} style={{ background: '#0f0f0f', color: '#cce0f5' }}>
+                  {m.emoji} {m.label} ({m.mph} mph)
+                </option>
+              ))}
+            </select>
+          )}
           {/* SHARE VIEW — GM-only. Snapshots the current map state
               (center, zoom, tile layer) and broadcasts to every other
               viewer of this campaign. Players' maps smoothly flyTo
