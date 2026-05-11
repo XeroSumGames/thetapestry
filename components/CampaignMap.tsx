@@ -46,14 +46,20 @@ const SETTING_CENTERS: Record<string, { center: [number, number]; zoom: number }
   mongrels: { center: [38.0, -112.0], zoom: 5 },
 }
 
-const TILE_LAYERS: Record<string, { url: string; attr: string }> = {
-  street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap' },
-  satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
-  dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '© CARTO' },
-  positron: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '© CARTO' },
-  voyager: { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: '© CARTO' },
-  topo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attr: '© OpenTopoMap' },
-  humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '© HOT' },
+// maxNativeZoom = the highest zoom level the provider actually serves
+// tiles for. Above that, Leaflet upscales the maxNativeZoom tile
+// (blurry but readable) instead of asking the provider for tiles it
+// doesn't have. Without this, OpenTopoMap (z17 cap) returns a
+// "max zoom layer = 17" placeholder image past z17 — that's the bug
+// users hit when zooming on the topo style.
+const TILE_LAYERS: Record<string, { url: string; attr: string; maxNativeZoom: number }> = {
+  street:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap', maxNativeZoom: 19 },
+  satellite:    { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri', maxNativeZoom: 19 },
+  dark:         { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxNativeZoom: 19 },
+  positron:     { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxNativeZoom: 19 },
+  voyager:      { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: '© CARTO', maxNativeZoom: 19 },
+  topo:         { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attr: '© OpenTopoMap', maxNativeZoom: 17 },
+  humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '© HOT', maxNativeZoom: 19 },
 }
 
 const PIN_CATEGORIES = [
@@ -389,7 +395,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     if (!L) return
     tileLayerRef.current.remove()
     const t = TILE_LAYERS[layer] ?? TILE_LAYERS.street
-    tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(mapInstanceRef.current)
+    tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19, maxNativeZoom: t.maxNativeZoom }).addTo(mapInstanceRef.current)
   }
 
   async function handleSearch(e: React.FormEvent) {
@@ -464,7 +470,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const view = customCenter ?? settingView ?? { center: [38.6169, 15.2930] as [number, number], zoom: 3 }
       const map = L.map(mapRef.current, { center: view.center, zoom: view.zoom, zoomControl: true, minZoom: 2, maxZoom: 19 })
       const t = TILE_LAYERS[mapLayer]
-      tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(map)
+      tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19, maxNativeZoom: t.maxNativeZoom }).addTo(map)
 
       mapInstanceRef.current = map
 
