@@ -449,6 +449,27 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           npcSection +
         `</div>`
       const marker = leaflet.marker([pin.lat, pin.lng], { icon, draggable: isGM }).bindPopup(popupHtml)
+      // Pin markers swallow the click before the map sees it, so the
+      // map-level alt-ping and measure-tool handlers never fire when a
+      // pin sits where you want to gesture. Strip bindPopup's auto-
+      // toggle and replace it with a router: alt -> ping at the pin's
+      // coords, measure-mode -> add a waypoint at the pin's coords,
+      // otherwise the normal open/close-popup behavior.
+      marker.off('click')
+      marker.on('click', (ev: any) => {
+        const oe = ev?.originalEvent
+        if (measureModeRef.current) {
+          addMeasurePoint(pin.lat, pin.lng)
+          return
+        }
+        if (oe?.altKey) {
+          const color = isGM ? '#ff3a1d' : '#39ff14'
+          dropPing(pin.lat, pin.lng, color)
+          pingChannelRef.current?.send({ type: 'broadcast', event: 'cm_ping', payload: { lat: pin.lat, lng: pin.lng, color } })
+          return
+        }
+        marker.togglePopup()
+      })
       if (isGM) {
         marker.on('dragend', async (ev: any) => {
           const ll = ev.target.getLatLng()
