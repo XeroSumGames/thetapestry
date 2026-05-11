@@ -201,9 +201,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     return () => window.removeEventListener('keydown', onKey)
   }, [measureMode])
 
-  // Inject ping pulse keyframes ONCE (per browser tab). Two pulses
-  // over ~2.4s, then auto-removal of the marker. Same visual cadence
-  // as TacticalMap so players recognize the gesture across surfaces.
+  // Inject ping pulse keyframes ONCE (per browser tab). Three staggered
+  // rings (red -> green -> red) at 0.6s each with 0.4s stagger pop in
+  // ~1.4s total. The alternating colors are deliberate — easier to
+  // catch from peripheral vision than a single hue. The role color
+  // passed to dropPing is now ignored; ping = always red/green/red.
   useEffect(() => {
     if (typeof document === 'undefined') return
     if (document.getElementById('cm-ping-style')) return
@@ -215,18 +217,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   100% { transform: scale(1.8); opacity: 0; }
 }
 .cm-ping-ring {
-  width: 110px; height: 110px; border-radius: 50%;
+  position: absolute; inset: 0;
+  border-radius: 50%;
   border: 5px solid currentColor;
   box-shadow: 0 0 18px currentColor, 0 0 36px currentColor, inset 0 0 14px currentColor;
-  animation: cm-ping-pulse 1.2s ease-out 2 both;
-  pointer-events: none;
-}
-.cm-ping-dot {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 14px currentColor, 0 0 28px currentColor;
-  position: absolute; left: 44px; top: 44px;
-  animation: cm-ping-pulse 1.2s ease-out 2 both;
+  animation: cm-ping-pulse 0.6s ease-out 1 both;
   pointer-events: none;
 }
 `
@@ -379,16 +374,29 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const L = (window as any).L
     const map = mapInstanceRef.current
     if (!L || !map) return
-    const html = `<div style="position:relative;width:110px;height:110px;color:${color};"><div class="cm-ping-ring"></div><div class="cm-ping-dot"></div></div>`
+    // Three staggered rings — red, green, red — for an alternating-
+    // color pop that catches peripheral attention. Each ring runs one
+    // pulse (0.6s); delays of 0s / 0.4s / 0.8s create a continuous
+    // rhythm with light overlap. The `color` param is preserved for
+    // back-compat with the broadcast handler but no longer drives the
+    // visual — the palette is fixed.
+    const ringHtml = (col: string, delayMs: number) =>
+      `<div class="cm-ping-ring" style="color:${col};animation-delay:${delayMs}ms;"></div>`
+    const html =
+      `<div style="position:relative;width:110px;height:110px;">` +
+        ringHtml('#ff3a1d', 0) +
+        ringHtml('#39ff14', 400) +
+        ringHtml('#ff3a1d', 800) +
+      `</div>`
     const icon = L.divIcon({ html, className: '', iconSize: [110, 110], iconAnchor: [55, 55] })
     const marker = L.marker([lat, lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9999 }).addTo(map)
     pingMarkersRef.current.push(marker)
-    // 1.2s × 2 iterations = 2.4s total. Add a small buffer so the last
-    // frame of the final pulse renders before we yank the DOM node.
+    // Last ring starts at 800ms + 600ms duration = 1400ms; small buffer
+    // ensures the final frame renders before the DOM node is yanked.
     setTimeout(() => {
       try { map.removeLayer(marker) } catch {}
       pingMarkersRef.current = pingMarkersRef.current.filter(m => m !== marker)
-    }, 2600)
+    }, 1600)
   }
 
   async function loadPins(L?: any) {
