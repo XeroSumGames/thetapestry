@@ -35,10 +35,10 @@ export default function Page() {
         title="Stress & Breaking Point"
         intro={
           <>
-            Each character starts with a <Term>Stress Level</Term> of 0
-            and a <Term>Breaking Point</Term> of 5. Brutal scenes push
-            Stress up; reaching the Breaking Point triggers a Breaking
-            Point reaction from Table 13.
+            Each character starts with a <Term>Stress Level</Term> of 0,
+            tracked on a 5-pip bar. Brutal scenes push Stress up; reaching
+            pip 5 triggers a last-chance <Term>Hold It Together</Term> save
+            — and if that fails, a Breaking Point reaction from Table 13.
           </>
         }
       />
@@ -48,15 +48,55 @@ export default function Page() {
           When faced with extreme stress or emotional trauma — at the
           GM's discretion or when the narrative calls for it — PCs make a{' '}
           <Term>Stress Check</Term>: roll <Term>2d6 + Stress Modifier</Term>{' '}
-          (RSN + ACU AMod). A failure raises the character's Stress Level
-          by 1.
+          (RSN + ACU AMod) plus any CMods the GM applies. Standard outcome
+          ladder: <Term>Success (9+)</Term> means the character holds it
+          together, no Stress gained; <Term>Failure (≤8)</Term> raises
+          their Stress Level by 1.
+        </P>
+        <P>
+          On the platform the <Term>Check</Term> button next to the
+          character's Stress bar fires this roll. The result broadcasts
+          to the table via the dice feed, and the GM (or the player on a
+          GM nod) applies the +1 manually using the ± buttons. The Stress
+          increment is not auto-applied — keeps the GM in the loop on
+          severity judgement.
+        </P>
+        <P>
+          Stress Level also auto-increments by 1 (no check, no manual
+          tick) when a character enters <Term>0 WP (Mortally Wounded)</Term>{' '}
+          or <Term>0 RP (Incapacitated)</Term>. The platform handles
+          these automatically and logs the cause to the roll feed.
+        </P>
+      </RuleSection>
+
+      <RuleSection id="hold-it-together" title="Hold It Together (Pip 5 save)">
+        <P>
+          When Stress Level hits <Term>5</Term>, the character gets one
+          last chance to keep their composure before Breaking Point fires.
+          The platform pops a Stress Check modal automatically; the
+          character makes a <Term>Hold It Together</Term> save:{' '}
+          <Term>2d6 + RSN AMod + ACU AMod + CMod</Term>.
+        </P>
+        <P>
+          Threshold is <Term>7 or above</Term> — lower than a standard
+          Success, because this is the cliff edge. On a Success, Stress
+          drops back to <Term>4</Term> (one pip cleared, the bar still
+          full of warning). On a Failure, Stress stays at 5 and the
+          character rolls on Table 13: Breaking Point (below).
+        </P>
+        <P>
+          The Hold It Together save is the only Stress Check with a
+          non-standard success threshold. CMods apply normally — Psychology*
+          help from another PC, Luxury Rations consumed before the brink,
+          or whatever the GM judges relevant.
         </P>
       </RuleSection>
 
       <RuleSection id="breaking-point" title="Breaking Point">
         <P>
-          If a character's Stress Level reaches <Term>5</Term>, they hit
-          their Breaking Point.
+          If the Hold It Together save fails (or the GM is running a
+          variant that skips the save), the character hits their{' '}
+          <Term>Breaking Point</Term>.
         </P>
         <P>
           Roll <Term>2d6</Term> on Table 13: Breaking Point. The reaction

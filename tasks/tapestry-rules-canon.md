@@ -1,7 +1,7 @@
 # Tapestry Rules Canon — XSE SRD v1.1.17
 
 **Source of truth**: `lib/xse-schema.ts` and `app/rules/*` pages on TheTapestry platform.
-**Generated**: 2026-05-09.
+**Generated**: 2026-05-11.
 **Regenerate**: `npx tsx scripts/export-canon.ts > tasks/tapestry-rules-canon.md`
 
 This file is the platform's canonical reference for rules content. Every term, formula,
@@ -480,7 +480,17 @@ Each attack deals **Wound Points (WP)** and **Resilience Points (RP)** damage. R
 
 ### Stress & Breaking Point
 
-Stress starts at 0, max 5. Rises by 1 on a failed Stress Check (2d6 + RSN + ACU AMod) or when entering 0 WP / 0 RP (Tapestry house rule). At 5, roll 2d6 on Table 13 — reaction lasts 1d6 rounds, then Stress resets to 0. **Cooling Off**: Stress drops by 1 per 8 uninterrupted in-game hours free from combat/conflict/threat doing something the character enjoys.
+Stress is tracked on a 5-pip bar starting at 0. Three things raise it:
+
+- **Failed Stress Check** (GM-triggered narrative event): roll `2d6 + Stress Modifier (RSN + ACU AMod) + CMod`, standard 9+ Success threshold. Failure → +1 Stress, manually applied by GM or player. The platform does NOT auto-tick on a failed Stress Check; the result broadcasts to the dice feed and the GM judges.
+- **Entering 0 WP (Mortally Wounded)**: automatic +1 Stress, no check, no manual tick. Tapestry handles via `character_states.stress` increment.
+- **Entering 0 RP (Incapacitated)**: same — automatic +1 Stress.
+
+**Hold It Together save (Pip 5)**: when Stress hits 5, the character makes a last-chance save before Breaking Point fires. Roll `2d6 + RSN AMod + ACU AMod + CMod`. The success threshold is **7 or above** — lower than the standard 9+ Success because this is the cliff edge. On a Success, Stress drops to 4. On a Failure, Stress stays at 5 and the character rolls on Table 13: Breaking Point. The platform pops the Hold It Together modal automatically when Stress transitions from <5 to 5.
+
+**Breaking Point**: roll 2d6 on Table 13 — reaction lasts 1d6 rounds, then Stress resets to 0.
+
+**Cooling Off**: Stress drops by 1 per 8 uninterrupted in-game hours free from combat/conflict/threat doing something the character enjoys.
 
 ### Lasting Wounds (Table 12)
 
