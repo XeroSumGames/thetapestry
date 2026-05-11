@@ -217,7 +217,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   width: 110px; height: 110px; border-radius: 50%;
   border: 5px solid currentColor;
   box-shadow: 0 0 18px currentColor, 0 0 36px currentColor, inset 0 0 14px currentColor;
-  animation: cm-ping-pulse 1.2s ease-out 3 both;
+  animation: cm-ping-pulse 1.2s ease-out 2 both;
   pointer-events: none;
 }
 .cm-ping-dot {
@@ -225,7 +225,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   background: currentColor;
   box-shadow: 0 0 14px currentColor, 0 0 28px currentColor;
   position: absolute; left: 44px; top: 44px;
-  animation: cm-ping-pulse 1.2s ease-out 3 both;
+  animation: cm-ping-pulse 1.2s ease-out 2 both;
   pointer-events: none;
 }
 `
@@ -382,12 +382,12 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const icon = L.divIcon({ html, className: '', iconSize: [110, 110], iconAnchor: [55, 55] })
     const marker = L.marker([lat, lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9999 }).addTo(map)
     pingMarkersRef.current.push(marker)
-    // 1.2s × 3 iterations = 3.6s total. Add a small buffer so the last
+    // 1.2s × 2 iterations = 2.4s total. Add a small buffer so the last
     // frame of the final pulse renders before we yank the DOM node.
     setTimeout(() => {
       try { map.removeLayer(marker) } catch {}
       pingMarkersRef.current = pingMarkersRef.current.filter(m => m !== marker)
-    }, 3800)
+    }, 2600)
   }
 
   async function loadPins(L?: any) {
