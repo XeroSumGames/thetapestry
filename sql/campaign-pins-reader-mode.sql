@@ -14,3 +14,10 @@ ALTER TABLE public.campaign_pins
 
 COMMENT ON COLUMN public.campaign_pins.reader_mode IS
   'When set, the pin opens a reader popout instead of acting as a normal location pin. Current values: ''comic''. Pages = the pin''s sorted image attachments.';
+
+-- PostgREST caches its schema introspection; without this NOTIFY the
+-- new column is silently stripped from API write payloads on the first
+-- request after this migration runs, surfacing as
+-- "Could not find the 'reader_mode' column of 'campaign_pins' in the
+-- schema cache" on edit.
+NOTIFY pgrst, 'reload schema';
