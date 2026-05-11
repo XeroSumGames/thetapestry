@@ -4394,10 +4394,10 @@ export default function TablePage() {
       })
       console.warn('[playtest-trace] [damage-calc]', {
         weapon: weapon.weaponName,
-        base: weapon.damage?.split('+')[0],
-        diceDesc: weapon.damage,
-        diceRoll,
-        phyBonus,
+        damageExpr: weapon.damage,
+        totalBase,
+        totalDice,
+        totalPhy,
         unarmedBonus,
         totalWP_raw: totalWP + unarmedBonus,
         rpPercent: weapon.rpPercent,

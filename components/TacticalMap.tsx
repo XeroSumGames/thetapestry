@@ -2884,6 +2884,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // No token or handle clicked — start panning (unless locked)
     setSelectedToken(null)
     onTokenSelect?.(null)
+    console.warn('[playtest-trace] [TacticalMap] plain mousedown fell-through to pan branch', {
+      mapLocked,
+      willStartPan: !mapLocked,
+      button: e.button,
+      altKey: e.altKey,
+      shiftKey: e.shiftKey,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+      spaceHeld,
+      fogEditMode,
+    })
     if (!mapLocked) {
       startPan(e.clientX, e.clientY)
     }
