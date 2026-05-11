@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Roll Feed - Complete Log Preview</title>
+<!--
+  Roll Feed - Complete Log Preview
+  =================================
+  Current state after the 2026-05-10 log-trimming pass.
+
+  Outcome tags (global):
+    Wild Success / High Insight   ' and has a Moment of Insight as to why it went so well'
+    Low Insight                   ' and has a Moment of Insight as to why it went so badly'
+    First Impression (bespoke):
+      Wild/HI                     ' and has a Moment of Insight as to why they did so well'
+      LI                          ', but has a Moment of Insight as to what went wrong'
+    Unarmed HI (bespoke):         'had a Moment of Insight when using Unarmed Combat on X'
+    Stabilize HI (bespoke):       '...and has a Moment of Insight while doing so'
+
+  Turn gate removed 2026-05-10: any character at /table can fire
+  any check (skill / attribute / social / weapon attack) in or out
+  of combat. Action accounting still ties to the active combatant -
+  out-of-turn rolls are free, only the active combatant's rolls
+  consume actions.
+
+  Cast: Cree Hask (PC), Marv, Wilson, Frankie (PCs), Avery Xavier,
+  Nolan Penn (NPCs), Barrel 1 (object), Minnie (vehicle),
+  The Farm (community).
+-->
+<style>
+  :root {
+    --bg-page: #0e0e0e; --bg-row: #1a1a1a; --border: #2e2e2e;
+    --text: #d4cfc9; --text-strong: #f5f2ee; --label: #cce0f5;
+    --green: #7fc458; --blue: #7ab3d4; --amber: #EF9F27;
+    --red: #c0392b; --salmon: #f5a89a; --gold-text: #f5d8a0; --green-text: #c4e8a8;
+  }
+  html, body { background: var(--bg-page); margin: 0; padding: 24px 24px 80px; font-family: 'Carlito', 'Segoe UI', sans-serif; color: var(--text); }
+  h1 { color: var(--text-strong); font-size: 22px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 4px; }
+  h2 { color: var(--label); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { color: var(--amber); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 20px 0 8px; font-weight: 600; }
+  .intro { color: #888; font-size: 13px; margin-bottom: 20px; line-height: 1.5; max-width: 720px; }
+  .feed { max-width: 540px; }
+  code { color: #b5d8b5; background: #14181c; padding: 1px 5px; border-radius: 2px; font-size: 12px; }
+  .toc { background: #14181c; border: 1px solid var(--border); border-radius: 3px; padding: 12px 16px; margin-bottom: 24px; max-width: 720px; }
+  .toc h3 { color: var(--label); margin: 0 0 8px; }
+  .toc ul { margin: 0; padding-left: 18px; columns: 2; column-gap: 24px; }
+  .toc li { font-size: 13px; line-height: 1.7; }
+  .toc a { color: var(--blue); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  .row { margin-bottom: 8px; padding: 8px; background: var(--bg-row); border: 1px solid var(--border); border-radius: 3px; border-left-width: 3px; border-left-style: solid; }
+  .row.green  { border-left-color: var(--green); }
+  .row.blue   { border-left-color: var(--blue); }
+  .row.amber  { border-left-color: var(--amber); }
+  .row.red    { border-left-color: var(--red); }
+  .row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+  .name { font-size: 14px; font-weight: 700; color: var(--text-strong); letter-spacing: .04em; text-transform: uppercase; }
+  .right { display: flex; align-items: baseline; gap: 6px; }
+  .time { font-size: 13px; color: var(--label); }
+  .toggle { color: var(--blue); font-size: 13px; cursor: default; }
+  .narrative { font-size: 15px; color: var(--text); }
+  .insight-badge { display: inline-block; font-size: 13px; color: var(--green); background: #1a2e10; border: 1px solid #2d5a1b; padding: 1px 5px; border-radius: 2px; margin-left: 6px; }
+
+  .banner { margin-bottom: 8px; padding: 8px 10px; border: 1px solid; border-radius: 3px; border-left-width: 3px; border-left-style: solid; }
+  .banner-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .banner-title { font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .banner-body { font-size: 15px; line-height: 1.5; }
+
+  .b-combat-start { background: #1a1010; border-color: var(--red); border-left-color: var(--red); }
+  .b-combat-start .banner-title { color: var(--salmon); }
+  .b-combat-start .banner-body { color: var(--text); }
+  .b-combat-start .name-strong { color: var(--text-strong); font-weight: 600; }
+
+  .b-drop { background: #1a2010; border-color: var(--amber); border-left-color: var(--amber); }
+  .b-drop .banner-title { color: var(--amber); }
+  .b-drop .banner-body { color: var(--text); }
+
+  .b-defer { background: #0f1a2e; border-color: var(--blue); border-left-color: var(--blue); padding: 6px 10px; }
+  .b-defer .banner-title { font-size: 13px; font-weight: 400; letter-spacing: .04em; color: var(--blue); }
+
+  .b-sprint { background: #1a2010; border-color: var(--amber); border-left-color: var(--amber); }
+  .b-sprint .banner-title { color: var(--amber); }
+  .b-sprint .banner-body { color: var(--text); }
+
+  .b-death { background: #1a0a0a; border-color: #5a1b1b; border-left-color: var(--red); }
+  .b-death .banner-title { color: var(--red); }
+  .b-death .banner-body { color: var(--salmon); }
+
+  .b-incap { background: #1a1408; border-color: #5a4218; border-left-color: var(--amber); }
+  .b-incap .banner-title { color: var(--amber); }
+  .b-incap .banner-body { color: var(--gold-text); }
+
+  .b-revive { background: #0f1f08; border-color: #2d5a1b; border-left-color: var(--green); }
+  .b-revive .banner-title { color: var(--green); }
+  .b-revive .banner-body { color: var(--green-text); }
+
+  .b-combat-end { background: #0f2035; border-color: #1a3a5c; border-left-color: var(--blue); }
+  .b-combat-end .banner-title { color: var(--blue); }
+  .b-combat-end .banner-body { color: var(--text); }
+
+  .b-init { background: var(--bg-row); border-color: var(--amber); border-left-color: var(--amber); padding: 8px; }
+  .b-init .banner-title { color: var(--amber); }
+  .b-init .row-init { display: flex; align-items: baseline; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .b-init .row-init:last-child { border-bottom: none; }
+  .b-init .nm { font-size: 13px; font-weight: 700; text-transform: uppercase; min-width: 90px; }
+  .b-init .pc { color: var(--blue); }
+  .b-init .npc { color: var(--text-strong); }
+  .b-init .dice { color: var(--text); }
+  .b-init .total { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--amber); }
+
+  .b-fed { background: #111; border: 1px solid #7fc45833; border-left: 3px solid var(--green); padding: 8px 10px; }
+  .b-fed .banner-title { color: var(--text-strong); }
+  .b-clothed { background: #111; border: 1px solid #7fc45833; border-left: 3px solid var(--green); padding: 8px 10px; }
+  .b-clothed .banner-title { color: var(--text-strong); }
+  .b-morale { background: #111; border: 1px solid var(--blue); border-left: 3px solid var(--blue); padding: 10px; }
+  .b-morale .banner-title { color: var(--text-strong); }
+  .b-retention { background: #0f1a2e; border: 1px solid var(--green); border-left: 3px solid var(--green); padding: 10px; }
+  .b-retention .banner-title { color: var(--text-strong); }
+
+  .mod-pos { color: var(--green); }
+  .mod-neg { color: var(--red); }
+  .mod-cmod-pos { color: var(--blue); }
+  .mod-cmod-neg { color: var(--amber); }
+  .total { color: var(--text-strong); font-weight: 700; }
+
+  /* Expand-toggle interactivity. Click any ▸ to reveal an expansion
+     panel below the narrative line. Bespoke <div class="expanded-
+     details"> elements are pre-baked into specific rows (Sprint,
+     Drop, Incap, weekly community checks). Rows without one get a
+     generic placeholder generated by the JS at the bottom. */
+  .toggle { cursor: pointer; user-select: none; transition: color 0.1s; }
+  .toggle:hover { color: var(--green); }
+  .expanded-details {
+    display: none;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Carlito', 'Segoe UI', sans-serif;
+    line-height: 1.5;
+  }
+  .row.is-expanded > .expanded-details,
+  .banner.is-expanded > .expanded-details { display: block; }
+  .expanded-details .dice-preview { color: var(--text); margin-bottom: 4px; }
+  .expanded-details .dice-preview .die { color: var(--text-strong); font-weight: 700; }
+  .expanded-details .dice-preview .amod  { color: var(--green); }
+  .expanded-details .dice-preview .smod  { color: var(--green); }
+  .expanded-details .dice-preview .cmod  { color: var(--blue); }
+  .expanded-details .dice-preview .total { color: var(--text-strong); font-weight: 700; }
+  .expanded-details .dice-preview .out   { font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-left: 8px; }
+  .expanded-details .dice-preview .out.green  { color: var(--green); }
+  .expanded-details .dice-preview .out.blue   { color: var(--blue); }
+  .expanded-details .dice-preview .out.amber  { color: var(--amber); }
+  .expanded-details .dice-preview .out.red    { color: var(--red); }
+  .expanded-details .detail-line { color: var(--label); margin-bottom: 3px; }
+  .expanded-details .detail-line .strong { color: var(--text-strong); font-weight: 700; }
+  .expanded-details .hint { font-size: 11px; color: #5a5550; font-style: italic; margin-top: 4px; }
+
+  .note { color: #888; font-size: 12px; margin: 0 0 14px 12px; line-height: 1.5; max-width: 540px; }
+  .progression {
+    margin: 4px 0 14px 12px; padding: 6px 10px; background: #14181c;
+    border-left: 3px solid #5a4218; border-radius: 0 3px 3px 0;
+    font-size: 13px; color: #c4b58a; font-style: italic; max-width: 510px;
+  }
+  .progression .tag {
+    display: inline-block; color: var(--amber); font-style: normal; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase; font-size: 12px; margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Roll Feed - Complete Log Preview</h1>
+<p class="intro">
+  Current state after the 2026-05-10 log-trimming pass. All "(critical)"
+  tags removed; HI/LI both lead with "and has a Moment of Insight". Turn
+  gate is lifted - any character at /table can fire any check in or out
+  of combat; action accounting still consumes only from the active
+  combatant's rolls.
+</p>
+
+<div class="toc">
+  <h3>Table of Contents</h3>
+  <ul>
+    <li><strong>Bespoke banners</strong></li>
+    <li><a href="#combat-start">Combat Started</a></li>
+    <li><a href="#combat-end">Combat Ended</a></li>
+    <li><a href="#initiative">Initiative</a></li>
+    <li><a href="#drop">Gets the Drop</a></li>
+    <li><a href="#defer">Defer turn</a></li>
+    <li><a href="#sprint">Sprint</a></li>
+    <li><a href="#death">Death</a></li>
+    <li><a href="#incap">Incap</a></li>
+    <li><a href="#revive">Revive</a></li>
+    <li><a href="#gather">Gather Check</a></li>
+    <li><a href="#clothed">Clothed Check</a></li>
+    <li><a href="#morale">Morale Check</a></li>
+    <li><a href="#retention">Retention Check</a></li>
+    <li><a href="#group">Group Check</a></li>
+    <li><strong>Combat actions</strong></li>
+    <li><a href="#actions">Aim/Move/Ready/etc.</a></li>
+    <li><a href="#social-actions">Cover Fire / Inspire</a></li>
+    <li><strong>Combat attacks</strong></li>
+    <li><a href="#attack-weapon">Weapon attack</a></li>
+    <li><a href="#charge">Charge</a></li>
+    <li><a href="#subdue">Subdue</a></li>
+    <li><a href="#unarmed">Unarmed</a></li>
+    <li><a href="#distract">Distract</a></li>
+    <li><a href="#explosives">Explosives</a></li>
+    <li><a href="#multiword">Rapid Fire / Fire from Cover</a></li>
+    <li><strong>Special checks</strong></li>
+    <li><a href="#first-impression">First Impression</a></li>
+    <li><a href="#gut">Gut Instinct</a></li>
+    <li><a href="#perception">Perception</a></li>
+    <li><strong>Combat events</strong></li>
+    <li><a href="#grapple">Grapple</a></li>
+    <li><a href="#coordinate">Coordinate</a></li>
+    <li><strong>Recovery / status</strong></li>
+    <li><a href="#stress-check">Stress Check</a></li>
+    <li><a href="#stabilize">Stabilize</a></li>
+    <li><a href="#stress">Stress (mortal/incap)</a></li>
+    <li><strong>Recruitment</strong></li>
+    <li><a href="#recruit">Recruit</a></li>
+    <li><strong>Equipment</strong></li>
+    <li><a href="#unjam">Unjam</a></li>
+    <li><a href="#upkeep">Upkeep</a></li>
+    <li><strong>Vehicle</strong></li>
+    <li><a href="#vehicle-attack">Vehicle Attack</a></li>
+    <li><a href="#driving">Driving</a></li>
+    <li><a href="#brew">Brew</a></li>
+    <li><strong>System / out-of-combat</strong></li>
+    <li><a href="#loot">Loot</a></li>
+    <li><a href="#barter">Barter</a></li>
+    <li><a href="#cdp">CDP award</a></li>
+    <li><a href="#encumbrance">Encumbrance tick</a></li>
+    <li><a href="#evolution">Evolution</a></li>
+    <li><strong>Generic</strong></li>
+    <li><a href="#skill">Skill check</a></li>
+    <li><a href="#attribute">Attribute check</a></li>
+  </ul>
+</div>
+
+<div class="feed">
+
+  <h2>Bespoke Banners</h2>
+
+  <h3 id="combat-start">Combat Started</h3>
+  <div class="banner b-combat-start">
+    <div class="banner-head"><span class="banner-title">⚔️ Combat Started</span><span class="time">2:00 PM</span></div>
+    <div class="banner-body">Between <span class="name-strong">Cree Hask</span>, <span class="name-strong">Marv</span>, <span class="name-strong">Frankie</span> and <span class="name-strong">Avery Xavier</span></div>
+  </div>
+
+  <h3 id="combat-end">Combat Ended</h3>
+  <div class="banner b-combat-end">
+    <div class="banner-head"><span class="banner-title">⚔️ Combat Ended</span><span class="time">2:24 PM</span></div>
+    <div class="banner-body">Between <span style="color: var(--text-strong); font-weight: 600;">Cree Hask</span>, <span style="color: var(--text-strong); font-weight: 600;">Marv</span> and <span style="color: var(--text-strong); font-weight: 600;">Frankie</span></div>
+  </div>
+
+  <h3 id="initiative">Initiative</h3>
+  <div class="banner b-init">
+    <div class="banner-head"><span class="banner-title">⚔️ Initiative</span><span class="time">2:01 PM</span></div>
+    <div class="row-init"><span class="nm pc">Cree Hask</span><span class="dice">[5+4] <span class="mod-pos">+3 Init</span></span><span class="total">12</span></div>
+    <div class="row-init"><span class="nm pc">Marv</span><span class="dice">[6+2] <span class="mod-pos">+2 Init</span></span><span class="total">10</span></div>
+    <div class="row-init"><span class="nm npc">Avery Xavier</span><span class="dice">[3+5] <span class="mod-pos">+2 Init</span></span><span class="total">10</span></div>
+    <div class="row-init"><span class="nm pc">Frankie</span><span class="dice">[4+3] <span class="mod-pos">+1 Init</span></span><span class="total">8</span></div>
+  </div>
+
+  <h3 id="drop">Drop</h3>
+  <div class="banner b-drop">
+    <div class="banner-head"><span class="banner-title">Frankie gets the Drop!</span><div class="right"><span class="time">2:01 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Acts alone with 1 action before initiative is rolled.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Frankie took an action and got a <span class="strong">-3 CMod</span> on the next Initiative check.</div>
+    </div>
+  </div>
+
+  <h3 id="defer">Defer turn</h3>
+  <div class="banner b-defer">
+    <div class="banner-head"><span class="banner-title">Cree Hask defers their turn to Marv</span><span class="time">2:05 PM</span></div>
+  </div>
+
+  <h3 id="sprint">Sprint - winded</h3>
+  <div class="banner b-sprint">
+    <div class="banner-head"><span class="banner-title">🏃 Sprint</span><div class="right"><span class="time">2:08 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask sprints and looks winded</div>
+    <div class="expanded-details">
+      <div class="dice-preview">
+        Athletics check: [<span class="die">2</span>+<span class="die">3</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +1 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 7</span>
+        <span class="out amber">Failure</span>
+      </div>
+      <div class="detail-line" style="color: var(--salmon); font-weight: 600;">Loses 1 Combat Action next round.</div>
+    </div>
+  </div>
+
+  <h3>Sprint - clean</h3>
+  <div class="banner b-sprint">
+    <div class="banner-head"><span class="banner-title">🏃 Sprint</span><div class="right"><span class="time">2:09 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Marv sprints and does not look winded</div>
+    <div class="expanded-details">
+      <div class="dice-preview">
+        Athletics check: [<span class="die">5</span>+<span class="die">4</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +1 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 11</span>
+        <span class="out blue">Success</span>
+      </div>
+      <div class="detail-line" style="color: var(--green); font-weight: 600;">Full 2 actions next round.</div>
+    </div>
+  </div>
+
+  <h3 id="death">Death</h3>
+  <div class="banner b-death">
+    <div class="banner-head"><span class="banner-title">Avery Xavier</span><span class="time">2:18 PM</span></div>
+    <div class="banner-body">💀 Avery Xavier is gone.</div>
+  </div>
+
+  <h3>Mortally Wounded (countdown begins)</h3>
+  <div class="banner b-death">
+    <div class="banner-head"><span class="banner-title">Death is in the air</span><span class="time">2:18 PM</span></div>
+    <div class="banner-body">Cree Hask has fallen, mortally wounded by Avery Xavier, and will die if not stabilized in 3 rounds.</div>
+  </div>
+
+  <h3 id="incap">Incap</h3>
+  <div class="banner b-incap">
+    <div class="banner-head"><span class="banner-title">Nolan Penn - Lights Out</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Nolan Penn has been Incapacitated by Frankie.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Nolan Penn is Incapacitated for <span class="strong">3 rounds</span>.</div>
+    </div>
+  </div>
+
+  <h3 id="revive">Revive</h3>
+  <div class="banner b-revive">
+    <div class="banner-head"><span class="banner-title">Nolan Penn - Coming Around</span><span class="time">2:17 PM</span></div>
+    <div class="banner-body">Nolan Penn has regained consciousness.</div>
+  </div>
+
+  <h3 id="gather">Gather Check</h3>
+  <div class="banner b-fed">
+    <div class="banner-head"><span class="banner-title">🌾 Week 4 · The Farm · Gather Check</span><div class="right"><span class="time">10:00 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">They were successful and residents will eat this week.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Cree Hask</span> (PC) - <span style="color: var(--blue);">Farming</span></div>
+      <div class="dice-preview">
+        [<span class="die">4</span>+<span class="die">5</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 12</span>
+        <span class="out blue">Success</span>
+      </div>
+      <div class="detail-line">-> Next Morale CMod <span class="strong" style="color: var(--green);">+1</span></div>
+    </div>
+  </div>
+  <div class="banner b-fed" style="border-left-color: var(--amber); border-color: #EF9F2733;">
+    <div class="banner-head"><span class="banner-title">🌾 Week 4 · The Farm · Gather Check</span><div class="right"><span class="time">10:00 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">They were unsuccessful, and residents will go hungry this week.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Cree Hask</span> (PC) - <span style="color: var(--blue);">Farming</span></div>
+      <div class="dice-preview">
+        [<span class="die">2</span>+<span class="die">3</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +1 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 7</span>
+        <span class="out amber">Failure</span>
+      </div>
+      <div class="detail-line">-> Next Morale CMod <span class="strong" style="color: var(--salmon);">-1</span></div>
+    </div>
+  </div>
+
+  <h3 id="clothed">Clothed Check</h3>
+  <div class="banner b-clothed">
+    <div class="banner-head"><span class="banner-title">🔧 Week 4 · The Farm · Clothed Check</span><div class="right"><span class="time">10:01 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">They were successful and residents have what they need.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Marv</span> (PC) - <span style="color: var(--blue);">Tinkerer</span></div>
+      <div class="dice-preview">
+        [<span class="die">3</span>+<span class="die">4</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +1 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 9</span>
+        <span class="out blue">Success</span>
+      </div>
+      <div class="detail-line">-> Next Morale CMod <span class="strong" style="color: var(--green);">+1</span></div>
+    </div>
+  </div>
+  <div class="banner b-clothed" style="border-left-color: var(--amber); border-color: #EF9F2733;">
+    <div class="banner-head"><span class="banner-title">🔧 Week 4 · The Farm · Clothed Check</span><div class="right"><span class="time">10:01 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">They were unsuccessful, and residents will go without.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Marv</span> (PC) - <span style="color: var(--blue);">Tinkerer</span></div>
+      <div class="dice-preview">
+        [<span class="die">2</span>+<span class="die">3</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +1 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 7</span>
+        <span class="out amber">Failure</span>
+      </div>
+      <div class="detail-line">-> Next Morale CMod <span class="strong" style="color: var(--salmon);">-1</span></div>
+    </div>
+  </div>
+
+  <h3 id="morale">Morale Check - success</h3>
+  <div class="banner b-morale">
+    <div class="banner-head"><span class="banner-title">📊 Week 4 · The Farm · Morale</span><div class="right"><span class="time">10:05 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask inspired The Farm and morale was maintained. The Mood around the Campfire is good.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Cree Hask</span> (PC) - <span style="color: var(--blue);">Inspiration</span></div>
+      <div class="dice-preview">
+        [<span class="die">4</span>+<span class="die">3</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> +1 CMod</span>
+        <span class="total"> = 11</span>
+        <span class="out blue">Success</span>
+      </div>
+      <div class="detail-line"><span style="color: #5a5550;">Slots:</span> · Mood <span style="color: var(--green); font-weight: 700;">+1</span> · Fed <span style="color: var(--green); font-weight: 700;">+1</span> · Clothed <span style="color: var(--salmon); font-weight: 700;">-1</span> · Hands <span style="font-weight: 700;">0</span> · Voice <span style="font-weight: 700;">0</span> · Watch <span style="font-weight: 700;">0</span></div>
+      <div class="detail-line" style="color: var(--green);">Morale holds. Next Morale CMod: <span class="strong">+1</span></div>
+    </div>
+  </div>
+
+  <h3>Morale Check - failure with departures</h3>
+  <div class="banner b-morale" style="border-color: var(--amber); border-left-color: var(--amber);">
+    <div class="banner-head"><span class="banner-title">📊 Week 5 · The Farm · Morale</span><div class="right"><span class="time">10:05 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask fails to inspire The Farm. Morale has dropped and people are leaving. The Mood around the Campfire is not good.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Cree Hask</span> (PC) - <span style="color: var(--blue);">Inspiration</span></div>
+      <div class="dice-preview">
+        [<span class="die">2</span>+<span class="die">2</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> -1 CMod</span>
+        <span class="total"> = 6</span>
+        <span class="out amber">Failure</span>
+      </div>
+      <div class="detail-line"><span style="color: #5a5550;">Slots:</span> · Mood <span style="color: var(--salmon); font-weight: 700;">-1</span> · Fed <span style="font-weight: 700;">0</span> · Clothed <span style="color: var(--salmon); font-weight: 700;">-1</span> · Hands <span style="font-weight: 700;">0</span> · Voice <span style="font-weight: 700;">0</span> · Watch <span style="font-weight: 700;">0</span></div>
+      <div class="detail-line" style="color: var(--amber);">3 left: <span style="color: var(--text);">Avery Xavier, Bekah, Tomás</span><span style="color: var(--label);"> · 9/12 remaining · 1/3 failures</span></div>
+    </div>
+  </div>
+
+  <h3>Morale Check - community dissolves</h3>
+  <div class="banner b-morale" style="border-color: var(--red); border-left-color: var(--red); background: #1a0a0a;">
+    <div class="banner-head"><span class="banner-title">📊 Week 7 · The Farm · Morale</span><div class="right"><span class="time">10:05 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body" style="color: var(--salmon);">⚠ After 3 consecutive failures of confidence in Cree Hask, The Farm has dissolved. All 12 members scattered.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Cree Hask</span> (PC) - <span style="color: var(--blue);">Inspiration</span></div>
+      <div class="dice-preview">
+        [<span class="die">1</span>+<span class="die">2</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> -2 CMod</span>
+        <span class="total"> = 4</span>
+        <span class="out red">Dire Failure</span>
+      </div>
+      <div class="detail-line" style="color: var(--salmon);">3 consecutive failures - The Farm dissolved. All 12 members scattered.</div>
+    </div>
+  </div>
+
+  <h3 id="retention">Retention Check - survived</h3>
+  <div class="banner b-retention">
+    <div class="banner-head"><span class="banner-title">🙏 Week 6 · The Farm · Retention</span><div class="right"><span class="time">10:00 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body" style="color: var(--green-text); font-weight: 600;">✓ Cree Hask rallied the survivors and the Community still exists</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Cree Hask</span> (PC) - <span style="color: var(--blue);">Inspiration</span></div>
+      <div class="dice-preview">
+        [<span class="die">5</span>+<span class="die">4</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> +1 Mood</span>
+        <span class="total"> = 13</span>
+        <span class="out blue">Success</span>
+      </div>
+      <div class="detail-line" style="color: var(--green); font-weight: 600;">Community retained - consecutive failures reset to 2.</div>
+    </div>
+  </div>
+
+  <h3>Retention Check - dissolved</h3>
+  <div class="banner b-retention" style="background: #1a0a0a; border-color: var(--red); border-left-color: var(--red);">
+    <div class="banner-head"><span class="banner-title">🙏 Week 7 · The Farm · Retention</span><div class="right"><span class="time">10:00 AM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body" style="color: var(--salmon); font-weight: 600;">✗ With the members fragmenting in different directions, The Farm has dissolved.</div>
+    <div class="expanded-details">
+      <div class="detail-line">Rolled by <span class="strong">Cree Hask</span> (PC) - <span style="color: var(--blue);">Inspiration</span></div>
+      <div class="dice-preview">
+        [<span class="die">2</span>+<span class="die">1</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> -2 Mood</span>
+        <span class="total"> = 4</span>
+        <span class="out red">Dire Failure</span>
+      </div>
+    </div>
+  </div>
+
+  <h3 id="group">Group Check (bespoke multi-participant banner)</h3>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #7ab3d433; border-left: 3px solid var(--blue);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--blue);">Group Check</span><div class="right"><span class="time">3:02 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask, Marv, Wilson, and Frankie were Successful at Survival</div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #7fc45833; border-left: 3px solid var(--green);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--green);">Group Check</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask, Marv, Wilson, and Frankie were Wildly Successful at Survival <span class="insight-badge">+1 Insight Die</span></div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #EF9F2733; border-left: 3px solid var(--amber);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--amber);">Group Check</span><div class="right"><span class="time">3:04 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask, Marv, Wilson, and Frankie were Unsuccessful at Survival</div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #c0392b33; border-left: 3px solid var(--red);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--red);">Group Check</span><div class="right"><span class="time">3:06 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask, Marv, Wilson, and Frankie failed miserably at Survival but collectively had a Moment of Insight into why they failed <span class="insight-badge">+1 Insight Die</span></div>
+  </div>
+
+  <h2>Combat actions (no roll)</h2>
+  <h3 id="actions">Aim / Move / Ready / Switch / Reload / Unequip / Defend / Take Cover / Reposition</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:02 PM</span></div></div><div class="narrative">Cree Hask takes Aim</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:02 PM</span></div></div><div class="narrative">Cree Hask Moves</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:03 PM</span></div></div><div class="narrative">Cree Hask readies a weapon</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:03 PM</span></div></div><div class="narrative">Cree Hask readies their Sniper's Rifle</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:04 PM</span></div></div><div class="narrative">Cree Hask switches to their Pistol</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:04 PM</span></div></div><div class="narrative">Cree Hask reloads their Pistol</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:05 PM</span></div></div><div class="narrative">Cree Hask unequips their Sniper's Rifle</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:05 PM</span></div></div><div class="narrative">Cree Hask prepares to Defend</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:06 PM</span></div></div><div class="narrative">Cree Hask takes Cover</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:06 PM</span></div></div><div class="narrative">Cree Hask repositions</div></div>
+
+  <h3 id="social-actions">Cover Fire / Inspire</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:07 PM</span></div></div><div class="narrative">Cree Hask lays down covering fire on Avery Xavier!</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:07 PM</span></div></div><div class="narrative">Cree Hask Inspires Marv!</div></div>
+
+  <h2>Combat attacks</h2>
+  <h3 id="attack-weapon">Weapon attack - outcome variants</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:10 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully Attacked Avery Xavier using a Pistol</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:11 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully Attacked Avery Xavier using a Pistol and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:12 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully Attacked Avery Xavier using a Pistol</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully Attacked Avery Xavier using a Pistol and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h3 id="charge">Charge</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully made a Pistol attack after Charge at Avery Xavier</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Ivan Hayes</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Ivan Hayes Unsuccessfully made an Unarmed attack after Charge at Barrel 1</div></div>
+
+  <h3 id="subdue">Subdue</h3>
+  <div class="row green"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully Subdued Avery Xavier using a Makeshift Club and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h3 id="unarmed">Unarmed</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:15 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully used Unarmed Combat on Nolan Penn</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:15 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask had a Moment of Insight when using Unarmed Combat on Nolan Penn <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:16 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully used Unarmed Combat on Nolan Penn</div></div>
+
+  <h3 id="distract">Distract</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Successfully Distracts Avery Xavier</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Failed to Distract Avery Xavier</div></div>
+
+  <h3 id="explosives">Explosives</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:19 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson threw a Molotov at Avery Xavier</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:19 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson threw a Grenade</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson fired an RPG Launcher at Avery Xavier</div></div>
+
+  <h3 id="multiword">Rapid Fire / Fire from Cover</h3>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:21 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask used their Assault Rifle Rapid Fire on Avery Xavier and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:22 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask used their Pistol Fire from Cover on Avery Xavier</div></div>
+
+  <h2>Special checks</h2>
+  <h3 id="first-impression">First Impression</h3>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:42 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask makes a strong First Impression and has a Moment of Insight as to why they did so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:41 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask makes a First Impression</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:43 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask makes a bad First Impression</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:44 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask makes a terrible First Impression</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:45 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask made a terrible First Impression, but has a Moment of Insight as to what went wrong <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="progression"><span class="tag">[relationship]</span>Met Avery Xavier - rough start (CMod -1).</div>
+
+  <h3 id="gut">Gut Instinct</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct lets them know something is amiss</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:48 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct is quiet</div></div>
+
+  <h3 id="perception">Perception</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:50 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask successfully Perceives something useful</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:52 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask does not Perceive anything useful</div></div>
+
+  <h2>Combat events</h2>
+  <h3 id="grapple">Grapple</h3>
+  <div class="row green"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:25 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie grapples with Avery Xavier</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:26 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie unsuccessfully attempts to grapple with Avery Xavier</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:27 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie fails to grapple with Avery Xavier</div></div>
+
+  <h3 id="coordinate">Coordinate (UNIFIED ROW pattern - one row per event)</h3>
+  <div class="row blue">
+    <div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:30 PM</span><span class="toggle">▸</span></div></div>
+    <div class="narrative">Marv Successfully coordinated an attack against Avery Xavier with Frankie, Wilson</div>
+    <div class="expanded-details">
+      <div class="dice-preview">
+        [<span class="die">5</span>+<span class="die">4</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 12</span>
+        <span class="out blue">Success</span>
+      </div>
+      <div class="detail-line">+2 CMod applied to Frankie, Wilson against Avery Xavier.</div>
+    </div>
+  </div>
+  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv fails to coordinate allies against Avery Xavier</div></div>
+  <p class="note">Successful Coordinate writes ONE row carrying the coordinator's name, the actual dice + outcome, and the affected allies in the narrative. No separate "System" effect-broadcast row. Failures use the regular Coordinate-roll narrative path.</p>
+
+  <h2>Recovery / status</h2>
+  <h3 id="stress-check">Stress Check</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:35 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully Calms Themselves</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully Attempts to Calm Themselves</div></div>
+
+  <h3 id="stabilize">Stabilize</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Successfully Stabilizes Cree Hask</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Successfully Stabilizes Cree Hask and has a Moment of Insight while doing so <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:38 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv is Unsuccessful in attempting to Stabilize Cree Hask</div></div>
+
+  <h3 id="stress">Stress (mortal / incapacitated)</h3>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:18 PM</span></div></div><div class="narrative">Cree Hask is Mortally Wounded by Avery Xavier</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Avery Xavier</span><div class="right"><span class="time">2:14 PM</span></div></div><div class="narrative">Avery Xavier is Incapacitated by Frankie</div></div>
+
+  <h2>Recruitment</h2>
+  <h3 id="recruit">Recruit - Cohort / Conscript / Convert / Apprentice / fail tiers</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask recruited Avery Xavier as a Cohort to The Farm</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask forced Avery Xavier into service as a Conscript to The Farm</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Converted Avery Xavier as a recruit to The Farm</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask takes Avery Xavier as their Apprentice <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:57 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tried to recruit Avery Xavier but it didn't go well</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:58 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tried to recruit Avery Xavier - it went badly</div></div>
+  <div class="progression"><span class="tag">[community]</span>🤝 Recruited Avery Xavier as a Cohort to The Farm.</div>
+
+  <h2>Equipment</h2>
+  <h3 id="unjam">Unjam</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:23 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask unjams their Pistol</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:23 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask fails to unjam their Pistol</div></div>
+
+  <h3 id="upkeep">Upkeep - 5 outcome variants</h3>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:00 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tunes up their Sniper's Rifle and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:01 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask maintains the condition of their Sniper's Rifle</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:02 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask fails to upkeep the condition of their Sniper's Rifle and it degrades</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:03 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask irreparably damages their Sniper's Rifle while performing upkeep</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:04 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask breaks their Sniper's Rifle while attempting to maintain its condition and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h2>Vehicle</h2>
+  <h3 id="vehicle-attack">Vehicle Attack</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:31 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss shot at and hit Avery Xavier using Minnie's Sniper's Rifle</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:32 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss shot at and missed Avery Xavier using Minnie's Sniper's Rifle</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss fired using Minnie's Sniper's Rifle</div></div>
+
+  <h3 id="driving">Driving</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:40 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv drives Minnie</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:41 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv struggles driving Minnie</div></div>
+
+  <h3 id="brew">Brew</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:45 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson brews fuel in Minnie's still</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson botches the brew in Minnie's still</div></div>
+
+  <h2>System / out-of-combat</h2>
+  <h3 id="loot">Loot (NPC corpse vs object container)</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:33 PM</span></div></div><div class="narrative">Cree Hask searched the corpse of Avery Xavier and found something</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:34 PM</span></div></div><div class="narrative">Cree Hask looked through the remains of Barrel 1 and found something</div></div>
+
+  <h3 id="barter">Barter (with partner name)</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:10 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask traded with Avery Xavier - gave Apple×3, got Bandage×1</div></div>
+
+  <h3 id="cdp">CDP award</h3>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">11:30 PM</span></div></div><div class="narrative">+5 Character Development Points awarded to Cree Hask, Marv, Wilson</div></div>
+
+  <h3 id="encumbrance">Encumbrance tick</h3>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">9:00 AM</span></div></div><div class="narrative">Time advances 4h, Cree Hask is overencumbered</div></div>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">9:00 AM</span></div></div><div class="narrative">Time advances 4h, Cree Hask and Marv are both overencumbered</div></div>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">9:00 AM</span></div></div><div class="narrative">Time advances 4h, Cree Hask, Marv, and Wilson are all overencumbered</div></div>
+
+  <h3 id="evolution">Evolution (CDP spend)</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:45 PM</span></div></div><div class="narrative">Cree Hask spent 5 Character Development Points raising Survival from Lv 2 to Lv 3</div></div>
+
+  <h2>Generic skill / attribute</h2>
+  <h3 id="skill">Skill check</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask succeeds at Athletics</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask succeeds at Athletics and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Avery Xavier</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Avery Xavier fails at Athletics</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Avery Xavier</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Avery Xavier fails at Athletics and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h3 id="attribute">Attribute check</h3>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:05 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask succeeds at a physicality check</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:06 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask fails at a physicality check</div></div>
+
+</div>
+
+<script>
+/* Expand-toggle interactivity for the preview file.
+ *
+ * Click any ▸ to flip the row's .is-expanded class. CSS handles
+ * showing the .expanded-details panel underneath.
+ *
+ * Rows with a pre-baked <div class="expanded-details">...</div>
+ * inside them get their custom content. Rows without one get a
+ * generic placeholder generated on first expand and cached.
+ *
+ * The toggle char swaps ▸ <-> ▾ via the class state.
+ */
+(function () {
+  const OUTCOME_LABELS = {
+    green: 'Wild Success',
+    blue:  'Success',
+    amber: 'Failure',
+    red:   'Dire Failure',
+  }
+
+  function inferOutcomeKey(row) {
+    if (row.classList.contains('green')) return 'green'
+    if (row.classList.contains('amber')) return 'amber'
+    if (row.classList.contains('red')) return 'red'
+    return 'blue'
+  }
+
+  function buildGenericDetails(outcomeKey) {
+    const label = OUTCOME_LABELS[outcomeKey] || 'Success'
+    return `
+      <div class="dice-preview">
+        [<span class="die">5</span>+<span class="die">4</span>]
+        <span class="amod"> +1 AMod</span>
+        <span class="smod"> +2 SMod</span>
+        <span class="cmod"> +0 CMod</span>
+        <span class="total"> = 12</span>
+        <span class="out ${outcomeKey}">${label}</span>
+      </div>
+      <div class="hint">Live feed adds Insight Die badge on HI/LI and a damage box on attack rolls.</div>
+    `
+  }
+
+  document.addEventListener('click', function (e) {
+    const t = e.target
+    if (!t.classList || !t.classList.contains('toggle')) return
+    const container = t.closest('.row, .banner')
+    if (!container) return
+    // Generate a generic details panel if the row doesn't have one
+    // baked in. Only done once per row; subsequent toggles just flip
+    // visibility via the class.
+    let details = container.querySelector(':scope > .expanded-details')
+    if (!details) {
+      details = document.createElement('div')
+      details.className = 'expanded-details'
+      details.innerHTML = buildGenericDetails(inferOutcomeKey(container))
+      container.appendChild(details)
+    }
+    const wasExpanded = container.classList.toggle('is-expanded')
+    t.textContent = wasExpanded ? '▾' : '▸'
+  })
+})()
+</script>
+
+</body>
+</html>

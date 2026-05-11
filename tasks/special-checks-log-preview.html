@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Special Checks — Log Entry Preview</title>
+<!--
+  ============================================================
+  Special-Checks Log Preview (TRIMMED FEED)
+  ============================================================
+  These are the narrative one-liners that compactRollSummary
+  in lib/roll-helpers.ts emits for the live roll feed. The
+  verbose dice-breakdown card lives behind the ▸ toggle.
+
+  Each row reproduces what the player actually sees:
+    - top header: CHARACTER NAME (uppercase) + timestamp + ▸
+    - body: the narrative sentence, fontSize 15px
+
+  Edit any string below; the styling sticks.
+
+  Cast: Cree Hask (PC), Marv (PC), Wilson (PC),
+        Avery Xavier (NPC), The Farm (community).
+
+  Outcome -> left-border color (lib/roll-helpers.ts:35):
+    Wild Success / High Insight   #7fc458 (green)
+    Success                       #7ab3d4 (blue)
+    Failure                       #EF9F27 (amber)
+    Dire Failure / Low Insight    #c0392b (red)
+
+  Suffix tags appended by compactRollSummary:
+    Wild Success / High Insight   " (critical)"
+    Low Insight                   ", but failed miserably"
+    All other outcomes            none
+-->
+<style>
+  :root {
+    --bg-page: #0e0e0e;
+    --bg-row: #1a1a1a;
+    --border: #2e2e2e;
+    --text: #d4cfc9;
+    --text-strong: #f5f2ee;
+    --label: #cce0f5;
+    --green: #7fc458;
+    --blue: #7ab3d4;
+    --amber: #EF9F27;
+    --red: #c0392b;
+  }
+  html, body { background: var(--bg-page); margin: 0; padding: 24px; font-family: 'Carlito', 'Segoe UI', sans-serif; color: var(--text); }
+  h1 { color: var(--text-strong); font-size: 20px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 4px; }
+  h2 { color: var(--label); font-size: 14px; letter-spacing: .12em; text-transform: uppercase; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .intro { color: #888; font-size: 13px; margin-bottom: 24px; line-height: 1.5; max-width: 720px; }
+  .feed { max-width: 540px; }
+
+  /* Roll-feed row — matches RollEntryCard at components/RollsFeed.tsx:508+ */
+  .row {
+    margin-bottom: 8px;
+    padding: 8px;
+    background: var(--bg-row);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    border-left-width: 3px;
+    border-left-style: solid;
+  }
+  .row.green  { border-left-color: var(--green); }
+  .row.blue   { border-left-color: var(--blue); }
+  .row.amber  { border-left-color: var(--amber); }
+  .row.red    { border-left-color: var(--red); }
+
+  .row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+  .name { font-size: 14px; font-weight: 700; color: var(--text-strong); letter-spacing: .04em; text-transform: uppercase; }
+  .right { display: flex; align-items: baseline; gap: 6px; }
+  .time { font-size: 13px; color: var(--label); }
+  .toggle { color: var(--blue); font-size: 13px; cursor: default; }
+
+  /* The narrative one-liner. */
+  .narrative { font-size: 15px; color: var(--text); }
+  .insight-badge {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--green);
+    background: #1a2e10;
+    border: 1px solid #2d5a1b;
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  /* Progression-log entry — separate surface, sits on the PC sheet. */
+  .progression {
+    margin: 4px 0 12px 12px;
+    padding: 6px 10px;
+    background: #14181c;
+    border-left: 3px solid #5a4218;
+    border-radius: 0 3px 3px 0;
+    font-size: 13px;
+    color: #c4b58a;
+    font-style: italic;
+  }
+  .progression .tag {
+    display: inline-block;
+    color: var(--amber);
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-size: 12px;
+    margin-right: 6px;
+  }
+
+  .note { color: #888; font-size: 12px; margin: 0 0 12px 12px; line-height: 1.5; }
+  .note code { color: #b5d8b5; background: #14181c; padding: 1px 5px; border-radius: 2px; }
+
+  /* Section break */
+  .variants {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .variants-label {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #6a6a6a;
+    margin: 6px 0 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Special-Checks Log Preview — Trimmed Feed</h1>
+<p class="intro">
+  Narrative one-liners from <code>compactRollSummary</code>, exactly as the
+  live roll feed renders them. The dice-breakdown card lives behind the ▸
+  expander; the trimmed view IS the row that scrolls past during play.
+  Edit text inline, save with a <code>.html</code> extension, open in any
+  browser.
+</p>
+
+<div class="feed">
+
+  <!-- 1. FIRST IMPRESSION ============================================ -->
+  <h2>1 · First Impression</h2>
+
+  <!-- Success (no critical tag — plain Success doesn't add one) -->
+  <div class="row blue">
+    <div class="row-head">
+      <span class="name">Cree Hask</span>
+      <div class="right"><span class="time">2:41 PM</span><span class="toggle">▸</span></div>
+    </div>
+    <div class="narrative">Cree Hask makes a strong First Impression</div>
+  </div>
+
+  <!-- Variants -->
+  <div class="variants">
+    <div class="variants-label">Other outcomes</div>
+    <div class="row green">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:42 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask makes a strong First Impression (critical) <span class="insight-badge">+1 Insight Die</span></div>
+    </div>
+    <div class="row amber">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:43 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask fails to make a First Impression</div>
+    </div>
+    <div class="row red">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:44 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask fails to make a First Impression, but failed miserably <span class="insight-badge">+1 Insight Die</span></div>
+    </div>
+  </div>
+  <div class="progression"><span class="tag">[relationship]</span>Met Avery Xavier — rough start (CMod -1).</div>
+  <p class="note">Side effect: <code>npc_relationships.relationship_cmod</code> for Cree↔Avery is bumped (atomic, clamped ±3). Insight Die badge auto-renders on Wild/HI/LI for PCs.</p>
+
+  <!-- 2. GUT INSTINCT =============================================== -->
+  <h2>2 · Gut Instinct</h2>
+
+  <div class="row blue">
+    <div class="row-head">
+      <span class="name">Cree Hask</span>
+      <div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div>
+    </div>
+    <div class="narrative">Cree Hask successfully uses Gut Instinct</div>
+  </div>
+
+  <div class="variants">
+    <div class="variants-label">Other outcomes</div>
+    <div class="row green">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:47 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask successfully uses Gut Instinct (critical) <span class="insight-badge">+1 Insight Die</span></div>
+    </div>
+    <div class="row amber">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:48 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask fails to use Gut Instinct</div>
+    </div>
+  </div>
+  <p class="note">No progression-log entry. AMod = RSN + ACU; SMod is the best of Psychology / Streetwise / Tactics.</p>
+
+  <!-- 3. PERCEPTION ================================================= -->
+  <h2>3 · Perception Check</h2>
+
+  <div class="row blue">
+    <div class="row-head">
+      <span class="name">Cree Hask</span>
+      <div class="right"><span class="time">2:50 PM</span><span class="toggle">▸</span></div>
+    </div>
+    <div class="narrative">Cree Hask successfully uses Perception</div>
+  </div>
+
+  <div class="variants">
+    <div class="variants-label">Other outcomes</div>
+    <div class="row green">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:51 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask successfully uses Perception (critical) <span class="insight-badge">+1 Insight Die</span></div>
+    </div>
+    <div class="row amber">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:52 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask fails to use Perception</div>
+    </div>
+  </div>
+  <p class="note">No progression-log entry. AMod = RSN + ACU; pure attribute roll, no SMod.</p>
+
+  <!-- 4. RECRUIT ==================================================== -->
+  <h2>4 · Recruit</h2>
+
+  <!-- Success: label already narrative; compactRollSummary just strips the 🤝 -->
+  <div class="row blue">
+    <div class="row-head">
+      <span class="name">Cree Hask</span>
+      <div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div>
+    </div>
+    <div class="narrative">Cree Hask recruited Avery Xavier as a Cohort to The Farm</div>
+  </div>
+
+  <div class="variants">
+    <div class="variants-label">Other outcomes</div>
+    <div class="row green">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask recruited Avery Xavier as an Apprentice to The Farm <span class="insight-badge">+1 Insight Die</span></div>
+    </div>
+    <div class="row amber">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:57 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask tried to recruit Avery Xavier but it didn't go well</div>
+    </div>
+    <div class="row red">
+      <div class="row-head">
+        <span class="name">Cree Hask</span>
+        <div class="right"><span class="time">2:58 PM</span><span class="toggle">▸</span></div>
+      </div>
+      <div class="narrative">Cree Hask tried to recruit Avery Xavier — it went badly</div>
+    </div>
+  </div>
+  <div class="progression"><span class="tag">[community]</span>🤝 Recruited Avery Xavier as a Cohort to The Farm.</div>
+  <p class="note">Success-side label is already narrative-shaped; <code>compactRollSummary</code> just strips the leading 🤝 emoji. Failure tier collapses to "but it didn't go well"; Dire Failure / Low Insight tier collapses to "it went badly". Apprentice variant only fires on Moment of High Insight when the player applies the unlock toggle.</p>
+
+  <!-- 5. GROUP CHECK ================================================ -->
+  <h2>5 · Group Check</h2>
+
+  <p class="note" style="margin-left: 0; margin-bottom: 8px; color: #c4b58a;">
+    <strong>Group Check has no narrative branch in <code>compactRollSummary</code></strong> — it falls through to the verbose card. Shown below as it actually renders (full dice breakdown). Worth flagging as a trim candidate if we want it to read like the rest.
+  </p>
+
+  <div class="row green">
+    <div class="row-head">
+      <span class="name">Cree Hask</span>
+      <div class="right"><span class="time">3:02 PM</span></div>
+    </div>
+    <div class="narrative" style="margin-bottom: 4px;">Group Check — Survival (led by Cree)</div>
+    <div style="font-size: 14px; color: var(--text); margin-bottom: 3px;">[5+4] <span style="color: var(--green);">+1 AMod</span> <span style="color: var(--green);">+5 SMod</span> <span style="color: var(--text-strong); font-weight: 700;">= 15</span></div>
+    <div><span style="font-size: 15px; font-weight: 700; color: var(--green); letter-spacing: .06em; text-transform: uppercase;">Wild Success</span></div>
+  </div>
+  <p class="note">Lead PC's AMod only. SMod = Cree's Survival (+2) + Marv's (+1) + Wilson's (+2). No Insight Dice — explicitly excluded from Group Checks per SRD.</p>
+
+  <!-- 6. OPPOSED CHECK ============================================== -->
+  <h2>6 · Opposed Check</h2>
+
+  <p class="note" style="margin-left: 0; margin-bottom: 8px; color: #c4b58a;">
+    No row of its own — picker is purely instructional. Each side rolls a normal skill check; both go through <code>compactRollSummary</code>'s skillMatch branch and trim to "succeeds at" / "fails at" sentences.
+  </p>
+
+  <div class="row blue">
+    <div class="row-head">
+      <span class="name">Cree Hask</span>
+      <div class="right"><span class="time">3:05 PM</span><span class="toggle">▸</span></div>
+    </div>
+    <div class="narrative">Cree Hask succeeds at Athletics</div>
+  </div>
+
+  <div class="row amber">
+    <div class="row-head">
+      <span class="name">Avery Xavier</span>
+      <div class="right"><span class="time">3:05 PM</span><span class="toggle">▸</span></div>
+    </div>
+    <div class="narrative">Avery Xavier fails at Athletics</div>
+  </div>
+  <p class="note">GM compares: Cree wins (Success vs. Failure). Grapple is the structured exception — it has its own dedicated row with a custom outcome string ("Grappled!", "Failed — 1 RP", etc.).</p>
+
+</div>
+
+</body>
+</html>

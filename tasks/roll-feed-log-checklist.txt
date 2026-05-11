@@ -1,0 +1,445 @@
+================================================================
+ROLL FEED — LOG ENTRY REVIEW CHECKLIST
+================================================================
+One entry per distinct row type that can land in the LOG feed.
+Group lines together when they share a current copy template;
+fan out the variants below.
+
+Format:
+  [ ] Name
+        current: "<the actual string today>"
+        notes:
+
+Mark with [x] when reviewed. Fill the notes line with copy
+changes, formatting tweaks, or "keep as-is" — anything we
+need to act on in the single-pass cleanup.
+
+Cast in examples: Cree Hask (PC), Marv, Wilson, Frankie (PCs),
+Avery Xavier, Nolan Penn (NPCs), Barrel 1 (object),
+Minnie (vehicle), The Farm (community).
+
+================================================================
+TIER A — BESPOKE BANNERS
+================================================================
+
+[ ] 1. Combat Started
+        current: "⚔️ Combat Started — Between Cree Hask, Marv, Frankie and Avery Xavier"
+        notes:
+
+[ ] 2. Combat Ended
+        current: "⚔️ Combat Ended — Between Cree Hask, Marv and Frankie"
+        notes:
+
+[ ] 3. Initiative (the per-combatant tracker)
+        current: per-row "Cree Hask  [5+4] +3 Init   12"
+        notes:
+
+[ ] 4. Drop ("Gets the Drop!")
+        current: "Frankie gets the Drop! — Acts alone with 1 action before initiative is rolled."
+        notes:
+
+[ ] 5. Defer turn
+        current: "Cree Hask defers their turn to Marv"
+        notes:
+
+[ ] 6. Sprint — winded
+        current: "🏃 Sprint — Cree Hask sprints 12 cells (Athletics 7 → Failure)"
+                 "Winded — loses 1 Combat Action next round."
+        notes:
+
+[ ] 7. Sprint — clean (not winded)
+        current: "🏃 Sprint — Marv sprints 14 cells (Athletics 11 → Success)"
+                 "Not winded — full 2 actions next round."
+        notes:
+
+[ ] 8. Death
+        current: "Avery Xavier — has fallen. Killed by Cree Hask."
+        notes:
+
+[ ] 9. Incap (lights out)
+        current: "Nolan Penn — Lights Out — Nolan Penn has been Incapacitated by Frankie."
+        notes:
+
+[ ] 10. Revive (coming around)
+        current: "Nolan Penn — Coming Around — Nolan Penn has regained consciousness."
+        notes:
+
+[ ] 11. Fed Check (community weekly)
+        current: "🌾 Week 4 · The Farm · Fed Check"
+                 dice line + "→ Next Morale CMod +1"
+        notes:
+
+[ ] 12. Clothed Check (community weekly)
+        current: "🔧 Week 4 · The Farm · Clothed Check"
+                 dice line + "→ Next Morale CMod -1"
+        notes:
+
+[ ] 13. Morale Check — success (community holds)
+        current: "📊 Week 4 · The Farm · Morale"
+                 leader line + dice line + slot breakdown +
+                 "Morale holds. Next Morale CMod: +1"
+        notes:
+
+[ ] 14. Morale Check — failure with departures
+        current: "📊 Week 5 · The Farm · Morale"
+                 dice line + "3 left: Avery Xavier, Bekah, Tomás · 9/12 remaining · 1/3 failures"
+        notes:
+
+[ ] 15. Morale Check — community dissolves (3 consecutive failures)
+        current: "⚠ Community dissolved — 3 consecutive failures. All 12 members scattered."
+        notes:
+
+[ ] 16. Retention Check — survived
+        current: "🙏 Week 6 · The Farm · Retention"
+                 dice line + "✓ Cree Hask rallied the survivors. Community retained — consecutive failures reset to 2."
+        notes:
+
+[ ] 17. Retention Check — dissolved
+        current: "🙏 Week 7 · The Farm · Retention"
+                 dice line + "✗ The fragments scatter. Community dissolved."
+        notes:
+
+[ ] 18. Group Check (NEW banner — all participants, outcome adverb)
+        current: "GROUP CHECK — Cree Hask, Marv, Wilson, and Frankie were Successful at Survival"
+        notes:
+
+
+================================================================
+TIER B — TRIMMED NARRATIVES (compactRollSummary)
+================================================================
+
+--- Combat actions (no roll) ---
+
+[ ] 19. Aim
+        current: "Cree Hask takes Aim"
+        notes:
+
+[ ] 20. Move
+        current: "Cree Hask Moves"
+        notes:
+
+[ ] 21. Ready Weapon (generic)
+        current: "Cree Hask readies a weapon"
+        notes:
+
+[ ] 22. Ready <weapon>
+        current: "Cree Hask readies Sniper's Rifle"
+        notes:
+
+[ ] 23. Switch to <weapon>
+        current: "Cree Hask switches to Pistol"
+        notes:
+
+[ ] 24. Reload <weapon>
+        current: "Cree Hask reloads Pistol"
+        notes:
+
+[ ] 25. Unequip <weapon>
+        current: "Cree Hask unequips Sniper's Rifle"
+        notes:
+
+[ ] 26. Defend
+        current: "Cree Hask braces to Defend"
+        notes:
+
+[ ] 27. Take Cover
+        current: "Cree Hask takes Cover"
+        notes:
+
+[ ] 28. Reposition
+        current: "Cree Hask repositions"
+        notes:
+
+[ ] 29. Cover Fire (social action)
+        current: "Cree Hask lays down covering fire on Avery Xavier!"
+        notes:
+
+[ ] 30. Inspire (social action)
+        current: "Cree Hask Inspires Marv!"
+        notes:
+
+--- Combat attacks ---
+
+[ ] 31. Weapon attack — Success
+        current: "Cree Hask used a Pistol to Successfully Attack Avery Xavier"
+        notes:
+
+[ ] 32. Weapon attack — Wild Success / High Insight
+        current: "Cree Hask used a Pistol to Successfully Attack Avery Xavier (critical) [+1 Insight Die]"
+        notes:
+
+[ ] 33. Weapon attack — Failure
+        current: "Cree Hask used a Pistol to Unsuccessfully Attack Avery Xavier"
+        notes:
+
+[ ] 34. Weapon attack — Low Insight
+        current: "Cree Hask used a Pistol to Unsuccessfully Attack Avery Xavier, but failed miserably [+1 Insight Die]"
+        notes:
+
+[ ] 35. Charge (with weapon)
+        current: "Ivan Hayes used an Unarmed to Unsuccessfully Charge Barrel 1"
+        notes:
+
+[ ] 36. Subdue (with weapon)
+        current: "Frankie used a Makeshift Club to Successfully Subdue Avery Xavier (critical)"
+        notes:
+
+[ ] 37. Unarmed — hit
+        current: "Cree Hask Successfully used Unarmed Combat on Nolan Penn (critical)"
+        notes:
+
+[ ] 38. Unarmed — miss
+        current: "Cree Hask Unsuccessfully used Unarmed Combat on Nolan Penn"
+        notes:
+
+[ ] 39. Distract — hit
+        current: "Marv Successfully Distracts Avery Xavier"
+        notes:
+
+[ ] 40. Distract — miss
+        current: "Marv Failed to Distract Avery Xavier"
+        notes:
+
+[ ] 41. Explosive thrown (Grenade / Molotov / etc.)
+        current: "Wilson threw a Molotov at Avery Xavier"
+        notes:
+
+[ ] 42. Explosive thrown at empty cell
+        current: "Wilson threw a Grenade"
+        notes:
+
+[ ] 43. Explosive launcher (RPG / Mortar / etc.)
+        current: "Wilson fired an RPG Launcher at Avery Xavier"
+        notes:
+
+[ ] 44. Rapid Fire (multi-word action — neutral phrasing)
+        current: "Cree Hask used Assault Rifle Rapid Fire on Avery Xavier"
+        notes:
+
+[ ] 45. Fire from Cover (multi-word action)
+        current: "Cree Hask used Pistol Fire from Cover on Avery Xavier"
+        notes:
+
+--- Special checks ---
+
+[ ] 46. First Impression — Success
+        current: "Cree Hask makes a strong First Impression"
+        notes:
+
+[ ] 47. First Impression — Wild Success / High Insight
+        current: "Cree Hask makes a strong First Impression (critical) [+1 Insight Die]"
+        notes:
+
+[ ] 48. First Impression — Failure
+        current: "Cree Hask fails to make a First Impression"
+        notes:
+
+[ ] 49. First Impression — Low Insight
+        current: "Cree Hask fails to make a First Impression, but failed miserably [+1 Insight Die]"
+        notes:
+
+[ ] 50. Gut Instinct — hit
+        current: "Cree Hask successfully uses Gut Instinct"
+        notes:
+
+[ ] 51. Gut Instinct — miss
+        current: "Cree Hask fails to use Gut Instinct"
+        notes:
+
+[ ] 52. Perception — hit
+        current: "Cree Hask successfully uses Perception"
+        notes:
+
+[ ] 53. Perception — miss
+        current: "Cree Hask fails to use Perception"
+        notes:
+
+--- Combat events ---
+
+[ ] 54. Grapple — Grappled!
+        current: "Frankie grapples Avery Xavier"
+        notes:
+
+[ ] 55. Grapple — No clear victor
+        current: "Frankie unsuccessfully attempts to grapple Avery Xavier"
+        notes:
+
+[ ] 56. Grapple — Failed (1 RP loss)
+        current: "Frankie fails to grapple Avery Xavier"
+        notes:
+
+[ ] 57. Coordinate — player roll, hit
+        current: "Marv coordinates allies against Avery Xavier"
+        notes:
+
+[ ] 58. Coordinate — player roll, miss
+        current: "Marv fails to coordinate against Avery Xavier"
+        notes:
+
+[ ] 59. Coordinate — effect-broadcast row
+        current: "Frankie, Wilson get +2 CMod when attacking Avery Xavier"
+        notes:
+
+--- Recovery / status ---
+
+[ ] 60. Stress Check — calmed
+        current: "Cree Hask Successfully Calms Themselves"
+        notes:
+
+[ ] 61. Stress Check — failed
+        current: "Cree Hask Unsuccessfully Calms Themselves"
+        notes:
+
+[ ] 62. Stabilize — hit
+        current: "Marv Successfully Stabilizes Cree Hask (critical) [+1 Insight Die]"
+        notes:
+
+[ ] 63. Stabilize — miss
+        current: "Marv Unsuccessfully Stabilizes Cree Hask"
+        notes:
+
+[ ] 64. Stress (Mortally Wounded)
+        current: "Cree Hask is Mortally Wounded by Avery Xavier"
+        notes:
+
+[ ] 65. Stress (Incapacitated)
+        current: "Avery Xavier is Incapacitated by Frankie"
+        notes:
+
+--- Recruitment ---
+
+[ ] 66. Recruit Cohort — Success
+        current: "Cree Hask recruited Avery Xavier as a Cohort to The Farm"
+        notes:
+
+[ ] 67. Recruit Conscript — Success
+        current: "Cree Hask recruited Avery Xavier as a Conscript to The Farm"
+        notes:
+
+[ ] 68. Recruit Convert — Success
+        current: "Cree Hask recruited Avery Xavier as a Convert to The Farm"
+        notes:
+
+[ ] 69. Recruit Apprentice — High Insight unlock
+        current: "Cree Hask recruited Avery Xavier as an Apprentice to The Farm [+1 Insight Die]"
+        notes:
+
+[ ] 70. Recruit — Failure tier
+        current: "Cree Hask tried to recruit Avery Xavier but it didn't go well"
+        notes:
+
+[ ] 71. Recruit — Dire Failure / Low Insight tier
+        current: "Cree Hask tried to recruit Avery Xavier — it went badly"
+        notes:
+
+--- Equipment ---
+
+[ ] 72. Unjam — hit
+        current: "Cree Hask unjams Pistol"
+        notes:
+
+[ ] 73. Unjam — miss
+        current: "Cree Hask fails to unjam Pistol"
+        notes:
+
+[ ] 74. Upkeep — Wild Success / High Insight (tune up)
+        current: "Cree Hask tunes up Sniper's Rifle (critical)"
+        notes:
+
+[ ] 75. Upkeep — Success (maintain)
+        current: "Cree Hask maintains Sniper's Rifle"
+        notes:
+
+[ ] 76. Upkeep — Failure (degrade)
+        current: "Cree Hask fails upkeep — Sniper's Rifle degrades"
+        notes:
+
+[ ] 77. Upkeep — Dire Failure (break)
+        current: "Cree Hask breaks Sniper's Rifle during upkeep"
+        notes:
+
+[ ] 78. Upkeep — Low Insight (break + miserably)
+        current: "Cree Hask breaks Sniper's Rifle during upkeep, but failed miserably"
+        notes:
+
+--- Vehicle ---
+
+[ ] 79. Vehicle attack — hit (with target)
+        current: "Knox Koss shot at and hit Avery Xavier using Minnie's Sniper's Rifle"
+        notes:
+
+[ ] 80. Vehicle attack — miss (with target)
+        current: "Knox Koss shot at and missed Avery Xavier using Minnie's Sniper's Rifle"
+        notes:
+
+[ ] 81. Vehicle attack — no target (e.g. suppression)
+        current: "Knox Koss fired using Minnie's Sniper's Rifle"
+        notes:
+
+[ ] 82. Driving — hit
+        current: "Marv drives Minnie"
+        notes:
+
+[ ] 83. Driving — miss
+        current: "Marv struggles driving Minnie"
+        notes:
+
+[ ] 84. Brew — hit
+        current: "Wilson brews fuel in Minnie"
+        notes:
+
+[ ] 85. Brew — miss
+        current: "Wilson botches the brew in Minnie"
+        notes:
+
+--- System / out-of-combat ---
+
+[ ] 86. Loot
+        current: "Cree Hask looked through the remains of Avery Xavier and found something"
+        notes:
+
+[ ] 87. Barter (NEW trim)
+        current: "Cree Hask traded — gave Apple×3, got Bandage×1"
+        notes:
+
+[ ] 88. CDP award (NEW trim)
+        current: "+5 CDP awarded to Cree Hask, Marv, Wilson"
+        notes:
+
+[ ] 89. Encumbrance tick (NEW trim)
+        current: "Time advances 4h · overencumbered: Cree Hask (7→8), Marv (5→6)"
+        notes:
+
+[ ] 90. Evolution (CDP spend)
+        current: "Cree Hask — Survival Lv 2 → Lv 3 — 5 CDP."
+        notes:
+
+--- Generic skill / attribute ---
+
+[ ] 91. Skill check — Success
+        current: "Cree Hask succeeds at Athletics"
+        notes:
+
+[ ] 92. Skill check — Wild Success / High Insight
+        current: "Cree Hask succeeds at Athletics (critical) [+1 Insight Die]"
+        notes:
+
+[ ] 93. Skill check — Failure
+        current: "Avery Xavier fails at Athletics"
+        notes:
+
+[ ] 94. Skill check — Low Insight
+        current: "Avery Xavier fails at Athletics, but failed miserably [+1 Insight Die]"
+        notes:
+
+[ ] 95. Attribute check — hit
+        current: "Cree Hask succeeds at PHY check"
+        notes:
+
+[ ] 96. Attribute check — miss
+        current: "Cree Hask fails PHY check"
+        notes:
+
+================================================================
+END OF CHECKLIST — 96 entries
+================================================================
