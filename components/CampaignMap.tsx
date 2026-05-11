@@ -101,6 +101,12 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // other viewer of this campaign — same UX as the tactical map. GM
   // pings are orange; player pings are green.
   const pingChannelRef = useRef<any>(null)
+  // View-share channel — GM broadcasts current center/zoom/tile-layer
+  // to every other viewer of this campaign. Player receives → smooth
+  // flyTo + matching tile layer. One-shot, not continuous-follow.
+  const viewShareChannelRef = useRef<any>(null)
+  const [sharedToast, setSharedToast] = useState<string | null>(null)
+  const [shareFlash, setShareFlash] = useState(false)
   const pingMarkersRef = useRef<any[]>([])
   // Measure tool — click to drop point A, click again for point B,
   // shows total path distance + per-segment legs. Multi-click adds
@@ -127,6 +133,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
   const [mapLayer, setMapLayer] = useState<string>(defaultMapStyle ?? 'street')
+  // Mirror mapLayer in a ref so the view-share broadcast handler (set
+  // up once in the init effect) can compare the latest value without
+  // re-subscribing on every layer switch.
+  const mapLayerRef = useRef<string>(defaultMapStyle ?? 'street')
+  useEffect(() => { mapLayerRef.current = mapLayer }, [mapLayer])
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
@@ -528,6 +539,29 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         })
         .subscribe()
       pingChannelRef.current = pingCh
+
+      // View-share broadcast channel. GM Send-side fires payload
+      // { lat, lng, zoom, tile }. Every other viewer flyTo()s to the
+      // coords and switches their tile layer to match. One-shot.
+      // (Self-receive is OK and ignored — the GM is already there.)
+      const viewCh = supabase.channel(`campaign_view_share_${campaignId}`)
+        .on('broadcast', { event: 'cm_view_share' }, (msg: any) => {
+          if (isGM) return // GMs ignore their own share echo + other GMs' shares
+          const p = msg?.payload ?? {}
+          const lat = typeof p.lat === 'number' ? p.lat : null
+          const lng = typeof p.lng === 'number' ? p.lng : null
+          const zoom = typeof p.zoom === 'number' ? p.zoom : null
+          const tile = typeof p.tile === 'string' ? p.tile : null
+          if (lat == null || lng == null || zoom == null) return
+          const map = mapInstanceRef.current
+          if (!map) return
+          if (tile && tile !== mapLayerRef.current) switchLayer(tile)
+          map.flyTo([lat, lng], zoom, { duration: 0.6 })
+          setSharedToast('GM shared a view')
+          window.setTimeout(() => setSharedToast(null), 2500)
+        })
+        .subscribe()
+      viewShareChannelRef.current = viewCh
     }
     init()
     return () => {
@@ -546,6 +580,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       if (pingChannelRef.current) {
         try { supabase.removeChannel(pingChannelRef.current) } catch {}
         pingChannelRef.current = null
+      }
+      if (viewShareChannelRef.current) {
+        try { supabase.removeChannel(viewShareChannelRef.current) } catch {}
+        viewShareChannelRef.current = null
       }
       if (mapInstanceRef.current) {
         try { mapInstanceRef.current.remove() } catch {}
@@ -613,6 +651,33 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
             {measureMode ? '✕ Stop' : '📏 Measure'}
           </button>
+          {/* SHARE VIEW — GM-only. Snapshots the current map state
+              (center, zoom, tile layer) and broadcasts to every other
+              viewer of this campaign. Players' maps smoothly flyTo
+              the location and swap to the matching tile layer.
+              One-shot — not a continuous follow-mode. Flash green for
+              ~1.5s after click so the GM has visual confirmation the
+              broadcast went out. Added 2026-05-11. */}
+          {isGM && (
+            <button type="button"
+              onClick={() => {
+                const map = mapInstanceRef.current
+                if (!map) return
+                const c = map.getCenter()
+                const z = map.getZoom()
+                viewShareChannelRef.current?.send({
+                  type: 'broadcast',
+                  event: 'cm_view_share',
+                  payload: { lat: c.lat, lng: c.lng, zoom: z, tile: mapLayerRef.current },
+                })
+                setShareFlash(true)
+                window.setTimeout(() => setShareFlash(false), 1500)
+              }}
+              title="Push your current map view (center/zoom/tile) to every player"
+              style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${shareFlash ? '#2d5a1b' : '#3a3a3a'}`, background: shareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', color: shareFlash ? '#7fc458' : '#d4cfc9' }}>
+              {shareFlash ? '✓ Shared' : '👁 Share View'}
+            </button>
+          )}
           <div style={{ position: 'relative' }}>
             <input value={searchQuery} onChange={e => {
               setSearchQuery(e.target.value)
@@ -685,6 +750,16 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Player view-share toast — fires when the GM clicks SHARE
+          VIEW and this client receives the broadcast. Soft blue chip,
+          auto-clears after 2.5s. GM never sees this; their own
+          confirmation lives on the button itself. */}
+      {sharedToast && !isGM && (
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+          👁 {sharedToast}
         </div>
       )}
 
