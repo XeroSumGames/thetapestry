@@ -14,6 +14,22 @@
 
 ---
 
+## ✅ Shipped 2026-05-03 → 2026-05-04 — audit follow-ups + tactical fog/zoom fixes
+
+Aggregated from the multi-session audit follow-up arc. Each item is a single commit on `main` from the `claude/audit-followup-2026-05-03` branch.
+
+- [x] **Defensive bundle: moderator-character delete + vehicle crew fetch surface errors** — `handleDelete` + `handleDeleteAll` on `/moderate/users/[id]/characters` now error-check, alert, and only flip state on success (mirrors the user-side fix in `4429915`). Vehicle page's `Promise.all([memberRes, npcRes])` logs per-result errors instead of falling through to empty arrays on RLS denial. LFG deletes turned out to already be error-checked; dropped from PR. Commit `d7dc829`. Testplan: `tasks/defensive-bundle-2026-05-04-testplan.md`.
+- [x] **gm-kit: scoped scene_tokens fetch + lazy JSZip** — `cloneModuleIntoCampaign` was fetching ALL `scene_tokens` across the DB (unfiltered `select('*')`) and filtering client-side; now uses `.in('scene_id', sceneIds)` for proper server-side filtering. Plus JSZip moved to a dynamic `await import('jszip')` inside `exportGmKit` (was a top-level import pulling ~50KB into every bundle that touched the module). Commit `8553234`. Testplan: `tasks/gm-kit-scope-2026-05-03-testplan.md`.
+- [x] **Dead-code: drop `LABEL_STYLE_LG_TIGHT` + `app/oldfavicon.ico`** — `LABEL_STYLE_LG_TIGHT` was created defensively during the initial label-style sweep but had no 14px+.08em sites to map onto. Verified zero callers. `oldfavicon.ico` was a leftover orphan from a favicon refresh. Commit `5fd6275`. Testplan: `tasks/dead-code-2026-05-03-testplan.md`.
+- [x] **Painted fog absolute (initial)** — reverted the `!visible.has(k)` guard on painted-fog rendering, making painted fog absolute. Fixed the morning playtest where day-mode unbounded sight on a no-walls map cleared every painted-fog cell. Commit `26f6dfc`.
+- [x] **Painted fog blocker-gated (the real fix)** — the "absolute" fix above broke the open-window-clears-fog workflow on properly-walled maps. Final fix gates LoS-defeasibility on `hasBlockers = visionSegs.length > 0 || cellBlockers.size > 0`. No blockers → painted fog absolute, auto-fog off. Blockers + PC → LoS-driven painted fog + auto-fog. Both morning and evening playtest cases satisfied. Commit `4f2ee48`. Testplan: `tasks/fog-blocker-gated-2026-05-04-testplan.md`.
+- [x] **imgScale clobber on tactical_scenes UPDATE** — player view zoom-jumped every time the GM toggled a window/wall. Cause: `loadScenes()` (which fires on every `tactical_scenes` UPDATE) was unconditionally re-applying `setImgScale(active.img_scale)` for every player, clobbering the per-viewer local auto-fit value. Fix: only re-apply when DB has a non-default value (`>0 && !== 1`). Commit `3d699d4`. Testplan: `tasks/imgscale-clobber-2026-05-04-testplan.md`.
+- [x] **Sentry-example wizard scaffolding dropped** — `app/sentry-example-page/page.tsx` + `app/api/sentry-example-api/route.ts` from the Sentry setup wizard, never wired into anything. Commit `68505c4`. Testplan: `tasks/sentry-example-drop-2026-05-03-testplan.md`.
+- [x] **Z-index norm: NoteAttachmentsView lightbox** — single-site swap from literal `zIndex: 10010` to `Z_INDEX.criticalModalOver`. Two other off-scale literals (`10001` × 2) deliberately preserved because of intentional `+1`-above-critical stacking offsets. Commit `ab22260`. Testplan: `tasks/zindex-norm-2026-05-03-testplan.md`.
+- [x] **Map tile-provider zoom cap (hard-cap)** — OpenTopoMap returns a "max zoom layer = 17" placeholder image past z17. First attempt used `maxNativeZoom` (commit `ab8eeb5`, lets zoom past with blurry upscaled tiles); replaced with hard-cap `maxZoom` per provider so the + button greys out at the provider's native max. `switchLayer` also calls `map.setMaxZoom(t.maxZoom)` and clamps current zoom on cross-provider switches. Commit `87acdef`. Testplan: `tasks/map-tile-zoom-cap-2026-05-04-testplan.md`.
+
+---
+
 ## ✅ Shipped 2026-05-08 — anti-spam, Turnstile, godmode surface 5, Leaflet fixes
 
 - [x] **SUSPEND/DELETE layout fix** — `<select>` was filling the full row width due to `globals.css select{width:100%}`. Fixed with `width:'auto'` + wrapped Suspend+Delete as a single inner flex unit so they stay paired. Commits `9045492`, `2cc1a1d`.
