@@ -149,11 +149,24 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   useEffect(() => { dblClickRef.current = onMapDoubleClick }, [onMapDoubleClick])
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
-  const [mapLayer, setMapLayer] = useState<string>(defaultMapStyle ?? 'street')
+  // Last view + tile layer persist to localStorage per campaign so a
+  // refresh lands back where you were instead of snapping to the
+  // setting default or world fallback. Keys: tapestry:campaignMap:view
+  // / :layer suffixed with campaignId. Lazy init below; save on
+  // moveend/zoomend + every switchLayer call.
+  const [mapLayer, setMapLayer] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(`tapestry:campaignMap:layer:${campaignId}`)
+        if (saved && TILE_LAYERS[saved]) return saved
+      } catch {}
+    }
+    return defaultMapStyle ?? 'street'
+  })
   // Mirror mapLayer in a ref so the view-share broadcast handler (set
   // up once in the init effect) can compare the latest value without
   // re-subscribing on every layer switch.
-  const mapLayerRef = useRef<string>(defaultMapStyle ?? 'street')
+  const mapLayerRef = useRef<string>(mapLayer)
   useEffect(() => { mapLayerRef.current = mapLayer }, [mapLayer])
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
@@ -459,6 +472,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
   function switchLayer(layer: string) {
     setMapLayer(layer)
+    try { localStorage.setItem(`tapestry:campaignMap:layer:${campaignId}`, layer) } catch {}
     if (!mapInstanceRef.current || !tileLayerRef.current) return
     const L = (window as any).L
     if (!L) return
@@ -541,15 +555,42 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
       const settingView = setting ? SETTING_CENTERS[setting] : undefined
       const customCenter = (mapCenterLat != null && mapCenterLng != null) ? { center: [mapCenterLat, mapCenterLng] as [number, number], zoom: 12 } : undefined
+      // Saved view from a prior session for this campaign. Wins over
+      // every other source so a refresh resumes exactly where the user
+      // was looking. Cleared localStorage falls through to customCenter
+      // / settingView / world default below.
+      let savedView: { center: [number, number]; zoom: number } | undefined
+      try {
+        const raw = localStorage.getItem(`tapestry:campaignMap:view:${campaignId}`)
+        if (raw) {
+          const p = JSON.parse(raw)
+          if (typeof p?.lat === 'number' && typeof p?.lng === 'number' && typeof p?.zoom === 'number') {
+            savedView = { center: [p.lat, p.lng], zoom: p.zoom }
+          }
+        }
+      } catch {}
       // Default fallback: Mediterranean (Tyrrhenian Sea, near Stromboli) at
       // zoom 3 — wide regional view that frames Europe + N Africa for any
       // campaign that hasn't picked a setting or set a custom center.
-      const view = customCenter ?? settingView ?? { center: [38.6169, 15.2930] as [number, number], zoom: 3 }
+      const view = savedView ?? customCenter ?? settingView ?? { center: [38.6169, 15.2930] as [number, number], zoom: 3 }
       const t = TILE_LAYERS[mapLayer] ?? TILE_LAYERS.street
       const map = L.map(mapRef.current, { center: view.center, zoom: view.zoom, zoomControl: true, minZoom: 2, maxZoom: t.maxZoom })
       tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: t.maxZoom }).addTo(map)
 
       mapInstanceRef.current = map
+
+      // Persist view on every move/zoom so the next refresh resumes
+      // here. Cheap enough to fire on every settle event — no debounce
+      // needed for a single localStorage write per gesture.
+      const saveView = () => {
+        try {
+          const c = map.getCenter()
+          const z = map.getZoom()
+          localStorage.setItem(`tapestry:campaignMap:view:${campaignId}`, JSON.stringify({ lat: c.lat, lng: c.lng, zoom: z }))
+        } catch {}
+      }
+      map.on('moveend', saveView)
+      map.on('zoomend', saveView)
 
       // Alt+click anywhere — drop a ping locally and broadcast it to
       // every other viewer of this campaign. GM/player both can ping;
