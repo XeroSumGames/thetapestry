@@ -10,9 +10,16 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 
 ## TOP PRIORITY — Playtest carry-over
 
-- [ ] **Random character — Medic produces no First Aid skill.**
-      *Likely a wording mix-up — XSE has no "First Aid" skill;
-      Medic seeds Medicine\*. Confirm with player before chasing.*
+- [x] **Random character — Medic produces no First Aid skill.** RESOLVED
+      2026-05-11 — verified `app/characters/random/page.tsx:146-167`
+      profession-skill floor: every Medic random character gets 10 CDP
+      across the 5 profession skills (each min 1, max 3) merged with
+      paradigm via max(). Medicine\* always lands at level 1+. Player
+      report was most likely naming confusion (expected a skill named
+      "First Aid"). Polish flagged in tasks/todo.md: surface skill
+      description on hover so Medicine\* tooltip reads "covers first
+      aid, diagnosis, treatment, emergency stabilization, and advanced
+      medical care".
 
 - [ ] **Vehicle passenger sync — terrain rejection.** Passenger
       auto-move (`7f71bce`) follows the vehicle without checking
