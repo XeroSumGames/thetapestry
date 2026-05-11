@@ -105,7 +105,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const measureLineRef = useRef<any>(null)
   const measureLabelsRef = useRef<any[]>([])
   const [measureMode, setMeasureMode] = useState(false)
-  const [measureDistanceText, setMeasureDistanceText] = useState<string>('')
+  // Per-leg breakdown for the toolbar. Each entry: "Leg N→N+1: <dist> · <time>".
+  // The toolbar stacks these vertically with a TOTAL line at the bottom.
+  // Replaced the prior single-string state 2026-05-11 per Xero - multi-
+  // waypoint paths need the breakdown visible in the toolbar, not just
+  // on the per-segment chips out on the map.
+  const [measureLegs, setMeasureLegs] = useState<string[]>([])
+  const [measureTotalText, setMeasureTotalText] = useState<string>('')
   useEffect(() => { measureModeRef.current = measureMode }, [measureMode])
   // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
   // dblclick handler registered in the init effect can always call the
@@ -231,7 +237,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     measureLabelsRef.current.forEach(l => { try { map?.removeLayer(l) } catch {} })
     measureLabelsRef.current = []
     measurePointsRef.current = []
-    setMeasureDistanceText('')
+    setMeasureLegs([])
+    setMeasureTotalText('')
   }
   // Append a click point and redraw markers + connecting polyline +
   // distance label. Label sits at the latest segment's midpoint so it
@@ -264,11 +271,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const labelIcon = L.divIcon({ html: labelHtml, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
       const segLabel = L.marker([mid.lat, mid.lng], { icon: labelIcon, interactive: false, keyboard: false, zIndexOffset: 9500 }).addTo(map)
       measureLabelsRef.current.push(segLabel)
-      // Toolbar shows the total path + total walk time.
+      // Toolbar shows per-leg breakdown stacked vertically + a TOTAL
+      // row at the bottom. Each leg line: "Leg N→N+1: <dist> · <time>".
+      setMeasureLegs(prev => [...prev, `Leg ${i - 1}→${i}: ${formatDistance(segMeters)} · 🚶 ${formatWalkTime(segMeters)}`])
       const total = totalMeters(measurePointsRef.current)
-      setMeasureDistanceText(`${formatDistance(total)} · 🚶 ${formatWalkTime(total)} total`)
+      setMeasureTotalText(`${formatDistance(total)} · 🚶 ${formatWalkTime(total)} total`)
     } else {
-      setMeasureDistanceText('Click a second point to measure…')
+      setMeasureLegs([])
+      setMeasureTotalText('Click a second point to measure…')
     }
   }
 
@@ -589,7 +599,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 setMeasureMode(true)
                 setPlacing(false)
                 setNewPin(null)
-                setMeasureDistanceText('Click a point to start measuring…')
+                setMeasureLegs([])
+                setMeasureTotalText('Click a point to start measuring…')
               }
             }}
             title={measureMode ? 'Stop measuring (Esc)' : 'Click two points to measure distance'}
@@ -646,13 +657,28 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Measure mode banner — shows live total distance and a hint
-          for next click. Tucked above the placing banner spot so the
+      {/* Measure mode banner — per-leg breakdown stacked vertically,
+          TOTAL row at the bottom. Each leg has its own line: "Leg N→N+1:
+          <dist> · <time>". Tucked above the placing banner spot so the
           two never overlap (measure forces placing off anyway). */}
       {measureMode && (
-        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span>📏 {measureDistanceText || 'Click a point to start measuring…'}</span>
-          <span style={{ color: '#7ab3d4', fontSize: '13px' }}>Esc to clear</span>
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px', minWidth: '280px' }}>
+          {measureLegs.length === 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+              <span>📏 {measureTotalText || 'Click a point to start measuring…'}</span>
+              <span style={{ marginLeft: 'auto', color: '#7ab3d4', fontSize: '13px' }}>Esc to clear</span>
+            </div>
+          ) : (
+            <>
+              {measureLegs.map((leg, idx) => (
+                <div key={idx} style={{ color: '#cce0f5', fontWeight: 400, letterSpacing: '.04em' }}>{leg}</div>
+              ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid #1a3a5c' }}>
+                <span style={{ color: '#f5f2ee', fontWeight: 700 }}>📏 {measureTotalText}</span>
+                <span style={{ marginLeft: 'auto', color: '#7ab3d4', fontSize: '13px' }}>Esc to clear</span>
+              </div>
+            </>
+          )}
         </div>
       )}
 
