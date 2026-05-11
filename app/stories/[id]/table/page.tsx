@@ -6954,7 +6954,7 @@ export default function TablePage() {
         {/* Left - Game Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', whiteSpace: 'nowrap' }}>
               <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span><MessagesBell /><NotificationBell /><BugReportButton />
             </div>
           </div>
