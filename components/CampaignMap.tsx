@@ -741,20 +741,45 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     }
   }, [focusPin])
 
+  // Shared geometry/font for every control in the top-right toolbar row.
+  // Locks height + font so the buttons, the <select>, the search input,
+  // and the Go button all line up — and gives the flex row predictable
+  // sizing so it never wraps when measure-mode adds the travel picker.
+  const toolbarCtrl: React.CSSProperties = {
+    height: 28,
+    boxSizing: 'border-box',
+    padding: '0 10px',
+    fontSize: '13px',
+    fontFamily: 'Carlito, sans-serif',
+    letterSpacing: '.04em',
+    borderRadius: '3px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+    cursor: 'pointer',
+  }
+
   return (
     <div style={{ flex: 1, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%', cursor: (placing || measureMode) ? 'crosshair' : '' }} />
 
-      {/* Search + layer switcher — single right column (matches MapView) */}
+      {/* Search + layer switcher — single right column (matches MapView).
+          Every control in the top form row shares `toolbarCtrl` for
+          geometry + font so heights match and the row never wraps,
+          regardless of how many conditional buttons are showing
+          (measure-mode travel-picker, GM-only Share View, etc.). */}
       <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px' }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', flexWrap: 'nowrap', gap: '4px' }}>
           {/* + Pin opens to all campaign members, not just the GM. RLS
               already permits members to INSERT into campaign_pins; the
               old isGM gate was UI-only. Player pins land revealed=false
               so the GM sees them in CampaignPins for review/reveal. */}
           <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
             title={isGM ? 'Drop a pin on the campaign map' : 'Suggest a pin — GM will review and reveal it'}
-            style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
             {placing ? '✕ Cancel' : isGM ? '+ Pin' : '+ Suggest Pin'}
           </button>
           {/* Measure tool — toggle on, click two (or more) points to
@@ -776,7 +801,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               }
             }}
             title={measureMode ? 'Stop measuring (Esc)' : 'Click two points to measure distance'}
-            style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
             {measureMode ? '✕ Stop' : '📏 Measure'}
           </button>
           {/* Travel-mode picker — appears only while measure mode is
@@ -788,7 +813,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           {measureMode && (
             <select value={travelMode} onChange={e => setTravelMode(e.target.value as TravelMode)}
               title="How are the characters traveling? Affects time-of-travel display."
-              style={{ padding: '5px 8px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: '1px solid #7ab3d4', background: '#0f1a2e', color: '#cce0f5', letterSpacing: '.04em' }}>
+              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #7ab3d4', background: '#0f1a2e', color: '#cce0f5' }}>
               {Object.entries(TRAVEL_MODES).map(([key, m]) => (
                 <option key={key} value={key} style={{ background: '#0f0f0f', color: '#cce0f5' }}>
                   {m.emoji} {m.label} ({m.mph} mph)
@@ -819,7 +844,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 window.setTimeout(() => setShareFlash(false), 1500)
               }}
               title="Push your current map view (center/zoom/tile) to every player"
-              style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${shareFlash ? '#2d5a1b' : '#3a3a3a'}`, background: shareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', color: shareFlash ? '#7fc458' : '#d4cfc9' }}>
+              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${shareFlash ? '#2d5a1b' : '#3a3a3a'}`, background: shareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', color: shareFlash ? '#7fc458' : '#d4cfc9' }}>
               {shareFlash ? '✓ Shared' : '👁 Share View'}
             </button>
           )}
@@ -835,7 +860,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 }, 300)
               } else { setSuggestions([]) }
             }} placeholder="Search address..."
-              style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', width: '175px', outline: 'none' }} />
+              style={{ ...toolbarCtrl, justifyContent: 'flex-start', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', color: '#f5f2ee', width: '175px', outline: 'none', cursor: 'text', textTransform: 'none', letterSpacing: 'normal' }} />
             {suggestions.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 1001 }}>
                 {suggestions.map((s, i) => (
@@ -854,7 +879,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             )}
           </div>
           <button type="submit" disabled={searching}
-            style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', color: '#f5f2ee' }}>
             {searching ? '...' : 'Go'}
           </button>
         </form>
