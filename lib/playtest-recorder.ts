@@ -6,13 +6,26 @@
 // console.error/warn, manual marks. NEVER captures input values, cookies,
 // localStorage contents, or auth tokens — see redact() below.
 
-const MAX_EVENTS = 2000
+// Sized for a full 3-hour playtest (180 min). At a moderate ~50 events/min
+// (active combat is denser, idle stretches are sparser), 3h ≈ 9000 events;
+// 20000 gives ~2x headroom for stretches of click-heavy tactical work plus
+// the diagnostic console.warns. Memory cost is ~4MB worst case.
+const MAX_EVENTS = 20000
 const STORAGE_KEY = 'tapestry_playtest_buffer'
 // Min ms between localStorage writes — protects against jank if something
 // throws/marks in a tight loop (each persist is a sync JSON.stringify of
-// up to 500 events).
+// up to PERSIST_BACKUP_COUNT events).
 const PERSIST_THROTTLE_MS = 2000
+// How many trailing events to back up to localStorage on each persist.
+// Sized larger than the old 500 so a crash mid-3h session loses less
+// context. Still bounded so the persist itself stays cheap.
+const PERSIST_BACKUP_COUNT = 5000
+// Periodic flush interval. Even with no errors or marks, we want the
+// recent buffer mirrored to localStorage so a browser crash doesn't lose
+// the whole session.
+const PERIODIC_FLUSH_MS = 60_000
 let lastPersistMs = 0
+let periodicFlushTimer: ReturnType<typeof setInterval> | null = null
 
 export type PlaytestEvent = {
   t: string            // ISO timestamp
@@ -47,18 +60,49 @@ declare global {
 }
 
 // Called by PlaytestRecorder after fetching playtest_recorder_config and
-// deciding whether the current user is in scope. Wipes the buffer when
-// transitioning to disabled so the dump can't surface events captured
-// before the config check resolved.
+// deciding whether the current user is in scope. Does NOT wipe the buffer
+// — that's a separate explicit call. Mid-session toggles from /record
+// should stop capture without nuking 3 hours of data; only the initial
+// fail-closed path (config says "off for me from the start") should wipe.
 export function setEnabled(enabled: boolean) {
   const r = getRecorder()
   if (!r) return
   if (r.enabled === enabled) return
   r.enabled = enabled
-  if (!enabled) {
-    r.buffer.length = 0
-    try { localStorage.removeItem('tapestry_playtest_buffer') } catch {}
-  }
+}
+
+// Explicit buffer wipe. Used by PlaytestRecorder's initial gate eval
+// when the config resolves to "off for me" — anything captured during
+// the optimistic-on window is junk and shouldn't surface in a dump.
+// NOT called when the GM toggles off mid-session via /record.
+export function wipeBuffer() {
+  const r = getRecorder()
+  if (!r) return
+  r.buffer.length = 0
+  try { localStorage.removeItem(STORAGE_KEY) } catch {}
+}
+
+// Best-effort persist of the trailing buffer to localStorage. Called by
+// the periodic flush timer and by error/rejection/mark events in
+// record(). Throttled to avoid main-thread jank under spam.
+function persistTrailing(now: number) {
+  const r = getRecorder()
+  if (!r || !r.enabled) return
+  if (now - lastPersistMs < PERSIST_THROTTLE_MS) return
+  lastPersistMs = now
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(r.buffer.slice(-PERSIST_BACKUP_COUNT)))
+  } catch { /* quota / no storage */ }
+}
+
+// Start a periodic flush so a browser crash mid-session loses ≤60s of
+// trailing context instead of everything since the last error/mark.
+// Idempotent: if a timer is already running, this no-ops. PlaytestRecorder
+// calls this once per mount.
+export function startPeriodicFlush() {
+  if (typeof window === 'undefined') return
+  if (periodicFlushTimer != null) return
+  periodicFlushTimer = setInterval(() => persistTrailing(Date.now()), PERIODIC_FLUSH_MS)
 }
 
 export function getRecorder(): RecorderState | null {
@@ -105,13 +149,9 @@ export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown
   if (r.buffer.length > MAX_EVENTS) r.buffer.splice(0, r.buffer.length - MAX_EVENTS)
   // Persist to localStorage on errors and marks — cheap insurance against
   // refresh wiping the buffer right when something interesting happened.
-  // Throttled so a runaway error loop can't pin the main thread.
+  // The periodic flush (every 60s) covers the no-interesting-event case.
   if (kind === 'error' || kind === 'rejection' || kind === 'mark') {
-    const now = Date.now()
-    if (now - lastPersistMs >= PERSIST_THROTTLE_MS) {
-      lastPersistMs = now
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(r.buffer.slice(-500))) } catch {}
-    }
+    persistTrailing(Date.now())
   }
 }
 

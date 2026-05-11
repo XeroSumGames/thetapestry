@@ -300,7 +300,7 @@ export default function RecorderConfigPage() {
           </button>
           {savedAt && (
             <span style={{ fontSize: 13, color: '#27ae60', fontFamily: 'Carlito, sans-serif' }}>
-              Saved at {savedAt}. Open tabs apply on next page load.
+              Saved at {savedAt}. Open tabs apply within ~1 second via realtime.
             </span>
           )}
         </div>
@@ -310,10 +310,27 @@ export default function RecorderConfigPage() {
           <div>· Ctrl+Shift+L — dump buffer to JSON file</div>
           <div>· Ctrl+Shift+M — mark a moment with a label</div>
           <div>· Ctrl+Shift+P — peek last 20 events in console</div>
+          <div style={{ marginTop: 14, padding: 10, background: '#161616', border: '1px solid #2e2e2e', borderRadius: 3 }}>
+            <div style={{ color: '#cce0f5', marginBottom: 4, fontWeight: 600 }}>3-hour playtest workflow:</div>
+            <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+              1. Toggle <strong>ON</strong> here a few minutes before the session.<br />
+              2. Open tabs (yours + players') pick up the change via realtime — no reload needed.<br />
+              3. Players mark issues with <strong>Ctrl+Shift+M</strong> when something looks wrong.<br />
+              4. At session end, everyone dumps with <strong>Ctrl+Shift+L</strong>.<br />
+              5. Then toggle <strong>OFF</strong>. The dump survives the toggle — open tabs stop capturing but keep their buffer until they reload or close.
+            </div>
+          </div>
           <div style={{ marginTop: 10, fontSize: 12 }}>
-            Buffer holds the last 2,000 events per tab. The tiny red dot in
-            the bottom-right corner is the visual indicator that recording is
-            on for this user.
+            Buffer holds up to <strong>20,000 events</strong> per tab (sized for a
+            full 3-hour session with combat). Trailing context auto-flushes to
+            localStorage every 60 seconds so a browser crash loses at most a
+            minute. The tiny red dot in the bottom-right corner is the visual
+            indicator that recording is on for this user.
+          </div>
+          <div style={{ marginTop: 10, fontSize: 12, color: '#9aa' }}>
+            <strong>5/11 diagnostic traces active:</strong> initiative
+            transitions (per-phase ms), damage calc ingredients, skill-check
+            outcome + consumeAction. Grep dumps for <code>[playtest-trace]</code>.
           </div>
         </div>
       </div>

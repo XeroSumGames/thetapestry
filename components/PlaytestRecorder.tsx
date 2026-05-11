@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { getCachedAuth } from '../lib/auth-cache'
 import { createClient } from '../lib/supabase-browser'
-import { record, downloadDump, getRecorder, setEnabled } from '../lib/playtest-recorder'
+import { record, downloadDump, getRecorder, setEnabled, wipeBuffer, startPeriodicFlush } from '../lib/playtest-recorder'
 
 // Warns we never want in the dump — already filtered from the console by the
 // head script in app/layout.tsx, but our recorder runs upstream of that
@@ -82,12 +82,17 @@ export default function PlaytestRecorder() {
     getCachedAuth().then(({ user }) => applyUser(user ?? null)).catch(() => {})
 
     // ── Recorder gate: fetch playtest_recorder_config and decide whether
-    //    this tab should record. Default is "on" until we hear back, so
-    //    no events are lost on tabs that turn out to be in-scope. If the
-    //    config says we're out-of-scope, setEnabled(false) wipes the
-    //    buffer and short-circuits all future record() calls.
-    //    Re-runs whenever auth state changes (sign-in / sign-out) since
-    //    target_user_ids matches by user.id.
+    //    this tab should record. Optimistic-on default — events captured
+    //    during the brief fetch window are kept IF the gate resolves on,
+    //    discarded (via wipeBuffer) if it resolves off the first time.
+    //    Re-runs on auth-state change and on realtime config UPDATE,
+    //    so /record-page saves propagate without requiring a reload.
+    //    initialGateDoneRef tracks "have we resolved once yet" — the
+    //    very first off-resolution is the only one that wipes; later
+    //    GM toggles to off stop capture but preserve the buffer so a
+    //    3-hour session isn't lost if the GM toggles off before
+    //    dumping.
+    const initialGateDoneRef = { current: false }
     const evaluateGate = async () => {
       try {
         const supabase = createClient()
@@ -107,16 +112,49 @@ export default function PlaytestRecorder() {
             ? !!user                              // allowlist empty → all authed
             : !!user && targets.includes(user.id) // allowlist → my id?
         }
+        const isFirstEval = !initialGateDoneRef.current
         setEnabled(resolved)
         setEnabledUI(resolved)
+        if (isFirstEval && !resolved) {
+          // First gate eval says we're out-of-scope. Wipe the optimistic
+          // captures so they don't surface in a future dump if the gate
+          // later flips on.
+          wipeBuffer()
+        }
+        initialGateDoneRef.current = true
       } catch {
         // On any error fetching config, default to OFF — better to miss
         // a few events than to record traffic the GM didn't intend.
         setEnabled(false)
         setEnabledUI(false)
+        if (!initialGateDoneRef.current) wipeBuffer()
+        initialGateDoneRef.current = true
       }
     }
     evaluateGate()
+
+    // Periodic flush so a browser crash mid-session loses ≤60s of context
+    // instead of the whole session. Idempotent — startPeriodicFlush no-ops
+    // if a timer is already running.
+    startPeriodicFlush()
+
+    // Realtime subscription on playtest_recorder_config so /record-page
+    // toggles propagate to every open tab without requiring a reload.
+    // Critical for the "turn on at session start, leave running for 3h"
+    // workflow — otherwise players would need to reload after the GM
+    // flips ON.
+    try {
+      const supabaseRt = createClient()
+      const ch = supabaseRt.channel('playtest_recorder_config_changes')
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'playtest_recorder_config', filter: 'id=eq.1' },
+          () => evaluateGate())
+        .subscribe()
+      // Best-effort cleanup is omitted — this is a singleton mount that
+      // lives for the page lifetime; the channel is implicitly torn down
+      // when the tab closes.
+      void ch
+    } catch { /* realtime disabled / SSR */ }
 
     // Subscribe to auth-state changes so dumps after a fresh sign-in are
     // tagged with the user — fixes the always-`anon` filename problem when

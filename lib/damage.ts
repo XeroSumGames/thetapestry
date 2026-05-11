@@ -101,5 +101,22 @@ export function calculateDamage(
   const finalWP = Math.max(0, rawWP - mitigated)
   const rpSource = options?.rpFromRaw ? rawWP : finalWP
   const finalRP = Math.floor(rpSource * (rpPercent / 100))
+  // Diagnostic — playtest 2026-05-11 belt-and-suspenders trace inside
+  // calculateDamage itself, so the math is captured no matter which
+  // caller invoked it (table page, vehicle popout, future paths). The
+  // call-site trace in table/page.tsx around line 4390 has caller
+  // context; this one guarantees the raw-math ingredients are in the
+  // recorder dump for every damage call.
+  // Prefix [playtest-trace] matches the rest of the 5/11 instrumentation
+  // so all traces are greppable together in DevTools.
+  try {
+    console.warn('[playtest-trace] [damage] calculateDamage', {
+      rawWP, rpPercent, defensiveModifier,
+      armorDm, mitigated,
+      finalWP, finalRP,
+      rpFromRaw: !!options?.rpFromRaw,
+      attackerCategory: options?.attackerCategory ?? null,
+    })
+  } catch { /* SSR / no console */ }
   return { finalWP, finalRP, mitigated }
 }
