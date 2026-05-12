@@ -668,6 +668,17 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
       {useCompact ? (
         <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
           {compact}
+          {/* Insight Die SPEND badge - mirrors the verbose-card badge
+              so the compact narrative tells the same story. Without
+              this, "Juno makes a First Impression" reads as a routine
+              roll even when she burned an Insight Die to land it.
+              Same fallback heuristic for pre-2026-04-28 rows. */}
+          {(r.insight_used === '3d6' || (!r.insight_used && r.die2 > 6)) && (
+            <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>🎲 Insight Die spent (3d6)</span>
+          )}
+          {r.insight_used === '+3cmod' && (
+            <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>🎲 Insight Die spent (+3 CMod)</span>
+          )}
           {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
         </div>
       ) : (
@@ -684,14 +695,14 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               heuristic for pre-bump rows so old 3d6 spends
               still get surfaced. +3 CMod spends from before
               the bump can't be detected and stay silent.
-              The Both tab's merged feed drops this banner -
-              less per-row vertical noise in the interleaved view. */}
-          {!simple && (r.insight_used === '3d6' || (!r.insight_used && r.die2 > 6)) && (
+              Shows on both tabs (rolls-only AND Both) so an
+              insight-die spend is never invisible. */}
+          {(r.insight_used === '3d6' || (!r.insight_used && r.die2 > 6)) && (
             <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
               <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - pre-rolled 3d6 (kept all three)</span>
             </div>
           )}
-          {!simple && r.insight_used === '+3cmod' && (
+          {r.insight_used === '+3cmod' && (
             <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
               <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - +3 CMod</span>
             </div>
