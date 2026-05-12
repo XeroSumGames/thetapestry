@@ -253,6 +253,48 @@ export default function TablePage() {
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
   // anything outside that closes the menu.
+  // Recorder state sync — read the global config once on mount and
+  // subscribe to Realtime UPDATEs so the toggle's UI stays in step with
+  // /record-page changes (in case the GM also has /record open) and
+  // with the live ON/STOP buttons on this page.
+  useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+    supabase
+      .from('playtest_recorder_config')
+      .select('enabled')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data }: any) => { if (!cancelled) setRecorderEnabled(!!data?.enabled) })
+    const ch = supabase.channel('table_recorder_state')
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'playtest_recorder_config', filter: 'id=eq.1' },
+        (payload: any) => { setRecorderEnabled(!!payload?.new?.enabled) })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(ch) }
+  }, [])
+
+  // Toggle the recorder ON/OFF from the table page. Writes to the same
+  // DB row /record does — Realtime propagates to every open tab, the
+  // PlaytestRecorder gate-transition logic handles wipe-on-ON and
+  // auto-download-on-OFF, so the GM never leaves the session tab.
+  async function toggleRecorder() {
+    if (recorderToggling) return
+    setRecorderToggling(true)
+    const next = !recorderEnabled
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('playtest_recorder_config')
+      .update({ enabled: next, updated_at: new Date().toISOString(), updated_by: userId })
+      .eq('id', 1)
+    setRecorderToggling(false)
+    if (error) {
+      alert(`Recorder toggle failed: ${error.message}`)
+      return
+    }
+    setRecorderEnabled(next)
+  }
+
   useEffect(() => {
     if (!openHeaderMenu) return
     function handleClick(e: MouseEvent) {
@@ -558,6 +600,17 @@ export default function TablePage() {
   // used to paint a green online dot on each player's footer avatar.
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set())
   const presenceChannelRef = useRef<any>(null)
+
+  // Playtest recorder ON/OFF mirror — local state driven by the
+  // playtest_recorder_config row. Lives on the table page so the GM
+  // can flip ON / STOP without leaving the session tab (closing the
+  // session tab kills its localStorage-backed recorder buffer, so the
+  // GM controlling from /record in a separate tab risks losing
+  // everything when they close the session tab to end). The toggle
+  // writes to the DB; the existing Realtime subscription in
+  // PlaytestRecorder.tsx handles wipe-on-ON / auto-download-on-OFF.
+  const [recorderEnabled, setRecorderEnabled] = useState<boolean>(false)
+  const [recorderToggling, setRecorderToggling] = useState<boolean>(false)
 
   // Session
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
@@ -6007,6 +6060,20 @@ export default function TablePage() {
             className="hdr-btn"
             style={{ ...hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: sessionActing ? 0.5 : 1, cursor: sessionActing ? 'not-allowed' : 'pointer' }}>
             {sessionActing ? 'Starting...' : 'Start Session'}
+          </button>
+        )}
+        {/* Recorder toggle — lives on the table page (not just /record)
+            so the GM never has to leave the session tab. Closing the
+            session tab kills its localStorage-backed recorder buffer,
+            so controlling the recorder from a sibling /record tab
+            risked losing everything when the GM closed the table tab
+            to end. Red dot pulses while recording. */}
+        {isGM && (
+          <button onClick={toggleRecorder} disabled={recorderToggling}
+            className="hdr-btn"
+            title={recorderEnabled ? 'Stop the playtest recorder — every open tab auto-downloads its buffer' : 'Start the playtest recorder — every open tab wipes its buffer and captures fresh'}
+            style={{ ...hdrBtn(recorderEnabled ? '#2a1210' : '#242424', recorderEnabled ? '#f5a89a' : '#d4cfc9', recorderEnabled ? '#c0392b' : '#3a3a3a'), opacity: recorderToggling ? 0.5 : 1, cursor: recorderToggling ? 'not-allowed' : 'pointer' }}>
+            {recorderToggling ? '...' : recorderEnabled ? '⏺ Stop Recording' : '⏺ Record'}
           </button>
         )}
         {isGM && sessionStatus === 'active' && (
