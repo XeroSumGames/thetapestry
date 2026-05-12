@@ -81,18 +81,20 @@ export default function PlaytestRecorder() {
     }
     getCachedAuth().then(({ user }) => applyUser(user ?? null)).catch(() => {})
 
-    // ── Recorder gate: fetch playtest_recorder_config and decide whether
-    //    this tab should record. Optimistic-on default — events captured
-    //    during the brief fetch window are kept IF the gate resolves on,
-    //    discarded (via wipeBuffer) if it resolves off the first time.
+    // ── Session marker (was: recorder gate). Capture is unconditional
+    //    now — events always accumulate locally per tab. The DB
+    //    `enabled` flag is a session marker: a transition OFF→ON wipes
+    //    the buffer (fresh session start) and a transition ON→OFF
+    //    triggers an automatic download (session end). Allowlist
+    //    (target_user_ids) gates WHICH tabs participate in the
+    //    transitions — non-allowlisted tabs keep recording locally and
+    //    can still be manually dumped via Ctrl+Shift+L, but their
+    //    auto-dump is suppressed so the dump pile isn't polluted by
+    //    tabs the GM didn't intend to record.
+    //
     //    Re-runs on auth-state change and on realtime config UPDATE,
-    //    so /record-page saves propagate without requiring a reload.
-    //    initialGateDoneRef tracks "have we resolved once yet" — the
-    //    very first off-resolution is the only one that wipes; later
-    //    GM toggles to off stop capture but preserve the buffer so a
-    //    3-hour session isn't lost if the GM toggles off before
-    //    dumping.
-    const initialGateDoneRef = { current: false }
+    //    so /record-page saves propagate to every open tab.
+    const prevEnabledRef = { current: null as boolean | null }
     const evaluateGate = async () => {
       try {
         const supabase = createClient()
@@ -112,23 +114,29 @@ export default function PlaytestRecorder() {
             ? !!user                              // allowlist empty → all authed
             : !!user && targets.includes(user.id) // allowlist → my id?
         }
-        const isFirstEval = !initialGateDoneRef.current
+        const prev = prevEnabledRef.current
+        prevEnabledRef.current = resolved
+        // Transition logic (skip on the very first eval — there's no
+        // previous state to compare against, and we don't want to dump
+        // a freshly-loaded tab's empty buffer on initial gate read).
+        if (prev !== null) {
+          if (prev === false && resolved === true) {
+            // OFF → ON: new session starting. Clear the buffer so the
+            // dump at session end is purely this session's events.
+            wipeBuffer()
+          } else if (prev === true && resolved === false) {
+            // ON → OFF: session ended. Auto-download this tab's buffer
+            // so the GM doesn't have to hit Ctrl+Shift+L on every tab.
+            downloadDump()
+          }
+        }
         setEnabled(resolved)
         setEnabledUI(resolved)
-        if (isFirstEval && !resolved) {
-          // First gate eval says we're out-of-scope. Wipe the optimistic
-          // captures so they don't surface in a future dump if the gate
-          // later flips on.
-          wipeBuffer()
-        }
-        initialGateDoneRef.current = true
       } catch {
-        // On any error fetching config, default to OFF — better to miss
-        // a few events than to record traffic the GM didn't intend.
-        setEnabled(false)
-        setEnabledUI(false)
-        if (!initialGateDoneRef.current) wipeBuffer()
-        initialGateDoneRef.current = true
+        // On any error fetching config, leave the tab's state alone
+        // rather than nuke the buffer or trigger a spurious download.
+        // Without a confirmed DB read, we can't tell a real transition
+        // from a transient network error.
       }
     }
     evaluateGate()

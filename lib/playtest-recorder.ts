@@ -138,7 +138,12 @@ function redact(value: unknown, depth = 0): unknown {
 export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown>) {
   const r = getRecorder()
   if (!r) return
-  if (!r.enabled) return
+  // Capture is unconditional now (was gated on r.enabled). The DB
+  // `enabled` flag transitioned from "gate" to "session marker":
+  // ON click = wipe + start fresh; OFF click = auto-download. This
+  // removes the "I forgot to flip ON" failure mode that nuked the
+  // 2026-05-11 playtest data — events accumulate from page mount and
+  // are dumped at session end regardless of when ON was clicked.
   const ev: PlaytestEvent = {
     t: new Date().toISOString(),
     ms: Date.now() - r.startedAt,
