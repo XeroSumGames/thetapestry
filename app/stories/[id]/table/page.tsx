@@ -8107,21 +8107,22 @@ export default function TablePage() {
                       </div>
                     )
                   })()}
-                  {/* Wrap avatar + online dot. The avatar itself needs
-                      overflow:hidden to clip the photo into a circle,
-                      which would also clip the corner-anchored dot to
-                      invisibility (the bottom-right of a circle inside
-                      a square has no pixels). Wrapper stays relative
-                      with no overflow so the dot can sit on top. */}
-                  <div style={{ position: 'relative', flexShrink: 0 }}>
-                    <div style={{ width: avatarSize, height: avatarSize, borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                      {photo ? <img src={photo} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>{getInitials(entry.character.name)}</span>}
-                    </div>
-                    {onlineUserIds.has(entry.userId) && (
-                      <span title={`${entry.username} is online`}
-                        style={{ position: 'absolute', right: '-1px', bottom: '-1px', width: isCompact ? '9px' : '11px', height: isCompact ? '9px' : '11px', borderRadius: '50%', background: '#39ff14', border: '2px solid #1a1a1a', boxShadow: '0 0 6px rgba(57,255,20,.7)' }} />
-                    )}
-                  </div>
+                  {/* Avatar border colors signal status in priority order:
+                      active combatant (red) > online (green) > default
+                      (teal). Online presence is read from onlineUserIds
+                      populated by the table-page presence channel. Glow
+                      box-shadow on the online state makes the bright
+                      green ring pop even at compact (28px) avatar size. */}
+                  {(() => {
+                    const isOnline = onlineUserIds.has(entry.userId)
+                    const borderColor = isActive ? '#c0392b' : isOnline ? '#39ff14' : '#7ab3d4'
+                    return (
+                      <div title={isOnline ? `${entry.username} is online` : undefined}
+                        style={{ width: avatarSize, height: avatarSize, borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, boxShadow: isOnline && !isActive ? '0 0 8px rgba(57,255,20,.6)' : 'none' }}>
+                        {photo ? <img src={photo} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>{getInitials(entry.character.name)}</span>}
+                      </div>
+                    )
+                  })()}
                   {(isGM || isMe) && (
                     <div onClick={e => { e.stopPropagation(); openPopout(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, { w: 800, h: 800 }) }}
                       style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
