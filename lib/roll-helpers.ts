@@ -546,7 +546,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   }
   // Generic skill / attribute check - label "<skillName> (<attrKey>)" or "<attrKey> Check"
   // These come in with no "<name> - " prefix when fired from CharacterCard.
-  const skillMatch = suffix.match(/^([A-Z][A-Za-z\s]+?)\s*\(([A-Z]{3})\)$/)
+  // Character class includes `*` for tagged/professional skills (Medicine*,
+  // Demolitions*, Heavy Weapons*, etc.) and `-` for hyphenated skill names
+  // (Lock-Picking*). Without these the regex silently fails on the most
+  // common pro skills and the verbose dice card renders.
+  const skillMatch = suffix.match(/^([A-Z][A-Za-z\s\*\-]+?)\s*\(([A-Z]{3})\)$/)
   if (skillMatch) {
     const skill = skillMatch[1]
     return hit ? `${r.character_name} succeeds at ${skill}${outcomeTag}`
