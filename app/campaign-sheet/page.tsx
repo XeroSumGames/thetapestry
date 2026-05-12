@@ -254,7 +254,7 @@ export default function CampaignSheetPage() {
           <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
             <button onClick={() => setHealModal(true)} disabled={advancing}
               style={actionBtn('#1a2e10', '#2d5a1b', '#7fc458')}>
-              + Queue Heal
+              🩹 Heal
             </button>
             {/* Placeholder buttons — Phase 3 will wire each to its
                 event type:
@@ -284,10 +284,10 @@ export default function CampaignSheetPage() {
               visible control of their own. Phase 3 will check the
               player's PC's current Stress, fire a discharge roll (or
               auto-clear one pip per the chosen tactic), and log it. */}
-          <button onClick={() => alert('Discharge Stress (placeholder).\n\nPhase 3 will let your PC spend a tactic (or pass a roll) to clear one Stress pip. For now this is just a visible affordance.')}
+          <button onClick={() => alert('Relax (placeholder).\n\nPhase 3 will let your PC spend a tactic (or pass a roll) to clear one Stress pip. For now this is just a visible affordance.')}
             style={actionBtn('#2a1210', '#c0392b', '#f5a89a')}
             title="Spend a tactic to clear one Stress pip (Phase 3)">
-            ⚡ Discharge Stress
+            🧘 Relax
           </button>
         </div>
       )}
