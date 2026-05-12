@@ -40,6 +40,7 @@ import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
+import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer } from '../../../../lib/playtest-recorder'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
@@ -274,14 +275,35 @@ export default function TablePage() {
     return () => { cancelled = true; supabase.removeChannel(ch) }
   }, [])
 
-  // Toggle the recorder ON/OFF from the table page. Writes to the same
-  // DB row /record does — Realtime propagates to every open tab, the
-  // PlaytestRecorder gate-transition logic handles wipe-on-ON and
-  // auto-download-on-OFF, so the GM never leaves the session tab.
+  // Toggle the recorder ON/OFF from the table page.
+  //
+  // The same-tab effects fire DIRECTLY here (not via the Realtime
+  // round-trip + evaluateGate path) because there's a race in that
+  // path: if the initial evaluateGate is still in-flight when the
+  // Realtime UPDATE fires, prevEnabledRef.current is still null and
+  // the transition is skipped — the auto-download never runs in the
+  // tab that clicked the button. Doing it inline guarantees the
+  // current tab's buffer gets handled even under load.
+  //
+  // Other tabs still get notified via the DB UPDATE → Realtime →
+  // PlaytestRecorder transition logic.
   async function toggleRecorder() {
     if (recorderToggling) return
     setRecorderToggling(true)
     const next = !recorderEnabled
+    // Same-tab effect first, then DB write. If the DB write fails, at
+    // least this tab's buffer is preserved (download) or cleared
+    // (wipe) per the user's intent.
+    if (next) {
+      // ON: wipe this tab's buffer so the session starts clean.
+      recorderWipeBuffer()
+    } else {
+      // OFF: download this tab's buffer immediately. Browser-blocked
+      // downloads only happen for un-focused tabs, and this tab is
+      // the one that just got clicked, so the download proceeds.
+      const filename = recorderDownloadDump()
+      if (filename) console.warn('[recorder] auto-downloaded:', filename)
+    }
     const supabase = createClient()
     const { error } = await supabase
       .from('playtest_recorder_config')
@@ -289,7 +311,7 @@ export default function TablePage() {
       .eq('id', 1)
     setRecorderToggling(false)
     if (error) {
-      alert(`Recorder toggle failed: ${error.message}`)
+      alert(`Recorder toggle failed: ${error.message}\n(Same-tab ${next ? 'wipe' : 'download'} still ran.)`)
       return
     }
     setRecorderEnabled(next)
