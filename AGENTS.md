@@ -9,3 +9,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Minimum inline fontSize is 13px.** (Raised from 12 → 13 on 2026-04-23.) Never write `fontSize: '9px'` through `'12px'` in `style={{ ... }}` props — even for badges, chips, or micro-labels. If something looks too big at 13, use color/weight/layout instead. Guardrail: `node scripts/check-font-sizes.mjs` reports offenders; `--fix` rewrites them to 13.
 - **Banned combo: `fontSize: '13px'` + `color: '#3a3a3a'`.** That pairing is illegible on dark backgrounds. Use `color: '#cce0f5'` instead. The font-size guardrail script flags the combo (no auto-fix — the right replacement color can vary by context, but default to `#cce0f5`).
 - **Popout routes never show the global sidebar.** `LayoutShell.tsx`'s `FULL_WIDTH_PATTERN` auto-hides the sidebar for any pathname ending in `-sheet` or `-popout`, or under `/popout/...`. Name new popout routes accordingly (e.g. `/foo-sheet`, `/foo-popout`) and they'll be sidebar-free with no further edits.
+
+## Role comparisons
+
+- **Never write `'Thriver'` / `'Survivor'` / `'Ghost'` capital-case literals in app code.** The DB normalises `profiles.role` to lowercase via `trg_normalize_role`, so capital-case comparisons silently never match post-migration. Hidden features for whole role groups have been shipped because of this.
+- **For reads:** import `isThriver` / `isSurvivor` / `isGhost` from `lib/auth/roles.ts`. They accept either a raw role string or a profile-shaped object with `.role`, and handle null / non-string inputs safely.
+- **For writes:** import the `THRIVER` / `SURVIVOR` / `GHOST` constants from the same module. The DB trigger would lowercase anyway, but writing the constant keeps local optimistic state consistent with on-disk state.
+- **Guardrail:** `node scripts/check-role-literals.mjs` scans `app/`, `components/`, `lib/`, `scripts/` for raw capital-case role literals and fails the run on any offender. Add `role-literal-allow` to a UI-only line to suppress.

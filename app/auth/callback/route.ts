@@ -24,6 +24,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
+import { SURVIVOR } from '../../../lib/auth/roles'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -101,7 +102,7 @@ export async function GET(request: Request) {
       id: userId,
       username,
       email: userEmail,
-      role: 'Survivor',
+      role: SURVIVOR,
       onboarded: false,
     }, { onConflict: 'id' })
     if (profileError) {

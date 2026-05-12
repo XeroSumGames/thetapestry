@@ -4,6 +4,7 @@ import Script from 'next/script'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../../lib/events'
+import { SURVIVOR } from '../../lib/auth/roles'
 
 // Safe-redirect guard: only accept single-slash relative paths (no
 // open-redirect vector). Same shape as the helper in app/login/page.tsx.
@@ -175,7 +176,7 @@ export default function SignupPage() {
         id: signUpData.user.id,
         username,
         email,
-        role: 'Survivor',
+        role: SURVIVOR,
         onboarded: false,
       }, { onConflict: 'id' })
       if (profileError) {

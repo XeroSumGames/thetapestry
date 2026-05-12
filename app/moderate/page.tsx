@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
+import { SURVIVOR, THRIVER, isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 interface Pin {
   id: string
@@ -523,7 +524,7 @@ export default function ModerationPage() {
     }
   }
 
-  async function handleRoleChange(id: string, newRole: 'Survivor' | 'Thriver') {
+  async function handleRoleChange(id: string, newRole: typeof SURVIVOR | typeof THRIVER) {
     setActing(id)
     const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', id)
     if (error) {
@@ -965,13 +966,13 @@ export default function ModerationPage() {
                       Order: role-flip, Message, Characters, Track,
                       Suspend/Unsuspend, Delete. */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginLeft: '20px' }}>
-                    {u.role?.toLowerCase() === 'thriver' ? (
-                      <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}
+                    {roleIsThriver(u.role) ? (
+                      <button onClick={() => handleRoleChange(u.id, SURVIVOR)} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}
                         title="Demote to Survivor">
                         Demote
                       </button>
                     ) : (
-                      <button onClick={() => handleRoleChange(u.id, 'Thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}
+                      <button onClick={() => handleRoleChange(u.id, THRIVER)} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}
                         title="Promote to Thriver">
                         Promote
                       </button>
