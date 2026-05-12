@@ -514,7 +514,7 @@ function CharacterCardImpl({
                           // Day-0 resolution: fire Lasting Damage roll if
                           // risk is set; sickness branch also drops to mortal.
                           if (ls.infection_lasting_risk && onRoll) {
-                            onRoll(`${c.name} — Infection Lasting-Damage Check`, phyAmod, 0)
+                            onRoll(`${c.name} - Infection Lasting-Damage Check`, phyAmod, 0)
                           }
                           if (ls.infection_state === 'sickness' && onStatUpdate) {
                             const dc = Math.max(1, 4 + phyAmod)
@@ -542,7 +542,7 @@ function CharacterCardImpl({
                           '',
                         )?.trim() || ''
                         if (source) onStatUpdate?.(localState.id, 'infection_infected_by', source as any)
-                        if (onRoll) onRoll(`${c.name} — Infection Check (${kind})`, phyAmod, 0)
+                        if (onRoll) onRoll(`${c.name} - Infection Check (${kind})`, phyAmod, 0)
                       }
                     }
                   }} style={btn('#5a2e5a', '#d48bd4')} title="Roll Infection / progress sick state">Infection</button>
@@ -783,7 +783,7 @@ function CharacterCardImpl({
         {/* Unarmed attack button */}
         <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
           <button onClick={onRoll ? () => {
-            onRoll(`${c.name} — Unarmed Attack`, rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+            onRoll(`${c.name} - Unarmed Attack`, rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
           } : undefined}
             style={{ width: '100%', padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: onRoll ? 'pointer' : 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
             <span>👊 Unarmed Attack</span>
@@ -854,7 +854,7 @@ function CharacterCardImpl({
                               const skillDef = SKILLS.find(s => s.name === skillName)
                               const attrKey = skillDef?.attribute ?? 'RSN'
                               const amod = rapid[attrKey] ?? 0
-                              onRoll(`Upkeep — ${w.name}`, amod, smod)
+                              onRoll(`Upkeep - ${w.name}`, amod, smod)
                             }}
                               style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                               Upkeep Check
@@ -924,7 +924,7 @@ function CharacterCardImpl({
                           if (cumbersome !== null) { const deficit = cumbersome - (rapid.PHY ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = `Cumbersome -${deficit}` } }
                           const unwieldy = getTraitValue(w.traits, 'Unwieldy')
                           if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
-                          onRoll(`${c.name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel, traits: w.traits })
+                          onRoll(`${c.name} - Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel, traits: w.traits })
                         }}
                           style={{ marginTop: '6px', width: '100%', padding: '6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: cond === 'Broken' ? 'not-allowed' : 'pointer', opacity: cond === 'Broken' ? 0.4 : 1 }}
                           disabled={cond === 'Broken'}>

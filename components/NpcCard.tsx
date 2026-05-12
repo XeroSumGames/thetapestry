@@ -107,13 +107,13 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
     if (!onRoll) return
     const attrKey = SKILL_ATTR[skillName] ?? 'RSN'
     const amod = rapid[attrKey] ?? 0
-    onRoll(`${npc.name} — ${skillName} (${attrKey})`, amod, level)
+    onRoll(`${npc.name} - ${skillName} (${attrKey})`, amod, level)
   }
 
   function handleAttrRoll(attrKey: string) {
     if (!onRoll) return
     const amod = rapid[attrKey] ?? 0
-    onRoll(`${npc.name} — ${attrKey} Check`, amod, 0)
+    onRoll(`${npc.name} - ${attrKey} Check`, amod, 0)
   }
 
   function handleWeaponAttack() {
@@ -131,7 +131,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
     if (cumbersome !== null) { const deficit = cumbersome - (rapid.PHY ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = `Cumbersome -${deficit}` } }
     const unwieldy = getTraitValue(w.traits, 'Unwieldy')
     if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
-    onRoll(`${npc.name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel, traits: w.traits })
+    onRoll(`${npc.name} - Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel, traits: w.traits })
   }
 
   return (
@@ -183,7 +183,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
               const amod = npc.reason ?? 0
               const npcSkills: any[] = Array.isArray(npc.skills?.entries) ? npc.skills.entries : []
               const smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
-              onRoll(`${npc.name} — Stabilize ${npc.name}`, amod, smod)
+              onRoll(`${npc.name} - Stabilize ${npc.name}`, amod, smod)
             }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Stabilize</button>
           )}
           {(displayStatus === 'dead' || displayStatus === 'mortally wounded') && (
@@ -331,7 +331,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           <button onClick={() => {
             const phyAmod = rapid.PHY ?? 0
             const smod = getSkillLevel('Unarmed Combat')
-            onRoll(`${npc.name} — Unarmed`, phyAmod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+            onRoll(`${npc.name} - Unarmed`, phyAmod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
           }}
             style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             👊 Unarmed
