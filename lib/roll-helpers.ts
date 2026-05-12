@@ -550,11 +550,26 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // Demolitions*, Heavy Weapons*, etc.) and `-` for hyphenated skill names
   // (Lock-Picking*). Without these the regex silently fails on the most
   // common pro skills and the verbose dice card renders.
+  //
+  // Outcome wording table (canon per Xero 2026-05-11):
+  //   Success       -> "X was successful at Y"
+  //   Wild Success  -> "X was wildly successful at Y"
+  //   High Insight  -> "X was successful at Y and has a Moment of Insight..."
+  //   Failure       -> "X failed at Y"
+  //   Dire Failure  -> "X failed miserably at Y"
+  //   Low Insight   -> "X failed at Y and has a Moment of Insight..."
+  // Self-contained per outcome instead of appending the generic outcomeTag,
+  // because the old "succeeds at X and was wildly successful" double-marked
+  // success and read redundantly. Phrasings drop the verb redundancy.
   const skillMatch = suffix.match(/^([A-Z][A-Za-z\s\*\-]+?)\s*\(([A-Z]{3})\)$/)
   if (skillMatch) {
     const skill = skillMatch[1]
-    return hit ? `${r.character_name} succeeds at ${skill}${outcomeTag}`
-               : `${r.character_name} fails at ${skill}${outcomeTag}`
+    if (r.outcome === 'Wild Success') return `${r.character_name} was wildly successful at ${skill}`
+    if (r.outcome === 'High Insight') return `${r.character_name} was successful at ${skill} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} failed miserably at ${skill}`
+    if (r.outcome === 'Low Insight') return `${r.character_name} failed at ${skill} and has a Moment of Insight as to why it went so badly`
+    return hit ? `${r.character_name} was successful at ${skill}`
+               : `${r.character_name} failed at ${skill}`
   }
   const attrMatch = suffix.match(/^([A-Z]{3})\s+Check$/)
   if (attrMatch) {
@@ -569,8 +584,12 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       DEX: 'dexterity',
     }
     const attrName = ATTR_FULL[attr] ?? attr.toLowerCase()
-    return hit ? `${r.character_name} succeeds at a ${attrName} check${outcomeTag}`
-               : `${r.character_name} fails at a ${attrName} check${outcomeTag}`
+    if (r.outcome === 'Wild Success') return `${r.character_name} was wildly successful at a ${attrName} check`
+    if (r.outcome === 'High Insight') return `${r.character_name} was successful at a ${attrName} check and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} failed miserably at a ${attrName} check`
+    if (r.outcome === 'Low Insight') return `${r.character_name} failed at a ${attrName} check and has a Moment of Insight as to why it went so badly`
+    return hit ? `${r.character_name} was successful at a ${attrName} check`
+               : `${r.character_name} failed at a ${attrName} check`
   }
   return null
 }
