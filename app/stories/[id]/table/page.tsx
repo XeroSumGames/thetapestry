@@ -3796,8 +3796,15 @@ export default function TablePage() {
       return { ...p, amod, smod, total: amod + smod }
     }).sort((a, b) => b.total - a.total)
     const leader = scored[0]
-    // Others contribute their AMod or SMod (whichever is used)
-    const bonusMods = scored.slice(1).reduce((sum, p) => sum + p.smod, 0)
+    // Canon per Group Check rules (app/rules/core-mechanics/attribute-checks):
+    // "The player with the highest relevant AMod or SMod makes the check
+    // and applies any AMods or SMods from the other characters taking
+    // part." Sum BOTH others' AMods and SMods - the previous version
+    // only added SMods, which under-counted multi-person checks. For a
+    // 3-person check this can be the difference between +1 SMod and
+    // +3 AMod +3 SMod on the leader's roll.
+    const bonusAmods = scored.slice(1).reduce((sum, p) => sum + p.amod, 0)
+    const bonusSmods = scored.slice(1).reduce((sum, p) => sum + p.smod, 0)
     // Stash the full participant list so the saveRollToLog branch
     // can attach it to damage_json and the bespoke banner can render
     // "Cree Hask, Marv, and Wilson were Successful at Survival" rather
@@ -3806,7 +3813,7 @@ export default function TablePage() {
       participants: scored.map(p => p.character.name),
       skill: groupCheckSkill,
     }
-    handleRollRequest(`Group Check - ${groupCheckSkill} (led by ${leader.character.name})`, leader.amod, leader.smod + bonusMods)
+    handleRollRequest(`Group Check - ${groupCheckSkill} (led by ${leader.character.name})`, leader.amod + bonusAmods, leader.smod + bonusSmods)
     setShowSpecialCheck(null)
     setGroupCheckParticipants(new Set())
     setGroupCheckSkill('')
