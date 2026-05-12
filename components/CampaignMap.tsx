@@ -853,7 +853,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           {measureMode && (
             <select value={travelMode} onChange={e => setTravelMode(e.target.value as TravelMode)}
               title="How are the characters traveling? Affects time-of-travel display."
-              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #7ab3d4', background: '#0f1a2e', color: '#cce0f5' }}>
+              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #7ab3d4', background: '#0f1a2e', color: '#cce0f5', width: '175px' }}>
               {Object.entries(TRAVEL_MODES).map(([key, m]) => (
                 <option key={key} value={key} style={{ background: '#0f0f0f', color: '#cce0f5' }}>
                   {m.emoji} {m.label} ({m.mph} mph)
