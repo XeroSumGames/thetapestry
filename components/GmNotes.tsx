@@ -27,6 +27,12 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
+  // Inline edit state — when set, the expanded note swaps the <pre> body
+  // (and its title header) for editable inputs + Save / Cancel buttons.
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
   // HTML5 drag-and-drop reorder state. dragId is the note being
   // dragged; dragOverId is the row currently being hovered as the drop
   // target; dropPosition tells the indicator (and reorder logic) whether
@@ -183,6 +189,39 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
     const remaining = note.attachments.filter(a => a.path !== att.path)
     await supabase.from('campaign_notes').update({ attachments: remaining }).eq('id', note.id)
     setNotes(prev => prev.map(n => n.id === note.id ? { ...n, attachments: remaining } : n))
+  }
+
+  function handleEditStart(note: Note) {
+    setEditingNoteId(note.id)
+    setEditTitle(note.title)
+    setEditContent(note.content)
+  }
+
+  function handleEditCancel() {
+    setEditingNoteId(null)
+    setEditTitle('')
+    setEditContent('')
+  }
+
+  async function handleEditSave(note: Note) {
+    if (!editTitle.trim() && !editContent.trim()) {
+      alert('Title or content must have something in it.')
+      return
+    }
+    setSavingEdit(true)
+    const { data, error } = await supabase
+      .from('campaign_notes')
+      .update({ title: editTitle, content: editContent })
+      .eq('id', note.id)
+      .select('id')
+    setSavingEdit(false)
+    if (error) { alert(`Save failed: ${error.message}`); return }
+    if (!data || data.length === 0) {
+      alert('Save did not affect any rows - likely an RLS / permissions issue.')
+      return
+    }
+    setNotes(prev => prev.map(n => n.id === note.id ? { ...n, title: editTitle, content: editContent } : n))
+    handleEditCancel()
   }
 
   async function handleDelete(note: Note) {
@@ -348,10 +387,26 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
               {/* All actions sit at the TOP of the expanded note so the
-                  GM doesn't scroll past long content to reach Popout /
-                  Share / Attach / Delete during a session. Single
-                  4-button strip; previously a two-row split. */}
+                  GM doesn't scroll past long content to reach Edit /
+                  Popout / Share / Attach / Delete during a session. */}
               <div style={{ display: 'flex', gap: '6px', marginTop: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                {editingNoteId === n.id ? (
+                  <>
+                    <button onClick={() => handleEditSave(n)} disabled={savingEdit}
+                      style={{ flex: 1, padding: '4px 10px', background: savingEdit ? 'transparent' : '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: savingEdit ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
+                      {savingEdit ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={handleEditCancel} disabled={savingEdit}
+                      style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #5a5550', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: savingEdit ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => handleEditStart(n)}
+                    style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Edit
+                  </button>
+                )}
                 <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
                   style={{ flex: 1, padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   Popout
@@ -391,9 +446,21 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 </button>
               </div>
 
-              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: '1.5', margin: '0 0 10px' }}>
-                {renderRichText(n.content, { linkify: true })}
-              </pre>
+              {editingNoteId === n.id ? (
+                <>
+                  <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
+                    placeholder="Title"
+                    style={{ ...inp, marginBottom: '6px' }} />
+                  <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
+                    placeholder="Content"
+                    rows={Math.max(4, Math.min(20, (editContent.match(/\n/g)?.length ?? 0) + 2))}
+                    style={{ ...inp, fontSize: '13px', lineHeight: '1.5', resize: 'vertical', minHeight: '80px', marginBottom: '10px' }} />
+                </>
+              ) : (
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: '1.5', margin: '0 0 10px' }}>
+                  {renderRichText(n.content, { linkify: true })}
+                </pre>
+              )}
 
               {/* Attachments — large inline image previews + lightbox */}
               {n.attachments.length > 0 && (
