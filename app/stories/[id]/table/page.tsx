@@ -690,6 +690,11 @@ export default function TablePage() {
   // into firstImpressionTargetRef so executeRoll can write the
   // relationship CMod post-outcome.
   const [firstImpressionNpcId, setFirstImpressionNpcId] = useState<string>('')
+  // Player-picked social skill for the First Impression roll. 'best'
+  // keeps the original auto-pick (highest of Manipulation/Streetwise/
+  // Psychology); explicit names use that skill regardless of level.
+  // Reset back to 'best' alongside firstImpressionNpcId on modal close.
+  const [firstImpressionSkill, setFirstImpressionSkill] = useState<'best' | 'Manipulation' | 'Streetwise' | 'Psychology'>('best')
   const firstImpressionTargetRef = useRef<{ characterId: string; npcId: string; npcName: string } | null>(null)
   // Group Check stash - set by triggerGroupCheck just before the dice
   // modal opens, read by executeRoll's saveRollToLog branch so the
@@ -3324,15 +3329,21 @@ export default function TablePage() {
   // writes `npc_relationships.relationship_cmod` so future Recruitment
   // Checks (and other social interactions) have the right CMod baked in.
   // See SRD §02 First Impressions + §08 Communities Recruitment Check.
-  function triggerFirstImpression(characterName: string, npcId: string, npcName: string) {
+  function triggerFirstImpression(characterName: string, npcId: string, npcName: string, skillChoice: 'best' | 'Manipulation' | 'Streetwise' | 'Psychology' = 'best') {
     const charEntry = entries.find(e => e.character.name === characterName)
     if (!charEntry) return
     const rapid = charEntry.character.data?.rapid ?? {}
     const infMod = rapid.INF ?? 0
     const skills = charEntry.character.data?.skills ?? []
-    const socialSkills = ['Manipulation', 'Streetwise', 'Psychology']
-    const bestSkill = skills.filter((s: any) => socialSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
-    const smod = bestSkill?.level ?? 0
+    let smod: number
+    if (skillChoice === 'best') {
+      const socialSkills = ['Manipulation', 'Streetwise', 'Psychology']
+      const bestSkill = skills.filter((s: any) => socialSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
+      smod = bestSkill?.level ?? 0
+    } else {
+      const picked = skills.find((s: any) => s.skillName === skillChoice)
+      smod = picked?.level ?? 0
+    }
     // Stash the NPC target so executeRoll can write the relationship
     // CMod when the outcome lands. Ref not state - executeRoll runs
     // inside a state update chain and would miss a re-render.
@@ -10314,7 +10325,7 @@ export default function TablePage() {
 
       {/* Special Check Modal */}
       {showSpecialCheck && (
-        <div onClick={() => { setShowSpecialCheck(null); setFirstImpressionNpcId('') }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div onClick={() => { setShowSpecialCheck(null); setFirstImpressionNpcId(''); setFirstImpressionSkill('best') }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '380px' }}>
             {showSpecialCheck === 'perception' && (
               <>
@@ -10364,7 +10375,28 @@ export default function TablePage() {
               return (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>First Impression</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets the Relationship CMod between the rolling PC and the target NPC - feeds future Recruitment / social checks.</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Influence + the social skill you pick below. Result sets the Relationship CMod between the rolling PC and the target NPC - feeds future Recruitment / social checks.</div>
+
+                {/* Skill picker - player chooses which social skill to
+                    roll under. 'Best' keeps the legacy auto-pick of the
+                    highest level Manipulation/Streetwise/Psychology;
+                    the named buttons force that specific skill. Picker
+                    sits above the NPC selector so the picked skill is
+                    locked in when the auto-fire-on-NPC path triggers. */}
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skill</div>
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                    {(['best', 'Manipulation', 'Streetwise', 'Psychology'] as const).map(opt => {
+                      const selected = firstImpressionSkill === opt
+                      return (
+                        <button key={opt} type="button" onClick={() => setFirstImpressionSkill(opt)}
+                          style={{ flex: 1, minWidth: '110px', padding: '6px 10px', background: selected ? '#2a1210' : '#242424', border: `1px solid ${selected ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: selected ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          {opt === 'best' ? 'Best Social' : opt}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
 
                 {/* NPC target picker */}
                 <div style={{ marginBottom: '12px' }}>
@@ -10397,7 +10429,7 @@ export default function TablePage() {
                       }
                       const targetNpc = eligibleNpcs.find((n: any) => n.id === npcId)
                       if (auto && targetNpc) {
-                        triggerFirstImpression(auto.character.name, targetNpc.id, targetNpc.name)
+                        triggerFirstImpression(auto.character.name, targetNpc.id, targetNpc.name, firstImpressionSkill)
                       }
                     }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
@@ -10446,7 +10478,7 @@ export default function TablePage() {
                           return (
                             <button key={e.character.id}
                               disabled={!ready}
-                              onClick={() => { if (npcChosen) triggerFirstImpression(e.character.name, npcChosen.id, npcChosen.name) }}
+                              onClick={() => { if (npcChosen) triggerFirstImpression(e.character.name, npcChosen.id, npcChosen.name, firstImpressionSkill) }}
                               style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), opacity: ready ? 1 : 0.4, cursor: ready ? 'pointer' : 'not-allowed' }}>
                               {e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})
                             </button>
