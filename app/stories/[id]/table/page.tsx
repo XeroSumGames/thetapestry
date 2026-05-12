@@ -1222,7 +1222,7 @@ export default function TablePage() {
       const gmProfile = gmProfileRes.data
       const members = membersRes.data
       setMyUsername(myProfile?.username ?? '')
-      setIsThriver(myProfile?.role === 'Thriver')
+      setIsThriver((myProfile?.role ?? '').toLowerCase() === 'thriver')
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
       // Kick gate - handled after the parallel batch instead of mid-
@@ -6098,13 +6098,14 @@ export default function TablePage() {
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
-        {/* Recorder toggle — lives on the table page (not just /record)
-            so the GM never has to leave the session tab. Closing the
-            session tab kills its localStorage-backed recorder buffer,
-            so controlling the recorder from a sibling /record tab
-            risked losing everything when the GM closed the table tab
-            to end. Red dot pulses while recording. */}
-        {isGM && (
+        {/* Recorder toggle — Thriver-only (not GM). The recorder is
+            an internal QA tool for the Tapestry team, not a campaign
+            mechanic, so it stays gated to the Thriver role even at
+            tables where the local user is the GM. Lives on the table
+            page so the Thriver never has to leave the session tab —
+            closing the session tab kills its localStorage-backed
+            recorder buffer before any auto-download can fire. */}
+        {isThriver && (
           <button onClick={toggleRecorder} disabled={recorderToggling}
             className="hdr-btn"
             title={recorderEnabled ? 'Stop the playtest recorder — every open tab auto-downloads its buffer' : 'Start the playtest recorder — every open tab wipes its buffer and captures fresh'}

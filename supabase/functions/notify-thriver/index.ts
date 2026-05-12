@@ -29,6 +29,11 @@ Deno.serve(async (req) => {
 
     const emails = thrivers.map((t: any) => t.email).filter(Boolean)
 
+    // BUG FIX 2026-05-12: the hardcoded `to: 'xerosumstudio@gmail.com'`
+    // meant every iteration of this loop emailed the same defunct
+    // address while ignoring the per-Thriver `email` variable just
+    // fetched on line 30. Now uses the loop variable so each Thriver
+    // gets the notification at their own registered address.
     let sent = 0
     for (const email of emails) {
       const res = await fetch('https://api.resend.com/emails', {
@@ -39,7 +44,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           from: 'The Tapestry <noreply@distemperverse.com>',
-          to: 'xerosumstudio@gmail.com',
+          to: email,
           subject: `[The Tapestry] ${title}`,
           text: `${body}${link ? `\n\n${link}` : ''}`,
         }),
