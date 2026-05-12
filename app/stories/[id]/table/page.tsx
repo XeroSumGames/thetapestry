@@ -364,6 +364,20 @@ export default function TablePage() {
   const [loading, setLoading] = useState(true)
   const [entriesLoading, setEntriesLoading] = useState(true)
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
+  // Vehicle inline takeover — mirrors the character-sheet inline path.
+  // When set, the full /vehicle popout UI renders as an iframe over the
+  // center area (same absolute-inset-0 overlay as the character sheet).
+  // Cleared on close, or when a character sheet opens (one inline view
+  // at a time). The Popout button on VehicleCard stays as the
+  // separate-window option.
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
+  // One inline view at a time: opening a character sheet always closes
+  // any open vehicle takeover. Vehicle-open already clears selectedEntry
+  // in VehicleCard's onClickInline callback, so this useEffect only
+  // covers the other direction.
+  useEffect(() => {
+    if (selectedEntry) setSelectedVehicleId(null)
+  }, [selectedEntry])
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
   const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
@@ -7525,8 +7539,40 @@ export default function TablePage() {
             )
           })}
 
+          {/* Inline vehicle takeover - iframe of the /vehicle popout
+              UI, anchored over the center area. /vehicle is already in
+              LayoutShell's FULL_WIDTH_PATTERN so it renders sidebar-
+              free; the iframe sits at the same z-index as the inline
+              character sheet so the two are mutually exclusive (we
+              clear selectedEntry when opening a vehicle inline, and
+              vice versa via the same setSelectedVehicleId chain). */}
+          {selectedVehicleId && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(26,26,26,1)',
+              zIndex: 1100,
+              display: 'flex',
+              flexDirection: 'column',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#0f0f0f', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
+                <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                  {vehicles.find(v => v.id === selectedVehicleId)?.name ?? 'Vehicle'}
+                </span>
+                <button onClick={() => setSelectedVehicleId(null)}
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #5a5550', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Close
+                </button>
+              </div>
+              <iframe
+                src={`/vehicle?c=${id}&v=${selectedVehicleId}`}
+                style={{ flex: 1, border: 'none', background: '#1a1a1a' }}
+                title="Vehicle sheet"
+              />
+            </div>
+          )}
+
           {/* Inline character sheet - full screen over map */}
-          {syncedSelectedEntry && sheetMode === 'inline' && (
+          {syncedSelectedEntry && sheetMode === 'inline' && !selectedVehicleId && (
             <div style={{
               position: 'absolute', inset: 0,
               overflowY: 'auto',
@@ -8091,6 +8137,7 @@ export default function TablePage() {
                                 them. expandedVehicleId state retained for
                                 forward-compat (other surfaces may want it). */}
                             <VehicleCard vehicle={v} campaignId={id} canEdit={gmLike}
+                              onClickInline={() => { setSelectedEntry(null); setSheetPos(null); setSelectedVehicleId(v.id) }}
                               onUpdate={async (updated: Vehicle) => {
                                 const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
                                 setVehicles(newVehicles)

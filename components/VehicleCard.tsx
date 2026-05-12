@@ -75,9 +75,14 @@ interface Props {
   // Optional — when omitted, the close ✕ button hides. Used by surfaces
   // that render the card inline (no separate close affordance needed).
   onClose?: () => void
+  // When set, the header (image + name) becomes a clickable region that
+  // fires this callback — used by the table page to open the full sheet
+  // inline-takeover the same way clicking a player avatar opens the
+  // inline character sheet. Popout button still works alongside.
+  onClickInline?: () => void
 }
 
-export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate, onClose }: Props) {
+export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate, onClose, onClickInline }: Props) {
   // Slim summary card — the full data (cargo, operator notes, driver/
   // brewer dropdowns, Driving + Brew checks) lives on the popout. This
   // card stays light enough to sit in the right-side Assets panel
@@ -106,20 +111,27 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
   return (
     <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '10px 12px' }}>
 
-      {/* Header */}
+      {/* Header — image + name region is clickable when onClickInline
+          is wired, opening the full sheet inline. The Popout button is
+          a sibling so its own click doesn't trigger the inline open
+          (stopPropagation on the buttons keeps them isolated). */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        {v.image_url && (
-          <img src={v.image_url} alt="" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3a3a3a' }} />
-        )}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{v.name}</div>
-          <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{v.type} · {v.rarity}</div>
-          {v.three_words && <div style={{ fontSize: '13px', color: '#d4cfc9', fontStyle: 'italic' }}>{v.three_words}</div>}
+        <div onClick={onClickInline}
+          title={onClickInline ? 'Open full sheet inline' : undefined}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: onClickInline ? 'pointer' : 'default' }}>
+          {v.image_url && (
+            <img src={v.image_url} alt="" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3a3a3a' }} />
+          )}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{v.name}</div>
+            <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{v.type} · {v.rarity}</div>
+            {v.three_words && <div style={{ fontSize: '13px', color: '#d4cfc9', fontStyle: 'italic' }}>{v.three_words}</div>}
+          </div>
         </div>
-        <button onClick={() => openPopout(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, { w: 900, h: 700 })} title="Pop out"
+        <button onClick={e => { e.stopPropagation(); openPopout(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, { w: 900, h: 700 }) }} title="Pop out"
           style={{ background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Popout</button>
         {onClose && (
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+          <button onClick={e => { e.stopPropagation(); onClose() }} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
         )}
       </div>
 
