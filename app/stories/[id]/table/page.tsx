@@ -1408,7 +1408,13 @@ export default function TablePage() {
       if (cancelled) return
       // Presence - track how many users are on this table page
       try {
-        const presChannel = supabase.channel(`presence_table_${id}_${Date.now()}`, { config: { presence: { key: user.id } } })
+        // Channel name MUST be stable across all viewers of the same
+        // campaign — anything that varies per page load (Date.now(),
+        // session-local UUIDs, etc.) silos each user into their own
+        // channel and presence sync never sees anyone else. Pre-fix
+        // this had `_${Date.now()}` appended and the online dot never
+        // lit because no two clients shared a channel.
+        const presChannel = supabase.channel(`presence_table_${id}`, { config: { presence: { key: user.id } } })
         presChannel.on('presence', { event: 'sync' }, () => {
           const state = presChannel.presenceState()
           const keys = Object.keys(state)
