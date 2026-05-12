@@ -176,6 +176,29 @@ export default function CampaignPage() {
     router.push('/stories')
   }
 
+  // GM-only: cull a member from the campaign. Deletes their
+  // campaign_members row + clears any character_states they own in
+  // this campaign so a future re-join lands them clean. Confirms by
+  // username so a misclick on the wrong row can't silently nuke
+  // someone. Their character itself is preserved — only their seat
+  // at this table is removed.
+  async function handleRemoveMember(member: Member) {
+    if (!userId || !campaign) return
+    if (campaign.gm_user_id !== userId) return
+    if (member.user_id === campaign.gm_user_id) return  // can't remove the GM
+    const name = (member.profiles as any)?.username ?? 'this player'
+    if (!confirm(`Remove ${name} from this campaign?\n\nTheir character is preserved but they lose their seat at the table.`)) return
+    const [{ error: memErr }, { error: stateErr }] = await Promise.all([
+      supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', member.user_id),
+      supabase.from('character_states').delete().eq('campaign_id', id).eq('user_id', member.user_id),
+    ])
+    if (memErr || stateErr) {
+      alert(`Remove failed: ${(memErr || stateErr)?.message ?? 'unknown error'}`)
+      return
+    }
+    setMembers(prev => prev.filter(m => m.user_id !== member.user_id))
+  }
+
   async function handleRejoin() {
     if (!userId || !campaign || rejoining) return
     setRejoining(true)
@@ -380,6 +403,14 @@ export default function CampaignPage() {
                         style={{ padding: '3px 8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', lineHeight: 1.4 }}>
                         💬 Message
                       </a>
+                    )}
+                    {/* GM-only Remove. Hidden for the GM's own row to
+                        prevent self-removal — a campaign needs a GM. */}
+                    {userId === campaign.gm_user_id && !isThisGM && (
+                      <button onClick={() => handleRemoveMember(m)} title={`Remove ${(m.profiles as any)?.username ?? 'player'} from the campaign`}
+                        style={{ padding: '3px 8px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.4 }}>
+                        Remove
+                      </button>
                     )}
                     <div style={{ fontSize: '13px', color: '#cce0f5' }}>Joined {formatDate(m.joined_at)}</div>
                   </div>
