@@ -251,14 +251,44 @@ export default function CampaignSheetPage() {
               </button>
             ))}
           </div>
-          <button onClick={() => setHealModal(true)} disabled={advancing}
-            style={{ height: 32, padding: '0 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: 3, color: '#7fc458', fontSize: 13, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
-            + Queue Heal
-          </button>
+          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
+            <button onClick={() => setHealModal(true)} disabled={advancing}
+              style={actionBtn('#1a2e10', '#2d5a1b', '#7fc458')}>
+              + Queue Heal
+            </button>
+            {/* Placeholder buttons — Phase 3 will wire each to its
+                event type:
+                  Eat   → ration_consumed events for everyone present
+                  Rest  → bulk WP/RP restoration over scheduled hours
+                The visible button keeps the workflow surface intact
+                so the GM has the muscle memory by the time the wiring
+                lands. */}
+            <button onClick={() => alert('Eating (placeholder).\n\nPhase 3 will consume one ration per character present + apply any Luxury Ration stress-clear. For now this is just a visible affordance.')} disabled={advancing}
+              style={actionBtn('#2a1a10', '#5a3a1b', '#EF9F27')}
+              title="Consume rations for everyone present (Phase 3)">
+              🍞 Eat
+            </button>
+            <button onClick={() => alert('Resting (placeholder).\n\nPhase 3 will queue a bulk rest action — full WP/RP restoration over a configurable rest duration, with interruption rules. For now this is just a visible affordance.')} disabled={advancing}
+              style={actionBtn('#0f1a2e', '#1a3a5c', '#7ab3d4')}
+              title="Begin a rest (Phase 3)">
+              💤 Rest
+            </button>
+          </div>
         </div>
       ) : (
-        <div style={{ marginBottom: 24, padding: '8px 12px', background: '#14181c', border: '1px solid #2e2e2e', borderRadius: 3, fontSize: 13, color: '#888', fontStyle: 'italic' }}>
-          Only the GM can advance the clock or queue effects.
+        <div style={{ marginBottom: 24, padding: '10px 14px', background: '#14181c', border: '1px solid #2e2e2e', borderRadius: 3, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 13, color: '#888', fontStyle: 'italic', flex: 1 }}>
+            Only the GM can advance the clock or queue effects.
+          </div>
+          {/* Player-only Discharge Stress placeholder — gives players a
+              visible control of their own. Phase 3 will check the
+              player's PC's current Stress, fire a discharge roll (or
+              auto-clear one pip per the chosen tactic), and log it. */}
+          <button onClick={() => alert('Discharge Stress (placeholder).\n\nPhase 3 will let your PC spend a tactic (or pass a roll) to clear one Stress pip. For now this is just a visible affordance.')}
+            style={actionBtn('#2a1210', '#c0392b', '#f5a89a')}
+            title="Spend a tactic to clear one Stress pip (Phase 3)">
+            ⚡ Discharge Stress
+          </button>
         </div>
       )}
 
@@ -397,6 +427,21 @@ function advanceBtn(disabled: boolean): React.CSSProperties {
     letterSpacing: '.06em', textTransform: 'uppercase',
     cursor: disabled ? 'wait' : 'pointer',
     whiteSpace: 'nowrap',
+  }
+}
+
+// Generic action button — same geometry as advance buttons but the
+// caller picks the color theme. Used by Queue Heal, Eat, Rest, and
+// the player-side Discharge Stress placeholder so they all share the
+// 32px height in the same toolbar row.
+function actionBtn(bg: string, border: string, color: string): React.CSSProperties {
+  return {
+    height: 32, padding: '0 14px',
+    background: bg, border: `1px solid ${border}`, borderRadius: 3,
+    color,
+    fontSize: 13, fontFamily: 'Carlito, sans-serif',
+    letterSpacing: '.06em', textTransform: 'uppercase',
+    cursor: 'pointer', whiteSpace: 'nowrap',
   }
 }
 

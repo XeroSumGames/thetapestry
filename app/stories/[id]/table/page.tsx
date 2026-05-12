@@ -6098,17 +6098,6 @@ export default function TablePage() {
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
-        {/* Campaign Sheet popout — everyone can open (read-only for
-            players, GM gets the advance-time buttons). Lives next to
-            Start Session because it shares the same "session admin"
-            mental cluster. */}
-        <button onClick={() => openPopout(`/campaign-sheet?c=${id}`, `campaign-sheet-${id}`, { w: 900, h: 800 })}
-          className="hdr-btn"
-          title="Open the Campaign Sheet — clock, timeline, and over-time effects"
-          style={hdrBtn('#0f1a2e', '#cce0f5', '#1a3a5c')}>
-          Campaign Sheet
-        </button>
-
         {/* Recorder toggle — Thriver-only (not GM). The recorder is
             an internal QA tool for the Tapestry team, not a campaign
             mechanic, so it stays gated to the Thriver role even at
@@ -6272,6 +6261,15 @@ export default function TablePage() {
             {
               label: 'Stories',
               onClick: () => window.open(`/stories/${id}`, '_blank', 'noopener,noreferrer'),
+            },
+            {
+              // Campaign Sheet popout — clock, timeline, party
+              // status, vehicles, pending heals. GM gets the
+              // advance-time + queue-effect controls; players see
+              // everything read-only plus a Discharge Stress button
+              // (Phase 3 wiring).
+              label: 'Campaign Sheet',
+              onClick: () => openPopout(`/campaign-sheet?c=${id}`, `campaign-sheet-${id}`, { w: 900, h: 800 }),
             },
           ],
           hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'),
