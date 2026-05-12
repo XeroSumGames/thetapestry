@@ -573,22 +573,24 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     const participants: string[] = dj.groupCheckParticipants
     const skill: string = dj.groupCheckSkill
     const outcomeColorVal = outcomeColor(r.outcome)
-    const wild = r.outcome === 'Wild Success' || r.outcome === 'High Insight'
-    const hit = wild || r.outcome === 'Success'
-    const adverb = wild
-      ? 'were Wildly Successful at'
-      : r.outcome === 'Success'
-        ? 'were Successful at'
-        : r.outcome === 'Low Insight'
-          ? 'failed miserably at'
-          : r.outcome === 'Dire Failure'
-            ? 'failed badly at'
-            : 'were Unsuccessful at'
+    const hit = r.outcome === 'Wild Success' || r.outcome === 'High Insight' || r.outcome === 'Success'
+    // Canon rule per Xero 2026-05-11: "Moment of Insight" only on HI/LI;
+    // Wild Success says "wildly successful"; Dire Failure says "failed
+    // miserably". Earlier version lumped HI into Wildly Successful and
+    // used "failed miserably" for LI (now reserved for DF).
+    const adverb =
+      r.outcome === 'Wild Success' ? 'were wildly successful at'
+      : r.outcome === 'High Insight' ? 'were Successful at'
+      : r.outcome === 'Success' ? 'were Successful at'
+      : r.outcome === 'Dire Failure' ? 'failed miserably at'
+      : r.outcome === 'Low Insight' ? 'were Unsuccessful at'
+      : 'were Unsuccessful at'
     const skillTail = skill
-    // LI gets a group-flavored insight beat: the whole party shares
-    // the moment of insight, not just the leader.
-    const groupOutcomeTag = r.outcome === 'Low Insight'
-      ? ' but collectively had a Moment of Insight into why they failed'
+    // Group-flavored Insight Die tags: HI and LI both apply to the
+    // whole party here, not just the leader.
+    const groupOutcomeTag =
+      r.outcome === 'High Insight' ? ' and collectively had a Moment of Insight as to why it went so well'
+      : r.outcome === 'Low Insight' ? ' but collectively had a Moment of Insight into why they failed'
       : ''
     // "A, B, C, and D" with Oxford serial comma when 3+; "A and B"
     // for two; just "A" for solo.

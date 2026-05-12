@@ -52,19 +52,20 @@ export function outcomeColor(outcome: string): string {
 export function compactRollSummary(r: { label: string; character_name: string; target_name?: string | null; outcome: string }): string | null {
   const suffix = r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label
   const hit = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
-  const wild = r.outcome === 'Wild Success' || r.outcome === 'High Insight'
-  // Canon-correct outcome suffix. (Was "(critical)" / "failed miserably"
-  // pre-2026-05-10 - Xero called the "(critical)" tag out of canon. XSE
-  // doesn't use "critical"; the right framing for HI/LI is the Moment-
-  // of-Insight die award.) Wild Success and High Insight are lumped here
-  // for the trim; Wild without dice 6+6 doesn't actually award an Insight
-  // Die at the dice-engine layer, but the narrative tag matches the
-  // user-facing wording in lessons.md.
-  const outcomeTag = wild
-    ? ' and has a Moment of Insight as to why it went so well'
-    : r.outcome === 'Low Insight'
-      ? ' and has a Moment of Insight as to why it went so badly'
-      : ''
+  // Outcome suffix appended to the trim sentence. Canon rule per Xero
+  // (2026-05-11): the phrase "a Moment of Insight" ONLY applies to High
+  // Insight / Low Insight outcomes (the actual Insight Die awards).
+  // Wild Success gets "was wildly successful"; Dire Failure gets "failed
+  // miserably". Earlier pass lumped WS into the Moment-of-Insight bucket
+  // which conflated the intensity modifier (WS/DF) with the Insight Die
+  // award (HI/LI). Order matters: HI/LI checked before WS/DF since HI
+  // is also a hit and LI is also a fail.
+  const outcomeTag =
+    r.outcome === 'High Insight'  ? ' and has a Moment of Insight as to why it went so well'
+    : r.outcome === 'Low Insight' ? ' and has a Moment of Insight as to why it went so badly'
+    : r.outcome === 'Wild Success' ? ' and was wildly successful'
+    : r.outcome === 'Dire Failure' ? ' and failed miserably'
+    : ''
 
   // Aim action - no dice, no target.
   if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
@@ -320,13 +321,18 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         : `${r.character_name}'s Gut Instinct is quiet${outcomeTag}`
     }
     if (check === 'First Impression') {
-      // Five outcome bands per SRD §07 ladder. HI and LI use bespoke
-      // tags that override the global outcomeTag - the moment-of-
-      // insight beat reads more naturally with FI-specific phrasing
-      // ("why they did so well" / "what went wrong") than the generic
-      // "as to why they failed".
-      if (wild) {
+      // Six outcome bands per SRD §07 ladder. HI and LI keep their FI-
+      // specific Moment-of-Insight phrasing ("why they did so well" /
+      // "what went wrong"). Wild Success and Dire Failure carry their
+      // intensity entirely in the "strong" / "terrible" qualifier - no
+      // separate tag needed since the bespoke phrasing already conveys
+      // the wild/dire beat. (Canon rule per Xero 2026-05-11: "Moment of
+      // Insight" only on HI/LI; WS/DF use distinct phrasing.)
+      if (r.outcome === 'High Insight') {
         return `${r.character_name} makes a strong First Impression and has a Moment of Insight as to why they did so well`
+      }
+      if (r.outcome === 'Wild Success') {
+        return `${r.character_name} makes a strong First Impression`
       }
       if (r.outcome === 'Success') {
         return `${r.character_name} makes a First Impression`
