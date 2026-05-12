@@ -8083,12 +8083,16 @@ export default function TablePage() {
                       </div>
                     )
                   })()}
-                  <div style={{ width: avatarSize, height: avatarSize, borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                    {photo ? <img src={photo} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>{getInitials(entry.character.name)}</span>}
-                    {/* Online indicator — green dot bottom-right when the
-                        owning user is currently subscribed to the table-
-                        page presence channel. Sized as a fraction of the
-                        avatar so it tracks the compact/regular switch. */}
+                  {/* Wrap avatar + online dot. The avatar itself needs
+                      overflow:hidden to clip the photo into a circle,
+                      which would also clip the corner-anchored dot to
+                      invisibility (the bottom-right of a circle inside
+                      a square has no pixels). Wrapper stays relative
+                      with no overflow so the dot can sit on top. */}
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <div style={{ width: avatarSize, height: avatarSize, borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {photo ? <img src={photo} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>{getInitials(entry.character.name)}</span>}
+                    </div>
                     {onlineUserIds.has(entry.userId) && (
                       <span title={`${entry.username} is online`}
                         style={{ position: 'absolute', right: '-1px', bottom: '-1px', width: isCompact ? '9px' : '11px', height: isCompact ? '9px' : '11px', borderRadius: '50%', background: '#39ff14', border: '2px solid #1a1a1a', boxShadow: '0 0 6px rgba(57,255,20,.7)' }} />
