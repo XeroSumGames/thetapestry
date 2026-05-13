@@ -36,6 +36,7 @@ const CampaignObjects = dynamic(() => import('../../../../components/CampaignObj
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { computeEncumbrance } from '../../../../lib/encumbrance'
+import { advance as advanceCampaignClock } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
@@ -9186,6 +9187,14 @@ export default function TablePage() {
                   }))
                   initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
                   initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: {} })
+
+                  // Tick the canonical campaign clock so streaming heals
+                  // drain and the campaign-sheet popout sees the new time.
+                  // Best-effort: if it fails, the RP updates above still
+                  // landed, so the encumbrance hit is correct even with a
+                  // clock drift.
+                  const ticked = await advanceCampaignClock(id, hours)
+                  if (!ticked) console.warn('[advance-time] campaign clock did not tick')
 
                   setAdvanceTimeBusy(false)
                   setShowAdvanceTimeModal(false)
