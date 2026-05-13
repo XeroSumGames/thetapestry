@@ -597,6 +597,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     return hit ? `${r.character_name} was successful at a ${attrName} check`
                : `${r.character_name} failed at a ${attrName} check`
   }
+  // Last-resort fallback for old verbose labels that predate compactRollSummary.
+  // These rows have baked-in outcome text (Moment of Insight, wildly successful,
+  // etc.) that may contradict r.outcome. Strip the first line of the label,
+  // remove the baked-in outcome text, and re-apply the correct tag from r.outcome.
+  // Only triggers when baked-in outcome text is detected - new unhandled label
+  // types fall through to the verbose renderer so they still show their data.
+  const firstLine = r.label.split('\n')[0].trim()
+  const bakedIn = /\s+(and has a Moment of Insight|but has a Moment of Insight|had a Moment of Insight|and was wildly successful|and failed miserably|\+1 Insight Die)/
+  if (firstLine && bakedIn.test(firstLine)) {
+    const cleaned = firstLine
+      .replace(/\s+and has a Moment of Insight\b.*$/, '')
+      .replace(/\s+but has a Moment of Insight\b.*$/, '')
+      .replace(/\s+had a Moment of Insight\b.*$/, '')
+      .replace(/\s+and was wildly successful\b.*$/, '')
+      .replace(/\s+and failed miserably\b.*$/, '')
+      .replace(/\s+\+1 Insight Die\b.*$/, '')
+    return `${cleaned}${outcomeTag}`
+  }
   return null
 }
 
