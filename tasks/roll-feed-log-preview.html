@@ -794,22 +794,30 @@
  * The toggle char swaps ▸ <-> ▾ via the class state.
  */
 (function () {
-  const OUTCOME_LABELS = {
-    green: 'Wild Success',
-    blue:  'Success',
-    amber: 'Failure',
-    red:   'Dire Failure',
+  // Outcome inference reads the row's border color AND looks for the
+  // insight-badge to differentiate HI/LI (which share green/red borders
+  // with WS/DF). Previously this function lumped all green rows as
+  // "Wild Success" and all red as "Dire Failure" - that produced a
+  // contradictory expansion on HI/LI rows (narrative said "Moment of
+  // Insight", dice said "Wild Success"). Fixed 2026-05-13.
+  function inferOutcome(row) {
+    const hasInsightBadge = !!row.querySelector('.insight-badge')
+    if (row.classList.contains('green')) {
+      return hasInsightBadge
+        ? { key: 'green', label: 'High Insight' }
+        : { key: 'green', label: 'Wild Success' }
+    }
+    if (row.classList.contains('red')) {
+      return hasInsightBadge
+        ? { key: 'red', label: 'Low Insight' }
+        : { key: 'red', label: 'Dire Failure' }
+    }
+    if (row.classList.contains('amber')) return { key: 'amber', label: 'Failure' }
+    return { key: 'blue', label: 'Success' }
   }
 
-  function inferOutcomeKey(row) {
-    if (row.classList.contains('green')) return 'green'
-    if (row.classList.contains('amber')) return 'amber'
-    if (row.classList.contains('red')) return 'red'
-    return 'blue'
-  }
-
-  function buildGenericDetails(outcomeKey) {
-    const label = OUTCOME_LABELS[outcomeKey] || 'Success'
+  function buildGenericDetails(row) {
+    const o = inferOutcome(row)
     return `
       <div class="dice-preview">
         [<span class="die">5</span>+<span class="die">4</span>]
@@ -817,9 +825,8 @@
         <span class="smod"> +2 SMod</span>
         <span class="cmod"> +0 CMod</span>
         <span class="total"> = 12</span>
-        <span class="out ${outcomeKey}">${label}</span>
+        <span class="out ${o.key}">${o.label}</span>
       </div>
-      <div class="hint">Live feed adds Insight Die badge on HI/LI and a damage box on attack rolls.</div>
     `
   }
 
@@ -835,7 +842,7 @@
     if (!details) {
       details = document.createElement('div')
       details.className = 'expanded-details'
-      details.innerHTML = buildGenericDetails(inferOutcomeKey(container))
+      details.innerHTML = buildGenericDetails(container)
       container.appendChild(details)
     }
     const wasExpanded = container.classList.toggle('is-expanded')
