@@ -630,7 +630,9 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
         </div>
         <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
           {formatNames(participants)} {adverb} {skillTail}{groupOutcomeTag}
-          {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+          {/* Badge gates on outcome AND insight_awarded - canon rule: Insight Die
+              only on HI/LI, regardless of what insight_awarded says on old rows. */}
+          {r.insight_awarded && (r.outcome === 'High Insight' || r.outcome === 'Low Insight') && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
         </div>
         {isExpanded && (
           <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
@@ -670,10 +672,28 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
   // label type), show the first line of the label stripped of any "+1
   // Insight Die" / dev-note tails. Keeps the row readable without showing
   // the dice dump or dev notes that old labels baked in.
-  const compact = compactRaw ?? r.label.split('\n')[0]
+  let compact = compactRaw ?? r.label.split('\n')[0]
     .replace(/\s+Live feed adds.*$/, '')
     .replace(/\s+\+1 Insight Die\b.*$/, '')
     .trim()
+  // BULLETPROOF GUARD (canon rule, locked 2026-05-13): "Moment of Insight"
+  // text + "+1 Insight Die" badge ONLY appear on HI/LI outcomes. If r.outcome
+  // is anything else, strip any leaked insight text from the narrative no
+  // matter what produced it (old baked-in labels, missed compact branches,
+  // bespoke phrasings that snuck through). Last line of defense - can't be
+  // bypassed by any code path that wrote the wrong narrative.
+  const isInsightOutcome = r.outcome === 'High Insight' || r.outcome === 'Low Insight'
+  if (!isInsightOutcome) {
+    compact = compact
+      .replace(/\s+and has a Moment of Insight\b.*$/, '')
+      .replace(/\s+but has a Moment of Insight\b.*$/, '')
+      .replace(/\s+and collectively have a Moment of Insight\b.*$/, '')
+      .replace(/\s+but collectively have a Moment of Insight\b.*$/, '')
+      .replace(/\s+and collectively had a Moment of Insight\b.*$/, '')
+      .replace(/\s+but collectively had a Moment of Insight\b.*$/, '')
+      .replace(/\s+collectively had a Moment of Insight\b.*$/, '')
+      .replace(/\s+had a Moment of Insight\b.*$/, '')
+  }
   const isExpanded = expandedRollIds.has(r.id)
   const hasRealDice = r.die1 > 0 || r.die2 > 0
   // Show the ▸ pip whenever there's something meaningful to expand to:
@@ -699,7 +719,9 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
       </div>
       <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
         {compact}
-        {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+        {/* Badge gates on outcome AND insight_awarded - stale-true rows from
+            old DB writes can't leak the badge onto WS/Success/DF outcomes. */}
+        {r.insight_awarded && isInsightOutcome && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
       </div>
       {isExpanded && (
         <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a' }}>
