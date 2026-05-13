@@ -234,6 +234,8 @@
     <li><a href="#barter">Barter</a></li>
     <li><a href="#cdp">CDP award</a></li>
     <li><a href="#encumbrance">Encumbrance tick</a></li>
+    <li><a href="#rations">Rations consumed</a></li>
+    <li><a href="#subsistence">Subsistence damage</a></li>
     <li><a href="#evolution">Evolution</a></li>
     <li><strong>Generic</strong></li>
     <li><a href="#skill">Skill check</a></li>
@@ -674,6 +676,16 @@
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">9:00 AM</span></div></div><div class="narrative">Time advances 4h, Cree Hask is overencumbered</div></div>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">9:00 AM</span></div></div><div class="narrative">Time advances 4h, Cree Hask and Marv are both overencumbered</div></div>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">9:00 AM</span></div></div><div class="narrative">Time advances 4h, Cree Hask, Marv, and Wilson are all overencumbered</div></div>
+
+  <h3 id="rations">Rations consumed (Phase 3b drainer)</h3>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">6:00 AM</span></div></div><div class="narrative">🍞 Rations consumed (1d): Cree Hask (3 to 2), Marv (2 to 1)</div></div>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">6:00 AM</span></div></div><div class="narrative">🍞 Rations consumed (1d): Cree Hask (1 to 0, out)</div></div>
+  <p class="note">outcome='rations'. Falls through to default System row rendering (border #d4cfc9). The "(X to Y, out)" suffix fires when count hits 0 and stamps out_since_day; the subsistence drainer picks it up from day 3.</p>
+
+  <h3 id="subsistence">Subsistence damage (Phase 3c drainer)</h3>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">6:00 AM</span></div></div><div class="narrative">🪦 Subsistence damage: Cree Hask (-1 WP/-1 RP, 3->2 WP, 5->4 RP)</div></div>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">6:00 AM</span></div></div><div class="narrative">🪦 Subsistence damage: Cree Hask (-2 WP/-2 RP, 2->0 WP, 4->2 RP), Marv (-1 WP/-1 RP, 5->4 WP, 7->6 RP)</div></div>
+  <p class="note">outcome='subsistence'. Same default System row rendering. Multi-day advances can hit multiple day-boundaries in one go; each boundary fires the 1 WP + 1 RP deduction, so the damage count can be &gt;1 when the GM advances several days at once.</p>
 
   <h3 id="evolution">Evolution (CDP spend)</h3>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:45 PM</span></div></div><div class="narrative">Cree Hask spent 5 Character Development Points raising Survival from Lv 2 to Lv 3</div></div>

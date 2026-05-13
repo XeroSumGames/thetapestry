@@ -6,6 +6,12 @@
 
 ---
 
+## 🔲 Flagged 2026-05-13 — Skill + Combat action end-to-end audit
+
+- [ ] **Skill + Combat action playtest audit** - walk every skill check and every combat action (Aim, Move, Ready, Switch, Reload, Unequip, Defend, Take Cover, Reposition, Cover Fire, Inspire, Charge, Subdue, Unarmed, Distract, Explosives, Rapid Fire, Fire from Cover, Grapple, Coordinate, Stress Check, Stabilize, Unjam, Upkeep) and verify each fires the correct roll, produces the correct feed row, and applies the correct game state change. Use `tasks/roll-feed-log-preview.html` as the canonical visual reference. Log any drift as bugs.
+
+---
+
 ## 🔲 Flagged 2026-05-08 — Rules coverage
 
 - [ ] **Infection audit** - verify Infection condition/progression/treatment is fully implemented against the SRD.
