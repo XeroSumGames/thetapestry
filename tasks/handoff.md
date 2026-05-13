@@ -1,6 +1,6 @@
-# TheTapestry handoff
+# TheTapestry handoff (scaffolding for Claude)
 
-**This is the single file to paste into a fresh chat.** Two sections: evergreen (role briefing, locked rules, canon, protocol - sharpened in place when corrections surface) and session state (current commits, what's untested, what's blocked - rewritten each session). Maintained by Claude; pasted as-is by Xero.
+**This file is the source-of-truth Claude uses to assemble the chat handoff block.** Xero does not paste this file. When he asks for a handoff, Claude rewrites this file in the background (evergreen top + session state bottom), commits it, then outputs a paste-ready text block in chat. The chat block is the deliverable; this file is the scaffold behind it.
 
 ---
 
@@ -38,7 +38,7 @@ These exist because I broke them and Xero corrected me. Do not violate.
 - **Long-term fix over quick fix.** Root-cause path always wins. Surface latent bugs even when off-request.
 - **Verify shipped state before quoting scope.** Grep + git log first. Don't trust master inventories or specs.
 - **Capture lessons + todo immediately.** After every meaningful ship, edit `tasks/lessons.md` + `tasks/todo.md` in the same response. Never offer "want me to add this?"
-- **Handoff = ONE file Claude maintains.** `tasks/handoff.md` is the single paste target. Never tell Xero to paste two files, combine pieces, or "open Notepad." Rebuild this file at session end and commit it.
+- **Handoff = paste-ready CHAT BLOCK, not a file pointer.** When Xero asks for a handoff, the FINAL response in chat must be a self-contained block of text he can copy-paste into a new chat. Spells out role, working-dir rules, reference files, hard rules, response protocol, current state. `tasks/handoff.md` exists as scaffolding (rebuild + commit it in the background), but never end by saying "go read the file" or "paste tasks/handoff.md". The chat block IS the deliverable.
 - **Never delete backlog items silently.** Move resolved items to a "Shipped" section with the commit hash.
 - **Testplan naming:** `tasks/<topic>testplan.md` with descriptive name (e.g. `loadtimestestplan.md`). Never overwrite generic `tasks/testplan.md`.
 - **Token spawn = top-left (1,1).** Never top-right.
@@ -110,20 +110,22 @@ git log -1 --oneline                         # worktree HEAD
 git log HEAD..origin/main --oneline          # commits behind main; if non-empty, rebase
 ```
 
-## Sharpening hook
+## Sharpening + chat-block protocol
 
-At session end (or whenever Xero asks for a fresh handoff), propose **ONE** edit to the evergreen section of this file. Sources:
+When Xero asks for a handoff:
 
-- Any correction Xero gave during the session -> new locked rule.
-- Recurring process friction (asked the same clarifying question twice) -> response-protocol tweak.
-- Canon I had to re-derive from PDFs -> new locked-canon entry.
-- Tool I should have reached for sooner -> reference-files edit.
-
-Apply the edit directly. Show diff + one-line "why" in chat.
-
-Then rewrite the **Session state** section below from scratch with latest commits + open threads. Commit the whole file. Xero pastes it as-is into the next chat.
+1. Sharpen the evergreen section above. ONE edit per session, sourced from:
+   - Correction Xero gave -> new locked rule.
+   - Recurring process friction (asked the same clarifying question twice) -> response-protocol tweak.
+   - Canon I had to re-derive from PDFs -> new locked-canon entry.
+   - Tool I should have reached for sooner -> reference-files edit.
+2. Rewrite the **Session state** section below from scratch with latest commits + open threads.
+3. Commit this file.
+4. **Output the chat block as the final response.** Self-contained: role one-liner, "read `tasks/handoff.md` first" + session-start check commands, working-directory rules with worktree-path footgun, reference-file list, full hard-rules list (not "see file"), full response protocol, current state (HEAD + recent ships + untested + blocked), final "What's next?"
 
 Aim: evergreen section stays under ~150 lines. Merge new rules into existing ones rather than appending.
+
+The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
