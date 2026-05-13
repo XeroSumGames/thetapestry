@@ -6,6 +6,12 @@
 
 ---
 
+## 🔲 Flagged 2026-05-13 — Loot "found nothing" write path missing
+
+- [ ] **Loot: write "found nothing" row for empty containers** - when a player/GM searches a corpse or container with no items, the code silently skips the log write entirely. Need to write a `outcome: 'loot'` row with label `🎒 X searched the corpse of Y and found nothing` (corpse) or `🎒 X looked through the remains of Y and found nothing` (object) when contents is empty. `compactRollSummary` already handles these labels (added 2026-05-13); only the write in `app/stories/[id]/table/page.tsx` (`ObjectCard.tsx` `onLoot` path + auto-loot `contents.length === 0` branch) is missing.
+
+---
+
 ## 🔲 Flagged 2026-05-13 — Skill + Combat action end-to-end audit
 
 - [ ] **Skill + Combat action playtest audit** - walk every skill check and every combat action (Aim, Move, Ready, Switch, Reload, Unequip, Defend, Take Cover, Reposition, Cover Fire, Inspire, Charge, Subdue, Unarmed, Distract, Explosives, Rapid Fire, Fire from Cover, Grapple, Coordinate, Stress Check, Stabilize, Unjam, Upkeep) and verify each fires the correct roll, produces the correct feed row, and applies the correct game state change. Use `tasks/roll-feed-log-preview.html` as the canonical visual reference. Log any drift as bugs.

@@ -485,20 +485,18 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // compact banner hides WHAT was looted (keeps players reading the log
   // without spoiling everyone's hauls); ▸ expand reveals the full list.
   if (r.outcome === 'loot') {
-    // NPC corpse search - SQL label "🎒 <PC> searched the corpse of <NPC>
-    // and looted <Item>". Bespoke wording per Xero (2026-05-10): bodies
-    // and crates read differently.
+    // "Found nothing" - label "🎒 <PC> searched the corpse of <NPC> and found nothing"
+    // or "🎒 <PC> looked through the remains of <Object> and found nothing".
+    const nothingCorpseMatch = r.label.match(/^🎒\s+(.+?)\s+searched the corpse of\s+(.+?)\s+and found nothing/)
+    if (nothingCorpseMatch) return `${r.character_name} searched the corpse of ${nothingCorpseMatch[2]} and found nothing`
+    const nothingObjMatch = r.label.match(/^🎒\s+(.+?)\s+looked through the remains of\s+(.+?)\s+and found nothing/)
+    if (nothingObjMatch) return `${r.character_name} looked through the remains of ${nothingObjMatch[2]} and found nothing`
+    // NPC corpse search - label "🎒 <PC> searched the corpse of <NPC> and looted <Item>".
     const corpseMatch = r.label.match(/^🎒\s+(.+?)\s+searched the corpse of\s+(.+?)\s+and looted/)
-    if (corpseMatch) {
-      const npc = corpseMatch[2]
-      return `${r.character_name} searched the corpse of ${npc} and found something`
-    }
+    if (corpseMatch) return `${r.character_name} searched the corpse of ${corpseMatch[2]} and found something`
     // Object/container loot - "🎒 <PC> looted <Item> from <Object>".
     const lootMatch = r.label.match(/^🎒\s+(.+?)\s+looted\s+.+\s+from\s+(.+)$/)
-    if (lootMatch) {
-      const container = lootMatch[2]
-      return `${r.character_name} looked through the remains of ${container} and found something`
-    }
+    if (lootMatch) return `${r.character_name} looked through the remains of ${lootMatch[2]} and found something`
   }
   // (Group Check moved to a bespoke Tier A banner in components/RollsFeed.tsx
   // - keyed off label prefix + damage_json.groupCheckParticipants - so it
