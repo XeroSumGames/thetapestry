@@ -78,9 +78,14 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     console.error('[campaign-clock] drainStreamingHeals failed:', e)
   }
   try {
-    await drainRationsConsumption(campaignId, next.canon_day - current.canon_day)
+    await drainRationsConsumption(campaignId, current.canon_day, next.canon_day - current.canon_day)
   } catch (e) {
     console.error('[campaign-clock] drainRationsConsumption failed:', e)
+  }
+  try {
+    await drainSubsistenceDamage(campaignId, current.canon_day, next.canon_day - current.canon_day)
+  } catch (e) {
+    console.error('[campaign-clock] drainSubsistenceDamage failed:', e)
   }
   // Realtime broadcast — every viewer's campaign sheet gets the new
   // clock state immediately, without waiting for postgres_changes to
@@ -205,7 +210,7 @@ async function drainStreamingHeals(campaignId: string, clock: ClockState): Promi
 // Emits a single System row to roll_log summarizing the tick (mirrors
 // the encumbrance summary shape). Skipped silently if no PC consumed
 // anything (e.g. dayDelta=0 or everyone's already out).
-async function drainRationsConsumption(campaignId: string, dayDelta: number): Promise<void> {
+async function drainRationsConsumption(campaignId: string, prevCanonDay: number, dayDelta: number): Promise<void> {
   if (dayDelta <= 0) return
   const supabase = createClient()
   const { data: states, error } = await supabase
@@ -224,7 +229,16 @@ async function drainRationsConsumption(campaignId: string, dayDelta: number): Pr
     if (rations.count <= 0) continue
     const nextCount = Math.max(0, rations.count - dayDelta)
     if (nextCount === rations.count) continue
-    const newData = { ...c.data, rations: { type: rations.type, count: nextCount } }
+    const newRations: any = { type: rations.type, count: nextCount }
+    // Stamp out_since_day on the day the last ration was consumed.
+    // PC ate one per day starting day prevCanonDay+1, so the last
+    // ration is gone after day prevCanonDay + prev_count; day after
+    // that is the first hungry day.
+    if (nextCount === 0 && rations.count > 0) {
+      newRations.out_since_day = prevCanonDay + rations.count + 1
+      newRations.last_subsistence_day = null
+    }
+    const newData = { ...c.data, rations: newRations }
     const { error: updErr } = await supabase
       .from('characters')
       .update({ data: newData })
@@ -253,6 +267,114 @@ async function drainRationsConsumption(campaignId: string, dayDelta: number): Pr
     label: `🍞 Rations consumed (${dayDelta}d): ${summaryParts.join(', ')}`,
     die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
     outcome: 'rations',
+  })
+}
+
+// Subsistence-damage drainer (CRB Ch.07 p.117 canon, locked 2026-05-09).
+//
+// Once a PC's rations hit 0, they get a 2-day grace period (days 1
+// and 2 hungry). Starting day 3, every day without food costs 1 WP
+// + 1 RP. This drainer iterates the day-boundaries crossed by the
+// current advance() and, for any boundary where the PC is at daysOut
+// >= 3, applies the per-day damage. last_subsistence_day on the
+// rations blob prevents double-application across overlapping
+// advances.
+//
+// out_since_day is set by drainRationsConsumption when count drops to
+// 0. If a PC's rations are restored (count > 0) without going through
+// the inventory UI's reset path, this drainer self-heals by clearing
+// out_since_day + last_subsistence_day at read time.
+//
+// PCs with wp_current <= 0 or rp_current <= 0 are still subject to
+// subsistence damage on principle (the game world doesn't pause for
+// the incapacitated); the existing mortal/incap pipeline takes over
+// when totals hit 0.
+async function drainSubsistenceDamage(campaignId: string, prevCanonDay: number, dayDelta: number): Promise<void> {
+  if (dayDelta <= 0) return
+  const supabase = createClient()
+  const { data: states, error } = await supabase
+    .from('character_states')
+    .select('id, wp_current, wp_max, rp_current, rp_max, stress, character_id, characters!inner(id, name, data)')
+    .eq('campaign_id', campaignId)
+  if (error || !states || states.length === 0) return
+
+  type Outcome = { name: string; damage: number; wpFrom: number; wpTo: number; rpFrom: number; rpTo: number }
+  const outcomes: Outcome[] = []
+
+  for (const row of states as any[]) {
+    const c = row.characters
+    if (!c?.data) continue
+    const rations = normalizeRations(c.data.rations)
+    const rawData: any = c.data.rations ?? {}
+    // Self-heal: count > 0 should mean no hungry-day tracking.
+    if (rations.count > 0) {
+      if (rawData.out_since_day != null || rawData.last_subsistence_day != null) {
+        const newData = { ...c.data, rations: { type: rations.type, count: rations.count } }
+        await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+      }
+      continue
+    }
+    const outSinceDay: number | null = typeof rawData.out_since_day === 'number' ? rawData.out_since_day : null
+    if (outSinceDay == null) continue  // count==0 but never tracked (e.g. created with 0 rations); skip
+    const lastSubDay: number | null = typeof rawData.last_subsistence_day === 'number' ? rawData.last_subsistence_day : null
+
+    // Walk each day-boundary crossed by this advance. A boundary at
+    // canon_day = prevCanonDay + d (d in 1..dayDelta) is "hungry day
+    // d_hungry = boundaryCanon - outSinceDay + 1" of starvation.
+    // Damage applies at d_hungry >= 3. Skip boundaries we already
+    // applied damage for (last_subsistence_day tracks the most recent
+    // hungry-day that took damage).
+    let damage = 0
+    let newLastSubDay = lastSubDay
+    for (let d = 1; d <= dayDelta; d++) {
+      const boundaryCanon = prevCanonDay + d
+      const hungryDay = boundaryCanon - outSinceDay + 1
+      if (hungryDay < 3) continue
+      if (lastSubDay != null && boundaryCanon <= lastSubDay) continue
+      damage++
+      newLastSubDay = boundaryCanon
+    }
+    if (damage === 0) continue
+
+    const wpFrom = row.wp_current ?? 0
+    const rpFrom = row.rp_current ?? 0
+    const wpTo = Math.max(0, wpFrom - damage)
+    const rpTo = Math.max(0, rpFrom - damage)
+    const updateFields: any = {
+      wp_current: wpTo,
+      rp_current: rpTo,
+      updated_at: new Date().toISOString(),
+    }
+    // Stress on mortal/incap (cap 5).
+    if (wpTo === 0 && wpFrom > 0) {
+      updateFields.stress = Math.min(5, (row.stress ?? 0) + 1)
+    }
+    if (rpTo === 0 && rpFrom > 0) {
+      updateFields.stress = Math.min(5, (updateFields.stress ?? row.stress ?? 0) + 1)
+    }
+    await supabase.from('character_states').update(updateFields).eq('id', row.id)
+
+    // Stamp last_subsistence_day so a future overlapping advance
+    // doesn't double-apply damage.
+    const newRations = { ...rawData, type: rations.type, count: 0, last_subsistence_day: newLastSubDay }
+    const newData = { ...c.data, rations: newRations }
+    await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+
+    outcomes.push({ name: c.name, damage, wpFrom, wpTo, rpFrom, rpTo })
+  }
+
+  if (outcomes.length === 0) return
+  const { data: { user } } = await supabase.auth.getUser()
+  const summaryParts = outcomes.map(o =>
+    `${o.name} (-${o.damage} WP/-${o.damage} RP, ${o.wpFrom}->${o.wpTo} WP, ${o.rpFrom}->${o.rpTo} RP)`
+  )
+  await supabase.from('roll_log').insert({
+    campaign_id: campaignId,
+    user_id: user?.id ?? null,
+    character_name: 'System',
+    label: `🪦 Subsistence damage: ${summaryParts.join(', ')}`,
+    die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+    outcome: 'subsistence',
   })
 }
 
