@@ -33,10 +33,58 @@ interface ModuleRow {
   parent_setting: string | null
   visibility: string
   moderation_status: string
+  // Days since 2-Mar-Year0 (first recorded H724 death). NULL means
+  // no canonical start date is baked into the module - cloning falls
+  // back to canon_day 0.
+  start_canon_day: number | null
   sort_order: number | null
 }
 
 const COVERS_BUCKET = 'module-covers'
+
+// Cumulative days at the start of each month (non-leap year). Shared
+// by both directions of the canon_day <-> date conversion below.
+const DAYS_BEFORE_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
+
+// (dateIso, year) -> canon_day. canon_day = 0 means 2-Mar-Year0
+// (first recorded H724 death). Returns null on missing/invalid input.
+function computeCanonDay(dateIso: string, year: string): number | null {
+  if (!dateIso) return null
+  const y = parseInt(year, 10)
+  if (!Number.isFinite(y) || y < 0 || y > 20) return null
+  const parts = dateIso.split('-')
+  if (parts.length !== 3) return null
+  const m = parseInt(parts[1], 10)
+  const d = parseInt(parts[2], 10)
+  if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12 || d < 1 || d > 31) return null
+  const dayOfYear = DAYS_BEFORE_MONTH[m - 1] + d  // 1..365
+  return y * 365 + (dayOfYear - 61)  // March 2nd = day 61
+}
+
+// canon_day -> { dateIso: "YYYY-MM-DD", year: "0".."20" }. The picker
+// year uses a neutral 2000 since we only consume month/day on the way
+// out. Returns null if canon_day is outside the supported Year 0-20
+// range (would be hugely negative or >20 years post-pandemic).
+function canonDayToDateAndYear(canonDay: number): { dateIso: string; year: string } | null {
+  // canon_day = y*365 + (dayOfYear - 61).  Add 61 to get the offset
+  // from the start of Year y, then split into (year, dayOfYear).
+  const offsetFromYearStart = canonDay + 61
+  const year = Math.floor(offsetFromYearStart / 365)
+  if (year < 0 || year > 20) return null
+  const dayOfYear = offsetFromYearStart - year * 365  // 1..365
+  if (dayOfYear < 1 || dayOfYear > 365) return null
+  // Find month / day from dayOfYear.
+  let month = 12
+  for (let i = 11; i >= 0; i--) {
+    if (dayOfYear > DAYS_BEFORE_MONTH[i]) { month = i + 1; break }
+  }
+  const day = dayOfYear - DAYS_BEFORE_MONTH[month - 1]
+  // Neutral picker year (2000) - the visible year in the calendar is
+  // irrelevant, only month/day round-trip.
+  const mm = String(month).padStart(2, '0')
+  const dd = String(day).padStart(2, '0')
+  return { dateIso: `2000-${mm}-${dd}`, year: String(year) }
+}
 
 export default function ModuleEditPage() {
   const params = useParams<{ id: string }>()
@@ -54,6 +102,11 @@ export default function ModuleEditPage() {
   const [sessionEstimate, setSessionEstimate] = useState<string>('')
   const [playerCount, setPlayerCount] = useState<string>('')
   const [sortOrder, setSortOrder] = useState<string>('')
+  // Canonical start date controls. dateIso = "YYYY-MM-DD" from the
+  // calendar (month/day only), year = "0".."20" from the dropdown.
+  // Both blank = no canonical start (clone uses canon_day 0).
+  const [startDateIso, setStartDateIso] = useState<string>('')
+  const [startYear, setStartYear] = useState<string>('')
   const [coverUrl, setCoverUrl] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -71,7 +124,7 @@ export default function ModuleEditPage() {
 
       const [{ data: row, error }, { data: profile }] = await Promise.all([
         supabase.from('modules')
-          .select('id, author_user_id, name, tagline, description, cover_image_url, content_tags, session_count_estimate, player_count_recommended, parent_setting, visibility, moderation_status, sort_order')
+          .select('id, author_user_id, name, tagline, description, cover_image_url, content_tags, session_count_estimate, player_count_recommended, parent_setting, visibility, moderation_status, sort_order, start_canon_day')
           .eq('id', moduleId)
           .maybeSingle(),
         supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
@@ -101,6 +154,15 @@ export default function ModuleEditPage() {
       setSessionEstimate(m.session_count_estimate != null ? String(m.session_count_estimate) : '')
       setPlayerCount(m.player_count_recommended != null ? String(m.player_count_recommended) : '')
       setSortOrder(m.sort_order != null ? String(m.sort_order) : '')
+      // Reverse-compute the date from start_canon_day so the calendar
+      // and year dropdown reflect the saved value.
+      if (m.start_canon_day != null) {
+        const parsed = canonDayToDateAndYear(m.start_canon_day)
+        if (parsed) {
+          setStartDateIso(parsed.dateIso)
+          setStartYear(parsed.year)
+        }
+      }
       setCoverUrl(m.cover_image_url ?? '')
       setLoading(false)
     })()
@@ -213,6 +275,16 @@ export default function ModuleEditPage() {
       setSaving(false)
       return
     }
+    // start_canon_day: both fields blank → null (no canonical start);
+    // both filled → compute from date+year. Partial fill is rejected
+    // so authors don't accidentally save a half-configured date.
+    const partialDate = (startDateIso === '') !== (startYear === '')
+    if (partialDate) {
+      setStatus('Set both the start date and Year, or leave both blank.')
+      setSaving(false)
+      return
+    }
+    const startCanonDay = computeCanonDay(startDateIso, startYear)
     const { error } = await supabase
       .from('modules')
       .update({
@@ -223,6 +295,7 @@ export default function ModuleEditPage() {
         session_count_estimate: sessions,
         player_count_recommended: players,
         sort_order: sort,
+        start_canon_day: startCanonDay,
       })
       .eq('id', mod.id)
     if (error) {
@@ -349,6 +422,39 @@ export default function ModuleEditPage() {
           <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
             Lower number ranks first on /rumors. Blank sorts last.
           </div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '14px' }}>
+        <label style={lbl}>Canonical Start Date</label>
+        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', fontStyle: 'italic' }}>
+          The 1st recorded death from the Dog Flu (H724 / the Distemper) was on March 2nd, Year 0. Campaigns cloned from this module open on the date you set here.
+        </div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <input type="date" value={startDateIso} onChange={e => setStartDateIso(e.target.value)}
+            style={{ ...inp, flex: 1 }} />
+          <select value={startYear} onChange={e => setStartYear(e.target.value)} style={{ ...inp, flex: 1 }}>
+            <option value="">Year</option>
+            {Array.from({ length: 21 }, (_, i) => (
+              <option key={i} value={String(i)}>Year {i}</option>
+            ))}
+          </select>
+        </div>
+        {(() => {
+          const cd = computeCanonDay(startDateIso, startYear)
+          if (cd === null) return null
+          return (
+            <div style={{ fontSize: '13px', color: cd >= 0 ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+              {cd === 0
+                ? 'The day the pandemic was declared.'
+                : cd > 0
+                  ? `${cd} days since the first recorded death.`
+                  : `${Math.abs(cd)} days before the first recorded death.`}
+            </div>
+          )
+        })()}
+        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+          Leave blank for a module with no canonical start date - clones will use the campaign creator's setting.
         </div>
       </div>
 
