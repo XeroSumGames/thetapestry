@@ -131,7 +131,7 @@ Aim: evergreen section stays under ~150 lines. Merge new rules into existing one
 
 ## Current main HEAD
 
-(will be one commit after this file lands; check `git log -1` after sync)
+`5259926 docs(handoff): single combined paste target at tasks/handoff.md`
 
 ## What shipped in the 2026-05-12 / 2026-05-13 session
 
