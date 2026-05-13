@@ -4682,7 +4682,7 @@ export default function TablePage() {
             stressReason = 'Incapacitated'
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId,
-              character_name: 'Lights out',
+              character_name: 'Lights Out',
               label: `${targetEntry.character.name} has been Incapacitated by ${characterName}.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'incap',
             })
@@ -4749,7 +4749,7 @@ export default function TablePage() {
           npcUpdate.incap_rounds = Math.max(1, 4 - (targetNpc.physicality ?? 0))
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId,
-            character_name: 'Lights out',
+            character_name: 'Lights Out',
             label: `${targetNpc.name} has been Incapacitated by ${characterName}.`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'incap',
           })

@@ -300,7 +300,10 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
   }
 
   // incap (RP=0) - same shape as death but amber, less alarming.
-  if (r.outcome === 'incap' || r.character_name === 'Lights out') {
+  // Sentinel form is 'Lights Out' per the canonical template; the old
+  // 'Lights out' spelling stays matched here for back-compat with
+  // pre-2026-05-12 rows that landed before the rename.
+  if (r.outcome === 'incap' || r.character_name === 'Lights Out' || r.character_name === 'Lights out') {
     return (
       <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1408', border: '1px solid #5a4218', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
@@ -360,7 +363,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           const nameColor = e.is_npc === false ? '#7ab3d4' : '#f5f2ee'
           return (
             <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: '6px', padding: '3px 0', borderBottom: i < (r.damage_json as any).initiative.length - 1 ? '1px solid #2e2e2e' : 'none' }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: nameColor, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '80px' }}>{e.name}</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: nameColor, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '90px' }}>{e.name}</span>
               <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
                 [{e.d1}+{e.d2}]
                 {init !== 0 && <span style={{ color: '#7fc458' }}> {init > 0 ? '+' : ''}{init} Init</span>}
@@ -422,6 +425,11 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
               <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
             </div>
+            {survived && typeof dj.consecutiveFailuresAfter === 'number' && (
+              <div style={{ marginTop: '4px', color: '#7fc458' }}>
+                Community retained - consecutive failures reset to <span style={{ fontWeight: 700 }}>{dj.consecutiveFailuresAfter}</span>.
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -463,6 +471,13 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
         <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{body}</div>
         {isExpanded && (
           <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+            {dj.leaderName && (
+              <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
+                Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
+                {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
+                {dj.skillUsed && <span> - <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+              </div>
+            )}
             <div>
               [{r.die1}+{r.die2}]
               {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
@@ -553,7 +568,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             )}
             {!willDissolve && (
               <div style={{ color: '#7fc458', marginTop: '4px' }}>
-                Next Morale CMod: <span style={{ fontWeight: 700 }}>{fmt(dj.cmodForNext ?? 0)}</span>
+                {isHit && 'Morale holds. '}Next Morale CMod: <span style={{ fontWeight: 700 }}>{fmt(dj.cmodForNext ?? 0)}</span>
               </div>
             )}
           </div>
@@ -579,7 +594,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     // miserably". Earlier version lumped HI into Wildly Successful and
     // used "failed miserably" for LI (now reserved for DF).
     const adverb =
-      r.outcome === 'Wild Success' ? 'were wildly successful at'
+      r.outcome === 'Wild Success' ? 'were Wildly Successful at'
       : r.outcome === 'High Insight' ? 'were Successful at'
       : r.outcome === 'Success' ? 'were Successful at'
       : r.outcome === 'Dire Failure' ? 'failed miserably at'
