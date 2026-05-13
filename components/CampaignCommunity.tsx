@@ -9,6 +9,7 @@ import CommunityProxyRecruitModal from './CommunityProxyRecruitModal'
 import { type InventoryItem } from '../lib/inventory'
 import { EQUIPMENT } from '../lib/xse-schema'
 import { LABEL_STYLE_LG, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
+import { advance as advanceCampaignClock } from '../lib/campaign-clock'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
 import {
   logSchism,
@@ -1263,12 +1264,18 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   async function handleSkipWeek(c: Community) {
     if (c.status === 'dissolved') return
     const nextWeek = c.week_number + 1
-    if (!confirm(`Skip week ${nextWeek} for ${c.name}? Week counter advances; no rolls, no departures, no Mood change.`)) return
+    if (!confirm(`Skip week ${nextWeek} for ${c.name}? Week counter advances and the campaign clock ticks forward 7 days (rations consumed, subsistence damage for anyone already out, streaming heals drain). No rolls, no departures, no Mood change for the community itself.`)) return
     const { error } = await supabase.from('communities')
       .update({ week_number: nextWeek })
       .eq('id', c.id)
     if (error) { alert(`Skip week failed: ${error.message}`); return }
     setCommunities(prev => prev.map(x => x.id === c.id ? { ...x, week_number: nextWeek } : x))
+    // Tick the canonical campaign clock 7 days. Best-effort: if this
+    // fails, the community's week_number bump above still landed, and
+    // the GM can advance the clock manually from the campaign-sheet
+    // popout.
+    const ticked = await advanceCampaignClock(campaignId, 168)
+    if (!ticked) console.warn('[skip-week] campaign clock did not tick')
   }
 
   // Auto-successor picker per spec: next founder → longest-tenured
