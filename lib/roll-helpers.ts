@@ -62,7 +62,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // is also a hit and LI is also a fail.
   const outcomeTag =
     r.outcome === 'High Insight'  ? ' and has a Moment of Insight as to why it went so well'
-    : r.outcome === 'Low Insight' ? ' and has a Moment of Insight as to why it went so badly'
+    : r.outcome === 'Low Insight' ? ' but has a Moment of Insight as to why it went so badly'
     : r.outcome === 'Wild Success' ? ' and was wildly successful'
     : r.outcome === 'Dire Failure' ? ' and failed miserably'
     : ''
@@ -378,7 +378,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       // per Xero 2026-05-11). Earlier version lumped both into the same
       // "it went badly" branch with no LI tag.
       if (rollOutcome === 'Low Insight') {
-        return `${name} tried to recruit ${target} - it went badly and has a Moment of Insight as to why it went so badly`
+        return `${name} tried to recruit ${target} - it went badly but has a Moment of Insight as to why it went so badly`
       }
       if (rollOutcome === 'Dire Failure') {
         return `${name} tried to recruit ${target} - it went badly`
@@ -573,7 +573,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (r.outcome === 'Wild Success') return `${r.character_name} was wildly successful at ${skill}`
     if (r.outcome === 'High Insight') return `${r.character_name} was successful at ${skill} and has a Moment of Insight as to why it went so well`
     if (r.outcome === 'Dire Failure') return `${r.character_name} failed miserably at ${skill}`
-    if (r.outcome === 'Low Insight') return `${r.character_name} failed at ${skill} and has a Moment of Insight as to why it went so badly`
+    if (r.outcome === 'Low Insight') return `${r.character_name} failed at ${skill} but has a Moment of Insight as to why it went so badly`
     return hit ? `${r.character_name} was successful at ${skill}`
                : `${r.character_name} failed at ${skill}`
   }
@@ -593,7 +593,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (r.outcome === 'Wild Success') return `${r.character_name} was wildly successful at a ${attrName} check`
     if (r.outcome === 'High Insight') return `${r.character_name} was successful at a ${attrName} check and has a Moment of Insight as to why it went so well`
     if (r.outcome === 'Dire Failure') return `${r.character_name} failed miserably at a ${attrName} check`
-    if (r.outcome === 'Low Insight') return `${r.character_name} failed at a ${attrName} check and has a Moment of Insight as to why it went so badly`
+    if (r.outcome === 'Low Insight') return `${r.character_name} failed at a ${attrName} check but has a Moment of Insight as to why it went so badly`
     return hit ? `${r.character_name} was successful at a ${attrName} check`
                : `${r.character_name} failed at a ${attrName} check`
   }
