@@ -604,16 +604,20 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // Only triggers when baked-in outcome text is detected - new unhandled label
   // types fall through to the verbose renderer so they still show their data.
   const firstLine = r.label.split('\n')[0].trim()
-  const bakedIn = /\s+(and has a Moment of Insight|but has a Moment of Insight|had a Moment of Insight|and was wildly successful|and failed miserably|\+1 Insight Die)/
+  const bakedIn = /\s+(and has a Moment of Insight|but has a Moment of Insight|and was wildly successful|and failed miserably|\+1 Insight Die)/
   if (firstLine && bakedIn.test(firstLine)) {
     const cleaned = firstLine
       .replace(/\s+and has a Moment of Insight\b.*$/, '')
       .replace(/\s+but has a Moment of Insight\b.*$/, '')
-      .replace(/\s+had a Moment of Insight\b.*$/, '')
       .replace(/\s+and was wildly successful\b.*$/, '')
       .replace(/\s+and failed miserably\b.*$/, '')
       .replace(/\s+\+1 Insight Die\b.*$/, '')
     return `${cleaned}${outcomeTag}`
+  }
+  // Unarmed HI bespoke: "X had a Moment of Insight when using Unarmed Combat on Y +1 Insight Die"
+  // The insight text is the narrative, not a suffix - strip badge only, return as-is.
+  if (firstLine && /had a Moment of Insight when/.test(firstLine)) {
+    return firstLine.replace(/\s+\+1 Insight Die\b.*$/, '')
   }
   return null
 }

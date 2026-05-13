@@ -391,8 +391,8 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     // Trim shows the OUTCOME in plain prose; dice math lives behind
     // the ▸ expander.
     const narrative = survived
-      ? `✓ ${leaderName} rallied the survivors and the Community still exists`
-      : `✗ With the members fragmenting in different directions, ${communityName} has dissolved.`
+      ? `${leaderName} rallied the survivors and the Community still exists`
+      : `With the members fragmenting in different directions, ${communityName} has dissolved.`
     const isExpanded = expandedRollIds.has(r.id)
     return (
       <div style={{ marginBottom: '8px', padding: '10px', background: survived ? '#0f1a2e' : '#1a0a0a', border: `1px solid ${color}`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
@@ -511,7 +511,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     // live behind the ▸ expander.
     let narrative: string
     if (willDissolve) {
-      narrative = `⚠ After 3 consecutive failures of confidence in ${leaderName}, ${communityName} has dissolved. All ${dj.membersBefore ?? '?'} members scattered.`
+      narrative = `After 3 consecutive failures of confidence in ${leaderName}, ${communityName} has dissolved. All ${dj.membersBefore ?? '?'} members scattered.`
     } else if (isHit) {
       narrative = `${leaderName} inspired ${communityName} and morale was maintained. The Mood around the Campfire is good.`
     } else {
