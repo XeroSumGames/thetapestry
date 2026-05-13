@@ -4842,17 +4842,14 @@ export default function TablePage() {
           const { data: fullToken } = await supabase.from('scene_tokens').select('contents').eq('id', targetObject.id).single()
           const contents: { type: string; name: string; quantity: number }[] = fullToken?.contents ?? []
           console.warn('[auto-loot] crate destroyed', targetObject.name, 'contents:', contents.length)
+          const active = initiativeOrder.find(ie => ie.is_active)
+          const attackerEntry = (active ? entries.find(e => e.character.id === active.character_id) : null)
+            ?? entries.find(e => e.userId === userId)
+          const attackerNpc = active && !attackerEntry && active.npc_id
+            ? (rosterNpcs.find(n => n.id === active.npc_id) ?? campaignNpcs.find((n: any) => n.id === active.npc_id))
+            : null
+          console.warn('[auto-loot] attackerEntry:', attackerEntry?.character?.name, 'attackerNpc:', (attackerNpc as any)?.name)
           if (contents.length > 0) {
-            const active = initiativeOrder.find(ie => ie.is_active)
-            // Prefer the active combatant; fall back to the current user's PC
-            // so out-of-combat attacks (no initiative running) still route
-            // loot into the right inventory instead of dropping it.
-            const attackerEntry = (active ? entries.find(e => e.character.id === active.character_id) : null)
-              ?? entries.find(e => e.userId === userId)
-            const attackerNpc = active && !attackerEntry && active.npc_id
-              ? (rosterNpcs.find(n => n.id === active.npc_id) ?? campaignNpcs.find((n: any) => n.id === active.npc_id))
-              : null
-            console.warn('[auto-loot] attackerEntry:', attackerEntry?.character?.name, 'attackerNpc:', (attackerNpc as any)?.name)
             if (attackerEntry) {
               const charData = attackerEntry.character.data ?? {}
               const inv: InventoryItem[] = charData.inventory ?? []
@@ -4926,6 +4923,15 @@ export default function TablePage() {
               initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
               traitNotes.push(`Destroyed ${targetObject.name} - ${attackerNpc.name} looted: ${lootedNames.join(', ')}`)
             }
+          } else {
+            // Container was empty - write a "found nothing" row so the feed
+            // records the search even when there's nothing to take.
+            const searcher = attackerEntry?.character?.name ?? (attackerNpc as any)?.name ?? 'Someone'
+            pendingLootLogs.push({
+              campaign_id: id, user_id: userId, character_name: searcher,
+              label: `🎒 ${searcher} looked through the remains of ${targetObject.name} and found nothing`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+            })
           }
         }
       } else if (grenadeTargetCell) {
@@ -7501,6 +7507,14 @@ export default function TablePage() {
                       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
                     })
                     await Promise.all([loadEntries(id), rollsFeed.refetch()])
+                  }}
+                  onSearchEmpty={async (objectName, characterId, characterName) => {
+                    await supabase.from('roll_log').insert({
+                      campaign_id: id, user_id: userId, character_name: characterName,
+                      label: `🎒 ${characterName} looked through the remains of ${objectName} and found nothing`,
+                      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                    })
+                    await rollsFeed.refetch()
                   }}
                   onMove={(() => {
                     // GM can always reposition. Players can only move an object

@@ -31,6 +31,7 @@ interface Props {
   // can self-loot items without going through the GM.
   myCharacter?: { id: string; name: string; data?: any } | null
   onLoot?: (objectName: string, item: ContentItem, characterId: string, characterName: string) => void | Promise<void>
+  onSearchEmpty?: (objectName: string, characterId: string, characterName: string) => void | Promise<void>
   // When provided, renders a "Move" button at the top of the card. Parent
   // decides who gets to see it (GM always; players who are in the token's
   // controlled_by_character_ids list — e.g. drivers of a vehicle). Clicking
@@ -52,7 +53,7 @@ function wpBarColor(pct: number): string {
   return '#c0392b'
 }
 
-export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, myCharacter, onLoot, onMove, onRotate, onClose }: Props) {
+export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, myCharacter, onLoot, onSearchEmpty, onMove, onRotate, onClose }: Props) {
   const supabase = createClient()
   const [properties, setProperties] = useState<TokenProperty[]>([])
   const [contents, setContents] = useState<ContentItem[]>([])
@@ -331,6 +332,17 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
               )
             })}
           </div>
+        </div>
+      )}
+
+      {!loading && canPlayerLoot && contents.length === 0 && myCharacter && (
+        <div style={{ marginTop: '4px' }}>
+          <button
+            onClick={() => onSearchEmpty?.(name, myCharacter.id, myCharacter.name)}
+            style={{ padding: '3px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            Search
+          </button>
         </div>
       )}
 
