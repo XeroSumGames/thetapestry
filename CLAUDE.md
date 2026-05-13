@@ -60,18 +60,23 @@
 
 ## Rulebook references
 
-The authoritative rules for the XSE / Distemper system live as PDFs in `docs/Rules/`. Read them via `pdftotext` (available on the shell) rather than the PDF Read tool — it's faster and doesn't require pdftoppm.
+**Read [`tasks/rules-system-workflow.md`](tasks/rules-system-workflow.md) FIRST before touching any rules content.** It documents the precedence rule, the file layout, the audit pattern, the corrected-output convention, and what I'm after when I ask for an audit or rewrite.
 
-**Precedence when rules conflict** (higher wins):
+**Precedence when rules conflict** (higher wins, locked 2026-05-09):
 
-1. `XSE SRD v1.1.17 (Small).pdf` — **canonical**, most recent. Core mechanics live here (§08 Communities, etc.).
-2. `Distemper CRB v0.9.2.pdf` — Distemper Core Rulebook. Adds setting-flavor rules + Paradigms + Inspiration Lv4 etc. Pre-dates SRD 1.1, so defer to SRD on anything they both cover.
-3. `Distemper Quickstart v0.8.530.pdf` — slim intro, narrative-first. Rule references here are derivative.
-4. `Distemper Chased (Magazine) v0.8.116.pdf` — setting content for Chased (Delaware). Not a rules source; defer to the rulebooks for mechanics.
-5. `The District Zero Sourcebook v0.9.04.pdf` — setting content for District Zero. Narrative + NPCs + pins. Defer to rulebooks for mechanics.
-6. `The District Zero Road to Citizenship Sourcebook v0.1.01.pdf` — supplementary District Zero content.
+1. **Tapestry canon** — `lib/xse-schema.ts` (data) + `app/rules/*` pages (prose). The export at `tasks/tapestry-rules-canon.md` is the snapshot for offline audits — regenerate via `npx tsx scripts/export-canon.ts > tasks/tapestry-rules-canon.md` whenever the schema or rules pages change.
+2. **Distemper Quickstart** (`Distemper Quickstart (Book) v1.0.2.pdf` and successors) — beginner-facing booklet. Pre-dates current canon; rule references here are derivative.
+3. **XSE SRD** (`XSE SRD Export v1.1.17.pdf`) — generic engine reference. Pre-dates canon's most recent additions (Communities chapter expansions, Lv4 Skill Traits, Negotiations, etc.). Defer to canon on anything they both cover.
+4. **Distemper Core Rulebook** (`Distemper CRB v0.9.2.pdf` / `Distemper Core Rules v0.9.3 (Claude Edit).docx`) — full Core Rulebook. Setting flavor + expanded mechanics. Lowest priority — anything that contradicts canon must be revised.
 
-**Pre-digested extracts** (when written) live in `tasks/rules-extract-*.md` — consult those first for a given subsystem before re-reading the PDFs, and audit them against the source when something feels off.
+**Setting-content sources** (not rules sources; defer to canon for mechanics):
+- `Distemper Chased (Magazine) v0.8.116.pdf` — setting content for Chased (Delaware).
+- `The District Zero Sourcebook v0.9.04.pdf` — setting content for District Zero. Narrative + NPCs + pins.
+- `The District Zero Road to Citizenship Sourcebook v0.1.01.pdf` — supplementary District Zero content.
+
+**Note on the SRD PDF**: it has a font-encoding bug that breaks `pdftotext`. Use `python-docx` for docx files and PyMuPDF (`fitz`) for the SRD PDF specifically. PDF Read tool also fails (no `pdftoppm`); claude.ai chat reads it natively via vision if you need a quick scan.
+
+**Pre-digested extracts** (when written) live in `tasks/rules-extract-*.md` — consult those first for a given subsystem before re-reading the PDFs, and audit them against the source when something feels off. The `tasks/tapestry-rules-canon.md` snapshot supersedes the older `rules-extract-*.md` files where they overlap.
 
 Existing spec files (`tasks/spec-communities.md`, `tasks/spec-modules.md`) are implementation specs written from these rules. If the spec and the rules disagree, the rules are canonical — update the spec, don't code the wrong thing.
 

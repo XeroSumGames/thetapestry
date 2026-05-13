@@ -14,6 +14,51 @@
 ## Roll-Feed Log canonical template
 - **`tasks/roll-feed-log-preview.html` is the source of truth for log rendering** (locked 2026-05-12). The file is a 758-line standalone HTML reference that covers every banner type (Combat Start/End, Initiative, Drop, Defer, Sprint, Skill Check, Attack, Damage, Heal, Stabilize, Status In/Out, NPC Down, Session End, Time Skip, etc.), every row anatomy (`<span class="nm pc/npc">` + `<span class="dice">` + `<span class="amod/smod/cmod">` + `<span class="total">` + `<span class="out amber/green/salmon">`), the ▸ expand-toggle pattern, color tokens via CSS vars (`--text-strong`, `--salmon`, etc.), and the canonical narrative trims for every outcome value. Banned-copy rules baked in: no "(critical)", no em/en-dash, no capital "CDP". When adding any new row/banner/outcome to `components/RollsFeed.tsx` or `lib/roll-helpers.ts:compactRollSummary`, **open the template first**, find an analogous existing row, and mirror its class names + structure + narrative shape. Don't invent new visual treatments unless the template doesn't have one (and then add it to the template in the same commit so the canon doesn't drift). Audit task on the backlog: scope (b) live-feed reconciliation against this file.
 
+## Roll-Feed Log Patterns (2026-05-10)
+
+**UNIFIED ROW pattern — one mechanic, one row.** When a single in-game event has both a dice roll AND a downstream effect-broadcast, write **one row** that carries both, not two. Set:
+- `character_name` = the actor (NOT 'System')
+- `label` = the narrative outcome (e.g. `🎯 Marv Successfully coordinated an attack against Avery Xavier with Frankie, Wilson`)
+- `die1` / `die2` / `amod` / `smod` / `cmod` / `total` = the real roll values
+- `outcome` = the real roll outcome (`'Success'` / `'Wild Success'` / `'High Insight'`)
+- `insight_awarded` = `outcome === 'High Insight'` for PCs
+
+Then suppress the standalone `saveRollToLog` write by adding the label to the `isTrimmedRoll` check in `executeRoll` (`app/stories/[id]/table/page.tsx:5478`). `compactRollSummary` strips the emoji and renders the trim; `▸` expands to the dice breakdown.
+
+Reference implementation: Coordinate-success (commit `<pending>`). Sprint is the older pattern (custom outcome value + bespoke banner); both work, but UNIFIED is preferred when the dice math is interesting and the narrative is short.
+
+**Anti-pattern (do not do):** two rows — one for the dice roll, one for the System effect. The second row has `0+0` dice and reads as a duplicate. Visible bug shipped via the Coordinate flow until 2026-05-10.
+
+**Trim pattern for every new outcome value:**
+1. Pick whether the row is Tier A (bespoke banner with its own JSX in `RollsFeed.tsx`) or Tier B (narrative trim via `compactRollSummary`).
+2. Tier B: add a branch in `lib/roll-helpers.ts:compactRollSummary` that matches your label / outcome and returns the trimmed sentence. Return `null` falls through to the verbose dice card — only acceptable when the row genuinely has no compact form.
+3. Hide the `▸` pip on rows with `die1 = die2 = 0` (auto — handled by `hasRealDice` in `RollEntryCard`). If the row has no real dice, design the narrative to stand on its own.
+4. Banned in copy: `(critical)` (use 'Moment of Insight as to why it went so well'), em-dash `—`, en-dash `–`, capital `CDP` (use 'Character Development Points').
+5. Wild/HI global tag: ` and has a Moment of Insight as to why it went so well`.
+6. LI global tag: ` and has a Moment of Insight as to why it went so badly`.
+7. Per-check bespoke overrides (Unarmed HI, Stabilize HI, First Impression HI/LI, Group Check LI) live alongside the general pattern and replace the global tag wholesale.
+
+## Rules System — full workflow
+
+**Read [`tasks/rules-system-workflow.md`](rules-system-workflow.md) first.** It's the canonical doc for everything below. Rules below are supplementary lessons learned during audits.
+
+## CRB / Rules Audit Workflow (2026-05-09)
+- **Audit precedence is immutable**: Tapestry canon (`tasks/tapestry-rules-canon.md`) > Quickstart > SRD > CRB. Anything in a lower source that contradicts a higher source must be flagged for rewrite, not preserved. Canon is the live platform code (`lib/xse-schema.ts` + `app/rules/*`).
+- **Audit findings get split four ways**: 🔴 CONTRADICTION (direct disagreement, must fix), 🟡 STALE (canon revised since, update to match), 🟢 CRB-UNIQUE (not in canon, no conflict — user decides keep/drop/promote), ⚪ TYPO/GRAMMAR (deferred, batched at end). The four-tag system maps cleanly onto how the user wants to act on each.
+- **Chapter-by-chapter pacing beats whole-book passes**: a single CRB-sized PDF (~195 pages) won't fit in one response. Process by user-specified page range, append findings to a running log file (`tasks/froms-tos-crb.md`), summarize per-chapter counts in chat. The user picks the page ranges; don't auto-advance.
+- **CRB-unique content gets sorted into 4 tiers, not just kept/dropped**: Tier 1 = strong canon promotion (fills real gap), Tier 2 = setting-supplement (Distemper-specific, not core canon), Tier 3 = optional GM-aid (playtest first), Tier 4 = drop. The four-tier sort is what feeds the roadmap.
+- **Two-document export pattern after a long audit**: long-term canon-promotion strategy lives in `tasks/roadmap.md` (new file), concrete next-action items get prepended to `tasks/todo.md` flagged sections. Roadmap and todo answer different questions ("what should canon look like" vs "what's queued") — keep them separate but cross-link.
+- **Substitution-pass workflow**: after the audit produces the FROM/TO blocks, the rewrite phase is mechanical — receive a chapter txt (or pdftotext extract), apply only the canon-mismatch substitutions from the audit, leave grammar/spelling alone, write the corrected text to a parallel file. User explicit: "this is NOT about spelling or grammar, just about replacing what's old with what's new." Don't expand scope.
+
+## Promote-to-canon flow + corrected docx export (2026-05-09 follow-up)
+- **Always regenerate canon BEFORE auditing**: `npx tsx scripts/export-canon.ts > tasks/tapestry-rules-canon.md`. Skipping this means the audit runs against stale canon and findings will be wrong. Build it into every rules-audit todo as step zero.
+- **Promote-to-canon = full code change + recompile, not just markdown**: when a 🟢 CRB-unique mechanic gets promoted, update `lib/xse-schema.ts` if it's data, OR add/update a page under `app/rules/*` if it's prose, AND update `scripts/export-canon.ts` if the new content needs explicit prose handling beyond what the schema auto-flows. Then regen canon.md, run `npx tsc --noEmit` (after `rm -rf .next` to clear the stale validator), commit as a single `feat(rules): promote N CRB-unique mechanics into canon`.
+- **New top-level rules pages need nav wiring too**: when adding a page under `app/rules/X/Y/page.tsx`, also add the anchor to `lib/rules/sections.ts` `RULE_SECTIONS[].anchors`. Otherwise the page exists but doesn't appear in the left-rail nav.
+- **`pdftotext` breaks on the SRD font**: PDF was authored with a custom font where lowercase letter glyphs aren't unicode-mapped. `pdftotext` strips most lowercase chars. Use PyMuPDF (`fitz`) instead — installed at the user's Python 3.13 path. For docx, use `python-docx`. For Quickstart-export PDFs, regular `pdftotext -layout` works fine.
+- **Corrected-doc output goes to two places**: working copy at `tasks/_work/<doc>-CORRECTED.txt` for repo tracking, plus a sibling copy next to the original docx in the user's OneDrive (e.g. `C:\Users\tony_\OneDrive\Distemper\01. Rules System\01. Core Rules\<doc>-CORRECTED.txt`). The OneDrive copy is what the user actually opens.
+- **The script-driven docx-edit pattern is reusable**: `tasks/_work/apply_<doc>_edits.py` opens the docx via `python-docx`, walks paragraphs, applies a mix of (a) whole-paragraph replacements via `(needle_substring, replacement)` pairs (first-match-wins), (b) substring replacements applied to every paragraph, and (c) paragraph insertions at named anchor points. Keeps the logic explicit and idempotent. Reuse this pattern for any future docx-CRB-edit task.
+- **Reverse-audit beats forward-audit when the doc looks already-aligned**: instead of "audit X against canon", ask "does X already match canon, and what gaps exist?". Same severity tagging applies. Reverse-audit on the CRB v0.9.3 (Claude Edit) found only 18 issues vs the Quickstart v0.1.01's 50 — useful signal that a doc has already had a canon-alignment pass.
+
 ## Database & Auth
 - **Role is now normalized to lowercase**: DB trigger `trg_normalize_role` auto-lowercases `profiles.role` on insert/update. All existing rows backfilled. Always compare against `'thriver'` / `'survivor'` (lowercase). No more `.toLowerCase()` needed — but harmless if left in.
 - **Supabase email-confirmation links use `verifyOtp`, not `exchangeCodeForSession`**: confirmation emails carry `?token_hash=<...>&type=signup`, not `?code=<...>`. The latter is for OAuth/PKCE. A `/auth/callback` route built only for `code=` silently fails on every signup-confirmation click. Branch on which params are present and call the right API. Cost: an end-to-end signup test on 2026-05-08C produced "Invalid login credentials" because email never got marked confirmed.

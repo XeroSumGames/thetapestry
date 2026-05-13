@@ -6,9 +6,9 @@
 
 ---
 
-## 🔲 Flagged 2026-05-13 — Loot "found nothing" write path missing
+## 🔲 Flagged 2026-05-13 — Loot "found nothing" write path (partial)
 
-- [ ] **Loot: write "found nothing" row for empty containers** - when a player/GM searches a corpse or container with no items, the code silently skips the log write entirely. Need to write a `outcome: 'loot'` row with label `🎒 X searched the corpse of Y and found nothing` (corpse) or `🎒 X looked through the remains of Y and found nothing` (object) when contents is empty. `compactRollSummary` already handles these labels (added 2026-05-13); only the write in `app/stories/[id]/table/page.tsx` (`ObjectCard.tsx` `onLoot` path + auto-loot `contents.length === 0` branch) is missing.
+- [ ] **Loot: "found nothing" write for `CampaignObjects.tsx`** - auto-loot + `ObjectCard` player search now write the row (commit `ec5d844`). `CampaignObjects.tsx` (campaign sidebar loot UI) still silently skips empty containers. Needs same `onSearchEmpty`-style callback added there.
 
 ---
 
@@ -18,11 +18,84 @@
 
 ---
 
+## 🔲 Flagged 2026-05-09 — Canon promotions from CRB audit
+
+Source: [tasks/froms-tos-crb.md](froms-tos-crb.md) audit of Distemper CRB v0.9.2 against `tasks/tapestry-rules-canon.md`. Strategic ordering in [tasks/roadmap.md](roadmap.md). Verify against live platform state before drafting; some may already be partly implemented per the `Inventory system shipped` memory.
+
+**Tier 1 — High-value canon gap fills (priority order):**
+
+- [ ] **1. Item Condition + Upkeep Check** — five-state degradation (Pristine / Used / Worn / Damaged / Broken), Upkeep Check rules (skill-of-the-tool, drop on Dire Failure, Wild-Success caps at Used). Verify against live inventory page; if implemented, document in canon §07. CRB Ch. 06 pp. 67–70.
+- [ ] **2. Vehicle subsystem + Vehicles-as-Cover** — Rarity, Size 1–6, Speed 1–5, WP = size×10 + size·d6, Encumbrance = size×20, Range with ethanol/methanol modifiers, Cover-as-RDM by size. Highest-value canon gap; platform already has cargo/vehicle surface. CRB Ch. 08 pp. 138–141.
+- [ ] **3. Activity Block taxonomy** — formal Daily / Weekly / Monthly / Seasonal time-granularity ladder. Canon §08 uses "weekly" but never names the four tiers. Tiny addition that unblocks naming across many other rules. CRB Ch. 08 pp. 147–148.
+- [ ] **4. NPC threat tiers** — Friendlies / Goons / Foes / Antagonists with stat-block templates. GM-side scaffolding, zero conflict. CRB Ch. 10 pp. 174–175.
+- [ ] **5. Falling / Drowning / Subsistence Damage** — three small independent additions:
+  - Falling: 3 WP + 3 RP per 10 ft.
+  - Drowning: 6 + PHY AMod rounds breath; 3 WP + 3 RP per round after, with -1 CMod per resist.
+  - Subsistence: 1 WP + 1 RP per day past day 2 without food/water.
+  - CRB Ch. 07 pp. 116–117. (Subsistence supersedes the older 2026-05-08 flagged item below.)
+- [ ] **6. Travel Times subsystem** — 8h travel + 8h rest + 8h sleep cycle; 1 RP/hour overage past 8h. CRB Ch. 08 p. 142.
+- [ ] **7. Resource Quality / Supplies abstraction** — Common / Uncommon / Rare units of generic Supplies as a resource currency. Anchors Communities economy. CRB Ch. 08 pp. 131, 133.
+- [ ] **8. Per-activity yield rates** — Scavenging 2/Daily, Foraging 2 Standard, Fishing 2 Luxury, Trapping 1 Luxury/trap, Hunting 10 Luxury (15 Wild), Farming season → 90 days at 1 Standard each. CRB Ch. 08 pp. 134–136. Depends on (1) and (7) landing first.
+- [ ] **9. Base of Operations sizing** — Tiny (≤4) / Small (≤12) / Medium (≤36, min for Homestead) / Large (≤300) / Massive (≤1000), with monthly Supplies cost. Pre-Community gap. CRB Ch. 09 pp. 152–155.
+
+**Tier 2 — Distemper-supplement content (not core canon):**
+
+- [ ] **Dog Flu signature mechanic** — 1 WP+RP per 6h, severity-tier disease. Reconcile with canon Sick state. CRB Ch. 10 pp. 184–186.
+- [ ] **Distemper-Infected Canines** — +1 Athletics & Unarmed Combat tag for infected wolves/dogs. CRB Ch. 10 pp. 196–197.
+- [ ] **Fuel subsystem** — gasoline spoilage, ethanol -66% range / -1 Speed, methanol -80% range, still build/conversion costs. Hangs off Vehicles if Tier 1 (2) lands. CRB Ch. 08 pp. 145–146.
+- [ ] **Government Remnants / Beacons of Hope factions** — Cunningham + American Colonial Forces (Washington); Buchanan (Manhattan); Wilkerson (New Philly). Cross-check no territorial overlap. Chs. 08, 10.
+
+**Tier 3 — Optional GM-aid promotions (playtest first):**
+
+- [ ] **Negotiations Gambit / Rebuttal** — two-step Opposed Check structure for social scenes. CRB Ch. 10 p. 178.
+- [ ] **Morality loss/regain ladder** — 3 lost → -1 INF; 6 regained → +1 INF; INF floor at -2. Puts teeth on canon's "Morality starts at 3." CRB Ch. 10 pp. 181–182.
+- [ ] **Called Shots** — Wild Success required, freeform effect via Fill in the Gaps. CRB Ch. 07 p. 119.
+- [ ] **Tactical Advantages** — +1 to +3 CMod GM-discretion catch-all. CRB Ch. 07 p. 119.
+- [ ] **Chases subsystem** — Speed-matched Opposed Athletics/Animal Handling/Driving across range bands; escape at Distant. CRB Ch. 08 p. 141.
+- [ ] **Banishment** — Code-of-Conduct teeth for Communities. CRB Ch. 09 p. 165.
+- [ ] **Luxury Ration clears 1 Stress pip** — gives Luxury Rations a real purpose. Compatible with canon Cooling Off. CRB Ch. 08 p. 133.
+- [ ] **Mundane vs Complex Tasks split** + Simplified Group Check (+2 CMod per participant, no AMods/SMods, Mundane-only label). CRB Ch. 09 pp. 166–167.
+- [ ] **Apprentice continuity on PC death** — player promotes Apprentice → PC. CRB Ch. 09 p. 173.
+
+**Tier 4 — Skip / drop (don't promote, recommend dropping from CRB):**
+
+- Stacking +1 CMod patterns (second Attack / Cover Fire / Defend in same round).
+- Distract↔Inspire backfire symmetry on Dire Failure.
+- Helper-clears-Stress check (conflicts with Cooling Off).
+- Eight Explosive / Special weapons (Grenade, Smoke, Flashbang, Mortar, RPG, Flamethrower, Molotov, Tranquilizer Gun) — only promote if encounter design wants explosives.
+
+---
+
+## 🔲 Flagged 2026-05-09 — CRB rewrite tracking
+
+Audit produced ~150 FROM/TO blocks across Chs. 01–10. See [tasks/froms-tos-crb.md](froms-tos-crb.md) for full per-chapter listing. Largest cross-cutting fixes:
+
+- [ ] **DMM/DMR → MDM/RDM** sweep (every chapter, ~40 sites including 33 NPC stat blocks).
+- [ ] **Intimidation skill removal** — replace with Manipulation or Psychology\* across Chs. 05, 07, 09, 10 (~12 sites).
+- [ ] **General Knowledge → Specific Knowledge** sweep (Chs. 04, 05, 07).
+- [ ] **Mechanics\* → Mechanic\*** plural sweep (Chs. 06, 08).
+- [ ] **Panic Threshold / Stress counter → Stress Level (0–5) + Stress Modifier (RSN+ACU AMod)** — wholesale replacement across Chs. 05, 07, 08, 10.
+- [ ] **Insight Dice on Death** — "1 WP + 1 RP per die" → "1 WP + 1 RP total" at three sites (CRB pp. 28, 122, plus the live `app/rules/core-mechanics/insight-dice/page.tsx` which still has the bug).
+- [ ] **Lv4 Skill Trait paragraphs** — pull from all 24 skill descriptions in Ch. 05 §05 pending unified Lv4 trait release.
+- [ ] **Combat Actions table** — 17 actions, "Grapple" (not Grappling), drop "Skill Check" action (Ch. 07 p. 108).
+- [ ] **CMod ladder labels** — all 11 tiers renamed (Ch. 04 pp. 22, 25–26).
+- [ ] **All 12 Profession bundles** — wholesale 7-skill → 5-skill replacement (Ch. 05 pp. 41–43).
+- [ ] **Paradigm roster** — 16 → 12: drop Beat Cop, Cosmetic Surgeon, Family Doctor, Flea Market Trader, Handyman, Semi-Pro Athlete, Trucker; add Antiques Dealer + Hot Rod Mechanic; rename "Business Owner" body → "Bar Owner" (Ch. 05 pp. 62–65).
+- [ ] **Range Band movement** — Engaged → Close = 3 (not 1), → Medium = 6 (not 3), → Long = 10 (not 6), → Distant = 15 (not 10). Ch. 07 pp. 117–118.
+- [ ] **Morale Check structure** — replace freeform CMod list with canon's 6 named slots (Mood / Fed / Clothed / Enough Hands / A Clear Voice / Someone To Watch Over Me / Adjusted). Ch. 09 p. 164.
+- [ ] **Morale outcomes** — replace "1d6 / 2d6 leave" with canon's percentage attrition (25% / 50% / 75%) and Mood-carryforward values. Ch. 09 pp. 164–165.
+- [ ] **Fed Check + Clothed Check** — both missing entirely from the CRB; insert canon's two 6-row outcome tables. Ch. 09 p. 167.
+- [ ] **Apprentice unlock** — Wild Success OR High Insight → **High Insight only** (3 sites: Cohort, Conscript, Convert + Apprentices section). Ch. 09 pp. 169–172.
+- [ ] **Apprentice creation CDP** — add canon's 3 RAPID + 5 skill CDP allocation. Ch. 09 p. 173.
+>>>>>>> Stashed changes
+
+---
+
 ## 🔲 Flagged 2026-05-08 — Rules coverage
 
 - [ ] **Infection audit** - verify Infection condition/progression/treatment is fully implemented against the SRD.
 - [ ] **Armor system** - build armor into character sheet (slots/worn), damage calc (DR), and inventory. Needs SRD rules-extract first.
-- [ ] **Subsistence Damage + Rations** - SRD §06: 1 RP/day after day 1 without food. Quickstart tracks Rations (2 starting). Not yet in the platform. Decision needed: scope to canon, then build Rations as inventory item + daily Subsistence Damage tick. Flagged from SRD audit item A.10.
+- [ ] **Subsistence Damage + Rations** - SRD §06: 1 RP/day after day 1 without food. Quickstart tracks Rations (2 starting). Not yet in the platform. Decision needed: scope to canon, then build Rations as inventory item + daily Subsistence Damage tick. Flagged from SRD audit item A.10. **Note**: CRB Ch. 07 p. 117 specifies 1 WP + 1 RP per day (not just 1 RP) past day 2 without food/water — see Tier 1 (5) above for the canon-grade spec.
 
 ---
 
