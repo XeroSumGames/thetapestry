@@ -796,23 +796,41 @@
 (function () {
   // Outcome inference reads the row's border color AND looks for the
   // insight-badge to differentiate HI/LI (which share green/red borders
-  // with WS/DF). Previously this function lumped all green rows as
-  // "Wild Success" and all red as "Dire Failure" - that produced a
-  // contradictory expansion on HI/LI rows (narrative said "Moment of
-  // Insight", dice said "Wild Success"). Fixed 2026-05-13.
+  // with WS/DF).
+  //
+  // Two color sources: (1) `.row.green/red/amber/blue` class on standard
+  // rows, (2) inline `border-left: ... var(--green)` style on banners
+  // (which don't use the color class). Without the banner branch every
+  // bespoke banner expansion was falling through to the default
+  // "Success" - including Group Check HI/LI banners that should read
+  // "High Insight" / "Low Insight".
+  function detectColor(row) {
+    if (row.classList.contains('green')) return 'green'
+    if (row.classList.contains('red')) return 'red'
+    if (row.classList.contains('amber')) return 'amber'
+    if (row.classList.contains('blue')) return 'blue'
+    const style = row.getAttribute('style') || ''
+    if (style.includes('var(--green)')) return 'green'
+    if (style.includes('var(--red)')) return 'red'
+    if (style.includes('var(--amber)')) return 'amber'
+    if (style.includes('var(--blue)')) return 'blue'
+    if (style.includes('var(--salmon)')) return 'red'
+    return 'blue'
+  }
   function inferOutcome(row) {
     const hasInsightBadge = !!row.querySelector('.insight-badge')
-    if (row.classList.contains('green')) {
+    const color = detectColor(row)
+    if (color === 'green') {
       return hasInsightBadge
         ? { key: 'green', label: 'High Insight' }
         : { key: 'green', label: 'Wild Success' }
     }
-    if (row.classList.contains('red')) {
+    if (color === 'red') {
       return hasInsightBadge
         ? { key: 'red', label: 'Low Insight' }
         : { key: 'red', label: 'Dire Failure' }
     }
-    if (row.classList.contains('amber')) return { key: 'amber', label: 'Failure' }
+    if (color === 'amber') return { key: 'amber', label: 'Failure' }
     return { key: 'blue', label: 'Success' }
   }
 
