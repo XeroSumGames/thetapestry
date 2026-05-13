@@ -22,14 +22,23 @@ A player who wants to attempt something significant where multiple PCs can each 
 - **2c.** GM does not gate the flow at any point. No approval, no notification, no review step.
 - **2d.** Separate feature from Group Check — different code path, different UI affordance. Group Check stays as the single-leader-pooled-stats model (see `tasks/spec-group-check.md`); Coordinated Effort is the multi-individual-roll model.
 
-## Open implementation questions (resolve before coding)
+## Decisions locked 2026-05-13
 
-- **Helper Insight Dice:** can a helper spend an Insight Die on their helper roll? Default assumption: yes, same as any normal roll.
-- **Helper insight award:** if a helper rolls HI or LI, does THEY get a +1 Insight Die personally? Default assumption: yes — HI/LI award the rolling character regardless of whether the roll is part of a Coordinated Effort.
-- **Modifier ladder for final roll:** Success +1 / WS +2 / HI +3 / Failure -1 / DF -2 / LI -3 — confirm or specify a different ladder.
-- **Initiator's eligible skills:** are they restricted to skills they have a level in, or can they initiate on a skill they're untrained in? Default: anyone can initiate on any skill (the helpers might carry them).
-- **Action consumption:** does each helper roll consume one of that character's combat actions if combat is active? Default: yes if combat-tied, no if out of combat (matches normal roll behavior).
-- **Feed shape:** one bespoke "Coordinated Effort" banner row that summarizes all the sub-rolls, or one row per helper + a final-result banner? Recommend bespoke summary banner with an expand showing each helper's dice.
+- **Modifier ladder** (helper outcome → modifier on initiator's final roll):
+  - Success → +1
+  - Wild Success → +2
+  - High Insight → +3
+  - Failure → -1
+  - Dire Failure → -2
+  - Low Insight → -3
+- **Helper Insight Dice spend:** YES — a helper can spend an Insight Die on their helper roll (3d6 keep-all or +3 CMod), same as any normal roll.
+- **Helper personal HI/LI award:** YES — if a helper rolls HI or LI on their helper roll, THEY receive a +1 Insight Die personally, independent of the Coordinated Effort outcome.
+- **Action consumption in combat:** YES — each helper roll consumes 1 combat action from that helper when combat is active. Out of combat, no action cost (matches normal roll behavior).
+- **Initiator's eligible skills:** anyone can initiate on any skill (helpers might carry them).
+
+## Open implementation questions (small, resolve at code time)
+
+- **Feed shape:** one bespoke "Coordinated Effort" banner row that summarizes all the sub-rolls, or one row per helper + a final-result banner? Default recommendation: bespoke summary banner with an expand showing each helper's individual dice + outcomes.
 
 ## Schema impact
 
