@@ -374,7 +374,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       const name = failMatch[1]
       const target = failMatch[2]
       const rollOutcome = failMatch[3]
-      if (rollOutcome === 'Dire Failure' || rollOutcome === 'Low Insight') {
+      // LI carries the canon Moment-of-Insight tag; DF does not (HI/LI only
+      // per Xero 2026-05-11). Earlier version lumped both into the same
+      // "it went badly" branch with no LI tag.
+      if (rollOutcome === 'Low Insight') {
+        return `${name} tried to recruit ${target} - it went badly and has a Moment of Insight as to why it went so badly`
+      }
+      if (rollOutcome === 'Dire Failure') {
         return `${name} tried to recruit ${target} - it went badly`
       }
       return `${name} tried to recruit ${target} but it didn't go well`
