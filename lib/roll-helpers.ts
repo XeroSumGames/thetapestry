@@ -438,7 +438,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       // - newcomers shouldn't have to decode "CDP" in the live feed.
       // Pluralize 'Point' on counts != 1 for grammatical correctness.
       const noun = cdp === '1' ? 'Character Development Point' : 'Character Development Points'
-      return `${charName} spent ${cdp} ${noun} raising ${what} from Lv ${fromLv} to Lv ${toLv}`
+      return `${charName} spent ${cdp} ${noun} raising ${what} from ${fromLv} to ${toLv}`
     }
     return r.label.replace(/^📈\s*/, '')
   }
@@ -546,7 +546,9 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       if (names.length <= 1) nameList = `${names[0] ?? 'Someone'} is overencumbered`
       else if (names.length === 2) nameList = `${names[0]} and ${names[1]} are both overencumbered`
       else nameList = `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]} are all overencumbered`
-      return `Time advances ${timePart}, ${nameList}`
+      const hours = parseInt(timePart, 10)
+      const hourStr = isNaN(hours) ? timePart : `${hours} ${hours === 1 ? 'hour' : 'hours'}`
+      return `time advances ${hourStr}, ${nameList}`
     }
     return r.label.replace(/^⏳\s*/, '')
   }
