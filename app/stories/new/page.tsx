@@ -49,6 +49,14 @@ export default function NewCampaignPage() {
   const [locationQuery, setLocationQuery] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const [customCenter, setCustomCenter] = useState<{ lat: number; lng: number } | null>(null)
+  // Custom-Setting start date. All three are independent strings so the
+  // user can fill them in any order and we only commit when all three are
+  // valid. Year is Year 0 - Year 20 (Year 1 = pandemic start; Year 0 is
+  // pre-pandemic prologue territory; the system tolerates negative
+  // canon_day for pre-pandemic campaigns).
+  const [startMonth, setStartMonth] = useState<string>('')
+  const [startDay, setStartDay] = useState<string>('')
+  const [startYear, setStartYear] = useState<string>('')
   // Phase 5 Sprint 1 — Module picker; see /campaigns/new for notes.
   const [modules, setModules] = useState<ModuleListing[]>([])
   const [pickedModuleVersionId, setPickedModuleVersionId] = useState<string>('')
@@ -113,6 +121,25 @@ export default function NewCampaignPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // canon_day = days since 2-Mar-Year1 (first recorded H724 death).
+  // 365-day flat years (matches the rest of the campaign-clock math
+  // which doesn't model leap years). Returns null when any field is
+  // missing or out of range; the UI gates on that to avoid showing
+  // garbage math for half-filled forms.
+  function computeCanonDay(month: string, day: string, year: string): number | null {
+    const m = parseInt(month, 10)
+    const d = parseInt(day, 10)
+    const y = parseInt(year, 10)
+    if (!Number.isFinite(m) || !Number.isFinite(d) || !Number.isFinite(y)) return null
+    if (m < 1 || m > 12 || d < 1 || d > 31 || y < 0 || y > 20) return null
+    // Cumulative days at the start of each month (non-leap year).
+    const DAYS_BEFORE_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
+    const dayOfYear = DAYS_BEFORE_MONTH[m - 1] + d  // 1..365
+    // March 2nd = day 31 + 28 + 2 = 61.
+    return (y - 1) * 365 + (dayOfYear - 61)
+  }
+  const startCanonDay = computeCanonDay(startMonth, startDay, startYear)
+
   async function handleCreate() {
     if (!name.trim()) return
     setSaving(true)
@@ -128,6 +155,12 @@ export default function NewCampaignPage() {
       : null
     const seedCenterLat = pickedCommunity ? pickedCommunity.lat : customCenter?.lat ?? null
     const seedCenterLng = pickedCommunity ? pickedCommunity.lng : customCenter?.lng ?? null
+    // Custom Setting only: if the GM filled in a start date, seed
+    // campaigns.clock with the computed canon_day so the campaign opens
+    // on that in-world day. Other settings keep the default {0,0}.
+    const clockSeed = setting === 'custom' && !pickedModuleVersionId && startCanonDay !== null
+      ? { clock: { canon_day: startCanonDay, hour: 0 } }
+      : {}
     const { data, error: err } = await supabase.from('campaigns').insert({
       name: name.trim(),
       description: description.trim(),
@@ -141,6 +174,7 @@ export default function NewCampaignPage() {
       gm_user_id: user.id,
       invite_code,
       status: 'active',
+      ...clockSeed,
     }).select().single()
     if (err) { setError(err.message); setSaving(false); return }
     // GM auto-joins as member
@@ -352,6 +386,47 @@ export default function NewCampaignPage() {
             ))}
           </div>
         </div>
+
+        {/* Custom Setting → start date. Renders above Starting Location.
+            Lets the GM pick a day/month/year-of-pandemic for their
+            campaign. Computes canon_day = days since 2-Mar-Year1 (first
+            recorded H724 / Dog Flu / Distemper death). Negative values
+            allowed for pre-pandemic prologue campaigns. Optional - if
+            blank, campaign starts at canon_day 0 (the default). */}
+        {setting === 'custom' && !pickedModuleVersionId && (
+          <div style={{ marginBottom: '16px' }}>
+            <label style={lbl}>Campaign Start Date</label>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', fontStyle: 'italic' }}>
+              The 1st recorded death from the Dog Flu (H724 / the Distemper) was on March 2nd, Year 1.
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <select value={startMonth} onChange={e => setStartMonth(e.target.value)} style={{ ...inp, flex: 1 }}>
+                <option value="">Month</option>
+                {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+                  <option key={m} value={String(i + 1)}>{m}</option>
+                ))}
+              </select>
+              <input type="number" value={startDay} onChange={e => setStartDay(e.target.value)}
+                placeholder="Day" min={1} max={31}
+                style={{ ...inp, width: '70px' }} />
+              <select value={startYear} onChange={e => setStartYear(e.target.value)} style={{ ...inp, flex: 1 }}>
+                <option value="">Year</option>
+                {Array.from({ length: 21 }, (_, i) => (
+                  <option key={i} value={String(i)}>Year {i}</option>
+                ))}
+              </select>
+            </div>
+            {startCanonDay !== null && (
+              <div style={{ fontSize: '13px', color: startCanonDay >= 0 ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+                {startCanonDay === 0
+                  ? 'The day the pandemic was declared.'
+                  : startCanonDay > 0
+                    ? `${startCanonDay} days since the first recorded death.`
+                    : `${Math.abs(startCanonDay)} days before the first recorded death.`}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Custom Setting → Starting Location (renders BEFORE the module
             picker so a player choosing 'Custom' can pin the map without
