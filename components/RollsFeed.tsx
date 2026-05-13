@@ -448,11 +448,11 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     // Narrative bodies - trim shows what HAPPENED; the dice math +
     // Next-Morale CMod live behind the ▸ expander.
     const successBody = r.outcome === 'fed_check'
-      ? 'They were successful and residents will eat this week.'
-      : 'They were successful and residents have what they need.'
+      ? 'The residents were successful and will eat this week.'
+      : 'The residents were successful and have what they need.'
     const failBody = r.outcome === 'fed_check'
-      ? 'They were unsuccessful, and residents will go hungry this week.'
-      : 'They were unsuccessful, and residents will go without.'
+      ? 'The residents were unsuccessful and will go hungry this week.'
+      : 'The residents were unsuccessful and will go without this week.'
     const body = isHit ? successBody : failBody
     const isExpanded = expandedRollIds.has(r.id)
     return (
