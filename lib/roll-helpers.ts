@@ -259,12 +259,20 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (r.outcome === 'coordinate') {
     return r.label.replace(/^🎯\s*/, '')
   }
-  // Unjam - "Unjam - <weaponName> (<skill>)"
+  // Unjam (firearm) - "Unjam - <weaponName> (<skill>)"
   const unjamMatch = suffix.match(/^Unjam\s+-\s+(.+?)(?:\s*\(|$)/)
   if (unjamMatch) {
     const wName = unjamMatch[1].trim()
     return hit ? `${r.character_name} unjams their ${wName}${outcomeTag}`
                : `${r.character_name} fails to unjam their ${wName}${outcomeTag}`
+  }
+  // Repair (melee) - "Repair - <weaponName> (<skill>)". Mirror of Unjam for
+  // melee weapons - they malfunction rather than jam, so the verb is repair.
+  const repairMatch = suffix.match(/^Repair\s+-\s+(.+?)(?:\s*\(|$)/)
+  if (repairMatch) {
+    const wName = repairMatch[1].trim()
+    return hit ? `${r.character_name} repairs their ${wName}${outcomeTag}`
+               : `${r.character_name} fails to repair their ${wName}${outcomeTag}`
   }
   // Upkeep - "Upkeep - <weaponName>". Each outcome maps to its own
   // narrative because the mechanical effect varies (improve vs.

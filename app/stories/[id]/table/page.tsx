@@ -5245,10 +5245,15 @@ export default function TablePage() {
       }
     }
 
-    // Unjam result - adjust weapon condition (same logic as Upkeep)
+    // Unjam (firearm) / Repair (melee) result - adjust weapon condition (same logic as Upkeep)
     let unjamResult = ''
-    if (pendingRoll.label.startsWith('Unjam - ') && myEntry) {
-      const weaponName = pendingRoll.label.replace(/^Unjam - (.+?) \(.+\)$/, '$1')
+    const isUnjamLabel = pendingRoll.label.startsWith('Unjam - ')
+    const isRepairLabel = pendingRoll.label.startsWith('Repair - ')
+    if ((isUnjamLabel || isRepairLabel) && myEntry) {
+      const verbPrefix = isUnjamLabel ? 'Unjam' : 'Repair'
+      const weaponName = pendingRoll.label.replace(new RegExp(`^${verbPrefix} - (.+?) \\(.+\\)$`), '$1')
+      const pastVerb = isUnjamLabel ? 'Unjammed' : 'Repaired'
+      const failVerb = isUnjamLabel ? 'unjam' : 'repair'
       const charData = myEntry.character.data ?? {}
       const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
       const slots = ['weaponPrimary', 'weaponSecondary'] as const
@@ -5258,8 +5263,8 @@ export default function TablePage() {
           let newIdx = currentIdx
           if (outcome === 'Wild Success') { newIdx = Math.max(1, currentIdx - 1); unjamResult = 'Condition improved by 1 level' }
           else if (outcome === 'High Insight') { newIdx = Math.max(1, currentIdx - 2); unjamResult = 'Condition improved by 2 levels' }
-          else if (outcome === 'Success') { newIdx = Math.max(currentIdx - 1, 2); unjamResult = currentIdx > 2 ? 'Unjammed - condition partially restored' : 'No change' }
-          else if (outcome === 'Failure') { unjamResult = 'Failed to unjam - no change' }
+          else if (outcome === 'Success') { newIdx = Math.max(currentIdx - 1, 2); unjamResult = currentIdx > 2 ? `${pastVerb} - condition partially restored` : 'No change' }
+          else if (outcome === 'Failure') { unjamResult = `Failed to ${failVerb} - no change` }
           else if (outcome === 'Dire Failure') { newIdx = 4; unjamResult = 'Weapon breaks!' }
           else if (outcome === 'Low Insight') {
             newIdx = 4; unjamResult = 'Weapon breaks! 1 WP damage.'
@@ -10391,7 +10396,11 @@ export default function TablePage() {
           }
           const amod = (rapid as any)[bestAttr] ?? 0
           clearAimIfActive(active.id)
-          handleRollRequest(`Unjam - ${primary.weaponName} (${bestSkill})`, amod, bestLevel)
+          // Melee weapons don't "jam" - they malfunction (bent, stuck, fouled).
+          // Roll request label distinguishes so the executeRoll handler picks the
+          // right narrative and compactRollSummary renders the right verb.
+          const verb = isMelee ? 'Repair' : 'Unjam'
+          handleRollRequest(`${verb} - ${primary.weaponName} (${bestSkill})`, amod, bestLevel)
           actionPreConsumedRef.current = true
           await consumeAction(active.id)
           setShowReadyWeaponModal(false)
@@ -10510,7 +10519,7 @@ export default function TablePage() {
                 </button>
                 <button onClick={canUnjam ? doUnjam : undefined} disabled={!canUnjam}
                   style={{ padding: '10px', background: canUnjam ? '#2a1210' : '#1a1a1a', border: `1px solid ${canUnjam ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: canUnjam ? '#f5a89a' : '#3a3a3a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canUnjam ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '13px', opacity: 0.5 }}>- not jammed or damaged</span>}
+                  {primaryW?.category === 'melee' ? 'Repair' : 'Unjam'} {!canUnjam && <span style={{ fontSize: '13px', opacity: 0.5 }}>- not jammed or damaged</span>}
                 </button>
               </div>
 
