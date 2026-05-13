@@ -648,23 +648,40 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
-  // Default: skill / attribute / attack roll. Branches on `simple`:
-  // - simple=false (rolls-only tab): Insight Die spent banner, label
-  //   stripped of "<character> - " prefix, 14px damage box.
-  // - simple=true (Both tab): raw label, no Insight Die banner, 13px
-  //   damage box. Compact-with-expand-toggle is identical in both.
-  const compact = compactRollSummary(r)
+  // Default: skill / attribute / attack roll.
+  //
+  // STRUCTURE (post-2026-05-13 unification):
+  //   Always render the compact narrative as the top line. The raw r.label
+  //   is NEVER displayed - it's input to compactRollSummary only. Old DB
+  //   rows have verbose narratives + dice dumps + dev notes baked into the
+  //   label field; rendering them would leak "Moment of Insight" text onto
+  //   Wild Success / Dire Failure rows. Falling back to a stripped first
+  //   line keeps unknown label types readable without that bleed.
+  //
+  //   When expanded, append a math panel below the narrative with the
+  //   dice/mod breakdown + damage box. The expanded panel reads from the
+  //   row's numeric fields (die1, die2, amod, ..., damage_json) - never
+  //   parsed from the label string.
+  //
+  //   Insight Die badge gates on r.insight_awarded - set only on HI/LI
+  //   outcomes by saveRollToLog, so WS / DF can never show the badge.
+  const compactRaw = compactRollSummary(r)
+  // Minimal safety fallback: if no compact branch matches (truly unknown
+  // label type), show the first line of the label stripped of any "+1
+  // Insight Die" / dev-note tails. Keeps the row readable without showing
+  // the dice dump or dev notes that old labels baked in.
+  const compact = compactRaw ?? r.label.split('\n')[0]
+    .replace(/\s+Live feed adds.*$/, '')
+    .replace(/\s+\+1 Insight Die\b.*$/, '')
+    .trim()
   const isExpanded = expandedRollIds.has(r.id)
-  // Hide the ▸ pip when there's nothing meaningful to expand to. System
-  // rows (Evolution / CDP / Encumbrance / Loot / Coordinate-effect) all
-  // write die1 = die2 = 0 because no dice were rolled - clicking ▸
-  // there used to show "[0+0] +0 AMod = 0 -> evolution" which was just
-  // noise. Real rolls still get the pip. Also force useCompact for
-  // no-dice rows so a stale isExpanded entry can't flip them to the
-  // verbose card.
   const hasRealDice = r.die1 > 0 || r.die2 > 0
-  const showExpandPip = compact && hasRealDice
-  const useCompact = compact && (!isExpanded || !hasRealDice)
+  // Show the ▸ pip whenever there's something meaningful to expand to:
+  // dice math, insight-die spend banner, or a damage box. Pure system
+  // rows (CDP, Encumbrance) with no dice and no extras don't get a pip.
+  const hasInsightSpend = r.insight_used === '3d6' || r.insight_used === '+3cmod' || (!r.insight_used && r.die2 > 6)
+  const hasDamageBox = r.damage_json && (r.damage_json as any).targetName && (r.damage_json as any).totalWP != null
+  const showExpandPip = hasRealDice || hasInsightSpend || hasDamageBox
   return (
     <div style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
@@ -680,77 +697,32 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           )}
         </div>
       </div>
-      {useCompact ? (
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
-          {compact}
-          {/* Insight Die SPEND badge - mirrors the verbose-card badge
-              so the compact narrative tells the same story. Without
-              this, "Juno makes a First Impression" reads as a routine
-              roll even when she burned an Insight Die to land it.
-              Same fallback heuristic for pre-2026-04-28 rows. */}
-          {(r.insight_used === '3d6' || (!r.insight_used && r.die2 > 6)) && (
-            <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>🎲 Insight Die spent (3d6)</span>
-          )}
-          {r.insight_used === '+3cmod' && (
-            <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>🎲 Insight Die spent (+3 CMod)</span>
-          )}
-          {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
-        </div>
-      ) : (
-        <>
-          <div style={{ fontSize: '15px', color: '#d4cfc9', marginBottom: '4px' }}>
-            {simple
-              ? r.label
-              : (r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label)}
-            {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
-          </div>
-          {/* Insight Die pre-spend callout - explicit when
-              insight_used is recorded (post-2026-04-28
-              schema bump), falls back to the die2 > 6
-              heuristic for pre-bump rows so old 3d6 spends
-              still get surfaced. +3 CMod spends from before
-              the bump can't be detected and stay silent.
-              Shows on both tabs (rolls-only AND Both) so an
-              insight-die spend is never invisible. */}
-          {(r.insight_used === '3d6' || (!r.insight_used && r.die2 > 6)) && (
-            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-              <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - pre-rolled 3d6 (kept all three)</span>
+      <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+        {compact}
+        {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+      </div>
+      {isExpanded && (
+        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a' }}>
+          {hasInsightSpend && (
+            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '4px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+              {r.insight_used === '+3cmod'
+                ? <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - +3 CMod</span>
+                : <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - pre-rolled 3d6 (kept all three)</span>}
             </div>
           )}
-          {r.insight_used === '+3cmod' && (
-            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-              <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - +3 CMod</span>
+          {hasRealDice && (
+            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>
+              {!simple && r.die2 > 6
+                ? <>[{r.die1} + {r.die2} <span style={{ fontSize: '13px', color: '#7fc458' }}>(d2+d3)</span>]</>
+                : <>[{r.die1}+{r.die2}]</>}
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              <span style={{ marginLeft: '8px', fontWeight: 700, color: outcomeColor(r.outcome), letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
             </div>
           )}
-          {/* Hide the dice/mod breakdown for no-roll action rows (Ready
-              Weapon, Switch, Reload, Defend, Take Cover, Reposition,
-              Move, etc.). Those write outcome='action' with die1=die2=0,
-              so showing "[0+0] = 0  action" is just visual noise. */}
-          {r.outcome !== 'action' && (
-            <>
-              <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>
-                {!simple && r.die2 > 6
-                  ? <>[{r.die1} + {r.die2} <span style={{ fontSize: '13px', color: '#7fc458' }}>(d2+d3)</span>]</>
-                  : <>[{r.die1}+{r.die2}]</>}
-                {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
-                {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-                {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
-                <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
-                {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif' }}>+1 Insight Die</span>}
-              </div>
-            </>
-          )}
-          {r.damage_json && (r.damage_json as any).targetName && (r.damage_json as any).totalWP != null && (
-            // Gate: only render the Damage box when this row actually
-            // carries attack-resolution data (targetName + totalWP).
-            // Vehicle driving / brew checks write damage_json with
-            // metadata-only payloads (vehicleId, fuelDelta, etc.) and
-            // no damage fields - pre-fix that lit up an empty
-            // "Damage → / = raw → WP / RP" line on every Driving check,
-            // which read like a phantom hit on nothing.
+          {hasDamageBox && (
             <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
               <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>Damage → {(r.damage_json as any).targetName}</span>
               <div style={{ marginTop: '2px' }}>
@@ -764,7 +736,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   )
