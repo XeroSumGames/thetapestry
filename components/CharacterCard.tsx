@@ -759,8 +759,10 @@ function CharacterCardImpl({
           {skills.map(s => {
             const raised = s.level > 0
             const clickable = !!onRoll
+            const description = SKILLS.find(d => d.name === s.skillName)?.description ?? ''
             return (
               <span key={s.skillName}
+                title={description}
                 onClick={() => handleSkillClick(s.skillName, s.level)}
                 style={{
                   fontSize: '13px', padding: '3px 6px', borderRadius: '3px',
