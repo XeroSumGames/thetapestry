@@ -817,6 +817,16 @@ export async function publishModuleVersion(
   const parts = params.version.split('.').map((n) => parseInt(n, 10))
   const [major, minor, patch] = [parts[0] || 0, parts[1] || 0, parts[2] || 0]
 
+  // Snapshot the module's canonical start date into the version row so
+  // future clones use the value that was current at publish time. NULL
+  // is fine - means "no canonical start date" and clones default to 0.
+  const { data: parentMod } = await supabase
+    .from('modules')
+    .select('start_canon_day')
+    .eq('id', moduleId)
+    .maybeSingle()
+  const startCanonDay = (parentMod?.start_canon_day ?? null) as number | null
+
   const { data: versionRow, error: vErr } = await supabase
     .from('module_versions')
     .insert({
@@ -828,6 +838,7 @@ export async function publishModuleVersion(
       published_by: user.id,
       changelog: params.changelog ?? null,
       snapshot: params.snapshot as any,
+      start_canon_day: startCanonDay,
     })
     .select('id')
     .single()
