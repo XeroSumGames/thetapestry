@@ -46,44 +46,34 @@ const COVERS_BUCKET = 'module-covers'
 // by both directions of the canon_day <-> date conversion below.
 const DAYS_BEFORE_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
 
-// (dateIso, year) -> canon_day. canon_day = 0 means 2-Mar-Year0
+// (month, day, year) -> canon_day. canon_day = 0 means 2-Mar-Year0
 // (first recorded H724 death). Returns null on missing/invalid input.
-function computeCanonDay(dateIso: string, year: string): number | null {
-  if (!dateIso) return null
+function computeCanonDay(month: string, day: string, year: string): number | null {
+  const m = parseInt(month, 10)
+  const d = parseInt(day, 10)
   const y = parseInt(year, 10)
-  if (!Number.isFinite(y) || y < 0 || y > 20) return null
-  const parts = dateIso.split('-')
-  if (parts.length !== 3) return null
-  const m = parseInt(parts[1], 10)
-  const d = parseInt(parts[2], 10)
-  if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12 || d < 1 || d > 31) return null
+  if (!Number.isFinite(m) || !Number.isFinite(d) || !Number.isFinite(y)) return null
+  if (m < 1 || m > 12 || d < 1 || d > 31 || y < 0 || y > 20) return null
   const dayOfYear = DAYS_BEFORE_MONTH[m - 1] + d  // 1..365
   return y * 365 + (dayOfYear - 61)  // March 2nd = day 61
 }
 
-// canon_day -> { dateIso: "YYYY-MM-DD", year: "0".."20" }. The picker
-// year uses a neutral 2000 since we only consume month/day on the way
-// out. Returns null if canon_day is outside the supported Year 0-20
-// range (would be hugely negative or >20 years post-pandemic).
-function canonDayToDateAndYear(canonDay: number): { dateIso: string; year: string } | null {
-  // canon_day = y*365 + (dayOfYear - 61).  Add 61 to get the offset
-  // from the start of Year y, then split into (year, dayOfYear).
+// canon_day -> { month, day, year } as string values for the dropdowns.
+// Returns null if canon_day is outside the supported Year 0-20 range.
+function canonDayToParts(canonDay: number): { month: string; day: string; year: string } | null {
+  // canon_day = y*365 + (dayOfYear - 61). Add 61 to get the offset from
+  // the start of Year y, then split into (year, dayOfYear).
   const offsetFromYearStart = canonDay + 61
   const year = Math.floor(offsetFromYearStart / 365)
   if (year < 0 || year > 20) return null
   const dayOfYear = offsetFromYearStart - year * 365  // 1..365
   if (dayOfYear < 1 || dayOfYear > 365) return null
-  // Find month / day from dayOfYear.
   let month = 12
   for (let i = 11; i >= 0; i--) {
     if (dayOfYear > DAYS_BEFORE_MONTH[i]) { month = i + 1; break }
   }
   const day = dayOfYear - DAYS_BEFORE_MONTH[month - 1]
-  // Neutral picker year (2000) - the visible year in the calendar is
-  // irrelevant, only month/day round-trip.
-  const mm = String(month).padStart(2, '0')
-  const dd = String(day).padStart(2, '0')
-  return { dateIso: `2000-${mm}-${dd}`, year: String(year) }
+  return { month: String(month), day: String(day), year: String(year) }
 }
 
 export default function ModuleEditPage() {
@@ -102,10 +92,10 @@ export default function ModuleEditPage() {
   const [sessionEstimate, setSessionEstimate] = useState<string>('')
   const [playerCount, setPlayerCount] = useState<string>('')
   const [sortOrder, setSortOrder] = useState<string>('')
-  // Canonical start date controls. dateIso = "YYYY-MM-DD" from the
-  // calendar (month/day only), year = "0".."20" from the dropdown.
-  // Both blank = no canonical start (clone uses canon_day 0).
-  const [startDateIso, setStartDateIso] = useState<string>('')
+  // Canonical start date controls - Month / Day / Year-of-Pandemic
+  // dropdowns. All blank = no canonical start (clone uses canon_day 0).
+  const [startMonth, setStartMonth] = useState<string>('')
+  const [startDay, setStartDay] = useState<string>('')
   const [startYear, setStartYear] = useState<string>('')
   const [coverUrl, setCoverUrl] = useState<string>('')
   const [saving, setSaving] = useState(false)
@@ -154,12 +144,13 @@ export default function ModuleEditPage() {
       setSessionEstimate(m.session_count_estimate != null ? String(m.session_count_estimate) : '')
       setPlayerCount(m.player_count_recommended != null ? String(m.player_count_recommended) : '')
       setSortOrder(m.sort_order != null ? String(m.sort_order) : '')
-      // Reverse-compute the date from start_canon_day so the calendar
-      // and year dropdown reflect the saved value.
+      // Reverse-compute Month / Day / Year from start_canon_day so the
+      // three dropdowns reflect the saved value.
       if (m.start_canon_day != null) {
-        const parsed = canonDayToDateAndYear(m.start_canon_day)
+        const parsed = canonDayToParts(m.start_canon_day)
         if (parsed) {
-          setStartDateIso(parsed.dateIso)
+          setStartMonth(parsed.month)
+          setStartDay(parsed.day)
           setStartYear(parsed.year)
         }
       }
@@ -275,16 +266,16 @@ export default function ModuleEditPage() {
       setSaving(false)
       return
     }
-    // start_canon_day: both fields blank → null (no canonical start);
-    // both filled → compute from date+year. Partial fill is rejected
-    // so authors don't accidentally save a half-configured date.
-    const partialDate = (startDateIso === '') !== (startYear === '')
-    if (partialDate) {
-      setStatus('Set both the start date and Year, or leave both blank.')
+    // start_canon_day: all three blank → null (no canonical start);
+    // all three filled → compute. Partial fill is rejected so authors
+    // don't accidentally save a half-configured date.
+    const blanks = [startMonth, startDay, startYear].filter(v => v === '').length
+    if (blanks !== 0 && blanks !== 3) {
+      setStatus('Set Month, Day, and Year together, or leave all three blank.')
       setSaving(false)
       return
     }
-    const startCanonDay = computeCanonDay(startDateIso, startYear)
+    const startCanonDay = computeCanonDay(startMonth, startDay, startYear)
     const { error } = await supabase
       .from('modules')
       .update({
@@ -431,8 +422,18 @@ export default function ModuleEditPage() {
           The 1st recorded death from the Dog Flu (H724 / the Distemper) was on March 2nd, Year 0. Campaigns cloned from this module open on the date you set here.
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
-          <input type="date" value={startDateIso} onChange={e => setStartDateIso(e.target.value)}
-            style={{ ...inp, flex: 1 }} />
+          <select value={startMonth} onChange={e => setStartMonth(e.target.value)} style={{ ...inp, flex: 1 }}>
+            <option value="">Month</option>
+            {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+              <option key={m} value={String(i + 1)}>{m}</option>
+            ))}
+          </select>
+          <select value={startDay} onChange={e => setStartDay(e.target.value)} style={{ ...inp, width: '90px' }}>
+            <option value="">Day</option>
+            {Array.from({ length: 31 }, (_, i) => (
+              <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
+            ))}
+          </select>
           <select value={startYear} onChange={e => setStartYear(e.target.value)} style={{ ...inp, flex: 1 }}>
             <option value="">Year</option>
             {Array.from({ length: 21 }, (_, i) => (
@@ -441,7 +442,7 @@ export default function ModuleEditPage() {
           </select>
         </div>
         {(() => {
-          const cd = computeCanonDay(startDateIso, startYear)
+          const cd = computeCanonDay(startMonth, startDay, startYear)
           if (cd === null) return null
           return (
             <div style={{ fontSize: '13px', color: cd >= 0 ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>

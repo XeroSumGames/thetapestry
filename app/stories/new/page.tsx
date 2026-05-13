@@ -49,16 +49,13 @@ export default function NewCampaignPage() {
   const [locationQuery, setLocationQuery] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const [customCenter, setCustomCenter] = useState<{ lat: number; lng: number } | null>(null)
-  // Custom-Setting start date.
-  //   startDateIso = "YYYY-MM-DD" from the native calendar picker. We
-  //                  only consume month/day; the year-of-pandemic comes
-  //                  from startYear below. A neutral year like 2024 in
-  //                  the picker is fine - it doesn't affect canon_day.
-  //   startYear    = "0" through "20"; Year 0 contains March 2nd, the
-  //                  first recorded H724 death (canon_day 0). Jan-Feb
-  //                  of Year 0 land at negative canon_day (pre-pandemic
-  //                  prologue, ~60 days).
-  const [startDateIso, setStartDateIso] = useState<string>('')
+  // Custom-Setting start date - three dropdowns. Native <input type="date">
+  // was tried first but its calendar popup forces a real-world year (2026
+  // etc.) which read as confusing UX alongside the Year-of-Pandemic dropdown.
+  // Year 0 contains March 2nd (first recorded H724 death, canon_day 0).
+  // Jan-Feb of Year 0 land at negative canon_day (pre-pandemic prologue).
+  const [startMonth, setStartMonth] = useState<string>('')
+  const [startDay, setStartDay] = useState<string>('')
   const [startYear, setStartYear] = useState<string>('')
   // Phase 5 Sprint 1 — Module picker; see /campaigns/new for notes.
   const [modules, setModules] = useState<ModuleListing[]>([])
@@ -125,29 +122,23 @@ export default function NewCampaignPage() {
   }, [])
 
   // canon_day = days since 2-Mar-Year0 (first recorded H724 death).
-  // Convention: Year 0 contains the pandemic outbreak (March 2nd).
-  // Year 1+ are post-pandemic years. Jan/Feb of Year 0 produce a
-  // negative canon_day (campaigns set leading up to the outbreak).
+  // Year 0 contains the pandemic outbreak; Year 1+ are post-pandemic.
   // 365-day flat years - matches the rest of the campaign-clock math.
-  // Returns null when month/day or year is missing; the UI gates on
-  // that to avoid showing garbage math for half-filled forms.
-  function computeCanonDay(dateIso: string, year: string): number | null {
-    if (!dateIso) return null
+  // Returns null when any field is missing or out of range; the UI
+  // gates on that to avoid showing garbage math for half-filled forms.
+  function computeCanonDay(month: string, day: string, year: string): number | null {
+    const m = parseInt(month, 10)
+    const d = parseInt(day, 10)
     const y = parseInt(year, 10)
-    if (!Number.isFinite(y) || y < 0 || y > 20) return null
-    // dateIso is "YYYY-MM-DD" - we only consume month/day.
-    const parts = dateIso.split('-')
-    if (parts.length !== 3) return null
-    const m = parseInt(parts[1], 10)
-    const d = parseInt(parts[2], 10)
-    if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12 || d < 1 || d > 31) return null
+    if (!Number.isFinite(m) || !Number.isFinite(d) || !Number.isFinite(y)) return null
+    if (m < 1 || m > 12 || d < 1 || d > 31 || y < 0 || y > 20) return null
     // Cumulative days at the start of each month (non-leap year).
     const DAYS_BEFORE_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
     const dayOfYear = DAYS_BEFORE_MONTH[m - 1] + d  // 1..365
     // March 2nd = day 31 + 28 + 2 = 61.
     return y * 365 + (dayOfYear - 61)
   }
-  const startCanonDay = computeCanonDay(startDateIso, startYear)
+  const startCanonDay = computeCanonDay(startMonth, startDay, startYear)
 
   async function handleCreate() {
     if (!name.trim()) return
@@ -410,11 +401,10 @@ export default function NewCampaignPage() {
         </div>
 
         {/* Custom Setting → start date. Renders above Starting Location.
-            Calendar picker for day/month + Year-of-Pandemic dropdown
-            (Year 0 = pandemic year, Year 1+ post-pandemic). The picker's
-            own year is ignored - we only consume month/day. Optional:
-            blank both fields → campaign starts at canon_day 0 (the
-            actual day of the outbreak). */}
+            Month / Day / Year-of-Pandemic dropdowns (Year 0 = pandemic
+            year, Year 1+ post-pandemic). Optional: blank fields →
+            campaign starts at canon_day 0 (the actual day of the
+            outbreak). */}
         {setting === 'custom' && !pickedModuleVersionId && (
           <div style={{ marginBottom: '16px' }}>
             <label style={lbl}>Campaign Start Date</label>
@@ -422,8 +412,18 @@ export default function NewCampaignPage() {
               The 1st recorded death from the Dog Flu (H724 / the Distemper) was on March 2nd, Year 0.
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
-              <input type="date" value={startDateIso} onChange={e => setStartDateIso(e.target.value)}
-                style={{ ...inp, flex: 1 }} />
+              <select value={startMonth} onChange={e => setStartMonth(e.target.value)} style={{ ...inp, flex: 1 }}>
+                <option value="">Month</option>
+                {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+                  <option key={m} value={String(i + 1)}>{m}</option>
+                ))}
+              </select>
+              <select value={startDay} onChange={e => setStartDay(e.target.value)} style={{ ...inp, width: '90px' }}>
+                <option value="">Day</option>
+                {Array.from({ length: 31 }, (_, i) => (
+                  <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
+                ))}
+              </select>
               <select value={startYear} onChange={e => setStartYear(e.target.value)} style={{ ...inp, flex: 1 }}>
                 <option value="">Year</option>
                 {Array.from({ length: 21 }, (_, i) => (
