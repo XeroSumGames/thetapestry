@@ -1,8 +1,8 @@
 # Tapestry — To Do & Backlog
 
-## 🔲 Flagged 2026-05-11 — Skill-description tooltips on character sheet
+## ✅ Shipped 2026-05-12 — Skill-description tooltips on character sheet
 
-- [ ] **Skill-description hover tooltips on character sheet.** Every skill row should surface its canonical description as a hover tooltip — `lib/xse-schema.ts:SKILLS[].description` already has the prose ("Providing first aid, diagnosis, treatment, emergency stabilization..." for Medicine\*, etc.). Currently the skill name shows on its own with no tooltip; players unfamiliar with XSE shorthand miss what each skill actually covers. Touches `components/CharacterCard.tsx` skills section. ~30m. Flagged after a player misread a random Medic character with Medicine\* level 1 as "having no first aid skill" — implementation was correct (profession-floor 10-CDP-across-5-skills, verified `app/characters/random/page.tsx:146-167`), but absence of an in-UI description for what Medicine\* covers caused the misread.
+- [x] **Skill-description hover tooltips on character sheet** - commit `bc24db9`. Each skill chip in `components/CharacterCard.tsx` now carries a native `title` attribute resolving from `lib/xse-schema.ts:SKILLS[].description`, so hovering surfaces the canonical prose ("Providing first aid, diagnosis, treatment, emergency stabilization..." for Medicine\*, etc.). Native browser tooltip means ~500ms delay, no JS state, no positioning logic, no portal - appropriate scope for a 30m item. Flagged 2026-05-11 after a playtester misread a Medic with Medicine\* lv1 as having no first aid skill.
 
 ---
 

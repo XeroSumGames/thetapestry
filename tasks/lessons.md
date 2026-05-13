@@ -1,5 +1,8 @@
 # Lessons Learned
 
+## Worktree hygiene
+- **Edit/Write/Read paths must point at the worktree, not the main checkout**: when working inside `.claude/worktrees/<name>`, every Edit/Write call needs the full worktree absolute path (`C:\TheTapestry\.claude\worktrees\<name>\...`), not `C:\TheTapestry\...`. The Edit tool will silently land changes in the main checkout otherwise. Read is mostly safe (the files match at clean state) but writes are dangerous because they mix new work into the main checkout's uncommitted state (CRB rewrite, etc.). Symptom: `git add` from the worktree finds "nothing to commit" right after a successful Edit. Recovery: `git -C /c/TheTapestry checkout -- <path>` to revert the main checkout, then re-apply the Edit using the full worktree path. Cost: 2026-05-12 skill-tooltip ship lost ~5 minutes to this.
+
 ## Database & Auth
 - **Role is now normalized to lowercase**: DB trigger `trg_normalize_role` auto-lowercases `profiles.role` on insert/update. All existing rows backfilled. Always compare against `'thriver'` / `'survivor'` (lowercase). No more `.toLowerCase()` needed — but harmless if left in.
 - **Supabase email-confirmation links use `verifyOtp`, not `exchangeCodeForSession`**: confirmation emails carry `?token_hash=<...>&type=signup`, not `?code=<...>`. The latter is for OAuth/PKCE. A `/auth/callback` route built only for `code=` silently fails on every signup-confirmation click. Branch on which params are present and call the right API. Cost: an end-to-end signup test on 2026-05-08C produced "Invalid login credentials" because email never got marked confirmed.
