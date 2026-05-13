@@ -449,7 +449,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     // Next-Morale CMod live behind the ▸ expander.
     const successBody = r.outcome === 'fed_check'
       ? 'The residents were successful and will eat this week.'
-      : 'The residents were successful and have what they need.'
+      : 'The residents were successful and have scrounged up what they need.'
     const failBody = r.outcome === 'fed_check'
       ? 'The residents were unsuccessful and will go hungry this week.'
       : 'The residents were unsuccessful and will go without this week.'
