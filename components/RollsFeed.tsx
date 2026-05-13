@@ -725,23 +725,31 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
       </div>
       {isExpanded && (
         <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a' }}>
-          {hasInsightSpend && (
-            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '4px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-              {r.insight_used === '+3cmod'
-                ? <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - +3 CMod</span>
-                : <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent - pre-rolled 3d6 (kept all three)</span>}
-            </div>
-          )}
           {hasRealDice && (
             <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>
-              {!simple && r.die2 > 6
-                ? <>[{r.die1} + {r.die2} <span style={{ fontSize: '13px', color: '#7fc458' }}>(d2+d3)</span>]</>
-                : <>[{r.die1}+{r.die2}]</>}
+              {/* Three render branches for the dice slot:
+                  - insight_used='3d6' AND damage_json.die3 stored: split die2 into
+                    its raw components (die2 = d2+d3 by storage convention) and show
+                    [d1+d2+d3 (insight die)]
+                  - insight_used='3d6' fallback (old rows where die3 wasn't captured): [d1 + d2 (d2+d3)]
+                  - normal:                                          [d1+d2] */}
+              {r.insight_used === '3d6' && (r.damage_json as any)?.die3 != null
+                ? <>[{r.die1}+{r.die2 - (r.damage_json as any).die3}+{(r.damage_json as any).die3} <span style={{ color: '#7fc458', fontSize: '13px' }}>(insight die)</span>]</>
+                : !simple && r.die2 > 6
+                  ? <>[{r.die1} + {r.die2} <span style={{ fontSize: '13px', color: '#7fc458' }}>(d2+d3)</span>]</>
+                  : <>[{r.die1}+{r.die2}]</>}
               {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
               {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod{r.insight_used === '+3cmod' && <span style={{ color: '#7fc458', fontSize: '13px' }}> (insight die)</span>}</span>}
               <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
               <span style={{ marginLeft: '8px', fontWeight: 700, color: outcomeColor(r.outcome), letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
+            </div>
+          )}
+          {hasInsightSpend && (
+            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '4px', fontFamily: 'Carlito, sans-serif' }}>
+              {r.insight_used === '+3cmod'
+                ? 'Insight Die spent - +3 CMod'
+                : 'Insight Die spent to pre-roll 3d6 and keep all 3'}
             </div>
           )}
           {hasDamageBox && (

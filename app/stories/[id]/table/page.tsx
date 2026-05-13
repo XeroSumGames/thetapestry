@@ -4202,7 +4202,12 @@ export default function TablePage() {
     setSocialCmod(null)
   }
 
-  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult, insightUsed: '3d6' | '+3cmod' | null = null) {
+  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult, insightUsed: '3d6' | '+3cmod' | null = null, die3: number | null = null) {
+    // NOTE on 3d6 Insight Die storage: existing convention packs d2+d3 into
+    // die2 (so die1+die2+mods = d1+d2+d3+mods - correct total without a
+    // schema change). die3 here is the RAW d3 value, stored separately in
+    // damage_json.die3 so the renderer can show [d1+(die2-die3)+die3 (insight
+    // die)] for the expanded math. Total math stays the same.
     const total = die1 + die2 + amod + smod + cmodVal
     const outcome = getOutcome(total, die1, die2)
     // Non-antagonist NPCs never get Insight Dice
@@ -4211,12 +4216,18 @@ export default function TablePage() {
     const npcTypeForLog = isNPC ? (rosterNpcs.find((n: any) => n.name === characterName)?.npc_type ?? campaignNpcs.find((n: any) => n.name === characterName)?.npc_type ?? '') : ''
     const insightAwarded = isHighLow && !(isNPC && npcTypeForLog !== 'antagonist')
 
+    // Merge die3 into damage_json (attack rolls already have one; skill rolls
+    // typically don't - then damage_json becomes {die3}).
+    const damageJsonOut = die3 != null
+      ? { ...(damageData || {}), die3 }
+      : (damageData || null)
+
     await supabase.from('roll_log').insert({
       campaign_id: id, user_id: userId, character_name: characterName,
       label: isReroll ? `${label} (Re-roll)` : label,
       die1, die2, amod, smod, cmod: cmodVal, total, outcome, insight_awarded: insightAwarded,
       target_name: target || null,
-      damage_json: damageData || null,
+      damage_json: damageJsonOut,
       // Recorded so the extended log can call out +3 CMod spends
       // (which are otherwise indistinguishable from organic CMod
       // stacks) and 3d6 spends where d2+d3 ≤ 6 (the legacy heuristic
@@ -4283,6 +4294,9 @@ export default function TablePage() {
     }
     let die1: number, die2: number
     let preRollSpent = false
+    // d3 raw value when a 3d6 Insight Die is spent - passed to saveRollToLog
+    // so it lands in damage_json.die3 for the expanded-math renderer.
+    let insightDie3: number | null = null
     // Populated only on 3d6 Insight rolls - carries all three dice so the
     // modal render can show three boxes instead of two (die2 would
     // otherwise read as d2+d3, misleadingly as one die).
@@ -4296,9 +4310,12 @@ export default function TablePage() {
       // so the Low-Insight pair check can't fire here, and we pass the
       // skipInsightPair flag to getOutcome so a coincidental d1=6, d2+d3=6
       // doesn't trigger High Insight on a roll that already spent one.
+      // d3 is ALSO stored separately on damage_json so the renderer can split
+      // die2 back into raw d2 (die2 - die3) for [d1+d2+d3 (insight die)].
       const d1 = rollD6(), d2 = rollD6(), d3 = rollD6()
       die1 = d1
       die2 = d2 + d3
+      insightDie3 = d3
       insightDiceRolled = [d1, d2, d3]  // surfaced in rollResult so the modal shows all 3 dice boxes
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
@@ -5684,7 +5701,7 @@ export default function TablePage() {
         }
         groupCheckPayloadRef.current = null
       }
-      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue)
+      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3)
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack
