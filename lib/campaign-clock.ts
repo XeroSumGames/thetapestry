@@ -10,6 +10,7 @@
 // rely solely on RLS for UX.
 
 import { createClient } from './supabase-browser'
+import { normalizeRations } from './xse-schema'
 
 export interface ClockState {
   canon_day: number
@@ -75,6 +76,11 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     await drainStreamingHeals(campaignId, next)
   } catch (e) {
     console.error('[campaign-clock] drainStreamingHeals failed:', e)
+  }
+  try {
+    await drainRationsConsumption(campaignId, next.canon_day - current.canon_day)
+  } catch (e) {
+    console.error('[campaign-clock] drainRationsConsumption failed:', e)
   }
   // Realtime broadcast — every viewer's campaign sheet gets the new
   // clock state immediately, without waiting for postgres_changes to
@@ -180,6 +186,74 @@ async function drainStreamingHeals(campaignId: string, clock: ClockState): Promi
     }
     await supabase.from('campaign_events').update(updateFields).eq('id', ev.id)
   }
+}
+
+// Rations consumption drainer.
+//
+// One ration covers one day of food + water for one character
+// (Quickstart Table 16 canon, locked 2026-05-09). For every day-
+// boundary crossed by an advance(), each PC in the campaign loses
+// one ration from `characters.data.rations.count` (floor at 0). PCs
+// already at 0 are skipped here and become candidates for the
+// subsistence-damage drainer (Phase 3c).
+//
+// Why iterate per-PC instead of using campaign_events rows: rations
+// are a perpetual per-day decrement, not a scheduled future effect.
+// Computing consumption from current state at tick time is simpler
+// and naturally handles characters added/removed mid-campaign.
+//
+// Emits a single System row to roll_log summarizing the tick (mirrors
+// the encumbrance summary shape). Skipped silently if no PC consumed
+// anything (e.g. dayDelta=0 or everyone's already out).
+async function drainRationsConsumption(campaignId: string, dayDelta: number): Promise<void> {
+  if (dayDelta <= 0) return
+  const supabase = createClient()
+  const { data: states, error } = await supabase
+    .from('character_states')
+    .select('character_id, characters!inner(id, name, data)')
+    .eq('campaign_id', campaignId)
+  if (error || !states || states.length === 0) return
+
+  type Outcome = { name: string; prev: number; next: number; ranOut: boolean }
+  const outcomes: Outcome[] = []
+
+  for (const row of states as any[]) {
+    const c = row.characters
+    if (!c?.data) continue
+    const rations = normalizeRations(c.data.rations)
+    if (rations.count <= 0) continue
+    const nextCount = Math.max(0, rations.count - dayDelta)
+    if (nextCount === rations.count) continue
+    const newData = { ...c.data, rations: { type: rations.type, count: nextCount } }
+    const { error: updErr } = await supabase
+      .from('characters')
+      .update({ data: newData })
+      .eq('id', c.id)
+    if (updErr) {
+      console.error('[drainRationsConsumption] failed to update character', c.id, updErr.message)
+      continue
+    }
+    outcomes.push({
+      name: c.name,
+      prev: rations.count,
+      next: nextCount,
+      ranOut: nextCount === 0 && rations.count > 0,
+    })
+  }
+
+  if (outcomes.length === 0) return
+  const { data: { user } } = await supabase.auth.getUser()
+  const summaryParts = outcomes.map(o =>
+    o.ranOut ? `${o.name} (${o.prev} to 0, out)` : `${o.name} (${o.prev} to ${o.next})`
+  )
+  await supabase.from('roll_log').insert({
+    campaign_id: campaignId,
+    user_id: user?.id ?? null,
+    character_name: 'System',
+    label: `🍞 Rations consumed (${dayDelta}d): ${summaryParts.join(', ')}`,
+    die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+    outcome: 'rations',
+  })
 }
 
 // Queue a streaming heal. GM-callable (RLS allows members to INSERT,
