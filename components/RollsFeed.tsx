@@ -604,8 +604,8 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     // Group-flavored Insight Die tags: HI and LI both apply to the
     // whole party here, not just the leader.
     const groupOutcomeTag =
-      r.outcome === 'High Insight' ? ' and collectively had a Moment of Insight as to why it went so well'
-      : r.outcome === 'Low Insight' ? ' but collectively had a Moment of Insight into why they failed'
+      r.outcome === 'High Insight' ? ' and has a Moment of Insight as to why it went so well'
+      : r.outcome === 'Low Insight' ? ' but has a Moment of Insight as to why it went so badly'
       : ''
     // "A, B, C, and D" with Oxford serial comma when 3+; "A and B"
     // for two; just "A" for solo.
