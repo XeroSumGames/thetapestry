@@ -31,7 +31,7 @@ export default function CharacterSheetPage() {
       setUserId(user.id)
 
       // Load character
-      const { data: char } = await supabase.from('characters').select('*').eq('id', characterId).single()
+      const { data: char } = await supabase.from('characters').select('id,user_id,name,created_at,data').eq('id', characterId).single()
       if (!char) { setLoading(false); return }
       setCharacter(char)
       setNotes(char.data?.session_notes ?? '')
@@ -49,7 +49,7 @@ export default function CharacterSheetPage() {
 
       // Load live state if in a campaign
       if (campaignId) {
-        const { data: state } = await supabase.from('character_states').select('*').eq('campaign_id', campaignId).eq('character_id', characterId).maybeSingle()
+        const { data: state } = await supabase.from('character_states').select('id,wp_current,wp_max,rp_current,rp_max,stress,insight_dice,morality,cdp,death_countdown,incap_rounds').eq('campaign_id', campaignId).eq('character_id', characterId).maybeSingle()
         if (state) {
           setStateId(state.id)
           setLiveState({
