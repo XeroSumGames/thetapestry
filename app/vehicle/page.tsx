@@ -97,10 +97,13 @@ export default function VehiclePage() {
       setMyUserId(user.id)
       const { data: camp } = await supabase.from('campaigns').select('gm_user_id, vehicles').eq('id', campaignId).single()
       if (!camp) { setLoading(false); return }
-      setIsGM(camp.gm_user_id === user.id)
-      // Check if user is a campaign member or GM
+      // Thriver godmode: profile.role check widens GM affordances.
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      const isThriver = !!profile?.role && String(profile.role).toLowerCase() === 'thriver'
+      setIsGM(camp.gm_user_id === user.id || isThriver)
+      // Check if user is a campaign member or GM (or Thriver)
       const { data: membership } = await supabase.from('campaign_members').select('id').eq('campaign_id', campaignId).eq('user_id', user.id).maybeSingle()
-      setCanEdit(camp.gm_user_id === user.id || !!membership)
+      setCanEdit(camp.gm_user_id === user.id || !!membership || isThriver)
       const v = (camp.vehicles ?? []).find((v: Vehicle) => v.id === vehicleId)
       setVehicle(v ?? null)
 

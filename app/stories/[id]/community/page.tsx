@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import StoryActionBar from '../../../../components/StoryActionBar'
 import type { Community, Member } from '../../../../lib/types/community'
 
@@ -62,6 +63,9 @@ export default function CommunityDashboardPage() {
 
   const [loading, setLoading] = useState(true)
   const [isGM, setIsGM] = useState(false)
+  const [isThriverState, setIsThriverState] = useState(false)
+  // gmLike = real GM OR Thriver godmode. Same pattern as table page.
+  const gmLike = isGM || isThriverState
   const [campaignName, setCampaignName] = useState('')
   const [inviteCode, setInviteCode] = useState<string>('')
   const [communities, setCommunities] = useState<Community[]>([])
@@ -77,18 +81,20 @@ export default function CommunityDashboardPage() {
     async function load() {
       if (!campaignId) return
       const { user } = await getCachedAuth()
-      const [camp, coms] = await Promise.all([
+      const [camp, coms, profile] = await Promise.all([
         supabase.from('campaigns').select('name, gm_user_id, invite_code').eq('id', campaignId).maybeSingle(),
         supabase.from('communities')
           .select('id, name, status, week_number, consecutive_failures, created_at, dissolved_at')
           .eq('campaign_id', campaignId)
           .order('created_at', { ascending: true }),
+        user ? supabase.from('profiles').select('role').eq('id', user.id).maybeSingle() : Promise.resolve({ data: null }),
       ])
       if (camp.data) {
         setCampaignName((camp.data as any).name)
         setIsGM(user?.id === (camp.data as any).gm_user_id)
         setInviteCode((camp.data as any).invite_code ?? '')
       }
+      if (profile?.data) setIsThriverState(roleIsThriver(profile.data))
       const list = (coms.data ?? []) as Community[]
       setCommunities(list)
       if (list.length > 0) setSelectedId(list[0].id)
@@ -187,10 +193,10 @@ export default function CommunityDashboardPage() {
   }, [members])
 
   if (loading) return <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading…</div>
-  if (!isGM) return (
+  if (!gmLike) return (
     <div style={{ padding: '2rem', color: '#cce0f5', maxWidth: '600px', margin: '0 auto', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ fontSize: '18px', color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em' }}>GM Only</div>
-      <div style={{ marginTop: '8px', fontSize: '15px' }}>The Community Dashboard is restricted to the campaign's GM. Players see the read-only summary on the Community panel instead.</div>
+      <div style={{ marginTop: '8px', fontSize: '15px' }}>The Community Dashboard is restricted to the campaign's GM (or a Thriver). Players see the read-only summary on the Community panel instead.</div>
       <Link href={`/stories/${campaignId}`} style={{ display: 'inline-block', marginTop: '1rem', color: '#7ab3d4', fontSize: '15px' }}>← Back to campaign</Link>
     </div>
   )
