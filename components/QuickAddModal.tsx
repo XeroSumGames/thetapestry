@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
@@ -236,7 +237,7 @@ export default function QuickAddModal({
       // public (Thriver queue for Survivors, auto-approved for
       // Thrivers) or stays as a private personal note.
       if (!userId) { setPinSaving(false); alert('Sign in to drop a pin'); return }
-      const isThriver = userRole === 'thriver'
+      const isThriver = roleIsThriver(userRole)
       const pinType = !worldShare ? 'private' : (isThriver ? 'gm' : 'rumor')
       const pinStatus = !worldShare ? 'active' : (isThriver ? 'approved' : 'pending')
       const { data, error } = await supabase.from('map_pins').insert({
@@ -511,7 +512,7 @@ export default function QuickAddModal({
                     Make this pin public
                   </span>
                   <span style={{ display: 'block', marginTop: '2px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', lineHeight: 1.3 }}>
-                    {userRole === 'thriver'
+                    {roleIsThriver(userRole)
                       ? 'Auto-approved for Thrivers. Visible to all players as a Rumor.'
                       : 'Goes to the Thriver queue. If approved, becomes a Rumor visible to all players.'}
                     {!worldShare && ' Otherwise kept private — only you can see it.'}

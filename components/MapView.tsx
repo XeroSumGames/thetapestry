@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { logFirstEvent, logEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji, categoryNeedsWhiteFilter, wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
@@ -639,7 +640,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       if (profiles) {
         setUsernames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
         for (const p of profiles as any[]) {
-          if (typeof p.role === 'string' && p.role.toLowerCase() === 'thriver') thriverIds.add(p.id)
+          if (roleIsThriver(p)) thriverIds.add(p.id)
         }
       }
     }
@@ -958,7 +959,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!form.title.trim()) return
     if (!userId) { alert('Not logged in'); return }
     setSaving(true)
-    const isThriver = userRole === 'thriver'
+    const isThriver = roleIsThriver(userRole)
     const { error, data } = await supabase.from('map_pins').insert({
       user_id: userId, lat: form.lat, lng: form.lng,
       title: form.title, notes: form.notes,
@@ -1310,7 +1311,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           <button onClick={() => setSidebarOpen(p => !p)} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
           </button>
-          {userRole === 'thriver' && (
+          {roleIsThriver(userRole) && (
             <button onClick={() => {
               const map = mapInstanceRef.current
               if (!map) return
@@ -1405,7 +1406,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                             {w.content}
                           </div>
                         </div>
-                        {userRole === 'thriver' && (
+                        {roleIsThriver(userRole) && (
                           <button onClick={() => { if (confirm('Delete this whisper?')) deleteWhisper(w.id) }} disabled={deletingWhisperId === w.id}
                             title="Thriver: delete this whisper"
                             style={{ flexShrink: 0, width: 22, height: 22, padding: 0, background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3, color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: deletingWhisperId === w.id ? 'wait' : 'pointer', lineHeight: 1 }}
@@ -1715,9 +1716,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                         })}
                                       </div>
                                     )}
-                                    {(p.user_id === userId || userRole === 'thriver') && (
+                                    {(p.user_id === userId || roleIsThriver(userRole)) && (
                                       <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-                                        {userRole === 'thriver' && (
+                                        {roleIsThriver(userRole) && (
                                           <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
                                             style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '13px', padding: '0', fontFamily: 'Carlito, sans-serif' }}>
                                             {p.status === 'approved' ? 'Public' : 'Private'}
@@ -1960,7 +1961,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         </div>
       )}
     </div>
-    {userRole === 'thriver' && editingPin && (
+    {roleIsThriver(userRole) && editingPin && (
       <div style={{ marginBottom: '12px' }}>
         <label style={lbl}>Pin Type</label>
         <div style={{ display: 'flex', gap: '4px' }}>

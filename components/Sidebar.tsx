@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NotificationBell from './NotificationBell'
@@ -66,7 +67,7 @@ export default function Sidebar() {
       setUsername(profile.username)
       setAvatarUrl((profile as any).avatar_url ?? null)
       setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
-      if (profile.role === 'thriver') {
+      if (roleIsThriver(profile)) {
         const { count } = await supabase.from('map_pins').select('*', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending')
         setPendingCount(count ?? 0)
       }
@@ -76,7 +77,7 @@ export default function Sidebar() {
       // For Thrivers, also resolve the present user_ids → usernames so
       // the hover popup can show the roster. Survivors only need the
       // count, so we skip the username lookup for them.
-      const isThriver = profile.role === 'thriver'
+      const isThriver = roleIsThriver(profile)
       presenceRef.current = supabase.channel('global_presence', { config: { presence: { key: user.id } } })
       presenceRef.current.on('presence', { event: 'sync' }, async () => {
         const ids = Object.keys(presenceRef.current.presenceState())
@@ -133,15 +134,15 @@ export default function Sidebar() {
         </Link>
         {onlineCount > 0 && (
           <div
-            onMouseEnter={() => userRole === 'thriver' && setPresenceHover(true)}
+            onMouseEnter={() => roleIsThriver(userRole) && setPresenceHover(true)}
             onMouseLeave={() => setPresenceHover(false)}
-            style={{ position: 'relative', fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px', cursor: userRole === 'thriver' ? 'help' : 'default' }}>
+            style={{ position: 'relative', fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px', cursor: roleIsThriver(userRole) ? 'help' : 'default' }}>
             Survivors present: {onlineCount}
             {/* Thriver-only roster popup. Anchored under the count line,
                 left-aligned with the sidebar so it doesn't clip. Survivors
                 see only the count — keeps presence-style anonymity for
                 non-Thriver viewers. */}
-            {presenceHover && userRole === 'thriver' && presentUsernames.length > 0 && (
+            {presenceHover && roleIsThriver(userRole) && presentUsernames.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '4px', minWidth: '180px', maxWidth: '240px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)', zIndex: 1000, textAlign: 'left' }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>Online now</div>
                 {presentUsernames.map(n => (
@@ -166,7 +167,7 @@ export default function Sidebar() {
                 logged-in user adds visual noise without adding info. */}
             <div style={{ fontSize: '14px', letterSpacing: '.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '7px', textAlign: 'center' }}>
               <span style={{ color: '#f5f2ee' }}>{username}</span>
-              {userRole === 'thriver' && (
+              {roleIsThriver(userRole) && (
                 <span style={{ color: '#c0392b', marginLeft: '5px' }}>(Thriver)</span>
               )}
             </div>
@@ -239,7 +240,7 @@ export default function Sidebar() {
 
       {/* Tools — Thriver-only. Keeps elevated destinations behind the role gate
           so Survivors don't see admin surfaces. */}
-      {userRole === 'thriver' && (
+      {roleIsThriver(userRole) && (
         <>
           <div style={sectionHeading}>Tools</div>
           <Link href="/moderate"
