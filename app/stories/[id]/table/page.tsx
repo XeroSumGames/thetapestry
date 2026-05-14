@@ -19,6 +19,7 @@ import InitiativeBar from '../../../../components/InitiativeBar'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
 import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components/RollsFeed'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
@@ -1245,7 +1246,7 @@ export default function TablePage() {
       const gmProfile = gmProfileRes.data
       const members = membersRes.data
       setMyUsername(myProfile?.username ?? '')
-      setIsThriver((myProfile?.role ?? '').toLowerCase() === 'thriver')
+      setIsThriver(roleIsThriver(myProfile))
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
       // Kick gate - handled after the parallel batch instead of mid-

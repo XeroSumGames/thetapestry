@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { logEvent } from '../../../lib/events'
 import { renderRichText } from '../../../lib/rich-text'
 import { useRouter } from 'next/navigation'
@@ -121,7 +122,7 @@ export default function LfgPage() {
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      if (profile && (profile.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
+      setIsThriver(roleIsThriver(profile))
       // Fetch the user's GM'd campaigns once. Used by the 🎟 Invite picker;
       // cheap query that doesn't change during a session, so no need to
       // refetch on every loadPosts call.

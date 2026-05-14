@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { useRouter, useParams } from 'next/navigation'
 import { searchNominatimUSFirst } from '../../../../lib/nominatim-search'
 import { SETTINGS } from '../../../../lib/settings'
@@ -50,7 +51,7 @@ export default function EditCampaignPage() {
       if (!camp) { router.push('/stories'); return }
       if (camp.gm_user_id !== user.id) { router.push('/stories'); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if ((profile?.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
+      setIsThriver(roleIsThriver(profile))
       setName(camp.name)
       setDescription(camp.description ?? '')
       setMapStyle(camp.map_style ?? 'street')

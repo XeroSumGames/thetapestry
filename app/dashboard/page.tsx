@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useRouter } from 'next/navigation'
 import { trackGhostConversion } from '../../lib/events'
 import dynamic from 'next/dynamic'
@@ -49,7 +50,7 @@ export default function DashboardPage() {
         if (!profile.onboarded) setShowWelcome(true)
         setUsername(profile.username)
         setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
-        if (profile.role === 'thriver') {
+        if (roleIsThriver(profile)) {
           const { data: rawRumors } = await supabase
             .from('map_pins')
             .select('*, profiles!map_pins_user_id_fkey(username)')

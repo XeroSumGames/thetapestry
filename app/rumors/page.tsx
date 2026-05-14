@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { listAvailableModules, type ModuleListing } from '../../lib/modules'
 
 const SETTING_LABELS: Record<string, string> = {
@@ -60,8 +61,7 @@ export default function ModuleMarketplacePage() {
       if (!user) return
       setCurrentUserId(user.id)
       const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      const role = (data?.role ?? '').toLowerCase()
-      if (role === 'thriver') setIsThriver(true)
+      setIsThriver(roleIsThriver(data))
     })()
   }, [supabase])
 

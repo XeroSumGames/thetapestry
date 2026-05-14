@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useSearchParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../components/CharacterCard'
 import ProgressionLog, { LogEntry } from '../../components/ProgressionLog'
@@ -41,7 +42,7 @@ export default function CharacterSheetPage() {
         supabase.from('profiles').select('role').eq('id', user.id).single(),
       ])
       if (campRes.data) setIsGM((campRes.data as any).gm_user_id === user.id)
-      if (profRes.data) setIsThriver((profRes.data as any).role?.toLowerCase() === 'thriver')
+      if (profRes.data) setIsThriver(roleIsThriver(profRes.data))
 
       // Check ownership
       setIsMySheet(char.user_id === user.id)

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { logEvent } from '../../../lib/events'
 import { useRouter } from 'next/navigation'
 import AuthorBadge from '../../../components/AuthorBadge'
@@ -115,7 +116,7 @@ export default function ForumsIndexPage() {
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      if (profile && (profile.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
+      setIsThriver(roleIsThriver(profile))
       // Fetch the user's campaigns once for the Campaign scope picker.
       // Mirrors the War Stories pattern: pulled via campaign_members so
       // player-role campaigns appear, not just GM-owned ones. Cheap; no

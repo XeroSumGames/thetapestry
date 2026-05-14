@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useRouter } from 'next/navigation'
 
 // /record — admin UI for the playtest event recorder. Lets a thriver
@@ -64,7 +65,7 @@ export default function RecorderConfigPage() {
         .select('role')
         .eq('id', user.id)
         .maybeSingle()
-      const thriver = ((prof as any)?.role ?? '').toLowerCase() === 'thriver'
+      const thriver = roleIsThriver(prof)
       if (cancelled) return
       setIsThriver(thriver)
       setAuthChecked(true)
@@ -267,7 +268,7 @@ export default function RecorderConfigPage() {
                           {isMe && <span style={{ marginLeft: 6, fontSize: 13, color: '#EF9F27' }}>(you)</span>}
                         </span>
                         <span style={{ fontSize: 13, color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{p.email}</span>
-                        {p.role && p.role.toLowerCase() === 'thriver' && (
+                        {roleIsThriver(p) && (
                           <span style={{ fontSize: 13, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>thriver</span>
                         )}
                         {p.characterNames.length > 0 && (

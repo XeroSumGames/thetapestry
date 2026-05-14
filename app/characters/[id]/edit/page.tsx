@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
 import { SKILLS, normalizeRations } from '../../../../lib/xse-schema'
 import StepXero from '../../../../components/wizard/StepXero'
@@ -51,7 +52,7 @@ export default function EditCharacterPage() {
       // Thrivers can edit any character (godmode surface 5).
       // Everyone else must own the character — non-owners are redirected.
       const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      const isThriver = (prof as any)?.role?.toLowerCase() === 'thriver'
+      const isThriver = roleIsThriver(prof)
 
       let query = supabase.from('characters').select('id, name, data').eq('id', id)
       if (!isThriver) query = query.eq('user_id', user.id)

@@ -19,6 +19,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 
 interface ModuleRow {
   id: string
@@ -127,7 +128,7 @@ export default function ModuleEditPage() {
         return
       }
 
-      const isThriver = ((profile?.role ?? '') as string).toLowerCase() === 'thriver'
+      const isThriver = roleIsThriver(profile)
       const isAuthor = row.author_user_id === user.id
       if (!isThriver && !isAuthor) {
         setAccessDenied(true)

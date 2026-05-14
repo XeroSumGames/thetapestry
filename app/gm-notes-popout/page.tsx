@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { renderRichText } from '../../lib/rich-text'
 
 interface Campaign {
@@ -94,7 +95,7 @@ export default function GMNotesPopoutPage() {
         .eq('id', user.id)
         .maybeSingle()
       const isGM = (camp as Campaign).gm_user_id === user.id
-      const isThriver = (profile as any)?.role?.toLowerCase() === 'thriver'
+      const isThriver = roleIsThriver(profile)
       if (!isGM && !isThriver) {
         if (!cancelled) { setAuthError('GM access only.'); setLoading(false) }
         return
