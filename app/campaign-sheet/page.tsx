@@ -13,7 +13,7 @@
 //
 // See tasks/spec-campaign-sheet.md for the locked rules.
 
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -63,6 +63,8 @@ export default function CampaignSheetPage() {
   const supabase = useMemo(() => createClient(), [])
 
   const [clock, setClockState] = useState<ClockState>({ canon_day: 0, hour: 0 })
+  const [startCanonDay, setStartCanonDay] = useState<number>(0)
+  const [editClockModal, setEditClockModal] = useState(false)
   const [campaignName, setCampaignName] = useState<string>('')
   const [gmUserId, setGmUserId] = useState<string | null>(null)
   const [myUserId, setMyUserId] = useState<string | null>(null)
@@ -151,7 +153,7 @@ export default function CampaignSheetPage() {
     async function load() {
       const [auth, camp] = await Promise.all([
         getCachedAuth(),
-        supabase.from('campaigns').select('name, gm_user_id, clock').eq('id', campaignId).maybeSingle(),
+        supabase.from('campaigns').select('name, gm_user_id, clock, start_canon_day').eq('id', campaignId).maybeSingle(),
       ])
       if (cancelled) return
       setMyUserId(auth.user?.id ?? null)
@@ -162,6 +164,13 @@ export default function CampaignSheetPage() {
         const stored = c.clock as ClockState | null
         if (stored && typeof stored.canon_day === 'number' && typeof stored.hour === 'number') {
           setClockState({ canon_day: stored.canon_day, hour: stored.hour })
+        }
+        // start_canon_day backfills to current clock.canon_day if NULL
+        // (the SQL migration already backfilled existing campaigns).
+        if (typeof c.start_canon_day === 'number') {
+          setStartCanonDay(c.start_canon_day)
+        } else if (stored && typeof stored.canon_day === 'number') {
+          setStartCanonDay(stored.canon_day)
         }
       }
       await Promise.all([loadParty(), loadVehicles(), loadPending()])
@@ -230,8 +239,33 @@ export default function CampaignSheetPage() {
         <div style={{ fontSize: 13, color: '#888', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>
           {campaignName || 'Campaign'} · Campaign Sheet
         </div>
-        <div style={{ fontSize: 24, color: '#f5f2ee', fontWeight: 700, letterSpacing: '.04em', marginBottom: 6 }}>
-          {calendar.display} · {hourTo12h(clock.hour)}
+        {/* Header line: "Campaign Day N · <time>, <date> · X days after
+            the first recorded death". Three dot-separated parts:
+            - Campaign Day = clock.canon_day - start_canon_day + 1 (Day 1
+              when the campaign just started, increments each canon day).
+            - <time>, <date> = hourTo12h + month/day/year (Year 0 = pandemic).
+            - X days = clock.canon_day (with negative handling for
+              pre-pandemic prologue campaigns). */}
+        <div style={{ fontSize: 24, color: '#f5f2ee', fontWeight: 700, letterSpacing: '.04em', marginBottom: 6, display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+          <span>
+            Campaign Day {clock.canon_day - startCanonDay + 1}
+            {' · '}
+            {hourTo12h(clock.hour)}, {calendar.monthName} {calendar.dayOrdinal}, Year {calendar.yearNumber}
+            {' · '}
+            <span style={{ fontSize: 18, color: '#cce0f5', fontWeight: 400 }}>
+              {clock.canon_day === 0
+                ? 'the day of the first recorded death'
+                : clock.canon_day > 0
+                  ? `${clock.canon_day} days after the first recorded death`
+                  : `${Math.abs(clock.canon_day)} days before the first recorded death`}
+            </span>
+          </span>
+          {isGM && (
+            <button onClick={() => setEditClockModal(true)}
+              style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Edit
+            </button>
+          )}
         </div>
         {todaysEvents.length > 0 && (
           <div style={{ fontSize: 15, color: '#EF9F27', fontStyle: 'italic', marginBottom: 6 }}>
@@ -388,6 +422,140 @@ export default function CampaignSheetPage() {
           }}
         />
       )}
+
+      {/* ── Edit Clock Modal (GM-only) ────────────────────────── */}
+      {editClockModal && isGM && (
+        <EditClockModal
+          clock={clock}
+          startCanonDay={startCanonDay}
+          onClose={() => setEditClockModal(false)}
+          onSubmit={async (next) => {
+            await supabase
+              .from('campaigns')
+              .update({
+                clock: { canon_day: next.canonDay, hour: next.hour },
+                start_canon_day: next.startCanonDay,
+              })
+              .eq('id', campaignId)
+            setClockState({ canon_day: next.canonDay, hour: next.hour })
+            setStartCanonDay(next.startCanonDay)
+            setEditClockModal(false)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Edit Clock Modal ───────────────────────────────────────────
+// Lets the GM set the clock (canon_day + hour) and campaign start
+// (start_canon_day) directly. Uses Month/Day/Year-of-Pandemic dropdowns
+// for the canon_day inputs - matches /stories/new and the module editor.
+function EditClockModal({ clock, startCanonDay, onClose, onSubmit }: {
+  clock: ClockState
+  startCanonDay: number
+  onClose: () => void
+  onSubmit: (next: { canonDay: number; hour: number; startCanonDay: number }) => void
+}) {
+  // Reverse-convert canon_day → month/day/year for the dropdowns.
+  function partsFromCanonDay(cd: number): { month: string; day: string; year: string } {
+    const offsetFromYearStart = cd + 61
+    const year = Math.floor(offsetFromYearStart / 365)
+    const dayOfYear = offsetFromYearStart - year * 365
+    const DAYS_BEFORE_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
+    let month = 12
+    for (let i = 11; i >= 0; i--) {
+      if (dayOfYear > DAYS_BEFORE_MONTH[i]) { month = i + 1; break }
+    }
+    const day = dayOfYear - DAYS_BEFORE_MONTH[month - 1]
+    return { month: String(month), day: String(day), year: String(year) }
+  }
+  function canonDayFromParts(m: string, d: string, y: string): number | null {
+    const mi = parseInt(m, 10), di = parseInt(d, 10), yi = parseInt(y, 10)
+    if (!Number.isFinite(mi) || !Number.isFinite(di) || !Number.isFinite(yi)) return null
+    if (mi < 1 || mi > 12 || di < 1 || di > 31 || yi < 0 || yi > 20) return null
+    const DAYS_BEFORE_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
+    return yi * 365 + (DAYS_BEFORE_MONTH[mi - 1] + di - 61)
+  }
+  const initNow = partsFromCanonDay(clock.canon_day)
+  const initStart = partsFromCanonDay(startCanonDay)
+  const [nowMonth, setNowMonth] = useState(initNow.month)
+  const [nowDay, setNowDay] = useState(initNow.day)
+  const [nowYear, setNowYear] = useState(initNow.year)
+  const [nowHour, setNowHour] = useState(String(clock.hour))
+  const [startMonth, setStartMonth] = useState(initStart.month)
+  const [startDay, setStartDay] = useState(initStart.day)
+  const [startYear, setStartYear] = useState(initStart.year)
+  const newCanonDay = canonDayFromParts(nowMonth, nowDay, nowYear)
+  const newStartCanonDay = canonDayFromParts(startMonth, startDay, startYear)
+  const newHourVal = parseInt(nowHour, 10)
+  const hourValid = Number.isFinite(newHourVal) && newHourVal >= 0 && newHourVal <= 23
+  const isValid = newCanonDay !== null && newStartCanonDay !== null && hourValid
+  const inp: React.CSSProperties = { padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '460px', maxWidth: '92vw', fontFamily: 'Carlito, sans-serif' }}>
+        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '8px' }}>Edit Campaign Clock</div>
+        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '14px', fontStyle: 'italic' }}>
+          Year 0 = pandemic year (March 2nd Year 0 = first recorded death). Year 1+ = years after.
+        </div>
+
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '4px' }}>Current Date / Time</div>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+            <select value={nowMonth} onChange={e => setNowMonth(e.target.value)} style={{ ...inp, flex: 1 }}>
+              {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+                <option key={m} value={String(i + 1)}>{m}</option>
+              ))}
+            </select>
+            <select value={nowDay} onChange={e => setNowDay(e.target.value)} style={{ ...inp, width: '90px' }}>
+              {Array.from({ length: 31 }, (_, i) => <option key={i + 1} value={String(i + 1)}>{i + 1}</option>)}
+            </select>
+            <select value={nowYear} onChange={e => setNowYear(e.target.value)} style={{ ...inp, flex: 1 }}>
+              {Array.from({ length: 21 }, (_, i) => <option key={i} value={String(i)}>Year {i}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>Hour (0-23):</span>
+            <input type="number" min={0} max={23} value={nowHour} onChange={e => setNowHour(e.target.value)} style={{ ...inp, width: '70px' }} />
+            {hourValid && <span style={{ fontSize: '13px', color: '#7fc458' }}>= {hourTo12h(newHourVal)}</span>}
+          </div>
+          {newCanonDay !== null && (
+            <div style={{ fontSize: '13px', color: '#7fc458', marginTop: '4px' }}>canon_day = {newCanonDay}</div>
+          )}
+        </div>
+
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '4px' }}>Campaign Start Date (anchors &quot;Campaign Day N&quot;)</div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <select value={startMonth} onChange={e => setStartMonth(e.target.value)} style={{ ...inp, flex: 1 }}>
+              {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+                <option key={m} value={String(i + 1)}>{m}</option>
+              ))}
+            </select>
+            <select value={startDay} onChange={e => setStartDay(e.target.value)} style={{ ...inp, width: '90px' }}>
+              {Array.from({ length: 31 }, (_, i) => <option key={i + 1} value={String(i + 1)}>{i + 1}</option>)}
+            </select>
+            <select value={startYear} onChange={e => setStartYear(e.target.value)} style={{ ...inp, flex: 1 }}>
+              {Array.from({ length: 21 }, (_, i) => <option key={i} value={String(i)}>Year {i}</option>)}
+            </select>
+          </div>
+          {newStartCanonDay !== null && (
+            <div style={{ fontSize: '13px', color: '#7fc458', marginTop: '4px' }}>start_canon_day = {newStartCanonDay}</div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+          <button onClick={onClose}
+            style={{ flex: 1, padding: '9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button onClick={() => isValid && onSubmit({ canonDay: newCanonDay!, hour: newHourVal, startCanonDay: newStartCanonDay! })} disabled={!isValid}
+            style={{ flex: 2, padding: '9px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', cursor: isValid ? 'pointer' : 'not-allowed', opacity: isValid ? 1 : 0.5 }}>
+            Save Clock
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -160,7 +160,9 @@ export default function NewCampaignPage() {
     //      start_canon_day (NULL on the version = no seed, default to 0)
     //   2. Custom Setting with the GM's picked date → use computed canon_day
     //   3. Anything else → no seed, campaign starts at canon_day 0
-    let clockSeed: { clock: { canon_day: number; hour: number } } | {} = {}
+    // Whatever we seed clock with, also stamp campaigns.start_canon_day
+    // so "Campaign Day N" math on the Campaign Sheet anchors here.
+    let clockSeed: { clock: { canon_day: number; hour: number }; start_canon_day: number } | { start_canon_day: number } = { start_canon_day: 0 }
     if (pickedModuleVersionId) {
       const { data: ver } = await supabase
         .from('module_versions')
@@ -169,10 +171,10 @@ export default function NewCampaignPage() {
         .maybeSingle()
       const moduleCanonDay = ver?.start_canon_day
       if (typeof moduleCanonDay === 'number') {
-        clockSeed = { clock: { canon_day: moduleCanonDay, hour: 0 } }
+        clockSeed = { clock: { canon_day: moduleCanonDay, hour: 0 }, start_canon_day: moduleCanonDay }
       }
     } else if (setting === 'custom' && startCanonDay !== null) {
-      clockSeed = { clock: { canon_day: startCanonDay, hour: 0 } }
+      clockSeed = { clock: { canon_day: startCanonDay, hour: 0 }, start_canon_day: startCanonDay }
     }
     const { data, error: err } = await supabase.from('campaigns').insert({
       name: name.trim(),

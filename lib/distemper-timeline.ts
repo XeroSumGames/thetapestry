@@ -1,10 +1,16 @@
 // Canonical Distemper timeline + calendar helpers.
 //
-// Anchor: Day 0 = "First Recorded death in Chile" = 2-Mar (Year 1 / 2025).
-// In-game years map to real Gregorian years (Year 1 = 2025, Year 2 = 2026,
-// etc.) but the YEAR is implicit — display shows "Year N" with no real-
-// world year, because the launch date isn't fixed yet and the world plays
-// out in real time relative to whenever launch happens.
+// Anchor: Day 0 = "First Recorded death in Chile" = 2-Mar (Year 0 / 2025).
+// In-game years map to real Gregorian years (Year 0 = 2025, Year 1 = 2026,
+// etc.) - Year 0 is the pandemic year itself, Year 1 is the first year
+// AFTER the pandemic, and so on. The YEAR is implicit in display - shows
+// "Year N" with no real-world year, because the launch date isn't fixed
+// yet and the world plays out in real time relative to whenever launch
+// happens.
+//
+// Re-locked 2026-05-13 (was Year 1 = pandemic year pre-shift; the
+// /stories/new and module-editor canonical-start-date pickers locked
+// Year 0 = pandemic year and this file follows suit).
 //
 // Some Year 2 day numbers in Xero's canonical table are +1 vs strict
 // Gregorian math (e.g. 15-Sep = Day 563 per canon, vs Day 562 per strict
@@ -24,7 +30,7 @@ export interface TimelineEntry {
 // timeline spreadsheet (2026-05-12). Empty-event rows from the source
 // table are dropped — they're placeholders, not events to display.
 export const DISTEMPER_TIMELINE: ReadonlyArray<TimelineEntry> = [
-  // ── Year 1 (Infection Year — 2025) ─────────────────────────
+  // ── Year 0 (Infection Year — 2025, the pandemic year) ─────────────────────────
   { canon_day: 0,   date_short: '2-Mar',  event: 'First Recorded death in Chile' },
   { canon_day: 7,   date_short: '9-Mar',  event: 'WHO classifies the virus, believing it to be transmission based with a mortality rate just in advance of seasonal flu at 1.3%' },
   { canon_day: 31,  date_short: '2-Apr',  event: 'H724 has infected more people than the common cold' },
@@ -72,7 +78,7 @@ export const DISTEMPER_TIMELINE: ReadonlyArray<TimelineEntry> = [
   { canon_day: 246, date_short: '3-Nov',  event: 'The Irresistible Force' },
   { canon_day: 297, date_short: '24-Dec', event: 'Infection complete.' },
 
-  // ── Year 2 (The Year After — 2026) ─────────────────────────
+  // ── Year 1 (The Year After — 2026) ─────────────────────────
   { canon_day: 305, date_short: '1-Jan',  event: 'Apex of the pandemic' },
   { canon_day: 315, date_short: '11-Jan', event: 'To Hunker In the Bunker' },
   { canon_day: 362, date_short: '27-Feb', event: 'Empty' },
@@ -86,12 +92,12 @@ export const DISTEMPER_TIMELINE: ReadonlyArray<TimelineEntry> = [
   { canon_day: 573, date_short: '25-Sep', event: 'Bad Faith Negotiations' },
   { canon_day: 633, date_short: '24-Nov', event: 'A Month In Hell' },
 
-  // ── Year 3 (Two Years On — 2027) ───────────────────────────
+  // ── Year 2 (Two Years On — 2027) ───────────────────────────
   { canon_day: 791, date_short: '1-May',  event: "Our Father's House" },
   { canon_day: 855, date_short: '4-Jul',  event: 'Greatest City on Earth' },
   { canon_day: 919, date_short: '6-Sep',  event: 'The Island' },
 
-  // ── Year 4 (Three Years On — 2028) ─────────────────────────
+  // ── Year 3 (Three Years On — 2028) ─────────────────────────
   { canon_day: 1085, date_short: '19-Feb', event: 'Mongrels' },
   { canon_day: 1095, date_short: '1-Mar',  event: 'Trade Routes of New Philly' },
   { canon_day: 1398, date_short: '29-Dec', event: 'The Procession' },
@@ -150,7 +156,7 @@ export function dayToCalendar(canonDay: number): CalendarParts {
   const monthIdx = d.getUTCMonth()
   const day = d.getUTCDate()
   const realYear = d.getUTCFullYear()
-  const yearNumber = realYear - 2024  // 2025 → Year 1, 2026 → Year 2, ...
+  const yearNumber = realYear - 2025  // 2025 → Year 0 (pandemic), 2026 → Year 1, ...
   const monthName = MONTH_NAMES[monthIdx]
   const dayOrdinal = `${day}${ordinalSuffix(day)}`
   const display = `Day ${canonDay} / ${monthName} ${dayOrdinal}, Year ${yearNumber}`
