@@ -3313,6 +3313,30 @@ export default function TablePage() {
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
   const [revealedNpcs, setRevealedNpcs] = useState<any[]>([])
   const revealedNpcIds = useMemo(() => new Set<string>(revealedNpcs.map((n: any) => n.id)), [revealedNpcs])
+  const npcRosterInitiativeNpcIds = useMemo(
+    () => new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!)),
+    [initiativeOrder]
+  )
+  const npcRosterInitiativeNpcOrder = useMemo(() => {
+    const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+    const rotated = activeIdx >= 0
+      ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
+      : initiativeOrder
+    return rotated.filter(e => e.npc_id).map(e => e.npc_id!)
+  }, [initiativeOrder])
+  const npcRosterPcEntries = useMemo(
+    () => entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId })),
+    [entries]
+  )
+  const npcRosterViewingNpcIds = useMemo(
+    () => new Set(viewingNpcs.map(n => n.id)),
+    [viewingNpcs]
+  )
+  const onNpcRosterViewNpc = useCallback(
+    (npc: CampaignNpc) => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}&gm=${gmLike ? 1 : 0}`, `npc-${npc.id}`, { w: 571, h: 400 }) },
+    [id, gmLike]
+  )
+  const onNpcRosterEditStarted = useCallback(() => setPendingEditNpcId(null), [])
   // Player-side NPC folder expand state. Mirrors the GM's NpcRoster
   // folder grouping so players see the same organization the GM set up.
   // localStorage-backed per (campaign, user) so each player can have
@@ -8042,13 +8066,7 @@ export default function TablePage() {
           </div>
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {gmTab === 'npcs' && gmLike && (() => {
-              // Rotate initiative order so the currently-active combatant is first.
-              const activeIdx = initiativeOrder.findIndex(e => e.is_active)
-              const rotated = activeIdx >= 0
-                ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
-                : initiativeOrder
-              const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={gmLike} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}&gm=${gmLike ? 1 : 0}`, `npc-${npc.id}`, { w: 571, h: 400 }) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} onTacticalRefresh={async () => {
+              return <NpcRoster campaignId={id} isGM={gmLike} combatActive={combatActive} initiativeNpcIds={npcRosterInitiativeNpcIds} initiativeNpcOrder={npcRosterInitiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={npcRosterPcEntries} onViewNpc={onNpcRosterViewNpc} viewingNpcIds={npcRosterViewingNpcIds} editNpcId={pendingEditNpcId} onEditStarted={onNpcRosterEditStarted} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} onTacticalRefresh={async () => {
               // Final-pass refresh after the GM toggles SHOW/HIDE on a
               // folder. revealNpcsByIds in NpcRoster updates is_visible
               // on scene_tokens but doesn't broadcast - without this
