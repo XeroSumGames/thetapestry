@@ -1,7 +1,7 @@
 # Tapestry Rules Canon — XSE SRD v1.1.17
 
 **Source of truth**: `lib/xse-schema.ts` and `app/rules/*` pages on TheTapestry platform.
-**Generated**: 2026-05-11.
+**Generated**: 2026-05-14.
 **Regenerate**: `npx tsx scripts/export-canon.ts > tasks/tapestry-rules-canon.md`
 
 This file is the platform's canonical reference for rules content. Every term, formula,
@@ -19,6 +19,24 @@ Goal of any audit pass: Quickstart, SRD, and Core Rulebook all match the canon i
 If a term, table entry, or skill name appears in the Quickstart, SRD, or CRB but is **not** in
 this canon file, it should be deleted from those documents, not preserved. If something is in
 this canon file but missing from a document being audited, it should be added. Never invent new terms.
+
+## §01 Overview › In-World Time
+
+Source: `app/rules/overview/in-world-time/page.tsx`.
+
+The Distemper world has a shared canonical calendar anchored to the first recorded H724 (Dog Flu / Distemper) death on **March 2nd, Year 0**. This is canon_day 0 — the zero point for all calendar math.
+
+**Year 0 is the pandemic year itself.** The outbreak begins, spreads through Year 0, and by the end of Year 0 the world is in collapse. **Year 1** is the first year after the pandemic. **Year 2** is the second year after. And so on. The year numbers shown in-game are **always implicit** ("Year N", no Gregorian year shown) - the world plays out in real time relative to platform launch.
+
+**Pre-pandemic prologue.** January and February of Year 0 (~60 days before the first recorded death) are playable for campaigns set in the run-up to the outbreak. These days have **negative canon_day** values: January 1, Year 0 = canon_day -60.
+
+**Campaign Sheet clock display.** Every campaign tracks both its current in-world clock and the canon_day it started on. The Campaign Sheet header shows three pieces of time:
+
+- **Campaign Day N** - days since the campaign started (Day 1 on the first day).
+- **<time>, <month> <day_ordinal>, Year M** - the wall-clock equivalent (e.g. "6 PM, September 15th, Year 1").
+- **X days after the first recorded death** - the canon_day value, for situating the campaign on the universal timeline.
+
+Module authors can stamp a canonical start date on their module (`modules.start_canon_day`); any campaign cloned from that module opens on that in-world day automatically. GMs can edit the clock + start date directly from the Campaign Sheet at any time.
 
 ## §02 Core Mechanics
 
@@ -55,6 +73,27 @@ Multiple players attempting the same task can pool their abilities. Everyone mus
 Source: `app/rules/core-mechanics/attribute-checks/page.tsx`.
 
 The outcome is determined by the first side to roll a Success, Wild Success, or Moment of High Insight while the other simultaneously rolls a Failure, Dire Failure, or Moment of Low Insight. If both sides roll the same outcome tier, the result is negated and play continues until a clear winner emerges.
+
+### Coordinated Effort
+
+Source: `app/rules/core-mechanics/coordinated-effort/page.tsx`.
+
+A chain of skill checks where multiple PCs work together on a sequence of actions toward a shared goal. Any player can initiate, pick participants, and pick the skill they themselves will roll first (Tactics\*, Manipulation, Mechanic\*, Perception, or any other skill that fits the opening action). The first roll's outcome becomes the **lead CMod** that propagates to every subsequent roll in the chain. Each participant rolls whatever skill suits their part of the plan; the same participant can roll multiple times. Only the FIRST roll's outcome propagates - later helper outcomes don't stack further. Every roll gets **+1 CMod per OTHER participant** plus the lead CMod.
+
+| First-roll outcome | Lead CMod | Effect on chain |
+|---|---|---|
+| Moment of High Insight (6+6) | +3 | Chain at +3; first roller earns a personal Insight Die. |
+| Wild Success (14+) | +2 | All subsequent rolls +2. |
+| Success (9-13) | +1 | All subsequent rolls +1. |
+| Failure (4-8) | -1 | Chain continues at -1. |
+| Dire Failure (0-3) | -3 | Chain continues at -3, heavily penalized. |
+| Moment of Low Insight (1+1) | — | **Chain collapses immediately.** First roller still earns an Insight Die per canon. |
+
+Asymmetry is intentional - bad lead rolls cascade hard, and Low Insight aborts the entire effort. Chain ends on goal achievement, opt-out by any participant, narrative impossibility, or LI on the lead.
+
+**Insight Dice during a Coordinated Effort:** any participant can spend an Insight Die on their own roll (3d6 keep all 3 or +3 CMod), and any participant who rolls HI or LI personally earns +1 Insight Die regardless of the overall outcome.
+
+**In combat:** each roll consumes 1 combat action from the roller; the chain resolves on the initiator's turn (initiative pauses until the chain ends or someone opts out). Out of combat, rolls are free.
 
 ### Perception Check
 
@@ -477,6 +516,51 @@ Each attack deals **Wound Points (WP)** and **Resilience Points (RP)** damage. R
 - **Stabilise**: Successful **Medicine\*** check, OR Wild Success on Reason. Once Stabilised, Incapacitated for **16 − PHY AMod** rounds (min 1), then 1 WP + 1 RP.
 - **Death**: prevented only by spending ALL Insight Dice — character lives with 1 WP + 1 RP per die surrendered.
 - **Healing**: never-MW heal 1 WP/day; was-MW heal 1 WP/2 days; resting recovers 1 RP/hour.
+
+### Healing (Medicine\* check)
+
+Source: `app/rules/combat/healing/page.tsx`.
+
+A successful Medicine\* check on a target at Engaged range queues a pending heal that applies over 24 hours of in-world time: **50% at +12 hours, 50% at +24 hours**. Healer may roll naked or use a First Aid Kit (+1 CMod, heals 1+1d3) or a Doctor's Bag (+2 CMod, heals 1+2d3).
+
+| Outcome | Naked Medicine\* check | First Aid Kit | Doctor's Bag |
+|---|---|---|---|
+| Wild Success | Medicine\* level + 1 | 1+1d3 + 1 | 1+2d3 + 1 |
+| High Insight (6+6) | Medicine\* level + 2 (+ Insight Die) | 1+1d3 + 2 (+ Insight Die) | 1+2d3 + 2 (+ Insight Die) |
+| Success | Medicine\* level | 1+1d3 | 1+2d3 |
+| Failure | 0 | 0 | 0 |
+| Dire Failure | -1 WP to target (immediate) | -1 WP | -1 WP |
+| Low Insight (1+1) | Target makes a Wound Infection check (+ Insight Die to healer) | same | same |
+
+**Banking:** total split 50/50 across +12h and +24h checkpoints. Odd totals put the larger half at +24h (heal of 5 → +2 at +12h, +3 at +24h).
+
+**Target queue:** the pending heal lives on the target, not the healer. If the healer dies between the check and the checkpoint, the target still gets the WP.
+
+**Stacking:** multiple successful heals on the same target stack as independent queue rows, each with its own +12h/+24h schedule from its own check time.
+
+**Dire Failure interrupt:** the -1 WP from Dire Failure applies immediately, not over 24h. Mortal-wound flow fires if the target hits 0 WP.
+
+### Weapon Repair (Unjam / Repair)
+
+Source: `app/rules/combat/weapon-repair/page.tsx`.
+
+On a Moment of Low Insight with a weapon, the weapon malfunctions: it's flagged as jammed (firearms) or broken-state (melee) AND its condition degrades by one level. The owner can spend a Ready Weapon action to attempt recovery. Firearms call it **Unjam**; melee weapons call it **Repair** — same mechanic, different verb and skill pool.
+
+**Skill pool** (best of three the roller has access to):
+
+- **Firearms (Unjam):** Tinkerer, Weaponsmith\*, or Ranged Combat.
+- **Melee (Repair):** Tinkerer, Weaponsmith\*, or Melee Combat.
+
+| Outcome | Effect |
+|---|---|
+| Wild Success | Condition improved by 1 level. Jam cleared. |
+| High Insight (6+6) | Condition improved by 2 levels. Jam cleared. Insight Die awarded. |
+| Success | If condition is Worn or worse, improve by 1 level. Jam cleared. |
+| Failure | No change. Jam still in place. |
+| Dire Failure | Weapon breaks (condition jumps to Broken). |
+| Low Insight (1+1) | Weapon breaks AND the roller takes 1 WP damage. Insight Die awarded. |
+
+Condition ladder (worst → best): Broken → Damaged → Worn → Used → Pristine. A Broken weapon can't be used until repaired past Damaged.
 
 ### Stress & Breaking Point
 
