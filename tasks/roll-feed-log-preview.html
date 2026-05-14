@@ -228,6 +228,7 @@
     <li><strong>Equipment</strong></li>
     <li><a href="#unjam">Unjam (firearm)</a></li>
     <li><a href="#repair">Repair (melee)</a></li>
+    <li><a href="#heal">Heal (Medicine*)</a></li>
     <li><a href="#upkeep">Upkeep</a></li>
     <li><strong>Vehicle</strong></li>
     <li><a href="#vehicle-attack">Vehicle Attack</a></li>
@@ -658,6 +659,17 @@
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:23 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask unjams their Pistol and was wildly successful</div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:23 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask unjams their Pistol</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:23 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask fails to unjam their Pistol</div></div>
+
+  <h3 id="heal">Heal (Medicine*)</h3>
+  <p class="note">Medicine* check on a target. Outcome decides heal amount (banked +12h/+24h) or harm. Naked check heals Medicine* level WP; First Aid Kit heals 1+1d3; Doctor's Bag heals 1+2d3. WS adds +1, HI adds +2. Failure = nothing. Dire Failure = -1 WP immediate. Low Insight = target makes Wound Infection check.</p>
+  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie expertly treats Marv with a Doctor's Bag - exceptional care</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie treats Marv with a First Aid Kit</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie fails to make progress treating Marv</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie botches the treatment - Marv takes 1 WP damage</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie botches the treatment - Marv must make a Wound Infection check and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">3:30 AM</span></div></div><div class="narrative">Treatment applied: Marv (+2 WP, 4 to 6)</div></div>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">3:30 PM</span></div></div><div class="narrative">Treatment applied: Marv (+3 WP, 6 to 9)</div></div>
 
   <h3 id="repair">Repair (melee)</h3>
   <p class="note">Mirror of Unjam for melee weapons - they malfunction (bent, stuck, fouled) rather than jam. Roll request label is <code>Repair - &lt;weaponName&gt; (&lt;skill&gt;)</code>; skill picker considers Weaponsmith and Melee Combat (instead of Ranged Combat). Ready Weapon modal labels the button "Repair" when the equipped weapon is melee.</p>
