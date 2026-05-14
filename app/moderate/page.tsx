@@ -169,7 +169,7 @@ export default function ModerationPage() {
         .maybeSingle()
       setMyRole((prof as any)?.role ?? null)
       setRoleChecked(true)
-      if (((prof as any)?.role ?? '').toLowerCase() === 'thriver') {
+      if (roleIsThriver(prof)) {
         loadPendingCounts()
       }
       load()
@@ -177,7 +177,7 @@ export default function ModerationPage() {
     check()
   }, [filter])
 
-  const isThriver = typeof myRole === 'string' && myRole.toLowerCase() === 'thriver'
+  const isThriver = roleIsThriver(myRole)
 
   useEffect(() => {
     if (section === 'users') loadUsers()
@@ -906,7 +906,7 @@ export default function ModerationPage() {
                 <div key={u.id} style={{
                   background: checked ? '#2a1210' : '#1a1a1a',
                   border: `1px solid ${checked ? '#7a1f16' : '#2e2e2e'}`,
-                  borderLeft: `3px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#3a3a3a'}`,
+                  borderLeft: `3px solid ${roleIsThriver(u) ? '#c0392b' : '#3a3a3a'}`,
                   borderRadius: '4px', padding: '10px 1.25rem',
                   display: 'flex', flexDirection: 'column', gap: '8px',
                   position: 'relative',
@@ -941,9 +941,9 @@ export default function ModerationPage() {
                       fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                       letterSpacing: '.08em', textTransform: 'uppercase',
                       padding: '3px 8px', borderRadius: '2px',
-                      background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
-                      color: u.role?.toLowerCase() === 'thriver' ? '#f5a89a' : '#7ab3d4',
-                      border: `1px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
+                      background: roleIsThriver(u) ? '#2a1210' : '#1a1a2e',
+                      color: roleIsThriver(u) ? '#f5a89a' : '#7ab3d4',
+                      border: `1px solid ${roleIsThriver(u) ? '#c0392b' : '#2e2e5a'}`,
                       flexShrink: 0,
                     }}>
                       {u.role}

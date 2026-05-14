@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../../lib/auth/roles'
 import { useRouter, useParams } from 'next/navigation'
 
 interface UserHeader {
@@ -225,9 +226,9 @@ export default function UserActivityPage() {
               fontSize: '13px', fontFamily: 'Carlito, sans-serif',
               letterSpacing: '.08em', textTransform: 'uppercase',
               padding: '3px 8px', borderRadius: '2px',
-              background: header.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
-              color: header.role?.toLowerCase() === 'thriver' ? '#f5a89a' : '#7ab3d4',
-              border: `1px solid ${header.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
+              background: roleIsThriver(header) ? '#2a1210' : '#1a1a2e',
+              color: roleIsThriver(header) ? '#f5a89a' : '#7ab3d4',
+              border: `1px solid ${roleIsThriver(header) ? '#c0392b' : '#2e2e5a'}`,
             }}>
               {header.role}
             </span>
