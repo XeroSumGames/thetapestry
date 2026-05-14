@@ -36,7 +36,7 @@ const CampaignObjects = dynamic(() => import('../../../../components/CampaignObj
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { computeEncumbrance } from '../../../../lib/encumbrance'
-import { advance as advanceCampaignClock } from '../../../../lib/campaign-clock'
+import { advance as advanceCampaignClock, queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
@@ -654,7 +654,7 @@ export default function TablePage() {
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
-  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | 'coordinated_effort' | null>(null)
+  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | 'coordinated_effort' | 'heal' | null>(null)
   // Quick Add modal state - all pin/community form state now lives
   // inside <QuickAddModal>. The table page only tracks open/close
   // plus the pin-only flag + seed lat/lng.
@@ -816,6 +816,16 @@ export default function TablePage() {
   } | null>(null)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
+  // Healing state - see tasks/spec-healing.md. Healer picks a target
+  // and (optionally) a kit (First Aid Kit / Doctor's Bag). Roll fires
+  // Medicine* with kit CMod baked in. Post-resolve handler queues the
+  // pending heal via queuePendingHeal() in lib/campaign-clock.ts.
+  const [healTargetCharId, setHealTargetCharId] = useState<string>('')
+  const [healKit, setHealKit] = useState<'none' | 'first_aid' | 'doctors_bag'>('none')
+  // Stashed so the executeRoll post-resolve block knows it came from
+  // the Heal modal (label-prefix match alone could be brittle if the
+  // user labels their own roll something weird).
+  const healPendingRef = useRef<{ targetCharId: string; targetName: string; kit: 'none' | 'first_aid' | 'doctors_bag' } | null>(null)
   // Coordinated Effort state - see tasks/spec-coordinated-effort.md.
   // The initiator picks participants + their first skill, fires the
   // lead roll. Lead outcome → leadCmod (per ladder) is stored on
@@ -3927,6 +3937,40 @@ export default function TablePage() {
     setGroupCheckSkill('')
   }
 
+  // Heal: fires a Medicine* check on the chosen target with the kit CMod
+  // pre-baked. Post-resolve handler in executeRoll handles outcome:
+  // queues pending_heal events on Success+, applies -1 WP on Dire Failure,
+  // triggers a Wound Infection prompt on Low Insight.
+  function triggerHeal() {
+    if (!healTargetCharId) return
+    const myEntry = entries.find(e => e.userId === userId)
+    if (!myEntry) { alert('You must have a character in this campaign to heal.'); return }
+    const target = entries.find(e => e.character.id === healTargetCharId)
+    if (!target) { alert('Target not found.'); return }
+    // Medicine* is RSN-based.
+    const amod = (myEntry.character.data?.rapid as any)?.RSN ?? 0
+    const smod = (myEntry.character.data?.skills ?? []).find((s: any) => s.skillName === 'Medicine*')?.level ?? 0
+    healPendingRef.current = {
+      targetCharId: target.character.id,
+      targetName: target.character.name,
+      kit: healKit,
+    }
+    // Kit CMod is baked into baseCmod via the same path the
+    // Coordinated-Effort auto-injection uses. Simpler: pass the kit
+    // bonus by setting setCmod after handleRollRequest. handleRollRequest
+    // resets cmod to baseCmod, so we override right after.
+    const kitCmod = healKit === 'doctors_bag' ? 2 : healKit === 'first_aid' ? 1 : 0
+    const kitLabel = healKit === 'doctors_bag' ? "Doctor's Bag" : healKit === 'first_aid' ? 'First Aid Kit' : 'naked'
+    handleRollRequest(`${myEntry.character.name} - Heal ${target.character.name} (${kitLabel})`, amod, smod)
+    if (kitCmod > 0) {
+      // Defer to next tick so handleRollRequest's setCmod fires first.
+      setTimeout(() => setCmod(String(kitCmod)), 0)
+    }
+    setShowSpecialCheck(null)
+    setHealTargetCharId('')
+    setHealKit('none')
+  }
+
   // Coordinated Effort: fires the first roll in the chain. The +N coord
   // bonus (one per OTHER participant) is pre-baked into CMod inside
   // handleRollRequest (see coordEffortRef check in baseCmod calc).
@@ -5293,6 +5337,69 @@ export default function TablePage() {
       }
     }
 
+    // Heal result - queue pending heal on Success+, apply -1 WP immediate
+    // on Dire Failure, surface Wound Infection prompt on Low Insight.
+    let healResult = ''
+    if (healPendingRef.current && myEntry && pendingRoll.label.includes(' - Heal ')) {
+      const hp = healPendingRef.current
+      const medSmod = (myEntry.character.data?.skills ?? []).find((s: any) => s.skillName === 'Medicine*')?.level ?? 0
+      const kitLabel = hp.kit === 'doctors_bag' ? "Doctor's Bag" : hp.kit === 'first_aid' ? 'First Aid Kit' : 'naked Medicine*'
+      const rollD3 = () => Math.floor(Math.random() * 3) + 1
+      // Per spec table: heal amount by outcome × kit.
+      let healAmount = 0
+      let immediateDmg = 0
+      let infectionPrompt = false
+      if (outcome === 'Wild Success') {
+        const base = hp.kit === 'doctors_bag' ? (1 + rollD3() + rollD3()) : hp.kit === 'first_aid' ? (1 + rollD3()) : medSmod
+        healAmount = base + 1
+      } else if (outcome === 'High Insight') {
+        const base = hp.kit === 'doctors_bag' ? (1 + rollD3() + rollD3()) : hp.kit === 'first_aid' ? (1 + rollD3()) : medSmod
+        healAmount = base + 2
+      } else if (outcome === 'Success') {
+        healAmount = hp.kit === 'doctors_bag' ? (1 + rollD3() + rollD3()) : hp.kit === 'first_aid' ? (1 + rollD3()) : medSmod
+      } else if (outcome === 'Dire Failure') {
+        immediateDmg = 1
+      } else if (outcome === 'Low Insight') {
+        infectionPrompt = true
+      }
+      // Queue the pending heal (50% at +12h, 50% at +24h).
+      if (healAmount > 0) {
+        await queuePendingHeal({
+          campaignId: id as string,
+          targetCharacterId: hp.targetCharId,
+          totalWp: healAmount,
+          healerName: myEntry.character.name,
+          source: kitLabel,
+        })
+        healResult = `Queued +${healAmount} WP over 24h (50% at +12h, 50% at +24h).`
+      } else if (immediateDmg > 0) {
+        // Dire Failure: target loses 1 WP immediately. Mortal-wound flow
+        // will fire on its own via the standard WP=0 path if applicable.
+        const { data: targetState } = await supabase
+          .from('character_states')
+          .select('id, wp_current, stress, death_countdown')
+          .eq('character_id', hp.targetCharId)
+          .eq('campaign_id', id)
+          .maybeSingle()
+        if (targetState) {
+          const ts: any = targetState
+          const newWp = Math.max(0, (ts.wp_current ?? 0) - immediateDmg)
+          const update: any = { wp_current: newWp, updated_at: new Date().toISOString() }
+          if (newWp === 0 && (ts.wp_current ?? 0) > 0) {
+            update.death_countdown = Math.max(1, 4 + ((myEntry.character.data?.rapid?.PHY ?? 0)))
+            update.stress = Math.min(5, (ts.stress ?? 0) + 1)
+          }
+          await supabase.from('character_states').update(update).eq('id', ts.id)
+        }
+        healResult = `Botched treatment - ${hp.targetName} loses 1 WP.`
+      } else if (infectionPrompt) {
+        healResult = `Botched treatment - ${hp.targetName} must make a Wound Infection check.`
+      } else {
+        healResult = 'Treatment failed - no effect.'
+      }
+      healPendingRef.current = null
+    }
+
     // Upkeep Check result - adjust weapon condition
     let upkeepResult = ''
     if (pendingRoll.label.startsWith('Upkeep - ') && myEntry) {
@@ -5881,7 +5988,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
-      damage: damageResult, weaponJammed, traitNotes: [...(infectionSickCmodNote ? [infectionSickCmodNote] : []), ...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...(infectionSickCmodNote ? [infectionSickCmodNote] : []), ...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : []), ...(healResult ? [healResult] : [])],
       diceRolled: insightDiceRolled,
     } as any)
 
@@ -6336,6 +6443,7 @@ export default function TablePage() {
             { label: 'Recruit', onClick: () => openRecruitModal() },
             { label: 'Group Check', onClick: () => setShowSpecialCheck('group' as any) },
             { label: 'Coordinated Effort', onClick: () => setShowSpecialCheck('coordinated_effort' as any) },
+            { label: 'Heal', onClick: () => setShowSpecialCheck('heal' as any) },
             { label: 'Opposed Check', onClick: () => setShowSpecialCheck('opposed' as any) },
           ],
           hdrBtn('#2a102a', '#d48bd4', '#8b2e8b'),
@@ -10851,6 +10959,55 @@ export default function TablePage() {
                 </button>
               </>
             )}
+            {showSpecialCheck === 'heal' && (() => {
+              const myEntry = entries.find(e => e.userId === userId)
+              const myInv: string[] = Array.isArray(myEntry?.character?.data?.equipment) ? myEntry!.character.data.equipment : []
+              const hasFirstAid = myInv.some(i => /first aid kit/i.test(i))
+              const hasDoctor = myInv.some(i => /doctor.{0,3}s bag/i.test(i))
+              const medSmod = (myEntry?.character?.data?.skills ?? []).find((s: any) => s.skillName === 'Medicine*')?.level ?? 0
+              // Preview the heal amounts (deterministic Success line - dice not rolled yet so show ranges for kit paths).
+              const preview = healKit === 'doctors_bag'
+                ? `On Success: heals 1+2d3 WP (2-7) over 24h. WS: +1 more. HI: +2 more.`
+                : healKit === 'first_aid'
+                  ? `On Success: heals 1+1d3 WP (2-4) over 24h. WS: +1 more. HI: +2 more.`
+                  : `On Success: heals ${medSmod} WP (your Medicine* level) over 24h. WS: +1 more. HI: +2 more.`
+              return (
+                <>
+                  <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Heal</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Medicine* check on a target. Heal applies over 24h: half at +12h, half at +24h. Failure: nothing. Dire Failure: target takes 1 WP. Low Insight: target makes a Wound Infection check.</div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Target</div>
+                    <select value={healTargetCharId} onChange={e => setHealTargetCharId(e.target.value)}
+                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                      <option value="">Select target...</option>
+                      {entries.map(e => <option key={e.character.id} value={e.character.id}>{e.character.name}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Equipment</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px', cursor: 'pointer' }}>
+                        <input type="radio" checked={healKit === 'none'} onChange={() => setHealKit('none')} style={{ accentColor: '#c0392b' }} />
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>Naked check (no kit) - heals your Medicine* level WP on Success</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px', cursor: hasFirstAid ? 'pointer' : 'not-allowed', opacity: hasFirstAid ? 1 : 0.4 }}>
+                        <input type="radio" checked={healKit === 'first_aid'} disabled={!hasFirstAid} onChange={() => setHealKit('first_aid')} style={{ accentColor: '#c0392b' }} />
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>First Aid Kit - +1 CMod, heals 1+1d3 WP {!hasFirstAid && '(not in inventory)'}</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px', cursor: hasDoctor ? 'pointer' : 'not-allowed', opacity: hasDoctor ? 1 : 0.4 }}>
+                        <input type="radio" checked={healKit === 'doctors_bag'} disabled={!hasDoctor} onChange={() => setHealKit('doctors_bag')} style={{ accentColor: '#c0392b' }} />
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>Doctor&apos;s Bag - +2 CMod, heals 1+2d3 WP {!hasDoctor && '(not in inventory)'}</span>
+                      </label>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#7fc458', marginTop: '6px', fontStyle: 'italic' }}>{preview}</div>
+                  </div>
+                  <button onClick={triggerHeal} disabled={!healTargetCharId}
+                    style={{ width: '100%', padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: !healTargetCharId ? 'not-allowed' : 'pointer', opacity: !healTargetCharId ? 0.5 : 1 }}>
+                    Roll Medicine* on Target
+                  </button>
+                </>
+              )
+            })()}
             {showSpecialCheck === 'coordinated_effort' && (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Coordinated Effort</div>

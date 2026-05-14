@@ -78,6 +78,11 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     console.error('[campaign-clock] drainStreamingHeals failed:', e)
   }
   try {
+    await drainPendingHeals(campaignId, next)
+  } catch (e) {
+    console.error('[campaign-clock] drainPendingHeals failed:', e)
+  }
+  try {
     await drainRationsConsumption(campaignId, current.canon_day, next.canon_day - current.canon_day)
   } catch (e) {
     console.error('[campaign-clock] drainRationsConsumption failed:', e)
@@ -376,6 +381,134 @@ async function drainSubsistenceDamage(campaignId: string, prevCanonDay: number, 
     die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
     outcome: 'subsistence',
   })
+}
+
+// Pending heal drainer.
+//
+// pending_heal events represent a single discrete WP application at a
+// specific (canon_day, hour). Used by the Medicine*-check healing flow
+// per tasks/spec-healing.md: a successful check queues TWO pending_heal
+// events on the target — one at +12h with floor(total/2) WP and one at
+// +24h with the remainder. Each event is applied once when the clock
+// crosses its scheduled time.
+//
+// Payload shape: { wp_amount: number, source: string, healer_name: string }
+async function drainPendingHeals(campaignId: string, clock: ClockState): Promise<void> {
+  const supabase = createClient()
+  const { data: events, error } = await supabase
+    .from('campaign_events')
+    .select('*')
+    .eq('campaign_id', campaignId)
+    .eq('type', 'pending_heal')
+    .is('applied_canon_day', null)
+    .is('cancelled_at', null)
+  if (error || !events || events.length === 0) return
+  type Outcome = { name: string; wpFrom: number; wpTo: number; delta: number; source: string }
+  const outcomes: Outcome[] = []
+  for (const ev of events as any[]) {
+    const scheduled: ClockState = { canon_day: ev.scheduled_canon_day, hour: ev.scheduled_canon_hour }
+    if (hoursBetween(scheduled, clock) < 0) continue  // not yet due
+    const p = ev.payload ?? {}
+    const wpAmount = Number(p.wp_amount ?? 0)
+    if (!ev.target_character_id) {
+      await supabase.from('campaign_events').update({ applied_canon_day: clock.canon_day, applied_canon_hour: clock.hour }).eq('id', ev.id)
+      continue
+    }
+    try {
+      const { data: state } = await supabase
+        .from('character_states')
+        .select('id, wp_current, wp_max, character_id, characters!inner(name)')
+        .eq('character_id', ev.target_character_id)
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+      if (!state) {
+        await supabase.from('campaign_events').update({ applied_canon_day: clock.canon_day, applied_canon_hour: clock.hour }).eq('id', ev.id)
+        continue
+      }
+      const s: any = state
+      const wpFrom = s.wp_current ?? 0
+      const wpTo = Math.min(s.wp_max ?? 999, wpFrom + wpAmount)
+      const delta = wpTo - wpFrom
+      if (delta > 0) {
+        await supabase.from('character_states').update({ wp_current: wpTo, updated_at: new Date().toISOString() }).eq('id', s.id)
+      }
+      await supabase.from('campaign_events').update({ applied_canon_day: clock.canon_day, applied_canon_hour: clock.hour }).eq('id', ev.id)
+      const charName = s.characters?.name ?? 'Someone'
+      outcomes.push({ name: charName, wpFrom, wpTo, delta, source: String(p.source ?? 'treatment') })
+    } catch (e) {
+      console.error('[drainPendingHeals] failed to apply heal', ev.id, e)
+    }
+  }
+  if (outcomes.length === 0) return
+  // Emit a single System row summarizing the tick (mirrors rations /
+  // subsistence drainer pattern). One row per advance, not per heal.
+  const { data: { user } } = await supabase.auth.getUser()
+  const summaryParts = outcomes.map(o =>
+    o.delta > 0
+      ? `${o.name} (+${o.delta} WP, ${o.wpFrom} to ${o.wpTo})`
+      : `${o.name} (already at WP max - heal lost)`
+  )
+  await supabase.from('roll_log').insert({
+    campaign_id: campaignId,
+    user_id: user?.id ?? null,
+    character_name: 'System',
+    label: `🩹 Treatment applied: ${summaryParts.join(', ')}`,
+    die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+    outcome: 'pending_heal',
+  })
+}
+
+// Queue a pending heal: spec says 50% applies at +12h, remainder at +24h.
+// Creates two campaign_events rows. Each is applied independently by
+// drainPendingHeals when the clock crosses its scheduled time.
+export async function queuePendingHeal(args: {
+  campaignId: string
+  targetCharacterId: string
+  totalWp: number
+  healerName: string
+  source: string  // e.g. "naked Medicine*", "First Aid Kit", "Doctor's Bag"
+}): Promise<{ firstEventId: string | null; secondEventId: string | null }> {
+  const supabase = createClient()
+  const current = await readClock(args.campaignId)
+  const { data: { user } } = await supabase.auth.getUser()
+  const half1 = Math.floor(args.totalWp / 2)
+  const half2 = args.totalWp - half1
+  // First chunk: +12h from now.
+  const h12 = current.hour + 12
+  const sched1: ClockState = { canon_day: current.canon_day + Math.floor(h12 / 24), hour: h12 % 24 }
+  // Second chunk: +24h from now (so same hour, next day).
+  const sched2: ClockState = { canon_day: current.canon_day + 1, hour: current.hour }
+  const payload = { source: args.source, healer_name: args.healerName }
+  const rows = [
+    {
+      campaign_id: args.campaignId,
+      type: 'pending_heal',
+      target_character_id: args.targetCharacterId,
+      scheduled_canon_day: sched1.canon_day,
+      scheduled_canon_hour: sched1.hour,
+      payload: { ...payload, wp_amount: half1, half: 1 },
+      created_by: user?.id ?? null,
+    },
+    {
+      campaign_id: args.campaignId,
+      type: 'pending_heal',
+      target_character_id: args.targetCharacterId,
+      scheduled_canon_day: sched2.canon_day,
+      scheduled_canon_hour: sched2.hour,
+      payload: { ...payload, wp_amount: half2, half: 2 },
+      created_by: user?.id ?? null,
+    },
+  ]
+  const { data, error } = await supabase
+    .from('campaign_events')
+    .insert(rows)
+    .select('id')
+  if (error) {
+    console.error('[campaign-clock] queuePendingHeal failed:', error.message)
+    return { firstEventId: null, secondEventId: null }
+  }
+  const ids = (data ?? []) as any[]
+  return { firstEventId: ids[0]?.id ?? null, secondEventId: ids[1]?.id ?? null }
 }
 
 // Queue a streaming heal. GM-callable (RLS allows members to INSERT,

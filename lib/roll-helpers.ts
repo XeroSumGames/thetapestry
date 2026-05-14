@@ -259,6 +259,28 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (r.outcome === 'coordinate') {
     return r.label.replace(/^🎯\s*/, '')
   }
+  // Heal check - "<healer> - Heal <target> (<kit>)". Narrative carries
+  // the outcome flavor and the target's name. Actual WP queued lives in
+  // the post-roll System rows emitted by the drainPendingHeals.
+  const healMatch = suffix.match(/^Heal\s+(.+?)\s+\((.+?)\)$/)
+  if (healMatch) {
+    const target = healMatch[1].trim()
+    const kit = healMatch[2].trim()
+    const kitPhrase = kit === 'naked Medicine*' ? 'with a naked Medicine* check' : `with a ${kit}`
+    if (r.outcome === 'High Insight') return `${r.character_name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'Wild Success') return `${r.character_name} expertly treats ${target} ${kitPhrase} - exceptional care`
+    if (r.outcome === 'Success') return `${r.character_name} treats ${target} ${kitPhrase}`
+    if (r.outcome === 'Failure') return `${r.character_name} fails to make progress treating ${target}`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} botches the treatment - ${target} takes 1 WP damage`
+    if (r.outcome === 'Low Insight') return `${r.character_name} botches the treatment - ${target} must make a Wound Infection check and has a Moment of Insight as to why it went so badly`
+    return `${r.character_name} attempts to treat ${target} ${kitPhrase}`
+  }
+  // Pending heal tick - System row emitted by drainPendingHeals when a
+  // queued heal applies at its +12h or +24h checkpoint. Label already
+  // narrative-shaped; just strip the leading 🩹.
+  if (r.outcome === 'pending_heal') {
+    return r.label.replace(/^🩹\s*/, '')
+  }
   // Coordinated Effort lead roll - "Coordinated Effort - <skill>".
   // Subsequent participant rolls in the chain use normal skill-check
   // labels (they aren't tagged as part of a Coordinated Effort in the
