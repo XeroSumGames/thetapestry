@@ -1,15 +1,29 @@
 #!/usr/bin/env node
-// Guardrail: forbid capital-case role literals ('Thriver' / 'Survivor' /
-// 'Ghost') in app code. The DB normalises role to lowercase, so any
-// inline comparison against the capital-case form silently never matches
-// post-migration and silently hides features. Reads stay safe via the
-// helpers in `lib/auth/roles.ts`; writes should also use the lowercase
-// constants exported there.
+// Guardrail: forbid capital-case role literals AND inline lowercase role
+// comparisons in app code.
+//
+// Catches:
+//   1. Capital-case literals: 'Thriver' / 'Survivor' / 'Ghost' as quoted
+//      strings. The DB normalises role to lowercase, so any inline comparison
+//      against the capital-case form silently never matches post-migration.
+//   2. Inline lowercase comparisons via .toLowerCase():
+//        .role?.toLowerCase() === 'thriver'
+//        .role.toLowerCase() === 'thriver'
+//        (or any of the three role values, with == or ===)
+//   3. Direct bare lowercase comparisons:
+//        .role === 'thriver'   .role === 'survivor'   .role === 'ghost'
+//        .role == 'thriver'    etc.
+//      (where .role is the profile role field, not a community labor role)
+//
+// Fix: use isThriver() / isSurvivor() / isGhost() from lib/auth/roles.ts for
+// reads; use THRIVER / SURVIVOR / GHOST constants for writes.
 //
 // Allow-list:
-//   - lib/auth/roles.ts itself (defines the constants).
+//   - lib/auth/roles.ts itself (defines the constants + helpers).
 //   - app/logging/page.tsx — the Ghost/Survivor labels there are UI
 //     display strings inside Leaflet popup HTML, not DB comparisons.
+//   - lib/community-logic.ts — uses .role for community labor roles
+//     (gatherer / maintainer / safety / assigned / unassigned), not profile roles.
 //   - Any line that contains the token `role-literal-allow` (in any
 //     comment form, JSX or JS) is excused.
 
@@ -22,11 +36,21 @@ const SKIP_PATHS = new Set([
   path.join('lib', 'auth', 'roles.ts'),
   // Leaflet popup HTML — Ghost/Survivor are UI labels, not DB comparisons.
   path.join('app', 'logging', 'page.tsx'),
+  // Community labor roles (gatherer/maintainer/safety/assigned/unassigned).
+  path.join('lib', 'community-logic.ts'),
 ])
 
-// Matches 'Thriver' / "Thriver" / 'Survivor' / "Survivor" / 'Ghost' / "Ghost"
-// as standalone quoted strings (any leading/trailing punctuation OK).
-const ROLE_LITERAL = /['"](Thriver|Survivor|Ghost)['"]/g
+// Pattern 1: capital-case quoted literals 'Thriver' / "Thriver" etc.
+const CAPITAL_ROLE = /['"](Thriver|Survivor|Ghost)['"]/g
+
+// Pattern 2: .role?.toLowerCase() or .role.toLowerCase() followed (anywhere
+// on the same line) by === or == and a quoted thriver/survivor/ghost.
+const TOLOWER_CMP = /\.role\??\.toLowerCase\(\)\s*={1,3}\s*['"][^'"]*['"]/g
+
+// Pattern 3: .role === 'thriver' / .role == 'survivor' / .role === "ghost"
+// (direct bare comparison — only the three profile role strings).
+// Requires == or === (not single = which appears in SQL policy comments).
+const BARE_ROLE_CMP = /\.role\s*={2,3}\s*['"](?:thriver|survivor|ghost)['"]/g
 
 const offenders = []
 let scanned = 0
@@ -45,10 +69,17 @@ function walk(dir) {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
       if (line.includes('role-literal-allow')) continue
-      const matches = [...line.matchAll(ROLE_LITERAL)]
-      if (matches.length === 0) continue
-      for (const m of matches) {
-        offenders.push({ file: rel, line: i + 1, match: m[0], snippet: line.trim() })
+
+      for (const [pattern, kind] of [
+        [CAPITAL_ROLE, 'capital-case role literal'],
+        [TOLOWER_CMP, 'inline .toLowerCase() role comparison'],
+        [BARE_ROLE_CMP, 'inline .role === literal comparison'],
+      ]) {
+        pattern.lastIndex = 0
+        const matches = [...line.matchAll(pattern)]
+        for (const m of matches) {
+          offenders.push({ file: rel, line: i + 1, kind, match: m[0], snippet: line.trim() })
+        }
       }
     }
   }
@@ -60,16 +91,16 @@ for (const d of SCAN_DIRS) {
 }
 
 if (offenders.length === 0) {
-  console.log(`OK — scanned ${scanned} files, no capital-case role literals found.`)
+  console.log(`OK — scanned ${scanned} files, no role literal or inline comparison found.`)
   process.exit(0)
 }
 
-console.error(`Found ${offenders.length} capital-case role literal${offenders.length === 1 ? '' : 's'} in ${scanned} scanned files:\n`)
+console.error(`Found ${offenders.length} role literal / inline comparison${offenders.length === 1 ? '' : 's'} in ${scanned} scanned files:\n`)
 for (const o of offenders) {
-  console.error(`  ${o.file}:${o.line}  ${o.match}`)
+  console.error(`  ${o.file}:${o.line}  [${o.kind}]  ${o.match}`)
   console.error(`     ${o.snippet}`)
 }
-console.error(`\nFix: use THRIVER / SURVIVOR / GHOST constants from lib/auth/roles.ts,`)
-console.error(`or use isThriver()/isSurvivor()/isGhost() for comparisons.`)
+console.error(`\nFix: use isThriver()/isSurvivor()/isGhost() from lib/auth/roles.ts for comparisons,`)
+console.error(`or THRIVER/SURVIVOR/GHOST constants for writes.`)
 console.error(`Add \`// role-literal-allow\` on a UI-only line to suppress.`)
 process.exit(1)
