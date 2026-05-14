@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import JSZip from 'jszip'
 
 interface Counts {
@@ -35,7 +36,7 @@ export default function ImportGmKitPage() {
       const { user } = await getCachedAuth()
       if (!user) { setAuthChecked(true); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      setIsThriver((profile?.role ?? '').toString().toLowerCase() === 'thriver')
+      setIsThriver(roleIsThriver(profile))
       setAuthChecked(true)
     })()
   }, [supabase])

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 
 // /tools/migrate-character-photos — Thriver-only one-shot migration.
 // characters.data.photoDataUrl currently holds base64-encoded JPEGs
@@ -68,7 +69,7 @@ export default function MigrateCharacterPhotosPage() {
       const { user } = await getCachedAuth()
       if (!user) { setAuthChecked(true); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      const thriver = (profile?.role ?? '').toString().toLowerCase() === 'thriver'
+      const thriver = roleIsThriver(profile)
       setIsThriver(thriver)
       setAuthChecked(true)
       if (thriver) void loadCandidates()

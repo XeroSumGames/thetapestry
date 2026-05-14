@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 
 // /tools/campaign-explorer — Thriver-only oversight surface.
 // Lists every campaign on the platform with the GM's username + counts
@@ -73,7 +74,7 @@ export default function CampaignExplorerPage() {
       const { user } = await getCachedAuth()
       if (!user) { setAuthChecked(true); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      const thriver = (profile?.role ?? '').toString().toLowerCase() === 'thriver'
+      const thriver = roleIsThriver(profile)
       setIsThriver(thriver)
       setAuthChecked(true)
       if (thriver) void loadCampaigns()

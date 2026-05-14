@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import {
   computeReseedPlan,
   applyReseedPlan,
@@ -44,7 +45,7 @@ export default function ReseedCampaignPage() {
       const { user } = await getCachedAuth()
       if (!user) { setAuthChecked(true); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      const thriver = (profile?.role ?? '').toString().toLowerCase() === 'thriver'
+      const thriver = roleIsThriver(profile)
       setIsThriver(thriver)
       if (thriver) {
         // Thriver bypass on campaigns RLS lets us list every campaign,

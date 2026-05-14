@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
@@ -117,7 +118,7 @@ export default function MigrateSettingsPage() {
       const { user } = await getCachedAuth()
       if (!user) { setIsThriver(false); return }
       const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      setIsThriver(((data?.role ?? '') as string).toLowerCase() === 'thriver')
+      setIsThriver(roleIsThriver(data))
     })()
   }, [supabase])
 
