@@ -54,9 +54,16 @@ export default function Page() {
       <RuleSection id="environmental" title="Environmental Damage">
         <RuleSection id="subsistence" title="Subsistence Damage" level={3}>
           <P>
-            A character can go without food and water for one day without
-            harm. From the second day onward, they lose{' '}
-            <Term>1 WP and 1 RP per day</Term>.
+            A character without food and water gets a{' '}
+            <Term>two-day grace period</Term> (days 1 and 2 hungry, no
+            damage). Starting on day 3 of hunger, they lose{' '}
+            <Term>1 WP and 1 RP per day</Term> until rations are
+            restored.
+          </P>
+          <P>
+            <Term>Insight Dice</Term> can stave off the start of
+            Subsistence Damage. Surrender 1 Insight Die per additional
+            day of grace before WP/RP loss begins.
           </P>
           <P>
             If <Term>RP reaches 0</Term> from Subsistence Damage, they are
