@@ -654,7 +654,7 @@ export default function TablePage() {
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
-  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
+  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | 'coordinated_effort' | null>(null)
   // Quick Add modal state - all pin/community form state now lives
   // inside <QuickAddModal>. The table page only tracks open/close
   // plus the pin-only flag + seed lat/lng.
@@ -816,6 +816,18 @@ export default function TablePage() {
   } | null>(null)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
+  // Coordinated Effort state - see tasks/spec-coordinated-effort.md.
+  // The initiator picks participants + their first skill, fires the
+  // lead roll. Lead outcome → leadCmod (per ladder) is stored on
+  // coordEffortRef so every subsequent participant roll auto-applies
+  // (+N coord bonus + leadCmod) to its CMod.
+  const [coordEffortParticipants, setCoordEffortParticipants] = useState<Set<string>>(new Set())
+  const [coordEffortSkill, setCoordEffortSkill] = useState('')
+  const coordEffortRef = useRef<{ participantIds: string[]; totalParticipants: number; leadCmod: number; isActive: boolean; leadRollPending: boolean } | null>(null)
+  // UI tick so the active-banner / End button can react when the ref
+  // changes (refs don't trigger re-renders). Bumped whenever
+  // coordEffortRef state changes meaningfully.
+  const [coordEffortTick, setCoordEffortTick] = useState(0)
   const [opposedTarget, setOpposedTarget] = useState('')
   const [sessionSummary, setSessionSummary] = useState('')
   const [nextSessionNotes, setNextSessionNotes] = useState('')
@@ -3915,6 +3927,51 @@ export default function TablePage() {
     setGroupCheckSkill('')
   }
 
+  // Coordinated Effort: fires the first roll in the chain. The +N coord
+  // bonus (one per OTHER participant) is pre-baked into CMod inside
+  // handleRollRequest (see coordEffortRef check in baseCmod calc).
+  // Lead outcome → leadCmod is captured in executeRoll's post-resolve
+  // block; subsequent rolls by participants then auto-apply +N + leadCmod.
+  function triggerCoordinatedEffort() {
+    if (coordEffortParticipants.size === 0 || !coordEffortSkill) return
+    const participants = entries.filter(e => coordEffortParticipants.has(e.character.id))
+    if (participants.length === 0) return
+    const myEntry = entries.find(e => e.userId === userId)
+    if (!myEntry || !coordEffortParticipants.has(myEntry.character.id)) {
+      alert('You must include your own character in the Coordinated Effort.')
+      return
+    }
+    // Look up the chosen skill to find its attribute.
+    const skillDef = SKILLS.find(s => s.name === coordEffortSkill)
+    const attrKey = skillDef?.attribute ?? 'RSN'
+    const amod = (myEntry.character.data?.rapid as any)?.[attrKey] ?? 0
+    const smod = (myEntry.character.data?.skills ?? []).find((s: any) => s.skillName === coordEffortSkill)?.level ?? 0
+    // Stash the chain state. leadRollPending = the lead roll is about
+    // to fire; handleRollRequest's baseCmod hook will see this and
+    // add the coord bonus but NOT leadCmod (which is 0 at this point).
+    // executeRoll's post-resolve block flips this to isActive=true and
+    // populates leadCmod from the outcome.
+    coordEffortRef.current = {
+      participantIds: Array.from(coordEffortParticipants),
+      totalParticipants: participants.length,
+      leadCmod: 0,
+      isActive: false,
+      leadRollPending: true,
+    }
+    setCoordEffortTick(t => t + 1)
+    handleRollRequest(`Coordinated Effort - ${coordEffortSkill}`, amod, smod)
+    setShowSpecialCheck(null)
+    setCoordEffortParticipants(new Set())
+    setCoordEffortSkill('')
+  }
+
+  // End an active Coordinated Effort. Called from the active-chain
+  // banner OR auto-fired on Low Insight lead outcome (chain collapses).
+  function endCoordinatedEffort() {
+    coordEffortRef.current = null
+    setCoordEffortTick(t => t + 1)
+  }
+
   function getAutoRangeBand(attackerCharId?: string, attackerNpcId?: string, targetName?: string): 'engaged' | 'close' | 'medium' | 'long' | 'distant' | null {
     if (!targetName || mapTokens.length === 0) return null
     const aTok = mapTokens.find(t =>
@@ -4095,7 +4152,22 @@ export default function TablePage() {
     // Include aim bonus from Aim action or Tracking trait
     const activeEntry = combatActive ? initiativeOrder.find(e => e.is_active) : null
     const aimBonus = activeEntry?.aim_bonus ?? 0
-    const baseCmod = (weapon?.conditionCmod ?? 0) + aimBonus
+    let baseCmod = (weapon?.conditionCmod ?? 0) + aimBonus
+    // Coordinated Effort auto-injection: if a chain is active (or its
+    // lead roll is firing) AND the logged-in user's character is a
+    // participant, add the coord bonus (+1 per OTHER participant) +
+    // the leadCmod (0 for lead roll, ladder value once chain active).
+    // Skipped for the Group Check label since that uses its own pooled
+    // bonus path.
+    const cef = coordEffortRef.current
+    if (cef && !label.startsWith('Group Check - ')) {
+      const myEntry = entries.find(e => e.userId === userId)
+      const myCharId = myEntry?.character.id
+      if (myCharId && cef.participantIds.includes(myCharId)) {
+        const coordBonus = cef.totalParticipants - 1
+        baseCmod += coordBonus + cef.leadCmod
+      }
+    }
     setCmod(baseCmod ? String(baseCmod) : '0')
     // Auto-populate target dropdown.  Priority:
     //   1) Token the attacker selected on the map (explicit user action)
@@ -4334,6 +4406,27 @@ export default function TablePage() {
 
     const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
     const outcome = getOutcome(total, die1, die2, preRollInsight === '3d6' && preRollSpent)
+    // Coordinated Effort lead-roll resolution: if this roll's label is
+    // the lead roll and the chain's leadRollPending flag is set, map the
+    // outcome to a leadCmod (per the ladder in spec-coordinated-effort.md)
+    // and activate the chain. Low Insight = chain collapses immediately.
+    if (pendingRoll.label.startsWith('Coordinated Effort - ') && coordEffortRef.current?.leadRollPending) {
+      const cef = coordEffortRef.current
+      if (outcome === 'Low Insight') {
+        // Chain collapses; clear the ref so subsequent rolls don't get any bonus.
+        coordEffortRef.current = null
+      } else {
+        const leadCmod =
+          outcome === 'High Insight' ? 3
+          : outcome === 'Wild Success' ? 2
+          : outcome === 'Success' ? 1
+          : outcome === 'Failure' ? -1
+          : outcome === 'Dire Failure' ? -3
+          : 0
+        coordEffortRef.current = { ...cef, leadCmod, isActive: true, leadRollPending: false }
+      }
+      setCoordEffortTick(t => t + 1)
+    }
     // Award Insight Die - only to PCs, or Antagonist NPCs (Bystanders/Goons/Foes never get Insight Dice)
     const isHighLow = outcome === 'Low Insight' || outcome === 'High Insight'
     const isNPCRoll = isHighLow && pendingRoll.label.includes(' - ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
@@ -6242,6 +6335,7 @@ export default function TablePage() {
             { label: 'First Impression', onClick: () => setShowSpecialCheck('first_impression' as any) },
             { label: 'Recruit', onClick: () => openRecruitModal() },
             { label: 'Group Check', onClick: () => setShowSpecialCheck('group' as any) },
+            { label: 'Coordinated Effort', onClick: () => setShowSpecialCheck('coordinated_effort' as any) },
             { label: 'Opposed Check', onClick: () => setShowSpecialCheck('opposed' as any) },
           ],
           hdrBtn('#2a102a', '#d48bd4', '#8b2e8b'),
@@ -6430,6 +6524,34 @@ export default function TablePage() {
             <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a' }}>🩸 {title}</div>
             <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>{subtitle}</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>You can still watch the map, whisper the GM, and read the log.</div>
+          </div>
+        )
+      })()}
+      {/* Coordinated Effort active banner - visible while a chain is in
+          flight, shows the current leadCmod + count of participants,
+          and an End button to terminate the chain. tick state forces
+          a re-render when the ref changes. */}
+      {(() => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _ = coordEffortTick
+        const cef = coordEffortRef.current
+        if (!cef || !cef.isActive) return null
+        const coordBonus = cef.totalParticipants - 1
+        const sign = cef.leadCmod >= 0 ? '+' : ''
+        return (
+          <div style={{ background: '#0f1a2e', borderBottom: '1px solid #2d5a1b', padding: '8px 16px', fontFamily: 'Carlito, sans-serif', color: '#7fc458', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            <div>
+              <span style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>🤝 Coordinated Effort active</span>
+              <span style={{ fontSize: '13px', color: '#cce0f5', marginLeft: '10px' }}>
+                Every participant&apos;s roll gets <span style={{ color: '#7fc458', fontWeight: 700 }}>+{coordBonus} (coord)</span>
+                {cef.leadCmod !== 0 && <> + <span style={{ color: cef.leadCmod > 0 ? '#7fc458' : '#EF9F27', fontWeight: 700 }}>{sign}{cef.leadCmod} (lead)</span></>}
+                {' '}= <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{sign}{coordBonus + cef.leadCmod} CMod</span>
+              </span>
+            </div>
+            <button onClick={endCoordinatedEffort}
+              style={{ padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              End Effort
+            </button>
           </div>
         )
       })()}
@@ -10726,6 +10848,40 @@ export default function TablePage() {
                 <button onClick={triggerGroupCheck} disabled={groupCheckParticipants.size === 0 || !groupCheckSkill}
                   style={{ width: '100%', padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: groupCheckParticipants.size === 0 || !groupCheckSkill ? 0.5 : 1 }}>
                   Roll Group Check
+                </button>
+              </>
+            )}
+            {showSpecialCheck === 'coordinated_effort' && (
+              <>
+                <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Coordinated Effort</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>You roll first - any skill that fits your part of the plan. The outcome of your roll becomes a CMod bonus / penalty for everyone else in the chain. Each participant rolls their own skill for their part. Every roll gets +1 CMod per OTHER participant. Low Insight collapses the chain.</div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Your First Skill</div>
+                  <select value={coordEffortSkill} onChange={e => setCoordEffortSkill(e.target.value)}
+                    style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                    <option value="">Select skill...</option>
+                    {SKILLS.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Participants (include yourself)</div>
+                  {entries.map(e => (
+                    <label key={e.character.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={coordEffortParticipants.has(e.character.id)} onChange={() => {
+                        setCoordEffortParticipants(prev => { const next = new Set(prev); if (next.has(e.character.id)) next.delete(e.character.id); else next.add(e.character.id); return next })
+                      }} style={{ accentColor: '#c0392b' }} />
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{e.character.name}</span>
+                    </label>
+                  ))}
+                  {coordEffortParticipants.size > 1 && (
+                    <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', marginTop: '6px' }}>
+                      +{coordEffortParticipants.size - 1} CMod from {coordEffortParticipants.size - 1} other participant{coordEffortParticipants.size > 2 ? 's' : ''} chipping in.
+                    </div>
+                  )}
+                </div>
+                <button onClick={triggerCoordinatedEffort} disabled={coordEffortParticipants.size < 2 || !coordEffortSkill}
+                  style={{ width: '100%', padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: coordEffortParticipants.size < 2 || !coordEffortSkill ? 'not-allowed' : 'pointer', opacity: coordEffortParticipants.size < 2 || !coordEffortSkill ? 0.5 : 1 }}>
+                  Start Effort - You Roll First
                 </button>
               </>
             )}
