@@ -259,6 +259,21 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (r.outcome === 'coordinate') {
     return r.label.replace(/^🎯\s*/, '')
   }
+  // Coordinated Effort lead roll - "Coordinated Effort - <skill>".
+  // Subsequent participant rolls in the chain use normal skill-check
+  // labels (they aren't tagged as part of a Coordinated Effort in the
+  // feed; only the lead roll surfaces the effort itself).
+  const coordEffortMatch = suffix.match(/^Coordinated Effort\s+-\s+(.+)$/)
+  if (coordEffortMatch) {
+    const skill = coordEffortMatch[1].trim()
+    if (r.outcome === 'Low Insight') return `${r.character_name} kicked off a Coordinated Effort with ${skill} but the plan fell apart on a Moment of Low Insight`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} kicked off a Coordinated Effort with ${skill} - it went badly (everyone in the chain takes -3 CMod)`
+    if (r.outcome === 'Failure') return `${r.character_name} kicked off a Coordinated Effort with ${skill} - rough start (-1 CMod for the chain)`
+    if (r.outcome === 'High Insight') return `${r.character_name} kicked off a Coordinated Effort with ${skill} and has a Moment of Insight (+3 CMod for the chain)`
+    if (r.outcome === 'Wild Success') return `${r.character_name} kicked off a Coordinated Effort with ${skill} and was wildly successful (+2 CMod for the chain)`
+    if (r.outcome === 'Success') return `${r.character_name} kicked off a Coordinated Effort with ${skill} (+1 CMod for the chain)`
+    return `${r.character_name} kicked off a Coordinated Effort with ${skill}`
+  }
   // Unjam (firearm) - "Unjam - <weaponName> (<skill>)"
   const unjamMatch = suffix.match(/^Unjam\s+-\s+(.+?)(?:\s*\(|$)/)
   if (unjamMatch) {
