@@ -506,6 +506,18 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 ))}
               </div>
             )}
+            {/* Search button for destroyed-but-empty containers - opens
+                the loot modal in its empty-state branch so the searcher
+                can log a "found nothing" row to the feed. Matches the
+                ObjectCard player-search affordance. */}
+            {destroyed && Array.isArray(obj.contents) && obj.contents.length === 0 && entries && entries.length > 0 && (
+              <div style={{ paddingLeft: '24px', marginTop: '2px' }}>
+                <button onClick={e => { e.stopPropagation(); setLootingObj(obj); setLootCharId('') }}
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', padding: '0 6px', cursor: 'pointer' }}>
+                  Search
+                </button>
+              </div>
+            )}
             {/* Contents loot list — only when destroyed (players can take) */}
             {destroyed && Array.isArray(obj.contents) && obj.contents.length > 0 && (
               <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -587,7 +599,42 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '380px', maxWidth: '92vw' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>🎒 Loot from {lootingObj.name}</div>
             {lootingObj.contents.length === 0 ? (
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
+              <>
+                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
+                {/* "Found nothing" log path: searcher picks the PC who
+                    did the searching, then writes a roll_log row so the
+                    feed shows the attempt. Matches the ObjectCard
+                    "Search" empty-container pattern. */}
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '4px', fontFamily: 'Carlito, sans-serif' }}>Who&apos;s searching?</div>
+                  <select value={lootCharId} onChange={e => setLootCharId(e.target.value)}
+                    style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                    <option value="">Select a PC...</option>
+                    {entries.map(e => (
+                      <option key={e.character.id} value={e.character.id}>{e.character.name}</option>
+                    ))}
+                  </select>
+                  <button disabled={!lootCharId}
+                    onClick={async () => {
+                      const ce = entries.find(e => e.character.id === lootCharId)
+                      if (!ce) return
+                      const { data: { user } } = await supabase.auth.getUser()
+                      await supabase.from('roll_log').insert({
+                        campaign_id: campaignId,
+                        user_id: user?.id ?? null,
+                        character_name: ce.character.name,
+                        label: `🎒 ${ce.character.name} looked through the remains of ${lootingObj.name} and found nothing`,
+                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                        outcome: 'loot',
+                      })
+                      setLootingObj(null)
+                      setLootCharId('')
+                    }}
+                    style={{ width: '100%', marginTop: '6px', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: lootCharId ? '#d4cfc9' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: lootCharId ? 'pointer' : 'not-allowed', opacity: lootCharId ? 1 : 0.5 }}>
+                    Confirm Search (log &quot;found nothing&quot;)
+                  </button>
+                </div>
+              </>
             ) : (
               <div style={{ marginBottom: '10px' }}>
                 {lootingObj.contents.map((item, i) => {

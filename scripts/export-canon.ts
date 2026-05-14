@@ -387,7 +387,7 @@ Characters get **2 Insight Dice on creation** and gain an additional one each ti
 - After a Dice Check, drop one or both dice and replace each with an Insight Die rolled fresh.
 - Spend Insight Dice for a flashback, retcon, or anything else the player can Make The Case for.
 - Spend an Insight Die to introduce a story element (with GM approval and a successful Make The Case).
-- Spend ALL available Insight Dice to recover **1 Wound Point + 1 Resilience Point per die surrendered** and save the character from Death.
+- Spend ALL available Insight Dice to recover **1 Wound Point + 1 Resilience Point total** (flat, regardless of how many dice were surrendered) and save the character from Death.
 - Stave off death by **Subsistence Damage** (starvation/dehydration) by surrendering Insight Dice — each die buys one additional day before WP loss begins.
 
 Restrictions: Insight Dice are non-transferable, cannot transfer between characters, and **cannot re-roll a Moment of Low Insight**. They carry over from session to session.
