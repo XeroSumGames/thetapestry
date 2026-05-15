@@ -82,6 +82,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     : r.outcome === 'Dire Failure' ? ' and failed miserably'
     : ''
 
+  // Lasting Damage Check - canon §06.lasting-damage. Fired on Day 0 of
+  // a sick period when the original Infection check was a Failure
+  // (severity='check'). The Dire path applies Lasting Damage
+  // automatically at drain time and never opens this modal. Outcome:
+  //   Wild Success / High Insight / Success - no wound.
+  //   Failure / Dire Failure / Low Insight   - 2d6 on Table 12, wound
+  //                                            description rolled
+  //                                            server-side in
+  //                                            executeRoll and surfaced
+  //                                            via traitNotes.
+  if (/^Lasting Damage Check\b/.test(suffix)) {
+    const ldShrug = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
+    if (ldShrug) {
+      return `${r.character_name} shrugged off the Lasting Damage${outcomeTag}`
+    }
+    return `${r.character_name} suffered a Lasting Wound from infection${outcomeTag}`
+  }
+
   // Infection Check - canon §06 (post-combat wound / environmental
   // sickness). Label shape:
   //   "<name> - Infection Check (Wound)"

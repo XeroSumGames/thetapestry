@@ -10,7 +10,7 @@
 // rely solely on RLS for UX.
 
 import { createClient } from './supabase-browser'
-import { normalizeRations } from './xse-schema'
+import { normalizeRations, LASTING_WOUNDS } from './xse-schema'
 import { OUTCOME } from './roll-outcomes'
 
 export interface ClockState {
@@ -92,6 +92,11 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     await drainSubsistenceDamage(campaignId, current.canon_day, next.canon_day - current.canon_day)
   } catch (e) {
     console.error('[campaign-clock] drainSubsistenceDamage failed:', e)
+  }
+  try {
+    await drainInfectionDays(campaignId, next.canon_day - current.canon_day)
+  } catch (e) {
+    console.error('[campaign-clock] drainInfectionDays failed:', e)
   }
   // Realtime broadcast — every viewer's campaign sheet gets the new
   // clock state immediately, without waiting for postgres_changes to
@@ -381,6 +386,162 @@ async function drainSubsistenceDamage(campaignId: string, prevCanonDay: number, 
     label: `🪦 Subsistence damage: ${summaryParts.join(', ')}`,
     die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
     outcome: OUTCOME.subsistence,
+  })
+}
+
+// Infection days-left drainer (canon §06 - /rules/combat/infection).
+//
+// Every infected character (PC or NPC, `infection_state != null`) has
+// their `infection_days_left` decremented by the number of canon days
+// crossed in this advance. When days_left reaches 0 the infection
+// resolves per its severity:
+//   'auto'  - Lasting Damage applies automatically. Roll 2d6, look up
+//             Table 12 (LASTING_WOUNDS), append to the patient's
+//             lasting wounds. PCs: characters.data.lastingWounds[].
+//             NPCs: logged via roll_log only (no NPC field today;
+//             schema-gap follow-up).
+//   'check' - PHY check required. The drainer broadcasts a
+//             `lasting_damage_check_request` event scoped to the PC's
+//             owning user_id; the PC's client opens the standard
+//             roll modal. NPCs queue on the GM's local list (the
+//             table-page listener handles this just like the
+//             infection check broadcast).
+//
+// Either path clears infection_state / infection_days_left /
+// infection_lasting_risk / infection_severity AND lifts the RP cap
+// (caller's RP_max is unchanged, so just clearing infection_state
+// removes the half-max clamp downstream). A single System feed row
+// summarises the tick for the GM.
+async function drainInfectionDays(campaignId: string, dayDelta: number): Promise<void> {
+  if (dayDelta <= 0) return
+  const supabase = createClient()
+  // Pull infected PCs (character_states) + infected NPCs (campaign_npcs)
+  // in parallel - both tables share the same infection columns.
+  const [pcsRes, npcsRes] = await Promise.all([
+    supabase
+      .from('character_states')
+      .select('id, character_id, characters!inner(id, name, user_id, data), infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max')
+      .eq('campaign_id', campaignId)
+      .not('infection_state', 'is', null),
+    supabase
+      .from('campaign_npcs')
+      .select('id, name, infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max')
+      .eq('campaign_id', campaignId)
+      .not('infection_state', 'is', null),
+  ])
+  if (pcsRes.error) console.error('[drainInfectionDays] PC fetch:', pcsRes.error.message)
+  if (npcsRes.error) console.error('[drainInfectionDays] NPC fetch:', npcsRes.error.message)
+  const pcs = (pcsRes.data ?? []) as any[]
+  const npcs = (npcsRes.data ?? []) as any[]
+  if (pcs.length === 0 && npcs.length === 0) return
+
+  type Outcome = {
+    name: string
+    kind: 'wound' | 'sickness'
+    severity: 'check' | 'auto' | null
+    daysLeft: number
+    triggered: boolean   // hit Day 0 this tick
+    wound?: { roll: number; name: string; effect: string }
+  }
+  const outcomes: Outcome[] = []
+
+  const processRow = async (row: any, isPc: boolean) => {
+    const prev: number = row.infection_days_left ?? 0
+    const next = Math.max(0, prev - dayDelta)
+    const kind = (row.infection_state as 'wound' | 'sickness')
+    const severity = (row.infection_severity as 'check' | 'auto' | null)
+    const name = isPc ? row.characters?.name : row.name
+    if (next > 0) {
+      // Still sick; just decrement.
+      const table = isPc ? 'character_states' : 'campaign_npcs'
+      await supabase.from(table).update({ infection_days_left: next }).eq('id', row.id)
+      outcomes.push({ name, kind, severity, daysLeft: next, triggered: false })
+      return
+    }
+    // Day 0. Clear infection state; dispatch per severity.
+    const clear = {
+      infection_state: null,
+      infection_days_left: null,
+      infection_lasting_risk: false,
+      infection_severity: null,
+    }
+    if (severity === 'auto') {
+      // Auto Lasting Damage - roll 2d6, look up Table 12.
+      const die1 = Math.floor(Math.random() * 6) + 1
+      const die2 = Math.floor(Math.random() * 6) + 1
+      const sum = die1 + die2
+      const wound = LASTING_WOUNDS[sum]
+      // PC: push to data.lastingWounds. NPC: skip (no field today).
+      if (isPc && row.characters?.id) {
+        const charData = row.characters.data ?? {}
+        const nextLW = [...(charData.lastingWounds ?? []), wound.name]
+        await supabase.from('characters').update({ data: { ...charData, lastingWounds: nextLW } }).eq('id', row.characters.id)
+      }
+      await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clear).eq('id', row.id)
+      outcomes.push({ name, kind, severity, daysLeft: 0, triggered: true, wound: { roll: sum, name: wound.name, effect: wound.effect } })
+    } else if (severity === 'check') {
+      // PHY check required. Broadcast to PC owner (or queue on GM for NPC).
+      // The infection resolution path's PHY AMod is read from the PC's
+      // rapid.PHY at modal-roll time; we just need to fire the request.
+      const targetUserId = isPc ? row.characters?.user_id : null
+      const ch = supabase.channel(`initiative_${campaignId}`)
+      try {
+        await new Promise<void>((resolve) => {
+          ch.subscribe(async (status: string) => {
+            if (status !== 'SUBSCRIBED') return
+            await ch.send({
+              type: 'broadcast',
+              event: 'lasting_damage_check_request',
+              payload: { targetUserId, name, kind, isPc },
+            })
+            resolve()
+          })
+        })
+      } catch (e) {
+        console.error('[drainInfectionDays] broadcast failed for', name, e)
+      } finally {
+        await supabase.removeChannel(ch)
+      }
+      await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clear).eq('id', row.id)
+      outcomes.push({ name, kind, severity, daysLeft: 0, triggered: true })
+    } else {
+      // No severity recorded (legacy data). Just clear state.
+      await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clear).eq('id', row.id)
+      outcomes.push({ name, kind, severity, daysLeft: 0, triggered: true })
+    }
+  }
+
+  for (const row of pcs) await processRow(row, true)
+  for (const row of npcs) await processRow(row, false)
+
+  // System feed row: one summary covering the tick. Only emit if at
+  // least one row triggered (Day 0) OR had a decrement. Quiet ticks
+  // (everyone still has multi-day sickness with no state change) emit
+  // a single "still sick" summary so the GM has signal.
+  const { data: { user } } = await supabase.auth.getUser()
+  const triggered = outcomes.filter(o => o.triggered)
+  const stillSick = outcomes.filter(o => !o.triggered)
+  const parts: string[] = []
+  for (const o of triggered) {
+    if (o.wound) {
+      parts.push(`${o.name} Day 0 - Lasting Wound: ${o.wound.name} [2d6=${o.wound.roll}] (${o.wound.effect})`)
+    } else if (o.severity === 'check') {
+      parts.push(`${o.name} Day 0 - Lasting Damage check pending`)
+    } else {
+      parts.push(`${o.name} Day 0 - infection cleared (no severity)`)
+    }
+  }
+  for (const o of stillSick) {
+    parts.push(`${o.name} (${o.kind}, ${o.daysLeft}d left)`)
+  }
+  if (parts.length === 0) return
+  await supabase.from('roll_log').insert({
+    campaign_id: campaignId,
+    user_id: user?.id ?? null,
+    character_name: 'System',
+    label: `🦠 Infection tick (${dayDelta}d): ${parts.join(', ')}`,
+    die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+    outcome: 'infection_tick',
   })
 }
 

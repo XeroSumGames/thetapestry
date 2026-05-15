@@ -55,7 +55,7 @@ import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { OUTCOME } from '../../../../lib/roll-outcomes'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
-import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR } from '../../../../lib/xse-schema'
+import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
 interface Campaign {
@@ -242,6 +242,15 @@ export default function TablePage() {
   const [userId, setUserId] = useState<string | null>(null)
   const userIdRef = useRef<string | null>(null)
   useEffect(() => { userIdRef.current = userId }, [userId])
+  // Companion refs for long-lived listeners that need a fresh snapshot
+  // of gmLike / entries / campaignNpcs. The infection-check stale-
+  // closure post-mortem (56c0534, lessons.md) showed why these have to
+  // be refs not closures: listeners are registered once in a [id]-deps
+  // useEffect and never re-bound. Plain React state captured in those
+  // closures stays at the mount-time value forever.
+  const gmLikeRef = useRef<boolean>(false)
+  const entriesRef = useRef<TableEntry[]>([])
+  const campaignNpcsRef = useRef<CampaignNpc[]>([])
 
   // Header-bar nested dropdowns (Checks / Community / GM Tools). Only
   // one menu opens at a time - clicking another closes the previous;
@@ -341,7 +350,10 @@ export default function TablePage() {
   // "GM Tools" menu name) where Thrivers should still read as themselves.
   const [isThriver, setIsThriver] = useState(false)
   const gmLike = isGM || isThriver
+  // Sync gmLikeRef every render so listener closures get a fresh read.
+  useEffect(() => { gmLikeRef.current = gmLike }, [gmLike])
   const [entries, setEntries] = useState<TableEntry[]>([])
+  useEffect(() => { entriesRef.current = entries }, [entries])
   const [gmInfo, setGmInfo] = useState<GmInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [entriesLoading, setEntriesLoading] = useState(true)
@@ -1450,6 +1462,41 @@ export default function TablePage() {
           // Another client resolved the insight save - close our modal and refresh
           setInsightSavePrompt(null)
           loadEntries(id)
+        })
+        .on('broadcast', { event: 'lasting_damage_check_request' }, (msg: any) => {
+          // Day-0 Lasting Damage check (canon §06.lasting-damage). Fired
+          // by drainInfectionDays in lib/campaign-clock.ts when an
+          // infected character's days_left hits 0 with severity='check'.
+          // The targetUserId is the PC's owner; NPC sicknesses carry
+          // targetUserId=null and queue on the GM's tab.
+          //
+          // Outcome resolution lives in executeRoll's "Lasting Damage
+          // Check (" label branch and rolls 2d6 on Table 12 (Lasting
+          // Wounds) on Failure / Dire Failure.
+          //
+          // Uses userIdRef.current to dodge the stale-closure trap
+          // that bit infection_check_request earlier today (56c0534).
+          const data = msg.payload
+          if (!data) return
+          // PC: gate on user match. NPC (targetUserId null): GM only.
+          if (data.isPc) {
+            if (data.targetUserId !== userIdRef.current) return
+          } else {
+            // NPC path - only the GM opens the modal.
+            if (!gmLikeRef.current) return
+          }
+          // PHY check - AMod is the patient's PHY. For PCs we can read
+          // from entries[]. For NPCs the GM is rolling, so the GM-side
+          // dispatch reads it just like queueWoundInfectionChecks does.
+          let phyAmod = 0
+          if (data.isPc) {
+            const pcEntry = entriesRef.current.find(e => e.character.name === data.name)
+            phyAmod = pcEntry?.character.data?.rapid?.PHY ?? 0
+          } else {
+            const npcRow = campaignNpcsRef.current.find((n: any) => n.name === data.name)
+            phyAmod = (npcRow as any)?.physicality ?? 0
+          }
+          handleRollRequest(`${data.name} - Lasting Damage Check`, phyAmod, 0)
         })
         .on('broadcast', { event: 'infection_check_request' }, (msg: any) => {
           // End-of-combat Wound Infection check (canon §06). The GM's
@@ -3439,6 +3486,7 @@ export default function TablePage() {
   const [socialNpcId, setSocialNpcId] = useState<string>('')
   const [socialCmod, setSocialCmod] = useState<{ npcName: string; cmod: number } | null>(null)
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
+  useEffect(() => { campaignNpcsRef.current = campaignNpcs as any }, [campaignNpcs])
   const [revealedNpcs, setRevealedNpcs] = useState<any[]>([])
   const revealedNpcIds = useMemo(() => new Set<string>(revealedNpcs.map((n: any) => n.id)), [revealedNpcs])
   const npcRosterInitiativeNpcIds = useMemo(
@@ -5832,12 +5880,17 @@ export default function TablePage() {
       let infectionState: 'wound' | 'sickness' | null = null
       let daysLeft = 0
       let lastingRisk = false
+      // 'check' = PHY check required at Day 0 (Failure path).
+      // 'auto'  = Lasting Damage applies automatically at Day 0 (Dire path).
+      // null    = no infection / shrugged off.
+      let severity: 'check' | 'auto' | null = null
       let summary = ''
       if (isFail) {
         infectionState = kind
         // Failure: 1d3 days for both branches.
         daysLeft = Math.floor(Math.random() * 3) + 1
         lastingRisk = true
+        severity = 'check'
         summary = `${infName} failed the Infection check - sick for ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Lasting Damage risk.`
       } else if (isDire) {
         infectionState = kind
@@ -5847,6 +5900,7 @@ export default function TablePage() {
         // Lasting Damage check still fires on top.
         daysLeft = Math.floor(Math.random() * 6) + 1
         lastingRisk = true
+        severity = 'auto'
         summary = `${infName} dire-failed the Infection check - sick for ${daysLeft} days. ${kind === 'wound' ? 'Auto Lasting Damage on Day 0.' : 'Will progress to Mortally Wounded on Day 0.'}`
       } else {
         summary = `${infName} shrugged off the Infection check.`
@@ -5861,6 +5915,7 @@ export default function TablePage() {
           infection_state: infectionState,
           infection_days_left: daysLeft,
           infection_lasting_risk: lastingRisk,
+          infection_severity: severity,
           infection_started_at: new Date().toISOString(),
           rp_current: cappedRp,
         }
@@ -5874,6 +5929,7 @@ export default function TablePage() {
           infection_state: infectionState,
           infection_days_left: daysLeft,
           infection_lasting_risk: lastingRisk,
+          infection_severity: severity,
           infection_started_at: new Date().toISOString(),
           rp_current: npcCappedRp,
         }
@@ -5884,6 +5940,52 @@ export default function TablePage() {
         setViewingNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } as CampaignNpc : n))
       }
       infectionResult = summary
+    }
+
+    // Lasting Damage Check result - canon §06.lasting-damage. The patient
+    // rolls a Physicality check on Day 0 of their sick period (when
+    // infection_severity was 'check'; the 'auto' path skips this and
+    // applies a Lasting Wound at drain time). Outcome:
+    //   Wild Success / High Insight / Success - no wound.
+    //   Failure                                - roll 2d6 on Table 12,
+    //                                            append to lastingWounds.
+    //   Dire Failure / Low Insight             - roll 2d6 on Table 12.
+    // Table 12 = LASTING_WOUNDS in lib/xse-schema.ts.
+    let lastingDamageResult = ''
+    if (pendingRoll.label.includes('Lasting Damage Check')) {
+      const ldName = pendingRoll.label.replace(/^.* - /, '').replace(/^Lasting Damage Check\b.*$/, '').trim()
+      // Label shape is "<name> - Lasting Damage Check" so split on " - ".
+      const ldPatientName = pendingRoll.label.split(' - ')[0]
+      const ldTargetEntry = entries.find(e => e.character.name === ldPatientName)
+      const ldTargetNpc = !ldTargetEntry ? campaignNpcs.find((n: any) => n.name === ldPatientName) : null
+      const ldShrug = outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight'
+      if (ldShrug) {
+        lastingDamageResult = `${ldPatientName} shrugged off the Lasting Damage.`
+      } else {
+        // Failure or Dire Failure (or Low Insight) - roll 2d6 on Table 12.
+        const ld1 = Math.floor(Math.random() * 6) + 1
+        const ld2 = Math.floor(Math.random() * 6) + 1
+        const ldSum = ld1 + ld2
+        const wound = LASTING_WOUNDS[ldSum]
+        if (ldTargetEntry) {
+          const charData: any = ldTargetEntry.character.data ?? {}
+          const nextLW = [...(charData.lastingWounds ?? []), wound.name]
+          const { error: lwErr } = await supabase
+            .from('characters')
+            .update({ data: { ...charData, lastingWounds: nextLW } })
+            .eq('id', ldTargetEntry.character.id)
+          if (lwErr) console.error('[lasting-damage] PC update error:', lwErr.message)
+          setEntries(prev => prev.map(e => e.character.id === ldTargetEntry.character.id
+            ? { ...e, character: { ...e.character, data: { ...charData, lastingWounds: nextLW } } }
+            : e))
+        }
+        // NPCs: schema has no lastingWounds field today; log only.
+        lastingDamageResult = `${ldPatientName} suffers a Lasting Wound: ${wound.name} [2d6=${ldSum}] (${wound.effect})`
+        // Suppress the unused variable warning - ldName was the original
+        // greedy match attempt before we settled on split(' - ')[0].
+        void ldName
+        void ldTargetNpc
+      }
     }
 
     // Treat Infection result - medic's Medicine* check on a sick patient.
@@ -6228,7 +6330,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
-      damage: damageResult, weaponJammed, traitNotes: [...(infectionSickCmodNote ? [infectionSickCmodNote] : []), ...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : []), ...(healResult ? [healResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...(infectionSickCmodNote ? [infectionSickCmodNote] : []), ...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(lastingDamageResult ? [lastingDamageResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : []), ...(healResult ? [healResult] : [])],
       diceRolled: insightDiceRolled,
     } as any)
 
