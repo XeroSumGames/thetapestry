@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
@@ -124,6 +124,12 @@ export default function VehiclePage() {
   const [sceneInfo, setSceneInfo] = useState<{ id: string; cellFeet: number } | null>(null)
   const [vehicleTokenPos, setVehicleTokenPos] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const [characterRangeFeet, setCharacterRangeFeet] = useState<Record<string, number>>({})
+  // Long-lived tactical channel ref. The popout uses this for outbound
+  // broadcasts (vehicle_updated on board/disembark; token_moved on
+  // dismount placement). Sending through a long-lived channel avoids
+  // the subscribe/send/remove race where the teardown can drop the
+  // outbound message before the server fans it out.
+  const tacticalChannelRef = useRef<any>(null)
 
   useEffect(() => {
     async function load() {
@@ -304,7 +310,12 @@ export default function VehiclePage() {
     const ch = supabase.channel(`tactical_${campaignId}`)
       .on('broadcast', { event: 'token_moved' }, () => { loadTokens() })
       .subscribe()
-    return () => { cancelled = true; supabase.removeChannel(ch) }
+    tacticalChannelRef.current = ch
+    return () => {
+      cancelled = true
+      tacticalChannelRef.current = null
+      supabase.removeChannel(ch)
+    }
   }, [campaignId, vehicle?.name])
 
   if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
@@ -334,19 +345,28 @@ export default function VehiclePage() {
       console.error('[vehicle-popout] updateVehicle RPC failed:', error.message)
       return
     }
-    // Defensive: broadcast vehicle_updated on the tactical channel.
-    // TacticalMap.tsx already subscribes there for token_moved, so
-    // adding the new handler in-place is cheaper than spinning up
-    // another channel on the table page. The handler forwards to
-    // the parent's onVehiclesNeedRefresh callback which refetches
-    // campaigns.vehicles. Belt-and-suspenders for the campaigns
-    // realtime UPDATE path, which has been flaky for jsonb columns.
-    const ch = supabase.channel(`tactical_${campaignId}`)
-    ch.subscribe(async (status: string) => {
-      if (status !== 'SUBSCRIBED') return
-      await ch.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
-      await supabase.removeChannel(ch)
-    })
+    // Broadcast vehicle_updated on the long-lived tactical channel.
+    // TacticalMap subscribes to the same channel name and forwards
+    // to the parent's refetchVehicles. Sending through the ALREADY-
+    // subscribed channel avoids the previous race where an ad-hoc
+    // channel got torn down before the server fanned out the message.
+    // If the channel hasn't connected yet (ref still null on first
+    // render), fall back to the ad-hoc pattern as a one-shot.
+    if (tacticalChannelRef.current) {
+      try {
+        await tacticalChannelRef.current.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
+      } catch (err) {
+        console.error('[vehicle-popout] vehicle_updated broadcast failed:', err)
+      }
+    } else {
+      const ch = supabase.channel(`tactical_${campaignId}`)
+      ch.subscribe(async (status: string) => {
+        if (status !== 'SUBSCRIBED') return
+        await ch.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
+        // Hold briefly so the server has time to fan out before tearing down.
+        setTimeout(() => { supabase.removeChannel(ch) }, 500)
+      })
+    }
   }
 
   // Auto-vacate helper (2026-05-17): when a character is assigned to
