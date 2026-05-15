@@ -97,6 +97,17 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (ldShrug) {
       return `${r.character_name} shrugged off the Lasting Damage${outcomeTag}`
     }
+    // Read the wound name + effect from damage_json so the feed can
+    // name the specific wound (Skittish / Lost Eye / etc). Falls back
+    // to the generic line for pre-fix rows that didn't stash this.
+    const ldj = (r.damage_json && typeof r.damage_json === 'object')
+      ? r.damage_json as { wound_name?: string; wound_effect?: string; wound_roll?: number }
+      : null
+    if (ldj?.wound_name) {
+      const effect = ldj.wound_effect ? ` (${ldj.wound_effect})` : ''
+      const roll = ldj.wound_roll != null ? ` [2d6=${ldj.wound_roll}]` : ''
+      return `${r.character_name} suffered a Lasting Wound: ${ldj.wound_name}${effect}${roll}${outcomeTag}`
+    }
     return `${r.character_name} suffered a Lasting Wound from infection${outcomeTag}`
   }
 

@@ -6018,6 +6018,12 @@ export default function TablePage() {
     //   Dire Failure / Low Insight             - roll 2d6 on Table 12.
     // Table 12 = LASTING_WOUNDS in lib/xse-schema.ts.
     let lastingDamageResult = ''
+    // Stashed onto saveRollToLog's damage_json so the compact feed
+    // line can name the specific wound rolled (Skittish / Lost Eye /
+    // etc.) instead of just saying "suffered a Lasting Wound from
+    // infection". Set inside the Lasting Damage Check branch when
+    // a 2d6 Table 12 roll fires.
+    let lastingDamageJson: { wound_name: string; wound_effect: string; wound_roll: number } | null = null
     if (pendingRoll.label.includes('Lasting Damage Check')) {
       const ldName = pendingRoll.label.replace(/^.* - /, '').replace(/^Lasting Damage Check\b.*$/, '').trim()
       // Label shape is "<name> - Lasting Damage Check" so split on " - ".
@@ -6047,6 +6053,9 @@ export default function TablePage() {
         }
         // NPCs: schema has no lastingWounds field today; log only.
         lastingDamageResult = `${ldPatientName} suffers a Lasting Wound: ${wound.name} [2d6=${ldSum}] (${wound.effect})`
+        // Stash the wound on damage_json so future feed renders can
+        // name the wound instead of just saying "from infection".
+        lastingDamageJson = { wound_name: wound.name, wound_effect: wound.effect, wound_roll: ldSum }
       }
       // Clear the persistent pending flag now that the check resolved.
       // The auto-open useEffect's firedLastingChecksRef will also drop
@@ -6308,6 +6317,12 @@ export default function TablePage() {
       // becomes just the infection block in those cases.
       if (infectionDamageJson) {
         augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), ...infectionDamageJson }
+      }
+      // Same pattern for Lasting Damage rolls - stash the wound name +
+      // effect so historical feed entries can name the wound instead
+      // of generic "suffered a Lasting Wound from infection".
+      if (lastingDamageJson) {
+        augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), ...lastingDamageJson }
       }
       await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3)
     }
