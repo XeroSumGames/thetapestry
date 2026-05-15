@@ -536,9 +536,13 @@ export default function VehiclePage() {
 
   // Confirm a pending slot change. Calls the existing setter
   // (setCrewAssignment / setPassengerSlot / setShooterAssignment) and
-  // then snaps the assignee's scene token into place.
-  async function confirmPending(slot: SlotKey) {
-    const newValue = pendingSlot[slot]
+  // then drops the prior occupant next to the bus on disembark.
+  // `valueOverride` lets a caller (e.g. the instant-disembark button)
+  // commit a value without going through pendingSlot first - useful
+  // when we don't want to wait for a React state flush before
+  // running the await chain.
+  async function confirmPending(slot: SlotKey, valueOverride?: string) {
+    const newValue = valueOverride !== undefined ? valueOverride : pendingSlot[slot]
     if (newValue === undefined) return
     // Defense in depth on the range gate: the dropdown disables
     // out-of-range options visually, but if the staged value somehow
@@ -1040,50 +1044,65 @@ export default function VehiclePage() {
     )
   }
 
-  // Apply-seat-change button. Single action: commit whatever the
-  // dropdown has staged. Passengers/crew vanish into the vehicle on
-  // the canvas (the TacticalMap aboard-filter hides them) and the
-  // vehicle gets a 🪑 N badge for headcount; disembarking drops the
-  // token at the first free cell next to the bus. No map-snap or
-  // seat-cell math anymore.
+  // Apply-seat-change button. Single action that commits the next
+  // sensible move for the slot. Label is contextual:
+  //   - staged with a new occupant       → "🪑 Board"        (commit)
+  //   - staged empty                     → "🚶 Disembark"   (commit)
+  //   - nothing staged + slot occupied   → "🚶 Disembark"   (instant)
+  //   - nothing staged + slot empty      → "🪑 No Change"   (disabled)
   //
-  // Label is contextual:
-  //   - staged with a new occupant → "🪑 Board"
-  //   - staged empty (clear)       → "🚶 Disembark"
-  //   - nothing staged             → disabled, "No change"
+  // The "instant disembark" path skips the stage-then-commit dance:
+  // since clicking it always means "get them off the bus" when the
+  // dropdown is unchanged, we set pendingSlot[slot] = '' and run
+  // confirmPending in one tick. That feeds the same dismount-to-
+  // adjacent-cell pipeline as a normally-staged disembark.
   function renderMoveHere(slot: SlotKey, accent: string) {
     const pending = pendingSlot[slot]
     const hasPending = pending !== undefined
     const submitting = submittingSlot.has(slot)
+    const savedId = getSavedSlotValue(slot)
     const clearing = hasPending && !pending
     const boarding = hasPending && !!pending
-    const empty = !hasPending
+    // "Instant disembark" — no pending stage, but the seat already
+    // has someone in it. Treat the button as a one-click eject.
+    const instantDisembark = !hasPending && !!savedId
+    const noOp = !hasPending && !savedId
     const label = submitting ? '...'
-      : clearing ? '🚶 Disembark'
+      : clearing || instantDisembark ? '🚶 Disembark'
       : boarding ? '🪑 Board'
       : '🪑 No Change'
     const title = submitting ? 'Working...'
       : clearing ? 'Click to remove them from this seat and place their token next to the bus'
       : boarding ? 'Click to seat them - their token vanishes into the vehicle'
-      : 'Change the dropdown to stage a board or disembark'
+      : instantDisembark ? 'Click to drop the current occupant off next to the bus'
+      : 'Change the dropdown to stage a board, or pick someone in a seat to disembark'
     return (
       <button
         onClick={async () => {
-          if (hasPending) await confirmPending(slot)
+          if (hasPending) {
+            await confirmPending(slot)
+            return
+          }
+          if (instantDisembark) {
+            // One-click eject — bypass the pendingSlot stage and pass
+            // the empty value directly. Same dismount-to-adjacent
+            // code path as a normally-staged disembark.
+            await confirmPending(slot, '')
+          }
         }}
-        disabled={empty || submitting || !canEdit}
+        disabled={noOp || submitting || !canEdit}
         title={title}
         style={{
           padding: '6px 10px',
-          background: empty ? '#242424' : '#1a2e10',
-          border: `1px solid ${empty ? '#3a3a3a' : accent}`,
+          background: noOp ? '#242424' : '#1a2e10',
+          border: `1px solid ${noOp ? '#3a3a3a' : accent}`,
           borderRadius: '3px',
-          color: empty ? '#5a5550' : accent,
+          color: noOp ? '#5a5550' : accent,
           fontSize: '13px',
           fontFamily: 'Carlito, sans-serif',
           letterSpacing: '.06em',
           textTransform: 'uppercase',
-          cursor: empty || submitting ? 'not-allowed' : 'pointer',
+          cursor: noOp || submitting ? 'not-allowed' : 'pointer',
           flexShrink: 0,
         }}>
         {label}
