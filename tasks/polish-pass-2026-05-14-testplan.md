@@ -234,6 +234,27 @@ account you mentioned setting up earlier). Log in as that account.
 
 ---
 
+### 5.7  Export Session Log
+
+1. On the table page, click **End Session** button to open the End
+   Session modal.
+2. Confirm: a green **Export Log** button appears between Cancel
+   and End Session.
+3. Click Export Log. A file should download named
+   `<campaign-slug>-session-<N>-<YYYY-MM-DD>.html`.
+4. Open the downloaded file in a browser. Confirm:
+   - Title reads "<Campaign Name> - Session N Log".
+   - Each row shows name + time + narrative + (dice math if applicable).
+   - HI/LI rows have the green `+1 Insight Die` badge.
+   - WS / Success / Failure / DF rows have NO badge.
+   - 3d6 insight spends show `[d1+d2+d3 (insight die)]` and the
+     "Insight Die spent to pre-roll 3d6 and keep all 3" subline.
+   - Bordered colors per outcome (green / blue / amber / red).
+5. Close the End Session modal without ending.
+6. Open the Campaign Sheet. Click the **Export Log** button next to
+   the Edit Clock button. Same file downloads (named with sessionNumber=0
+   if not actively in a session - cosmetic only).
+
 ## Smoke checks (do these whenever you have a tab open)
 
 - Feed never renders a `+1 Insight Die` badge on Success / Wild Success
