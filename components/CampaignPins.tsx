@@ -75,6 +75,9 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   const [editSceneId, setEditSceneId] = useState<string | null>(null)
   const [editSortOrder, setEditSortOrder] = useState('')
   const [editFolder, setEditFolder] = useState('')
+  // Pin filter — matches against pin name (case-insensitive substring).
+  // Empty string = show all. Persists only for the session.
+  const [pinFilter, setPinFilter] = useState('')
   // ── GM-shared folder state (mirrors NpcRoster) ────────────────────
   // Folder name lives directly on each pin row via the `folder` column.
   // NULL or empty = "Uncategorized." The expanded/collapsed and folder-
@@ -355,13 +358,27 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
 
   return (
     <>
-      {/* Header buttons */}
-      {isGM && pins.length > 0 && (
-        <div style={{ padding: '8px 10px', display: 'flex', gap: '4px' }}>
-          <button onClick={allRevealed ? hideAll : revealAll}
-            style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            {allRevealed ? 'Hide All' : 'Reveal All'}
-          </button>
+      {/* Header — Reveal/Hide All (GM only) + search box (everyone).
+          The search input lives next to the toggle so players who
+          can't manage reveal state still get a way to filter long
+          pin lists. Filter matches case-insensitive substring against
+          pin name only - notes get noisy fast and the name is what
+          shows in the row. */}
+      {pins.length > 0 && (
+        <div style={{ padding: '8px 10px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+          {isGM && (
+            <button onClick={allRevealed ? hideAll : revealAll}
+              style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
+              {allRevealed ? 'Hide All' : 'Reveal All'}
+            </button>
+          )}
+          <input
+            type="search"
+            value={pinFilter}
+            onChange={e => setPinFilter(e.target.value)}
+            placeholder="Search pins…"
+            style={{ flex: 1, minWidth: 0, padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
+          />
         </div>
       )}
 
@@ -380,11 +397,24 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
               </div>
             )
           }
+          // Apply the search filter before grouping. Empty filter = pass
+          // everything through. Case-insensitive substring on pin name.
+          const filterQ = pinFilter.trim().toLowerCase()
+          const filteredPins = filterQ === ''
+            ? pins
+            : pins.filter(p => (p.name ?? '').toLowerCase().includes(filterQ))
+          if (filteredPins.length === 0) {
+            return (
+              <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                No pins match &quot;{pinFilter}&quot;
+              </div>
+            )
+          }
           // Group pins by folder. NULL / empty / whitespace-only =
           // Uncategorized. Sort within each folder is already settled
           // upstream by loadPins (sort_order then created_at).
           const folderMap: Record<string, CampaignPin[]> = {}
-          for (const p of pins) {
+          for (const p of filteredPins) {
             const raw = (p.folder ?? '').trim()
             const key = raw === '' ? 'Uncategorized' : raw
             if (!folderMap[key]) folderMap[key] = []

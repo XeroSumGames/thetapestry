@@ -2060,11 +2060,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (t.token_type === 'object') {
         const paxCount = passengerCountByVehicleName.get(t.name) ?? 0
         if (paxCount > 0) {
-          const badgeR = Math.max(7, radius * 0.28)
-          const bx = cx + radius * 0.7
-          const by = cy - radius * 0.7
+          const badgeR = Math.max(7, radius * 0.14)
           ctx.beginPath()
-          ctx.arc(bx, by, badgeR, 0, Math.PI * 2)
+          ctx.arc(cx, cy, badgeR, 0, Math.PI * 2)
           ctx.fillStyle = '#1a2e10'
           ctx.fill()
           ctx.strokeStyle = '#7fc458'
@@ -2074,7 +2072,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.font = `bold ${Math.max(13, badgeR * 1.15)}px Carlito`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText(String(paxCount), bx, by)
+          ctx.fillText(String(paxCount), cx, cy)
         }
       }
 
