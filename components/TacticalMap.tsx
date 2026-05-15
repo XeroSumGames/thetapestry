@@ -2055,13 +2055,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
       // Passenger-count badge (top-right of vehicle/object tokens).
       // Only rendered when a vehicle of this name has 1+ bodies in
-      // any seat. 🪑 + count, sized like the initiative badge, dark
-      // chip with a green ring so it reads as "people inside" not
-      // "turn order" at a glance.
+      // any seat. Bare count - no chair icon, sized smaller than the
+      // initiative badge so it reads as a secondary annotation.
       if (t.token_type === 'object') {
         const paxCount = passengerCountByVehicleName.get(t.name) ?? 0
         if (paxCount > 0) {
-          const badgeR = Math.max(10, radius * 0.4)
+          const badgeR = Math.max(7, radius * 0.28)
           const bx = cx + radius * 0.7
           const by = cy - radius * 0.7
           ctx.beginPath()
@@ -2069,13 +2068,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.fillStyle = '#1a2e10'
           ctx.fill()
           ctx.strokeStyle = '#7fc458'
-          ctx.lineWidth = 1.5
+          ctx.lineWidth = 1
           ctx.stroke()
           ctx.fillStyle = '#7fc458'
-          ctx.font = `bold ${Math.max(13, badgeR * 1.0)}px Carlito`
+          ctx.font = `bold ${Math.max(13, badgeR * 1.15)}px Carlito`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText(`🪑${paxCount}`, bx, by)
+          ctx.fillText(String(paxCount), bx, by)
         }
       }
 
