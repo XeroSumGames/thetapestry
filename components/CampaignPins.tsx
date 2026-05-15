@@ -70,6 +70,19 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   const [scenes, setScenes] = useState<TacticalScene[]>([])
   const [editSceneId, setEditSceneId] = useState<string | null>(null)
   const [editSortOrder, setEditSortOrder] = useState('')
+  // ── Per-user pin folders (2026-05-15) ────────────────────────────
+  // Folders are PRIVATE to the viewer: each user (GM / Thriver / player)
+  // organises the pins they can see into folders they name themselves.
+  // RLS gates pin_folders + pin_folder_assignments on user_id =
+  // auth.uid() so even the campaign GM can't read another player's
+  // folder list. selectedFolderFilter drives the visible-pin filter:
+  //   'all'      = every pin you can see
+  //   'unfiled'  = pins you have NOT assigned to one of your folders
+  //   <uuid>     = pins you HAVE assigned to that folder
+  const [folders, setFolders] = useState<Array<{ id: string; name: string }>>([])
+  const [assignments, setAssignments] = useState<Record<string, string>>({})
+  const [selectedFolderFilter, setSelectedFolderFilter] = useState<'all' | 'unfiled' | string>('all')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   async function loadPins() {
     let query = supabase
@@ -117,7 +130,112 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     }
   }
 
-  useEffect(() => { loadPins(); loadScenes() }, [campaignId])
+  useEffect(() => { loadPins(); loadScenes(); loadFoldersAndAssignments() }, [campaignId])
+
+  // Load the viewer's folders + the viewer's pin assignments for this
+  // campaign. Cached auth call avoids a roundtrip when the user_id is
+  // already in localStorage. Both queries scoped to the current user
+  // by RLS; no client-side user_id filter needed (defense-in-depth).
+  async function loadFoldersAndAssignments() {
+    const { user } = await getCachedAuth()
+    if (!user) return
+    setCurrentUserId(user.id)
+    const [foldersRes, assignsRes] = await Promise.all([
+      supabase.from('pin_folders')
+        .select('id, name, sort_order, created_at')
+        .eq('campaign_id', campaignId)
+        .order('sort_order', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: true }),
+      supabase.from('pin_folder_assignments').select('pin_id, folder_id'),
+    ])
+    setFolders((foldersRes.data ?? []).map((f: any) => ({ id: f.id, name: f.name })))
+    const map: Record<string, string> = {}
+    for (const a of (assignsRes.data ?? []) as any[]) map[a.pin_id] = a.folder_id
+    setAssignments(map)
+  }
+
+  async function createFolder() {
+    if (!currentUserId) return
+    const name = prompt('Folder name:')?.trim()
+    if (!name) return
+    const { data, error } = await supabase
+      .from('pin_folders')
+      .insert({ user_id: currentUserId, campaign_id: campaignId, name })
+      .select('id, name')
+      .maybeSingle()
+    if (error) { alert(`Could not create folder: ${error.message}`); return }
+    if (data) {
+      setFolders(prev => [...prev, { id: data.id, name: data.name }])
+      setSelectedFolderFilter(data.id)
+    }
+  }
+
+  async function renameFolder(folderId: string) {
+    const cur = folders.find(f => f.id === folderId)
+    if (!cur) return
+    const name = prompt('Rename folder:', cur.name)?.trim()
+    if (!name || name === cur.name) return
+    const previous = folders
+    setFolders(prev => prev.map(f => f.id === folderId ? { ...f, name } : f))
+    const { error } = await supabase.from('pin_folders').update({ name }).eq('id', folderId).select()
+    if (error) {
+      alert(`Rename failed: ${error.message}`)
+      setFolders(previous)
+    }
+  }
+
+  async function deleteFolder(folderId: string) {
+    const cur = folders.find(f => f.id === folderId)
+    if (!cur) return
+    if (!confirm(`Delete folder "${cur.name}"? Pins inside become Unfiled. The pins themselves are not deleted.`)) return
+    const previousFolders = folders
+    const previousAssignments = assignments
+    // Optimistic: clear assignments to this folder + drop the folder row.
+    setFolders(prev => prev.filter(f => f.id !== folderId))
+    setAssignments(prev => {
+      const next = { ...prev }
+      for (const pinId of Object.keys(next)) if (next[pinId] === folderId) delete next[pinId]
+      return next
+    })
+    if (selectedFolderFilter === folderId) setSelectedFolderFilter('all')
+    // ON DELETE CASCADE on pin_folder_assignments.folder_id handles
+    // the rows server-side, so we don't need a separate DELETE.
+    const { error } = await supabase.from('pin_folders').delete().eq('id', folderId)
+    if (error) {
+      alert(`Delete failed: ${error.message}`)
+      setFolders(previousFolders)
+      setAssignments(previousAssignments)
+    }
+  }
+
+  async function assignPinToFolder(pinId: string, folderId: string | null) {
+    if (!currentUserId) return
+    const previous = assignments
+    setAssignments(prev => {
+      const next = { ...prev }
+      if (folderId) next[pinId] = folderId
+      else delete next[pinId]
+      return next
+    })
+    let error: any
+    if (folderId) {
+      const res = await supabase.from('pin_folder_assignments').upsert({
+        pin_id: pinId, user_id: currentUserId, folder_id: folderId,
+      }, { onConflict: 'pin_id,user_id' }).select()
+      error = res.error
+    } else {
+      const res = await supabase.from('pin_folder_assignments')
+        .delete()
+        .eq('pin_id', pinId)
+        .eq('user_id', currentUserId)
+        .select()
+      error = res.error
+    }
+    if (error) {
+      alert(`Could not move pin: ${error.message}`)
+      setAssignments(previous)
+    }
+  }
 
   async function loadScenes() {
     const { data } = await supabase.from('tactical_scenes').select('id, name').eq('campaign_id', campaignId).order('created_at', { ascending: false })
@@ -269,14 +387,93 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
         </div>
       )}
 
+      {/* Folder rail — viewer's private folder list. Chip per folder
+          plus 'All' / 'Unfiled' system chips and a '+ New' creator.
+          When a folder chip is active, rename / delete affordances
+          appear next to '+ New'. Counts reflect what the viewer can
+          see (RLS already excluded unrevealed pins for non-GMs). */}
+      {(() => {
+        const totalCount = pins.length
+        const unfiledCount = pins.filter(p => !assignments[p.id]).length
+        const countFor = (folderId: string) => pins.filter(p => assignments[p.id] === folderId).length
+        const activeFolder = typeof selectedFolderFilter === 'string'
+          && selectedFolderFilter !== 'all'
+          && selectedFolderFilter !== 'unfiled'
+          ? folders.find(f => f.id === selectedFolderFilter)
+          : null
+        const chipBase: React.CSSProperties = {
+          padding: '2px 8px', borderRadius: '2px',
+          fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+          letterSpacing: '.04em', textTransform: 'uppercase',
+          cursor: 'pointer', lineHeight: 1.4, whiteSpace: 'nowrap',
+        }
+        const chipStyle = (picked: boolean): React.CSSProperties => ({
+          ...chipBase,
+          background: picked ? '#0f2035' : '#1a1a1a',
+          border: `1px solid ${picked ? '#7ab3d4' : '#3a3a3a'}`,
+          color: picked ? '#7ab3d4' : '#cce0f5',
+        })
+        return (
+          <div style={{ padding: '6px 10px', display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid #2e2e2e' }}>
+            <button onClick={() => setSelectedFolderFilter('all')}
+              style={chipStyle(selectedFolderFilter === 'all')}>
+              All ({totalCount})
+            </button>
+            <button onClick={() => setSelectedFolderFilter('unfiled')}
+              style={chipStyle(selectedFolderFilter === 'unfiled')}>
+              Unfiled ({unfiledCount})
+            </button>
+            {folders.map(f => (
+              <button key={f.id} onClick={() => setSelectedFolderFilter(f.id)}
+                title={f.name}
+                style={chipStyle(selectedFolderFilter === f.id)}>
+                📁 {f.name} ({countFor(f.id)})
+              </button>
+            ))}
+            <button onClick={createFolder}
+              title="Create a new folder"
+              style={{ ...chipBase, background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458' }}>
+              + New
+            </button>
+            {activeFolder && (
+              <>
+                <button onClick={() => renameFolder(activeFolder.id)}
+                  title={`Rename "${activeFolder.name}"`}
+                  style={{ ...chipBase, background: 'transparent', border: '1px solid #3a3a3a', color: '#cce0f5' }}>
+                  Rename
+                </button>
+                <button onClick={() => deleteFolder(activeFolder.id)}
+                  title={`Delete "${activeFolder.name}" (pins survive, become Unfiled)`}
+                  style={{ ...chipBase, background: 'transparent', border: '1px solid #7a1f16', color: '#f5a89a' }}>
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+        )
+      })()}
+
       {/* Pin list */}
       <div style={{ overflowY: 'auto', padding: '4px' }}>
-        {pins.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-            {isGM ? 'No campaign pins' : 'No pins revealed yet'}
-          </div>
-        ) : (
-          pins.map(pin => (
+        {(() => {
+          const filtered = pins.filter(p => {
+            if (selectedFolderFilter === 'all') return true
+            if (selectedFolderFilter === 'unfiled') return !assignments[p.id]
+            return assignments[p.id] === selectedFolderFilter
+          })
+          if (filtered.length === 0) {
+            const msg = pins.length === 0
+              ? (isGM ? 'No campaign pins' : 'No pins revealed yet')
+              : selectedFolderFilter === 'unfiled'
+                ? 'No unfiled pins'
+                : 'No pins in this folder'
+            return (
+              <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                {msg}
+              </div>
+            )
+          }
+          return filtered.map(pin => (
             <div
               key={pin.id}
               onDragOver={e => { if (dragId) { e.preventDefault(); setDragOverId(pin.id) } }}
@@ -407,6 +604,23 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                     )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
+                    {/* Per-viewer folder filing. Visible to anyone who
+                        can see the pin — including players, because
+                        folders are PRIVATE per-user. Hidden when the
+                        viewer has no folders yet (encourages them to
+                        hit '+ New' on the rail first). */}
+                    {folders.length > 0 && (
+                      <select
+                        value={assignments[pin.id] ?? ''}
+                        onChange={e => assignPinToFolder(pin.id, e.target.value || null)}
+                        title="File this pin into one of your folders"
+                        style={{ width: 'auto', maxWidth: '110px', fontSize: '13px', padding: '0 4px', background: assignments[pin.id] ? '#0f2035' : '#1a1a1a', border: `1px solid ${assignments[pin.id] ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '2px', color: assignments[pin.id] ? '#7ab3d4' : '#cce0f5', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer', flexShrink: 0 }}>
+                        <option value="">📂 Unfiled</option>
+                        {folders.map(f => (
+                          <option key={f.id} value={f.id}>📁 {f.name}</option>
+                        ))}
+                      </select>
+                    )}
                     {canManage && (
                       <>
                         <button onClick={() => toggleReveal(pin)}
@@ -443,7 +657,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
               )}
             </div>
           ))
-        )}
+        })()}
       </div>
     </>
   )
