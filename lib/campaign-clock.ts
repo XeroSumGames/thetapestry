@@ -420,12 +420,12 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
   const [pcsRes, npcsRes] = await Promise.all([
     supabase
       .from('character_states')
-      .select('id, character_id, characters!inner(id, name, user_id, data), infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max')
+      .select('id, character_id, characters!inner(id, name, user_id, data), infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max, wp_current, wp_max')
       .eq('campaign_id', campaignId)
       .not('infection_state', 'is', null),
     supabase
       .from('campaign_npcs')
-      .select('id, name, infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max')
+      .select('id, name, infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max, wp_current, physicality, lasting_wounds')
       .eq('campaign_id', campaignId)
       .not('infection_state', 'is', null),
   ])
@@ -471,13 +471,40 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
       const die2 = Math.floor(Math.random() * 6) + 1
       const sum = die1 + die2
       const wound = LASTING_WOUNDS[sum]
-      // PC: push to data.lastingWounds. NPC: skip (no field today).
+      // Persist the wound. PCs: push to characters.data.lastingWounds.
+      // NPCs: push to campaign_npcs.lasting_wounds (new column 2026-05-15).
       if (isPc && row.characters?.id) {
         const charData = row.characters.data ?? {}
         const nextLW = [...(charData.lastingWounds ?? []), wound.name]
         await supabase.from('characters').update({ data: { ...charData, lastingWounds: nextLW } }).eq('id', row.characters.id)
+      } else if (!isPc) {
+        // Re-read the NPC row to get current lasting_wounds (the
+        // select above fetched it implicitly via *? no - the select
+        // is explicit; we'd need to refetch or trust the local copy).
+        // Trust local: drainer iterates per-NPC, no concurrent
+        // mutation expected during the drain.
+        const cur: string[] = Array.isArray((row as any).lasting_wounds) ? (row as any).lasting_wounds : []
+        const nextLW = [...cur, wound.name]
+        await supabase.from('campaign_npcs').update({ lasting_wounds: nextLW }).eq('id', row.id)
       }
-      await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clear).eq('id', row.id)
+      // Sickness Dire Failure has an EXTRA consequence beyond the
+      // Lasting Wound: the patient drops to Mortally Wounded on Day 0
+      // per canon (rules/combat/infection + executeRoll comment at
+      // 'For Sickness, the Day-0 mortal-wound drop is the worst part').
+      // Formula matches every other mortal-wound site:
+      //   wp_current=0, death_countdown=max(1, 4 + PHY).
+      // Applies only to severity='auto' (Dire Failure original).
+      // Wound-kind Dire skips this (the wound is the consequence,
+      // they don't ALSO drop to mortal).
+      const mortalUpdates: any = {}
+      if (kind === 'sickness') {
+        const phy = isPc
+          ? (row.characters?.data?.rapid?.PHY ?? 0)
+          : (row.physicality ?? 0)
+        mortalUpdates.wp_current = 0
+        mortalUpdates.death_countdown = Math.max(1, 4 + phy)
+      }
+      await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update({ ...clear, ...mortalUpdates }).eq('id', row.id)
       outcomes.push({ name, kind, severity, daysLeft: 0, triggered: true, wound: { roll: sum, name: wound.name, effect: wound.effect } })
     } else if (severity === 'check') {
       // PHY check required. Two delivery paths, used together:
@@ -538,7 +565,10 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
   const parts: string[] = []
   for (const o of triggered) {
     if (o.wound) {
-      parts.push(`${o.name} Day 0 - Lasting Wound: ${o.wound.name} [2d6=${o.wound.roll}] (${o.wound.effect})`)
+      // Sickness 'auto' carries the extra mortal-wound drop. Surface
+      // it in the feed text so the GM sees the second consequence.
+      const mortalTag = o.kind === 'sickness' ? ' + Mortally Wounded' : ''
+      parts.push(`${o.name} Day 0 - Lasting Wound: ${o.wound.name} [2d6=${o.wound.roll}] (${o.wound.effect})${mortalTag}`)
     } else if (o.severity === 'check') {
       parts.push(`${o.name} Day 0 - Lasting Damage check pending`)
     } else {

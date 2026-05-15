@@ -718,9 +718,23 @@ export const LASTING_WOUNDS: Record<number, { name: string; effect: string }> = 
 // Canon effect strings (above) read like rulebook citations; these
 // rephrase the effect into how it actually applies at the table.
 // Falls back to LASTING_WOUNDS[n].effect when no override is set.
-// Add entries here as Xero locks the wording per wound.
+// Initial set 2026-05-15. Skittish locked verbatim per Xero; others
+// follow the same pattern (attribute reductions read as "-N XYZ
+// attribute"; modifier-style effects read as "-N CMod on ... rolls";
+// stat caps stay terse: "-1 max RP / WP"). Swap any of these out
+// when Xero locks alternative wording per wound.
 export const LASTING_WOUND_NARRATIVE: Partial<Record<number, string>> = {
-  7: '-1 CMod on initiative rolls',  // Skittish (locked 2026-05-15)
+  2:  '-1 CMod on Dexterity checks',                            // Lost Eye
+  3:  '-2 RSN attribute',                                       // Brain Injury
+  4:  '-1 DEX attribute',                                       // Diminished
+  5:  '-1 max RP',                                              // Shaken
+  6:  '-1 max WP',                                              // Weakened
+  7:  '-1 CMod on initiative rolls',                            // Skittish (Xero-locked)
+  8:  '-1 INF attribute',                                       // Scarring
+  9:  '-1 PHY attribute',                                       // Fragile
+  10: '-1 ACU attribute',                                       // Hearing Loss
+  11: '-1 ACU attribute and -1 CMod on Perception checks',      // Crippled
+  12: '-2 DEX attribute',                                       // Shell Shock
 };
 
 // ----------------------------

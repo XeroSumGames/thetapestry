@@ -299,7 +299,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         if (hit && r.damage_json && typeof r.damage_json === 'object') {
           const dj = r.damage_json as { finalWP?: number; finalRP?: number }
           if (dj.finalWP === 0 && dj.finalRP === 0) {
-            return `${r.character_name}'s ${weaponLabel} attacked was deflected by ${r.target_name}${outcomeTag}`
+            return `${r.character_name}'s ${weaponLabel} attack was deflected by ${r.target_name}${outcomeTag}`
           }
         }
         // Past-tense restructure per Xero (2026-05-10): adverb before

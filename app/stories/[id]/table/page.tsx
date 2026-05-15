@@ -6065,8 +6065,19 @@ export default function TablePage() {
           setEntries(prev => prev.map(e => e.character.id === ldTargetEntry.character.id
             ? { ...e, character: { ...e.character, data: { ...charData, lastingWounds: nextLW } } }
             : e))
+        } else if (ldTargetNpc) {
+          // NPC path - campaign_npcs.lasting_wounds added 2026-05-15.
+          const cur: string[] = Array.isArray((ldTargetNpc as any).lasting_wounds)
+            ? (ldTargetNpc as any).lasting_wounds
+            : []
+          const nextLW = [...cur, wound.name]
+          const { error: lwNpcErr } = await supabase
+            .from('campaign_npcs')
+            .update({ lasting_wounds: nextLW })
+            .eq('id', (ldTargetNpc as any).id)
+          if (lwNpcErr) console.error('[lasting-damage] NPC update error:', lwNpcErr.message)
+          setCampaignNpcs(prev => prev.map(n => n.id === (ldTargetNpc as any).id ? { ...n, lasting_wounds: nextLW } : n))
         }
-        // NPCs: schema has no lastingWounds field today; log only.
         lastingDamageResult = `${ldPatientName} suffers a Lasting Wound: ${wound.name} [2d6=${ldSum}] (${wound.effect})`
         // Stash the wound on damage_json so future feed renders can
         // name the wound instead of just saying "from infection".
