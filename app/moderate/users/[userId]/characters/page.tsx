@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../../lib/auth/roles'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard from '../../../../../components/CharacterCard'
 
@@ -31,7 +32,7 @@ export default function UserCharactersPage() {
       if (!user) { router.push('/login'); return }
 
       const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (myProfile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
+      if (!roleIsThriver(myProfile)) { router.push('/dashboard'); return }
 
       const { data: profile } = await supabase.from('profiles').select('username, email, created_at').eq('id', userId).single()
       setUsername(profile?.username ?? 'Unknown')

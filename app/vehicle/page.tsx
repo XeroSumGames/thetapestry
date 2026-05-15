@@ -12,6 +12,7 @@ import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT } from '../../lib/xse-schema'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
 // pulled at load time so the Driving / Brew check modal can prefill
@@ -99,7 +100,7 @@ export default function VehiclePage() {
       if (!camp) { setLoading(false); return }
       // Thriver godmode: profile.role check widens GM affordances.
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      const isThriver = !!profile?.role && String(profile.role).toLowerCase() === 'thriver'
+      const isThriver = roleIsThriver(profile)
       setIsGM(camp.gm_user_id === user.id || isThriver)
       // Check if user is a campaign member or GM (or Thriver)
       const { data: membership } = await supabase.from('campaign_members').select('id').eq('campaign_id', campaignId).eq('user_id', user.id).maybeSingle()

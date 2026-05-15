@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useRouter } from 'next/navigation'
 
 interface VisitorLog {
@@ -60,7 +61,7 @@ export default function LoggingPage() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (profile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
+      if (!roleIsThriver(profile)) { router.push('/dashboard'); return }
 
       try {
         const now = new Date()

@@ -142,7 +142,7 @@ export default function UserActivityPage() {
       if (!user) { router.push('/login'); return }
 
       const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (myProfile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
+      if (!roleIsThriver(myProfile)) { router.push('/dashboard'); return }
 
       // All 13 data sources in parallel — header, character list +
       // count, campaigns owned + joined, roll log preview + count,

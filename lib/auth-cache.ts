@@ -86,10 +86,3 @@ export async function getCachedAuth(): Promise<AuthSnapshot> {
     inFlight = null
   }
 }
-
-// Test / cold-start helper. The auth listener auto-invalidates on real
-// transitions, so callers should rarely need this — but exposing it lets
-// callers force a re-read after operations they know mutated identity.
-export function invalidateAuthCache() {
-  snapshot = null
-}

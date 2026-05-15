@@ -9,9 +9,12 @@
 //   2. Inline lowercase comparisons via .toLowerCase():
 //        .role?.toLowerCase() === 'thriver'
 //        .role.toLowerCase() === 'thriver'
-//        (or any of the three role values, with == or ===)
+//        .role?.toLowerCase() !== 'thriver'  (negated form)
+//        (or any of the three role values, with ==/===/!=/!==)
+//   2b. Wrapped String(...).toLowerCase() shape:
+//        String(profile.role).toLowerCase() === 'thriver'
 //   3. Direct bare lowercase comparisons:
-//        .role === 'thriver'   .role === 'survivor'   .role === 'ghost'
+//        .role === 'thriver'   .role !== 'survivor'   .role === 'ghost'
 //        .role == 'thriver'    etc.
 //      (where .role is the profile role field, not a community labor role)
 //
@@ -44,13 +47,17 @@ const SKIP_PATHS = new Set([
 const CAPITAL_ROLE = /['"](Thriver|Survivor|Ghost)['"]/g
 
 // Pattern 2: .role?.toLowerCase() or .role.toLowerCase() followed (anywhere
-// on the same line) by === or == and a quoted thriver/survivor/ghost.
-const TOLOWER_CMP = /\.role\??\.toLowerCase\(\)\s*={1,3}\s*['"][^'"]*['"]/g
+// on the same line) by ==, ===, != or !== and a quoted role string.
+const TOLOWER_CMP = /\.role\??\.toLowerCase\(\)\s*[!=]={1,2}\s*['"][^'"]*['"]/g
 
-// Pattern 3: .role === 'thriver' / .role == 'survivor' / .role === "ghost"
+// Pattern 2b: String(...).toLowerCase() comparison — catches the wrapped
+// shape used when .role might be null/non-string. Same operator set.
+const STRING_TOLOWER_CMP = /String\([^)]*\)\.toLowerCase\(\)\s*[!=]={1,2}\s*['"](?:thriver|survivor|ghost)['"]/g
+
+// Pattern 3: .role === 'thriver' / .role !== 'survivor' / etc.
 // (direct bare comparison — only the three profile role strings).
-// Requires == or === (not single = which appears in SQL policy comments).
-const BARE_ROLE_CMP = /\.role\s*={2,3}\s*['"](?:thriver|survivor|ghost)['"]/g
+// Requires ==, ===, !=, or !==.
+const BARE_ROLE_CMP = /\.role\s*[!=]={1,2}\s*['"](?:thriver|survivor|ghost)['"]/g
 
 const offenders = []
 let scanned = 0
@@ -73,6 +80,7 @@ function walk(dir) {
       for (const [pattern, kind] of [
         [CAPITAL_ROLE, 'capital-case role literal'],
         [TOLOWER_CMP, 'inline .toLowerCase() role comparison'],
+        [STRING_TOLOWER_CMP, 'inline String(...).toLowerCase() role comparison'],
         [BARE_ROLE_CMP, 'inline .role === literal comparison'],
       ]) {
         pattern.lastIndex = 0

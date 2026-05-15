@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 
 // One-time migration: tactical scenes were previously sized using
 // container.clientWidth (viewer-dependent). New system uses image.naturalWidth
@@ -36,7 +37,7 @@ export default function RescaleTacticalScenesPage() {
       if (!user) { setLoading(false); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       setRole(profile?.role ?? null)
-      if (profile?.role !== 'thriver') { setLoading(false); return }
+      if (!roleIsThriver(profile)) { setLoading(false); return }
       const { data } = await supabase
         .from('tactical_scenes')
         .select('id, name, campaign_id, background_url, img_scale')
