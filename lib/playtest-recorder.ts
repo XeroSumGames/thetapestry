@@ -41,12 +41,10 @@ type RecorderState = {
   userEmail: string | null
   sessionId: string
   pathname: string
-  // Set by PlaytestRecorder once it has fetched playtest_recorder_config
-  // and matched it against the current user. Defaults to TRUE so events
-  // captured before the config fetch resolves aren't lost on tabs that
-  // turn out to be enabled. If the fetch resolves to "off for me",
-  // the buffer is wiped and `enabled` flips to false — record() drops
-  // any subsequent events on the floor.
+  // Tab-local capture flag. Defaults to false at page mount; the
+  // table-page Record button's setEnabled(true) is the only thing
+  // that flips it on. record() early-returns when false, so unless
+  // THIS tab has clicked Record, no events accumulate.
   enabled: boolean
 }
 
@@ -76,10 +74,9 @@ export function setEnabled(enabled: boolean) {
   }
 }
 
-// Explicit buffer wipe. Used by PlaytestRecorder's initial gate eval
-// when the config resolves to "off for me" — anything captured during
-// the optimistic-on window is junk and shouldn't surface in a dump.
-// NOT called when the GM toggles off mid-session via /record.
+// Explicit buffer wipe. Called by the table-page Record button when
+// transitioning OFF -> ON so the new session starts with a clean
+// buffer (no events from before the click).
 export function wipeBuffer() {
   const r = getRecorder()
   if (!r) return

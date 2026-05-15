@@ -258,17 +258,17 @@ export default function TablePage() {
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
   // anything outside that closes the menu.
-  // Recorder state sync — TAB-LOCAL ONLY (2026-05-17, Xero rewrite).
-  // Each browser controls its OWN recorder; the button no longer
-  // touches `playtest_recorder_config`. Previous shape wrote to the
-  // shared DB row + subscribed via Realtime so any GM/Thriver click
-  // flipped every connected client. That's wrong for the playtester
-  // workflow: a player records THEIR session, independent of the GM.
+  // Recorder state sync — TAB-LOCAL ONLY. Each browser controls its
+  // OWN recorder; no DB writes, no realtime subscription, no global
+  // gate (all of that was removed in e53211b along with the orphan
+  // /record admin page). Previous "shared playtest_recorder_config"
+  // shape flipped every connected client whenever any user clicked.
+  // Wrong for the playtester workflow: a player records THEIR
+  // session, independent of the GM.
   //
-  // On mount, mirror whatever state the global PlaytestRecorder lib
-  // currently shows (the lib's gate eval from /record-page or its
-  // own subscription may already have flipped it). After that, the
-  // button drives state purely locally.
+  // On mount, mirror the lib's current `enabled` flag (defaults to
+  // false at page mount per lib/playtest-recorder.ts). After that,
+  // toggleRecorder drives state purely locally.
   useEffect(() => {
     const r = getRecorder()
     if (r) setRecorderEnabled(!!r.enabled)
