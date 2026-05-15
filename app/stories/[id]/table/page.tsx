@@ -419,6 +419,18 @@ export default function TablePage() {
   const [initiativeOrder, setInitiativeOrder] = useState<InitiativeEntry[]>([])
   const [combatActive, setCombatActive] = useState(false)
   const [combatRound, setCombatRound] = useState(1)
+  // Wound-infection warning dedup. Holds character names that have
+  // already had a warning row emitted this combat. Resets on combat
+  // start (useEffect below). Cross-checked against rollsFeed in the
+  // emit helper so a reload mid-combat doesn't re-emit duplicates
+  // for names the page already wrote pre-reload.
+  const woundInfectionLoggedRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    // Reset on combatActive flipping true. False→false transitions
+    // (e.g. parent state churn) don't fire because the dep only
+    // changes when the bool flips.
+    if (combatActive) woundInfectionLoggedRef.current = new Set()
+  }, [combatActive])
   // Multistory: per-entry off-scene tag for the initiative bar.
   // Map from initiative entry id → scene name (or '' if same scene as
   // active). Computed by joining initiative entries' character_id /
@@ -4346,6 +4358,58 @@ export default function TablePage() {
     setSocialCmod(null)
   }
 
+  // Emit a one-per-character-per-combat "wound infection warning"
+  // banner the first time `targetName` takes WP damage from an
+  // attack during combat. Canon (CRB p.114-115): any character who
+  // took at least one shot/stab/cut wound during a fight makes a
+  // Physicality check post-combat. This row is the GM's reminder.
+  //
+  // Three-layer dedup:
+  //   1. Skip if !combatActive (canon trigger is in-combat only)
+  //   2. In-memory ref (woundInfectionLoggedRef) for instant skip on
+  //      back-to-back hits in the same render cycle.
+  //   3. rollsFeed cross-check — if a wound_infection_warning row for
+  //      this character already exists since the most recent
+  //      combat_start row, skip. Covers reload-mid-combat: ref is
+  //      fresh but the row is in the feed.
+  //
+  // Only the attacker's client (the one applying damage) calls this;
+  // other clients see the row via realtime once it lands.
+  async function maybeLogWoundInfection(targetName: string | null | undefined) {
+    if (!combatActive) return
+    if (!targetName) return
+    if (woundInfectionLoggedRef.current.has(targetName)) return
+    // Cross-check rollsFeed for a prior warning for this target since
+    // the most-recent combat_start. Reload-safe.
+    const feed = rollsFeed.rolls
+    let combatStartedAt: string | null = null
+    for (let i = feed.length - 1; i >= 0; i--) {
+      if ((feed[i] as any).outcome === OUTCOME.combat_start) { combatStartedAt = (feed[i] as any).created_at; break }
+    }
+    const alreadyWarned = feed.some((r: any) =>
+      r.outcome === OUTCOME.wound_infection_warning &&
+      r.character_name === targetName &&
+      (!combatStartedAt || r.created_at >= combatStartedAt)
+    )
+    if (alreadyWarned) { woundInfectionLoggedRef.current.add(targetName); return }
+    // Mark BEFORE the insert so a tight burst of damage events doesn't
+    // race a second emit through before the await resolves.
+    woundInfectionLoggedRef.current.add(targetName)
+    const { error } = await supabase.from('roll_log').insert({
+      campaign_id: id, user_id: userId,
+      character_name: targetName,
+      label: `${targetName} is wounded and may have to deal with infection`,
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+      outcome: OUTCOME.wound_infection_warning,
+    })
+    if (error) {
+      console.error('[wound-infection] roll_log insert error:', error.message)
+      // Don't roll back the ref — even on insert failure we don't
+      // want to spam retries every subsequent hit. Once-per-combat
+      // stays.
+    }
+  }
+
   async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult, insightUsed: '3d6' | '+3cmod' | null = null, die3: number | null = null) {
     // NOTE on 3d6 Insight Die storage: existing convention packs d2+d3 into
     // die2 (so die1+die2+mods = d1+d2+d3+mods - correct total without a
@@ -4796,6 +4860,10 @@ export default function TablePage() {
         const newWP = Math.max(0, currentWP - finalWP)
         const newRP = Math.max(0, currentRP - finalRP)
         console.warn('[damage] PC target', targetEntry.character.name, 'WP:', currentWP, '→', newWP, 'RP:', currentRP, '→', newRP)
+        // Wound Infection warning (canon §06 reminder) — fires once per
+        // character per combat on the first wound (finalWP > 0). Fire
+        // and forget; the helper dedups internally.
+        if (finalWP > 0) void maybeLogWoundInfection(targetEntry.character.name)
 
         if (newWP === 0 && currentWP > 0 && currentInsight > 0) {
           const { error: csErr, data: csData } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select()
@@ -4910,6 +4978,10 @@ export default function TablePage() {
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
         console.warn('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
+        // Wound Infection warning — NPCs can also be sick per canon
+        // (campaign_npcs has the infection_state columns). Fire on
+        // first wound during combat.
+        if (finalWP > 0) void maybeLogWoundInfection(targetNpc.name)
         const npcUpdate: any = { wp_current: newWP, rp_current: newRP }
         // Mortal wound - NPC enters death countdown when WP first hits 0
         if (newWP === 0 && npcWP > 0) {
@@ -6083,6 +6155,7 @@ export default function TablePage() {
 
       // Apply damage to target
       if (targetEntry?.liveState) {
+        if (finalWP > 0) void maybeLogWoundInfection(targetEntry.character.name)
         const tNewWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const tNewRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
         const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
@@ -6108,6 +6181,7 @@ export default function TablePage() {
           })
         }
       } else if (targetNpcObj) {
+        if (finalWP > 0) void maybeLogWoundInfection(targetNpcObj.name)
         const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
         const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
         const tNewWP = Math.max(0, tNpcWP - finalWP)

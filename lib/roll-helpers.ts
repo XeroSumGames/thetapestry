@@ -51,6 +51,11 @@ export function outcomeColor(outcome: string): string {
  *  unchanged - some already have their own styled cards, others need
  *  the full breakdown). */
 export function compactRollSummary(r: { label: string; character_name: string; target_name?: string | null; outcome: string }): string | null {
+  // Wound-infection warning fires once per character per combat (first
+  // shot/stab/cut wound). Label is already the full sentence; just
+  // return verbatim so the renderer shows it instead of falling
+  // through to the verbose dice card.
+  if (r.outcome === 'wound_infection_warning') return r.label
   const suffix = r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label
   const hit = r.outcome === OUTCOME.Success || r.outcome === OUTCOME.WildSuccess || r.outcome === OUTCOME.HighInsight
   // Outcome suffix appended to the trim sentence. Canon rule per Xero

@@ -62,6 +62,11 @@ export const OUTCOME = {
   sprint: 'sprint',
   stress: 'stress',
   subsistence: 'subsistence',
+  // First-wound-of-combat reminder. Fires once per character per
+  // combat when they take a shot/stab/cut wound (WP damage from an
+  // attack). GM cue to remember the post-combat Wound Infection
+  // check per canon (CRB p.114-115).
+  wound_infection_warning: 'wound_infection_warning',
 } as const
 
 export type RollOutcome = typeof OUTCOME[keyof typeof OUTCOME]

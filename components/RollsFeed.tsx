@@ -286,6 +286,24 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
+  // wound_infection_warning — first shot/stab/cut wound on a character
+  // during combat. Single banner per character per combat (the emit
+  // site dedupes via a ref + a roll_log cross-check). Orange outline
+  // mirrors the death-banner shape but in amber to signal "remember
+  // to roll Wound Infection after combat ends." See:
+  //   app/rules/combat/infection — Wound Infection (post-combat) §
+  if (r.outcome === 'wound_infection_warning') {
+    return (
+      <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1408', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🩸 Wound Infection Warning</span>
+          <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+        </div>
+        <div style={{ fontSize: '15px', color: '#f5d8a0', fontFamily: 'Carlito, sans-serif' }}>{r.label}</div>
+      </div>
+    )
+  }
+
   // death (also matches the "Death is in the air" sentinel name)
   if (r.outcome === 'death' || r.character_name === 'Death is in the air') {
     return (

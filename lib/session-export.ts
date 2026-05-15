@@ -184,6 +184,14 @@ function renderBespokeBanner(r: RollLogRow): string | null {
   <div class="banner-body" style="color:#c4e8a8">${esc(r.label)}</div>
 </div>`
   }
+  // wound_infection_warning - amber outline, fires once per character
+  // per combat on first shot/stab/cut wound (canon §06 reminder).
+  if (r.outcome === 'wound_infection_warning') {
+    return `<div class="banner banner-incap">
+  <div class="banner-head"><span class="banner-title amber">🩸 Wound Infection Warning</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body" style="color:#f5d8a0">${esc(r.label)}</div>
+</div>`
+  }
 
   // retention_check - community survival check (post-3-failures Morale).
   // Survived = community holds; not-survived = community dissolves. Dice
