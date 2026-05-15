@@ -143,6 +143,7 @@ interface Props {
   // were placed without their wp_max/wp_current copied across (so the
   // selected-token panel still shows the correct stats by name match).
   vehicles?: {
+    id?: string
     name: string
     wp_max?: number
     wp_current?: number
@@ -3982,6 +3983,24 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     Move
                   </button>
                 )}
+                {/* Popout — opens the full vehicle sheet in a new window
+                    for any vehicle token. Shown to everyone (not just
+                    controllers) since the popout's own canEdit gate
+                    decides who can mutate, and reading should be open. */}
+                {tok.token_type === 'object' && (() => {
+                  const veh = vehicles?.find(v => v.name === tok.name)
+                  if (!veh?.id || !campaignId) return null
+                  return (
+                    <button onClick={() => {
+                        const url = `/vehicle?campaign=${campaignId}&vehicle=${veh.id}`
+                        window.open(url, `vehicle_${veh.id}`, 'width=560,height=900,scrollbars=yes,resizable=yes')
+                      }}
+                      title="Open the vehicle sheet in a popout window"
+                      style={{ padding: '2px 6px', background: '#241a3a', border: '1px solid #6b4fb1', borderRadius: '2px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Popout
+                    </button>
+                  )
+                })()}
                 {isGM && (
                   <button onClick={() => toggleTokenVisibility(tok.id)}
                     style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: tok.is_visible ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
