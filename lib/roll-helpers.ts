@@ -50,7 +50,13 @@ export function outcomeColor(outcome: string): string {
  *  death, drop, and anything this function doesn't recognize render
  *  unchanged - some already have their own styled cards, others need
  *  the full breakdown). */
-export function compactRollSummary(r: { label: string; character_name: string; target_name?: string | null; outcome: string }): string | null {
+// damage_json is loosely typed: the DB shape carries finalWP / finalRP
+// per app/stories/[id]/table/page.tsx:130-140, but components/RollsFeed.tsx
+// has a stale local DamageResult interface with appliedWP/appliedRP.
+// Accepting `unknown` here lets both callers pass through; we
+// runtime-guard the fields we actually read (finalWP, finalRP) inside
+// the attack-narrative branch.
+export function compactRollSummary(r: { label: string; character_name: string; target_name?: string | null; outcome: string; damage_json?: unknown }): string | null {
   // Wound-infection warning fires once per character per combat (first
   // shot/stab/cut wound). Label is already the full sentence; just
   // return verbatim so the renderer shows it instead of falling
@@ -191,6 +197,21 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         // which has its own phrasing.
         const weaponLabel = /^unarmed$/i.test(weapon.trim()) ? `${weapon} attack` : weapon
         const labelArticle = /^[aeiouAEIOU]/.test(weaponLabel.trim()) ? 'an' : 'a'
+        // Fully-absorbed attack (Xero 2026-05-15): when an Attack /
+        // Subdue lands the to-hit roll but the target's mitigation
+        // (PHY + armor + Defend + Take Cover) eats the entire damage
+        // pool (finalWP === 0 && finalRP === 0), the "Successfully
+        // Attacked" wording is misleading - the table can't tell
+        // Defend did anything. Swap to a deflected-by-defense reading
+        // so the action is visible. Only applies to hits with damage
+        // data; misses already read "Unsuccessfully Attacked" and
+        // skip this branch.
+        if (hit && r.damage_json && typeof r.damage_json === 'object') {
+          const dj = r.damage_json as { finalWP?: number; finalRP?: number }
+          if (dj.finalWP === 0 && dj.finalRP === 0) {
+            return `${r.character_name}'s ${weaponLabel} attacked was deflected by ${r.target_name}${outcomeTag}`
+          }
+        }
         // Past-tense restructure per Xero (2026-05-10): adverb before
         // verb, target before weapon, "using" clause at the end. Applies
         // to Attack + Subdue; Charge has its own shape above.
