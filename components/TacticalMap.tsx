@@ -3175,9 +3175,27 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // tokens are unchanged (the footprint collapses to one cell).
     const w = tok?.grid_w ?? 1
     const h = tok?.grid_h ?? 1
-    const stayedInsideOldFootprint = !!(pos && tok
+    const inFootprint = !!(pos && tok
       && pos.gx >= tok.grid_x && pos.gx < tok.grid_x + w
       && pos.gy >= tok.grid_y && pos.gy < tok.grid_y + h)
+    // Visual-scale extension (2026-05-15 followup): tokens with
+    // scale > 1 render a circle of 0.4 * scale cells radius even
+    // when grid_w/grid_h stay at 1. getTokenAt's second pass picks
+    // them up by that circle, so a click on Minnie's portrait edge
+    // returned the token but landed outside her 1-cell footprint -
+    // mouseup then read "moved" and snapped her anchor to the
+    // clicked cell. Mirror the same circular hit-test here so a
+    // click anywhere on the rendered token is treated as a click,
+    // not a move. Falls back to footprint-only when scale <= 1.
+    let inVisualCircle = false
+    if (!inFootprint && pos && tok && (tok.scale ?? 1) > 1) {
+      const cx = tok.grid_x + w / 2
+      const cy = tok.grid_y + h / 2
+      const dx = (pos.gx + 0.5) - cx
+      const dy = (pos.gy + 0.5) - cy
+      inVisualCircle = Math.hypot(dx, dy) <= 0.4 * (tok.scale ?? 1)
+    }
+    const stayedInsideOldFootprint = inFootprint || inVisualCircle
     const moved = pos && tok && !stayedInsideOldFootprint
     // GM "drag" with zero movement on a door OR window = a click →
     // toggle. Drag with actual movement falls through to the normal
