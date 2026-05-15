@@ -848,6 +848,21 @@ If leadership is co-equal, they make a **Group Check**.
 
 After **three consecutive failures**, a community has degraded to the point of immediately and irreconcilably falling apart. A fast-acting leader wishing to retain fragments may make an **immediate Morale Check** using the result of the preceding Morale Check as the Mood Around The Campfire CMod.
 
+### Activity Blocks
+
+Source: \`app/rules/communities/structure/page.tsx\` (anchor activity-blocks).
+
+When the table jumps between scenes, the GM advances time in **Activity Blocks** - named tiers that frame what a character can credibly accomplish without a scene playing out on screen. Anything narratively appropriate inside one Block can be Filled In The Gaps; anything bigger needs to spend multiple Blocks, or its own scene.
+
+| Block | Duration | Typical scope |
+|---|---|---|
+| Daily | ~8 hours of focused effort within a single day. | One Psychology* stress-recovery session with another character. A day's labour on a building project. One Medicine* day-tick of treatment. One day's worth of foraging or hunting. |
+| Weekly | One in-game week (drives Morale / Fed / Clothed checks). | A community's weekly Morale Check fires; Gatherers and Maintainers resolve their Fed and Clothed Checks; one increment of training an Apprentice in a skill. |
+| Monthly | ~4 weeks of in-game time. | Finishing Apprentice skill training (PC can train Apprentice one level in any single skill the PC has, up to PC level - 1, in one Monthly Block). Major construction milestones; long-distance trade-route runs. |
+| Seasonal | ~3 months / a quarter of the year. | Long-term community shifts: a hard winter's siege, a growing season's harvest, persistent migration of NPCs, slow-burn faction politics. |
+
+Activity Blocks are the canonical names for time granularity when GMs and players talk about off-screen work. They're not a separate resource that gets spent - they're a shared vocabulary.
+
 ### Apprentices
 
 Source: \`app/rules/communities/apprentices/page.tsx\`.

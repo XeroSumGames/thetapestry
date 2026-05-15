@@ -23,12 +23,15 @@ import { dayToCalendar, eventsOnDay, pastAndPresentEvents, hourTo12h } from '../
 
 interface PartyRow {
   character_id: string
+  state_id: string
   name: string
   wp_current: number
   wp_max: number
   rp_current: number
   rp_max: number
   stress: number
+  rations_type: 'Standard Rations' | 'Luxury Rations' | 'Military Grade Rations'
+  rations_count: number
 }
 
 interface VehicleRow {
@@ -83,24 +86,67 @@ export default function CampaignSheetPage() {
   const loadParty = useCallback(async () => {
     const { data: states } = await supabase
       .from('character_states')
-      .select('character_id, wp_current, wp_max, rp_current, rp_max, stress')
+      .select('id, character_id, wp_current, wp_max, rp_current, rp_max, stress')
       .eq('campaign_id', campaignId)
     if (!states || states.length === 0) { setParty([]); return }
     const charIds = (states as any[]).map(s => s.character_id)
     const { data: chars } = await supabase
       .from('characters')
-      .select('id, name')
+      .select('id, name, data')
       .in('id', charIds)
-    const nameMap: Record<string, string> = {}
-    for (const c of (chars ?? []) as any[]) nameMap[c.id] = c.name
-    setParty((states as any[]).map(s => ({
-      character_id: s.character_id,
-      name: nameMap[s.character_id] ?? 'Unknown',
-      wp_current: s.wp_current ?? 0, wp_max: s.wp_max ?? 0,
-      rp_current: s.rp_current ?? 0, rp_max: s.rp_max ?? 0,
-      stress: s.stress ?? 0,
-    })))
+    const charMap: Record<string, { name: string; data: any }> = {}
+    for (const c of (chars ?? []) as any[]) charMap[c.id] = { name: c.name, data: c.data ?? {} }
+    setParty((states as any[]).map(s => {
+      const ch = charMap[s.character_id]
+      const rations = ch?.data?.rations ?? {}
+      const ratType = (rations.type === 'Luxury Rations' || rations.type === 'Military Grade Rations') ? rations.type : 'Standard Rations'
+      const ratCount = typeof rations.count === 'number' ? rations.count : 0
+      return {
+        character_id: s.character_id,
+        state_id: s.id,
+        name: ch?.name ?? 'Unknown',
+        wp_current: s.wp_current ?? 0, wp_max: s.wp_max ?? 0,
+        rp_current: s.rp_current ?? 0, rp_max: s.rp_max ?? 0,
+        stress: s.stress ?? 0,
+        rations_type: ratType,
+        rations_count: ratCount,
+      }
+    }))
   }, [supabase, campaignId])
+
+  // Consume one Luxury Ration: decrement count by 1, drop stress by 1
+  // (min 0), write a feed row. GM-callable from each PartyCard. Per
+  // lib/xse-schema.ts:RATIONS canon: "Luxury Rations - 1 day food +
+  // water; consume to drop Stress Level by 1."
+  async function consumeLuxuryRation(p: PartyRow) {
+    if (p.rations_type !== 'Luxury Rations' || p.rations_count <= 0) return
+    if (p.stress <= 0) return
+    const { data: charRow } = await supabase
+      .from('characters')
+      .select('data')
+      .eq('id', p.character_id)
+      .maybeSingle()
+    if (!charRow) return
+    const data = (charRow as any).data ?? {}
+    const nextCount = Math.max(0, p.rations_count - 1)
+    const newRations = { ...(data.rations ?? {}), type: 'Luxury Rations', count: nextCount }
+    const newData = { ...data, rations: newRations }
+    const newStress = Math.max(0, p.stress - 1)
+    await Promise.all([
+      supabase.from('characters').update({ data: newData }).eq('id', p.character_id),
+      supabase.from('character_states').update({ stress: newStress, updated_at: new Date().toISOString() }).eq('id', p.state_id),
+    ])
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.from('roll_log').insert({
+      campaign_id: campaignId,
+      user_id: user?.id ?? null,
+      character_name: p.name,
+      label: `🍷 ${p.name} consumed a Luxury Ration - Stress drops by 1 (${p.stress} to ${newStress})`,
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+      outcome: 'rations',
+    })
+    await loadParty()
+  }
 
   async function loadVehicles() {
     const { data } = await supabase.from('campaigns').select('vehicles').eq('id', campaignId).maybeSingle()
@@ -349,7 +395,7 @@ export default function CampaignSheetPage() {
             <Muted text="No characters at the table." />
           ) : (
             <div>
-              {party.map(p => <PartyCard key={p.character_id} row={p} />)}
+              {party.map(p => <PartyCard key={p.character_id} row={p} onConsumeLuxury={() => consumeLuxuryRation(p)} />)}
             </div>
           )}
         </Panel>
@@ -644,9 +690,13 @@ function StatBar({ label, current, max, color }: { label: string, current: numbe
   )
 }
 
-function PartyCard({ row: p }: { row: PartyRow }) {
+function PartyCard({ row: p, onConsumeLuxury }: { row: PartyRow; onConsumeLuxury: () => void }) {
   const wpColor = p.wp_current / Math.max(1, p.wp_max) > 0.5 ? '#7fc458' : p.wp_current / Math.max(1, p.wp_max) > 0.25 ? '#EF9F27' : '#c0392b'
   const rpColor = p.rp_current / Math.max(1, p.rp_max) > 0.5 ? '#7ab3d4' : p.rp_current / Math.max(1, p.rp_max) > 0.25 ? '#EF9F27' : '#c0392b'
+  // Luxury Ration consume affordance gates on (1) PC has Luxury Rations
+  // in inventory, (2) at least one Stress pip to clear. Standard Rations
+  // and Military Grade Rations don't clear Stress per canon.
+  const canConsumeLuxury = p.rations_type === 'Luxury Rations' && p.rations_count > 0 && p.stress > 0
   return (
     <div style={{ padding: '10px 12px', marginBottom: 8, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${wpColor}`, borderRadius: 3 }}>
       <div style={{ fontSize: 15, fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: 6 }}>
@@ -662,6 +712,13 @@ function PartyCard({ row: p }: { row: PartyRow }) {
           ))}
         </div>
       </div>
+      {canConsumeLuxury && (
+        <button onClick={onConsumeLuxury}
+          title={`Consume 1 of ${p.rations_count} Luxury Rations - drops Stress by 1 per canon`}
+          style={{ marginTop: 6, padding: '4px 10px', background: '#2a1a10', border: '1px solid #5a3a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', width: '100%' }}>
+          🍷 Consume Luxury Ration ({p.rations_count} left) — Stress -1
+        </button>
+      )}
     </div>
   )
 }
