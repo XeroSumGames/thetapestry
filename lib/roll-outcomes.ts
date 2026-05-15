@@ -65,3 +65,14 @@ export const OUTCOME = {
 } as const
 
 export type RollOutcome = typeof OUTCOME[keyof typeof OUTCOME]
+
+// Subset returned by getOutcome() - the dice-result categorisation
+// applied to a generic 2d6 + mods roll. Doesn't include event tags or
+// grapple-specific results (those are written by other code paths).
+export type RollResult =
+  | typeof OUTCOME.Success
+  | typeof OUTCOME.Failure
+  | typeof OUTCOME.WildSuccess
+  | typeof OUTCOME.DireFailure
+  | typeof OUTCOME.HighInsight
+  | typeof OUTCOME.LowInsight

@@ -16,30 +16,31 @@
 // compactRollSummary's attack-narrative branch).
 
 import { getWeaponByName } from './weapons'
+import { OUTCOME, type RollResult } from './roll-outcomes'
 
-export function getOutcome(total: number, die1: number, die2: number, skipInsightPair = false): string {
+export function getOutcome(total: number, die1: number, die2: number, skipInsightPair = false): RollResult {
   // `skipInsightPair` suppresses the Low/High Insight (1+1 / 6+6) checks for
   // roll types where those SRD triggers don't apply - e.g. 3d6 Insight-Die
   // rolls that were themselves purchased with an Insight Die (awarding or
   // consuming another Insight Die on top would double-dip).
   if (!skipInsightPair) {
-    if (die1 === 1 && die2 === 1) return 'Low Insight'
-    if (die1 === 6 && die2 === 6) return 'High Insight'
+    if (die1 === 1 && die2 === 1) return OUTCOME.LowInsight
+    if (die1 === 6 && die2 === 6) return OUTCOME.HighInsight
   }
-  if (total <= 3) return 'Dire Failure'
-  if (total <= 8) return 'Failure'
-  if (total <= 13) return 'Success'
-  return 'Wild Success'
+  if (total <= 3) return OUTCOME.DireFailure
+  if (total <= 8) return OUTCOME.Failure
+  if (total <= 13) return OUTCOME.Success
+  return OUTCOME.WildSuccess
 }
 
 export function outcomeColor(outcome: string): string {
   switch (outcome) {
-    case 'Wild Success': return '#7fc458'
-    case 'High Insight': return '#7fc458'
-    case 'Success': return '#7ab3d4'
-    case 'Failure': return '#EF9F27'
-    case 'Dire Failure': return '#c0392b'
-    case 'Low Insight': return '#c0392b'
+    case OUTCOME.WildSuccess: return '#7fc458'
+    case OUTCOME.HighInsight: return '#7fc458'
+    case OUTCOME.Success: return '#7ab3d4'
+    case OUTCOME.Failure: return '#EF9F27'
+    case OUTCOME.DireFailure: return '#c0392b'
+    case OUTCOME.LowInsight: return '#c0392b'
     default: return '#d4cfc9'
   }
 }
@@ -51,7 +52,7 @@ export function outcomeColor(outcome: string): string {
  *  the full breakdown). */
 export function compactRollSummary(r: { label: string; character_name: string; target_name?: string | null; outcome: string }): string | null {
   const suffix = r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label
-  const hit = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
+  const hit = r.outcome === OUTCOME.Success || r.outcome === OUTCOME.WildSuccess || r.outcome === OUTCOME.HighInsight
   // Outcome suffix appended to the trim sentence. Canon rule per Xero
   // (2026-05-11): the phrase "a Moment of Insight" ONLY applies to High
   // Insight / Low Insight outcomes (the actual Insight Die awards).

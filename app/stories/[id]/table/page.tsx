@@ -5786,7 +5786,7 @@ export default function TablePage() {
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprints and looks winded`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.sprint,
-          damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
+          damage_json: { trimmedRoll, winded: true } as any,
         })
       } else {
         sprintResult = `${characterName} does not seem to be winded.`
@@ -5794,7 +5794,7 @@ export default function TablePage() {
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprints and does not look winded`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.sprint,
-          damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
+          damage_json: { trimmedRoll, winded: false } as any,
         })
       }
       // Sprint log written - release the pending-Athletics gate. If

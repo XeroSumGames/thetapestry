@@ -17,6 +17,7 @@
 
 import { createClient } from './supabase-browser'
 import { compactRollSummary, outcomeColor, formatTime } from './roll-helpers'
+import { OUTCOME } from './roll-outcomes'
 
 // HTML escape - exports might include user-authored character names,
 // labels, etc. The escape covers the common XSS surface; the HTML is
@@ -34,12 +35,12 @@ function esc(s: string): string {
 // Row type → border color class.
 function colorClass(outcome: string): 'green' | 'blue' | 'amber' | 'red' {
   switch (outcome) {
-    case 'Wild Success': return 'green'
-    case 'High Insight': return 'green'
-    case 'Success': return 'blue'
-    case 'Failure': return 'amber'
-    case 'Dire Failure': return 'red'
-    case 'Low Insight': return 'red'
+    case OUTCOME.WildSuccess: return 'green'
+    case OUTCOME.HighInsight: return 'green'
+    case OUTCOME.Success: return 'blue'
+    case OUTCOME.Failure: return 'amber'
+    case OUTCOME.DireFailure: return 'red'
+    case OUTCOME.LowInsight: return 'red'
     default: return 'blue'
   }
 }
