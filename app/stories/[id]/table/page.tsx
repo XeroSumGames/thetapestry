@@ -1497,6 +1497,16 @@ export default function TablePage() {
           setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
           setSessionCount(row.session_count ?? 0)
           setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
+          // Sync the vehicles array too - the vehicle popout writes
+          // seat assignments here, and TacticalMap's aboard-token
+          // filter + passenger-count badge both read from this state.
+          // Without the sync, boarded tokens kept rendering on the
+          // canvas (and dragging along with the vehicle via
+          // syncVehiclePassengers, which DOES read DB directly), and
+          // the badge never appeared.
+          if (Array.isArray(row.vehicles)) {
+            setVehicles(row.vehicles)
+          }
         })
         .subscribe()
 
