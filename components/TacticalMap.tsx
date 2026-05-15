@@ -147,13 +147,25 @@ interface Props {
     wp_max?: number
     wp_current?: number
     speed?: number
-    // Mounted weapons — only the fields TacticalMap reads to render
-    // firing arc cones. Full vehicle interface lives in
-    // components/VehicleCard.tsx; this is a narrowed contract.
+    // Seat assignments — used to hide aboard tokens from the canvas
+    // (passengers/crew vanish into the vehicle, with a badge on the
+    // vehicle token showing the headcount) and to drive
+    // syncVehiclePassengers when the vehicle moves.
+    driver_character_id?: string | null
+    driver_kind?: string | null
+    brewer_character_id?: string | null
+    brewer_kind?: string | null
+    navigator_character_id?: string | null
+    navigator_kind?: string | null
+    passenger_seats?: ({ character_id: string; kind: string } | null)[]
+    // Mounted weapons — fields used to render firing arc cones AND to
+    // hide the assigned shooter token (treat shooters as aboard).
     mounted_weapons?: {
       name: string
       mount_angle?: number
       arc_degrees?: number
+      shooter_character_id?: string | null
+      shooter_kind?: string | null
     }[]
   }[]
   // Player-or-GM clicks Move on an object token in the in-map panel.
@@ -1480,11 +1492,45 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ctx.restore()
     }
 
+    // Aboard-token suppression (2026-05-17). Any PC/NPC currently
+    // sitting in a vehicle seat is treated as "inside the vehicle" and
+    // hidden from the canvas; the vehicle token gets a small 🪑 N badge
+    // showing how many bodies are aboard. Avoids overlapping portraits
+    // on a multi-cell vehicle footprint and saves us from the
+    // seat-cell-snap calibration mess. Passengers reappear via the
+    // popout's Disembark flow (places them next to the bus).
+    const aboardCharIds = new Set<string>()
+    const aboardNpcIds = new Set<string>()
+    const passengerCountByVehicleName = new Map<string, number>()
+    for (const v of (vehicles ?? [])) {
+      let count = 0
+      const add = (id: string | null | undefined, kind: string | null | undefined) => {
+        if (!id) return
+        count++
+        if (kind === 'pc') aboardCharIds.add(id)
+        else if (kind === 'npc') aboardNpcIds.add(id)
+      }
+      add(v.driver_character_id, v.driver_kind)
+      add(v.brewer_character_id, v.brewer_kind)
+      add(v.navigator_character_id, v.navigator_kind)
+      for (const w of (v.mounted_weapons ?? [])) add(w?.shooter_character_id, w?.shooter_kind)
+      for (const s of (v.passenger_seats ?? [])) if (s) add(s.character_id, s.kind)
+      if (count > 0) passengerCountByVehicleName.set(v.name, count)
+    }
+
     // Tokens. Sort so objects render first (bottom), then NPCs, then PCs
     // on top — canvas is painter's-algorithm, last draw wins. Prevents a
     // barrel or crate from covering a player token when they share a
     // neighboring cell. Stable within each tier via index fallback.
     const toks = [...tokensRef.current]
+      // Hide tokens whose owner is currently aboard any vehicle. Done
+      // before the fog filter so aboard tokens don't even contribute
+      // their footprint cells to visibility checks.
+      .filter(t => {
+        if (t.character_id && aboardCharIds.has(t.character_id)) return false
+        if (t.npc_id && aboardNpcIds.has(t.npc_id)) return false
+        return true
+      })
       // Player-side fog suppression: a token sitting in a fogged cell
       // is invisible to non-GM viewers. GM sees everything (their
       // overlay is only 35% opacity above). Combined with the
@@ -2003,6 +2049,32 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText(String(initIdx + 1), bx, by)
+        }
+      }
+
+      // Passenger-count badge (top-right of vehicle/object tokens).
+      // Only rendered when a vehicle of this name has 1+ bodies in
+      // any seat. 🪑 + count, sized like the initiative badge, dark
+      // chip with a green ring so it reads as "people inside" not
+      // "turn order" at a glance.
+      if (t.token_type === 'object') {
+        const paxCount = passengerCountByVehicleName.get(t.name) ?? 0
+        if (paxCount > 0) {
+          const badgeR = Math.max(10, radius * 0.4)
+          const bx = cx + radius * 0.7
+          const by = cy - radius * 0.7
+          ctx.beginPath()
+          ctx.arc(bx, by, badgeR, 0, Math.PI * 2)
+          ctx.fillStyle = '#1a2e10'
+          ctx.fill()
+          ctx.strokeStyle = '#7fc458'
+          ctx.lineWidth = 1.5
+          ctx.stroke()
+          ctx.fillStyle = '#7fc458'
+          ctx.font = `bold ${Math.max(13, badgeR * 1.0)}px Carlito`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(`🪑${paxCount}`, bx, by)
         }
       }
 

@@ -373,34 +373,6 @@ export default function VehiclePage() {
   // keyed by this string.
   type SlotKey = 'driver' | 'brewer' | 'navigator' | `passenger:${number}` | `shooter:${number}`
 
-  // Canonical (un-rotated) cell offsets from the vehicle anchor for
-  // each slot, derived from the Minnie floorplan numbering
-  // (1=driver right-front, 2=navigator right-back, 3=shooter center
-  // turret, 4-6=left-side passengers, 7=brewer at far-left still).
-  // Floorplan canonical orientation = vehicle nose pointing UP (-y).
-  // On confirm we apply the vehicle scene-token's rotation field as a
-  // 2D rotation matrix so the seat lands at the visually correct cell
-  // regardless of how the GM has spun Minnie on the map.
-  function canonicalSlotOffset(slot: SlotKey): { dx: number; dy: number } {
-    if (slot === 'driver') return { dx: 2, dy: -1 }
-    if (slot === 'navigator') return { dx: 2, dy: 1 }
-    if (slot === 'brewer') return { dx: -3, dy: 0 }
-    if (slot.startsWith('shooter:')) return { dx: 0, dy: 0 }
-    if (slot.startsWith('passenger:')) {
-      const idx = parseInt(slot.split(':')[1], 10)
-      const passengerOffsets: Array<{ dx: number; dy: number }> = [
-        { dx: -2, dy: -2 },  // seat 1 (floorplan #4) — left front
-        { dx: -2, dy: 0 },   // seat 2 (floorplan #5) — left middle
-        { dx: -2, dy: 2 },   // seat 3 (floorplan #6) — left back
-        { dx: 0, dy: 2 },    // seat 4 — center back
-        { dx: 1, dy: 2 },    // seat 5 — right-of-center back
-        { dx: -1, dy: 2 },   // seat 6 — left-of-center back
-      ]
-      return passengerOffsets[idx] ?? { dx: 0, dy: 0 }
-    }
-    return { dx: 0, dy: 0 }
-  }
-
   // True when crewId is currently occupying ANY seat on this vehicle
   // (driver / navigator / brewer / passenger / shooter). Used by the
   // range gate to keep currently-aboard members selectable even when
@@ -470,11 +442,19 @@ export default function VehiclePage() {
     })
   }
 
-  // After a slot assignment is persisted, snap the assignee's scene
-  // token onto the slot-specific cell of the active scene's vehicle
-  // token. Rotation-aware. Skips silently if no active scene, no
-  // matching vehicle token, or no matching assignee token.
-  async function moveAssigneeToSlotCell(slot: SlotKey, assigneeId: string) {
+  // Disembark a character: place their scene_token at the first free
+  // cell adjacent to the vehicle's bounding box. Used by the
+  // dismount path in confirmPending when a seat is cleared. Routes
+  // through the snap_token_to_seat RPC (SECURITY DEFINER) so any
+  // campaign member can disembark anyone — the popout already lets
+  // them clear seats, this just keeps the map state consistent.
+  //
+  // Search pattern: expanding ring around the vehicle's footprint.
+  // First-found wins; we don't try to put them on a specific side.
+  // If every nearby cell is occupied (rare), we silently bail —
+  // their token stays wherever it was last (usually the boarding
+  // spot). GM can drag them in by hand.
+  async function dismountToAdjacent(assigneeId: string) {
     if (!campaignId || !vehicle || !assigneeId) return
     const { data: scene } = await supabase
       .from('tactical_scenes')
@@ -483,43 +463,69 @@ export default function VehiclePage() {
       .eq('is_active', true)
       .maybeSingle()
     if (!scene) return
-    const { data: vehTok } = await supabase
+    const sceneId = (scene as any).id
+    const { data: tokens } = await supabase
       .from('scene_tokens')
-      .select('grid_x, grid_y, rotation')
-      .eq('scene_id', (scene as any).id)
-      .eq('name', vehicle.name)
-      .eq('token_type', 'object')
-      .maybeSingle()
+      .select('grid_x, grid_y, grid_w, grid_h, character_id, npc_id, name, token_type')
+      .eq('scene_id', sceneId)
+      .is('archived_at', null)
+    const all = (tokens ?? []) as any[]
+    const vehTok = all.find(t => t.token_type === 'object' && t.name === vehicle!.name)
     if (!vehTok) return
-    const { dx, dy } = canonicalSlotOffset(slot)
-    const rotDeg = (vehTok as any).rotation ?? 0
-    const rot = rotDeg * Math.PI / 180
-    const rdx = Math.round(dx * Math.cos(rot) - dy * Math.sin(rot))
-    const rdy = Math.round(dx * Math.sin(rot) + dy * Math.cos(rot))
-    const targetX = (vehTok as any).grid_x + rdx
-    const targetY = (vehTok as any).grid_y + rdy
+    const vx = vehTok.grid_x as number
+    const vy = vehTok.grid_y as number
+    const vw = (vehTok.grid_w ?? 1) as number
+    const vh = (vehTok.grid_h ?? 1) as number
+
+    // Build "occupied" set from every other token's footprint; skip
+    // the disembarking character themselves (their old cell is the
+    // boarding spot, which is usually under the vehicle now, but if
+    // it isn't we'd rather place them elsewhere anyway).
+    const occupied = new Set<string>()
+    for (const t of all) {
+      if (t.character_id === assigneeId || t.npc_id === assigneeId) continue
+      const tw = (t.grid_w ?? 1) as number
+      const th = (t.grid_h ?? 1) as number
+      for (let ddx = 0; ddx < tw; ddx++) {
+        for (let ddy = 0; ddy < th; ddy++) {
+          occupied.add(`${t.grid_x + ddx},${t.grid_y + ddy}`)
+        }
+      }
+    }
+
+    // Walk rings outward (r=1..5). Each ring traces the rectangle
+    // exactly r cells outside the vehicle's footprint.
+    let target: { x: number; y: number } | null = null
+    for (let r = 1; r <= 5 && !target; r++) {
+      const candidates: Array<{ x: number; y: number }> = []
+      // Top + bottom edges (full width including the corners)
+      for (let i = -r; i <= vw + r - 1; i++) {
+        candidates.push({ x: vx + i, y: vy - r })
+        candidates.push({ x: vx + i, y: vy + vh + r - 1 })
+      }
+      // Left + right edges (excluding the corners, already in top/bottom)
+      for (let j = -r + 1; j <= vh + r - 2; j++) {
+        candidates.push({ x: vx - r, y: vy + j })
+        candidates.push({ x: vx + vw + r - 1, y: vy + j })
+      }
+      const hit = candidates.find(c => !occupied.has(`${c.x},${c.y}`))
+      if (hit) target = hit
+    }
+    if (!target) return
+
     const member = crew.find(c => c.id === assigneeId)
     if (!member) return
-    // Route through the snap_token_to_seat RPC instead of a direct
-    // UPDATE. Direct UPDATEs hit the "Players move own token" RLS
-    // policy, which only lets a player move their OWN PC token - so
-    // non-GMs clicking MOVE HERE on someone else's seat got a silent
-    // 0-row reject. The RPC is SECURITY DEFINER and authorizes by
-    // campaign membership, so any seat-popout user can snap any
-    // assignee. (RPC scope is narrow: only grid_x/grid_y on the named
-    // scene+assignee, nothing else.)
     const { error } = await supabase.rpc('snap_token_to_seat', {
-      p_scene_id: (scene as any).id,
+      p_scene_id: sceneId,
       p_assignee_id: assigneeId,
       p_kind: member.kind,
-      p_target_x: targetX,
-      p_target_y: targetY,
+      p_target_x: target.x,
+      p_target_y: target.y,
     })
     if (error) {
-      console.error('[vehicle-popout] slot auto-move failed:', error.message)
+      console.error('[vehicle-popout] dismount placement failed:', error.message)
       return
     }
-    // Nudge the tactical map to redraw without waiting for postgres_changes.
     const ch = supabase.channel(`tactical_${campaignId}`)
     ch.subscribe(async (status: string) => {
       if (status !== 'SUBSCRIBED') return
@@ -549,6 +555,9 @@ export default function VehiclePage() {
       return next
     })
     try {
+      // Snapshot who was in the seat BEFORE the write, so the dismount
+      // branch below can place them next to the bus.
+      const priorOccupant = getSavedSlotValue(slot)
       if (slot === 'driver' || slot === 'brewer' || slot === 'navigator') {
         await setCrewAssignment(slot, newValue)
       } else if (slot.startsWith('passenger:')) {
@@ -558,10 +567,24 @@ export default function VehiclePage() {
         const idx = parseInt(slot.split(':')[1], 10)
         await setShooterAssignment(idx, newValue)
       }
-      // Empty crewId = clearing the slot. Per spec: scene token stays
-      // put (no auto-move on dismount). GM drags them off after.
-      if (newValue) {
-        await moveAssigneeToSlotCell(slot, newValue)
+      // Boarding/reseating (newValue truthy): no map work needed.
+      // The TacticalMap aboard-filter hides their token; the popout's
+      // own range/badge state updates via realtime + the vehicle
+      // refresh listener.
+      //
+      // Disembarking (newValue empty, priorOccupant truthy AND the
+      // character is no longer aboard ANY seat on this vehicle): drop
+      // their token at the first free cell adjacent to the vehicle.
+      // The "no longer aboard ANY seat" check matters because
+      // setCrewAssignment uses vacateCrewExcept, which may have
+      // already cleared them from this slot as part of a reassign
+      // elsewhere on the bus — in that case the dismount placement
+      // would visually eject them mid-ride. The vehicle state mutates
+      // synchronously through updateVehicle's setVehicle, so by the
+      // time we check, isCurrentlyOnVehicle reflects the post-write
+      // state.
+      if (!newValue && priorOccupant && !isCurrentlyOnVehicle(priorOccupant)) {
+        await dismountToAdjacent(priorOccupant)
       }
       cancelPending(slot)
     } finally {
@@ -1017,32 +1040,36 @@ export default function VehiclePage() {
     )
   }
 
-  // MOVE HERE button — acts as both the implicit Confirm for a staged
-  // dropdown change AND the on-demand "snap token to seat" action.
-  // When the dropdown has been changed (pendingSlot set), clicking
-  // this commits the new assignment AND snaps the token. When no
-  // pending change exists, it just snaps the saved assignee's token
-  // back to its seat. Disabled when there's nothing to do (no pending
-  // change AND no saved occupant).
+  // Apply-seat-change button. Single action: commit whatever the
+  // dropdown has staged. Passengers/crew vanish into the vehicle on
+  // the canvas (the TacticalMap aboard-filter hides them) and the
+  // vehicle gets a 🪑 N badge for headcount; disembarking drops the
+  // token at the first free cell next to the bus. No map-snap or
+  // seat-cell math anymore.
+  //
+  // Label is contextual:
+  //   - staged with a new occupant → "🪑 Board"
+  //   - staged empty (clear)       → "🚶 Disembark"
+  //   - nothing staged             → disabled, "No change"
   function renderMoveHere(slot: SlotKey, accent: string) {
-    const savedId = getSavedSlotValue(slot)
     const pending = pendingSlot[slot]
     const hasPending = pending !== undefined
     const submitting = submittingSlot.has(slot)
-    const empty = !hasPending && !savedId
+    const clearing = hasPending && !pending
+    const boarding = hasPending && !!pending
+    const empty = !hasPending
+    const label = submitting ? '...'
+      : clearing ? '🚶 Disembark'
+      : boarding ? '🪑 Board'
+      : '🪑 No Change'
     const title = submitting ? 'Working...'
-      : hasPending && !pending ? 'Click to clear this seat\'s assignment'
-      : hasPending && pending !== savedId ? 'Click to assign + snap token to seat'
-      : empty ? 'Slot is empty - assign someone via the dropdown'
-      : 'Snap this seat\'s token to its cell on the map'
+      : clearing ? 'Click to remove them from this seat and place their token next to the bus'
+      : boarding ? 'Click to seat them - their token vanishes into the vehicle'
+      : 'Change the dropdown to stage a board or disembark'
     return (
       <button
         onClick={async () => {
-          if (hasPending) {
-            await confirmPending(slot)
-          } else if (savedId) {
-            await moveAssigneeToSlotCell(slot, savedId)
-          }
+          if (hasPending) await confirmPending(slot)
         }}
         disabled={empty || submitting || !canEdit}
         title={title}
@@ -1059,7 +1086,7 @@ export default function VehiclePage() {
           cursor: empty || submitting ? 'not-allowed' : 'pointer',
           flexShrink: 0,
         }}>
-        {submitting ? '...' : '🪑 Move Here'}
+        {label}
       </button>
     )
   }
