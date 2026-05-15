@@ -3165,7 +3165,20 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const tokenId = dragging.tokenId
     const tok = tokensRef.current.find(t => t.id === tokenId)
     const pos = getGridPos(e)
-    const moved = pos && tok && (pos.gx !== tok.grid_x || pos.gy !== tok.grid_y)
+    // Multi-cell-token click-snap fix (2026-05-15): a click landing
+    // anywhere inside the token's existing footprint is a click, not
+    // a move. The old check compared `pos.gx !== tok.grid_x`, which
+    // treats the top-left cell as "stayed put" and every other
+    // footprint cell as "moved" — so clicking Minnie's center cell
+    // snapped her top-left to where the cursor landed. Footprint-
+    // overlap test fixes both axes for any grid_w/grid_h. 1-cell
+    // tokens are unchanged (the footprint collapses to one cell).
+    const w = tok?.grid_w ?? 1
+    const h = tok?.grid_h ?? 1
+    const stayedInsideOldFootprint = !!(pos && tok
+      && pos.gx >= tok.grid_x && pos.gx < tok.grid_x + w
+      && pos.gy >= tok.grid_y && pos.gy < tok.grid_y + h)
+    const moved = pos && tok && !stayedInsideOldFootprint
     // GM "drag" with zero movement on a door OR window = a click →
     // toggle. Drag with actual movement falls through to the normal
     // reposition path.
