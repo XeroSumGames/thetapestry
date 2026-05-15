@@ -82,6 +82,48 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     : r.outcome === 'Dire Failure' ? ' and failed miserably'
     : ''
 
+  // Infection Check - canon §06 (post-combat wound / environmental
+  // sickness). Label shape:
+  //   "<name> - Infection Check (Wound)"
+  //   "<name> - Infection Check (Sickness)"
+  // Outcome semantics (executeRoll's infection branch at
+  // app/stories/[id]/table/page.tsx:5811):
+  //   Success / Wild Success / High Insight - shrug it off, no state.
+  //   Failure                                - infected 1d3 days,
+  //                                            Lasting Damage RISK.
+  //   Dire Failure / Low Insight             - infected 1d6 days.
+  //                                            Wound: auto Lasting
+  //                                            Damage on Day 0.
+  //                                            Sickness: auto Mortally
+  //                                            Wounded on Day 0.
+  // Either failure also caps RP at half max. Compact line is the
+  // narrative consequence; the math panel ▸ still shows dice on
+  // expand.
+  const infMatch = suffix.match(/^Infection Check\s*\((Wound|Sickness)\)/)
+  if (infMatch) {
+    const kind = infMatch[1] as 'Wound' | 'Sickness'
+    const shrug = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
+    const dire = r.outcome === 'Dire Failure' || r.outcome === 'Low Insight'
+    const fail = r.outcome === 'Failure'
+    if (shrug) {
+      return kind === 'Wound'
+        ? `${r.character_name} shrugged off the wound infection${outcomeTag}`
+        : `${r.character_name} shrugged off the sickness${outcomeTag}`
+    }
+    if (fail) {
+      return kind === 'Wound'
+        ? `${r.character_name} has a wound that has become infected - sick for 1d3 days, with lasting damage risk${outcomeTag}`
+        : `${r.character_name} has fallen sick - ill for 1d3 days, with lasting damage risk${outcomeTag}`
+    }
+    if (dire) {
+      return kind === 'Wound'
+        ? `${r.character_name} has a wound that has severely infected - sick for 1d6 days, lasting damage applies automatically${outcomeTag}`
+        : `${r.character_name} has fallen gravely sick - ill for 1d6 days, will progress to Mortally Wounded on Day 0${outcomeTag}`
+    }
+    // Defensive fallback for any outcome we didn't anticipate.
+    return `${r.character_name} - Infection Check (${kind})${outcomeTag}`
+  }
+
   // Aim action - no dice, no target.
   if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
     return `${r.character_name} takes Aim`
