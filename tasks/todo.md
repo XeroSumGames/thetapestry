@@ -11,21 +11,21 @@
 - [ ] **Thriver-godmode-sweep testplan** ([tasks/thriver-godmode-sweep-testplan.md](thriver-godmode-sweep-testplan.md)) — 6 sections covering today's sweep (commit `07652f8` → merged `98d81c9`). Thriver-on-non-owned-campaign + GM regression + Survivor no-leak. Not playtested yet.
 
 ### Ready to build (small)
-- [ ] **Coordinated Effort — per-participant opt-out UI** (currently End Effort ends whole chain)
-- [ ] **Coordinated Effort — bespoke chain summary banner** (one feed row instead of N)
+- [ ] **Coordinated Effort — per-participant opt-out UI** (currently End Effort ends whole chain). **Design question first**: when a participant opts out mid-chain, does the +N coord bonus retroactively change for others who already rolled? Need an answer before code.
+- [ ] **Coordinated Effort — bespoke chain summary banner** (one feed row instead of N). Needs design pass on what the summary row looks like + interception of per-participant `saveRollToLog` writes.
 - [ ] **Coordinated Effort — combat turn-gate behavior tested in actual combat** (verification, not build)
-- [ ] **Healing — Wound Infection auto-trigger on LI** (currently feed prompt only; grep found no `infection_auto` wiring)
-- [ ] **Healing — kit consumption / charges** (canon silent; no `medkit` / `kit_charges` schema yet; infinite-use today)
-- [ ] **Export Session Log — bespoke banner types** for Combat Start/End, Sprint, Drop. Explicitly deferred in commit `1e159dc`.
-- [ ] **Export Session Log — chat messages export** ([lib/session-export.ts](../lib/session-export.ts) only exports roll_log rows)
+- [ ] **Healing — Wound Infection auto-trigger on LI** — *complex*: needs cross-client roll-modal broadcast (target patient's client opens the Infection Check modal) + Insight Die opt-out handling. Not a 30-min item.
+- [ ] **Healing — kit consumption / charges** — *needs schema*: new columns on character inventory for kit charges. Canon silent on the math (charges per Doctor's Bag? per First Aid Kit?).
+- [x] ~~**Export Session Log — bespoke banner types**~~ — **SHIPPED 2026-05-15** (`22d75dc`). 9 of 13 bespoke types ported (combat_start, combat_end, initiative, drop, defer, sprint, death, incap, revive). Deferred: retention_check, fed_check, clothed_check, morale_check (those have per-row table layouts that need bespoke porting too).
+- [x] ~~**Export Session Log — chat messages export**~~ — **SHIPPED 2026-05-15** (`22d75dc`). Fetches chat_messages in parallel with roll_log, interleaves by created_at via discriminated-union FeedItem. Whispers get purple palette, RLS-respecting.
 
 ### Ready to build (medium)
 - [ ] **Skill + Combat action end-to-end audit** — walk every check/action against [tasks/roll-feed-log-preview.html](roll-feed-log-preview.html); log drift as bugs
 - [ ] **Modal unification (5 of 6 remaining)** — Stabilize / Distract / Group Check / Gut Instinct / First Impression to `<RollModal>` shape. Coordinated Effort already migrated (`6640b1a`).
-- [ ] **First Impression skips target picker** — clicking revealed NPC card → straight to attack modal (skill-picker `e94bda2` is a different feature; this target-NPC-bypass is still open)
-- [ ] **Perception check skips picker** — same shape as First Impression (BUG-1 from 2026-05-04 playtest at [tasks/playtest-2026-05-04-bugs.md](playtest-2026-05-04-bugs.md))
+- [x] ~~**First Impression skips target picker**~~ — **ALREADY SHIPPED 2026-05-01** on `PlayerNpcCard` ([components/PlayerNpcCard.tsx:438-447](../components/PlayerNpcCard.tsx)). The skip-picker button is the `onFirstImpression` quick-fire on the player NPC card. GM-side `NpcCard.tsx` intentionally has no quick-fire (GM orchestrates).
+- [x] ~~**Perception check skips picker**~~ — **ALREADY SHIPPED**. `shortCircuitForSpecialCheck` at [app/stories/[id]/table/page.tsx:3436](../app/stories/[id]/table/page.tsx:3436) auto-picks single-PC or active-PC-in-combat for Perception and Gut Instinct. Picker only renders for "multi-PC GM out-of-combat" which is intentional per the comment at L3432.
 - [ ] **Gut Instinct results presentation** — design + rework
-- [ ] **CMod Stack reusable component** — extract from Recruit modal, use in Grapple / First Impression / Attack
+- [ ] **CMod Stack reusable component** — extract from Recruit modal, use in Grapple / First Impression / Attack. **Bigger than it looks**: extraction itself is small but each consumer (Grapple, First Impression, Attack) needs its own per-CMod-source compute function + render slot. Multi-day refactor properly thought through, not a single-session item.
 - [ ] **GM force-push view to players** — sync scene/view changes across all clients (no `view_changed` broadcast event yet)
 - [ ] **Character Evolution / CDP Calculator** — post-creation CDP spend surface (no `app/characters/[id]/evolve/` route)
 - [ ] **King's Crossroads Mall — tactical scenes** — author battle maps and wire into [lib/setting-scenes.ts](../lib/setting-scenes.ts) under `kings_crossroads_mall` (NOTE: key is `kings_crossroads_mall`, NOT `kings_crossing_mall`)
@@ -96,9 +96,13 @@
 ---
 
 ## Audit notes — what shipped recently that USED to be open
+- **2026-05-15 Edit page retirement** (`3e911d8`) — `/stories/[id]/edit` deleted; form inlined on the hub as a GM Tools card. EDIT button dropped from StoryActionBar.
+- **2026-05-15 Export Session Log polish** (`22d75dc`) — 9 of 13 bespoke banner types ported + chat-message interleave.
 - **2026-05-15 Thriver godmode UI sweep** (`07652f8` / `98d81c9`) — full UI layer parity with DB-level godmode
+- **2026-05-15 audit corrections** — Perception skip-picker + First Impression skip-picker were ALREADY shipped (2026-05-01 / `shortCircuitForSpecialCheck`); todo entries were stale.
 - **2026-05-14 stack**: Coord Effort, Healing on Time-Tick, Year-0 calendar shift, Campaign Sheet header redesign + Edit Clock modal, Export Session Log, Weapon Repair, die3 in expanded log, CampaignObjects "found nothing" write path (Bundle 4), Luxury Ration consume
 - **2026-05-14 canon shipped**: Item Condition + Upkeep, Activity Block taxonomy, Falling/Drowning/Subsistence Damage, Distemper-Infected Canines bestiary, Insight Dice on Death "1WP+1RP total" fix, Negotiations Gambit/Rebuttal full system
+- **2026-05-14 perf passes** (a1/a2/a3) — campaign-sheet debounce, NpcRoster prop memoization, stories useEffect cleanup. All shipped or no-op findings.
 - **2026-05-05 GM Tools Restore is slow** (`55d0693`) — fixed via optimistic-local + background-refetch
 - **2026-05-04 fog-blocker-gated LoS** — PC line-of-sight + painted fog interaction shipped
 
