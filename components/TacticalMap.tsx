@@ -173,9 +173,14 @@ interface Props {
   // Parent owns the moveMode state + the speed × 30ft / acceleration
   // ramp logic, so we just hand off the tokenId.
   onObjectMove?: (tokenId: string) => void
+  // Vehicle popout fires a broadcast on the tactical channel after
+  // writing seat assignments. Parent supplies this callback to
+  // refetch campaigns.vehicles + setVehicles so the aboard-filter
+  // and passenger-count badge update immediately.
+  onVehiclesNeedRefresh?: () => void
 }
 
-function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove }: Props) {
+function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove, onVehiclesNeedRefresh }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -718,6 +723,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       })
       .on('broadcast', { event: 'token_moved' }, () => {
         if (sceneRef.current) loadTokens(sceneRef.current.id)
+      })
+      // Vehicle popout fires this on every successful seat-write.
+      // The parent listens and refetches campaigns.vehicles, which
+      // refreshes the aboard-token filter and passenger-count badge.
+      // Belt-and-suspenders for the campaigns realtime UPDATE path,
+      // which has been flaky for jsonb columns.
+      .on('broadcast', { event: 'vehicle_updated' }, () => {
+        onVehiclesNeedRefresh?.()
       })
       .on('broadcast', { event: 'scene_activated' }, () => {
         // GM activated a different tactical scene. Reload the scene

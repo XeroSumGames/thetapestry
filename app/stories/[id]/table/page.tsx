@@ -1572,23 +1572,6 @@ export default function TablePage() {
             setVehicles(row.vehicles)
           }
         })
-        // Defensive: the vehicle popout fires this broadcast on every
-        // successful update_vehicle_in_campaign RPC write. The
-        // postgres_changes branch above SHOULD handle it via
-        // REPLICA IDENTITY FULL, but jsonb + RLS interactions have
-        // dropped events in the wild. On vehicle_updated, refetch
-        // campaigns.vehicles directly so the GM's TacticalMap sees
-        // the new seat assignments without a manual refresh.
-        .on('broadcast', { event: 'vehicle_updated' }, async () => {
-          const { data: camp } = await supabase
-            .from('campaigns')
-            .select('vehicles')
-            .eq('id', id)
-            .maybeSingle()
-          if (camp && Array.isArray((camp as any).vehicles)) {
-            setVehicles((camp as any).vehicles)
-          }
-        })
         .subscribe()
 
       if (cancelled) return
@@ -3134,6 +3117,21 @@ export default function TablePage() {
       (npcId && e.npc_id === npcId)
     )
     if (entry) consumeAction(entry.id, undefined, 1)
+  })
+
+  // Defensive vehicles refresh - called by TacticalMap when the
+  // tactical channel receives a vehicle_updated broadcast (popout
+  // wrote new seat assignments). Refetches campaigns.vehicles
+  // directly, bypassing the flaky jsonb-over-realtime path.
+  const refetchVehicles = useStableCallback(async () => {
+    const { data: camp } = await supabase
+      .from('campaigns')
+      .select('vehicles')
+      .eq('id', id)
+      .maybeSingle()
+    if (camp && Array.isArray((camp as any).vehicles)) {
+      setVehicles((camp as any).vehicles)
+    }
   })
 
   const handleMapObjectMove = useStableCallback((tokenId: string) => {
@@ -7985,6 +7983,7 @@ export default function TablePage() {
               entries={entries}
               myCharacterId={myCharIdRef.current}
               vehicles={vehicles}
+              onVehiclesNeedRefresh={refetchVehicles}
               onObjectMove={handleMapObjectMove}
               onTokenClick={handleMapTokenClick}
               onTokenSelect={handleMapTokenSelect}

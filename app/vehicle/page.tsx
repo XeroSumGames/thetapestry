@@ -334,14 +334,14 @@ export default function VehiclePage() {
       console.error('[vehicle-popout] updateVehicle RPC failed:', error.message)
       return
     }
-    // Defensive: broadcast a vehicle_updated event on the campaign
-    // channel so the table page can refresh its vehicles state
-    // immediately - the campaigns realtime UPDATE has been
-    // intermittent (REPLICA IDENTITY FULL helped but jsonb + RLS
-    // interactions can still drop events occasionally). This gives
-    // the GM/players instant feedback regardless. Fire-and-forget;
-    // channel is closed right after.
-    const ch = supabase.channel(`campaign_${campaignId}`)
+    // Defensive: broadcast vehicle_updated on the tactical channel.
+    // TacticalMap.tsx already subscribes there for token_moved, so
+    // adding the new handler in-place is cheaper than spinning up
+    // another channel on the table page. The handler forwards to
+    // the parent's onVehiclesNeedRefresh callback which refetches
+    // campaigns.vehicles. Belt-and-suspenders for the campaigns
+    // realtime UPDATE path, which has been flaky for jsonb columns.
+    const ch = supabase.channel(`tactical_${campaignId}`)
     ch.subscribe(async (status: string) => {
       if (status !== 'SUBSCRIBED') return
       await ch.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
