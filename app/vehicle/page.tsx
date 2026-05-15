@@ -11,7 +11,7 @@ import { decrementInitiativeAction } from '../../lib/initiative-actions'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
-import { EQUIPMENT, findEquipmentByName } from '../../lib/xse-schema'
+import { EQUIPMENT, findEquipmentByName, SKILLS } from '../../lib/xse-schema'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
@@ -27,9 +27,15 @@ interface CrewMember {
   mechanicLevel: number      // SMOD for Mechanic* (uses RSN)
   tinkererLevel: number      // SMOD for Tinkerer (uses DEX)
   rangedCombatLevel: number  // SMOD for mounted-weapon attack (uses DEX)
+  // Full attribute + skill maps so the Navigate check (and any future
+  // open-ended skill check off this sheet) can pick AMod and SMod
+  // dynamically when the player swaps which skill they're rolling.
+  // Both default to {} so empty-record lookups give 0 below.
+  attributes: Record<string, number>   // 'DEX' | 'PHY' | 'ACU' | ... -> level
+  skillByName: Record<string, number>  // 'Navigation' | 'Survival' | ... -> level
 }
 
-type CheckKind = 'driving' | 'brew' | 'attack'
+type CheckKind = 'driving' | 'brew' | 'attack' | 'navigate'
 type BrewSkill = 'mechanic' | 'tinkerer'
 
 // Mirrors the table in components/TacticalMap.tsx — a weapon's primary
@@ -60,7 +66,13 @@ interface CheckState {
   amod: number
   smod: number
   cmod: number
-  brewSkill: BrewSkill         // ignored for driving / attack
+  brewSkill: BrewSkill         // ignored for driving / attack / navigate
+  // for kind='navigate': which skill is being rolled. Defaults to
+  // 'Navigation' (the navigator's canonical skill, ACU-based) but a
+  // player can swap it after making the case for a different skill
+  // (e.g. Survival for off-road navigation, Awareness for spotting a
+  // route, etc.). Both AMod and SMod recompute on change.
+  navigateSkill?: string
   weaponIndex?: number         // for kind='attack': index into vehicle.mounted_weapons
   targetNpcId?: string          // for kind='attack': which NPC is being shot at
   targets?: AttackTarget[]     // for kind='attack': dropdown options (NPCs on active scene)
@@ -140,6 +152,10 @@ export default function VehiclePage() {
           const rapid = c.data?.rapid ?? {}
           const skills: { skillName: string; level: number }[] = c.data?.skills ?? []
           const lvl = (n: string) => skills.find(s => s.skillName === n)?.level ?? 0
+          // Flatten the full skill list into a lookup map - Navigate
+          // check's skill picker reads any of these.
+          const skillByName: Record<string, number> = {}
+          for (const s of skills) skillByName[s.skillName] = s.level ?? 0
           return {
             id: c.id, name: c.name, kind: 'pc' as const,
             dex: rapid.DEX ?? 0,
@@ -148,6 +164,8 @@ export default function VehiclePage() {
             mechanicLevel: lvl('Mechanic*'),
             tinkererLevel: lvl('Tinkerer'),
             rangedCombatLevel: lvl('Ranged Combat'),
+            attributes: { ...(rapid as Record<string, number>) },
+            skillByName,
           }
         })
 
@@ -163,6 +181,18 @@ export default function VehiclePage() {
           // NPC skills.entries shape: [{ name, level }]
           const entries: { name: string; level: number }[] = n.skills?.entries ?? []
           const lvl = (name: string) => entries.find(e => e.name === name)?.level ?? 0
+          const skillByName: Record<string, number> = {}
+          for (const e of entries) skillByName[e.name] = e.level ?? 0
+          // NPCs store attributes as top-level columns; widen the
+          // shape so the Navigate skill-picker can hit any of them.
+          // Note: campaign_npcs query above only pulled dexterity; if
+          // an NPC ends up rolling on PHY/INF/ACU/etc. we fall back
+          // to 0. (Backfilling NPC attribute fetch is a separate
+          // follow-up; not blocking the playtest tonight.)
+          const attributes: Record<string, number> = {
+            DEX: n.dexterity ?? 0,
+            RSN: n.reason ?? 0,
+          }
           return {
             id: n.id, name: n.name, kind: 'npc' as const,
             dex: n.dexterity ?? 0,
@@ -171,6 +201,8 @@ export default function VehiclePage() {
             mechanicLevel: lvl('Mechanic*'),
             tinkererLevel: lvl('Tinkerer'),
             rangedCombatLevel: lvl('Ranged Combat'),
+            attributes,
+            skillByName,
           }
         })
 
@@ -460,6 +492,7 @@ export default function VehiclePage() {
     let crewId: string | null | undefined
     if (kind === 'driving') crewId = vehicle.driver_character_id
     else if (kind === 'brew') crewId = vehicle.brewer_character_id
+    else if (kind === 'navigate') crewId = vehicle.navigator_character_id
     else crewId = vehicle.mounted_weapons?.[weaponIdx ?? 0]?.shooter_character_id
     const member = crew.find(c => c.id === crewId)
     if (!member) {
@@ -467,7 +500,9 @@ export default function VehiclePage() {
         ? 'Pick a driver from the dropdown first.'
         : kind === 'brew'
           ? 'Pick a brewer from the dropdown first.'
-          : 'Pick a shooter for this weapon first.')
+          : kind === 'navigate'
+            ? 'Pick a navigator from the dropdown first.'
+            : 'Pick a shooter for this weapon first.')
       return
     }
     if (kind === 'driving') {
@@ -477,6 +512,22 @@ export default function VehiclePage() {
         smod: member.drivingLevel,
         cmod: 0,
         brewSkill: 'mechanic',
+        rolling: false, result: null,
+      })
+    } else if (kind === 'navigate') {
+      // Default to canonical Navigation (ACU). Player can swap via
+      // the skill picker in the modal if they make the case for a
+      // different skill.
+      const defaultSkill = 'Navigation'
+      const skillDef = SKILLS.find(s => s.name === defaultSkill)
+      const attr = skillDef?.attribute ?? 'ACU'
+      setCheck({
+        kind, crewId: member.id,
+        amod: member.attributes[attr] ?? 0,
+        smod: member.skillByName[defaultSkill] ?? 0,
+        cmod: 0,
+        brewSkill: 'mechanic',
+        navigateSkill: defaultSkill,
         rolling: false, result: null,
       })
     } else if (kind === 'brew') {
@@ -621,6 +672,25 @@ export default function VehiclePage() {
     })
   }
 
+  // Navigate check skill swap. Default is Navigation (ACU); the picker
+  // lets a player swap to any other skill they argued was relevant
+  // (Survival for off-road, Awareness for spotting routes, etc.).
+  // AMod reads from the new skill's canonical attribute via the SKILLS
+  // table; SMod reads the navigator's level in that skill.
+  function switchNavigateSkill(nextSkillName: string) {
+    if (!check || check.kind !== 'navigate') return
+    const member = crew.find(c => c.id === check.crewId)
+    if (!member) return
+    const skillDef = SKILLS.find(s => s.name === nextSkillName)
+    const attr = skillDef?.attribute ?? 'ACU'
+    setCheck({
+      ...check,
+      navigateSkill: nextSkillName,
+      amod: member.attributes[attr] ?? 0,
+      smod: member.skillByName[nextSkillName] ?? 0,
+    })
+  }
+
   // Roll 2d6 + amod + smod + cmod, classify, log to roll_log, and apply
   // any rules-mandated mechanical effect. For brew: Wild Success / Success
   // produces a full tank (+1 fuel_current, capped at fuel_max). Failure
@@ -639,11 +709,16 @@ export default function VehiclePage() {
       ? vehicle.mounted_weapons?.[check.weaponIndex]
       : undefined
     const weaponDef = weapon ? getWeaponByName(weapon.name) : undefined
+    const navAttr = check.kind === 'navigate'
+      ? (SKILLS.find(s => s.name === check.navigateSkill)?.attribute ?? 'ACU')
+      : ''
     const skillLabel = check.kind === 'driving'
       ? 'Driving (DEX)'
       : check.kind === 'brew'
         ? (check.brewSkill === 'tinkerer' ? 'Tinkerer (DEX)' : 'Mechanic* (RSN)')
-        : 'Ranged Combat (DEX)'
+        : check.kind === 'navigate'
+          ? `${check.navigateSkill ?? 'Navigation'} (${navAttr})`
+          : 'Ranged Combat (DEX)'
     const targetName = check.kind === 'attack' && check.targetNpcId
       ? (check.targets?.find(t => t.id === check.targetNpcId)?.name ?? null)
       : null
@@ -651,7 +726,9 @@ export default function VehiclePage() {
       ? '🚗 Driving check'
       : check.kind === 'brew'
         ? '⚗️ Brew check'
-        : `🎯 ${weapon?.name ?? 'Mounted weapon'} attack${targetName ? ` → ${targetName}` : ''}`
+        : check.kind === 'navigate'
+          ? '🧭 Navigate check'
+          : `🎯 ${weapon?.name ?? 'Mounted weapon'} attack${targetName ? ` → ${targetName}` : ''}`
     const fuelDelta = check.kind === 'brew' && (outcome === 'Wild Success' || outcome === 'Success' || outcome === 'High Insight') ? 1 : 0
     const newFuel = Math.min(vehicle.fuel_max, vehicle.fuel_current + fuelDelta)
     const fuelNote = fuelDelta > 0 && newFuel > vehicle.fuel_current
@@ -789,6 +866,38 @@ export default function VehiclePage() {
   const lbl: React.CSSProperties = { fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }
   const bigVal: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }
 
+  // MOVE HERE button — snaps the slot's currently-assigned PC/NPC
+  // token onto the floorplan cell for that slot on the active scene.
+  // Independent of the Confirm gate: this acts on whatever is SAVED in
+  // vehicle.<slot>, not the pending dropdown value. Use when a player
+  // has wandered off and needs to be put back in their seat without
+  // re-assigning. Disabled when the slot has no current occupant.
+  function renderMoveHere(slot: SlotKey, accent: string) {
+    const savedId = getSavedSlotValue(slot)
+    const empty = !savedId
+    return (
+      <button
+        onClick={() => { if (savedId) moveAssigneeToSlotCell(slot, savedId) }}
+        disabled={empty || !canEdit}
+        title={empty ? 'Slot is empty - assign someone first' : 'Snap this slot\'s token to its seat on the map'}
+        style={{
+          padding: '6px 10px',
+          background: empty ? '#242424' : '#1a2e10',
+          border: `1px solid ${empty ? '#3a3a3a' : accent}`,
+          borderRadius: '3px',
+          color: empty ? '#5a5550' : accent,
+          fontSize: '13px',
+          fontFamily: 'Carlito, sans-serif',
+          letterSpacing: '.06em',
+          textTransform: 'uppercase',
+          cursor: empty ? 'not-allowed' : 'pointer',
+          flexShrink: 0,
+        }}>
+        🪑 Move Here
+      </button>
+    )
+  }
+
   // Confirm / Cancel chip for a pending slot change. Renders nothing
   // when no pending value, a green Confirm + grey Cancel pair when one
   // exists. Describes the staged change so the user sees "Confirm:
@@ -831,18 +940,24 @@ export default function VehiclePage() {
         {vehicle.three_words && <div style={{ fontSize: '14px', color: '#d4cfc9', fontStyle: 'italic', marginTop: '4px' }}>"{vehicle.three_words}"</div>}
       </div>
 
-      {/* Crew & Checks — driver/brewer dropdowns + roll buttons */}
+      {/* Crew & Checks — Driver + Navigator side by side; Brewer
+          below (only if has_still). Each row: dropdown -> MOVE HERE
+          -> check button. Confirm chip drops below the row when a
+          pending change exists. Navigator now lives here (promoted
+          up from the old Passenger Seats section) and gets its own
+          NAVIGATE button next to MOVE HERE. */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '16px' }}>
         <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Crew &amp; Checks</div>
-        <div style={{ display: 'grid', gridTemplateColumns: vehicle.has_still ? '1fr 1fr' : '1fr', gap: '12px' }}>
+        {/* Top row: Driver | Navigator (always 2 cols, regardless of has_still) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: vehicle.has_still ? '12px' : 0 }}>
           {/* Driver */}
           <div>
             <div style={lbl}>Driver</div>
-            <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
               <select value={pendingSlot['driver'] ?? (vehicle.driver_character_id ?? '')}
                 onChange={e => stagePending('driver', e.target.value)}
                 disabled={!canEdit}
-                style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                 <option value="">— Select driver —</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
@@ -859,77 +974,30 @@ export default function VehiclePage() {
                   </optgroup>
                 )}
               </select>
+              {renderMoveHere('driver', '#7fc458')}
               <button onClick={() => openCheck('driving')}
                 disabled={!vehicle.driver_character_id}
-                style={{ padding: '6px 14px', background: vehicle.driver_character_id ? '#1a3a5c' : '#242424', border: `1px solid ${vehicle.driver_character_id ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.driver_character_id ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.driver_character_id ? 'pointer' : 'not-allowed' }}>
+                style={{ padding: '6px 14px', background: vehicle.driver_character_id ? '#1a3a5c' : '#242424', border: `1px solid ${vehicle.driver_character_id ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.driver_character_id ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.driver_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
                 🚗 Driving Check
               </button>
             </div>
             {renderSlotConfirm('driver', 'Driver')}
           </div>
 
-          {/* Brewer — only when the vehicle has a still */}
-          {vehicle.has_still && (
-            <div>
-              <div style={lbl}>Brewer</div>
-              <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-                <select value={pendingSlot['brewer'] ?? (vehicle.brewer_character_id ?? '')}
-                  onChange={e => stagePending('brewer', e.target.value)}
-                  disabled={!canEdit}
-                  style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-                  <option value="">— Select brewer —</option>
-                  {crew.filter(c => c.kind === 'pc').length > 0 && (
-                    <optgroup label="Player Characters">
-                      {crew.filter(c => c.kind === 'pc').map(c => (
-                        <option key={c.id} value={c.id}>{c.name} (M* +{c.mechanicLevel} · Tink +{c.tinkererLevel})</option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {crew.filter(c => c.kind === 'npc').length > 0 && (
-                    <optgroup label="NPCs">
-                      {crew.filter(c => c.kind === 'npc').map(c => (
-                        <option key={c.id} value={c.id}>{c.name} (M* +{c.mechanicLevel} · Tink +{c.tinkererLevel})</option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-                <button onClick={() => openCheck('brew')}
-                  disabled={!vehicle.brewer_character_id}
-                  style={{ padding: '6px 14px', background: vehicle.brewer_character_id ? '#3a2516' : '#242424', border: `1px solid ${vehicle.brewer_character_id ? '#b87333' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.brewer_character_id ? '#b87333' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.brewer_character_id ? 'pointer' : 'not-allowed' }}>
-                  ⚗️ Brew Check
-                </button>
-              </div>
-              {renderSlotConfirm('brewer', 'Brewer')}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Mounted Weapons — fitted weapons (sniper nest, MG, etc.).
-          Each entry has its own Shooter dropdown so different crew
-          members can man different stations. */}
-      {/* Passenger Seats — Navigator + 6 numbered slots. When the
-          vehicle's tactical-map token moves, every PC/NPC in any of
-          these slots (plus driver/brewer/gunners) has their token
-          dragged along by the same delta. Stickiness is name-based
-          (vehicle.name → matching scene_tokens row), see TacticalMap
-          handleMouseUp. */}
-      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Passenger Seats</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {/* Navigator — single slot */}
+          {/* Navigator (promoted from Passenger Seats — has its own
+              NAVIGATE check button with a swappable skill picker). */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Navigator</span>
+            <div style={lbl}>Navigator</div>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
               <select value={pendingSlot['navigator'] ?? (vehicle.navigator_character_id ?? '')}
                 onChange={e => stagePending('navigator', e.target.value)}
                 disabled={!canEdit}
-                style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                 <option value="">— Empty —</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
                     {crew.filter(c => c.kind === 'pc').map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                      <option key={c.id} value={c.id}>{c.name} (ACU +{c.attributes['ACU'] ?? 0} · Nav +{c.skillByName['Navigation'] ?? 0})</option>
                     ))}
                   </optgroup>
                 )}
@@ -941,21 +1009,74 @@ export default function VehiclePage() {
                   </optgroup>
                 )}
               </select>
+              {renderMoveHere('navigator', '#7fc458')}
+              <button onClick={() => openCheck('navigate')}
+                disabled={!vehicle.navigator_character_id}
+                title="Default Navigation (ACU) - swap to any skill in the modal if a player has made the case"
+                style={{ padding: '6px 14px', background: vehicle.navigator_character_id ? '#241a3a' : '#242424', border: `1px solid ${vehicle.navigator_character_id ? '#a78bfa' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.navigator_character_id ? '#a78bfa' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.navigator_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
+                🧭 Navigate
+              </button>
             </div>
             {renderSlotConfirm('navigator', 'Navigator')}
           </div>
-          {/* 6 numbered passenger slots */}
+        </div>
+
+        {/* Brewer — full row below Driver/Navigator, only if has_still */}
+        {vehicle.has_still && (
+          <div>
+            <div style={lbl}>Brewer</div>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+              <select value={pendingSlot['brewer'] ?? (vehicle.brewer_character_id ?? '')}
+                onChange={e => stagePending('brewer', e.target.value)}
+                disabled={!canEdit}
+                style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                <option value="">— Select brewer —</option>
+                {crew.filter(c => c.kind === 'pc').length > 0 && (
+                  <optgroup label="Player Characters">
+                    {crew.filter(c => c.kind === 'pc').map(c => (
+                      <option key={c.id} value={c.id}>{c.name} (M* +{c.mechanicLevel} · Tink +{c.tinkererLevel})</option>
+                    ))}
+                  </optgroup>
+                )}
+                {crew.filter(c => c.kind === 'npc').length > 0 && (
+                  <optgroup label="NPCs">
+                    {crew.filter(c => c.kind === 'npc').map(c => (
+                      <option key={c.id} value={c.id}>{c.name} (M* +{c.mechanicLevel} · Tink +{c.tinkererLevel})</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+              {renderMoveHere('brewer', '#7fc458')}
+              <button onClick={() => openCheck('brew')}
+                disabled={!vehicle.brewer_character_id}
+                style={{ padding: '6px 14px', background: vehicle.brewer_character_id ? '#3a2516' : '#242424', border: `1px solid ${vehicle.brewer_character_id ? '#b87333' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.brewer_character_id ? '#b87333' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.brewer_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
+                ⚗️ Brew Check
+              </button>
+            </div>
+            {renderSlotConfirm('brewer', 'Brewer')}
+          </div>
+        )}
+      </div>
+
+      {/* Passenger Seats — 6 numbered slots, 2-col grid. Navigator
+          lives in Crew & Checks now (promoted up). When the vehicle
+          token moves, everyone here moves with it (TacticalMap drag
+          path + popout MOVE button path both call
+          syncVehiclePassengers). */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Passenger Seats</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           {Array.from({ length: 6 }).map((_, i) => {
             const seat = (vehicle.passenger_seats ?? [])[i] ?? null
             const slotKey: SlotKey = `passenger:${i}`
             return (
               <div key={i}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Seat {i + 1}</span>
+                  <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '64px' }}>Seat {i + 1}</span>
                   <select value={pendingSlot[slotKey] ?? (seat?.character_id ?? '')}
                     onChange={e => stagePending(slotKey, e.target.value)}
                     disabled={!canEdit}
-                    style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                    style={{ flex: 1, minWidth: 0, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                     <option value="">— Empty —</option>
                     {crew.filter(c => c.kind === 'pc').length > 0 && (
                       <optgroup label="Player Characters">
@@ -972,6 +1093,7 @@ export default function VehiclePage() {
                       </optgroup>
                     )}
                   </select>
+                  {renderMoveHere(slotKey, '#7fc458')}
                 </div>
                 {renderSlotConfirm(slotKey, `Seat ${i + 1}`)}
               </div>
@@ -1022,6 +1144,7 @@ export default function VehiclePage() {
                         </optgroup>
                       )}
                     </select>
+                    {renderMoveHere(`shooter:${i}` as SlotKey, '#7fc458')}
                     <button onClick={() => openCheck('attack', i)}
                       disabled={!w.shooter_character_id}
                       style={{ padding: '6px 14px', background: w.shooter_character_id ? '#2a1210' : '#242424', border: `1px solid ${w.shooter_character_id ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: w.shooter_character_id ? '#f5a89a' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: w.shooter_character_id ? 'pointer' : 'not-allowed' }}>
@@ -1355,9 +1478,17 @@ export default function VehiclePage() {
           ? 'Driving Check'
           : check.kind === 'brew'
             ? 'Brew Check'
-            : `${modalWeapon?.name ?? 'Mounted Weapon'} Attack`
-        const accent = check.kind === 'driving' ? '#7ab3d4' : check.kind === 'brew' ? '#b87333' : '#c0392b'
-        const accentBg = check.kind === 'driving' ? '#1a3a5c' : check.kind === 'brew' ? '#3a2516' : '#2a1210'
+            : check.kind === 'navigate'
+              ? 'Navigate Check'
+              : `${modalWeapon?.name ?? 'Mounted Weapon'} Attack`
+        const accent = check.kind === 'driving' ? '#7ab3d4'
+          : check.kind === 'brew' ? '#b87333'
+          : check.kind === 'navigate' ? '#a78bfa'
+          : '#c0392b'
+        const accentBg = check.kind === 'driving' ? '#1a3a5c'
+          : check.kind === 'brew' ? '#3a2516'
+          : check.kind === 'navigate' ? '#241a3a'
+          : '#2a1210'
         const outcomeColor = (o: string) =>
           o === 'High Insight' || o === 'Wild Success' ? '#7fc458'
           : o === 'Success' ? '#cce0f5'
@@ -1430,6 +1561,37 @@ export default function VehiclePage() {
                   )}
                 </div>
               )}
+
+              {/* Navigate skill picker — default Navigation (ACU),
+                  swappable to any skill the player has argued for.
+                  AMod/SMod auto-recompute on change via
+                  switchNavigateSkill. SKILLS is the canonical list
+                  from lib/xse-schema.ts so the dropdown stays in sync
+                  with the rulebook. */}
+              {check.kind === 'navigate' && (() => {
+                const navSkillDef = SKILLS.find(s => s.name === check.navigateSkill)
+                const navAttr = navSkillDef?.attribute ?? 'ACU'
+                return (
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={lbl}>Skill</div>
+                    <select value={check.navigateSkill ?? 'Navigation'}
+                      onChange={e => switchNavigateSkill(e.target.value)}
+                      style={{ width: '100%', padding: '6px 8px', marginTop: '4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', boxSizing: 'border-box' }}>
+                      {SKILLS.map(s => {
+                        const lvlHere = member?.skillByName[s.name] ?? 0
+                        return (
+                          <option key={s.name} value={s.name}>
+                            {s.name} ({s.attribute} · Skill +{lvlHere})
+                          </option>
+                        )
+                      })}
+                    </select>
+                    <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginTop: '4px' }}>
+                      Default is Navigation ({navAttr}). Switch if the player has made a case for a different skill.
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Brew skill picker — Mechanic* (RSN) vs Tinkerer (DEX) */}
               {check.kind === 'brew' && (
