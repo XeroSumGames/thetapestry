@@ -384,6 +384,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // stealing the user's scroll after they've moved around.
   const centeredSceneIdRef = useRef<string | null>(null)
   const sceneRef = useRef<Scene | null>(null)
+  // invalidated when mover position, range, grid size, or occupied-cell set changes; key checked inline in draw()
+  const moveZoneCacheRef = useRef<{ key: string; cells: Array<{gx: number; gy: number}> } | null>(null)
+  // invalidated when thrower position, range, or grid size change; key checked inline in draw()
+  const throwZoneCacheRef = useRef<{ key: string; cells: Array<{gx: number; gy: number}> } | null>(null)
+  // invalidated when hover cell, band radii, or grid size change; key checked inline in draw()
+  const blastZoneCacheRef = useRef<{ key: string; engCells: Array<{gx: number; gy: number}>; clCells: Array<{gx: number; gy: number}> } | null>(null)
+  // invalidated when PC positions/sight, wall segments, cell blockers, or lighting mode change; key checked inline in draw()
+  const fogVisibleCacheRef = useRef<{ key: string; visible: Set<string> } | null>(null)
 
   // Keep refs in sync for canvas drawing
   useEffect(() => { tokensRef.current = tokens }, [tokens])
@@ -1069,17 +1077,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       )
       if (moveTok) {
         const occupied = new Set(tokensRef.current.filter(t => t.id !== moveTok.id).map(t => `${t.grid_x},${t.grid_y}`))
-        for (let gx = 0; gx < s.grid_cols; gx++) {
-          for (let gy = 0; gy < s.grid_rows; gy++) {
-            const dist = Math.max(Math.abs(gx - moveTok.grid_x), Math.abs(gy - moveTok.grid_y))
-            if (dist > 0 && dist <= moveCells && !occupied.has(`${gx},${gy}`)) {
-              ctx.fillStyle = 'rgba(127,196,88,0.25)'
-              ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
-              ctx.strokeStyle = 'rgba(127,196,88,0.5)'
-              ctx.lineWidth = 1
-              ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+        const mzKey = `${moveTok.grid_x},${moveTok.grid_y}:${moveCells}:${s.grid_cols}x${s.grid_rows}:${[...occupied].sort().join('|')}`
+        if (moveZoneCacheRef.current?.key !== mzKey) {
+          const cells: Array<{gx: number; gy: number}> = []
+          for (let gx = 0; gx < s.grid_cols; gx++) {
+            for (let gy = 0; gy < s.grid_rows; gy++) {
+              const dist = Math.max(Math.abs(gx - moveTok.grid_x), Math.abs(gy - moveTok.grid_y))
+              if (dist > 0 && dist <= moveCells && !occupied.has(`${gx},${gy}`)) cells.push({ gx, gy })
             }
           }
+          moveZoneCacheRef.current = { key: mzKey, cells }
+        }
+        for (const { gx, gy } of moveZoneCacheRef.current!.cells) {
+          ctx.fillStyle = 'rgba(127,196,88,0.25)'
+          ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+          ctx.strokeStyle = 'rgba(127,196,88,0.5)'
+          ctx.lineWidth = 1
+          ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
         }
       }
     }
@@ -1097,21 +1111,27 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         (throwMode.attackerNpcId && t.npc_id === throwMode.attackerNpcId)
       )
       if (throwerTok) {
-        for (let gx = 0; gx < s.grid_cols; gx++) {
-          for (let gy = 0; gy < s.grid_rows; gy++) {
-            const dist = Math.max(Math.abs(gx - throwerTok.grid_x), Math.abs(gy - throwerTok.grid_y))
-            // Include the thrower's own cell (dist=0) so a player can
-            // drop a grenade at their feet if they really want to. Max
-            // bound: rangeCells. Dropping on self = Engaged = full blast
-            // to self, which is intentionally brutal.
-            if (dist <= rangeCells) {
-              ctx.fillStyle = 'rgba(239,159,39,0.22)'
-              ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
-              ctx.strokeStyle = 'rgba(239,159,39,0.55)'
-              ctx.lineWidth = 1
-              ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+        const tzKey = `${throwerTok.grid_x},${throwerTok.grid_y}:${rangeCells}:${s.grid_cols}x${s.grid_rows}`
+        if (throwZoneCacheRef.current?.key !== tzKey) {
+          const cells: Array<{gx: number; gy: number}> = []
+          for (let gx = 0; gx < s.grid_cols; gx++) {
+            for (let gy = 0; gy < s.grid_rows; gy++) {
+              const dist = Math.max(Math.abs(gx - throwerTok.grid_x), Math.abs(gy - throwerTok.grid_y))
+              // Include the thrower's own cell (dist=0) so a player can
+              // drop a grenade at their feet if they really want to. Max
+              // bound: rangeCells. Dropping on self = Engaged = full blast
+              // to self, which is intentionally brutal.
+              if (dist <= rangeCells) cells.push({ gx, gy })
             }
           }
+          throwZoneCacheRef.current = { key: tzKey, cells }
+        }
+        for (const { gx, gy } of throwZoneCacheRef.current!.cells) {
+          ctx.fillStyle = 'rgba(239,159,39,0.22)'
+          ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+          ctx.strokeStyle = 'rgba(239,159,39,0.55)'
+          ctx.lineWidth = 1
+          ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
         }
 
         // Blast preview — when the weapon has Blast Radius, paint
@@ -1130,17 +1150,26 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             // damaging. Drop the Far/25% faint shading from the preview.
             const engagedCells = Math.max(1, Math.round(5 / ft))
             const closeCells = Math.max(1, Math.round(30 / ft))
-            for (let gx = 0; gx < s.grid_cols; gx++) {
-              for (let gy = 0; gy < s.grid_rows; gy++) {
-                const d = Math.max(Math.abs(gx - hov.gx), Math.abs(gy - hov.gy))
-                let fill: string | null = null
-                if (d <= engagedCells) fill = 'rgba(192,57,43,0.45)'      // red — full damage
-                else if (d <= closeCells) fill = 'rgba(239,159,39,0.32)'  // amber — 50%
-                if (fill) {
-                  ctx.fillStyle = fill
-                  ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+            const bzKey = `${hov.gx},${hov.gy}:${engagedCells}:${closeCells}:${s.grid_cols}x${s.grid_rows}`
+            if (blastZoneCacheRef.current?.key !== bzKey) {
+              const engCells: Array<{gx: number; gy: number}> = []
+              const clCells: Array<{gx: number; gy: number}> = []
+              for (let gx = 0; gx < s.grid_cols; gx++) {
+                for (let gy = 0; gy < s.grid_rows; gy++) {
+                  const d = Math.max(Math.abs(gx - hov.gx), Math.abs(gy - hov.gy))
+                  if (d <= engagedCells) engCells.push({ gx, gy })
+                  else if (d <= closeCells) clCells.push({ gx, gy })
                 }
               }
+              blastZoneCacheRef.current = { key: bzKey, engCells, clCells }
+            }
+            ctx.fillStyle = 'rgba(192,57,43,0.45)'  // red — full damage
+            for (const { gx, gy } of blastZoneCacheRef.current!.engCells) {
+              ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+            }
+            ctx.fillStyle = 'rgba(239,159,39,0.32)'  // amber — 50%
+            for (const { gx, gy } of blastZoneCacheRef.current!.clCells) {
+              ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
             }
             // Outline the impact cell brightly so the player can read it
             // through all the band shading.
@@ -1321,43 +1350,53 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
         return false
       }
-      const visible = new Set<string>()
-      // Vision sweep only runs if the scene has authored blockers
-      // (walls / closed doors / closed windows / wall-tagged tokens).
-      // On a no-blocker scene — building drawn into the background
-      // image, no segments authored — day-mode unbounded sight would
-      // mark every cell visible, defeating both painted fog and the
-      // auto-fog blanket below. Skipping the sweep here means
-      // `visible` stays empty, painted fog renders absolute, and
-      // auto-fog is gated off (see below). Once the GM authors any
-      // walls/doors/windows, vision becomes meaningful and both
-      // painted fog and auto-fog become LoS-driven.
       const isDay = (s.lighting_mode ?? 'day') === 'day'
       const dayRadius = Math.max(s.grid_cols, s.grid_rows)
-      if (hasBlockers) {
-        for (const tok of pcVisionTokens) {
-          const gw = tok.grid_w ?? 1
-          const gh = tok.grid_h ?? 1
-          // Per-token override (column added in
-          // sql/scene-tokens-sight-radius.sql); falls back to the
-          // default constant for legacy rows.
-          const r = isDay ? dayRadius : (tok.sight_radius_cells ?? VISION_RADIUS_CELLS)
-          for (let fx = 0; fx < gw; fx++) {
-            for (let fy = 0; fy < gh; fy++) {
-              const ox = tok.grid_x + fx
-              const oy = tok.grid_y + fy
-              for (let dx = -r; dx <= r; dx++) {
-                for (let dy = -r; dy <= r; dy++) {
-                  if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
-                  const tx = ox + dx
-                  const ty = oy + dy
-                  if (losBlocked(ox, oy, tx, ty)) continue
-                  visible.add(`${tx},${ty}`)
+      const visKey = `${isDay}:${dayRadius}:`
+        + pcVisionTokens.map((t: Token) => `${t.grid_x},${t.grid_y},${t.sight_radius_cells ?? ''},${t.grid_w ?? 1},${t.grid_h ?? 1}`).join('|')
+        + ':' + visionSegs.map((seg: WallSegment) => `${seg.x1},${seg.y1},${seg.x2},${seg.y2}`).join('|')
+        + ':' + [...cellBlockers].sort().join('|')
+      let visible: Set<string>
+      if (fogVisibleCacheRef.current?.key === visKey) {
+        visible = fogVisibleCacheRef.current.visible
+      } else {
+        visible = new Set<string>()
+        // Vision sweep only runs if the scene has authored blockers
+        // (walls / closed doors / closed windows / wall-tagged tokens).
+        // On a no-blocker scene — building drawn into the background
+        // image, no segments authored — day-mode unbounded sight would
+        // mark every cell visible, defeating both painted fog and the
+        // auto-fog blanket below. Skipping the sweep here means
+        // `visible` stays empty, painted fog renders absolute, and
+        // auto-fog is gated off (see below). Once the GM authors any
+        // walls/doors/windows, vision becomes meaningful and both
+        // painted fog and auto-fog become LoS-driven.
+        if (hasBlockers) {
+          for (const tok of pcVisionTokens) {
+            const gw = tok.grid_w ?? 1
+            const gh = tok.grid_h ?? 1
+            // Per-token override (column added in
+            // sql/scene-tokens-sight-radius.sql); falls back to the
+            // default constant for legacy rows.
+            const r = isDay ? dayRadius : (tok.sight_radius_cells ?? VISION_RADIUS_CELLS)
+            for (let fx = 0; fx < gw; fx++) {
+              for (let fy = 0; fy < gh; fy++) {
+                const ox = tok.grid_x + fx
+                const oy = tok.grid_y + fy
+                for (let dx = -r; dx <= r; dx++) {
+                  for (let dy = -r; dy <= r; dy++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
+                    const tx = ox + dx
+                    const ty = oy + dy
+                    if (losBlocked(ox, oy, tx, ty)) continue
+                    visible.add(`${tx},${ty}`)
+                  }
                 }
               }
             }
           }
         }
+        fogVisibleCacheRef.current = { key: visKey, visible }
       }
       const effective: Record<string, boolean> = {}
       // GM-painted fog: defeasible by PC LoS *when* the scene has
