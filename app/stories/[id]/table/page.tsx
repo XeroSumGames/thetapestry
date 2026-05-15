@@ -432,6 +432,13 @@ export default function TablePage() {
   // AFTER saveRollToLog so the malfunction row's created_at follows
   // the attack row's. Mirrors pendingWoundInfectionRef.
   const pendingJamLogRef = useRef<string | null>(null)
+  // Tracks which character_states / campaign_npc rows we've already
+  // auto-opened a Lasting Damage Check modal for in this session.
+  // Without this, every loadEntries refresh would re-fire the modal
+  // for the same pending row (the DB flag stays true until the roll
+  // resolves), spamming the UI. Cleared on page navigation away (the
+  // ref dies with the component).
+  const firedLastingChecksRef = useRef<Set<string>>(new Set())
   useEffect(() => {
     // Reset on combatActive flipping true. False→false transitions
     // (e.g. parent state churn) don't fire because the dep only
@@ -997,7 +1004,17 @@ export default function TablePage() {
         // undefined.
         death_countdown: s.death_countdown ?? null,
         incap_rounds: s.incap_rounds ?? null,
-      },
+        // Infection fields - surfaced so the pending-Lasting-Damage
+        // auto-open useEffect can detect rows that need a check rolled,
+        // and so CharacterCard's existing infection_state branches
+        // hydrate on fresh page loads (previously they only got these
+        // fields when an executeRoll branch wrote them mid-session).
+        infection_state: s.infection_state ?? null,
+        infection_days_left: s.infection_days_left ?? null,
+        infection_lasting_risk: !!s.infection_lasting_risk,
+        infection_severity: s.infection_severity ?? null,
+        infection_pending_lasting_check: !!s.infection_pending_lasting_check,
+      } as any,
     }))
 
     if (!isLatest()) return
@@ -3487,6 +3504,45 @@ export default function TablePage() {
   const [socialCmod, setSocialCmod] = useState<{ npcName: string; cmod: number } | null>(null)
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
   useEffect(() => { campaignNpcsRef.current = campaignNpcs as any }, [campaignNpcs])
+
+  // Auto-open the Lasting Damage Check modal for any character with
+  // infection_pending_lasting_check=true on their row. The drainer sets
+  // this flag when an infection's days_left hits 0 with severity='check',
+  // alongside firing the realtime broadcast. Broadcast = fast path
+  // (modal opens within seconds on live tabs); this effect = durability
+  // path (modal opens on next page load even if the broadcast was
+  // missed - closed tab, stale bundle, websocket dropped).
+  //
+  // Gating:
+  //   PC row  -> only the owning user opens it.
+  //   NPC row -> only GM-likes open it.
+  //   firedLastingChecksRef dedups per-session so loadEntries refreshes
+  //     don't re-pop a modal that's already up. The DB flag clears in
+  //     executeRoll's Lasting Damage Check branch on resolve.
+  useEffect(() => {
+    if (pendingRoll) return       // one modal at a time
+    if (!userId) return
+    for (const e of entries) {
+      const ls: any = e.liveState
+      if (!ls?.infection_pending_lasting_check) continue
+      if (e.userId !== userId) continue
+      if (firedLastingChecksRef.current.has(e.stateId)) continue
+      firedLastingChecksRef.current.add(e.stateId)
+      const phyAmod = e.character.data?.rapid?.PHY ?? 0
+      handleRollRequest(`${e.character.name} - Lasting Damage Check`, phyAmod, 0)
+      return
+    }
+    if (!gmLike) return
+    for (const n of campaignNpcs as any[]) {
+      if (!n.infection_pending_lasting_check) continue
+      if (firedLastingChecksRef.current.has(n.id)) continue
+      firedLastingChecksRef.current.add(n.id)
+      const phyAmod = n.physicality ?? 0
+      handleRollRequest(`${n.name} - Lasting Damage Check`, phyAmod, 0)
+      return
+    }
+  }, [entries, campaignNpcs, userId, gmLike, pendingRoll])
+
   const [revealedNpcs, setRevealedNpcs] = useState<any[]>([])
   const revealedNpcIds = useMemo(() => new Set<string>(revealedNpcs.map((n: any) => n.id)), [revealedNpcs])
   const npcRosterInitiativeNpcIds = useMemo(
@@ -5991,11 +6047,23 @@ export default function TablePage() {
         }
         // NPCs: schema has no lastingWounds field today; log only.
         lastingDamageResult = `${ldPatientName} suffers a Lasting Wound: ${wound.name} [2d6=${ldSum}] (${wound.effect})`
-        // Suppress the unused variable warning - ldName was the original
-        // greedy match attempt before we settled on split(' - ')[0].
-        void ldName
-        void ldTargetNpc
       }
+      // Clear the persistent pending flag now that the check resolved.
+      // The auto-open useEffect's firedLastingChecksRef will also drop
+      // this id when entries refresh - the DB write is the source of
+      // truth, the ref is just per-session dedup.
+      if (ldTargetEntry) {
+        await supabase.from('character_states').update({ infection_pending_lasting_check: false }).eq('id', ldTargetEntry.stateId)
+        setEntries(prev => prev.map(e => e.stateId === ldTargetEntry.stateId
+          ? { ...e, liveState: { ...e.liveState, infection_pending_lasting_check: false } as any }
+          : e))
+      } else if (ldTargetNpc) {
+        await supabase.from('campaign_npcs').update({ infection_pending_lasting_check: false }).eq('id', ldTargetNpc.id)
+        setCampaignNpcs(prev => prev.map(n => n.id === ldTargetNpc.id ? { ...n, infection_pending_lasting_check: false } : n))
+      }
+      // Suppress unused-var warnings (ldName was a leftover from an
+      // earlier regex attempt).
+      void ldName
     }
 
     // Treat Infection result - medic's Medicine* check on a sick patient.

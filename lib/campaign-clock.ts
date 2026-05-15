@@ -480,9 +480,21 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
       await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clear).eq('id', row.id)
       outcomes.push({ name, kind, severity, daysLeft: 0, triggered: true, wound: { roll: sum, name: wound.name, effect: wound.effect } })
     } else if (severity === 'check') {
-      // PHY check required. Broadcast to PC owner (or queue on GM for NPC).
-      // The infection resolution path's PHY AMod is read from the PC's
-      // rapid.PHY at modal-roll time; we just need to fire the request.
+      // PHY check required. Two delivery paths, used together:
+      //
+      //   1. Broadcast `lasting_damage_check_request` for live-tab
+      //      delivery. The PC owner's table tab (or GM tab for NPCs)
+      //      opens the roll modal immediately. PHY AMod is read from
+      //      the listener side.
+      //   2. Set infection_pending_lasting_check=true on the row so
+      //      tabs that were CLOSED, stale-bundle, or backgrounded at
+      //      drain time pick the check up on next page load /
+      //      loadEntries cycle. Belt-and-suspenders against the
+      //      "broadcast has no replay" gap that bit Cree at 22:46 UTC.
+      //
+      // The pending flag is cleared by executeRoll's Lasting Damage
+      // Check branch when the modal resolves; until then it sits and
+      // re-opens the modal on every reload until someone rolls it.
       const targetUserId = isPc ? row.characters?.user_id : null
       const ch = supabase.channel(`initiative_${campaignId}`)
       try {
@@ -502,7 +514,9 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
       } finally {
         await supabase.removeChannel(ch)
       }
-      await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clear).eq('id', row.id)
+      // Clear the sick period AND raise the persistent pending flag.
+      const clearAndFlag = { ...clear, infection_pending_lasting_check: true }
+      await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clearAndFlag).eq('id', row.id)
       outcomes.push({ name, kind, severity, daysLeft: 0, triggered: true })
     } else {
       // No severity recorded (legacy data). Just clear state.
