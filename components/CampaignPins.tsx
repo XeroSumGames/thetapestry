@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
@@ -136,10 +136,33 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       console.error('[CampaignPins.handleDrop] update errors:', errors)
       alert(`Couldn't save the new order: ${errors[0].message}`)
       setPins(previous)
+      return
     }
+    broadcastPinsChanged()
   }
 
-  useEffect(() => { loadPins(); loadScenes() }, [campaignId])
+  // Realtime sync — pins channel. Every CampaignPins instance for the
+  // same campaign (GM screen + each player's screen) subscribes to
+  // `campaign_pins_<campaignId>`. Mutations (reveal toggle, folder
+  // bulk reveal/hide, edit save, delete, reorder) broadcast a
+  // `pins_changed` event; everyone refetches. Broadcast > postgres_
+  // changes because the latter is flaky on RLS'd tables (see lessons
+  // memo entry 2026-04-11 about npc_relationships).
+  const pinsChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  function broadcastPinsChanged() {
+    pinsChannelRef.current?.send({ type: 'broadcast', event: 'pins_changed', payload: {} })
+  }
+  useEffect(() => {
+    loadPins(); loadScenes()
+    const ch = supabase.channel(`campaign_pins_${campaignId}`)
+    ch.on('broadcast', { event: 'pins_changed' }, () => { void loadPins() })
+    ch.subscribe()
+    pinsChannelRef.current = ch
+    return () => {
+      supabase.removeChannel(ch)
+      pinsChannelRef.current = null
+    }
+  }, [campaignId])
 
   // ── Folder helpers — mirror NpcRoster ──────────────────────────────
   function toggleFolder(folderName: string) {
@@ -176,6 +199,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       setPins(previous)
       return
     }
+    broadcastPinsChanged()
     if (revealed) {
       const hiddenIds = inFolder.filter(p => !p.revealed).map(p => p.id)
       if (hiddenIds.length > 0) {
@@ -192,6 +216,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   async function toggleReveal(pin: CampaignPin) {
     await supabase.from('campaign_pins').update({ revealed: !pin.revealed }).eq('id', pin.id)
     setPins(prev => prev.map(p => p.id === pin.id ? { ...p, revealed: !p.revealed } : p))
+    broadcastPinsChanged()
     if (!pin.revealed) {
       // Only log on the reveal-direction; un-reveal isn't worth tracking.
       void logEvent('pin_revealed', { pin_id: pin.id, campaign_id: campaignId, bulk: false })
@@ -202,6 +227,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     const hidden = pins.filter(p => !p.revealed)
     await supabase.from('campaign_pins').update({ revealed: true }).eq('campaign_id', campaignId)
     setPins(prev => prev.map(p => ({ ...p, revealed: true })))
+    broadcastPinsChanged()
     if (hidden.length > 0) {
       void logEvent('pin_revealed', { campaign_id: campaignId, bulk: true, count: hidden.length })
     }
@@ -210,6 +236,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   async function hideAll() {
     await supabase.from('campaign_pins').update({ revealed: false }).eq('campaign_id', campaignId)
     setPins(prev => prev.map(p => ({ ...p, revealed: false })))
+    broadcastPinsChanged()
   }
 
   function startEdit(pin: CampaignPin) {
@@ -276,12 +303,14 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       })
     })
     setEditingId(null)
+    broadcastPinsChanged()
   }
 
   async function deletePin(id: string) {
     if (!confirm('Delete this pin?')) return
     await supabase.from('campaign_pins').delete().eq('id', id)
     setPins(prev => prev.filter(p => p.id !== id))
+    broadcastPinsChanged()
   }
 
   async function promoteToWorld(pin: CampaignPin) {
