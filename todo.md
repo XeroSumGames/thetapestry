@@ -6,7 +6,7 @@ Last updated: 2026-04-11
 ## 🚧 In Flight — Pick Up Here
 
 - [x] **APPLIED 2026-05-15: `sql/initiative-order-rls-members-write.sql` + `sql/initiative-order-rls-tighten-2026-05.sql`** — initiative_order RLS now has explicit per-cmd member policies (SELECT/INSERT/UPDATE) + GM-only DELETE + thriver bypass. Legacy "Anyone authenticated can manage" policy dropped. Verified via `pg_policies` query. Nana 2-attack repro should now advance initiative correctly. `decrementInitiativeAction` already has defensive silent-RLS detection (lib/initiative-actions.ts:99-101) that returns `'silent RLS fail (0 rows)'` if the issue recurs.
-- [ ] **APPLY `sql/player-notes-session-tag.sql`** — adds `session_number` column + BEFORE INSERT trigger so player notes only append to the session summary they were written in. Code in `page.tsx` end-session fetch already filters `.eq('session_number', sessionCount)`. Migration needs to be run in Supabase before the feature works end-to-end.
+- [x] **APPLIED 2026-05-15: `sql/player-notes-session-tag.sql`** — `session_number` int column added + `player_notes_stamp_session` BEFORE INSERT trigger live. Index `player_notes_session_idx` created. PostgREST schema reloaded. Verified via information_schema + pg_trigger queries. End-Session now only auto-appends notes from the session being closed.
 - [ ] On the **old machine only**, `tasks/testplan.md` got overwritten locally by content from a different project (`C:\theTableau` — dashboard tabs / star map). That change was never committed. The home-machine checkout will have the last-committed Tapestry test plan (region filter buttons) — not a concern for pickup, but don't accidentally resurrect the wrong content.
 
 ---
