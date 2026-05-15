@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
+import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import StoryActionBar from '../../../components/StoryActionBar'
 
 interface Campaign {
@@ -73,6 +74,7 @@ export default function CampaignPage() {
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
+  const [isThriver, setIsThriver] = useState(false)
   // Module publish + subscriber-update state moved to StoryActionBar
   // alongside the action buttons that consume it. Hub keeps only the
   // state it actually renders (members, kicked-rejoin, pregens).
@@ -86,6 +88,16 @@ export default function CampaignPage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
+
+      // Thriver lookup — drives gmLike for godmode UI. Thrivers visiting
+      // a campaign they don't GM still see the GM-side hub (no Rejoin /
+      // Leave / My Survivor cards, full member-management controls).
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+      setIsThriver(roleIsThriver(profile))
 
       const mems = await fetchMembersWithProfiles(supabase, id)
       setMembers(mems)
@@ -176,15 +188,17 @@ export default function CampaignPage() {
     router.push('/stories')
   }
 
-  // GM-only: cull a member from the campaign. Deletes their
+  // GM-or-Thriver: cull a member from the campaign. Deletes their
   // campaign_members row + clears any character_states they own in
   // this campaign so a future re-join lands them clean. Confirms by
   // username so a misclick on the wrong row can't silently nuke
   // someone. Their character itself is preserved — only their seat
-  // at this table is removed.
+  // at this table is removed. Thriver godmode bypasses the GM check
+  // (DB RLS already widened to admit them).
   async function handleRemoveMember(member: Member) {
     if (!userId || !campaign) return
-    if (campaign.gm_user_id !== userId) return
+    const isGm = campaign.gm_user_id === userId
+    if (!isGm && !isThriver) return
     if (member.user_id === campaign.gm_user_id) return  // can't remove the GM
     const name = (member.profiles as any)?.username ?? 'this player'
     if (!confirm(`Remove ${name} from this campaign?\n\nTheir character is preserved but they lose their seat at the table.`)) return
@@ -248,6 +262,10 @@ export default function CampaignPage() {
   )
 
   const isGM = campaign.gm_user_id === userId
+  // gmLike = isGM || isThriver. Thrivers visiting a campaign they don't
+  // GM see the GM-side hub (no Rejoin/Leave/My Survivor cards) and get
+  // member-management controls via godmode RLS.
+  const gmLike = isGM || isThriver
   const inviteLink = typeof window !== 'undefined' ? `${window.location.origin}/join/${campaign.invite_code}` : ''
 
   return (
@@ -256,7 +274,7 @@ export default function CampaignPage() {
       {/* Kicked banner above the action bar so the explanation reads
           before the Rejoin button. The banner-then-buttons order also
           keeps the action row visually unbroken. Player-only. */}
-      {!isGM && amKicked && (
+      {!gmLike && amKicked && (
         <div style={{ background: '#2a1210', border: '1px solid #c0392b', borderRadius: '4px', padding: '12px 14px', marginBottom: '12px', color: '#f5a89a', fontSize: '13px', lineHeight: 1.5 }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>Removed from Session</div>
           You were removed from this session by the GM. Click <b>Rejoin Session</b> below to return to the game.
@@ -268,7 +286,7 @@ export default function CampaignPage() {
           bar (full 7 buttons for GM, slim Launch/Share for player +
           inline Rejoin/Leave via extraButtons so all player actions
           sit on a single row). */}
-      <StoryActionBar campaignId={id} extraButtons={!isGM ? (
+      <StoryActionBar campaignId={id} extraButtons={!gmLike ? (
         <>
           {amKicked && (
             <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
@@ -298,8 +316,8 @@ export default function CampaignPage() {
         </div>
       </div>
 
-      {/* My Survivor — player only */}
-      {!isGM && (
+      {/* My Survivor — player only (Thriver godmode also hides this) */}
+      {!gmLike && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
             My Survivor
@@ -404,9 +422,11 @@ export default function CampaignPage() {
                         💬 Message
                       </a>
                     )}
-                    {/* GM-only Remove. Hidden for the GM's own row to
-                        prevent self-removal — a campaign needs a GM. */}
-                    {userId === campaign.gm_user_id && !isThisGM && (
+                    {/* GM-or-Thriver Remove. Hidden for the GM's own
+                        row to prevent self-removal — a campaign needs
+                        a GM. Thrivers can remove members on any
+                        campaign via godmode. */}
+                    {gmLike && !isThisGM && (
                       <button onClick={() => handleRemoveMember(m)} title={`Remove ${(m.profiles as any)?.username ?? 'player'} from the campaign`}
                         style={{ padding: '3px 8px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.4 }}>
                         Remove
