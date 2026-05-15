@@ -122,9 +122,9 @@
 
 ---
 
-## 🔲 Flagged 2026-05-13 — Loot "found nothing" write path (partial)
+## ✅ Shipped 2026-05-14 — Loot "found nothing" write path FULLY CLOSED
 
-- [ ] **Loot: "found nothing" write for `CampaignObjects.tsx`** - auto-loot + `ObjectCard` player search now write the row (commit `ec5d844`). `CampaignObjects.tsx` (campaign sidebar loot UI) still silently skips empty containers. Needs same `onSearchEmpty`-style callback added there.
+- [x] **Loot: "found nothing" write for `CampaignObjects.tsx`** — **SHIPPED 2026-05-14** (`6abb46b`). Empty destroyed containers in the campaign sidebar now show a "Search" affordance ([components/CampaignObjects.tsx:515](../components/CampaignObjects.tsx:515)); confirming opens the loot modal in empty mode ([components/CampaignObjects.tsx:601](../components/CampaignObjects.tsx:601)-637) which writes a roll_log row with the standard "looked through the remains of X and found nothing" label format. Closes the 2026-05-13 flag (audit residue: todo line claimed it was still silent; verified 2026-05-15 it shipped). The full empty-loot row write path is now in: auto-loot, ObjectCard player search, and CampaignObjects sidebar.
 
 ---
 

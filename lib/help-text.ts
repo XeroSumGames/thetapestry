@@ -93,8 +93,3 @@ export const LASTING_WOUND_DESCRIPTION =
   'When a PC drops to 0 Wound Points (mortally wounded), they roll a Physicality Check (2d6 + PHY). ' +
   'On failure, they roll Table 12 — Lasting Wound — for a permanent stat penalty. Cannot be healed.'
 
-// ── Insight Dice ────────────────────────────────────────────────────
-export const INSIGHT_DICE_DESCRIPTION =
-  'Insight Dice are awarded on Wild Success / Dire Failure rolls. ' +
-  'Spend 1 before a roll for either a +3 CMod boost OR to roll 3d6 keeping all three faces. ' +
-  'Spend 1 after a roll to reroll a single die. Capped at 10 per character.'
