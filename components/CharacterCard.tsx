@@ -711,9 +711,9 @@ function CharacterCardImpl({
                       <div key={i} style={{ width: '10px', height: '16px', borderRadius: '2px', background: i < localState.insight_dice ? '#7fc458' : '#242424', border: `1px solid ${i < localState.insight_dice ? '#7fc458' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
                     ))}
                   </div>
-                  <button disabled={!canEdit || localState.insight_dice >= 10}
-                    onClick={() => canEdit && localState.insight_dice < 10 && updateStat(localState.id, 'insight_dice', localState.insight_dice + 1)}
-                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.insight_dice < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.insight_dice < 10 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
+                  <button disabled={!canEdit}
+                    onClick={() => canEdit && updateStat(localState.id, 'insight_dice', localState.insight_dice + 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
                 </div>
               </div>
               {/* CDP bar — 10 blocks */}
