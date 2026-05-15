@@ -1,5 +1,27 @@
 # Lessons Learned
 
+## ALWAYS VERIFY. NEVER GO FROM MEMORY.
+
+**If Einstein didn't trust memory, why would we?** (locked 2026-05-17)
+
+Before ANY factual claim about code, canon, shipped state, scope, or past work — run the actual check. Grep, Read, git log, supabase db query. Memory is hypothesis, not assertion.
+
+- "I think X is at line Y" → grep first, then state the line.
+- "That feature shipped" → git log -i --grep first, then cite the SHA.
+- "The column already exists" → query information_schema, then say so.
+- "Yes that's done" → run the audit, then answer.
+- "I just touched this so I know" → no, you don't. Re-check.
+
+When the user asks "are you sure?" that is the signal to verify, not to repeat the claim with more confidence. Confidence is not evidence.
+
+Failure modes this prevents: citing renamed functions, fixing bugs at lines that no longer exist, telling the user something shipped when it didn't, re-implementing features that already exist, missing scope in a sweep because "I think that's all the call sites."
+
+The cost of a 5-second grep is nothing. The cost of an unverified claim is trust.
+
+Full version + how-to-apply: `memory/feedback_accuracy_over_confidence.md`.
+
+---
+
 ## Worktree hygiene
 - **Edit/Write/Read paths must point at the worktree, not the main checkout**: when working inside `.claude/worktrees/<name>`, every Edit/Write call needs the full worktree absolute path (`C:\TheTapestry\.claude\worktrees\<name>\...`), not `C:\TheTapestry\...`. The Edit tool will silently land changes in the main checkout otherwise. Read is mostly safe (the files match at clean state) but writes are dangerous because they mix new work into the main checkout's uncommitted state (CRB rewrite, etc.). Symptom: `git add` from the worktree finds "nothing to commit" right after a successful Edit. Recovery: `cp <main-path> <worktree-path>` to move the edits over, then `git -C /c/TheTapestry checkout -- <path>` to revert the main checkout. **Common source of the footgun: subagent reports cite main-checkout paths** (Agents don't know about your worktree); re-prefix every Edit target to the worktree before applying. Cost: hit twice on 2026-05-12 (skill-tooltips ~5min; log-template audit ~3min via this exact route).
 
