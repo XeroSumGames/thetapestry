@@ -11,6 +11,7 @@
 
 import { createClient } from './supabase-browser'
 import { normalizeRations } from './xse-schema'
+import { OUTCOME } from './roll-outcomes'
 
 export interface ClockState {
   canon_day: number
@@ -271,7 +272,7 @@ async function drainRationsConsumption(campaignId: string, prevCanonDay: number,
     character_name: 'System',
     label: `🍞 Rations consumed (${dayDelta}d): ${summaryParts.join(', ')}`,
     die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-    outcome: 'rations',
+    outcome: OUTCOME.rations,
   })
 }
 
@@ -379,7 +380,7 @@ async function drainSubsistenceDamage(campaignId: string, prevCanonDay: number, 
     character_name: 'System',
     label: `🪦 Subsistence damage: ${summaryParts.join(', ')}`,
     die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-    outcome: 'subsistence',
+    outcome: OUTCOME.subsistence,
   })
 }
 
@@ -454,7 +455,7 @@ async function drainPendingHeals(campaignId: string, clock: ClockState): Promise
     character_name: 'System',
     label: `🩹 Treatment applied: ${summaryParts.join(', ')}`,
     die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-    outcome: 'pending_heal',
+    outcome: OUTCOME.pending_heal,
   })
 }
 

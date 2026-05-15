@@ -53,6 +53,7 @@ import { generateRandomNpc } from '../../../../lib/npc-generator'
 import { triangleBreakdown } from '../../../../lib/populate-triangle'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
+import { OUTCOME } from '../../../../lib/roll-outcomes'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
@@ -1835,11 +1836,11 @@ export default function TablePage() {
           supabase.from('initiative_order').insert(dropInsertRows).select(),
           supabase.from('roll_log').insert([
             { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.combat_start,
               damage_json: { combatants } as any, created_at: new Date(now).toISOString() },
             { campaign_id: id, user_id: userId, character_name: 'System',
               label: `⚡ ${dropCharacter} Gets the Drop!`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'drop',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.drop,
               created_at: new Date(now + 1).toISOString() },
           ]),
         ])
@@ -1873,10 +1874,10 @@ export default function TablePage() {
         supabase.from('initiative_order').insert(toInsert).select(),
         supabase.from('roll_log').insert([
           { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.combat_start,
             damage_json: { combatants } as any, created_at: new Date(now).toISOString() },
           { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.initiative,
             damage_json: { initiative: sorted } as any, created_at: new Date(now + 1).toISOString() },
         ]),
       ])
@@ -1961,7 +1962,7 @@ export default function TablePage() {
       // Log Initiative
       await supabase.from('roll_log').insert({
         campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.initiative,
         damage_json: { initiative: sortedReroll } as any,
       })
 
@@ -2096,7 +2097,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `💀 ${e.character.name} is gone.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.death,
             })
             if (e.character?.id) void appendProgressionLog(e.character.id, 'wound', '💀 Died.')
           }
@@ -2121,7 +2122,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Coming around',
               label: `${e.character.name} has regained consciousness.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'revive',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.revive,
             })
           }
         }
@@ -2153,7 +2154,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `💀 ${npc.name} is gone.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.death,
             })
           }
         }
@@ -2173,7 +2174,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Coming around',
               label: `${npc.name} has regained consciousness.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'revive',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.revive,
             })
           }
         }
@@ -2216,7 +2217,7 @@ export default function TablePage() {
       const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
       const newRoundLogInsert = supabase.from('roll_log').insert({
         campaign_id: id, user_id: userId, character_name: 'System', label: 'New Round - Initiative',
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.initiative,
         damage_json: { initiative: sortedReroll } as any,
       })
       const deathLogInsert = deathLogRows.length > 0
@@ -2353,7 +2354,7 @@ export default function TablePage() {
         character_name: entry.character_name,
         label: actionLabel,
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-        outcome: 'action',
+        outcome: OUTCOME.action,
       })
       if (actionLogErr) console.error('[consumeAction] action log insert error:', actionLogErr.message)
     }
@@ -2440,7 +2441,7 @@ export default function TablePage() {
     const { error: endLogErr } = await supabase.from('roll_log').insert({
       campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended',
       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-      outcome: 'combat_end',
+      outcome: OUTCOME.combat_end,
       damage_json: { combatants } as any,
     })
     if (endLogErr) console.error('[endCombat] roll_log insert error:', endLogErr.message)
@@ -3176,7 +3177,7 @@ export default function TablePage() {
     await supabase.from('roll_log').insert({
       campaign_id: id, user_id: userId, character_name: 'System',
       label: `↓ ${current.character_name} deferred their turn to after ${next.character_name}`,
-      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'defer',
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.defer,
     })
     await Promise.all([loadInitiative(id), rollsFeed.refetch()])
     // Always broadcast so other clients refresh whether or not the deferrer
@@ -3262,7 +3263,7 @@ export default function TablePage() {
             if (error) console.warn('[endSession] chat_messages delete failed:', error.message)
           }),
           combatActive ? Promise.all([
-            supabase.from('roll_log').insert({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' }),
+            supabase.from('roll_log').insert({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action }),
             supabase.from('initiative_order').delete().eq('campaign_id', id),
           ]) : Promise.resolve(),
         ])
@@ -3764,7 +3765,7 @@ export default function TablePage() {
       label: logLabel,
       die1, die2, amod, smod, cmod: cmods.total + bonusCmod,
       total,
-      outcome: 'recruit',
+      outcome: OUTCOME.recruit,
       damage_json: {
         rollOutcome: outcome,
         approach: recruitApproach,
@@ -4097,7 +4098,7 @@ export default function TablePage() {
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `😰 ${targetEntry.character.name} gains a Stress from being Mortally Wounded`,
-          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
         })
       }
     }
@@ -4831,7 +4832,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `${targetEntry.character.name} has fallen, mortally wounded by ${characterName}, and will die if not stabilized in ${update.death_countdown} rounds.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.death,
             })
             // Auto-log mortal wound to progression log
             const tCharData = targetEntry.character.data ?? {}
@@ -4865,14 +4866,14 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Lights Out',
               label: `${targetEntry.character.name} has been Incapacitated by ${characterName}.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'incap',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.incap,
             })
           }
           if (stressReason) {
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId, character_name: 'System',
               label: `😰 ${targetEntry.character.name} gains a Stress from being ${stressReason}`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
             })
           }
           const { error: csErr, data: csData } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId).select()
@@ -4918,7 +4919,7 @@ export default function TablePage() {
             campaign_id: id, user_id: userId,
             character_name: 'Death is in the air',
             label: `${targetNpc.name} has fallen, mortally wounded by ${characterName}, and will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.death,
           })
           // Kill log entry on the attacker's progression log (PCs only).
           if (myEntry?.character?.id) {
@@ -4932,7 +4933,7 @@ export default function TablePage() {
             campaign_id: id, user_id: userId,
             character_name: 'Lights Out',
             label: `${targetNpc.name} has been Incapacitated by ${characterName}.`,
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'incap',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.incap,
           })
         }
         const { error: npcUpdErr, data: npcUpdData } = await supabase
@@ -5073,7 +5074,7 @@ export default function TablePage() {
               pendingLootLogs.push({
                 campaign_id: id, user_id: userId, character_name: attackerEntry.character.name,
                 label: `🎒 ${attackerEntry.character.name} looted ${lootedNames.join(', ')} from ${targetObject.name}`,
-                die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
               })
               initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
               traitNotes.push(`Destroyed ${targetObject.name} - looted: ${lootedNames.join(', ')}`)
@@ -5096,7 +5097,7 @@ export default function TablePage() {
               pendingLootLogs.push({
                 campaign_id: id, user_id: userId, character_name: attackerNpc.name,
                 label: `🎒 ${attackerNpc.name} looted ${lootedNames.join(', ')} from ${targetObject.name}`,
-                die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
               })
               // Reflect the updated inventory in local state so the NPC card shows it without refetch
               setCampaignNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, inventory: newInv } : n))
@@ -5111,7 +5112,7 @@ export default function TablePage() {
             pendingLootLogs.push({
               campaign_id: id, user_id: userId, character_name: searcher,
               label: `🎒 ${searcher} looked through the remains of ${targetObject.name} and found nothing`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
             })
           }
         }
@@ -5262,7 +5263,7 @@ export default function TablePage() {
                 stressLogRows.push({
                   campaign_id: id, user_id: userId, character_name: 'System',
                   label: `😰 ${job.pc.character.name} gains a Stress from being ${splashStressReason}`,
-                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
                 })
               }
               blastTargets.push(`${job.pc.character.name} (${job.rangeBand}): ${job.splashWP} WP, ${job.splashRP} RP`)
@@ -5456,7 +5457,7 @@ export default function TablePage() {
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
                   label: `😰 ${myEntry.character.name} gains a Stress from being Mortally Wounded`,
-                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
                 })
               }
             }
@@ -5507,7 +5508,7 @@ export default function TablePage() {
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
                   label: `😰 ${myEntry.character.name} gains a Stress from being Mortally Wounded`,
-                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
                 })
               }
             }
@@ -5784,7 +5785,7 @@ export default function TablePage() {
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprints and looks winded`,
-          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.sprint,
           damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
       } else {
@@ -5792,7 +5793,7 @@ export default function TablePage() {
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprints and does not look winded`,
-          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.sprint,
           damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
       }
@@ -6103,7 +6104,7 @@ export default function TablePage() {
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId, character_name: 'System',
             label: `😰 ${targetEntry.character.name} gains a Stress from being ${rerollStressReason}`,
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
           })
         }
       } else if (targetNpcObj) {
@@ -6776,7 +6777,7 @@ export default function TablePage() {
                       await supabase.from('roll_log').insert({
                         campaign_id: id, user_id: userId, character_name: activeEntry.character_name,
                         label: `${activeEntry.character_name} released ${grappledTarget.character_name}`,
-                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action,
                       })
                       await loadInitiative(id)
                     }}
@@ -7783,7 +7784,7 @@ export default function TablePage() {
                     await supabase.from('roll_log').insert({
                       campaign_id: id, user_id: userId, character_name: 'System',
                       label: `🎒 ${characterName} looted ${item.name} from ${objectName}`,
-                      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
                     })
                     await Promise.all([loadEntries(id), rollsFeed.refetch()])
                   }}
@@ -7791,7 +7792,7 @@ export default function TablePage() {
                     await supabase.from('roll_log').insert({
                       campaign_id: id, user_id: userId, character_name: characterName,
                       label: `🎒 ${characterName} looked through the remains of ${objectName} and found nothing`,
-                      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
                     })
                     await rollsFeed.refetch()
                   }}
@@ -8357,7 +8358,7 @@ export default function TablePage() {
                       await supabase.from('roll_log').insert({
                         campaign_id: id, user_id: userId, character_name: 'System',
                         label: `🎒 ${characterName} looted ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} from ${objectName}`,
-                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
                       })
                       await Promise.all([loadEntries(id), rollsFeed.refetch()])
                     }}
@@ -9209,7 +9210,7 @@ export default function TablePage() {
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
                   label: `🎒 Loot: ${itemList} → ${names}`,
-                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
                 })
                 initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
                 await Promise.all([loadEntries(id), rollsFeed.refetch()])
@@ -9453,7 +9454,7 @@ export default function TablePage() {
                     campaign_id: id, user_id: userId, character_name: 'System',
                     label: `⏳ Time advances ${hours}h · overencumbered: ${summaryParts.join(', ')}`,
                     die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-                    outcome: 'encumbrance',
+                    outcome: OUTCOME.encumbrance,
                   })
 
                   // Optimistic local patch + broadcast so other clients
@@ -9545,7 +9546,7 @@ export default function TablePage() {
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
                   label: `📚 +${cdpAmount} ${cdpNoun} awarded to ${names.join(', ')}`,
-                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'cdp',
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.cdp,
                 })
                 initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
                 await Promise.all([loadEntries(id), rollsFeed.refetch()])
@@ -10314,7 +10315,7 @@ export default function TablePage() {
             campaign_id: id, user_id: userId, character_name: active.character_name,
             label: `${active.character_name} - Grapple ${targetEntry.character_name}${insightSpent ? (insightMode === '3d6' ? ' (3d6 Insight)' : ' (+3 CMod Insight)') : ''}`,
             die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aUnarmed, cmod: totalCmod,
-            total: aTotal, outcome: result === 'grappled' ? 'Grappled!' : result === 'failed' ? 'Failed - 1 RP' : 'No clear victor',
+            total: aTotal, outcome: result === 'grappled' ? OUTCOME.Grappled : result === 'failed' ? OUTCOME.GrappleFailed : OUTCOME.GrappleNoVictor,
           })
 
           setGrappleResult({
@@ -11666,7 +11667,7 @@ export default function TablePage() {
                   die1: outcome.pcDie1, die2: outcome.pcDie2,
                   amod: pcAcuMod, smod: pcBarter, cmod: 0,
                   total: outcome.pcTotal,
-                  outcome: 'barter',
+                  outcome: OUTCOME.barter,
                 })
                 setTradeTarget(null)
               } catch (err: any) {

@@ -18,6 +18,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { advance, readClock, queueStreamingHeal, cancelEvent, type ClockState } from '../../lib/campaign-clock'
+import { OUTCOME } from '../../lib/roll-outcomes'
 import { exportSessionLog } from '../../lib/session-export'
 import { dayToCalendar, eventsOnDay, pastAndPresentEvents, hourTo12h } from '../../lib/distemper-timeline'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
@@ -149,7 +150,7 @@ export default function CampaignSheetPage() {
       character_name: p.name,
       label: `🍷 ${p.name} consumed a Luxury Ration - Stress drops by 1 (${p.stress} to ${newStress})`,
       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-      outcome: 'rations',
+      outcome: OUTCOME.rations,
     })
     await loadParty()
   }

@@ -13,6 +13,7 @@
 // the initiative state).
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { OUTCOME } from './roll-outcomes'
 
 export type DecrementResult = {
   ok: boolean
@@ -81,7 +82,7 @@ export async function decrementInitiativeAction(
         character_name: entry.character_name,
         label: args.actionLabel,
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-        outcome: 'action',
+        outcome: OUTCOME.action,
       })
     } catch { /* swallow */ }
   }

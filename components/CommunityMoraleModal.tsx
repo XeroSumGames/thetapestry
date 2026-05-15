@@ -25,6 +25,7 @@ import {
 } from '../lib/community-events'
 import type { Community, Member } from '../lib/types/community'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import { OUTCOME } from '../lib/roll-outcomes'
 
 // Phase C — Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
@@ -685,7 +686,7 @@ export default function CommunityMoraleModal({
         campaign_id: campaignId, user_id: userId,
         character_name: community.name, label: fedLabel,
         die1: fed.die1, die2: fed.die2, amod: fed.amod, smod: fed.smod, cmod: fed.cmod,
-        total: fed.total, outcome: 'fed_check',
+        total: fed.total, outcome: OUTCOME.fed_check,
         damage_json: {
           communityId: community.id,
           communityName: community.name,
@@ -699,7 +700,7 @@ export default function CommunityMoraleModal({
         campaign_id: campaignId, user_id: userId,
         character_name: community.name, label: clothedLabel,
         die1: clothed.die1, die2: clothed.die2, amod: clothed.amod, smod: clothed.smod, cmod: clothed.cmod,
-        total: clothed.total, outcome: 'clothed_check',
+        total: clothed.total, outcome: OUTCOME.clothed_check,
         damage_json: {
           communityId: community.id,
           communityName: community.name,
@@ -713,7 +714,7 @@ export default function CommunityMoraleModal({
         campaign_id: campaignId, user_id: userId,
         character_name: leaderName, label: moraleLabel,
         die1: morale.die1, die2: morale.die2, amod: morale.amod, smod: morale.smod, cmod: morale.cmod,
-        total: morale.total, outcome: 'morale_check',
+        total: morale.total, outcome: OUTCOME.morale_check,
         damage_json: {
           communityId: community.id,
           communityName: community.name,
@@ -749,7 +750,7 @@ export default function CommunityMoraleModal({
         character_name: leaderName, label: retLabel,
         die1: retention.die1, die2: retention.die2,
         amod: retention.amod, smod: retention.smod, cmod: retention.mood,
-        total: retention.total, outcome: 'retention_check',
+        total: retention.total, outcome: OUTCOME.retention_check,
         damage_json: {
           communityId: community.id,
           communityName: community.name,

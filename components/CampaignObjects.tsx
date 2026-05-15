@@ -7,6 +7,7 @@ import { EQUIPMENT } from '../lib/xse-schema'
 import ObjectImageCropper from './ObjectImageCropper'
 import { LABEL_STYLE_TIGHT, ModalBackdrop } from '../lib/style-helpers'
 import { defaultSpawnCell } from '../lib/tactical-spawn'
+import { OUTCOME } from '../lib/roll-outcomes'
 
 const OBJECT_ICONS = [
   { value: 'car', emoji: '🚗', label: 'Car' },
@@ -625,7 +626,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                         character_name: ce.character.name,
                         label: `🎒 ${ce.character.name} looked through the remains of ${lootingObj.name} and found nothing`,
                         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-                        outcome: 'loot',
+                        outcome: OUTCOME.loot,
                       })
                       setLootingObj(null)
                       setLootCharId('')

@@ -32,6 +32,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Community } from '../lib/types/community'
 import type { CampaignNpc } from './NpcRoster'
 import { ModalBackdrop, Z_INDEX, Button, LABEL_STYLE } from '../lib/style-helpers'
+import { OUTCOME } from '../lib/roll-outcomes'
 import { logEvent } from '../lib/events'
 
 type Approach = 'cohort' | 'conscript' | 'convert'
@@ -226,7 +227,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
       die1, die2,
       amod, smod, cmod: cmodTotal,
       total,
-      outcome: 'recruit',
+      outcome: OUTCOME.recruit,
       damage_json: {
         rollOutcome: outcome,
         approach,

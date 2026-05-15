@@ -32,6 +32,7 @@ import { SKILLS, type AttributeName, type SkillValue } from '../lib/xse-schema'
 import { ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../lib/cdp-costs'
 import { appendProgressionEntry } from '../lib/progression-log'
+import { OUTCOME } from '../lib/roll-outcomes'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 
@@ -338,7 +339,7 @@ export default function CharacterEvolution({
             user_id: user.id,
             character_name: targetLabel,
             label: `${targetLabel} — ${headline.replace(/^📈\s*/, '')}`,
-            outcome: 'evolution',
+            outcome: OUTCOME.evolution,
             damage_json: {
               kind: pending.kind,           // 'rapid' | 'skill'
               key: pending.key,             // attr name or skill name
