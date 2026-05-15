@@ -390,6 +390,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const throwZoneCacheRef = useRef<{ key: string; cells: Array<{gx: number; gy: number}> } | null>(null)
   // invalidated when hover cell, band radii, or grid size change; key checked inline in draw()
   const blastZoneCacheRef = useRef<{ key: string; engCells: Array<{gx: number; gy: number}>; clCells: Array<{gx: number; gy: number}> } | null>(null)
+  // invalidated when PC positions/sight, wall segments, cell blockers, or lighting mode change; key checked inline in draw()
+  const fogVisibleCacheRef = useRef<{ key: string; visible: Set<string> } | null>(null)
 
   // Keep refs in sync for canvas drawing
   useEffect(() => { tokensRef.current = tokens }, [tokens])
@@ -1348,43 +1350,53 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
         return false
       }
-      const visible = new Set<string>()
-      // Vision sweep only runs if the scene has authored blockers
-      // (walls / closed doors / closed windows / wall-tagged tokens).
-      // On a no-blocker scene — building drawn into the background
-      // image, no segments authored — day-mode unbounded sight would
-      // mark every cell visible, defeating both painted fog and the
-      // auto-fog blanket below. Skipping the sweep here means
-      // `visible` stays empty, painted fog renders absolute, and
-      // auto-fog is gated off (see below). Once the GM authors any
-      // walls/doors/windows, vision becomes meaningful and both
-      // painted fog and auto-fog become LoS-driven.
       const isDay = (s.lighting_mode ?? 'day') === 'day'
       const dayRadius = Math.max(s.grid_cols, s.grid_rows)
-      if (hasBlockers) {
-        for (const tok of pcVisionTokens) {
-          const gw = tok.grid_w ?? 1
-          const gh = tok.grid_h ?? 1
-          // Per-token override (column added in
-          // sql/scene-tokens-sight-radius.sql); falls back to the
-          // default constant for legacy rows.
-          const r = isDay ? dayRadius : (tok.sight_radius_cells ?? VISION_RADIUS_CELLS)
-          for (let fx = 0; fx < gw; fx++) {
-            for (let fy = 0; fy < gh; fy++) {
-              const ox = tok.grid_x + fx
-              const oy = tok.grid_y + fy
-              for (let dx = -r; dx <= r; dx++) {
-                for (let dy = -r; dy <= r; dy++) {
-                  if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
-                  const tx = ox + dx
-                  const ty = oy + dy
-                  if (losBlocked(ox, oy, tx, ty)) continue
-                  visible.add(`${tx},${ty}`)
+      const visKey = `${isDay}:${dayRadius}:`
+        + pcVisionTokens.map((t: Token) => `${t.grid_x},${t.grid_y},${t.sight_radius_cells ?? ''},${t.grid_w ?? 1},${t.grid_h ?? 1}`).join('|')
+        + ':' + visionSegs.map((seg: WallSegment) => `${seg.x1},${seg.y1},${seg.x2},${seg.y2}`).join('|')
+        + ':' + [...cellBlockers].sort().join('|')
+      let visible: Set<string>
+      if (fogVisibleCacheRef.current?.key === visKey) {
+        visible = fogVisibleCacheRef.current.visible
+      } else {
+        visible = new Set<string>()
+        // Vision sweep only runs if the scene has authored blockers
+        // (walls / closed doors / closed windows / wall-tagged tokens).
+        // On a no-blocker scene — building drawn into the background
+        // image, no segments authored — day-mode unbounded sight would
+        // mark every cell visible, defeating both painted fog and the
+        // auto-fog blanket below. Skipping the sweep here means
+        // `visible` stays empty, painted fog renders absolute, and
+        // auto-fog is gated off (see below). Once the GM authors any
+        // walls/doors/windows, vision becomes meaningful and both
+        // painted fog and auto-fog become LoS-driven.
+        if (hasBlockers) {
+          for (const tok of pcVisionTokens) {
+            const gw = tok.grid_w ?? 1
+            const gh = tok.grid_h ?? 1
+            // Per-token override (column added in
+            // sql/scene-tokens-sight-radius.sql); falls back to the
+            // default constant for legacy rows.
+            const r = isDay ? dayRadius : (tok.sight_radius_cells ?? VISION_RADIUS_CELLS)
+            for (let fx = 0; fx < gw; fx++) {
+              for (let fy = 0; fy < gh; fy++) {
+                const ox = tok.grid_x + fx
+                const oy = tok.grid_y + fy
+                for (let dx = -r; dx <= r; dx++) {
+                  for (let dy = -r; dy <= r; dy++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
+                    const tx = ox + dx
+                    const ty = oy + dy
+                    if (losBlocked(ox, oy, tx, ty)) continue
+                    visible.add(`${tx},${ty}`)
+                  }
                 }
               }
             }
           }
         }
+        fogVisibleCacheRef.current = { key: visKey, visible }
       }
       const effective: Record<string, boolean> = {}
       // GM-painted fog: defeasible by PC LoS *when* the scene has
