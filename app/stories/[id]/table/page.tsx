@@ -1446,6 +1446,17 @@ export default function TablePage() {
           setInsightSavePrompt(null)
           loadEntries(id)
         })
+        .on('broadcast', { event: 'infection_check_request' }, (msg: any) => {
+          // End-of-combat Wound Infection check (canon §06). The GM's
+          // endCombat broadcasts this for every wounded PC, scoped to
+          // that PC's owning userId. The target's client opens the
+          // standard roll modal — patient rolls their own check with
+          // their CMod / Insight Dice. NPCs are rolled by the GM
+          // directly (separate queue, no broadcast).
+          const data = msg.payload
+          if (!data || data.targetUserId !== userId) return
+          handleRollRequest(`${data.name} - Infection Check (Wound)`, data.amod ?? 0, 0)
+        })
         // Players' postgres_changes subscription on npc_relationships is
         // unreliable (RLS / publication), so mid-combat reveals go over this
         // broadcast channel instead. Refetch cnpcs fresh so newly-added roster
@@ -2497,7 +2508,10 @@ export default function TablePage() {
       if (r.character_name) wounded.add(r.character_name)
     }
     if (wounded.size === 0) return
-    const queue: Array<{ name: string; amod: number }> = []
+    // Split: PCs get a broadcast to their owning client (player rolls
+    // their own check). NPCs stay on the GM's local queue (no owner;
+    // GM rolls). Same canon outcome resolution either path.
+    const npcQueue: Array<{ name: string; amod: number }> = []
     for (const name of Array.from(wounded)) {
       const pcEntry = entries.find(e => e.character.name === name)
       const npcRow = !pcEntry ? campaignNpcs.find((n: any) => n.name === name) : null
@@ -2506,16 +2520,26 @@ export default function TablePage() {
         ? (pcEntry.liveState as any)?.infection_state
         : (npcRow as any)?.infection_state
       if (currentState) continue // already sick — canon: no stacking
-      const phyAmod = pcEntry
-        ? (pcEntry.character.data?.rapid?.PHY ?? 0)
-        : ((npcRow as any)?.physicality ?? 0)
-      queue.push({ name, amod: phyAmod })
+      if (pcEntry) {
+        const phyAmod = pcEntry.character.data?.rapid?.PHY ?? 0
+        // Broadcast scoped to the PC's owning userId. The listener
+        // in init channel gates on targetUserId === userId, so only
+        // that player's client opens the modal.
+        initChannelRef.current?.send({
+          type: 'broadcast',
+          event: 'infection_check_request',
+          payload: { targetUserId: pcEntry.userId, name, amod: phyAmod },
+        })
+      } else if (npcRow) {
+        const phyAmod = (npcRow as any).physicality ?? 0
+        npcQueue.push({ name, amod: phyAmod })
+      }
     }
-    if (queue.length === 0) return
-    pendingInfectionChecksRef.current = queue
-    // Fire the first modal. Subsequent ones drain from closeRollModal.
-    const first = queue.shift()!
-    pendingInfectionChecksRef.current = queue
+    if (npcQueue.length === 0) return
+    // GM rolls NPC checks sequentially — first opens now, the rest
+    // drain from closeRollModal as each closes.
+    const first = npcQueue.shift()!
+    pendingInfectionChecksRef.current = npcQueue
     handleRollRequest(`${first.name} - Infection Check (Wound)`, first.amod, 0)
   }
 
