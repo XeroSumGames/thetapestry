@@ -332,7 +332,21 @@ export default function VehiclePage() {
     })
     if (error) {
       console.error('[vehicle-popout] updateVehicle RPC failed:', error.message)
+      return
     }
+    // Defensive: broadcast a vehicle_updated event on the campaign
+    // channel so the table page can refresh its vehicles state
+    // immediately - the campaigns realtime UPDATE has been
+    // intermittent (REPLICA IDENTITY FULL helped but jsonb + RLS
+    // interactions can still drop events occasionally). This gives
+    // the GM/players instant feedback regardless. Fire-and-forget;
+    // channel is closed right after.
+    const ch = supabase.channel(`campaign_${campaignId}`)
+    ch.subscribe(async (status: string) => {
+      if (status !== 'SUBSCRIBED') return
+      await ch.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
+      await supabase.removeChannel(ch)
+    })
   }
 
   // Auto-vacate helper (2026-05-17): when a character is assigned to

@@ -2060,7 +2060,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (t.token_type === 'object') {
         const paxCount = passengerCountByVehicleName.get(t.name) ?? 0
         if (paxCount > 0) {
-          const badgeR = Math.max(7, radius * 0.14)
+          const badgeR = Math.max(10, radius * 0.21)
           ctx.beginPath()
           ctx.arc(cx, cy, badgeR, 0, Math.PI * 2)
           ctx.fillStyle = '#1a2e10'
