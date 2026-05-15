@@ -138,7 +138,7 @@ export default function VehiclePage() {
           .eq('campaign_id', campaignId)
           .not('character_id', 'is', null),
         supabase.from('campaign_npcs')
-          .select('id, name, reason, dexterity, skills, status, wp_current, death_countdown')
+          .select('id, name, reason, dexterity, physicality, influence, skills, status, wp_current, death_countdown')
           .eq('campaign_id', campaignId),
       ])
       // Surface partial failures. Pre-fix both .data fell through to
@@ -186,15 +186,20 @@ export default function VehiclePage() {
           const lvl = (name: string) => entries.find(e => e.name === name)?.level ?? 0
           const skillByName: Record<string, number> = {}
           for (const e of entries) skillByName[e.name] = e.level ?? 0
-          // NPCs store attributes as top-level columns; widen the
-          // shape so the Navigate skill-picker can hit any of them.
-          // Note: campaign_npcs query above only pulled dexterity; if
-          // an NPC ends up rolling on PHY/INF/ACU/etc. we fall back
-          // to 0. (Backfilling NPC attribute fetch is a separate
-          // follow-up; not blocking the playtest tonight.)
+          // NPCs store attributes as top-level columns. Backfilled
+          // 2026-05-15 to populate the full set so the Navigate
+          // skill-picker reads the correct AMod for any skill the
+          // player swaps to. campaign_npcs schema only carries PHY /
+          // DEX / RSN / INF - ACU (Acuity) is NOT on the NPC table,
+          // so any ACU-based skill (Navigation, Farming, Gambling,
+          // Lock-Picking) still falls back to 0 for NPC navigators.
+          // That's a schema gap, not a vehicle-popout bug; queued
+          // separately in tasks/todo.md.
           const attributes: Record<string, number> = {
             DEX: n.dexterity ?? 0,
             RSN: n.reason ?? 0,
+            PHY: n.physicality ?? 0,
+            INF: n.influence ?? 0,
           }
           return {
             id: n.id, name: n.name, kind: 'npc' as const,
