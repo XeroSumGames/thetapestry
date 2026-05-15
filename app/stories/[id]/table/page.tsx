@@ -6355,14 +6355,17 @@ export default function TablePage() {
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
-        {/* Recorder toggle — Thriver-only (not GM). The recorder is
-            an internal QA tool for the Tapestry team, not a campaign
-            mechanic, so it stays gated to the Thriver role even at
-            tables where the local user is the GM. Lives on the table
-            page so the Thriver never has to leave the session tab —
+        {/* Recorder toggle — TEMP WIDENED to all signed-in users
+            (2026-05-17, Xero) so playtesters can capture sessions
+            during the MINNIE module shake-down. Revert to `isThriver`
+            before going live. Default (locked) shape:
+              {isThriver && ( ... )}
+            The recorder is otherwise an internal QA tool for the
+            Tapestry team, not a campaign mechanic. Lives on the
+            table page so the user never leaves the session tab —
             closing the session tab kills its localStorage-backed
             recorder buffer before any auto-download can fire. */}
-        {isThriver && (
+        {/* TEMP WIDENED: was `isThriver`, now visible to everyone */ true && (
           <button onClick={toggleRecorder} disabled={recorderToggling}
             className="hdr-btn"
             title={recorderEnabled ? 'Stop the playtest recorder — every open tab auto-downloads its buffer' : 'Start the playtest recorder — every open tab wipes its buffer and captures fresh'}
