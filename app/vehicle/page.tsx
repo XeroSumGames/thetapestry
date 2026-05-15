@@ -317,9 +317,22 @@ export default function VehiclePage() {
   async function updateVehicle(updated: Vehicle) {
     setVehicle(updated)
     if (!campaignId) return
-    const { data: camp } = await supabase.from('campaigns').select('vehicles').eq('id', campaignId).single()
-    const vehicles = (camp?.vehicles ?? []).map((v: Vehicle) => v.id === updated.id ? updated : v)
-    await supabase.from('campaigns').update({ vehicles }).eq('id', campaignId)
+    // Route through update_vehicle_in_campaign RPC instead of a direct
+    // UPDATE on campaigns. The "GM can update campaigns" RLS policy
+    // silently rejects any non-GM write, so the popout's optimistic
+    // setVehicle was the only thing visually changing - the DB stayed
+    // stale, no realtime UPDATE fired, the table page never refreshed
+    // its vehicles state, and TacticalMap kept rendering aboard
+    // tokens. The RPC is SECURITY DEFINER + authorized by campaign
+    // membership, with a narrow swap-one-vehicle scope.
+    const { error } = await supabase.rpc('update_vehicle_in_campaign', {
+      p_campaign_id: campaignId,
+      p_vehicle_id: updated.id,
+      p_new_vehicle: updated as any,
+    })
+    if (error) {
+      console.error('[vehicle-popout] updateVehicle RPC failed:', error.message)
+    }
   }
 
   // Auto-vacate helper (2026-05-17): when a character is assigned to
