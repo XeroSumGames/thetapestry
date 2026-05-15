@@ -183,6 +183,138 @@ function renderBespokeBanner(r: RollLogRow): string | null {
   <div class="banner-body" style="color:#c4e8a8">${esc(r.label)}</div>
 </div>`
   }
+
+  // retention_check - community survival check (post-3-failures Morale).
+  // Survived = community holds; not-survived = community dissolves. Dice
+  // math always shown in export (no ▸/▾ toggle in static HTML).
+  if (r.outcome === 'retention_check') {
+    const dj = (r.damage_json ?? {}) as any
+    const rollOutcome = dj.rollOutcome ?? 'Success'
+    const survived = !!dj.survived
+    const colorHex = survived ? '#7fc458' : '#c0392b'
+    const bgHex = survived ? '#0f1a2e' : '#1a0a0a'
+    const leaderName = dj.leaderName || 'The leader'
+    const communityName = dj.communityName || 'the Community'
+    const narrative = survived
+      ? `${esc(leaderName)} rallied the survivors and the Community still exists`
+      : `With the members fragmenting in different directions, ${esc(communityName)} has dissolved.`
+    const rolledBy = dj.leaderName
+      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#5a5550">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
+      : ''
+    const amodChip = r.amod !== 0 ? ` <span style="color:${r.amod > 0 ? '#7fc458' : '#c0392b'}">${r.amod > 0 ? '+' : ''}${r.amod} AMod</span>` : ''
+    const smodChip = r.smod !== 0 ? ` <span style="color:${r.smod > 0 ? '#7fc458' : '#c0392b'}">${r.smod > 0 ? '+' : ''}${r.smod} SMod</span>` : ''
+    const moodChip = ` <span style="color:${r.cmod < 0 ? '#f5a89a' : '#cce0f5'}">${r.cmod >= 0 ? '+' : ''}${r.cmod} Mood</span>`
+    const survivedFooter = survived && typeof dj.consecutiveFailuresAfter === 'number'
+      ? `<div style="margin-top:4px;color:#7fc458">Community retained - consecutive failures reset to <span style="font-weight:700">${dj.consecutiveFailuresAfter}</span>.</div>`
+      : ''
+    return `<div style="margin-bottom:8px;padding:10px;background:${bgHex};border:1px solid ${colorHex};border-radius:3px;border-left:3px solid ${colorHex}">
+  <div class="banner-head"><span class="banner-title" style="color:#f5f2ee">🙏 Week ${esc(String(dj.weekNumber ?? '?'))} · ${esc(dj.communityName ?? '?')} · Retention</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body" style="color:${survived ? '#c4e8a8' : '#f5a89a'};font-weight:600">${narrative}</div>
+  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#d4cfc9">
+    ${rolledBy}
+    <div>[${r.die1}+${r.die2}]${amodChip}${smodChip}${moodChip} <span style="color:#f5f2ee;font-weight:700"> = ${r.total}</span> <span style="margin-left:8px;color:${colorHex};font-weight:700;text-transform:uppercase;letter-spacing:.06em">${esc(rollOutcome)}</span></div>
+    ${survivedFooter}
+  </div>
+</div>`
+  }
+
+  // fed_check / clothed_check - weekly resource check.
+  // 'fed_check' DB key, "Gather Check" display name per 2026-05-10 rename.
+  if (r.outcome === 'fed_check' || r.outcome === 'clothed_check') {
+    const dj = (r.damage_json ?? {}) as any
+    const rollOutcome = dj.rollOutcome ?? 'Success'
+    const emoji = r.outcome === 'fed_check' ? '🌾' : '🔧'
+    const title = r.outcome === 'fed_check' ? 'Gather Check' : 'Clothed Check'
+    const colorHex = outcomeColor(rollOutcome)
+    const isHit = rollOutcome === 'Success' || rollOutcome === 'Wild Success' || rollOutcome === 'High Insight'
+    const successBody = r.outcome === 'fed_check'
+      ? 'The residents were successful and will eat this week.'
+      : 'The residents were successful and have scrounged up what they need.'
+    const failBody = r.outcome === 'fed_check'
+      ? 'The residents were unsuccessful and will go hungry this week.'
+      : 'The residents were unsuccessful and will go without this week.'
+    const body = isHit ? successBody : failBody
+    const rolledBy = dj.leaderName
+      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#5a5550">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
+      : ''
+    const amodChip = r.amod !== 0 ? ` <span style="color:${r.amod > 0 ? '#7fc458' : '#c0392b'}">${r.amod > 0 ? '+' : ''}${r.amod} AMod</span>` : ''
+    const smodChip = r.smod !== 0 ? ` <span style="color:${r.smod > 0 ? '#7fc458' : '#c0392b'}">${r.smod > 0 ? '+' : ''}${r.smod} SMod</span>` : ''
+    const cmodChip = r.cmod !== 0 ? ` <span style="color:${r.cmod > 0 ? '#7ab3d4' : '#EF9F27'}">${r.cmod > 0 ? '+' : ''}${r.cmod} CMod</span>` : ''
+    const nextCmod = dj.cmodForNextMorale ?? 0
+    const nextCmodColor = nextCmod > 0 ? '#7fc458' : nextCmod < 0 ? '#f5a89a' : '#cce0f5'
+    return `<div style="margin-bottom:8px;padding:8px 10px;background:#111;border:1px solid ${colorHex}33;border-radius:3px;border-left:3px solid ${colorHex}">
+  <div class="banner-head"><span class="banner-title" style="color:#f5f2ee">${emoji} Week ${esc(String(dj.weekNumber ?? '?'))} · ${esc(dj.communityName ?? '?')} · ${title}</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body">${body}</div>
+  <div style="margin-top:6px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#d4cfc9">
+    ${rolledBy}
+    <div>[${r.die1}+${r.die2}]${amodChip}${smodChip}${cmodChip} <span style="color:#f5f2ee;font-weight:700"> = ${r.total}</span> <span style="margin-left:8px;color:${colorHex};font-weight:700;text-transform:uppercase;letter-spacing:.06em">${esc(rollOutcome)}</span></div>
+    <div style="margin-top:4px;color:#cce0f5">→ Next Morale CMod <span style="color:${nextCmodColor};font-weight:700">${nextCmod > 0 ? '+' : ''}${nextCmod}</span></div>
+  </div>
+</div>`
+  }
+
+  // morale_check - weekly community Morale Check with named-slot breakdown.
+  // 3 consecutive failures = community dissolves; willDissolve flag from
+  // damage_json drives the red palette + scattered-members narrative.
+  if (r.outcome === 'morale_check') {
+    const dj = (r.damage_json ?? {}) as any
+    const rollOutcome = dj.rollOutcome ?? 'Success'
+    const slots = (dj.slots ?? {}) as any
+    const willDissolve = !!dj.willDissolve
+    const colorHex = willDissolve ? '#c0392b' : outcomeColor(rollOutcome)
+    const isHit = rollOutcome === 'Success' || rollOutcome === 'Wild Success' || rollOutcome === 'High Insight'
+    const leaderName = dj.leaderName || 'The leader'
+    const communityName = dj.communityName || 'the Community'
+    let narrative: string
+    if (willDissolve) {
+      narrative = `After 3 consecutive failures of confidence in ${esc(leaderName)}, ${esc(communityName)} has dissolved. All ${esc(String(dj.membersBefore ?? '?'))} members scattered.`
+    } else if (isHit) {
+      narrative = `${esc(leaderName)} inspired ${esc(communityName)} and morale was maintained. The Mood around the Campfire is good.`
+    } else {
+      narrative = `${esc(leaderName)} fails to inspire ${esc(communityName)}. Morale has dropped and people are leaving. The Mood around the Campfire is not good.`
+    }
+    const fmt = (n: number) => n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0'
+    const cmodClr = (n: number) => n > 0 ? '#7fc458' : n < 0 ? '#f5a89a' : '#cce0f5'
+    const rolledBy = dj.leaderName
+      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#5a5550">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
+      : ''
+    const amodChip = r.amod !== 0 ? ` <span style="color:${r.amod > 0 ? '#7fc458' : '#c0392b'}">${r.amod > 0 ? '+' : ''}${r.amod} AMod</span>` : ''
+    const smodChip = r.smod !== 0 ? ` <span style="color:${r.smod > 0 ? '#7fc458' : '#c0392b'}">${r.smod > 0 ? '+' : ''}${r.smod} SMod</span>` : ''
+    const cmodChip = r.cmod !== 0 ? ` <span style="color:${r.cmod > 0 ? '#7ab3d4' : '#EF9F27'}">${r.cmod > 0 ? '+' : ''}${r.cmod} CMod</span>` : ''
+    let slotsLine = ''
+    if (slots && Object.keys(slots).length > 0) {
+      const pairs: [string, number][] = [
+        ['Mood', slots.mood ?? 0], ['Fed', slots.fed ?? 0], ['Clothed', slots.clothed ?? 0],
+        ['Hands', slots.enoughHands ?? 0], ['Voice', slots.clearVoice ?? 0], ['Watch', slots.safety ?? 0],
+      ]
+      const parts = pairs.map(([n, v]) => ` · ${n} <span style="color:${cmodClr(v)};font-weight:700">${fmt(v)}</span>`)
+      if (slots.additional !== 0 && slots.additional != null) {
+        parts.push(` · Additional <span style="color:${cmodClr(slots.additional)};font-weight:700">${fmt(slots.additional)}</span>`)
+      }
+      slotsLine = `<div style="color:#cce0f5;line-height:1.6;margin-bottom:4px"><span style="color:#5a5550">Slots:</span>${parts.join('')}</div>`
+    }
+    let departureLine = ''
+    if (!willDissolve && dj.departureCount > 0) {
+      const names = Array.isArray(dj.departureNames) ? dj.departureNames.map((n: any) => esc(String(n))).join(', ') : ''
+      departureLine = `<div style="color:#EF9F27">${esc(String(dj.departureCount))} left: <span style="color:#d4cfc9">${names}</span><span style="color:#cce0f5"> · ${esc(String(dj.membersAfter ?? '?'))}/${esc(String(dj.membersBefore ?? '?'))} remaining · ${esc(String(dj.consecutiveFailuresAfter ?? '?'))}/3 failures</span></div>`
+    }
+    let nextMoraleLine = ''
+    if (!willDissolve) {
+      nextMoraleLine = `<div style="color:#7fc458;margin-top:4px">${isHit ? 'Morale holds. ' : ''}Next Morale CMod: <span style="font-weight:700">${fmt(dj.cmodForNext ?? 0)}</span></div>`
+    }
+    return `<div style="margin-bottom:8px;padding:10px;background:${willDissolve ? '#1a0a0a' : '#111'};border:1px solid ${colorHex};border-radius:3px;border-left:3px solid ${colorHex}">
+  <div class="banner-head"><span class="banner-title" style="color:#f5f2ee">📊 Week ${esc(String(dj.weekNumber ?? '?'))} · ${esc(dj.communityName ?? '?')} · Morale</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body">${narrative}</div>
+  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#d4cfc9">
+    ${rolledBy}
+    <div style="margin-bottom:4px">[${r.die1}+${r.die2}]${amodChip}${smodChip}${cmodChip} <span style="color:#f5f2ee;font-weight:700"> = ${r.total}</span> <span style="margin-left:8px;color:${colorHex};font-weight:700;text-transform:uppercase;letter-spacing:.06em">${esc(rollOutcome)}</span></div>
+    ${slotsLine}
+    ${departureLine}
+    ${nextMoraleLine}
+  </div>
+</div>`
+  }
+
   return null
 }
 
