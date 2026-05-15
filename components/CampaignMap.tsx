@@ -72,37 +72,30 @@ const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }
   minnie:  { mph: 32, label: 'Minnie',   emoji: '🚐' },
 }
 
-// Local PIN_CATEGORIES — preserved here (instead of importing from
-// lib/pin-categories.ts) because CampaignMap historically carried two
-// extra categories ('landmark' / 'encounter') that the canonical list
-// doesn't have. Order mirrors the canonical list as of 2026-05-15:
-// 9-col grid, row 1 = locations/structures (camp slotted next to
-// residence), row 2 starts with person + group. 'airport' / Transport
-// was dropped 2026-05-15 — no transport hubs in canon. landmark +
-// encounter remain as CampaignMap-only overflow.
+// Local PIN_CATEGORIES — mirrors lib/pin-categories.ts canonical list
+// as of 2026-05-15. CampaignMap used to carry 'landmark' as a local-
+// only overflow; that category was consolidated into 'location' via
+// sql/pin-category-consolidation-2026-05-15.sql in the same change,
+// so the local list now matches canonical exactly.
 const PIN_CATEGORIES = [
-  // Row 1 — intel, places, institutions
+  // Row 1
   { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
   { value: 'location',   label: 'Location',   emoji: '📍' },
   { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
-  { value: 'residence',  label: 'Residence',  emoji: '🏠' },
-  { value: 'camp',       label: 'Camp',       emoji: '🏕️' },
-  { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
-  { value: 'community',  label: 'Community',  emoji: '🏘️' },
-  { value: 'business',   label: 'Business',   emoji: '🏪' },
-  { value: 'church',     label: 'Church',     emoji: '⛪' },
-  // Row 2 — services, people, threats, supplies
-  { value: 'government', label: 'Government', emoji: '🏛️' },
-  { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
-  { value: 'military',   label: 'Military',   emoji: '⚔️' },
   { value: 'person',     label: 'Person',     emoji: '👤' },
   { value: 'group',      label: 'Group',      emoji: '👥' },
-  { value: 'animals',    label: 'Animals',    emoji: '🐾' },
+  { value: 'community',  label: 'Community',  emoji: '🏘️' },
+  { value: 'residence',  label: 'Residence',  emoji: '🏠' },
+  { value: 'camp',       label: 'Camp',       emoji: '🏕️' },
+  // Row 2
   { value: 'danger',     label: 'Danger',     emoji: '☠️' },
+  { value: 'business',   label: 'Commercial', emoji: '🏪' },
+  { value: 'church',     label: 'Church',     emoji: '⛪' },
+  { value: 'government', label: 'Government', emoji: '🏛️' },
   { value: 'resource',   label: 'Resource',   emoji: '📦' },
-  { value: 'world_event', label: 'World Event', emoji: '🌍' },
-  // Row 3 (CampaignMap overflow — not in canonical list)
-  { value: 'landmark',   label: 'Landmark',   emoji: '🗿' },
+  { value: 'medical',    label: 'Medical',    emoji: '🩸' },
+  { value: 'animals',    label: 'Animals',    emoji: '🐾' },
+  { value: 'world_event', label: 'World Pin', emoji: '🌍' },
 ]
 
 function getCategoryEmoji(category: string): string {

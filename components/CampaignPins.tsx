@@ -298,7 +298,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                     <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>
                       Category — {getCategoryLabel(editCategory)}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '2px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '2px' }}>
                       {PIN_CATEGORIES.map(c => {
                         const picked = c.value === editCategory
                         const filter = getCategoryFilter(c.value)

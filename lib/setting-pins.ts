@@ -42,23 +42,23 @@ export const MONGRELS_PINS: SettingPin[] = [
   // ── LANDMARKS & SET PIECES ──
   { title: 'Canyon Lake Marina & Campground', lat: 33.5359, lng: -111.4231, category: 'encounter',
     notes: "Kincaid's base of operations. Most of his men are here. The bridge job starts here." },
-  { title: 'Apache Junction Territorial Line', lat: 33.4151, lng: -111.5460, category: 'landmark',
+  { title: 'Apache Junction Territorial Line', lat: 33.4151, lng: -111.5460, category: 'location',
     notes: "The Kincaid/Menendez border. The chase ends here — Kincaid's men won't cross." },
-  { title: 'Tonto National Forest SR-87 Entry', lat: 33.6500, lng: -111.3800, category: 'landmark',
+  { title: 'Tonto National Forest SR-87 Entry', lat: 33.6500, lng: -111.3800, category: 'location',
     notes: 'Road climbs steeply. Zero maintenance for three years. Tight switchbacks and rockfalls. Driving check terrain.' },
   { title: 'Beeline Highway SR-87 Switchbacks', lat: 33.7800, lng: -111.3500, category: 'encounter',
     notes: 'The most technically demanding road section of the Arizona leg.' },
-  { title: 'Lowell Observatory', lat: 35.2028, lng: -111.6645, category: 'landmark',
+  { title: 'Lowell Observatory', lat: 35.2028, lng: -111.6645, category: 'location',
     notes: 'Perkins Telescope site. Still standing. Visible from the Flagstaff approach.' },
   { title: "Cameron Old Bridge (Tanner's Crossing 1911)", lat: 36.0047, lng: -111.4139, category: 'encounter',
     notes: 'The only crossing for 50 miles. Controlled. A toll, a checkpoint, a potential threat.' },
-  { title: 'Cameron Trading Post', lat: 36.0003, lng: -111.4147, category: 'landmark',
+  { title: 'Cameron Trading Post', lat: 36.0003, lng: -111.4147, category: 'location',
     notes: 'Est. 1905. Someone is still running it. Full of Navajo crafts and jewellery — worthless now, profoundly beautiful.' },
-  { title: 'Little Colorado River Gorge', lat: 35.9500, lng: -111.4200, category: 'landmark',
+  { title: 'Little Colorado River Gorge', lat: 35.9500, lng: -111.4200, category: 'location',
     notes: 'Gather day terrain. Cottonwood and willow in the canyon. Remote and canyon-cut.' },
-  { title: 'Glen Canyon Dam', lat: 36.9369, lng: -111.4839, category: 'landmark',
+  { title: 'Glen Canyon Dam', lat: 36.9369, lng: -111.4839, category: 'location',
     notes: 'Still running. A light in the control room. Someone is keeping the electricity on for no one. Or for someone. Not an encounter — just something they see.' },
-  { title: 'Vermillion Cliffs SR-89', lat: 36.8200, lng: -111.9800, category: 'landmark',
+  { title: 'Vermillion Cliffs SR-89', lat: 36.8200, lng: -111.9800, category: 'location',
     notes: 'Spectacular and exposed. The approach to Kanab is visible from miles. Long sight lines.' },
   { title: 'Church Wells', lat: 36.9800, lng: -112.1200, category: 'encounter',
     notes: 'Sandstorm territory. A family custody dispute that turned violent. Neither side is simply wrong.' },
@@ -72,20 +72,20 @@ export const MONGRELS_PINS: SettingPin[] = [
 
 export const DISTRICT_ZERO_PINS: SettingPin[] = [
   // ── GATES ──
-  { title: 'West Gate', lat: 36.0526, lng: -95.7978, category: 'military', notes: 'Primary entrance for non-residents. Guards search all visitors. Non-residents enter here only. West Broadway & S Elm Place.' },
-  { title: 'North Gate', lat: 36.0580, lng: -95.7902, category: 'military', notes: 'Northern entrance/exit. W Kenosha St & N Main St. Residents can use freely within curfew rules.' },
-  { title: 'South Gate', lat: 36.0452, lng: -95.7902, category: 'military', notes: 'Southern entrance/exit. Houston St & S Main St. Near the Performing Arts Center.' },
-  { title: 'East Gate (Farm Gate)', lat: 36.0505, lng: -95.7782, category: 'military', notes: 'Separates District Zero from District One (the Farm). E College St & County Line Rd. Always has at least two guards plus a watchtower sniper.' },
+  { title: 'West Gate', lat: 36.0526, lng: -95.7978, category: 'government', notes: 'Primary entrance for non-residents. Guards search all visitors. Non-residents enter here only. West Broadway & S Elm Place.' },
+  { title: 'North Gate', lat: 36.0580, lng: -95.7902, category: 'government', notes: 'Northern entrance/exit. W Kenosha St & N Main St. Residents can use freely within curfew rules.' },
+  { title: 'South Gate', lat: 36.0452, lng: -95.7902, category: 'government', notes: 'Southern entrance/exit. Houston St & S Main St. Near the Performing Arts Center.' },
+  { title: 'East Gate (Farm Gate)', lat: 36.0505, lng: -95.7782, category: 'government', notes: 'Separates District Zero from District One (the Farm). E College St & County Line Rd. Always has at least two guards plus a watchtower sniper.' },
 
   // ── WATCHTOWERS ──
-  { title: 'Watchtower — NW Corner', lat: 36.0578, lng: -95.7978, category: 'military', notes: 'Corner watchtower. Battery-powered radio, siren, and powerful flashlight. Constant comms with City Hall shift leader.' },
-  { title: 'Watchtower — NE Corner', lat: 36.0578, lng: -95.7828, category: 'military', notes: 'Corner watchtower. Overlooks the Refinery approach. Battery-powered radio, siren, flashlight.' },
-  { title: 'Watchtower — SW Corner', lat: 36.0452, lng: -95.7978, category: 'military', notes: 'Corner watchtower. Covers the rail line crossing. Battery-powered radio, siren, flashlight.' },
-  { title: 'Watchtower — SE Corner', lat: 36.0452, lng: -95.7828, category: 'military', notes: 'Corner watchtower. Battery-powered radio, siren, flashlight.' },
-  { title: 'Watchtower — North Gate', lat: 36.0580, lng: -95.7895, category: 'military', notes: 'Covers the North Gate. Sharpshooter always on duty.' },
-  { title: 'Watchtower — West Gate', lat: 36.0528, lng: -95.7978, category: 'military', notes: 'Covers the West Gate. Primary public-facing tower.' },
-  { title: 'Watchtower — South Gate', lat: 36.0452, lng: -95.7896, category: 'military', notes: 'Covers the South Gate. Sharpshooter always on duty.' },
-  { title: 'Watchtower — East Gate', lat: 36.0507, lng: -95.7800, category: 'military', notes: 'Covers the Farm gate. Extra vigilance due to distance from the Mile.' },
+  { title: 'Watchtower — NW Corner', lat: 36.0578, lng: -95.7978, category: 'government', notes: 'Corner watchtower. Battery-powered radio, siren, and powerful flashlight. Constant comms with City Hall shift leader.' },
+  { title: 'Watchtower — NE Corner', lat: 36.0578, lng: -95.7828, category: 'government', notes: 'Corner watchtower. Overlooks the Refinery approach. Battery-powered radio, siren, flashlight.' },
+  { title: 'Watchtower — SW Corner', lat: 36.0452, lng: -95.7978, category: 'government', notes: 'Corner watchtower. Covers the rail line crossing. Battery-powered radio, siren, flashlight.' },
+  { title: 'Watchtower — SE Corner', lat: 36.0452, lng: -95.7828, category: 'government', notes: 'Corner watchtower. Battery-powered radio, siren, flashlight.' },
+  { title: 'Watchtower — North Gate', lat: 36.0580, lng: -95.7895, category: 'government', notes: 'Covers the North Gate. Sharpshooter always on duty.' },
+  { title: 'Watchtower — West Gate', lat: 36.0528, lng: -95.7978, category: 'government', notes: 'Covers the West Gate. Primary public-facing tower.' },
+  { title: 'Watchtower — South Gate', lat: 36.0452, lng: -95.7896, category: 'government', notes: 'Covers the South Gate. Sharpshooter always on duty.' },
+  { title: 'Watchtower — East Gate', lat: 36.0507, lng: -95.7800, category: 'government', notes: 'Covers the Farm gate. Extra vigilance due to distance from the Mile.' },
 
   // ── NAMED LOCATIONS ──
   { title: '01 | City Hall', lat: 36.0510, lng: -95.7900, category: 'government', notes: 'Center of all official business. Lincoln Sawyer and Mitch Kosinski both keep offices here. Deputies use this as their HQ. Secure holding area in the basement (capacity 12). Has served as a courthouse. S Main St near W Commercial St.' },
@@ -143,7 +143,7 @@ export const CHASED_PINS: SettingPin[] = [
     notes: 'Gas station at the edge of the King\'s Crossroads Mall property. Potential fuel source.' },
 
   // REFERENCE
-  { title: 'Georgetown', lat: 38.6901, lng: -75.3596, category: 'settlement',
+  { title: 'Georgetown', lat: 38.6901, lng: -75.3596, category: 'community',
     notes: 'A town of around 500 people living in a loose collective to the south. They consider the King\'s Crossroads Mall to be their territory and have not ventured there in a while. They will not be happy to find strangers living there.' },
 
   // EMPTY ENCOUNTER
