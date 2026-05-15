@@ -9253,7 +9253,7 @@ export default function TablePage() {
                   )}
                   {(rollResult as any).weaponJammed && (
                     <div style={{ fontSize: '14px', color: '#c0392b', background: '#2a1210', border: '1px solid #c0392b', padding: '6px 10px', borderRadius: '3px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: '8px' }}>
-                      ⚠️ Weapon Jammed! Condition degraded. Requires Ready Weapon action to unjam.
+                      ⚠️ Weapon Malfunction! The condition is degraded and will require a Ready Weapon action to prepare again.
                     </div>
                   )}
                 </div>
