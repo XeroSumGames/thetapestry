@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { WizardState } from '../../lib/xse-engine'
-import { ALL_WEAPONS, TRAIT_DESCRIPTIONS, type Weapon, type WeaponCategory } from '../../lib/weapons'
+import { ALL_WEAPONS, TRAIT_DESCRIPTIONS, getWeaponByName, type Weapon, type WeaponCategory } from '../../lib/weapons'
 import { EQUIPMENT, RATIONS } from '../../lib/xse-schema'
 import HelpTooltip from '../HelpTooltip'
 import {
@@ -101,7 +101,7 @@ const EQUIPMENT_INCIDENTAL_NAMES = new Set([
 function roll1d3() { return Math.floor(Math.random() * 3) + 1 }
 
 function needsAmmo(name: string): boolean {
-  const w = ALL_WEAPONS.find(w => w.name === name)
+  const w = getWeaponByName(name)
   return !!w && w.clip != null
 }
 

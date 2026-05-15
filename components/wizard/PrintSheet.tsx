@@ -1,7 +1,7 @@
 'use client'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { SKILLS, deriveSecondaryStats } from '../../lib/xse-schema'
-import { ALL_WEAPONS } from '../../lib/weapons'
+import { getWeaponByName } from '../../lib/weapons'
 
 // Optional live-state payload for printing an existing campaign character.
 // Wizard print paths don't pass liveState — they get a blank-form sheet.
@@ -31,8 +31,8 @@ export default function PrintSheet({ state, liveState }: Props) {
   const skills = getCumulativeSkills(state.steps)
   const step4 = state.steps[3] ?? {}
 
-  const pWep = ALL_WEAPONS.find(w => w.name === state.weaponPrimary)
-  const sWep = ALL_WEAPONS.find(w => w.name === state.weaponSecondary)
+  const pWep = getWeaponByName(state.weaponPrimary)
+  const sWep = getWeaponByName(state.weaponSecondary)
 
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
