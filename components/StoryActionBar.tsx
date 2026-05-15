@@ -1,27 +1,30 @@
 'use client'
 // StoryActionBar — the canonical campaign-page header rendered at the
-// top of every campaign page (hub + Edit + Snapshots + Sessions +
-// Community). Carries:
+// top of every campaign page (hub + Snapshots + Sessions + Community).
+// Carries:
 //   1. Setting label + role chip — "CUSTOM SETTING — GAME MASTER"
 //   2. Campaign name as the big H1
 //   3. Optional description
 //   4. Red separator
-//   5. The 7-button action bar (Launch / Edit / Share / GM Kit /
-//      Snapshot / Publish / Delete)
+//   5. The 6-button action bar (Launch / GM Notes / Snapshot /
+//      Publish / Delete / GM Kit)
 //
 // Per the 2026-04-29 follow-up directive — "make each of these sub-
 // pages look exactly like this. not just the buttons but the name at
 // the top too." Single component = guaranteed visual + behavioral
 // consistency end-to-end.
 //
+// The Edit button + /edit page were retired 2026-05-15; the form
+// lives inline on the campaign hub now.
+//
 // The component is self-sufficient: given just a campaignId, it
 // loads everything it needs (campaign row, setting lookup, existing
 // module, GM check) and owns its own modals (ModulePublishModal,
 // Delete confirm, GM Kit export progress).
 //
-// Active-page highlighting is driven by usePathname() so on the Edit
-// sub-page the EDIT button gets a brighter border + bold weight, and
-// the user always knows where they are.
+// Active-page highlighting is driven by usePathname() so on the
+// Snapshot sub-page the SNAPSHOT button gets a brighter border +
+// bold weight, and the user always knows where they are.
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -221,21 +224,19 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.25rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
       {/* Player view = a slimmer surface (Launch + Share only). The
           GM-only actions just don't render. */}
-      {/* Order locked by Xero (2026-05-06):
-          LAUNCH → EDIT → GM NOTES → SNAPSHOT → PUBLISH → DELETE → GM KIT.
+      {/* Order locked by Xero (2026-05-06, EDIT removed 2026-05-15):
+          LAUNCH → GM NOTES → SNAPSHOT → PUBLISH → DELETE → GM KIT.
           Share button removed — the always-visible Invite Link box
           below the action bar already has its own COPY LINK button,
-          so Share was redundant. Conditional buttons (Archive,
-          Module update) slot in next to PUBLISH. */}
+          so Share was redundant. The Edit page was retired 2026-05-15
+          and its form lives inline on the campaign hub itself; clicking
+          the campaign name from /stories drops the GM right into the
+          editable surface. Conditional buttons (Archive, Module
+          update) slot in next to PUBLISH. */}
       <a href={`/stories/${campaignId}/table`} target="_blank" rel="noreferrer"
         style={btn('#c0392b', '#fff', '#c0392b', false)}>
         Launch
       </a>
-      {isGM && (
-        <Link href={`/stories/${campaignId}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a', onSubpath('/edit'))}>
-          Edit
-        </Link>
-      )}
       {isGM && (
         <button onClick={() => {
           // Popout — same window-features as /gm-screen so it lands

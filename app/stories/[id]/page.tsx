@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
@@ -8,7 +8,18 @@ import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
+import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
+
+// GM Tools section constants (lifted from the retired /edit page —
+// the Edit form is now inlined on the hub itself).
+const MAP_STYLES = [
+  ['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'],
+  ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'],
+  ['positron', 'Positron'], ['dark', 'Dark'],
+]
+const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }
+const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }
 
 interface Campaign {
   id: string
@@ -75,6 +86,20 @@ export default function CampaignPage() {
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
+  // GM Tools (edit form) state — lifted from the retired /edit page.
+  // These are GM-or-Thriver-only; non-GM members never see this surface.
+  const [editName, setEditName] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editMapStyle, setEditMapStyle] = useState('street')
+  const [editMapCenter, setEditMapCenter] = useState<{ lat: number; lng: number } | null>(null)
+  const [editLocationQuery, setEditLocationQuery] = useState('')
+  const [editLocationSuggestions, setEditLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [editSaved, setEditSaved] = useState(false)
+  const [editSyncing, setEditSyncing] = useState(false)
+  const [editSyncResult, setEditSyncResult] = useState('')
+  const editDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Module publish + subscriber-update state moved to StoryActionBar
   // alongside the action buttons that consume it. Hub keeps only the
   // state it actually renders (members, kicked-rejoin, pregens).
@@ -88,6 +113,16 @@ export default function CampaignPage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
+
+      // Seed GM Tools form state from the loaded campaign row. GM-or-
+      // Thriver-only inputs below; non-GM members never see this
+      // surface so the values are harmless to set unconditionally.
+      setEditName(camp.name ?? '')
+      setEditDescription(camp.description ?? '')
+      setEditMapStyle(camp.map_style ?? 'street')
+      if (camp.map_center_lat != null && camp.map_center_lng != null) {
+        setEditMapCenter({ lat: camp.map_center_lat, lng: camp.map_center_lng })
+      }
 
       // Thriver lookup — drives gmLike for godmode UI. Thrivers visiting
       // a campaign they don't GM still see the GM-side hub (no Rejoin /
@@ -211,6 +246,103 @@ export default function CampaignPage() {
       return
     }
     setMembers(prev => prev.filter(m => m.user_id !== member.user_id))
+  }
+
+  // GM Tools — Save form (Name / Description / Map Style / Map Center).
+  // Lifted from the retired /edit page. GM-or-Thriver gated at the JSX
+  // call-site; the function itself trusts the caller.
+  async function handleEditSave() {
+    if (!editName.trim()) { setEditError('Story name is required.'); return }
+    setEditSaving(true)
+    setEditError('')
+    const { error } = await supabase.from('campaigns').update({
+      name: editName.trim(),
+      description: editDescription.trim() || null,
+      map_style: editMapStyle,
+      map_center_lat: editMapCenter?.lat ?? null,
+      map_center_lng: editMapCenter?.lng ?? null,
+    }).eq('id', id)
+    if (error) { setEditError(error.message); setEditSaving(false); return }
+    // Reflect the new name/description in the loaded campaign row so
+    // the header re-renders without a reload.
+    setCampaign(prev => prev ? { ...prev, name: editName.trim(), description: editDescription.trim() } : prev)
+    setEditSaved(true)
+    setEditSaving(false)
+    setTimeout(() => setEditSaved(false), 2000)
+  }
+
+  // GM Tools — Sync to Seed (Thriver only, non-custom settings). Overwrites
+  // setting_seed_* rows with this campaign's NPCs/pins/scenes/handouts so
+  // future campaigns using the same setting inherit the curated state.
+  async function handleEditSyncSeed() {
+    if (!campaign || !campaign.setting || campaign.setting === 'custom') return
+    if (!confirm(`This will overwrite all seed data for "${SETTINGS[campaign.setting] ?? campaign.setting}" with this campaign's current NPCs, pins, scenes, and handouts.\n\nAll future campaigns using this setting will inherit these changes.\n\nContinue?`)) return
+    setEditSyncing(true)
+    setEditSyncResult('')
+    try {
+      await Promise.all([
+        supabase.from('setting_seed_npcs').delete().eq('setting', campaign.setting),
+        supabase.from('setting_seed_pins').delete().eq('setting', campaign.setting),
+        supabase.from('setting_seed_scenes').delete().eq('setting', campaign.setting),
+        supabase.from('setting_seed_handouts').delete().eq('setting', campaign.setting),
+      ])
+      const [npcsRes, pinsRes, scenesRes, handoutsRes] = await Promise.all([
+        supabase.from('campaign_npcs').select('*').eq('campaign_id', id).order('sort_order'),
+        supabase.from('campaign_pins').select('*').eq('campaign_id', id).order('sort_order'),
+        supabase.from('tactical_scenes').select('*').eq('campaign_id', id),
+        supabase.from('campaign_notes').select('*').eq('campaign_id', id).order('created_at'),
+      ])
+      const counts = { npcs: 0, pins: 0, scenes: 0, handouts: 0 }
+      const pinIdToName: Record<string, string> = {}
+      ;(pinsRes.data ?? []).forEach((p: any) => { pinIdToName[p.id] = p.name })
+      const npcs = (npcsRes.data ?? []).map((n: any, i: number) => ({
+        setting: campaign.setting,
+        name: n.name,
+        reason: n.reason, acumen: n.acumen, physicality: n.physicality,
+        influence: n.influence, dexterity: n.dexterity,
+        wp_max: n.wp_max, rp_max: n.rp_max,
+        skills: n.skills, equipment: n.equipment,
+        notes: n.notes, motivation: n.motivation,
+        portrait_url: n.portrait_url, npc_type: n.npc_type,
+        pin_title: n.campaign_pin_id ? (pinIdToName[n.campaign_pin_id] ?? null) : null,
+        sort_order: n.sort_order ?? i + 1,
+      }))
+      if (npcs.length > 0) {
+        const { error } = await supabase.from('setting_seed_npcs').insert(npcs)
+        if (error) throw new Error(`NPCs: ${error.message}`)
+        counts.npcs = npcs.length
+      }
+      const pins = (pinsRes.data ?? []).map((p: any, i: number) => ({
+        setting: campaign.setting, name: p.name, lat: p.lat, lng: p.lng,
+        notes: p.notes, category: p.category ?? 'location',
+        sort_order: p.sort_order ?? i + 1,
+      }))
+      if (pins.length > 0) {
+        const { error } = await supabase.from('setting_seed_pins').insert(pins)
+        if (error) throw new Error(`Pins: ${error.message}`)
+        counts.pins = pins.length
+      }
+      const scenes = (scenesRes.data ?? []).map((s: any) => ({
+        setting: campaign.setting, name: s.name, grid_cols: s.grid_cols, grid_rows: s.grid_rows, notes: s.notes ?? '',
+      }))
+      if (scenes.length > 0) {
+        const { error } = await supabase.from('setting_seed_scenes').insert(scenes)
+        if (error) throw new Error(`Scenes: ${error.message}`)
+        counts.scenes = scenes.length
+      }
+      const handouts = (handoutsRes.data ?? []).map((h: any) => ({
+        setting: campaign.setting, title: h.title, content: h.content ?? '',
+      }))
+      if (handouts.length > 0) {
+        const { error } = await supabase.from('setting_seed_handouts').insert(handouts)
+        if (error) throw new Error(`Handouts: ${error.message}`)
+        counts.handouts = handouts.length
+      }
+      setEditSyncResult(`✓ Synced: ${counts.npcs} NPCs, ${counts.pins} pins, ${counts.scenes} scenes, ${counts.handouts} handouts`)
+    } catch (err: any) {
+      setEditSyncResult(`Error: ${err?.message ?? 'Unknown error'}`)
+    }
+    setEditSyncing(false)
   }
 
   async function handleRejoin() {
@@ -440,6 +572,124 @@ export default function CampaignPage() {
           </div>
         )}
       </div>
+
+      {/* GM Tools — Edit form, lifted from the retired /edit page (2026-05-15).
+          GM-or-Thriver only. Story Name / Description / Default Map Style /
+          Map Center Location, with Save Changes. Seed Management sub-section
+          is Thriver-only and only visible on non-custom settings. */}
+      {gmLike && (
+        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
+            GM Tools
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={lbl}>Story Name</label>
+            <input style={inp} value={editName} onChange={e => setEditName(e.target.value)} placeholder="Name your story..." />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={lbl}>Description <span style={{ color: '#5a5550', fontWeight: 400 }}>(optional)</span></label>
+            <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="A brief description of your story..." />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={lbl}>Default Map Style</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+              {MAP_STYLES.map(([val, label]) => (
+                <button key={val} type="button" onClick={() => setEditMapStyle(val)}
+                  style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editMapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: editMapStyle === val ? '#2a1210' : '#242424', color: editMapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '20px', position: 'relative' }}>
+            <label style={lbl}>Map Center Location</label>
+            <div style={{ position: 'relative' }}>
+              <input value={editLocationQuery} onChange={e => {
+                setEditLocationQuery(e.target.value)
+                if (editDebounceRef.current) clearTimeout(editDebounceRef.current)
+                if (e.target.value.length >= 3) {
+                  editDebounceRef.current = setTimeout(async () => {
+                    try {
+                      const data = await searchNominatimUSFirst(e.target.value)
+                      setEditLocationSuggestions(data)
+                    } catch { setEditLocationSuggestions([]) }
+                  }, 300)
+                } else { setEditLocationSuggestions([]) }
+              }} placeholder="Search for a new center location..." style={inp} />
+              {editLocationSuggestions.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 10 }}>
+                  {editLocationSuggestions.map((s, i) => (
+                    <div key={i} onClick={() => {
+                      setEditMapCenter({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) })
+                      setEditLocationQuery(s.display_name.split(',').slice(0, 2).join(','))
+                      setEditLocationSuggestions([])
+                    }}
+                      style={{ padding: '8px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      {s.display_name.length > 80 ? s.display_name.slice(0, 80) + '...' : s.display_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {editMapCenter && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                <span style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'monospace' }}>
+                  {editMapCenter.lat.toFixed(4)}, {editMapCenter.lng.toFixed(4)}
+                </span>
+                <button type="button" onClick={() => { setEditMapCenter(null); setEditLocationQuery('') }}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>
+                  Clear
+                </button>
+              </div>
+            )}
+            {!editMapCenter && (
+              <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>No custom center — map uses default view</div>
+            )}
+          </div>
+
+          {editError && (
+            <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', marginBottom: '12px' }}>
+              {editError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button onClick={handleEditSave} disabled={editSaving || !editName.trim()}
+              style={{ padding: '10px 24px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSaving || !editName.trim() ? 'not-allowed' : 'pointer', opacity: editSaving || !editName.trim() ? 0.6 : 1 }}>
+              {editSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+            {editSaved && (
+              <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Saved</span>
+            )}
+          </div>
+
+          {/* Sync to Seed — Thriver only, non-custom settings. Overwrites
+              setting_seed_* tables with this campaign's curated content. */}
+          {isThriver && campaign.setting && campaign.setting !== 'custom' && (
+            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Seed Management</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '10px', lineHeight: 1.5 }}>
+                Update the seed data for <strong style={{ color: '#f5f2ee' }}>{SETTINGS[campaign.setting] ?? campaign.setting}</strong> using this campaign's NPCs, pins, scenes, and handouts. All future campaigns using this setting will start with this data.
+              </div>
+              <button onClick={handleEditSyncSeed} disabled={editSyncing}
+                style={{ padding: '10px 24px', background: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSyncing ? 'wait' : 'pointer', fontWeight: 700, opacity: editSyncing ? 0.6 : 1 }}>
+                {editSyncing ? 'Syncing...' : 'Update Seed Data'}
+              </button>
+              {editSyncResult && (
+                <div style={{ marginTop: '8px', fontSize: '13px', color: editSyncResult.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>
+                  {editSyncResult}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Back button */}
       <div style={{ display: 'flex', gap: '8px' }}>
