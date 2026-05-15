@@ -21,9 +21,16 @@
 -- `npx supabase db query --linked -f sql/update-vehicle-in-campaign-rpc-2026-05-17.sql`.
 -- ============================================================
 
+-- Drop the previous uuid-typed overload (an earlier draft assumed
+-- vehicle.id was a uuid - it's actually an arbitrary string like
+-- "minnie-001", so the cast inside the body would have thrown). The
+-- type signature is part of the function's identity, so a fresh
+-- CREATE on the text-typed version coexists rather than replacing.
+DROP FUNCTION IF EXISTS update_vehicle_in_campaign(uuid, uuid, jsonb);
+
 CREATE OR REPLACE FUNCTION update_vehicle_in_campaign(
   p_campaign_id uuid,
-  p_vehicle_id uuid,
+  p_vehicle_id text,
   p_new_vehicle jsonb
 ) RETURNS void
 LANGUAGE plpgsql
@@ -57,8 +64,9 @@ BEGIN
 
   -- Sanity: the supplied vehicle blob must carry its own id and it
   -- must match p_vehicle_id, so a caller can't smuggle in a write
-  -- targeted at a different vehicle.
-  IF (p_new_vehicle->>'id') IS NULL OR (p_new_vehicle->>'id')::uuid <> p_vehicle_id THEN
+  -- targeted at a different vehicle. String comparison - vehicle.id
+  -- is an arbitrary slug, not a uuid.
+  IF (p_new_vehicle->>'id') IS NULL OR (p_new_vehicle->>'id') <> p_vehicle_id THEN
     RAISE EXCEPTION 'update_vehicle_in_campaign: p_new_vehicle.id must equal p_vehicle_id';
   END IF;
 
@@ -76,7 +84,7 @@ BEGIN
   FOR v_elem IN
     SELECT value FROM jsonb_array_elements(v_existing) AS t(value)
   LOOP
-    IF (v_elem->>'id') IS NOT NULL AND (v_elem->>'id')::uuid = p_vehicle_id THEN
+    IF (v_elem->>'id') = p_vehicle_id THEN
       v_next := v_next || jsonb_build_array(p_new_vehicle);
       v_found := true;
     ELSE
@@ -92,5 +100,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION update_vehicle_in_campaign(uuid, uuid, jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_vehicle_in_campaign(uuid, uuid, jsonb) TO authenticated;
+REVOKE ALL ON FUNCTION update_vehicle_in_campaign(uuid, text, jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_vehicle_in_campaign(uuid, text, jsonb) TO authenticated;
