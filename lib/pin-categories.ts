@@ -29,11 +29,13 @@ export const PIN_CATEGORIES: ReadonlyArray<PinCategory> = [
   { value: 'person',      label: 'Person',             emoji: '👤' },
   { value: 'group',       label: 'Group',              emoji: '👥' },
   { value: 'danger',      label: 'Danger',             emoji: '☠️' },
+  { value: 'encounter',   label: 'Encounter',          emoji: '⚡' },
   { value: 'resource',    label: 'Resource',           emoji: '🎒' },
   { value: 'medical',     label: 'Medical',            emoji: '🩸' },
   { value: 'animals',     label: 'Animals',            emoji: '🐾' },
   { value: 'community',   label: 'Community',          emoji: '🏘️' },
   { value: 'world_event', label: 'Distemper Timeline', emoji: '🌍' },
+  // ── Row 3 — overflow ──
   { value: 'settlement',  label: 'Settlement',         emoji: '🏚️' },
 ]
 

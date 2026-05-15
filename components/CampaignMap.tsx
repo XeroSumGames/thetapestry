@@ -91,10 +91,12 @@ const PIN_CATEGORIES = [
   { value: 'government', label: 'Government', emoji: '🏛️' },
   { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
   { value: 'military',   label: 'Military',   emoji: '⚔️' },
-  // Row 2 (person + group lead per 2026-05-15)
+  // Row 2 (person + group lead per 2026-05-15; encounter promoted
+  // to canonical 2026-05-15)
   { value: 'person',     label: 'Person',     emoji: '👤' },
   { value: 'group',      label: 'Group',      emoji: '👥' },
   { value: 'danger',     label: 'Danger',     emoji: '☠️' },
+  { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
   { value: 'resource',   label: 'Resource',   emoji: '🎒' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },
   { value: 'community',  label: 'Community',  emoji: '🏘️' },
@@ -102,7 +104,6 @@ const PIN_CATEGORIES = [
   { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
   // Row 3 (CampaignMap overflow — not in canonical list)
   { value: 'landmark',   label: 'Landmark',   emoji: '🗿' },
-  { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
 ]
 
 function getCategoryEmoji(category: string): string {
