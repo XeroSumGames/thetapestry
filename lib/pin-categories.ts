@@ -9,19 +9,20 @@ export interface PinCategory {
   emoji: string
 }
 
-// Order also drives the picker grid (9 columns × N rows). Categories
-// 1-9 are row 1 (locations/structures); 10-18 are row 2 (people and
-// things — person + group sit first per Xero's call); 19+ is row 3
-// overflow.
+// Order also drives the picker grid (9 columns × 2 rows = 18 cells).
+// Row 1 (1-9) = locations & structures. Row 2 (10-18) = people &
+// things, with person + group leading per Xero's 2026-05-15 call.
+// 'airport' / Transport was removed 2026-05-15 (no transport hubs in
+// canon); 'camp' takes its slot in row 1.
 export const PIN_CATEGORIES: ReadonlyArray<PinCategory> = [
   // ── Row 1 — locations & structures ──
   { value: 'rumor',       label: 'Rumor',              emoji: '❓' },
   { value: 'location',    label: 'Location',           emoji: '📍' },
   { value: 'residence',   label: 'Residence',          emoji: '🏠' },
+  { value: 'camp',        label: 'Camp',               emoji: '🏕️' },
   { value: 'business',    label: 'Business',           emoji: '🏪' },
   { value: 'church',      label: 'Church',             emoji: '⛪' },
   { value: 'government',  label: 'Government',         emoji: '🏛️' },
-  { value: 'airport',     label: 'Transport',          emoji: '✈️' },
   { value: 'hospital',    label: 'Hospital',           emoji: '🏥' },
   { value: 'military',    label: 'Military',           emoji: '⚔️' },
   // ── Row 2 — people & things (person + group lead) ──
@@ -34,8 +35,6 @@ export const PIN_CATEGORIES: ReadonlyArray<PinCategory> = [
   { value: 'community',   label: 'Community',          emoji: '🏘️' },
   { value: 'world_event', label: 'Distemper Timeline', emoji: '🌍' },
   { value: 'settlement',  label: 'Settlement',         emoji: '🏚️' },
-  // ── Row 3 — overflow ──
-  { value: 'camp',        label: 'Camp',               emoji: '🏕️' },
 ]
 
 export function getCategoryEmoji(category: string | null | undefined): string {

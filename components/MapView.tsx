@@ -1827,9 +1827,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
         {editForm.categories.map(cat => {
           const catInfo = PIN_CATEGORIES.find(c => c.value === cat)
+          const filter = getCategoryFilter(cat)
           return (
             <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: '#0f2035', border: '1px solid #7ab3d4', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-              {catInfo?.emoji ?? '📍'} {catInfo?.label ?? cat}
+              {filter
+                ? <span style={{ filter, display: 'inline-block', lineHeight: 1 }}>{catInfo?.emoji ?? '📍'}</span>
+                : (catInfo?.emoji ?? '📍')} {catInfo?.label ?? cat}
               {editForm.categories.length > 1 && (
                 <button onClick={() => setEditForm(p => ({ ...p, categories: p.categories.filter(c => c !== cat) }))}
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 1px', lineHeight: 1 }}>×</button>

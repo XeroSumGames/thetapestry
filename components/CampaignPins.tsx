@@ -301,6 +301,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '2px' }}>
                       {PIN_CATEGORIES.map(c => {
                         const picked = c.value === editCategory
+                        const filter = getCategoryFilter(c.value)
                         return (
                           <button key={c.value} type="button" onClick={() => setEditCategory(c.value)}
                             title={c.label}
@@ -314,7 +315,9 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                               lineHeight: 1,
                               transition: 'background 120ms',
                             }}>
-                            {c.emoji}
+                            {filter
+                              ? <span style={{ filter, display: 'inline-block', lineHeight: 1 }}>{c.emoji}</span>
+                              : c.emoji}
                           </button>
                         )
                       })}

@@ -76,16 +76,19 @@ const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }
 // lib/pin-categories.ts) because CampaignMap historically carried two
 // extra categories ('landmark' / 'encounter') that the canonical list
 // doesn't have. Order mirrors the canonical list as of 2026-05-15:
-// row 1 = locations/structures, row 2 starts with person + group.
+// 9-col grid, row 1 = locations/structures (camp slotted next to
+// residence), row 2 starts with person + group. 'airport' / Transport
+// was dropped 2026-05-15 — no transport hubs in canon. landmark +
+// encounter remain as CampaignMap-only overflow.
 const PIN_CATEGORIES = [
   // Row 1
   { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
   { value: 'location',   label: 'Location',   emoji: '📍' },
   { value: 'residence',  label: 'Residence',  emoji: '🏠' },
+  { value: 'camp',       label: 'Camp',       emoji: '🏕️' },
   { value: 'business',   label: 'Business',   emoji: '🏪' },
   { value: 'church',     label: 'Church',     emoji: '⛪' },
   { value: 'government', label: 'Government', emoji: '🏛️' },
-  { value: 'airport',    label: 'Transport',  emoji: '✈️' },
   { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
   { value: 'military',   label: 'Military',   emoji: '⚔️' },
   // Row 2 (person + group lead per 2026-05-15)
@@ -97,8 +100,7 @@ const PIN_CATEGORIES = [
   { value: 'community',  label: 'Community',  emoji: '🏘️' },
   { value: 'world_event', label: 'World Event', emoji: '🌍' },
   { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
-  // Row 3 (overflow)
-  { value: 'camp',       label: 'Camp',       emoji: '🏕️' },
+  // Row 3 (CampaignMap overflow — not in canonical list)
   { value: 'landmark',   label: 'Landmark',   emoji: '🗿' },
   { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
 ]
