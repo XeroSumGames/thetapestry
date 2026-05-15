@@ -55,7 +55,7 @@ import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { OUTCOME } from '../../../../lib/roll-outcomes'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
-import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS } from '../../../../lib/xse-schema'
+import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
 interface Campaign {
@@ -6342,6 +6342,31 @@ export default function TablePage() {
       const names = Array.from(pendingWoundInfectionRef.current)
       pendingWoundInfectionRef.current.clear()
       for (const n of names) await maybeLogWoundInfection(n)
+    }
+    // Lasting Wound announcement row. Mirrors the wound-infection
+    // warning + weapon-malfunction pattern: emit AFTER saveRollToLog
+    // so the dice roll row appears above the announcement in the feed
+    // (oldest-first). Uses the player-friendly narrative override from
+    // LASTING_WOUND_NARRATIVE when available, falling back to the
+    // canon effect string for wounds that don't have an override yet.
+    if (lastingDamageJson) {
+      const wRoll = lastingDamageJson.wound_roll
+      const wName = lastingDamageJson.wound_name
+      const wEffect = LASTING_WOUND_NARRATIVE[wRoll] ?? lastingDamageJson.wound_effect
+      // Use the patient's name, not the dice-roller's. They're the
+      // same on a PC self-roll but distinct if the GM rolled for an
+      // NPC ("Vera Oakes" should announce Vera's wound, not the GM's
+      // character).
+      const patientName = pendingRoll.label.split(' - ')[0]
+      const { error: lwLogErr } = await supabase.from('roll_log').insert({
+        campaign_id: id, user_id: userId,
+        character_name: patientName,
+        label: `${patientName} has picked up a Lasting Wound and is now ${wName} (${wEffect})`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+        outcome: OUTCOME.lasting_wound_acquired,
+        damage_json: { wound_name: wName, wound_effect: wEffect, wound_roll: wRoll } as any,
+      })
+      if (lwLogErr) console.error('[lasting-wound] roll_log insert error:', lwLogErr.message)
     }
     // Drain queued weapon-malfunction row. Same after-attack ordering
     // applies — malfunction is a consequence of the attack roll, so

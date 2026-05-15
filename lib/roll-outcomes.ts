@@ -72,6 +72,12 @@ export const OUTCOME = {
   // the feed surfaces the malfunction as a discrete event. Reader
   // sees: attack row → malfunction row.
   weapon_malfunction: 'weapon_malfunction',
+  // Lasting Wound acquired - announcement row inserted right after a
+  // Lasting Damage Check resolves to Failure / Dire Failure (and the
+  // 2d6 on Table 12 has been applied to the patient's
+  // data.lastingWounds). Reader sees: dice roll row -> announcement
+  // row "X has picked up a Lasting Wound and is now <wound> (<effect>)".
+  lasting_wound_acquired: 'lasting_wound_acquired',
 } as const
 
 export type RollOutcome = typeof OUTCOME[keyof typeof OUTCOME]

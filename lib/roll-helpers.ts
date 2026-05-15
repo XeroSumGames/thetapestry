@@ -65,6 +65,12 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // Weapon malfunction (Low Insight on a non-Unarmed weapon roll).
   // Label is the full sentence — return verbatim, no trim needed.
   if (r.outcome === 'weapon_malfunction') return r.label
+  // Lasting Wound acquired announcement (post-Lasting-Damage-Check
+  // resolution). Label is the full sentence, e.g.
+  //   "Cree Hask has picked up a Lasting Wound and is now Skittish
+  //    (-1 CMod on initiative rolls)"
+  // Return verbatim - no compact transformation needed.
+  if (r.outcome === 'lasting_wound_acquired') return r.label
   const suffix = r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label
   const hit = r.outcome === OUTCOME.Success || r.outcome === OUTCOME.WildSuccess || r.outcome === OUTCOME.HighInsight
   // Outcome suffix appended to the trim sentence. Canon rule per Xero

@@ -714,6 +714,15 @@ export const LASTING_WOUNDS: Record<number, { name: string; effect: string }> = 
   12: { name: 'Shell Shock',  effect: '-2 Dexterity' },
 };
 
+// Player-facing narrative override for the Lasting Wound feed line.
+// Canon effect strings (above) read like rulebook citations; these
+// rephrase the effect into how it actually applies at the table.
+// Falls back to LASTING_WOUNDS[n].effect when no override is set.
+// Add entries here as Xero locks the wording per wound.
+export const LASTING_WOUND_NARRATIVE: Partial<Record<number, string>> = {
+  7: '-1 CMod on initiative rolls',  // Skittish (locked 2026-05-15)
+};
+
 // ----------------------------
 // BREAKING POINT (Table 13)
 // ----------------------------
