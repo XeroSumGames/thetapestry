@@ -59,16 +59,21 @@ declare global {
   }
 }
 
-// Called by PlaytestRecorder after fetching playtest_recorder_config and
-// deciding whether the current user is in scope. Does NOT wipe the buffer
-// — that's a separate explicit call. Mid-session toggles from /record
-// should stop capture without nuking 3 hours of data; only the initial
-// fail-closed path (config says "off for me from the start") should wipe.
+// Toggle the recorder's enabled flag for THIS tab. Tab-local: no DB
+// write, no cross-tab effect. Fires a window event so PlaytestRecorder
+// can sync its corner-dot visibility. Does NOT wipe the buffer or
+// trigger a download — those are explicit calls owned by the caller
+// (the table-page Record button handles both).
 export function setEnabled(enabled: boolean) {
   const r = getRecorder()
   if (!r) return
   if (r.enabled === enabled) return
   r.enabled = enabled
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('tapestry-recorder-changed', { detail: { enabled } }))
+    } catch { /* ignore - some envs lack CustomEvent */ }
+  }
 }
 
 // Explicit buffer wipe. Used by PlaytestRecorder's initial gate eval
@@ -138,12 +143,15 @@ function redact(value: unknown, depth = 0): unknown {
 export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown>) {
   const r = getRecorder()
   if (!r) return
-  // Capture is unconditional now (was gated on r.enabled). The DB
-  // `enabled` flag transitioned from "gate" to "session marker":
-  // ON click = wipe + start fresh; OFF click = auto-download. This
-  // removes the "I forgot to flip ON" failure mode that nuked the
-  // 2026-05-11 playtest data — events accumulate from page mount and
-  // are dumped at session end regardless of when ON was clicked.
+  // Tab-local gate (2026-05-15 rewrite): only capture when THIS tab's
+  // Record button has been clicked ON. Per Xero: "the GM and the
+  // players should ALL have a record button that ONLY records their
+  // browser tab." Previous unconditional-capture model coupled every
+  // tab to the global playtest_recorder_config flag, so any user's
+  // /record toggle started/stopped capture across every connected
+  // client. Trade-off: a player who forgets to hit Record loses any
+  // pre-click context. That's the price of strict tab-isolation.
+  if (!r.enabled) return
   const ev: PlaytestEvent = {
     t: new Date().toISOString(),
     ms: Date.now() - r.startedAt,

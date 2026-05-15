@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { getCachedAuth } from '../lib/auth-cache'
 import { createClient } from '../lib/supabase-browser'
-import { record, downloadDump, getRecorder, setEnabled, wipeBuffer, startPeriodicFlush } from '../lib/playtest-recorder'
+import { record, downloadDump, getRecorder, startPeriodicFlush } from '../lib/playtest-recorder'
 
 // Warns we never want in the dump — already filtered from the console by the
 // head script in app/layout.tsx, but our recorder runs upstream of that
@@ -62,7 +62,14 @@ export default function PlaytestRecorder() {
       userEmail: null,
       sessionId,
       pathname: window.location.pathname,
-      enabled: true, // optimistic — flipped off below if config disagrees
+      // Tab-local gate (2026-05-15 rewrite): each tab starts OFF.
+      // The only way to start capture is for that tab's Record
+      // button click. No DB config, no realtime sync, no global
+      // override. Previous "optimistic-on + DB gate" model coupled
+      // every tab to a shared flag; players reported the GM's
+      // button firing for them. Per Xero's spec, every user has
+      // their own button that controls only their tab.
+      enabled: false,
     }
 
     // Resolve user identity in the background; events recorded before this
@@ -81,100 +88,38 @@ export default function PlaytestRecorder() {
     }
     getCachedAuth().then(({ user }) => applyUser(user ?? null)).catch(() => {})
 
-    // ── Session marker (was: recorder gate). Capture is unconditional
-    //    now — events always accumulate locally per tab. The DB
-    //    `enabled` flag is a session marker: a transition OFF→ON wipes
-    //    the buffer (fresh session start) and a transition ON→OFF
-    //    triggers an automatic download (session end). Allowlist
-    //    (target_user_ids) gates WHICH tabs participate in the
-    //    transitions — non-allowlisted tabs keep recording locally and
-    //    can still be manually dumped via Ctrl+Shift+L, but their
-    //    auto-dump is suppressed so the dump pile isn't polluted by
-    //    tabs the GM didn't intend to record.
-    //
-    //    Re-runs on auth-state change and on realtime config UPDATE,
-    //    so /record-page saves propagate to every open tab.
-    const prevEnabledRef = { current: null as boolean | null }
-    const evaluateGate = async () => {
-      try {
-        const supabase = createClient()
-        const [{ data: cfg }, { user }] = await Promise.all([
-          supabase.from('playtest_recorder_config')
-            .select('enabled, target_user_ids')
-            .eq('id', 1)
-            .maybeSingle(),
-          getCachedAuth(),
-        ])
-        let resolved: boolean
-        if (!cfg || !cfg.enabled) {
-          resolved = false
-        } else {
-          const targets = (cfg.target_user_ids ?? []) as string[]
-          resolved = targets.length === 0
-            ? !!user                              // allowlist empty → all authed
-            : !!user && targets.includes(user.id) // allowlist → my id?
-        }
-        const prev = prevEnabledRef.current
-        prevEnabledRef.current = resolved
-        // Transition logic (skip on the very first eval — there's no
-        // previous state to compare against, and we don't want to dump
-        // a freshly-loaded tab's empty buffer on initial gate read).
-        if (prev !== null) {
-          if (prev === false && resolved === true) {
-            // OFF → ON: new session starting. Clear the buffer so the
-            // dump at session end is purely this session's events.
-            wipeBuffer()
-          } else if (prev === true && resolved === false) {
-            // ON → OFF: session ended. Auto-download this tab's buffer
-            // so the GM doesn't have to hit Ctrl+Shift+L on every tab.
-            downloadDump()
-          }
-        }
-        setEnabled(resolved)
-        setEnabledUI(resolved)
-      } catch {
-        // On any error fetching config, leave the tab's state alone
-        // rather than nuke the buffer or trigger a spurious download.
-        // Without a confirmed DB read, we can't tell a real transition
-        // from a transient network error.
-      }
-    }
-    evaluateGate()
-
-    // Periodic flush so a browser crash mid-session loses ≤60s of context
-    // instead of the whole session. Idempotent — startPeriodicFlush no-ops
-    // if a timer is already running.
+    // Periodic flush so a browser crash mid-session loses <=60s of
+    // context instead of the whole session. Idempotent —
+    // startPeriodicFlush no-ops if a timer is already running.
     startPeriodicFlush()
 
-    // Realtime subscription on playtest_recorder_config so /record-page
-    // toggles propagate to every open tab without requiring a reload.
-    // Critical for the "turn on at session start, leave running for 3h"
-    // workflow — otherwise players would need to reload after the GM
-    // flips ON.
-    try {
-      const supabaseRt = createClient()
-      const ch = supabaseRt.channel('playtest_recorder_config_changes')
-        .on('postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'playtest_recorder_config', filter: 'id=eq.1' },
-          () => evaluateGate())
-        .subscribe()
-      // Best-effort cleanup is omitted — this is a singleton mount that
-      // lives for the page lifetime; the channel is implicitly torn down
-      // when the tab closes.
-      void ch
-    } catch { /* realtime disabled / SSR */ }
+    // Tab-local recorder state listener. When this tab's Record button
+    // flips the lib's enabled flag, setEnabled fires a
+    // 'tapestry-recorder-changed' window event - we mirror it into
+    // enabledUI so the corner dot shows/hides. No DB config, no
+    // realtime subscription, no cross-tab propagation. (Previous
+    // PlaytestRecorder fetched playtest_recorder_config + subscribed
+    // to it via realtime; that coupled every tab to a global flag and
+    // caused the "GM Record button fires for every player" bug.
+    // Removed 2026-05-15.)
+    const onRecorderChanged = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail && typeof detail.enabled === 'boolean') setEnabledUI(detail.enabled)
+    }
+    window.addEventListener('tapestry-recorder-changed', onRecorderChanged)
+    // Initial sync from the lib's flag (false by default per the
+    // __tapestryRecorder init above).
+    setEnabledUI(!!getRecorder()?.enabled)
 
-    // Subscribe to auth-state changes so dumps after a fresh sign-in are
-    // tagged with the user — fixes the always-`anon` filename problem when
-    // the recorder mounts on /login before the user has signed in.
+    // Subscribe to auth-state changes so dumps after a fresh sign-in
+    // are tagged with the user - fixes the always-`anon` filename
+    // problem when the recorder mounts on /login before the user has
+    // signed in. No recorder-gate side effects here anymore.
     let authSub: { unsubscribe: () => void } | null = null
     try {
       const supabase = createClient()
       const { data } = supabase.auth.onAuthStateChange((_event: string, session: { user?: { id: string; email?: string | null } | null } | null) => {
         applyUser(session?.user ?? null)
-        // Re-check the recorder gate — a user signing in might transition
-        // from "no-record" to "record for me" if they're on the allowlist.
-        evaluateGate()
       })
       authSub = data.subscription
     } catch {}
