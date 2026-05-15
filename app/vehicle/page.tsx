@@ -113,6 +113,18 @@ export default function VehiclePage() {
   const [pendingSlot, setPendingSlot] = useState<Record<string, string>>({})
   const [submittingSlot, setSubmittingSlot] = useState<Set<string>>(new Set())
 
+  // Range-gate state (2026-05-17). Crew/passenger seats can only be
+  // assigned to a character whose scene_token is within Close range
+  // (<= 30 ft per RANGE_BAND_MAX_FEET) of the vehicle token, computed
+  // edge-to-edge over multi-cell footprints. characterRangeFeet maps
+  // every PC/NPC id we found a token for to its current distance in
+  // feet from the vehicle. Anyone with no scene_token entry is absent
+  // from the map and treated as out-of-range (can't board what isn't
+  // on the scene). Recomputed on the token_moved broadcast.
+  const [sceneInfo, setSceneInfo] = useState<{ id: string; cellFeet: number } | null>(null)
+  const [vehicleTokenPos, setVehicleTokenPos] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+  const [characterRangeFeet, setCharacterRangeFeet] = useState<Record<string, number>>({})
+
   useEffect(() => {
     async function load() {
       if (!campaignId || !vehicleId) { setLoading(false); return }
@@ -231,6 +243,70 @@ export default function VehiclePage() {
     return () => { supabase.removeChannel(channel) }
   }, [campaignId, vehicleId])
 
+  // Range-gate token loader (2026-05-17). Loads the active scene's
+  // vehicle token + every PC/NPC token, computes edge-to-edge distance
+  // in feet from each to the vehicle's bounding box, and stashes the
+  // result so dropdowns can show a "⛔ Too far" tag on anyone outside
+  // Close range. Recomputes on the tactical_${campaignId} channel's
+  // token_moved broadcast (fired by TacticalMap drags AND by this
+  // popout's own MOVE HERE snaps).
+  useEffect(() => {
+    if (!campaignId || !vehicle?.name) return
+    let cancelled = false
+
+    async function loadTokens() {
+      const { data: scene } = await supabase
+        .from('tactical_scenes')
+        .select('id, cell_feet')
+        .eq('campaign_id', campaignId)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (cancelled || !scene) {
+        setSceneInfo(null); setVehicleTokenPos(null); setCharacterRangeFeet({})
+        return
+      }
+      const sceneRow = scene as { id: string; cell_feet: number | null }
+      const cellFeet = sceneRow.cell_feet ?? 3
+      const { data: tokens } = await supabase
+        .from('scene_tokens')
+        .select('name, token_type, character_id, npc_id, grid_x, grid_y, grid_w, grid_h')
+        .eq('scene_id', sceneRow.id)
+        .is('archived_at', null)
+      if (cancelled) return
+      const all = (tokens ?? []) as any[]
+      const vehTok = all.find(t => t.token_type === 'object' && t.name === vehicle!.name)
+      if (!vehTok) {
+        setSceneInfo({ id: sceneRow.id, cellFeet }); setVehicleTokenPos(null); setCharacterRangeFeet({})
+        return
+      }
+      const vBox = {
+        x: vehTok.grid_x, y: vehTok.grid_y,
+        w: vehTok.grid_w ?? 1, h: vehTok.grid_h ?? 1,
+      }
+      const distances: Record<string, number> = {}
+      for (const t of all) {
+        const id: string | null = t.character_id ?? t.npc_id ?? null
+        if (!id) continue
+        const tBox = { x: t.grid_x, y: t.grid_y, w: t.grid_w ?? 1, h: t.grid_h ?? 1 }
+        // Edge-to-edge gap on each axis (0 when boxes overlap on that
+        // axis); diagonal distance via hypot, multiplied by cellFeet.
+        const gx = Math.max(0, vBox.x - (tBox.x + tBox.w), tBox.x - (vBox.x + vBox.w))
+        const gy = Math.max(0, vBox.y - (tBox.y + tBox.h), tBox.y - (vBox.y + vBox.h))
+        distances[id] = Math.hypot(gx, gy) * cellFeet
+      }
+      setSceneInfo({ id: sceneRow.id, cellFeet })
+      setVehicleTokenPos(vBox)
+      setCharacterRangeFeet(distances)
+    }
+
+    loadTokens()
+
+    const ch = supabase.channel(`tactical_${campaignId}`)
+      .on('broadcast', { event: 'token_moved' }, () => { loadTokens() })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(ch) }
+  }, [campaignId, vehicle?.name])
+
   if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
   if (!vehicle) return <div style={{ background: '#0f0f0f', color: '#f5a89a', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Vehicle not found.</div>
 
@@ -325,6 +401,39 @@ export default function VehiclePage() {
     return { dx: 0, dy: 0 }
   }
 
+  // True when crewId is currently occupying ANY seat on this vehicle
+  // (driver / navigator / brewer / passenger / shooter). Used by the
+  // range gate to keep currently-aboard members selectable even when
+  // their token is far from the vehicle - the auto-vacate flow on
+  // confirm will reassign them between seats without dragging their
+  // token first.
+  function isCurrentlyOnVehicle(crewId: string): boolean {
+    if (!vehicle || !crewId) return false
+    if (vehicle.driver_character_id === crewId) return true
+    if (vehicle.brewer_character_id === crewId) return true
+    if (vehicle.navigator_character_id === crewId) return true
+    if (vehicle.passenger_seats?.some(s => s?.character_id === crewId)) return true
+    if (vehicle.mounted_weapons?.some(w => w?.shooter_character_id === crewId)) return true
+    return false
+  }
+
+  // Out-of-range gate. Returns true when the candidate has a token on
+  // the active scene and that token is beyond Close range (30 ft per
+  // RANGE_BAND_MAX_FEET) from the vehicle's bounding box. Returns
+  // false when:
+  //  - no scene info loaded yet (can't gate, allow)
+  //  - candidate isn't on the map at all (let the GM place them first;
+  //    the range gate only blocks people who ARE on the map but too far)
+  //  - candidate is already aboard this vehicle (reassigns are free)
+  function isOutOfRangeForVehicle(crewId: string): boolean {
+    if (!crewId) return false
+    if (!sceneInfo || !vehicleTokenPos) return false
+    if (isCurrentlyOnVehicle(crewId)) return false
+    const feet = characterRangeFeet[crewId]
+    if (feet === undefined) return false
+    return feet > 30
+  }
+
   function getSavedSlotValue(slot: SlotKey): string {
     if (!vehicle) return ''
     if (slot === 'driver') return vehicle.driver_character_id ?? ''
@@ -391,12 +500,21 @@ export default function VehiclePage() {
     const targetY = (vehTok as any).grid_y + rdy
     const member = crew.find(c => c.id === assigneeId)
     if (!member) return
-    const filterCol = member.kind === 'pc' ? 'character_id' : 'npc_id'
-    const { error } = await supabase
-      .from('scene_tokens')
-      .update({ grid_x: targetX, grid_y: targetY })
-      .eq('scene_id', (scene as any).id)
-      .eq(filterCol, assigneeId)
+    // Route through the snap_token_to_seat RPC instead of a direct
+    // UPDATE. Direct UPDATEs hit the "Players move own token" RLS
+    // policy, which only lets a player move their OWN PC token - so
+    // non-GMs clicking MOVE HERE on someone else's seat got a silent
+    // 0-row reject. The RPC is SECURITY DEFINER and authorizes by
+    // campaign membership, so any seat-popout user can snap any
+    // assignee. (RPC scope is narrow: only grid_x/grid_y on the named
+    // scene+assignee, nothing else.)
+    const { error } = await supabase.rpc('snap_token_to_seat', {
+      p_scene_id: (scene as any).id,
+      p_assignee_id: assigneeId,
+      p_kind: member.kind,
+      p_target_x: targetX,
+      p_target_y: targetY,
+    })
     if (error) {
       console.error('[vehicle-popout] slot auto-move failed:', error.message)
       return
@@ -416,6 +534,15 @@ export default function VehiclePage() {
   async function confirmPending(slot: SlotKey) {
     const newValue = pendingSlot[slot]
     if (newValue === undefined) return
+    // Defense in depth on the range gate: the dropdown disables
+    // out-of-range options visually, but if the staged value somehow
+    // becomes out-of-range between selection and click (vehicle drives
+    // away after pick), refuse the commit and tell the user why.
+    if (newValue && isOutOfRangeForVehicle(newValue)) {
+      const name = crew.find(c => c.id === newValue)?.name ?? 'that character'
+      alert(`${name} is too far from ${vehicle?.name ?? 'the vehicle'} to board. Move within Close range (30 ft) first.`)
+      return
+    }
     setSubmittingSlot(prev => {
       const next = new Set(prev)
       next.add(slot)
@@ -874,6 +1001,22 @@ export default function VehiclePage() {
   const lbl: React.CSSProperties = { fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }
   const bigVal: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }
 
+  // Render a single crew dropdown option with the Close-range gate
+  // applied. Out-of-range options get a "⛔ Too far" suffix and the
+  // disabled attribute, so the player can see WHY they can't pick
+  // someone instead of the option just vanishing. Currently-onboard
+  // characters are always selectable (already in the vehicle; reassigns
+  // between seats don't care about distance — handled by
+  // isOutOfRangeForVehicle's currently-aboard short-circuit).
+  function renderCrewOption(c: CrewMember, statsSuffix: string) {
+    const outOfRange = isOutOfRangeForVehicle(c.id)
+    return (
+      <option key={c.id} value={c.id} disabled={outOfRange}>
+        {c.name}{statsSuffix}{outOfRange ? ' - Too far' : ''}
+      </option>
+    )
+  }
+
   // MOVE HERE button — acts as both the implicit Confirm for a staged
   // dropdown change AND the on-demand "snap token to seat" action.
   // When the dropdown has been changed (pendingSlot set), clicking
@@ -956,16 +1099,12 @@ export default function VehiclePage() {
                 <option value="">— Select driver —</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
-                    {crew.filter(c => c.kind === 'pc').map(c => (
-                      <option key={c.id} value={c.id}>{c.name} (DEX +{c.dex} · Driving +{c.drivingLevel})</option>
-                    ))}
+                    {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (DEX +${c.dex} · Driving +${c.drivingLevel})`))}
                   </optgroup>
                 )}
                 {crew.filter(c => c.kind === 'npc').length > 0 && (
                   <optgroup label="NPCs">
-                    {crew.filter(c => c.kind === 'npc').map(c => (
-                      <option key={c.id} value={c.id}>{c.name} (DEX +{c.dex} · Driving +{c.drivingLevel})</option>
-                    ))}
+                    {crew.filter(c => c.kind === 'npc').map(c => renderCrewOption(c, ` (DEX +${c.dex} · Driving +${c.drivingLevel})`))}
                   </optgroup>
                 )}
               </select>
@@ -990,16 +1129,12 @@ export default function VehiclePage() {
                 <option value="">— Empty —</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
-                    {crew.filter(c => c.kind === 'pc').map(c => (
-                      <option key={c.id} value={c.id}>{c.name} (ACU +{c.attributes['ACU'] ?? 0} · Nav +{c.skillByName['Navigation'] ?? 0})</option>
-                    ))}
+                    {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (ACU +${c.attributes['ACU'] ?? 0} · Nav +${c.skillByName['Navigation'] ?? 0})`))}
                   </optgroup>
                 )}
                 {crew.filter(c => c.kind === 'npc').length > 0 && (
                   <optgroup label="NPCs">
-                    {crew.filter(c => c.kind === 'npc').map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                    {crew.filter(c => c.kind === 'npc').map(c => renderCrewOption(c, ''))}
                   </optgroup>
                 )}
               </select>
@@ -1026,16 +1161,12 @@ export default function VehiclePage() {
                 <option value="">— Select brewer —</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
-                    {crew.filter(c => c.kind === 'pc').map(c => (
-                      <option key={c.id} value={c.id}>{c.name} (M* +{c.mechanicLevel} · Tink +{c.tinkererLevel})</option>
-                    ))}
+                    {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (M* +${c.mechanicLevel} · Tink +${c.tinkererLevel})`))}
                   </optgroup>
                 )}
                 {crew.filter(c => c.kind === 'npc').length > 0 && (
                   <optgroup label="NPCs">
-                    {crew.filter(c => c.kind === 'npc').map(c => (
-                      <option key={c.id} value={c.id}>{c.name} (M* +{c.mechanicLevel} · Tink +{c.tinkererLevel})</option>
-                    ))}
+                    {crew.filter(c => c.kind === 'npc').map(c => renderCrewOption(c, ` (M* +${c.mechanicLevel} · Tink +${c.tinkererLevel})`))}
                   </optgroup>
                 )}
               </select>
@@ -1072,16 +1203,12 @@ export default function VehiclePage() {
                     <option value="">— Empty —</option>
                     {crew.filter(c => c.kind === 'pc').length > 0 && (
                       <optgroup label="Player Characters">
-                        {crew.filter(c => c.kind === 'pc').map(c => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
+                        {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ''))}
                       </optgroup>
                     )}
                     {crew.filter(c => c.kind === 'npc').length > 0 && (
                       <optgroup label="NPCs">
-                        {crew.filter(c => c.kind === 'npc').map(c => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
+                        {crew.filter(c => c.kind === 'npc').map(c => renderCrewOption(c, ''))}
                       </optgroup>
                     )}
                   </select>
@@ -1122,16 +1249,12 @@ export default function VehiclePage() {
                       <option value="">— Select shooter —</option>
                       {crew.filter(c => c.kind === 'pc').length > 0 && (
                         <optgroup label="Player Characters">
-                          {crew.filter(c => c.kind === 'pc').map(c => (
-                            <option key={c.id} value={c.id}>{c.name} (DEX +{c.dex} · RC +{c.rangedCombatLevel})</option>
-                          ))}
+                          {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (DEX +${c.dex} · RC +${c.rangedCombatLevel})`))}
                         </optgroup>
                       )}
                       {crew.filter(c => c.kind === 'npc').length > 0 && (
                         <optgroup label="NPCs">
-                          {crew.filter(c => c.kind === 'npc').map(c => (
-                            <option key={c.id} value={c.id}>{c.name} (DEX +{c.dex} · RC +{c.rangedCombatLevel})</option>
-                          ))}
+                          {crew.filter(c => c.kind === 'npc').map(c => renderCrewOption(c, ` (DEX +${c.dex} · RC +${c.rangedCombatLevel})`))}
                         </optgroup>
                       )}
                     </select>
