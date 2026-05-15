@@ -403,6 +403,12 @@ export default function TablePage() {
   // emit helper so a reload mid-combat doesn't re-emit duplicates
   // for names the page already wrote pre-reload.
   const woundInfectionLoggedRef = useRef<Set<string>>(new Set())
+  // Per-roll queue of target names that took a wound this attack.
+  // Populated during damage application; drained AFTER saveRollToLog
+  // finishes the attack row, so the warning's created_at strictly
+  // follows the attack's (feed order: attack first, warning below).
+  // Mirrors the pendingLootLogs pattern used for auto-loot rows.
+  const pendingWoundInfectionRef = useRef<Set<string>>(new Set())
   useEffect(() => {
     // Reset on combatActive flipping true. False→false transitions
     // (e.g. parent state churn) don't fire because the dep only
@@ -4838,10 +4844,10 @@ export default function TablePage() {
         const newWP = Math.max(0, currentWP - finalWP)
         const newRP = Math.max(0, currentRP - finalRP)
         console.warn('[damage] PC target', targetEntry.character.name, 'WP:', currentWP, '→', newWP, 'RP:', currentRP, '→', newRP)
-        // Wound Infection warning (canon §06 reminder) — fires once per
-        // character per combat on the first wound (finalWP > 0). Fire
-        // and forget; the helper dedups internally.
-        if (finalWP > 0) void maybeLogWoundInfection(targetEntry.character.name)
+        // Queue a wound-infection warning. Drained AFTER saveRollToLog
+        // so the warning row's created_at follows the attack row's,
+        // keeping feed order: attack first, warning below.
+        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetEntry.character.name)
 
         if (newWP === 0 && currentWP > 0 && currentInsight > 0) {
           const { error: csErr, data: csData } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select()
@@ -4956,10 +4962,8 @@ export default function TablePage() {
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
         console.warn('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
-        // Wound Infection warning — NPCs can also be sick per canon
-        // (campaign_npcs has the infection_state columns). Fire on
-        // first wound during combat.
-        if (finalWP > 0) void maybeLogWoundInfection(targetNpc.name)
+        // Queue a wound-infection warning. Drained after saveRollToLog.
+        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetNpc.name)
         const npcUpdate: any = { wp_current: newWP, rp_current: newRP }
         // Mortal wound - NPC enters death countdown when WP first hits 0
         if (newWP === 0 && npcWP > 0) {
@@ -5994,6 +5998,15 @@ export default function TablePage() {
       const { error: lootErr } = await supabase.from('roll_log').insert(pendingLootLogs)
       if (lootErr) console.error('[auto-loot] log insert error:', lootErr.message)
     }
+    // Drain queued wound-infection warnings. Same pattern as auto-loot:
+    // emit AFTER saveRollToLog so the attack row appears above the
+    // warning in the feed (oldest-first). maybeLogWoundInfection's
+    // internal dedup handles the cross-target / cross-combat checks.
+    if (pendingWoundInfectionRef.current.size > 0) {
+      const names = Array.from(pendingWoundInfectionRef.current)
+      pendingWoundInfectionRef.current.clear()
+      for (const n of names) await maybeLogWoundInfection(n)
+    }
 
     // First Impression - write outcome to npc_relationships.relationship_cmod.
     // Outcome → CMod mapping (SRD v1.1.17 §07, canonical):
@@ -6133,7 +6146,7 @@ export default function TablePage() {
 
       // Apply damage to target
       if (targetEntry?.liveState) {
-        if (finalWP > 0) void maybeLogWoundInfection(targetEntry.character.name)
+        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetEntry.character.name)
         const tNewWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const tNewRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
         const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
@@ -6159,7 +6172,7 @@ export default function TablePage() {
           })
         }
       } else if (targetNpcObj) {
-        if (finalWP > 0) void maybeLogWoundInfection(targetNpcObj.name)
+        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetNpcObj.name)
         const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
         const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
         const tNewWP = Math.max(0, tNpcWP - finalWP)
@@ -6193,6 +6206,14 @@ export default function TablePage() {
     const { insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName || null, rerollDamage)
     if (insightAwarded) {
       await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+    }
+    // Drain queued wound-infection warnings — reroll-path parallel of
+    // the executeRoll drain (see comment there). Warning row's
+    // created_at lands after the reroll's saveRollToLog completes.
+    if (pendingWoundInfectionRef.current.size > 0) {
+      const names = Array.from(pendingWoundInfectionRef.current)
+      pendingWoundInfectionRef.current.clear()
+      for (const n of names) await maybeLogWoundInfection(n)
     }
 
     const prev = (rollResult as any).insightUsed as RollResult['insightUsed']
