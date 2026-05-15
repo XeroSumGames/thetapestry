@@ -415,6 +415,11 @@ export default function TablePage() {
   // Populated by endCombat, drained by closeRollModal as each roll
   // resolves.
   const pendingInfectionChecksRef = useRef<Array<{ name: string; amod: number }>>([])
+  // Per-roll queue of weapon-malfunction log rows. Populated when an
+  // attack roll lands Low Insight on a non-Unarmed weapon; drained
+  // AFTER saveRollToLog so the malfunction row's created_at follows
+  // the attack row's. Mirrors pendingWoundInfectionRef.
+  const pendingJamLogRef = useRef<string | null>(null)
   useEffect(() => {
     // Reset on combatActive flipping true. False→false transitions
     // (e.g. parent state churn) don't fire because the dep only
@@ -5501,6 +5506,11 @@ export default function TablePage() {
     let weaponJammed = false
     if (pendingRoll.weapon && pendingRoll.weapon.weaponName !== 'Unarmed' && outcome === 'Low Insight') {
       weaponJammed = true
+      // Queue the malfunction log row. Drained after saveRollToLog
+      // so the malfunction row's created_at follows the attack row's
+      // (feed order: attack first, malfunction below). characterName
+      // is in scope from earlier in executeRoll.
+      pendingJamLogRef.current = characterName
       if (myEntry) {
         const charData = myEntry.character.data ?? {}
         const slots = ['weaponPrimary', 'weaponSecondary'] as const
@@ -6111,6 +6121,21 @@ export default function TablePage() {
       const names = Array.from(pendingWoundInfectionRef.current)
       pendingWoundInfectionRef.current.clear()
       for (const n of names) await maybeLogWoundInfection(n)
+    }
+    // Drain queued weapon-malfunction row. Same after-attack ordering
+    // applies — malfunction is a consequence of the attack roll, so
+    // its created_at must follow the attack row's.
+    if (pendingJamLogRef.current) {
+      const attackerName = pendingJamLogRef.current
+      pendingJamLogRef.current = null
+      const { error: jamErr } = await supabase.from('roll_log').insert({
+        campaign_id: id, user_id: userId,
+        character_name: attackerName,
+        label: `${attackerName}'s weapon malfunctions and they must ready it for use again!`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+        outcome: OUTCOME.weapon_malfunction,
+      })
+      if (jamErr) console.error('[weapon-malfunction] roll_log insert error:', jamErr.message)
     }
 
     // First Impression - write outcome to npc_relationships.relationship_cmod.

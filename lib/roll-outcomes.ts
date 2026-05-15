@@ -67,6 +67,11 @@ export const OUTCOME = {
   // attack). GM cue to remember the post-combat Wound Infection
   // check per canon (CRB p.114-115).
   wound_infection_warning: 'wound_infection_warning',
+  // Weapon malfunction (Low Insight on a non-Unarmed weapon roll).
+  // Emitted alongside the condition-degrade + jammed-flag write so
+  // the feed surfaces the malfunction as a discrete event. Reader
+  // sees: attack row → malfunction row.
+  weapon_malfunction: 'weapon_malfunction',
 } as const
 
 export type RollOutcome = typeof OUTCOME[keyof typeof OUTCOME]

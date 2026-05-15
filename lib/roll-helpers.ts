@@ -56,6 +56,9 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // return verbatim so the renderer shows it instead of falling
   // through to the verbose dice card.
   if (r.outcome === 'wound_infection_warning') return r.label
+  // Weapon malfunction (Low Insight on a non-Unarmed weapon roll).
+  // Label is the full sentence — return verbatim, no trim needed.
+  if (r.outcome === 'weapon_malfunction') return r.label
   const suffix = r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label
   const hit = r.outcome === OUTCOME.Success || r.outcome === OUTCOME.WildSuccess || r.outcome === OUTCOME.HighInsight
   // Outcome suffix appended to the trim sentence. Canon rule per Xero

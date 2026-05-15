@@ -192,6 +192,14 @@ function renderBespokeBanner(r: RollLogRow): string | null {
   <div class="banner-body" style="color:#f5d8a0">${esc(r.label)}</div>
 </div>`
   }
+  // weapon_malfunction - amber outline, Low Insight on a non-Unarmed
+  // weapon roll. Same shape as the wound-infection banner.
+  if (r.outcome === 'weapon_malfunction') {
+    return `<div class="banner banner-incap">
+  <div class="banner-head"><span class="banner-title amber">⚠️ Weapon Malfunction</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body" style="color:#f5d8a0">${esc(r.label)}</div>
+</div>`
+  }
 
   // retention_check - community survival check (post-3-failures Morale).
   // Survived = community holds; not-survived = community dissolves. Dice
