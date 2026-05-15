@@ -8,7 +8,7 @@
 import { getWeaponByName } from './weapons'
 
 export const BASE_ENC_LIMIT = 6
-export const BACKPACK_BONUS = 2
+const BACKPACK_BONUS = 2
 const BACKPACK_NAMES = new Set(['Backpack', 'Military Backpack'])
 
 export interface EncumbranceItem {

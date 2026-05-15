@@ -102,7 +102,7 @@ const WEAPON_PROFILE_MAP: Record<string, string> = {
   'Mounted Turret / Gatling Gun': 'heavy_mounted',
 }
 
-export function getWeaponRangeProfile(weaponName: string): RangeProfile | null {
+function getWeaponRangeProfile(weaponName: string): RangeProfile | null {
   const key = WEAPON_PROFILE_MAP[weaponName]
   return key ? PROFILES[key] : null
 }

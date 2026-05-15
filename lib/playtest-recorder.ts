@@ -160,7 +160,7 @@ export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown
   }
 }
 
-export function dumpBuffer(): { meta: Record<string, unknown>; events: PlaytestEvent[] } | null {
+function dumpBuffer(): { meta: Record<string, unknown>; events: PlaytestEvent[] } | null {
   const r = getRecorder()
   if (!r) return null
   return {

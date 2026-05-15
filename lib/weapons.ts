@@ -38,14 +38,6 @@ export const CONDITION_CMOD: Record<Condition, number> = {
   Broken: -99, // unusable
 }
 
-export const CONDITION_LABELS: Record<Condition, string> = {
-  Pristine: 'Perfect working order. +1 CMod when used.',
-  Used: 'Good working order.',
-  Worn: 'Works but requires care. -1 CMod when used.',
-  Damaged: 'Not working properly. -2 CMod when used.',
-  Broken: 'Cannot be used unless repaired back to Damaged.',
-}
-
 export const CONDITIONS: Condition[] = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
 
 export const TRAIT_DESCRIPTIONS: Record<string, string> = {
@@ -152,16 +144,6 @@ export interface CharacterWeapon {
   ammoCurrent: number
   ammoMax: number
   reloads: number
-}
-
-export function createCharacterWeapon(weapon: Weapon): CharacterWeapon {
-  return {
-    weaponName: weapon.name,
-    condition: 'Used',
-    ammoCurrent: weapon.clip ?? 0,
-    ammoMax: weapon.clip ?? 0,
-    reloads: weapon.ammo ? Math.floor(Math.random() * 3) + 1 : 0, // 1d3 reloads
-  }
 }
 
 export function getWeaponByName(name: string): Weapon | undefined {
