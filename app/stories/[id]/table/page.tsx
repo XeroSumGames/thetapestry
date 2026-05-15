@@ -1458,8 +1458,17 @@ export default function TablePage() {
           // standard roll modal — patient rolls their own check with
           // their CMod / Insight Dice. NPCs are rolled by the GM
           // directly (separate queue, no broadcast).
+          //
+          // Stale-closure fix (2026-05-15): this handler was defined
+          // inside the [id]-deps useEffect, so the React state
+          // `userId` was captured at mount when it was still null
+          // (setUserId fires inside the same load() but only schedules
+          // a re-render — the closure keeps the null binding). Result:
+          // `null !== <actual-user-id>` was always true, dropping
+          // every broadcast on both tabs. Reading userIdRef.current
+          // gets the always-fresh id (synced via the L244 effect).
           const data = msg.payload
-          if (!data || data.targetUserId !== userId) return
+          if (!data || data.targetUserId !== userIdRef.current) return
           handleRollRequest(`${data.name} - Infection Check (Wound)`, data.amod ?? 0, 0)
         })
         // Players' postgres_changes subscription on npc_relationships is
