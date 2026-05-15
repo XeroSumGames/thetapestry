@@ -5,7 +5,7 @@ import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { logFirstEvent, logEvent } from '../lib/events'
-import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji, categoryNeedsWhiteFilter, wrapCategoryEmojiHtml } from '../lib/pin-categories'
+import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji, getCategoryFilter, wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE, LABEL_STYLE_LG, LABEL_STYLE_TIGHT, ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
@@ -1444,7 +1444,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                             onMouseEnter={e => { if (expandedPinId !== p.id) e.currentTarget.style.background = '#1a1a1a' }}
                             onMouseLeave={e => { if (expandedPinId !== p.id) e.currentTarget.style.background = 'transparent' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ fontSize: '14px', ...(categoryNeedsWhiteFilter(p.category) ? { filter: 'brightness(0) invert(1)', display: 'inline-block' } : {}) }}>{getCategoryEmoji(p.category)}</span>
+                              <span style={{ fontSize: '14px', ...(() => { const f = getCategoryFilter(p.category); return f ? { filter: f, display: 'inline-block' } : {} })() }}>{getCategoryEmoji(p.category)}</span>
                               <span style={{ fontSize: '13px', color: '#f5f2ee', overflow: expandedPinId === p.id ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: expandedPinId === p.id ? 'normal' : 'nowrap' }}>{p.name}</span>
                             </div>
                             {expandedPinId === p.id && p.notes && (

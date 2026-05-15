@@ -72,9 +72,15 @@ const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }
   minnie:  { mph: 32, label: 'Minnie',   emoji: '🚐' },
 }
 
+// Local PIN_CATEGORIES — preserved here (instead of importing from
+// lib/pin-categories.ts) because CampaignMap historically carried two
+// extra categories ('landmark' / 'encounter') that the canonical list
+// doesn't have. Order mirrors the canonical list as of 2026-05-15:
+// row 1 = locations/structures, row 2 starts with person + group.
 const PIN_CATEGORIES = [
+  // Row 1
+  { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
   { value: 'location',   label: 'Location',   emoji: '📍' },
-  { value: 'rumor',      label: 'Rumor',      emoji: '🎒' },
   { value: 'residence',  label: 'Residence',  emoji: '🏠' },
   { value: 'business',   label: 'Business',   emoji: '🏪' },
   { value: 'church',     label: 'Church',     emoji: '⛪' },
@@ -82,16 +88,19 @@ const PIN_CATEGORIES = [
   { value: 'airport',    label: 'Transport',  emoji: '✈️' },
   { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
   { value: 'military',   label: 'Military',   emoji: '⚔️' },
+  // Row 2 (person + group lead per 2026-05-15)
   { value: 'person',     label: 'Person',     emoji: '👤' },
+  { value: 'group',      label: 'Group',      emoji: '👥' },
   { value: 'danger',     label: 'Danger',     emoji: '☠️' },
-  { value: 'landmark',   label: 'Landmark',   emoji: '🗿' },
-  { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
   { value: 'resource',   label: 'Resource',   emoji: '🎒' },
-  { value: 'community',  label: 'Community',  emoji: '🏘️' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },
+  { value: 'community',  label: 'Community',  emoji: '🏘️' },
   { value: 'world_event', label: 'World Event', emoji: '🌍' },
   { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
-  { value: 'group',      label: 'Group',      emoji: '👥' },
+  // Row 3 (overflow)
+  { value: 'camp',       label: 'Camp',       emoji: '🏕️' },
+  { value: 'landmark',   label: 'Landmark',   emoji: '🗿' },
+  { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
 ]
 
 function getCategoryEmoji(category: string): string {
