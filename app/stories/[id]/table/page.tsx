@@ -38,6 +38,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { computeEncumbrance } from '../../../../lib/encumbrance'
 import { advance as advanceCampaignClock, queuePendingHeal } from '../../../../lib/campaign-clock'
+import { exportSessionLog } from '../../../../lib/session-export'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
@@ -9957,6 +9958,10 @@ export default function TablePage() {
 
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowEndSessionModal(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => exportSessionLog({ campaignId: id as string, campaignName: campaign?.name ?? 'Campaign', sessionNumber: sessionCount })}
+                style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Export Log
+              </button>
               <button onClick={endSession} disabled={sessionActing} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
                 {sessionActing ? 'Ending...' : 'End Session'}
               </button>

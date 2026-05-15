@@ -18,6 +18,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { advance, readClock, queueStreamingHeal, cancelEvent, type ClockState } from '../../lib/campaign-clock'
+import { exportSessionLog } from '../../lib/session-export'
 import { dayToCalendar, eventsOnDay, pastAndPresentEvents, hourTo12h } from '../../lib/distemper-timeline'
 
 interface PartyRow {
@@ -273,6 +274,12 @@ export default function CampaignSheetPage() {
             <button onClick={() => setEditClockModal(true)}
               style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Edit
+            </button>
+          )}
+          {isGM && (
+            <button onClick={() => exportSessionLog({ campaignId, campaignName: campaignName || 'Campaign', sessionNumber: 0 })}
+              style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Export Log
             </button>
           )}
         </div>
