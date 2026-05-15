@@ -24,6 +24,10 @@ interface CampaignPin {
   // opens /reader-popout. The pin's image attachments become the
   // reader's pages, sorted natural-numerically.
   reader_mode: string | null
+  // GM-shared folder name. NULL or '' = Uncategorized. Mirrors the
+  // campaign_npcs.folder pattern — added 2026-05-15 via
+  // sql/pin-folder-column-2026-05-15.sql.
+  folder: string | null
 }
 
 interface TacticalScene {
@@ -70,6 +74,24 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   const [scenes, setScenes] = useState<TacticalScene[]>([])
   const [editSceneId, setEditSceneId] = useState<string | null>(null)
   const [editSortOrder, setEditSortOrder] = useState('')
+  const [editFolder, setEditFolder] = useState('')
+  // ── GM-shared folder state (mirrors NpcRoster) ────────────────────
+  // Folder name lives directly on each pin row via the `folder` column.
+  // NULL or empty = "Uncategorized." The expanded/collapsed and folder-
+  // order state is per-viewer in localStorage so a player's open
+  // sections don't leak across users.
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      try { const saved = localStorage.getItem(`pin_folders_${campaignId}`); if (saved) return new Set(JSON.parse(saved)) } catch {}
+    }
+    return new Set<string>()
+  })
+  const [folderOrder, setFolderOrder] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try { const saved = localStorage.getItem(`pin_folder_order_${campaignId}`); if (saved) return JSON.parse(saved) } catch {}
+    }
+    return []
+  })
 
   async function loadPins() {
     let query = supabase
@@ -119,6 +141,49 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
 
   useEffect(() => { loadPins(); loadScenes() }, [campaignId])
 
+  // ── Folder helpers — mirror NpcRoster ──────────────────────────────
+  function toggleFolder(folderName: string) {
+    setExpandedFolders(prev => {
+      const next = new Set(prev)
+      next.has(folderName) ? next.delete(folderName) : next.add(folderName)
+      if (typeof window !== 'undefined') localStorage.setItem(`pin_folders_${campaignId}`, JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  // Bulk reveal / hide every pin in a folder. GM/Thriver only — the
+  // button is hidden for players. Single UPDATE…IN keeps the round-
+  // trip count at one regardless of folder size. Reload happens
+  // optimistically locally; if the write fails the alert surfaces it.
+  async function setFolderRevealed(folderName: string, revealed: boolean) {
+    const target = folderName === 'Uncategorized' ? null : folderName
+    const inFolder = pins.filter(p => (p.folder ?? 'Uncategorized') === folderName)
+    if (inFolder.length === 0) return
+    const previous = pins
+    setPins(prev => prev.map(p => {
+      if ((p.folder ?? 'Uncategorized') !== folderName) return p
+      return { ...p, revealed }
+    }))
+    let query = supabase.from('campaign_pins')
+      .update({ revealed })
+      .eq('campaign_id', campaignId)
+    query = target == null
+      ? query.is('folder', null as any)
+      : query.eq('folder', target)
+    const { error } = await query.select()
+    if (error) {
+      alert(`Folder ${revealed ? 'reveal' : 'hide'} failed: ${error.message}`)
+      setPins(previous)
+      return
+    }
+    if (revealed) {
+      const hiddenIds = inFolder.filter(p => !p.revealed).map(p => p.id)
+      if (hiddenIds.length > 0) {
+        void logEvent('pin_revealed', { campaign_id: campaignId, bulk: true, count: hiddenIds.length, folder: folderName })
+      }
+    }
+  }
+
   async function loadScenes() {
     const { data } = await supabase.from('tactical_scenes').select('id, name').eq('campaign_id', campaignId).order('created_at', { ascending: false })
     setScenes(data ?? [])
@@ -157,6 +222,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     setEditReaderMode(pin.reader_mode ?? null)
     setEditSceneId(pin.tactical_scene_id ?? null)
     setEditSortOrder(pin.sort_order != null ? String(pin.sort_order) : '')
+    setEditFolder(pin.folder ?? '')
   }
 
   async function saveEdit() {
@@ -173,6 +239,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       reader_mode: editReaderMode,
       tactical_scene_id: editSceneId || null,
       sort_order: sortVal != null && !Number.isNaN(sortVal) ? sortVal : null,
+      folder: editFolder.trim() || null,
     }
     // Capture .select() so we can verify the DB returned the new state.
     // Pre-fix bug: this UPDATE was fire-and-forget — when PostgREST's
@@ -269,14 +336,73 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
         </div>
       )}
 
-      {/* Pin list */}
+      {/* Pin list — grouped into GM-shared folders. Mirrors the
+          NpcRoster pattern: each pin row carries a `folder` text
+          column; NULL/empty bucket under "Uncategorized." Order is
+          per-viewer in localStorage (`pin_folder_order_<campaignId>`)
+          so a player rearranging their view doesn't move folders
+          on the GM's screen. */}
       <div style={{ overflowY: 'auto', padding: '4px' }}>
-        {pins.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-            {isGM ? 'No campaign pins' : 'No pins revealed yet'}
-          </div>
-        ) : (
-          pins.map(pin => (
+        {(() => {
+          if (pins.length === 0) {
+            return (
+              <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                {isGM ? 'No campaign pins' : 'No pins revealed yet'}
+              </div>
+            )
+          }
+          // Group pins by folder. NULL / empty / whitespace-only =
+          // Uncategorized. Sort within each folder is already settled
+          // upstream by loadPins (sort_order then created_at).
+          const folderMap: Record<string, CampaignPin[]> = {}
+          for (const p of pins) {
+            const raw = (p.folder ?? '').trim()
+            const key = raw === '' ? 'Uncategorized' : raw
+            if (!folderMap[key]) folderMap[key] = []
+            folderMap[key].push(p)
+          }
+          const allFolderNames = Object.keys(folderMap)
+          // Order: saved order first, then any folders that appeared
+          // since (new GM creation, rename, etc.). Uncategorized
+          // always pinned LAST regardless of order.
+          const ordered = [
+            ...folderOrder.filter(f => allFolderNames.includes(f)),
+            ...allFolderNames.filter(f => !folderOrder.includes(f)),
+          ]
+          const finalOrder = ordered.filter(f => f !== 'Uncategorized')
+          if (ordered.includes('Uncategorized')) finalOrder.push('Uncategorized')
+          // Sync localStorage if the folder list shifted (don't store
+          // 'Uncategorized' — it's an implicit last bucket).
+          const persistable = finalOrder.filter(f => f !== 'Uncategorized')
+          if (persistable.length !== folderOrder.length || persistable.some((f, i) => f !== folderOrder[i])) {
+            setFolderOrder(persistable)
+            if (typeof window !== 'undefined') localStorage.setItem(`pin_folder_order_${campaignId}`, JSON.stringify(persistable))
+          }
+          return finalOrder.map(folderName => {
+            const folderPins = folderMap[folderName]
+            if (!folderPins || folderPins.length === 0) return null
+            const isOpen = expandedFolders.has(folderName)
+            const allFolderRevealed = folderPins.every(p => p.revealed)
+            return (
+              <div key={folderName} style={{ marginBottom: '2px' }}>
+                <div onClick={() => toggleFolder(folderName)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', borderBottom: '1px solid #2e2e2e', userSelect: 'none', background: 'transparent' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                  <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
+                  {canManage && (
+                    <button onClick={e => { e.stopPropagation(); void setFolderRevealed(folderName, !allFolderRevealed) }}
+                      title={allFolderRevealed
+                        ? `Hide all ${folderPins.length} pin${folderPins.length === 1 ? '' : 's'} in ${folderName}`
+                        : `Reveal all ${folderPins.length} pin${folderPins.length === 1 ? '' : 's'} in ${folderName}`}
+                      style={{ padding: '1px 8px', background: allFolderRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allFolderRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allFolderRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                      {allFolderRevealed ? 'Hide' : 'Show'}
+                    </button>
+                  )}
+                  <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderPins.length}</span>
+                </div>
+                {isOpen && folderPins.map(pin => (
             <div
               key={pin.id}
               onDragOver={e => { if (dragId) { e.preventDefault(); setDragOverId(pin.id) } }}
@@ -363,6 +489,21 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       </select>
                     </div>
                   )}
+                  {/* Folder — free-form text. Datalist offers any
+                      existing folder name in this campaign for quick
+                      auto-complete. Empty = Uncategorized. */}
+                  <div style={{ marginBottom: '4px' }}>
+                    <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Folder</div>
+                    <input value={editFolder} onChange={e => setEditFolder(e.target.value)}
+                      list="pin-folder-suggestions"
+                      placeholder="(Uncategorized)"
+                      style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                    <datalist id="pin-folder-suggestions">
+                      {Array.from(new Set(pins.map(p => p.folder).filter((f): f is string => !!f && f.trim().length > 0))).sort().map(f => (
+                        <option key={f} value={f} />
+                      ))}
+                    </datalist>
+                  </div>
                   {/* Sort order — explicit number that decides list position */}
                   <div style={{ marginBottom: '4px', width: '90px' }}>
                     <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Order</div>
@@ -442,8 +583,11 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                 </div>
               )}
             </div>
-          ))
-        )}
+                ))}
+              </div>
+            )
+          })
+        })()}
       </div>
     </>
   )
