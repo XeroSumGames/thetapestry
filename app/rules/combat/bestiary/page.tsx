@@ -119,26 +119,44 @@ export default function Page() {
             </tr>
           </thead>
           <tbody>
-            {distemperAnimals.map(a => (
-              <tr key={a.name}>
-                <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', fontWeight: 700, color: '#f5a89a' }}>{a.name}</td>
-                <td style={{ ...ruleTableTdStyle, textAlign: 'center', fontFamily: 'monospace', color: '#cce0f5' }}>{a.rapidCode}</td>
-                <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.wp_max}</td>
-                <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.rp_max}</td>
-                <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.mdm}</td>
-                <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.rdm}</td>
-                <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>+{a.init}</td>
-                <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.enc}</td>
-                <td style={ruleTableTdStyle}>
-                  {a.skills.map((s, i) => (
-                    <span key={s.name}>
-                      {i > 0 && ', '}
-                      {s.name} {s.level}
-                    </span>
-                  ))}
-                </td>
-              </tr>
-            ))}
+            {distemperAnimals.map(a => {
+              // Surface the +N delta from each infected canine to its base
+              // species - makes the infection's mechanical bump visible at
+              // a glance instead of forcing the reader to cross-reference
+              // the two tables. baseAnimal links the variant to its source.
+              const base = a.baseAnimal ? baseAnimals.find(b => b.name === a.baseAnimal) : undefined
+              const skillDelta = (skillName: string, infectedLevel: number) => {
+                if (!base) return null
+                const baseSkill = base.skills.find(s => s.name === skillName)
+                const baseLevel = baseSkill?.level ?? 0
+                const delta = infectedLevel - baseLevel
+                if (delta <= 0) return null
+                return <span style={{ color: '#7fc458', fontSize: '13px' }}> (+{delta})</span>
+              }
+              return (
+                <tr key={a.name}>
+                  <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', fontWeight: 700, color: '#f5a89a' }}>
+                    {a.name}
+                    {base && <div style={{ fontSize: '13px', color: '#888', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>vs base {base.name}</div>}
+                  </td>
+                  <td style={{ ...ruleTableTdStyle, textAlign: 'center', fontFamily: 'monospace', color: '#cce0f5' }}>{a.rapidCode}</td>
+                  <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.wp_max}</td>
+                  <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.rp_max}</td>
+                  <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.mdm}</td>
+                  <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.rdm}</td>
+                  <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>+{a.init}</td>
+                  <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{a.enc}</td>
+                  <td style={ruleTableTdStyle}>
+                    {a.skills.map((s, i) => (
+                      <span key={s.name}>
+                        {i > 0 && ', '}
+                        {s.name} {s.level}{skillDelta(s.name, s.level)}
+                      </span>
+                    ))}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </RuleTable>
         <P>

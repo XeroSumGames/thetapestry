@@ -127,6 +127,7 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'apprentices', label: 'Apprentices' },
       { id: 'morale', label: 'Morale Check' },
       { id: 'structure', label: 'Community Structure' },
+      { id: 'activity-blocks', label: 'Activity Blocks' },
       { id: 'crb-additions', label: 'Distemper CRB additions' },
     ],
     // not a stub — full content
