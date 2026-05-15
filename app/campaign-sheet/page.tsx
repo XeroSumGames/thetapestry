@@ -13,7 +13,7 @@
 //
 // See tasks/spec-campaign-sheet.md for the locked rules.
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -77,7 +77,9 @@ export default function CampaignSheetPage() {
 
   const isGM = !!myUserId && !!gmUserId && myUserId === gmUserId
 
-  async function loadParty() {
+  const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const loadParty = useCallback(async () => {
     const { data: states } = await supabase
       .from('character_states')
       .select('character_id, wp_current, wp_max, rp_current, rp_max, stress')
@@ -97,7 +99,7 @@ export default function CampaignSheetPage() {
       rp_current: s.rp_current ?? 0, rp_max: s.rp_max ?? 0,
       stress: s.stress ?? 0,
     })))
-  }
+  }, [supabase, campaignId])
 
   async function loadVehicles() {
     const { data } = await supabase.from('campaigns').select('vehicles').eq('id', campaignId).maybeSingle()
@@ -115,7 +117,7 @@ export default function CampaignSheetPage() {
     })))
   }
 
-  async function loadPending() {
+  const loadPending = useCallback(async () => {
     const { data: events } = await supabase
       .from('campaign_events')
       .select('id, type, payload, target_character_id, scheduled_canon_day, scheduled_canon_hour')
@@ -142,7 +144,15 @@ export default function CampaignSheetPage() {
       scheduled_canon_hour: e.scheduled_canon_hour,
       payload: e.payload ?? {},
     })))
-  }
+  }, [supabase, campaignId])
+
+  const scheduleRefetch = useCallback(() => {
+    if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
+    refetchTimerRef.current = setTimeout(() => {
+      loadParty()
+      loadPending()
+    }, 200)
+  }, [loadParty, loadPending])
 
   // Initial load + realtime subscription on clock, character_states,
   // and campaign_events. Anything that changes refreshes the
@@ -178,12 +188,10 @@ export default function CampaignSheetPage() {
     }
     load()
     const broadcastCh = supabase.channel(`campaign_clock_${campaignId}`)
-      .on('broadcast', { event: 'clock_advanced' }, async (msg: any) => {
+      .on('broadcast', { event: 'clock_advanced' }, (msg: any) => {
         const next = msg?.payload?.clock as ClockState | undefined
         if (next) setClockState(next)
-        // Clock moved → party WP/RP may have changed (heals drained),
-        // pending list may have changed.
-        await Promise.all([loadParty(), loadPending()])
+        scheduleRefetch()
       })
       .on('broadcast', { event: 'clock_set' }, (msg: any) => {
         const next = msg?.payload?.clock as ClockState | undefined
@@ -201,17 +209,18 @@ export default function CampaignSheetPage() {
         })
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${campaignId}` },
-        () => { loadParty() })
+        () => { scheduleRefetch() })
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'campaign_events', filter: `campaign_id=eq.${campaignId}` },
-        () => { loadPending() })
+        () => { scheduleRefetch() })
       .subscribe()
     return () => {
       cancelled = true
+      if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
       supabase.removeChannel(broadcastCh)
       supabase.removeChannel(pgCh)
     }
-  }, [campaignId, supabase])
+  }, [campaignId, supabase, scheduleRefetch])
 
   const calendar = dayToCalendar(clock.canon_day)
   const todaysEvents = eventsOnDay(clock.canon_day)
