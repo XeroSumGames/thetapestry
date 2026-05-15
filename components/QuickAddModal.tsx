@@ -20,6 +20,7 @@ import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
+import { PIN_CATEGORIES, getCategoryFilter, getCategoryLabel } from '../lib/pin-categories'
 
 export interface QuickAddModalProps {
   mode: 'campaign' | 'world'
@@ -41,33 +42,27 @@ export interface QuickAddModalProps {
   onCommunitySaved?: () => void
 }
 
+// Category lists are derived from the canonical PIN_CATEGORIES export
+// so emojis, labels, and color filters stay in sync with the
+// CampaignPins picker. Categories dropped in the 2026-05-15
+// consolidation (military / hospital / settlement / airport) are
+// gone for good - if a user needs one of those, they pick the
+// successor (government / medical / community / location).
+//
+// Homestead is prepended in campaign mode only - it's not a canonical
+// pin category, it's a flag the Start-a-Community flow uses to
+// surface a pin as a candidate Base of Operations.
+const HOMESTEAD_OPTION = { value: 'homestead', label: 'Homestead', emoji: '🏡' }
 const CAMPAIGN_CATEGORIES: { value: string; label: string; emoji: string }[] = [
-  // Homestead sits at the top — communities tag their Base of Operations
-  // with this category, and the Homestead pin dropdown on the Start-a-
-  // Community panel shows homestead-tagged pins first.
-  { value: 'homestead',  label: 'Homestead',  emoji: '🏡' },
-  { value: 'location',   label: 'Location',   emoji: '📍' },
-  { value: 'residence',  label: 'Residence',  emoji: '🏠' },
-  { value: 'business',   label: 'Business',   emoji: '🏪' },
-  { value: 'church',     label: 'Church',     emoji: '⛪' },
-  { value: 'government', label: 'Government', emoji: '🏛️' },
-  { value: 'airport',    label: 'Transport',  emoji: '✈️' },
-  { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
-  { value: 'military',   label: 'Military',   emoji: '⚔️' },
-  { value: 'person',     label: 'Person',     emoji: '👤' },
-  { value: 'danger',     label: 'Danger',     emoji: '☠️' },
-  { value: 'resource',   label: 'Resource',   emoji: '🎒' },
-  { value: 'medical',    label: 'Medical',    emoji: '🩸' },
-  { value: 'group',      label: 'Group',      emoji: '👥' },
-  { value: 'animals',    label: 'Animals',    emoji: '🐾' },
-  { value: 'community',  label: 'Community',  emoji: '🏘️' },
-  { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
+  HOMESTEAD_OPTION,
+  // Strip rumor + world_event - those are world-map concepts.
+  ...PIN_CATEGORIES.filter(c => c.value !== 'rumor' && c.value !== 'world_event').map(c => ({ value: c.value, label: c.label, emoji: c.emoji })),
 ]
-// World map supports the same categories plus rumor + distemper timeline.
+// World map adds rumor + distemper timeline (both already in
+// PIN_CATEGORIES, so just use the full list + homestead).
 const WORLD_CATEGORIES: { value: string; label: string; emoji: string }[] = [
-  { value: 'rumor',       label: 'Rumor',             emoji: '❓' },
-  ...CAMPAIGN_CATEGORIES,
-  { value: 'world_event', label: 'Distemper Timeline', emoji: '🌍' },
+  HOMESTEAD_OPTION,
+  ...PIN_CATEGORIES.map(c => ({ value: c.value, label: c.label, emoji: c.emoji })),
 ]
 
 export default function QuickAddModal({
@@ -460,11 +455,41 @@ export default function QuickAddModal({
             </div>
 
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Category</div>
-              <select value={pinCategory} onChange={e => setPinCategory(e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                {categories.map(c => <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>)}
-              </select>
+              <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>
+                Category — {categories.find(c => c.value === pinCategory)?.label ?? getCategoryLabel(pinCategory)}
+              </div>
+              {/* Icon grid - mirrors CampaignPins. Native <select>
+                  options can't be CSS-filtered, which is why the old
+                  dropdown showed mismatched native emoji colors
+                  (person/group purple, animals neutral, etc.). Grid
+                  buttons let us apply getCategoryFilter() per-cell so
+                  the colors match the rest of the app. 8 columns;
+                  flows to a 3rd row when world mode adds Homestead +
+                  Rumor + World Event. */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '2px' }}>
+                {categories.map(c => {
+                  const picked = c.value === pinCategory
+                  const filter = getCategoryFilter(c.value)
+                  return (
+                    <button key={c.value} type="button" onClick={() => setPinCategory(c.value)}
+                      title={c.label}
+                      style={{
+                        padding: '4px 0',
+                        background: picked ? '#2a1210' : '#242424',
+                        border: `1px solid ${picked ? '#c0392b' : '#3a3a3a'}`,
+                        borderRadius: '3px',
+                        fontSize: '17px',
+                        cursor: 'pointer',
+                        lineHeight: 1,
+                        transition: 'background 120ms',
+                      }}>
+                      {filter
+                        ? <span style={{ filter, display: 'inline-block', lineHeight: 1 }}>{c.emoji}</span>
+                        : c.emoji}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* World mode — optional Parent Pin picker. Nests this pin
