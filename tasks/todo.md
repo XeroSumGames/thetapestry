@@ -96,6 +96,8 @@
 ---
 
 ## Audit notes — what shipped recently that USED to be open
+- **2026-05-15 Multi-cell token click-snap fix** (`ae1a2a2`) — clicking anywhere inside Minnie's (or any wide-token's) footprint was snapping her top-left to the clicked cell. Replaced point-equality `moved` check with a footprint-overlap test at [components/TacticalMap.tsx:3168](../components/TacticalMap.tsx:3168). **Follow-up**: the drag-end handler at L3201-3205 also ignores the grab-offset, so dragging Minnie by her center commits with top-left at the cursor's end-cell (Minnie jumps +N cells beyond where the user dragged). Same class of bug, separate fix. Add to next-up.
+- **2026-05-15 Export Session Log polish — FULLY CLOSED** (`22d75dc` + `43a1e04`) — all 13 bespoke banner types ported + chat-message interleave.
 - **2026-05-15 Insight Dice cap removal** (`baa704f`) — `+` button on the character sheet Insight bar no longer caps at 10. Floor check on `-` unchanged. Pip render stays at 10; counts above 10 visually clamp (all pips green), per Xero's call. [components/CharacterCard.tsx:714](../components/CharacterCard.tsx:714).
 - **2026-05-15 Perf A4 follow-up #1** (`e83514b`) — `effective` fog map cached per `visKey + paintedFogHash + grid + hasPCs/hasBlockers` in [components/TacticalMap.tsx:1401](../components/TacticalMap.tsx:1401). Drops the O(grid_cols * grid_rows) auto-fog iteration to zero on cache hit; same shape as `fogVisibleCacheRef`. Findings #2 (getWeaponByName memo) and #3 (ResizeObserver rAF) still open in [tasks/perf-a4-tactical-map-2026-05-14.md](perf-a4-tactical-map-2026-05-14.md).
 - **2026-05-15 Edit page retirement** (`3e911d8`) — `/stories/[id]/edit` deleted; form inlined on the hub as a GM Tools card. EDIT button dropped from StoryActionBar.
