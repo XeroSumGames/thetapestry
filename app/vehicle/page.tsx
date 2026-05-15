@@ -89,6 +89,14 @@ export default function VehiclePage() {
   const [crew, setCrew] = useState<CrewMember[]>([])
   const [check, setCheck] = useState<CheckState | null>(null)
   const [myUserId, setMyUserId] = useState<string | null>(null)
+  // Slot-assignment Confirm-gate state (2026-05-15). Each select stages
+  // its candidate value here on change; the existing setter is not
+  // called until the user clicks Confirm. Keyed by slot identifier:
+  //   'driver' | 'brewer' | 'navigator' | `passenger:${0..5}` | `shooter:${0..N}`
+  // Submitting holds the slots whose confirm is currently in flight so
+  // the buttons disable until the await chain resolves.
+  const [pendingSlot, setPendingSlot] = useState<Record<string, string>>({})
+  const [submittingSlot, setSubmittingSlot] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function load() {
@@ -242,6 +250,160 @@ export default function VehiclePage() {
       }) as any
     }
     return next
+  }
+
+  // Slot-key parsing helpers for the Confirm-gate UX. Each select on
+  // the popout has a unique slot key; pending values + submit state are
+  // keyed by this string.
+  type SlotKey = 'driver' | 'brewer' | 'navigator' | `passenger:${number}` | `shooter:${number}`
+
+  // Canonical (un-rotated) cell offsets from the vehicle anchor for
+  // each slot, derived from the Minnie floorplan numbering
+  // (1=driver right-front, 2=navigator right-back, 3=shooter center
+  // turret, 4-6=left-side passengers, 7=brewer at far-left still).
+  // Floorplan canonical orientation = vehicle nose pointing UP (-y).
+  // On confirm we apply the vehicle scene-token's rotation field as a
+  // 2D rotation matrix so the seat lands at the visually correct cell
+  // regardless of how the GM has spun Minnie on the map.
+  function canonicalSlotOffset(slot: SlotKey): { dx: number; dy: number } {
+    if (slot === 'driver') return { dx: 2, dy: -1 }
+    if (slot === 'navigator') return { dx: 2, dy: 1 }
+    if (slot === 'brewer') return { dx: -3, dy: 0 }
+    if (slot.startsWith('shooter:')) return { dx: 0, dy: 0 }
+    if (slot.startsWith('passenger:')) {
+      const idx = parseInt(slot.split(':')[1], 10)
+      const passengerOffsets: Array<{ dx: number; dy: number }> = [
+        { dx: -2, dy: -2 },  // seat 1 (floorplan #4) — left front
+        { dx: -2, dy: 0 },   // seat 2 (floorplan #5) — left middle
+        { dx: -2, dy: 2 },   // seat 3 (floorplan #6) — left back
+        { dx: 0, dy: 2 },    // seat 4 — center back
+        { dx: 1, dy: 2 },    // seat 5 — right-of-center back
+        { dx: -1, dy: 2 },   // seat 6 — left-of-center back
+      ]
+      return passengerOffsets[idx] ?? { dx: 0, dy: 0 }
+    }
+    return { dx: 0, dy: 0 }
+  }
+
+  function getSavedSlotValue(slot: SlotKey): string {
+    if (!vehicle) return ''
+    if (slot === 'driver') return vehicle.driver_character_id ?? ''
+    if (slot === 'brewer') return vehicle.brewer_character_id ?? ''
+    if (slot === 'navigator') return vehicle.navigator_character_id ?? ''
+    if (slot.startsWith('passenger:')) {
+      const idx = parseInt(slot.split(':')[1], 10)
+      return vehicle.passenger_seats?.[idx]?.character_id ?? ''
+    }
+    if (slot.startsWith('shooter:')) {
+      const idx = parseInt(slot.split(':')[1], 10)
+      return vehicle.mounted_weapons?.[idx]?.shooter_character_id ?? ''
+    }
+    return ''
+  }
+
+  // Stage a candidate slot value. Writing the same value the slot
+  // already has clears the pending entry (no-op confirm needed).
+  function stagePending(slot: SlotKey, newValue: string) {
+    const saved = getSavedSlotValue(slot)
+    setPendingSlot(prev => {
+      const next = { ...prev }
+      if (newValue === saved) delete next[slot]
+      else next[slot] = newValue
+      return next
+    })
+  }
+
+  function cancelPending(slot: SlotKey) {
+    setPendingSlot(prev => {
+      const next = { ...prev }
+      delete next[slot]
+      return next
+    })
+  }
+
+  // After a slot assignment is persisted, snap the assignee's scene
+  // token onto the slot-specific cell of the active scene's vehicle
+  // token. Rotation-aware. Skips silently if no active scene, no
+  // matching vehicle token, or no matching assignee token.
+  async function moveAssigneeToSlotCell(slot: SlotKey, assigneeId: string) {
+    if (!campaignId || !vehicle || !assigneeId) return
+    const { data: scene } = await supabase
+      .from('tactical_scenes')
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (!scene) return
+    const { data: vehTok } = await supabase
+      .from('scene_tokens')
+      .select('grid_x, grid_y, rotation')
+      .eq('scene_id', (scene as any).id)
+      .eq('name', vehicle.name)
+      .eq('token_type', 'object')
+      .maybeSingle()
+    if (!vehTok) return
+    const { dx, dy } = canonicalSlotOffset(slot)
+    const rotDeg = (vehTok as any).rotation ?? 0
+    const rot = rotDeg * Math.PI / 180
+    const rdx = Math.round(dx * Math.cos(rot) - dy * Math.sin(rot))
+    const rdy = Math.round(dx * Math.sin(rot) + dy * Math.cos(rot))
+    const targetX = (vehTok as any).grid_x + rdx
+    const targetY = (vehTok as any).grid_y + rdy
+    const member = crew.find(c => c.id === assigneeId)
+    if (!member) return
+    const filterCol = member.kind === 'pc' ? 'character_id' : 'npc_id'
+    const { error } = await supabase
+      .from('scene_tokens')
+      .update({ grid_x: targetX, grid_y: targetY })
+      .eq('scene_id', (scene as any).id)
+      .eq(filterCol, assigneeId)
+    if (error) {
+      console.error('[vehicle-popout] slot auto-move failed:', error.message)
+      return
+    }
+    // Nudge the tactical map to redraw without waiting for postgres_changes.
+    const ch = supabase.channel(`tactical_${campaignId}`)
+    ch.subscribe(async (status: string) => {
+      if (status !== 'SUBSCRIBED') return
+      await ch.send({ type: 'broadcast', event: 'token_moved', payload: {} })
+      await supabase.removeChannel(ch)
+    })
+  }
+
+  // Confirm a pending slot change. Calls the existing setter
+  // (setCrewAssignment / setPassengerSlot / setShooterAssignment) and
+  // then snaps the assignee's scene token into place.
+  async function confirmPending(slot: SlotKey) {
+    const newValue = pendingSlot[slot]
+    if (newValue === undefined) return
+    setSubmittingSlot(prev => {
+      const next = new Set(prev)
+      next.add(slot)
+      return next
+    })
+    try {
+      if (slot === 'driver' || slot === 'brewer' || slot === 'navigator') {
+        await setCrewAssignment(slot, newValue)
+      } else if (slot.startsWith('passenger:')) {
+        const idx = parseInt(slot.split(':')[1], 10)
+        await setPassengerSlot(idx, newValue)
+      } else if (slot.startsWith('shooter:')) {
+        const idx = parseInt(slot.split(':')[1], 10)
+        await setShooterAssignment(idx, newValue)
+      }
+      // Empty crewId = clearing the slot. Per spec: scene token stays
+      // put (no auto-move on dismount). GM drags them off after.
+      if (newValue) {
+        await moveAssigneeToSlotCell(slot, newValue)
+      }
+      cancelPending(slot)
+    } finally {
+      setSubmittingSlot(prev => {
+        const next = new Set(prev)
+        next.delete(slot)
+        return next
+      })
+    }
   }
 
   // Persist driver / brewer / navigator assignment back to the vehicle.
@@ -627,6 +789,34 @@ export default function VehiclePage() {
   const lbl: React.CSSProperties = { fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }
   const bigVal: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }
 
+  // Confirm / Cancel chip for a pending slot change. Renders nothing
+  // when no pending value, a green Confirm + grey Cancel pair when one
+  // exists. Describes the staged change so the user sees "Confirm:
+  // Mikey -> Driver" instead of an anonymous green button.
+  function renderSlotConfirm(slot: SlotKey, slotLabel: string) {
+    const pending = pendingSlot[slot]
+    if (pending === undefined) return null
+    const submitting = submittingSlot.has(slot)
+    const assigneeName = pending
+      ? (crew.find(c => c.id === pending)?.name ?? 'unknown')
+      : '(empty)'
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', fontSize: '13px' }}>
+        <span style={{ color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
+          Stage: <strong>{assigneeName}</strong> -&gt; {slotLabel}
+        </span>
+        <button onClick={() => confirmPending(slot)} disabled={submitting}
+          style={{ padding: '4px 10px', background: submitting ? '#242424' : '#1a3a1a', border: `1px solid ${submitting ? '#3a3a3a' : '#7fc458'}`, borderRadius: '3px', color: submitting ? '#5a5550' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: submitting ? 'wait' : 'pointer' }}>
+          {submitting ? '...' : 'Confirm'}
+        </button>
+        <button onClick={() => cancelPending(slot)} disabled={submitting}
+          style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#888', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: submitting ? 'wait' : 'pointer' }}>
+          Cancel
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', fontFamily: 'Carlito, sans-serif', padding: '16px' }}>
 
@@ -649,8 +839,8 @@ export default function VehiclePage() {
           <div>
             <div style={lbl}>Driver</div>
             <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-              <select value={vehicle.driver_character_id ?? ''}
-                onChange={e => setCrewAssignment('driver', e.target.value)}
+              <select value={pendingSlot['driver'] ?? (vehicle.driver_character_id ?? '')}
+                onChange={e => stagePending('driver', e.target.value)}
                 disabled={!canEdit}
                 style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                 <option value="">— Select driver —</option>
@@ -675,6 +865,7 @@ export default function VehiclePage() {
                 🚗 Driving Check
               </button>
             </div>
+            {renderSlotConfirm('driver', 'Driver')}
           </div>
 
           {/* Brewer — only when the vehicle has a still */}
@@ -682,8 +873,8 @@ export default function VehiclePage() {
             <div>
               <div style={lbl}>Brewer</div>
               <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-                <select value={vehicle.brewer_character_id ?? ''}
-                  onChange={e => setCrewAssignment('brewer', e.target.value)}
+                <select value={pendingSlot['brewer'] ?? (vehicle.brewer_character_id ?? '')}
+                  onChange={e => stagePending('brewer', e.target.value)}
                   disabled={!canEdit}
                   style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                   <option value="">— Select brewer —</option>
@@ -708,6 +899,7 @@ export default function VehiclePage() {
                   ⚗️ Brew Check
                 </button>
               </div>
+              {renderSlotConfirm('brewer', 'Brewer')}
             </div>
           )}
         </div>
@@ -726,55 +918,62 @@ export default function VehiclePage() {
         <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Passenger Seats</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           {/* Navigator — single slot */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Navigator</span>
-            <select value={vehicle.navigator_character_id ?? ''}
-              onChange={e => setCrewAssignment('navigator', e.target.value)}
-              disabled={!canEdit}
-              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-              <option value="">— Empty —</option>
-              {crew.filter(c => c.kind === 'pc').length > 0 && (
-                <optgroup label="Player Characters">
-                  {crew.filter(c => c.kind === 'pc').map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </optgroup>
-              )}
-              {crew.filter(c => c.kind === 'npc').length > 0 && (
-                <optgroup label="NPCs">
-                  {crew.filter(c => c.kind === 'npc').map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Navigator</span>
+              <select value={pendingSlot['navigator'] ?? (vehicle.navigator_character_id ?? '')}
+                onChange={e => stagePending('navigator', e.target.value)}
+                disabled={!canEdit}
+                style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                <option value="">— Empty —</option>
+                {crew.filter(c => c.kind === 'pc').length > 0 && (
+                  <optgroup label="Player Characters">
+                    {crew.filter(c => c.kind === 'pc').map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {crew.filter(c => c.kind === 'npc').length > 0 && (
+                  <optgroup label="NPCs">
+                    {crew.filter(c => c.kind === 'npc').map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+            {renderSlotConfirm('navigator', 'Navigator')}
           </div>
           {/* 6 numbered passenger slots */}
           {Array.from({ length: 6 }).map((_, i) => {
             const seat = (vehicle.passenger_seats ?? [])[i] ?? null
+            const slotKey: SlotKey = `passenger:${i}`
             return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Seat {i + 1}</span>
-                <select value={seat?.character_id ?? ''}
-                  onChange={e => setPassengerSlot(i, e.target.value)}
-                  disabled={!canEdit}
-                  style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-                  <option value="">— Empty —</option>
-                  {crew.filter(c => c.kind === 'pc').length > 0 && (
-                    <optgroup label="Player Characters">
-                      {crew.filter(c => c.kind === 'pc').map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {crew.filter(c => c.kind === 'npc').length > 0 && (
-                    <optgroup label="NPCs">
-                      {crew.filter(c => c.kind === 'npc').map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
+              <div key={i}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Seat {i + 1}</span>
+                  <select value={pendingSlot[slotKey] ?? (seat?.character_id ?? '')}
+                    onChange={e => stagePending(slotKey, e.target.value)}
+                    disabled={!canEdit}
+                    style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                    <option value="">— Empty —</option>
+                    {crew.filter(c => c.kind === 'pc').length > 0 && (
+                      <optgroup label="Player Characters">
+                        {crew.filter(c => c.kind === 'pc').map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {crew.filter(c => c.kind === 'npc').length > 0 && (
+                      <optgroup label="NPCs">
+                        {crew.filter(c => c.kind === 'npc').map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                </div>
+                {renderSlotConfirm(slotKey, `Seat ${i + 1}`)}
               </div>
             )
           })}
@@ -803,8 +1002,8 @@ export default function VehiclePage() {
                   {w.notes && <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginBottom: '6px' }}>{w.notes}</div>}
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     <span style={{ ...lbl, marginBottom: 0, flexShrink: 0 }}>Shooter</span>
-                    <select value={w.shooter_character_id ?? ''}
-                      onChange={e => setShooterAssignment(i, e.target.value)}
+                    <select value={pendingSlot[`shooter:${i}` as SlotKey] ?? (w.shooter_character_id ?? '')}
+                      onChange={e => stagePending(`shooter:${i}` as SlotKey, e.target.value)}
                       disabled={!canEdit}
                       style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                       <option value="">— Select shooter —</option>
@@ -856,6 +1055,7 @@ export default function VehiclePage() {
                       </button>
                     )}
                   </div>
+                  {renderSlotConfirm(`shooter:${i}` as SlotKey, `${w.name} Shooter`)}
                 </div>
               )
             })}
