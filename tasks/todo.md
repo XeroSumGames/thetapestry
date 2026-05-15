@@ -469,19 +469,18 @@ When picking this back up:
 - [ ] UI surface: probably a small clock widget in the table page header showing "Day N · Hour H" with a +/- stepper on it. GM-only.
 - [ ] Migrate the `Time` button from Inventory #1 to use the unified clock instead of its current standalone tick.
 
-## 🔒 Backburner — Thriver godmode UI sweep
-**Status:** DB-level done, UI deferred. Xero's `profiles.role = 'Thriver'` + the policies in `sql/thriver-godmode-policies.sql` + `sql/campaign-pins-rls-thriver-bypass.sql` give superuser access at the database layer. The UI still hides admin affordances (add/edit/delete/scene-setup/session-control) behind `isGM` checks, so Thrivers can only see those buttons on campaigns they actually GM. Pilot (commit fd5db34) widened 3 components (NpcRoster / TacticalMap / CampaignCommunity) but was rolled back — user wants to hold until the whole surface is done in one pass.
-
-When picking this back up:
-- [ ] UI sweep: widen `isGM &&` UI gates to `(isGM || isThriver)` in CampaignCommunity, CampaignObjects (lines ~350,463,481,493,526), VehicleCard, NpcRoster, character sheet edits for non-owned PCs. DB layer already shipped via `sql/thriver-godmode-policies.sql`. Candidates:
-  - Table page header: Start/End Session, Start/End Combat, Tactical Map toggle, Share Map, GM Tools dropdown
-  - NpcRoster (add/edit/delete NPCs, folders, objects, place-on-map)
-  - TacticalMap (scene picker, setup, token placement)
-  - CampaignCommunity (delete community, approve pending, set leader)
-  - CampaignPins / CampaignObjects / VehicleCard
-  - Character sheet edits for non-owned PCs (GM-only today)
-- [ ] Pattern: prefer widening at the caller (`isGM={isGM || isThriver}`) over rewriting every internal reference — faster and keeps child components prop-clean.
-- [ ] Verify after the sweep: log in as Xero on a campaign they don't GM, confirm every admin affordance is visible and actually works (RLS + UI both honor it).
+## ✅ Shipped 2026-05-14 — Thriver godmode UI sweep COMPLETE
+Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sql/thriver-godmode-policies.sql`) was in place for weeks; UI was deferred so the sweep could land in one pass. Today's commit finishes:
+- `app/stories/[id]/snapshots/page.tsx` — upstream gate admits Thrivers
+- `app/campaign-sheet/page.tsx` — Advance Time / Heal / Edit Clock / Export Log / Pending Heal Cancel all widened
+- `app/stories/[id]/page.tsx` — Rejoin banner / extraButtons / My Survivor card / Remove member all gmLike
+- `app/stories/[id]/table/page.tsx` — header bar action buttons, 7 prop-passes (InitiativeBar, ChatComposer, TacticalMap, CampaignMap, ObjectCard, two CharacterCard), ~30 internal gates (entries.filter, action handlers, NpcCard vs PlayerNpcCard, hidden_from_players filter, special-check pickers, canControl, canAct, onKick, onRoll)
+- Strict `isGM` kept on identity-only surfaces: "GM View" header, "(GM)" badge, telemetry log, recorder toggle (Thriver-only by design)
+- Pattern: widen at the caller (`isGM={gmLike}`) per the lessons memo
+- Per Xero (2026-05-14): widening `entries.filter` means visiting Thrivers see every PC sheet + every player's rolls; `onKick` widening means Thrivers can kick from initiative. Both intentional.
+- Plan: `tasks/thriver-godmode-sweep-plan-2026-05-14.md`
+- Testplan: `tasks/thriver-godmode-sweep-testplan.md` (Sections 1-4 Thriver checks + Section 5 GM no-regression + Section 6 Survivor no-leak)
+- Earlier shipped passes (preserved here for history): `92f9243` (table page partial 4/5), `ae0933a` (character sheet edit), `bea860a` (community + vehicle pages), CampaignCommunity / CampaignObjects / GmNotes / VehicleCard / CampaignSnapshots already wired before today.
 
 *Inventory migration removed 2026-04-21 — DB audit confirmed every character's `data.inventory` is already an array. Nothing to migrate.*
 
