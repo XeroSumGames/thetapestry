@@ -129,68 +129,90 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-13
+# Session state - 2026-05-15
 
 ## Current main HEAD
 
-`5259926 docs(handoff): single combined paste target at tasks/handoff.md`
+`67552ab chore(todo): mark player-notes-session-tag migration applied 2026-05-15`
 
-## What shipped in the 2026-05-12 / 2026-05-13 session
+## What shipped in the 2026-05-14 / 2026-05-15 audit-and-followup arc
+
+Stretch driven by a 4-agent cold audit (bugs/perf/dead/refactor) plus three sub-batches of remote agent runs scheduled against it. Most ships are perf-only and rendering-output-identical by design, but the TacticalMap canvas caching is non-trivial and worth one playtest before stacking more.
 
 | Commit | What | Risk |
 |---|---|---|
-| (local) | Pre-commit hook at `.git/hooks/pre-commit` (font + role-literal guardrails) | None - hook proven to fire from worktrees |
-| `bc24db9` | Skill chip hover tooltips on CharacterCard (native `title` attribute) | Cosmetic |
-| `3d0ea42` | `tasks/roll-feed-log-preview.html` pinned as canonical log template | Docs |
-| `d77d9cd` | **Phase 3a** - table "Advance Time" modal now ticks the campaign clock | **Untested live** |
-| `aa20bdb` | **Phase 3b** - rations consumption drainer on day-tick | **Untested live** |
-| `36feee3` | **Phase 3c** - subsistence damage drainer (CRB Ch.07 p.117) | **Untested live** |
-| `80bc8f3` | **Phase 3d** - community Skip Week now ticks campaign clock 168h | **Untested live** |
-| `e2fd0f8` | Feed audit: 6 easy drifts (sentinel case, init col, "Morale holds.", etc.) | **Untested live** |
-| `e979b04` | Feed audit: 4 judgment-call resolutions (template + recruit-LI MOI tag) | **Untested live** |
-| Various docs | Testplans, lessons, todo updates, single-file handoff rebuild | Docs |
+| `0827fcc` `d23908c` | Drop superseded `update-player-joined-trigger.sql` v1/v2 (v3 covers) | None |
+| `9028295` | Drop superseded `build-open-work-docx.py` (dated `-2026-05-06` variant supersedes) | None |
+| `8caef7f` | Cleanup sweep summary | Docs |
+| `71b5a0e` `3cc47ac` `51206aa` `85a0617` | Role-helper consolidation: 30+ inline `.role?.toLowerCase() === 'thriver'` sites -> `roleIsThriver()` across app/, app/tools/, app/moderate/, components/ | Low (semantics-preserving) |
+| `a0f37f2` | **Guardrail tightened:** `scripts/check-role-literals.mjs` now catches inline lowercase comparison drift too, not just capital-case literals. Allowlist still via `role-literal-allow` line comment. | None |
+| `fb29f09` | Role-helper consolidation summary | Docs |
+| `49a9733` | `perf(queries):` column-pick `character-sheet` `select('*')` (characters + character_states; campaign-sheet was already column-picked) | Low |
+| `2194d63` | `perf(campaign-sheet):` 200ms debounce on realtime refetch (`scheduleRefetch` ref + `loadParty`/`loadPending` wrapped in `useCallback`) | Low |
+| `ef8f300` | A1 summary | Docs |
+| `ce5e33f` | `perf(stories-table):` memoize NpcRoster prop construction (4 `useMemo` for Set/array props, 2 `useCallback` for handlers; 7 callback props flagged but skipped to avoid cascade) | Low |
+| `ad116c3` | A2 summary | Docs |
+| `6465079` | A3 no-op: 24-dep useEffect from the original audit doesn't exist in stories-table. Max dep count = 4. Audit finding was bogus. | None (no-op) |
+| `c5041e5` | `perf(tactical-map):` cache move/throw/blast cell-zone overlays (`moveZoneCacheRef`, `throwZoneCacheRef`, `blastZoneCacheRef`; keyed on grid pos + range + grid dims + occupied cells; blast renders batched red-then-amber) | **Untested live** |
+| `ab7e0c9` | `perf(tactical-map):` cache fog visibility bitmap (`fogVisibleCacheRef` keyed on day-mode + all-PC-positions+sight + walls + cell blockers; ~6700 LoS checks/frame eliminated on cache hit for 20x20 / 4 PCs) | **Untested live** |
+| `5b04678` | A4 summary | Docs |
+| `c455b13` | Merge `perf/tactical-map-canvas` | - |
+| **LIVE DB** | `sql/initiative-order-rls-members-write.sql` + `sql/initiative-order-rls-tighten-2026-05.sql` applied. `pg_policies` verified: SELECT/INSERT/UPDATE for campaign members, DELETE GM-only, ALL thriver bypass. Legacy permissive `"Anyone authenticated can manage"` dropped. Nana 2-attack repro path closed. | **Verified via pg_policies** |
+| `5d42507` | Mark initiative-order RLS migrations applied in todo.md | Docs |
+| **LIVE DB** | `sql/player-notes-session-tag.sql` applied. `session_number` int column + `player_notes_stamp_session` BEFORE INSERT trigger + `player_notes_session_idx` partial index. PostgREST schema reloaded. | **Verified via information_schema + pg_trigger** |
+| `67552ab` | Mark player-notes migration applied in todo.md | Docs |
+
+Side-branches at `origin/perf/column-pick-and-debounce`, `origin/perf/npc-roster-memo`, `origin/perf/tactical-map-canvas`, `origin/role-helper-consolidation-2026-05-14` are now fully merged. Safe to delete or leave as paper trail.
 
 ## Verified vs untested
 
-- **Verified:** pre-commit hook (fires on commit, blocks bad commits); skill tooltips visible on CharacterCard.
-- **Untested on live:** Phase 3 a/b/c/d + 10 feed-audit drift fixes. Both touch what users see in roll_log and what PCs have in WP/RP and rations. Worth one playtest before stacking more work.
+- **Verified via DB queries:** initiative_order RLS policy state; player_notes `session_number` column + trigger present.
+- **Verified by passing pre-commit hooks:** role-literal guardrail (tightened) passes on 248 files.
+- **Untested on live:** TacticalMap canvas caches (move/throw/blast + fog visibility). Rendering-output-identical by construction but cache-invalidation keys are non-trivial. Worth one combat playtest before more TacticalMap work.
+- **Untested from previous session (still):** Phase 3 a/b/c/d + 10 feed-audit drift fixes carried forward from 2026-05-13. No playtest in between.
 
 ## Risks the next session should know
 
-- **`out_since_day` math** in Phase 3c. A PC with `rations.count = 0` *before* the Phase 3 ship has no `out_since_day` stamped, so 3c won't apply subsistence to them until they go through the rations-hits-0 transition again. The drainer documents this as a known no-op, but if a GM expects their starving PC to start taking damage immediately, they won't see it until the PC eats and re-runs out.
-- **Skip Week's new prompt** warns about the 7-day clock advance + downstream effects. Existing GMs may have built habits around the old "pure bookkeeping" semantics; flag in playtest if anyone's surprised.
-- **Recruit LI MOI tag** - the new LI branch adds the canon-required tag; rows with old `outcome: 'recruit'` AND `rollOutcome: 'Low Insight'` written *before* `e979b04` lack the tag and won't retroactively pick it up. Acceptable: only affects historical rows.
+- **TacticalMap cache invalidation surface area.** Three caches added today, each with a string key built from inputs. If a render bug shows up that involves stale cells (moved token still shows old movement zone, fog stuck after a wall move), the keys at `components/TacticalMap.tsx:392-394` and `~1356-1404` are where to look.
+- **A4's 3 new findings flagged for follow-up** in `tasks/perf-a4-tactical-map-2026-05-14.md`: `effective` fog map still O(n^2) at lines 1414-1420; `getWeaponByName` called inside `draw()` at 1177/1184; `ResizeObserver.observe` bypasses rAF coalescing at 956. Low priority; do in one tight agent pass when convenient.
+- **Cold audits are noisy.** Two findings from the cold audit were already-done (NpcRoster `memo` wrap, campaign-sheet column-pick), one was hallucinated (24-dep useEffect), and one was misframed (29-dep `draw()` useEffect - every dep actually drives output). Treat any specific `file:line` claim from a cold audit as a hypothesis, not a fact. Tightened audit prompts to "quote 2 surrounding lines so user can spot-verify" - apply same pattern if running another cold audit.
+- **Remote agents keep going to feature branches** despite explicit "push to main" instruction. C, A1, A2, A4 all branched. Easier to accept and merge than fight it. Three of those got named branches per a fallback clause; one (`role-helper-consolidation-2026-05-14`) used its own name.
+- **Carried-forward 2026-05-13 risks (still active):** `out_since_day` math in Phase 3c, Skip Week prompt semantics, Recruit LI MOI tag retroactive. See git history of this file pre-2026-05-15 if context needed.
 
 ## Open threads
 
-### Blocked on Xero design calls
-- **Playtest-marks system** (4 Qs): who sees whose marks; auto-tag campaign/scene/story; visible button + hotkey vs hotkey-only with louder toast; retention forever or auto-prune. Recorder gate currently silently drops marks - real bug, real fix is a `playtest_marks` Supabase table.
-- **Healing on GM time-tick** (5 Qs): which rolls count; recovery math; time-advance trigger; healer-vs-target attachment; stack vs overwrite.
-- **Coordinated Effort** (4 Qs): who picks skill; opt-in prompts; timeout behavior; fold into Group Check redesign or separate.
-- **Group Check redesign** (4 Qs): Insight Dice on helper rolls; HI/LI awards on helpers; skill-0 helpers; replace current Group Check or add as second mode.
-- **GM Notes / Assets merge** (3 options): unify into single tab; cross-link; leave as-is.
+### Blocked on Xero design calls (unchanged from 2026-05-13)
+- **Playtest-marks system** (4 Qs)
+- **Healing on GM time-tick** (5 Qs)
+- **Coordinated Effort** (4 Qs)
+- **Group Check redesign** (4 Qs)
+- **GM Notes / Assets merge** (3 options)
 
-### Blocked on playtest captures
-Bugs instrumented with `[playtest-trace]` console prefix on 2026-05-11 (commits `aaa29af`, `63a0b05`). Capture data not yet delivered:
+### Blocked on playtest captures (unchanged)
 - Initiative lag (`[nextTurn] done` payload)
 - Damage calc `2+2d6(6)=8 raw -> should be 7/7`
 - Failed-check leaves 2 actions (`[closeRollModal] gate`)
 - TacticalMap mouse-pan
 
-### Multi-day builds ready to start
-- **VehicleSheet refactor** (~half day, real `useSearchParams` lift risk - plan-mode first)
-- **Log template scope (a)** - "Export session log" button (~1 day)
-- **CRB Tier 1 canon promotions** (9 items, see `tasks/todo.md` flagged 2026-05-09; highest-value gap is #2 Vehicle subsystem - pairs with VehicleSheet refactor)
+### Audit follow-ups (new, low priority)
+- A4's 3 new findings (see Risks above)
+- A3's alternative angles if perf on stories-table is still wanted: shallow-equality on `setEntries`, split the 435-line mount effect at L1128 by concern, `useCallback` on `loadEntries`
 
-### Lower-priority sweeps
-- CRB doc-rewrite tracking (DMM/DMR -> MDM/RDM sweep, Intimidation removal, Profession 7->5 bundles, etc. - all doc fixes, not platform builds)
-- Older flagged items in `tasks/todo.md` (re-verify before acting; some shipped per MEMORY)
+### From this morning's todo audit (`8899809`)
+- **Bugs:** Print sheet renders blank (hydration), Distemper font missing in mobile navbar, Insight Dice cap hardcoded to 9 in CharacterCard + executeRoll, HP render lag from `b4d4671`
+- Phase 3 Table Completion: huge list (combat actions, NPC roster, campaign management, session history) - long-term work
+
+### Multi-day builds ready to start (unchanged)
+- VehicleSheet refactor (~half day, useSearchParams lift)
+- Log template scope (a) - Export session log button (~1 day)
+- CRB Tier 1 canon promotions (9 items)
 
 ## Suggested next moves (in order)
 
-1. **Real playtest** to verify Phase 3 + the feed audit changes in one go. No code; observe rations decrementing, subsistence firing on day-3-hungry PCs, log feed renders match the template.
-2. **VehicleSheet refactor** if you want orthogonal work that won't compound on today's surfaces.
-3. **One judgment-call answer** from the blocked list above unlocks whichever sub-build feels most pressing.
+1. **Playtest the unverified surfaces.** TacticalMap canvas caching + the still-untested 2026-05-13 Phase 3 + feed audit changes. One real combat session would clear all of it in 30 min.
+2. **Insight Dice cap removal.** Two specific edit sites called out in todo (`CharacterCard` `max={9}`, `executeRoll` `Math.min(..., 9)`). Quick concrete fix; clarify "remove cap" = uncap entirely or raise to N before shipping.
+3. **A4 follow-up findings** if you want to drain the last drops from the perf audit. One tight remote-agent run.
+4. **Pick a blocked-on-design call** and answer it. Unlocks the largest remaining build queue.
 
 ---
 
