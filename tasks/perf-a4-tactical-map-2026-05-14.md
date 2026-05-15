@@ -52,7 +52,7 @@ On a 20×20 scene with 4 PCs in day mode: ~6700 LoS computations/frame eliminate
 
 ## New findings (flag for follow-up — do NOT fix here)
 
-1. **`effective` fog map also O(n²)** — lines 1414–1420: after the `visible` set is built (now cached), the `effective` map still iterates all `grid_cols × grid_rows` cells every frame to add auto-fog for cells outside LoS. Same shape of fix: cache `effective` behind `visKey + rawFog-hash`. Held because `rawFog` changes whenever the GM paints (legitimately triggers redraw) so the marginal win is smaller; worth a separate commit.
+1. ~~**`effective` fog map also O(n²)**~~ — **SHIPPED 2026-05-15** (`e83514b`). Cached behind `visKey + painted-fog hash + grid dims + hasPCs/hasBlockers`. Same shape as `fogVisibleCacheRef`.
 
 2. **`getWeaponByName` called in draw()** — lines 1177/1184: weapon lookup on every draw that has `showRangeOverlay && selectedToken`. Cheap but could be memoized to a ref, invalidated on `selectedToken` or `entries`/`campaignNpcs` change.
 
