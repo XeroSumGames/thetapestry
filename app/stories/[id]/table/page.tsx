@@ -5867,6 +5867,11 @@ export default function TablePage() {
     //   "<name> - Infection Check (Sickness)"  environmental progression
     // See /rules/combat/infection + memory/project_infection_canon.md.
     let infectionResult = ''
+    // Stashed onto saveRollToLog's damage_json so compactRollSummary can
+    // render "sick for N days" with the actual rolled number instead of
+    // "1d3 days" / "1d6 days". Set inside the infection branch when the
+    // check resolves to a Failure or Dire Failure.
+    let infectionDamageJson: { infection_days: number; infection_severity: 'check' | 'auto'; kind: 'wound' | 'sickness' } | null = null
     if (pendingRoll.label.includes('Infection Check (')) {
       const infName = pendingRoll.label.split(' - ')[0]
       const isWound = pendingRoll.label.includes('(Wound)')
@@ -5904,6 +5909,11 @@ export default function TablePage() {
         summary = `${infName} dire-failed the Infection check - sick for ${daysLeft} days. ${kind === 'wound' ? 'Auto Lasting Damage on Day 0.' : 'Will progress to Mortally Wounded on Day 0.'}`
       } else {
         summary = `${infName} shrugged off the Infection check.`
+      }
+      // Stash days + severity onto the roll_log row's damage_json so the
+      // compact feed line can show the actual days instead of "1d3"/"1d6".
+      if (infectionState && severity) {
+        infectionDamageJson = { infection_days: daysLeft, infection_severity: severity, kind }
       }
       // Apply to the patient's row (PC or NPC). Sick state also caps
       // RP at half-max (round down) per locked canon - clamp here.
@@ -6223,6 +6233,13 @@ export default function TablePage() {
           groupCheckSkill: groupCheckPayloadRef.current.skill,
         }
         groupCheckPayloadRef.current = null
+      }
+      // Merge infection-roll metadata into damage_json so the compact
+      // feed renderer can show the actual rolled days. Pure additive -
+      // damageResult is null for non-attack rolls, so augmentedDamage
+      // becomes just the infection block in those cases.
+      if (infectionDamageJson) {
+        augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), ...infectionDamageJson }
       }
       await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3)
     }

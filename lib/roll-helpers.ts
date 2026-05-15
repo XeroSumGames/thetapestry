@@ -123,20 +123,33 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const shrug = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
     const dire = r.outcome === 'Dire Failure' || r.outcome === 'Low Insight'
     const fail = r.outcome === 'Failure'
+    // executeRoll stashes the rolled sick-day count + severity into
+    // damage_json so the compact line can show the actual number
+    // instead of "1d3" / "1d6". Falls back to the dice range if a
+    // pre-fix row from an older deploy lacks the metadata.
+    const dj = (r.damage_json && typeof r.damage_json === 'object')
+      ? r.damage_json as { infection_days?: number; infection_severity?: 'check' | 'auto' }
+      : null
+    const days: number | null = dj?.infection_days ?? null
+    // First name only - "Cree" reads better than "Cree Hask" in the
+    // second clause. Falls back to the full name if there's no space.
+    const first = r.character_name.split(/\s+/)[0]
     if (shrug) {
       return kind === 'Wound'
         ? `${r.character_name} shrugged off the wound infection${outcomeTag}`
         : `${r.character_name} shrugged off the sickness${outcomeTag}`
     }
     if (fail) {
+      const daysText = days != null ? `${days} day${days === 1 ? '' : 's'}` : '1d3 days'
       return kind === 'Wound'
-        ? `${r.character_name} has a wound that has become infected - sick for 1d3 days, with lasting damage risk${outcomeTag}`
-        : `${r.character_name} has fallen sick - ill for 1d3 days, with lasting damage risk${outcomeTag}`
+        ? `${r.character_name} has a wound that has become infected. ${first} is sick for ${daysText}. Lasting damage is possible if untreated.${outcomeTag}`
+        : `${r.character_name} has fallen sick. ${first} is ill for ${daysText}. Lasting damage is possible if untreated.${outcomeTag}`
     }
     if (dire) {
+      const daysText = days != null ? `${days} day${days === 1 ? '' : 's'}` : '1d6 days'
       return kind === 'Wound'
-        ? `${r.character_name} has a wound that has severely infected - sick for 1d6 days, lasting damage applies automatically${outcomeTag}`
-        : `${r.character_name} has fallen gravely sick - ill for 1d6 days, will progress to Mortally Wounded on Day 0${outcomeTag}`
+        ? `${r.character_name} has a wound that has become severely infected. ${first} is sick for ${daysText}. This will likely leave a lasting wound.${outcomeTag}`
+        : `${r.character_name} has fallen gravely sick. ${first} is ill for ${daysText}. Will progress to Mortally Wounded on Day 0.${outcomeTag}`
     }
     // Defensive fallback for any outcome we didn't anticipate.
     return `${r.character_name} - Infection Check (${kind})${outcomeTag}`
