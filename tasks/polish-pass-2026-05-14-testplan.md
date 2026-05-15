@@ -255,6 +255,38 @@ account you mentioned setting up earlier). Log in as that account.
    the Edit Clock button. Same file downloads (named with sessionNumber=0
    if not actively in a session - cosmetic only).
 
+### 5.8  Activity Block taxonomy in rules
+1. Navigate to `/rules/communities/structure`.
+2. Scroll to "Activity Blocks" sub-section.
+3. Confirm 4-row table with Daily / Weekly / Monthly / Seasonal tiers,
+   each with Duration + Typical scope columns.
+
+### 5.9  Distemper-infected canine deltas in bestiary
+1. Navigate to `/rules/combat/bestiary`.
+2. Scroll to the Distemper-infected variants table.
+3. Confirm each infected variant shows:
+   - "vs base Dog" / "vs base Wolf" subline under the name.
+   - Skill levels with green `(+N)` deltas next to any skill where the
+     infected version is higher than the base.
+
+### 5.10  Luxury Ration consume button on Campaign Sheet
+1. Open Campaign Sheet for a campaign where a PC has Luxury Rations in
+   inventory AND at least 1 Stress pip.
+2. In the Party Status panel, that PC's card should show:
+   `🍷 Consume Luxury Ration (N left) — Stress -1` button.
+3. Click. Confirm:
+   - Stress drops by 1 (pip clears in the row).
+   - Luxury Ration count decrements by 1 (button updates to show new count).
+   - Feed row appears: `🍷 <PC> consumed a Luxury Ration - Stress drops by 1 (X to Y)`.
+4. Button disappears when Stress hits 0 OR Luxury Rations hit 0.
+
+### 5.11  Quick Reference cards on /welcome
+1. Navigate to `/welcome`.
+2. Confirm the Quick Reference section shows 6 cards (Dice Check, Insight Dice,
+   WP/RP/Stress, CDP Spending, Combat Round, Full Rules).
+3. Confirm the Full Rules card has working links to /rules,
+   /rules/core-mechanics, /rules/combat, /rules/communities.
+
 ## Smoke checks (do these whenever you have a tab open)
 
 - Feed never renders a `+1 Insight Die` badge on Success / Wild Success
