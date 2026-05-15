@@ -354,57 +354,60 @@ export default function CampaignSheetPage() {
         )}
       </div>
 
-      {/* ── GM advance bar ──────────────────────────────────── */}
-      {gmLike ? (
-        <div style={{ marginBottom: 24, padding: '10px 14px', background: '#14181c', border: '1px solid #2e2e2e', borderRadius: 3, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 12, color: '#cce0f5', letterSpacing: '.12em', textTransform: 'uppercase' }}>Advance Time</div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {[1, 4, 8, 12, 24].map(h => (
-              <button key={h} onClick={() => handleAdvance(h)} disabled={advancing} style={advanceBtn(advancing)}>
-                +{h}h
-              </button>
-            ))}
+      {/* ── Action bar ──────────────────────────────────────────
+          Advance Time = GM-only (clock is GM's lever; players don't
+          fast-forward the world). Effect buttons (Heal / Eat / Rest /
+          Relax) = visible to EVERYONE - per Xero 2026-05-15, players
+          should have agency over effects affecting their own PCs.
+          The note for non-GMs is scoped to the clock specifically
+          (was "advance the clock or queue effects" which conflated
+          the two). */}
+      <div style={{ marginBottom: 24, padding: '10px 14px', background: '#14181c', border: '1px solid #2e2e2e', borderRadius: 3, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        {gmLike ? (
+          <>
+            <div style={{ fontSize: 12, color: '#cce0f5', letterSpacing: '.12em', textTransform: 'uppercase' }}>Advance Time</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[1, 4, 8, 12, 24].map(h => (
+                <button key={h} onClick={() => handleAdvance(h)} disabled={advancing} style={advanceBtn(advancing)}>
+                  +{h}h
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 13, color: '#888', fontStyle: 'italic' }}>
+            Only the GM can advance the clock.
           </div>
-          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
-            <button onClick={() => setHealModal(true)} disabled={advancing}
-              style={actionBtn('#1a2e10', '#2d5a1b', '#7fc458')}>
-              🩹 Heal
-            </button>
-            {/* Placeholder buttons — Phase 3 will wire each to its
-                event type:
-                  Eat   → ration_consumed events for everyone present
-                  Rest  → bulk WP/RP restoration over scheduled hours
-                The visible button keeps the workflow surface intact
-                so the GM has the muscle memory by the time the wiring
-                lands. */}
-            <button onClick={() => alert('Eating (placeholder).\n\nPhase 3 will consume one ration per character present + apply any Luxury Ration stress-clear. For now this is just a visible affordance.')} disabled={advancing}
-              style={actionBtn('#2a1a10', '#5a3a1b', '#EF9F27')}
-              title="Consume rations for everyone present (Phase 3)">
-              🍞 Eat
-            </button>
-            <button onClick={() => alert('Resting (placeholder).\n\nPhase 3 will queue a bulk rest action — full WP/RP restoration over a configurable rest duration, with interruption rules. For now this is just a visible affordance.')} disabled={advancing}
-              style={actionBtn('#0f1a2e', '#1a3a5c', '#7ab3d4')}
-              title="Begin a rest (Phase 3)">
-              💤 Rest
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div style={{ marginBottom: 24, padding: '10px 14px', background: '#14181c', border: '1px solid #2e2e2e', borderRadius: 3, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 13, color: '#888', fontStyle: 'italic', flex: 1 }}>
-            Only the GM can advance the clock or queue effects.
-          </div>
-          {/* Player-only Discharge Stress placeholder — gives players a
-              visible control of their own. Phase 3 will check the
-              player's PC's current Stress, fire a discharge roll (or
-              auto-clear one pip per the chosen tactic), and log it. */}
-          <button onClick={() => alert('Relax (placeholder).\n\nPhase 3 will let your PC spend a tactic (or pass a roll) to clear one Stress pip. For now this is just a visible affordance.')}
+        )}
+        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <button onClick={() => setHealModal(true)} disabled={advancing}
+            style={actionBtn('#1a2e10', '#2d5a1b', '#7fc458')}>
+            🩹 Heal
+          </button>
+          {/* Placeholder buttons — Phase 3 will wire each to its
+              event type:
+                Eat   → ration_consumed events for everyone present
+                Rest  → bulk WP/RP restoration over scheduled hours
+                Relax → spend a tactic to clear one Stress pip
+              Visible to both GM and players so muscle memory builds
+              before the wiring lands. */}
+          <button onClick={() => alert('Eating (placeholder).\n\nPhase 3 will consume one ration per character present + apply any Luxury Ration stress-clear. For now this is just a visible affordance.')} disabled={advancing}
+            style={actionBtn('#2a1a10', '#5a3a1b', '#EF9F27')}
+            title="Consume rations for everyone present (Phase 3)">
+            🍞 Eat
+          </button>
+          <button onClick={() => alert('Resting (placeholder).\n\nPhase 3 will queue a bulk rest action — full WP/RP restoration over a configurable rest duration, with interruption rules. For now this is just a visible affordance.')} disabled={advancing}
+            style={actionBtn('#0f1a2e', '#1a3a5c', '#7ab3d4')}
+            title="Begin a rest (Phase 3)">
+            💤 Rest
+          </button>
+          <button onClick={() => alert('Relax (placeholder).\n\nPhase 3 will let a PC spend a tactic (or pass a roll) to clear one Stress pip. For now this is just a visible affordance.')}
             style={actionBtn('#2a1210', '#c0392b', '#f5a89a')}
             title="Spend a tactic to clear one Stress pip (Phase 3)">
             🧘 Relax
           </button>
         </div>
-      )}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 20, marginBottom: 24 }}>
         {/* ── Party Status ───────────────────────────────────── */}
@@ -484,7 +487,13 @@ export default function CampaignSheetPage() {
       </div>
 
       {/* ── Queue Heal Modal ────────────────────────────────── */}
-      {healModal && gmLike && (
+      {/* Heal modal: previously GM-only. Opened to players 2026-05-15
+          so they can queue heals for their own PCs (and party members
+          via the target picker). queueStreamingHeal writes to
+          campaign_events - RLS on that table governs who can actually
+          insert; if a player's write is denied the catch in
+          queueStreamingHeal logs and returns null. */}
+      {healModal && (
         <QueueHealModal
           party={party}
           onClose={() => setHealModal(false)}
