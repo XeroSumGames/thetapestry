@@ -5,15 +5,17 @@
 // dedicated breathing room it deserves (save / restore / download /
 // import are 4 distinct flows, each with its own confirm dialog).
 //
-// GM-only: same RLS gate as the Snapshots component itself
-// (campaign_snapshots policies). The page redirects non-GM visitors
-// back to /stories/[id] to avoid showing an empty page.
+// GM-or-Thriver: same RLS gate as the Snapshots component itself
+// (campaign_snapshots policies). The page redirects unauthorized
+// visitors back to /stories/[id] to avoid showing an empty page.
+// Thrivers pass via godmode RLS (sql/thriver-godmode-policies.sql).
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import CampaignSnapshots from '../../../../components/CampaignSnapshots'
 import StoryActionBar from '../../../../components/StoryActionBar'
 
@@ -48,9 +50,21 @@ export default function StorySnapshotsPage() {
       if (cancelled) return
       if (error || !data) { router.push('/stories'); return }
       const c = data as CampaignRow
-      // GM-only — players don't manage snapshots. Bounce them back
-      // to the story page so they see something useful.
-      if (c.gm_user_id !== user.id) {
+      // GM-or-Thriver gate — players don't manage snapshots. Bounce
+      // them back to the story page so they see something useful.
+      // Thrivers (platform-admin role) get godmode access on every
+      // campaign via the same RLS policies the GM uses.
+      const isGm = c.gm_user_id === user.id
+      let isThr = false
+      if (!isGm) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        isThr = roleIsThriver(profile)
+      }
+      if (!isGm && !isThr) {
         setAccessDenied(true)
         setLoading(false)
         return
@@ -68,7 +82,7 @@ export default function StorySnapshotsPage() {
     return (
       <div style={{ padding: '24px', maxWidth: '560px', margin: '0 auto', color: '#d4cfc9' }}>
         <div style={{ fontSize: '20px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
-        <div style={{ fontSize: '14px' }}>Snapshots are GM-only.</div>
+        <div style={{ fontSize: '14px' }}>Snapshots are GM-only (or Thriver godmode).</div>
         <Link href={`/stories/${id}`} style={{ display: 'inline-block', marginTop: '16px', color: '#c4a7f0' }}>← Back to Story</Link>
       </div>
     )
@@ -82,6 +96,9 @@ export default function StorySnapshotsPage() {
         Snapshots
       </div>
 
+      {/* isGM={true} is correct here — the upstream gate above only lets
+          GM-or-Thriver render past it, so anyone who reaches this point
+          is authorized to act as the GM for snapshot management. */}
       <CampaignSnapshots campaignId={campaign.id} isGM={true} />
     </div>
   )

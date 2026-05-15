@@ -1114,8 +1114,8 @@ export default function TablePage() {
           // It's my PC - open the sheet so CharacterCard's effect fires the modal.
           setSelectedEntry(e)
           setViewingNpcs([])
-        } else if (isGM) {
-          // GM-side notice. Player will see the modal on their own client.
+        } else if (gmLike) {
+          // GM-or-Thriver telemetry. Player will see the modal on their own client.
           console.warn(`[stress] ${e.character.name} hit 5 - Stress Check triggered for player`)
         }
         // Log to the affected PC's progression log. Fires once per transition.
@@ -1124,7 +1124,7 @@ export default function TablePage() {
       prev.set(stateId, curStress)
     }
     stressWatchPrimedRef.current = true
-  }, [entries, isGM])
+  }, [entries, gmLike])
 
   useEffect(() => {
     // Race guard. The mount effect's load() does multiple awaits before
@@ -1434,7 +1434,7 @@ export default function TablePage() {
         .on('broadcast', { event: 'pc_mortal_wound' }, (msg: any) => {
           // Show insight save modal on the player's screen or GM's screen
           const data = msg.payload
-          if (data && (data.targetUserId === userId || isGM)) {
+          if (data && (data.targetUserId === userId || gmLike)) {
             setInsightSavePrompt(data)
           }
         })
@@ -1595,8 +1595,8 @@ export default function TablePage() {
             const wp = n.wp_current ?? n.wp_max ?? 10
             return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
           }))
-          const charId = isGM ? null : myCharIdRef.current
-          if (isGM || charId) loadRevealedNpcs(charId, cnpcs)
+          const charId = gmLike ? null : myCharIdRef.current
+          if (gmLike || charId) loadRevealedNpcs(charId, cnpcs)
         }
       })()
     }
@@ -1613,7 +1613,7 @@ export default function TablePage() {
       if (debounceTimer) clearTimeout(debounceTimer)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [id, isGM])
+  }, [id, gmLike])
 
   // Roll requests broadcast from the /character-sheet popout window. The
   // popout doesn't own the roll modal / initiative gates / CMod stack -
@@ -1669,7 +1669,7 @@ export default function TablePage() {
   // ── Initiative functions ──
 
   async function startCombat() {
-    if (!isGM) return
+    if (!gmLike) return
     // Load roster NPCs for picker
     const { data: roster } = await supabase
       .from('campaign_npcs')
@@ -2434,7 +2434,7 @@ export default function TablePage() {
   }
 
   async function endCombat() {
-    if (!isGM) return
+    if (!gmLike) return
     // Snapshot the combatants for the log entry before clearing initiative.
     const combatants = initiativeOrder.map(e => e.character_name)
     const { error: endLogErr } = await supabase.from('roll_log').insert({
@@ -2460,7 +2460,7 @@ export default function TablePage() {
   }
 
   async function addNPC(name: string) {
-    if (!isGM) return
+    if (!gmLike) return
     const trimmed = name.trim()
     if (!trimmed) return
     const roll = rollD6() + rollD6()
@@ -2484,7 +2484,7 @@ export default function TablePage() {
   // them on the bar. The PC is inactive by default - GM advances to them
   // when their turn comes up in sort order.
   async function addPCToCombat(charEntry: TableEntry) {
-    if (!isGM) return
+    if (!gmLike) return
     const rapid = charEntry.character.data?.rapid ?? {}
     const acu = rapid.ACU ?? 0
     const dex = rapid.DEX ?? 0
@@ -2839,7 +2839,7 @@ export default function TablePage() {
   }
 
   async function removeFromInitiative(entryId: string) {
-    if (!isGM) return
+    if (!gmLike) return
     await supabase.from('initiative_order').delete().eq('id', entryId)
     await loadInitiative(id)
   }
@@ -2871,9 +2871,10 @@ export default function TablePage() {
   }
 
   async function handleInitiativeBarRemove(entry: InitiativeEntry) {
-    if (!isGM) {
+    if (!gmLike) {
       // Player ending their own active turn - × is gated to active+self
-      // in the bar component, so we can just advance.
+      // in the bar component, so we can just advance. Thrivers fall
+      // through to the GM-side remove branch via godmode.
       await nextTurn()
       return
     }
@@ -2958,8 +2959,8 @@ export default function TablePage() {
       if (entry) {
         // Players can only open their OWN character sheet - seeing
         // another PC's sheet leaks stats, inventory, and notes.
-        // GM keeps full access.
-        if (!isGM && entry.userId !== userId) return
+        // GM and Thriver godmode keep full access.
+        if (!gmLike && entry.userId !== userId) return
         if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
         else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
       }
@@ -3187,7 +3188,7 @@ export default function TablePage() {
   // ── Session functions ──
 
   async function startSession() {
-    if (!isGM) return
+    if (!gmLike) return
     // UI updates instantly; DB writes fire in the background (mirrors endSession).
     const newCount = sessionCount + 1
     const startedAt = new Date().toISOString()
@@ -3225,7 +3226,7 @@ export default function TablePage() {
   }
 
   async function endSession() {
-    if (!isGM) return
+    if (!gmLike) return
     // Close modal & update local state instantly
     setShowEndSessionModal(false)
     setSessionActing(true)
@@ -3433,9 +3434,9 @@ export default function TablePage() {
   // playtest (2026-05-04 BUG-1: "Perception check has a redundant
   // first modal - should go straight to the roll modal").
   function shortCircuitForSpecialCheck(): { name: string } | null {
-    const visible = entries.filter(e => isGM || e.userId === userId)
+    const visible = entries.filter(e => gmLike || e.userId === userId)
     if (visible.length === 1) return { name: visible[0].character.name }
-    if (isGM && combatActive) {
+    if (gmLike && combatActive) {
       const active = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
       if (active && active.character_id) {
         const tgt = visible.find(e => e.character.id === active.character_id)
@@ -4195,17 +4196,17 @@ export default function TablePage() {
       if (firstPartIsKnownName) {
         rollerName = firstPart
       } else if (weapon) {
-        // Weapon attacks default to selectedEntry (GM context) or my PC.
-        if (isGM && selectedEntry) rollerName = selectedEntry.character.name
+        // Weapon attacks default to selectedEntry (GM/Thriver context) or my PC.
+        if (gmLike && selectedEntry) rollerName = selectedEntry.character.name
         else {
           const myChar = entries.find(e => e.userId === userId)
           rollerName = myChar?.character.name ?? null
         }
       } else {
-        // Non-weapon roll - GM may be rolling for active NPC; otherwise
-        // it's the GM's selectedEntry or the player's PC.
-        if (isGM && active?.is_npc) rollerName = active.character_name
-        else if (isGM && selectedEntry) rollerName = selectedEntry.character.name
+        // Non-weapon roll - GM/Thriver may be rolling for active NPC; otherwise
+        // it's the selectedEntry or the player's PC.
+        if (gmLike && active?.is_npc) rollerName = active.character_name
+        else if (gmLike && selectedEntry) rollerName = selectedEntry.character.name
         else {
           const myChar = entries.find(e => e.userId === userId)
           rollerName = myChar?.character.name ?? null
@@ -6346,7 +6347,7 @@ export default function TablePage() {
             {campaign.name}
           </div>
         </div>
-        {isGM && sessionStatus === 'idle' && (
+        {gmLike && sessionStatus === 'idle' && (
           <button onClick={startSession} disabled={sessionActing}
             className="hdr-btn"
             style={{ ...hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: sessionActing ? 0.5 : 1, cursor: sessionActing ? 'not-allowed' : 'pointer' }}>
@@ -6368,7 +6369,7 @@ export default function TablePage() {
             {recorderToggling ? '...' : recorderEnabled ? '⏺ Stop Recording' : '⏺ Record'}
           </button>
         )}
-        {isGM && sessionStatus === 'active' && (
+        {gmLike && sessionStatus === 'active' && (
           <button onClick={async () => {
             // Fetch any submitted player notes so the GM sees them in the modal.
             // Only pull notes that were written DURING this session - notes from
@@ -6398,21 +6399,21 @@ export default function TablePage() {
             Session {sessionCount}
           </div>
         )}
-        {isGM && !combatActive && (
+        {gmLike && !combatActive && (
           <button onClick={() => { setShowTacticalMap(prev => !prev); refreshMapTokenIds() }}
             className={`hdr-btn${showTacticalMap ? ' hdr-btn--active' : ''}`}
             style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
         )}
-        {!isGM && !combatActive && (
+        {!gmLike && !combatActive && (
           <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }}
             className={`hdr-btn${showTacticalMap ? ' hdr-btn--active' : ''}`}
             style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
         )}
-        {isGM && showTacticalMap && !combatActive && (
+        {gmLike && showTacticalMap && !combatActive && (
           <button onClick={() => {
             const newShared = !tacticalShared
             setTacticalShared(newShared)
@@ -6423,7 +6424,7 @@ export default function TablePage() {
             {tacticalShared ? 'Unshare Map' : 'Share Map'}
           </button>
         )}
-        {isGM && showTacticalMap && (
+        {gmLike && showTacticalMap && (
           // Map Setup - replaces the old inline 130px scene-controls
           // sidebar. Pops out the controls panel into its own browser
           // window so the GM can park it on a 2nd monitor and let the
@@ -6436,14 +6437,14 @@ export default function TablePage() {
             Map Setup
           </button>
         )}
-        {isGM && sessionStatus === 'active' && !combatActive && (
+        {gmLike && sessionStatus === 'active' && !combatActive && (
           <button onClick={startCombat} disabled={startingCombat}
             className="hdr-btn"
             style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat ? 0.5 : 1, cursor: startingCombat ? 'not-allowed' : 'pointer' }}>
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
-        {isGM && combatActive && (
+        {gmLike && combatActive && (
           <button onClick={endCombat}
             className="hdr-btn"
             style={hdrBtn('#0f2035', '#7ab3d4', '#1a3a5c')}>
@@ -6489,7 +6490,7 @@ export default function TablePage() {
             // resource log, role distribution, recruitment stats.
             // Route: /stories/<id>/community. GM-only gated inside
             // the page itself (non-GMs see an access-denied block).
-            { label: 'Dashboard', onClick: () => window.open(`/stories/${id}/community`, '_blank', 'noopener,noreferrer'), hidden: !isGM },
+            { label: 'Dashboard', onClick: () => window.open(`/stories/${id}/community`, '_blank', 'noopener,noreferrer'), hidden: !gmLike },
           ],
           hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
         )}
@@ -6531,7 +6532,7 @@ export default function TablePage() {
           ],
           hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'),
         )}
-        {isGM && renderHeaderMenu(
+        {gmLike && renderHeaderMenu(
           'gm_tools',
           'GM Tools',
           [
@@ -6641,7 +6642,7 @@ export default function TablePage() {
           what they CAN'T do (take actions). Banner is dismissible only
           by restoring the PC. Hidden when the PC is fully dead (countdown
           expired) since that's a different ending. */}
-      {!isGM && combatActive && (() => {
+      {!gmLike && combatActive && (() => {
         const myEntry = entries.find(e => e.userId === userId)
         if (!myEntry?.liveState) return null
         const ls = myEntry.liveState as any
@@ -6698,7 +6699,7 @@ export default function TablePage() {
             entries={entries}
             campaignNpcs={campaignNpcs}
             userId={userId}
-            isGM={isGM}
+            isGM={gmLike}
             entrySceneTags={entrySceneTags}
             onNextTurn={nextTurn}
             onDefer={deferInitiative}
@@ -6715,7 +6716,7 @@ export default function TablePage() {
             if (!activeEntry || (activeEntry.actions_remaining ?? 0) <= 0) return null
             const myChar = entries.find(e => e.userId === userId)
             const isMyTurn = !!(activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id)
-            const canAct = isMyTurn || isGM
+            const canAct = isMyTurn || gmLike
             if (!canAct) return null
 
             // Determine combatant's weapon for conditional buttons
@@ -7028,7 +7029,7 @@ export default function TablePage() {
                   const active = initiativeOrder.find(e => e.is_active)
                   let moverCharId: string | undefined
                   let moverNpcId: string | undefined
-                  if (isGM && selectedMapTargetName) {
+                  if (gmLike && selectedMapTargetName) {
                     const selTok = mapTokens.find(t => t.name === selectedMapTargetName && t.token_type !== 'object')
                     if (selTok) {
                       moverCharId = selTok.character_id ?? undefined
@@ -7403,7 +7404,7 @@ export default function TablePage() {
           </div>
           <div ref={setFeedScrollContainer} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
             {sessionStatus === 'idle' && (
-              isGM ? (
+              gmLike ? (
                 <button onClick={startSession} disabled={sessionActing}
                   style={{ width: '100%', textAlign: 'center', padding: '8px', marginBottom: '8px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
                   {sessionActing ? 'Starting...' : 'Start Session'}
@@ -7476,7 +7477,7 @@ export default function TablePage() {
               <ChatComposer
                 campaignId={id}
                 userId={userId}
-                isGM={isGM}
+                isGM={gmLike}
                 campaign={campaign}
                 entries={entries}
                 whisperTarget={whisperTarget}
@@ -7492,7 +7493,7 @@ export default function TablePage() {
           {(combatActive || showTacticalMap || tacticalShared) ? (
             <TacticalMap
               campaignId={id}
-              isGM={isGM}
+              isGM={gmLike}
               initiativeOrder={initiativeOrder}
               tokenRefreshKey={tokenRefreshKey}
               onTokenChanged={handleMapTokenChanged}
@@ -7514,7 +7515,7 @@ export default function TablePage() {
               onThrowCancel={handleMapThrowCancel}
             />
           ) : (
-            <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} onMapDoubleClick={(lat, lng) => openQuickAddPin(lat, lng)} />
+            <CampaignMap campaignId={id} isGM={gmLike} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} onMapDoubleClick={(lat, lng) => openQuickAddPin(lat, lng)} />
           )}
           {/* NPC Card(s) - grid overlay when out of combat, draggable inline when in combat */}
           {viewingNpcs.length > 0 && !combatActive && !showTacticalMap && (
@@ -7523,7 +7524,7 @@ export default function TablePage() {
                 const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
                 const liveNpc = fresh ? { ...fresh } as CampaignNpc : npc
                 const cardKey = `${npc.id}-${liveNpc.wp_current}-${liveNpc.rp_current}-${liveNpc.death_countdown}`
-                return isGM ? (
+                return gmLike ? (
                   <NpcCard key={cardKey}
                     npc={liveNpc}
                     onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
@@ -7542,7 +7543,7 @@ export default function TablePage() {
                       const bond = apprenticeBondsByNpcId[npc.id]
                       if (!bond || bond.apprenticeMeta.setup_complete) return undefined
                       const isMaster = !!myEntry && bond.masterCharacterId === myEntry.character.id
-                      if (!isGM && !isMaster) return undefined
+                      if (!gmLike && !isMaster) return undefined
                       return () => setSetupApprenticeNpcId(npc.id)
                     })()}
                     onOpenTrade={myEntry ? () => setTradeTarget({ kind: 'npc', id: npc.id }) : undefined}
@@ -7649,7 +7650,7 @@ export default function TablePage() {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', border: '1px solid #3a3a3a', borderBottom: 'none', userSelect: 'none' }}>
                     <div style={{ width: '40px', height: '3px', borderRadius: '2px', background: '#5a5a5a' }} />
                   </div>
-                  {isGM ? (
+                  {gmLike ? (
                     <NpcCard
                       npc={liveNpc}
                       onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
@@ -7772,7 +7773,7 @@ export default function TablePage() {
                   wpMax={liveTok?.wp_max ?? fallbackWpMax}
                   color={obj.color}
                   portraitUrl={obj.portraitUrl}
-                  isGM={isGM}
+                  isGM={gmLike}
                   entries={entries as any}
                   myCharacter={(() => {
                     const me = entries.find(e => e.userId === userId)
@@ -7804,7 +7805,7 @@ export default function TablePage() {
                     // see onMoveComplete).
                     const me = entries.find(e => e.userId === userId)
                     const controllers = (liveTok as any)?.controlled_by_character_ids
-                    const canControl = isGM
+                    const canControl = gmLike
                       || (!!me && Array.isArray(controllers) && controllers.includes(me.character.id))
                     if (!canControl) return undefined
                     // Acceleration model: per Distemper CRB pp.137-139,
@@ -7890,11 +7891,11 @@ export default function TablePage() {
                 canEdit={gmLike || syncedSelectedEntry.userId === userId}
                 showButtons={true}
                 isMySheet={syncedSelectedEntry.userId === userId}
-                isGM={isGM}
+                isGM={gmLike}
                 onStatUpdate={handleStatUpdate}
-                onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
+                onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || gmLike) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                 onClose={() => { setSelectedEntry(null); setSheetPos(null) }}
-                onKick={isGM && syncedSelectedEntry.userId !== userId ? async () => {
+                onKick={gmLike && syncedSelectedEntry.userId !== userId ? async () => {
                   const kickUserId = syncedSelectedEntry.userId
                   const kickName = syncedSelectedEntry.character.name
                   if (!confirm(`Remove ${kickName} from this session?`)) return
@@ -7953,7 +7954,7 @@ export default function TablePage() {
                   })
                 }}
                 otherNpcs={campaignNpcs
-                  .filter((n: any) => !(!isGM && n.hidden_from_players))
+                  .filter((n: any) => !(!gmLike && n.hidden_from_players))
                   .filter((n: any) => n.status !== 'dead')
                   .map((n: any) => ({ id: n.id, name: n.name }))}
                 onGiveItemToNpc={async (item: InventoryItem, targetNpcId: string, qty: number) => {
@@ -8501,7 +8502,7 @@ export default function TablePage() {
             const isMe = entry.userId === userId
             return (
               <button key={entry.stateId} onClick={() => {
-                if (isGM || isMe) {
+                if (gmLike || isMe) {
                   if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
                   else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
                 } else {
@@ -8515,7 +8516,7 @@ export default function TablePage() {
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  {isGM && (combatActive || showTacticalMap) && (() => {
+                  {gmLike && (combatActive || showTacticalMap) && (() => {
                     // Read the actual token state - was checking initiativeOrder,
                     // which meant the button didn't flip color for PCs placed on
                     // the map outside of combat (or cleared but still in init).
@@ -8556,7 +8557,7 @@ export default function TablePage() {
                       </div>
                     )
                   })()}
-                  {(isGM || isMe) && (
+                  {(gmLike || isMe) && (
                     <div onClick={e => { e.stopPropagation(); openPopout(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, { w: 800, h: 800 }) }}
                       style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
                       Popout
@@ -8615,12 +8616,12 @@ export default function TablePage() {
               campaignId={id}
               character={syncedSelectedEntry.character}
               liveState={syncedSelectedEntry.liveState}
-              canEdit={isGM || syncedSelectedEntry.userId === userId}
+              canEdit={gmLike || syncedSelectedEntry.userId === userId}
               showButtons={true}
               isMySheet={syncedSelectedEntry.userId === userId}
-              isGM={isGM}
+              isGM={gmLike}
               onStatUpdate={handleStatUpdate}
-              onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
+              onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || gmLike) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
               onWeaponChange={(slot, newWeapon) => {
                 // Same fix as the inline-mode card above - patch entries so
                 // the combat bar's Attack button picks up the new weapon
@@ -10795,9 +10796,9 @@ export default function TablePage() {
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Perception Check</div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Perception modifier (RSN + ACU)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {/* Players only see their own PC(s); GMs can roll Perception
-                      for any PC (mirror First Impression pattern below). */}
-                  {entries.filter(e => isGM || e.userId === userId).map(e => (
+                  {/* Players only see their own PC(s); GMs/Thrivers can roll
+                      Perception for any PC (mirror First Impression below). */}
+                  {entries.filter(e => gmLike || e.userId === userId).map(e => (
                     <button key={e.character.id} onClick={() => triggerPerceptionCheck(e.character.name)}
                       style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name} (PER {(e.character.data?.rapid?.RSN ?? 0) + (e.character.data?.rapid?.ACU ?? 0)})</button>
                   ))}
@@ -10810,7 +10811,7 @@ export default function TablePage() {
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Perception + best of Psychology, Streetwise, Tactics</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {/* Same player-self / GM-all filter as Perception + First Impression. */}
-                  {entries.filter(e => isGM || e.userId === userId).map(e => (
+                  {entries.filter(e => gmLike || e.userId === userId).map(e => (
                     <button key={e.character.id} onClick={() => triggerGutInstinct(e.character.name)}
                       style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name}</button>
                   ))}
@@ -10881,10 +10882,10 @@ export default function TablePage() {
                       // as "First Impression goes to a redundant first
                       // modal - should go to the standard roll modal".
                       if (!npcId) return
-                      const visibleNow = entries.filter(en => isGM || en.userId === userId)
+                      const visibleNow = entries.filter(en => gmLike || en.userId === userId)
                       let auto: typeof visibleNow[0] | undefined
                       if (visibleNow.length === 1) auto = visibleNow[0]
-                      else if (isGM && combatActive) {
+                      else if (gmLike && combatActive) {
                         const activeIE = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
                         if (activeIE?.character_id) {
                           auto = visibleNow.find(en => en.character.id === activeIE.character_id)
@@ -10912,10 +10913,10 @@ export default function TablePage() {
                     this - i.e. exactly one eligible PC OR (combat-active
                     GM with a PC-active turn). Avoids visual redundancy. */}
                 {(() => {
-                  const visibleNow = entries.filter(en => isGM || en.userId === userId)
+                  const visibleNow = entries.filter(en => gmLike || en.userId === userId)
                   const willAutoFireOnNpcPick =
                     visibleNow.length === 1 ||
-                    (isGM && combatActive && initiativeOrder.find(ie => ie.is_active && !ie.is_npc && ie.character_id && visibleNow.some(en => en.character.id === ie.character_id)))
+                    (gmLike && combatActive && initiativeOrder.find(ie => ie.is_active && !ie.is_npc && ie.character_id && visibleNow.some(en => en.character.id === ie.character_id)))
                   if (willAutoFireOnNpcPick) {
                     // Show a thin hint instead of the PC button list - the
                     // moment they pick an NPC, the roll modal opens for
@@ -11124,7 +11125,7 @@ export default function TablePage() {
                     <select value={recruitRollerId} onChange={e => setRecruitRollerId(e.target.value)}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                       <option value="">- pick a PC -</option>
-                      {entries.filter(e => isGM || e.userId === userId).map(e => (
+                      {entries.filter(e => gmLike || e.userId === userId).map(e => (
                         <option key={e.character.id} value={e.character.id}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</option>
                       ))}
                     </select>

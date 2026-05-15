@@ -20,6 +20,7 @@ import { getCachedAuth } from '../../lib/auth-cache'
 import { advance, readClock, queueStreamingHeal, cancelEvent, type ClockState } from '../../lib/campaign-clock'
 import { exportSessionLog } from '../../lib/session-export'
 import { dayToCalendar, eventsOnDay, pastAndPresentEvents, hourTo12h } from '../../lib/distemper-timeline'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 interface PartyRow {
   character_id: string
@@ -78,8 +79,13 @@ export default function CampaignSheetPage() {
   const [vehicles, setVehicles] = useState<VehicleRow[]>([])
   const [pending, setPending] = useState<PendingHeal[]>([])
   const [healModal, setHealModal] = useState(false)
+  const [isThriver, setIsThriver] = useState(false)
 
   const isGM = !!myUserId && !!gmUserId && myUserId === gmUserId
+  // gmLike = isGM || isThriver. Thrivers get GM-side controls on every
+  // campaign via platform godmode (DB RLS already widened; this is the
+  // matching UI gate).
+  const gmLike = isGM || isThriver
 
   const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -214,6 +220,17 @@ export default function CampaignSheetPage() {
       ])
       if (cancelled) return
       setMyUserId(auth.user?.id ?? null)
+      // Thriver lookup — once per page load. Result drives gmLike for
+      // every GM-gated affordance below (Advance Time, Heal modal,
+      // Edit Clock modal, Pending Heal cancel, Export Log).
+      if (auth.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', auth.user.id)
+          .maybeSingle()
+        if (!cancelled) setIsThriver(roleIsThriver(profile))
+      }
       const c: any = camp.data
       if (c) {
         setCampaignName(c.name ?? '')
@@ -274,7 +291,7 @@ export default function CampaignSheetPage() {
   const timeline = pastAndPresentEvents(clock.canon_day).slice().reverse()
 
   async function handleAdvance(hours: number) {
-    if (!isGM || advancing) return
+    if (!gmLike || advancing) return
     setAdvancing(true)
     const next = await advance(campaignId, hours)
     if (next) setClockState(next)
@@ -316,13 +333,13 @@ export default function CampaignSheetPage() {
                   : `${Math.abs(clock.canon_day)} days before the first recorded death`}
             </span>
           </span>
-          {isGM && (
+          {gmLike && (
             <button onClick={() => setEditClockModal(true)}
               style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Edit
             </button>
           )}
-          {isGM && (
+          {gmLike && (
             <button onClick={() => exportSessionLog({ campaignId, campaignName: campaignName || 'Campaign', sessionNumber: 0 })}
               style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Export Log
@@ -337,7 +354,7 @@ export default function CampaignSheetPage() {
       </div>
 
       {/* ── GM advance bar ──────────────────────────────────── */}
-      {isGM ? (
+      {gmLike ? (
         <div style={{ marginBottom: 24, padding: '10px 14px', background: '#14181c', border: '1px solid #2e2e2e', borderRadius: 3, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 12, color: '#cce0f5', letterSpacing: '.12em', textTransform: 'uppercase' }}>Advance Time</div>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -422,7 +439,7 @@ export default function CampaignSheetPage() {
                   key={ev.id}
                   ev={ev}
                   clock={clock}
-                  canCancel={isGM}
+                  canCancel={gmLike}
                   onCancel={async () => {
                     if (!confirm(`Cancel heal for ${ev.target_name}? Remaining heal is lost.`)) return
                     await cancelEvent(ev.id, 'manual_cancel')
@@ -466,7 +483,7 @@ export default function CampaignSheetPage() {
       </div>
 
       {/* ── Queue Heal Modal ────────────────────────────────── */}
-      {healModal && isGM && (
+      {healModal && gmLike && (
         <QueueHealModal
           party={party}
           onClose={() => setHealModal(false)}
@@ -485,8 +502,8 @@ export default function CampaignSheetPage() {
         />
       )}
 
-      {/* ── Edit Clock Modal (GM-only) ────────────────────────── */}
-      {editClockModal && isGM && (
+      {/* ── Edit Clock Modal (GM-or-Thriver) ──────────────────── */}
+      {editClockModal && gmLike && (
         <EditClockModal
           clock={clock}
           startCanonDay={startCanonDay}
