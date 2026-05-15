@@ -81,27 +81,26 @@ const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }
 // was dropped 2026-05-15 — no transport hubs in canon. landmark +
 // encounter remain as CampaignMap-only overflow.
 const PIN_CATEGORIES = [
-  // Row 1
+  // Row 1 — intel, places, institutions
   { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
   { value: 'location',   label: 'Location',   emoji: '📍' },
+  { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
   { value: 'residence',  label: 'Residence',  emoji: '🏠' },
   { value: 'camp',       label: 'Camp',       emoji: '🏕️' },
+  { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
+  { value: 'community',  label: 'Community',  emoji: '🏘️' },
   { value: 'business',   label: 'Business',   emoji: '🏪' },
   { value: 'church',     label: 'Church',     emoji: '⛪' },
+  // Row 2 — services, people, threats, supplies
   { value: 'government', label: 'Government', emoji: '🏛️' },
   { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
   { value: 'military',   label: 'Military',   emoji: '⚔️' },
-  // Row 2 (person + group lead per 2026-05-15; encounter promoted
-  // to canonical 2026-05-15)
   { value: 'person',     label: 'Person',     emoji: '👤' },
   { value: 'group',      label: 'Group',      emoji: '👥' },
-  { value: 'danger',     label: 'Danger',     emoji: '☠️' },
-  { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
-  { value: 'resource',   label: 'Resource',   emoji: '🎒' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },
-  { value: 'community',  label: 'Community',  emoji: '🏘️' },
+  { value: 'danger',     label: 'Danger',     emoji: '☠️' },
+  { value: 'resource',   label: 'Resource',   emoji: '📦' },
   { value: 'world_event', label: 'World Event', emoji: '🌍' },
-  { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
   // Row 3 (CampaignMap overflow — not in canonical list)
   { value: 'landmark',   label: 'Landmark',   emoji: '🗿' },
 ]

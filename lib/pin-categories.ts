@@ -9,34 +9,36 @@ export interface PinCategory {
   emoji: string
 }
 
-// Order also drives the picker grid (9 columns × 2 rows = 18 cells).
-// Row 1 (1-9) = locations & structures. Row 2 (10-18) = people &
-// things, with person + group leading per Xero's 2026-05-15 call.
-// 'airport' / Transport was removed 2026-05-15 (no transport hubs in
-// canon); 'camp' takes its slot in row 1.
+// Order also drives the picker grid (9 columns × 2 rows + overflow).
+// Narrative-arc shape locked 2026-05-15: rumor (intel) > location
+// (generic place) > encounter (event) > residence/camp/settlement/
+// community (escalating place-types) > business/church (institutions)
+// > government/hospital/military (state services) > person/group >
+// animals/danger (threats) > medical/resource (consumables) >
+// world_event (meta-timeline marker, row-3 dangler).
 export const PIN_CATEGORIES: ReadonlyArray<PinCategory> = [
-  // ── Row 1 — locations & structures ──
+  // ── Row 1 — intel, places, institutions ──
   { value: 'rumor',       label: 'Rumor',              emoji: '❓' },
   { value: 'location',    label: 'Location',           emoji: '📍' },
+  { value: 'encounter',   label: 'Encounter',          emoji: '⚡' },
   { value: 'residence',   label: 'Residence',          emoji: '🏠' },
   { value: 'camp',        label: 'Camp',               emoji: '🏕️' },
+  { value: 'settlement',  label: 'Settlement',         emoji: '🏚️' },
+  { value: 'community',   label: 'Community',          emoji: '🏘️' },
   { value: 'business',    label: 'Business',           emoji: '🏪' },
   { value: 'church',      label: 'Church',             emoji: '⛪' },
+  // ── Row 2 — services, people, threats, supplies ──
   { value: 'government',  label: 'Government',         emoji: '🏛️' },
   { value: 'hospital',    label: 'Hospital',           emoji: '🏥' },
   { value: 'military',    label: 'Military',           emoji: '⚔️' },
-  // ── Row 2 — people & things (person + group lead) ──
   { value: 'person',      label: 'Person',             emoji: '👤' },
   { value: 'group',       label: 'Group',              emoji: '👥' },
-  { value: 'danger',      label: 'Danger',             emoji: '☠️' },
-  { value: 'encounter',   label: 'Encounter',          emoji: '⚡' },
-  { value: 'resource',    label: 'Resource',           emoji: '🎒' },
-  { value: 'medical',     label: 'Medical',            emoji: '🩸' },
   { value: 'animals',     label: 'Animals',            emoji: '🐾' },
-  { value: 'community',   label: 'Community',          emoji: '🏘️' },
+  { value: 'danger',      label: 'Danger',             emoji: '☠️' },
+  { value: 'medical',     label: 'Medical',            emoji: '🩸' },
+  { value: 'resource',    label: 'Resource',           emoji: '📦' },
+  // ── Row 3 — meta-timeline ──
   { value: 'world_event', label: 'Distemper Timeline', emoji: '🌍' },
-  // ── Row 3 — overflow ──
-  { value: 'settlement',  label: 'Settlement',         emoji: '🏚️' },
 ]
 
 export function getCategoryEmoji(category: string | null | undefined): string {
