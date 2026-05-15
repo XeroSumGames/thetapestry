@@ -198,6 +198,52 @@ export default function VehiclePage() {
     await supabase.from('campaigns').update({ vehicles }).eq('id', campaignId)
   }
 
+  // Auto-vacate helper (2026-05-17): when a character is assigned to
+  // a new seat, clear them from every OTHER seat on the same vehicle.
+  // Without this, Mikey could be Driver AND Shooter AND Passenger #3
+  // simultaneously, which is incoherent. `keep` names the slot we
+  // just wrote into so we don't immediately wipe it.
+  //
+  // Empty crewId (slot being cleared, not filled) skips the vacate
+  // pass entirely — there's no character to deduplicate.
+  function vacateCrewExcept(
+    v: Vehicle,
+    crewId: string | null,
+    keep: { slot: 'driver' | 'brewer' | 'navigator' | 'shooter' | 'passenger'; idx?: number },
+  ): Vehicle {
+    if (!crewId) return v
+    const next: Vehicle = { ...v }
+    if (keep.slot !== 'driver' && next.driver_character_id === crewId) {
+      next.driver_character_id = null
+      next.driver_kind = null
+    }
+    if (keep.slot !== 'brewer' && next.brewer_character_id === crewId) {
+      next.brewer_character_id = null
+      next.brewer_kind = null
+    }
+    if (keep.slot !== 'navigator' && next.navigator_character_id === crewId) {
+      next.navigator_character_id = null
+      next.navigator_kind = null
+    }
+    if (Array.isArray(next.mounted_weapons)) {
+      next.mounted_weapons = next.mounted_weapons.map((w, i) => {
+        if (keep.slot === 'shooter' && keep.idx === i) return w
+        if (w?.shooter_character_id === crewId) {
+          return { ...w, shooter_character_id: null, shooter_kind: null }
+        }
+        return w
+      })
+    }
+    if (Array.isArray(next.passenger_seats)) {
+      next.passenger_seats = next.passenger_seats.map((s, i) => {
+        if (keep.slot === 'passenger' && keep.idx === i) return s
+        if (s?.character_id === crewId) return null
+        return s
+      }) as any
+    }
+    return next
+  }
+
   // Persist driver / brewer / navigator assignment back to the vehicle.
   async function setCrewAssignment(slot: 'driver' | 'brewer' | 'navigator', crewId: string) {
     if (!vehicle) return
@@ -206,7 +252,8 @@ export default function VehiclePage() {
       slot === 'driver'    ? { driver_character_id: crewId || null, driver_kind: member?.kind ?? null }
     : slot === 'brewer'    ? { brewer_character_id: crewId || null, brewer_kind: member?.kind ?? null }
     : /* navigator */        { navigator_character_id: crewId || null, navigator_kind: member?.kind ?? null }
-    await updateVehicle({ ...vehicle, ...patch })
+    const withPatch = { ...vehicle, ...patch }
+    await updateVehicle(vacateCrewExcept(withPatch, crewId || null, { slot }))
   }
 
   // Persist a passenger-slot assignment. Slots are a fixed-length 6
@@ -222,7 +269,8 @@ export default function VehiclePage() {
     seats[slotIndex] = crewId && member
       ? { character_id: crewId, kind: member.kind }
       : null
-    await updateVehicle({ ...vehicle, passenger_seats: seats as any })
+    const withPatch = { ...vehicle, passenger_seats: seats as any }
+    await updateVehicle(vacateCrewExcept(withPatch, crewId || null, { slot: 'passenger', idx: slotIndex }))
   }
 
   // Persist the shooter assignment for a specific mounted weapon.
@@ -238,7 +286,8 @@ export default function VehiclePage() {
       shooter_character_id: crewId || null,
       shooter_kind: member?.kind ?? null,
     }
-    await updateVehicle({ ...vehicle, mounted_weapons: weapons })
+    const withPatch = { ...vehicle, mounted_weapons: weapons }
+    await updateVehicle(vacateCrewExcept(withPatch, crewId || null, { slot: 'shooter', idx: weaponIdx }))
   }
 
   // Open the check modal for the assigned driver / brewer with sensible
