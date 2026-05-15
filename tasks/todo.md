@@ -1,5 +1,109 @@
 # Tapestry — To Do & Backlog
 
+> **CURRENT OPEN — 2026-05-15** lives at the top. Everything below the divider is the historical shipped log (don't trust those headings for current status — audit before quoting). Last full audit: 2026-05-15 (3 parallel Explore agents grepped every line item against live code + git log).
+
+---
+
+## 🎯 CURRENT OPEN — 2026-05-15
+
+### Untested live
+- [ ] **Polish-pass-2026-05-14 testplan** ([tasks/polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md)) — 11 sections covering everything that shipped 2026-05-14 (Coord Effort, Healing, Year-0, Campaign Sheet header/Edit Clock modal, Export Log, Luxury Ration, die3, Weapon Repair, CampaignObjects "found nothing", 4 polish bundles). Not playtested yet.
+- [ ] **Thriver-godmode-sweep testplan** ([tasks/thriver-godmode-sweep-testplan.md](thriver-godmode-sweep-testplan.md)) — 6 sections covering today's sweep (commit `07652f8` → merged `98d81c9`). Thriver-on-non-owned-campaign + GM regression + Survivor no-leak. Not playtested yet.
+
+### Ready to build (small)
+- [ ] **Coordinated Effort — per-participant opt-out UI** (currently End Effort ends whole chain)
+- [ ] **Coordinated Effort — bespoke chain summary banner** (one feed row instead of N)
+- [ ] **Coordinated Effort — combat turn-gate behavior tested in actual combat** (verification, not build)
+- [ ] **Healing — Wound Infection auto-trigger on LI** (currently feed prompt only; grep found no `infection_auto` wiring)
+- [ ] **Healing — kit consumption / charges** (canon silent; no `medkit` / `kit_charges` schema yet; infinite-use today)
+- [ ] **Export Session Log — bespoke banner types** for Combat Start/End, Sprint, Drop. Explicitly deferred in commit `1e159dc`.
+- [ ] **Export Session Log — chat messages export** ([lib/session-export.ts](../lib/session-export.ts) only exports roll_log rows)
+
+### Ready to build (medium)
+- [ ] **Skill + Combat action end-to-end audit** — walk every check/action against [tasks/roll-feed-log-preview.html](roll-feed-log-preview.html); log drift as bugs
+- [ ] **Modal unification (5 of 6 remaining)** — Stabilize / Distract / Group Check / Gut Instinct / First Impression to `<RollModal>` shape. Coordinated Effort already migrated (`6640b1a`).
+- [ ] **First Impression skips target picker** — clicking revealed NPC card → straight to attack modal (skill-picker `e94bda2` is a different feature; this target-NPC-bypass is still open)
+- [ ] **Perception check skips picker** — same shape as First Impression (BUG-1 from 2026-05-04 playtest at [tasks/playtest-2026-05-04-bugs.md](playtest-2026-05-04-bugs.md))
+- [ ] **Gut Instinct results presentation** — design + rework
+- [ ] **CMod Stack reusable component** — extract from Recruit modal, use in Grapple / First Impression / Attack
+- [ ] **GM force-push view to players** — sync scene/view changes across all clients (no `view_changed` broadcast event yet)
+- [ ] **Character Evolution / CDP Calculator** — post-creation CDP spend surface (no `app/characters/[id]/evolve/` route)
+- [ ] **King's Crossroads Mall — tactical scenes** — author battle maps and wire into [lib/setting-scenes.ts](../lib/setting-scenes.ts) under `kings_crossroads_mall` (NOTE: key is `kings_crossroads_mall`, NOT `kings_crossing_mall`)
+- [ ] **King's Crossroads Mall — handouts** — port broadcasts/journals into [lib/setting-handouts.ts](../lib/setting-handouts.ts) under same key
+- [ ] **Streamline player login flow** — too many steps; needs design call before build
+- [ ] **PCs riding vehicles don't move with the vehicle** — BUG-2 from 2026-05-04 playtest; passenger stickiness unimplemented for Minnie + other vehicles
+- [ ] **Tactical map pan via mouse drag — broken** ([tasks/long-term-fixes.md](long-term-fixes.md)). WASD/arrow workaround exists. Deferred since 2026-04-27.
+
+### Bigger builds
+- [ ] **VehicleSheet refactor** — vehicle page is a full page now (not iframe), but the "shared component" refactor for use in both popout + inline contexts hasn't shipped. Half-day, high risk.
+
+### Blocked on Xero design call
+- [ ] **GM Notes / Assets merge** — unify, cross-link, or leave-as-is
+- [ ] **Other explosives audit (QS Table 18)** — Grenade / Flash-Bang Grenade / Shiv-Grenade exist in [lib/weapons.ts](../lib/weapons.ts) and [lib/xse-schema.ts](../lib/xse-schema.ts); audit-vs-Table-18 not commit-marked
+- [ ] **Lv4 Skill Traits suite** — 2 of 24 traits authored (Inspiration "Beacon of Hope", Psychology "Insightful Counselor"). Remaining 22 blocked on full list from Xero. Blocks ALL Lv4 auto-bonuses.
+- [ ] **`hide-NPCs` global flag decision**
+- [ ] **Recruitment/Inspiration/Apprentice Tier-2 semantics** (3 items)
+- [ ] **HP pip dots on player-facing NPC card** ([components/PlayerNpcCard.tsx](../components/PlayerNpcCard.tsx) comment lists this as GM-only hidden data)
+- [ ] **Folder-level NPC reveal panic button** — per-folder Reveal/Hide already shipped (`f4b6796`); the cross-folder panic button is the open piece
+- [ ] **Initiative lag** — needs Xero solo-validation first
+- [ ] Healing on GM time-tick — 5 open questions (per [tasks/post-playtest-todo-2026-05-12.md](post-playtest-todo-2026-05-12.md))
+- [ ] Coordinated Effort — 3 open questions (per same)
+- [ ] Group Check redesign — 3 open questions (per same)
+
+### Long-term map features
+- [ ] **Dynamic lighting on tactical map** — no `light source` / `lights layer` references in [components/TacticalMap.tsx](../components/TacticalMap.tsx)
+- [ ] **Doors as movement-blockers** — fog-edit doors/windows ship vision-blocking (`4e02f70`/`4f9971b`). The `door` token_type with `is_open` state for movement-blocking is the open piece.
+
+### CRB rewrite workstream (Tier 1 canon — open)
+- [ ] **Vehicle subsystem + Vehicles-as-Cover** — no `app/rules/vehicles/` directory yet
+- [ ] **NPC threat tiers** (Friendlies/Goons/Foes/Antagonists templates) — `lib/populate-triangle.ts` comment mentions the ratio but no canon page
+- [ ] **Travel Times subsystem** — 8h travel + 8h rest + 8h sleep + 1RP/hour overage
+- [ ] **Resource Quality / Supplies abstraction** — `ItemRarity` exists; full Supplies subsystem + monthly cost not in canon
+- [ ] **Per-activity yield rates** — Scavenging 2/Daily, Foraging 2 Standard, Fishing 2 Luxury, Trapping 1 Luxury, Hunting 10 Luxury, Farming 90 days
+- [ ] **Base of Operations sizing** — Tiny/Small/Medium/Large/Massive with monthly Supplies cost
+
+### CRB rewrite workstream (Tier 2 supplement — open)
+- [ ] **Dog Flu** — 1WP+RP per 6h, severity-tier disease (setting flavor exists; mechanic doesn't)
+- [ ] **Fuel subsystem** — gasoline spoilage, ethanol/methanol
+- [ ] **Government Remnants / Beacons of Hope factions**
+
+### CRB rewrite workstream (Tier 3 optional — open)
+- [ ] Morality loss/regain ladder (3 lost → -1 INF; 6 regained → +1 INF)
+- [ ] Called Shots (Wild Success required, Fill in the Gaps)
+- [ ] Tactical Advantages (+1 to +3 CMod GM-discretion catch-all)
+- [ ] Chases subsystem (Speed-matched Opposed across range bands)
+- [ ] Banishment (Code-of-Conduct teeth for Communities)
+- [ ] Mundane vs Complex Tasks split + Simplified Group Check
+- [ ] Apprentice continuity on PC death
+
+### CRB rewrite workstream (Cross-cutting — open, platform-side)
+- [ ] **Intimidation skill removal** — gone from canon; still in [lib/npc-generator.ts](../lib/npc-generator.ts) Politician bundle + [lib/setting-npcs.ts](../lib/setting-npcs.ts) NPC stat lines
+- [ ] **Lv4 Skill Trait paragraphs** — 2 of 24 (blocked on the wider Lv4 design call above)
+- [ ] **Morale outcomes percentages (25/50/75%)** — verify moodRow table at [app/rules/communities/morale/page.tsx:100+](../app/rules/communities/morale/page.tsx)
+
+### CRB rewrite workstream (Cross-cutting — open, CRB-doc side only)
+- [ ] General Knowledge → Specific Knowledge sweep
+- [ ] CMod ladder labels (11 tiers renamed)
+- [ ] 12 Profession bundles (7-skill → 5-skill)
+
+### Backburner
+- [ ] **Campaign calendar** — deferred; revisit only on listed pain triggers (Forgotten Skip Week, world events sticking past end-date, etc.). See [memory/project_campaign_calendar.md](../../../../Users/tony_/.claude/projects/C--TheTapestry/memory/project_campaign_calendar.md).
+
+### Drop / archive
+- ~~"#33 general UI smoothness"~~ — too vague, needs specifics before tracking
+- ~~Random char gen — Medic missing First Aid~~ — NOT A BUG. Per [lib/xse-schema.ts:157-170](../lib/xse-schema.ts), Medic skills are `['Manipulation', 'Medicine*', 'Psychology*', 'Research', 'Sleight of Hand']`. First Aid isn't in the SKILLS table at all.
+
+---
+
+## Audit notes — what shipped recently that USED to be open
+- **2026-05-15 Thriver godmode UI sweep** (`07652f8` / `98d81c9`) — full UI layer parity with DB-level godmode
+- **2026-05-14 stack**: Coord Effort, Healing on Time-Tick, Year-0 calendar shift, Campaign Sheet header redesign + Edit Clock modal, Export Session Log, Weapon Repair, die3 in expanded log, CampaignObjects "found nothing" write path (Bundle 4), Luxury Ration consume
+- **2026-05-14 canon shipped**: Item Condition + Upkeep, Activity Block taxonomy, Falling/Drowning/Subsistence Damage, Distemper-Infected Canines bestiary, Insight Dice on Death "1WP+1RP total" fix, Negotiations Gambit/Rebuttal full system
+- **2026-05-05 GM Tools Restore is slow** (`55d0693`) — fixed via optimistic-local + background-refetch
+- **2026-05-04 fog-blocker-gated LoS** — PC line-of-sight + painted fog interaction shipped
+
+---
+
 ## ✅ Shipped 2026-05-12 — Skill-description tooltips on character sheet
 
 - [x] **Skill-description hover tooltips on character sheet** - commit `bc24db9`. Each skill chip in `components/CharacterCard.tsx` now carries a native `title` attribute resolving from `lib/xse-schema.ts:SKILLS[].description`, so hovering surfaces the canonical prose ("Providing first aid, diagnosis, treatment, emergency stabilization..." for Medicine\*, etc.). Native browser tooltip means ~500ms delay, no JS state, no positioning logic, no portal - appropriate scope for a 30m item. Flagged 2026-05-11 after a playtester misread a Medic with Medicine\* lv1 as having no first aid skill.
