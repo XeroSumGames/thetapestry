@@ -21,9 +21,38 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   const supabase = createClient()
   const [notes, setNotes] = useState<Note[]>([])
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [showAdd, setShowAdd] = useState(false)
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  // Draft state seeded from localStorage so the in-progress note
+  // survives a tab switch. Without this, the parent's
+  // `{gmTab === 'notes' && <GmNotes />}` guard unmounts the
+  // component when the GM peeks at the NPC tab and they lose
+  // everything they typed (logged as a bug 2026-05-11). The draft
+  // is keyed by campaign so two campaigns open in different tabs
+  // don't trample each other. Cleared on successful save and on
+  // explicit Cancel.
+  const draftKey = `gmnotes_draft_${campaignId}`
+  const initialDraft = (() => {
+    if (typeof window === 'undefined') return { showAdd: false, title: '', content: '' }
+    try {
+      const raw = window.localStorage.getItem(draftKey)
+      if (!raw) return { showAdd: false, title: '', content: '' }
+      const parsed = JSON.parse(raw)
+      return {
+        showAdd: !!parsed.showAdd,
+        title: typeof parsed.title === 'string' ? parsed.title : '',
+        content: typeof parsed.content === 'string' ? parsed.content : '',
+      }
+    } catch {
+      return { showAdd: false, title: '', content: '' }
+    }
+  })()
+  const [showAdd, setShowAdd] = useState(initialDraft.showAdd)
+  const [title, setTitle] = useState(initialDraft.title)
+  const [content, setContent] = useState(initialDraft.content)
+  // Pendingfiles is INTENTIONALLY not persisted - File objects can't
+  // be serialized to localStorage, and recreating them from blob
+  // URLs is more trouble than it's worth. Attachments restart on
+  // tab switch; the typed text doesn't, which is what the bug was
+  // actually about.
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
@@ -42,6 +71,21 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   const [dropPosition, setDropPosition] = useState<'above' | 'below'>('above')
 
   useEffect(() => { load() }, [campaignId])
+
+  // Persist draft to localStorage whenever showAdd/title/content
+  // changes. Skips write when there's nothing worth saving (collapsed
+  // form + empty fields) so we don't clutter storage on every mount.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const empty = !showAdd && title === '' && content === ''
+    if (empty) {
+      window.localStorage.removeItem(draftKey)
+    } else {
+      try {
+        window.localStorage.setItem(draftKey, JSON.stringify({ showAdd, title, content }))
+      } catch { /* quota or private mode - silently fall back to in-memory only */ }
+    }
+  }, [showAdd, title, content, draftKey])
 
   async function load() {
     // sort_order ASC, NULLS LAST so any post-migration row that lands
@@ -265,8 +309,19 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
 
   return (
     <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', overflow: 'auto', flex: 1 }}>
-      {/* Add note button */}
-      <button onClick={() => setShowAdd(!showAdd)}
+      {/* Add note button. Clicking Cancel while the form is open clears
+          the draft fields too - otherwise the localStorage persistence
+          would keep stale text alive invisibly. */}
+      <button onClick={() => {
+          if (showAdd) {
+            setShowAdd(false)
+            setTitle('')
+            setContent('')
+            setPendingFiles([])
+          } else {
+            setShowAdd(true)
+          }
+        }}
         style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
         {showAdd ? 'Cancel' : '+ Add Note'}
       </button>
