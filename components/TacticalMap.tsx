@@ -392,6 +392,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const blastZoneCacheRef = useRef<{ key: string; engCells: Array<{gx: number; gy: number}>; clCells: Array<{gx: number; gy: number}> } | null>(null)
   // invalidated when PC positions/sight, wall segments, cell blockers, or lighting mode change; key checked inline in draw()
   const fogVisibleCacheRef = useRef<{ key: string; visible: Set<string> } | null>(null)
+  // invalidated when visKey, painted-fog cells, grid dims, or hasPCs/hasBlockers change; key checked inline in draw()
+  const fogEffectiveCacheRef = useRef<{ key: string; effective: Record<string, boolean> } | null>(null)
 
   // Keep refs in sync for canvas drawing
   useEffect(() => { tokensRef.current = tokens }, [tokens])
@@ -1398,9 +1400,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
         fogVisibleCacheRef.current = { key: visKey, visible }
       }
-      const effective: Record<string, boolean> = {}
       // GM-painted fog: defeasible by PC LoS *when* the scene has
-      // authored blockers — opening a window or door extends LoS
+      // authored blockers - opening a window or door extends LoS
       // through that opening and clears painted fog along the path,
       // which is the GM's intuitive workflow. On no-blocker scenes
       // the `visible` set stays empty (we skipped the sweep above),
@@ -1408,22 +1409,32 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // between two earlier attempts: pure-LoS-defeasible nuked
       // painted fog on no-blocker maps; pure-absolute broke
       // open-window-clears-fog on properly-authored maps.
-      for (const k of Object.keys(rawFog)) {
-        if (rawFog[k] && !visible.has(k)) effective[k] = true
-      }
+      //
       // Auto-fog: every cell outside any PC's LoS is fogged. Only
-      // meaningful when blockers exist — otherwise "outside LoS"
+      // meaningful when blockers exist - otherwise "outside LoS"
       // would be the empty set (with unbounded day-sight) or the
       // edge of the radius (in night mode), neither of which the
       // GM is likely to want as a default. So gate on hasBlockers
       // alongside hasPCs.
-      if (hasPCs && hasBlockers) {
-        for (let x = 0; x < s.grid_cols; x++) {
-          for (let y = 0; y < s.grid_rows; y++) {
-            const k = `${x},${y}`
-            if (!visible.has(k)) effective[k] = true
+      const rawFogPaintedKey = Object.keys(rawFog).filter(k => rawFog[k]).sort().join('|')
+      const effKey = `${visKey}::${s.grid_cols}x${s.grid_rows}:${hasPCs ? 1 : 0}:${hasBlockers ? 1 : 0}:${rawFogPaintedKey}`
+      let effective: Record<string, boolean>
+      if (fogEffectiveCacheRef.current?.key === effKey) {
+        effective = fogEffectiveCacheRef.current.effective
+      } else {
+        effective = {}
+        for (const k of Object.keys(rawFog)) {
+          if (rawFog[k] && !visible.has(k)) effective[k] = true
+        }
+        if (hasPCs && hasBlockers) {
+          for (let x = 0; x < s.grid_cols; x++) {
+            for (let y = 0; y < s.grid_rows; y++) {
+              const k = `${x},${y}`
+              if (!visible.has(k)) effective[k] = true
+            }
           }
         }
+        fogEffectiveCacheRef.current = { key: effKey, effective }
       }
       fogMap = effective
     }
