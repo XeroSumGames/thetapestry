@@ -16,7 +16,7 @@
 - [ ] **Coordinated Effort — combat turn-gate behavior tested in actual combat** (verification, not build)
 - [ ] **Healing — Wound Infection auto-trigger on LI** — *complex*: needs cross-client roll-modal broadcast (target patient's client opens the Infection Check modal) + Insight Die opt-out handling. Not a 30-min item.
 - [ ] **Healing — kit consumption / charges** — *needs schema*: new columns on character inventory for kit charges. Canon silent on the math (charges per Doctor's Bag? per First Aid Kit?).
-- [x] ~~**Export Session Log — bespoke banner types**~~ — **SHIPPED 2026-05-15** (`22d75dc`). 9 of 13 bespoke types ported (combat_start, combat_end, initiative, drop, defer, sprint, death, incap, revive). Deferred: retention_check, fed_check, clothed_check, morale_check (those have per-row table layouts that need bespoke porting too).
+- [x] ~~**Export Session Log — bespoke banner types**~~ — **FULLY SHIPPED 2026-05-15** (`22d75dc` + `43a1e04`). All 13 bespoke types ported (combat_start, combat_end, initiative, drop, defer, sprint, death, incap, revive, retention_check, fed_check, clothed_check, morale_check). Static HTML always shows the breakdown that the live feed gates behind ▸/▾.
 - [x] ~~**Export Session Log — chat messages export**~~ — **SHIPPED 2026-05-15** (`22d75dc`). Fetches chat_messages in parallel with roll_log, interleaves by created_at via discriminated-union FeedItem. Whispers get purple palette, RLS-respecting.
 
 ### Ready to build (medium)
