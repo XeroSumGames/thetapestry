@@ -2441,6 +2441,16 @@ export default function TablePage() {
       damage_json: { combatants } as any,
     })
     if (endLogErr) console.error('[endCombat] roll_log insert error:', endLogErr.message)
+    // Auto-roll Wound Infection checks for every character who took
+    // a shot/stab/cut wound during the fight (canon §06 — one PHY
+    // check per character per combat). Driven off the
+    // wound_infection_warning rows already in the feed: any name
+    // with a warning since the most recent combat_start gets a
+    // PHY check rolled on the GM's client. Result writes a
+    // standard `<name> - Infection Check (Wound)` roll_log row plus
+    // applies infection_state / days_left / lasting_risk to the
+    // patient row per the same outcome table the manual button uses.
+    await autoRollWoundInfectionChecks()
     // Stress for mortal/incap is now applied on-entry to those states (see
     // the damage paths in executeRoll + handleInsightSave). The old combat-end
     // sweep was a workaround for the absence of on-entry stress; removing
@@ -2454,6 +2464,102 @@ export default function TablePage() {
     // Parallel - independent fetches (different tables).
     await Promise.all([rollsFeed.refetch(), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
+  }
+
+  // End-of-combat Wound Infection sweep. Called from endCombat after
+  // the Combat Ended row lands. For every character (PC or NPC) who
+  // got a wound_infection_warning during this combat:
+  //   1. Roll 2d6 + PHY AMod
+  //   2. Write the standard "<name> - Infection Check (Wound)" row
+  //      so the result is visible in the feed
+  //   3. Apply outcome to character_states / campaign_npcs:
+  //        - Wild/HI/Success → no infection (canon)
+  //        - Failure         → infection_state='wound', 1d3 days, lasting risk
+  //        - Dire/LI         → infection_state='wound', 1d6 days, lasting risk,
+  //                            auto Lasting Damage on day 0 (separate, not here)
+  //
+  // Identifying wounded characters: scan rollsFeed.rolls for warning
+  // rows whose created_at is after the most recent combat_start.
+  // Dedup by character_name. Skip names already carrying an active
+  // infection (don't double-stack).
+  async function autoRollWoundInfectionChecks() {
+    const feed = rollsFeed.rolls
+    let combatStartedAt: string | null = null
+    for (let i = feed.length - 1; i >= 0; i--) {
+      if ((feed[i] as any).outcome === OUTCOME.combat_start) { combatStartedAt = (feed[i] as any).created_at; break }
+    }
+    const wounded = new Set<string>()
+    for (const r of feed as any[]) {
+      if (r.outcome !== OUTCOME.wound_infection_warning) continue
+      if (combatStartedAt && r.created_at < combatStartedAt) continue
+      if (r.character_name) wounded.add(r.character_name)
+    }
+    if (wounded.size === 0) return
+    for (const name of Array.from(wounded)) {
+      // Resolve target (PC entry or NPC row) + PHY AMod + state ref.
+      const pcEntry = entries.find(e => e.character.name === name)
+      const npcRow = !pcEntry ? campaignNpcs.find((n: any) => n.name === name) : null
+      if (!pcEntry && !npcRow) continue
+      // Skip if already actively sick — canon is one check per
+      // incident; can't stack a fresh wound onto an existing one.
+      const currentState = pcEntry
+        ? (pcEntry.liveState as any)?.infection_state
+        : (npcRow as any)?.infection_state
+      if (currentState) continue
+      const phyAmod = pcEntry
+        ? (pcEntry.character.data?.rapid?.PHY ?? 0)
+        : ((npcRow as any)?.physicality ?? 0)
+      // Roll 2d6 + PHY AMod. No skill (raw RAPID check).
+      const die1 = rollD6()
+      const die2 = rollD6()
+      const total = die1 + die2 + phyAmod
+      const outcome = getOutcome(total, die1, die2)
+      const label = `${name} - Infection Check (Wound)`
+      // Write the roll_log row so the result is visible in the feed.
+      // Matches the shape executeRoll writes for the manual Infection
+      // button — same label prefix so any downstream handlers that
+      // key off "Infection Check (" still match.
+      await supabase.from('roll_log').insert({
+        campaign_id: id, user_id: userId, character_name: name,
+        label, die1, die2, amod: phyAmod, smod: 0, cmod: 0,
+        total, outcome,
+        target_name: null,
+        damage_json: null,
+        insight_used: null,
+      })
+      // Apply outcome to the patient row per canon. Wild/HI/Success
+      // = nothing to do (no infection acquired).
+      const isFail = outcome === OUTCOME.Failure
+      const isDire = outcome === OUTCOME.DireFailure || outcome === OUTCOME.LowInsight
+      if (!isFail && !isDire) continue
+      const daysLeft = isFail
+        ? Math.floor(Math.random() * 3) + 1   // 1d3
+        : Math.floor(Math.random() * 6) + 1   // 1d6
+      const updates: any = {
+        infection_state: 'wound',
+        infection_days_left: daysLeft,
+        infection_lasting_risk: true,
+        infection_started_at: new Date().toISOString(),
+        infection_infected_by: 'Wound infection (post-combat)',
+      }
+      // RP cap: Sick state caps RP at floor(rp_max / 2). Clamp now.
+      if (pcEntry?.liveState) {
+        const ls: any = pcEntry.liveState
+        const rpMax: number = ls.rp_max ?? 6
+        updates.rp_current = Math.min(ls.rp_current ?? rpMax, Math.floor(rpMax / 2))
+        const { error: pcErr } = await supabase.from('character_states').update(updates).eq('id', pcEntry.stateId)
+        if (pcErr) console.error('[auto-infection] PC update error:', pcErr.message)
+        setEntries(prev => prev.map(e => e.stateId === pcEntry.stateId ? { ...e, liveState: { ...e.liveState, ...updates } } : e))
+      } else if (npcRow) {
+        const rpMax: number = (npcRow as any).rp_max ?? 6
+        updates.rp_current = Math.min((npcRow as any).rp_current ?? rpMax, Math.floor(rpMax / 2))
+        const { error: npcErr } = await supabase.from('campaign_npcs').update(updates).eq('id', (npcRow as any).id)
+        if (npcErr) console.error('[auto-infection] NPC update error:', npcErr.message)
+        setCampaignNpcs(prev => prev.map(n => n.id === (npcRow as any).id ? { ...n, ...updates } as any : n))
+        setRosterNpcs(prev => prev.map(n => n.id === (npcRow as any).id ? { ...n, ...updates } as any : n))
+        setViewingNpcs(prev => prev.map(n => n.id === (npcRow as any).id ? { ...n, ...updates } as any as CampaignNpc : n))
+      }
+    }
   }
 
   async function addNPC(name: string) {
