@@ -62,7 +62,149 @@ interface RollLogRow {
   created_at: string
 }
 
+interface ChatMessageRow {
+  id: string
+  user_id: string
+  character_name: string
+  message: string
+  is_whisper: boolean
+  recipient_user_id: string | null
+  created_at: string
+}
+
+// Bespoke banner renderer — mirrors RollsFeed.tsx's Tier-A banners so
+// the export visually matches the live feed for the high-signal row
+// types (combat start/end, initiative, drop, defer, sprint, death,
+// incap, revive). Returns null for rows that should fall through to
+// the generic skill-roll template below. Ported 2026-05-15.
+//
+// Out of scope (still falls through to generic for now): retention_check,
+// fed_check, clothed_check, morale_check — those have their own row-
+// table layouts that need bespoke porting too, larger surgery.
+function renderBespokeBanner(r: RollLogRow): string | null {
+  const time = formatTime(r.created_at)
+  // combat_start - red banner + combatants list
+  if (r.outcome === 'combat_start' && (r.damage_json as any)?.combatants) {
+    const combatants = ((r.damage_json as any).combatants as string[]).map(n => `<span style="color:#f5f2ee;font-weight:600">${esc(n)}</span>`)
+    const joined = combatants.length <= 1 ? combatants.join('')
+      : combatants.slice(0, -1).join(', ') + ' and ' + combatants[combatants.length - 1]
+    return `<div class="banner banner-combat-start">
+  <div class="banner-head"><span class="banner-title">⚔️ Combat Started</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body">Between ${joined}</div>
+</div>`
+  }
+  // combat_end - blue banner + combatants list
+  if (r.outcome === 'combat_end' && (r.damage_json as any)?.combatants) {
+    const combatants = ((r.damage_json as any).combatants as string[])
+    const inner = combatants.length === 0 ? '' :
+      `<div class="banner-body">Between ${combatants.map(n => `<span style="color:#f5f2ee;font-weight:600">${esc(n)}</span>`).reduce((acc, name, i, arr) => acc + name + (i < arr.length - 2 ? ', ' : i === arr.length - 2 ? ' and ' : ''), '')}</div>`
+    return `<div class="banner banner-combat-end">
+  <div class="banner-head"><span class="banner-title">⚔️ Combat Ended</span><span class="time">${esc(time)}</span></div>
+  ${inner}
+</div>`
+  }
+  // initiative - amber banner + per-row breakdown
+  if (r.outcome === 'initiative' && (r.damage_json as any)?.initiative) {
+    const rows = ((r.damage_json as any).initiative as any[]).map((e: any, i: number, arr: any[]) => {
+      const init = (e.acu ?? 0) + (e.dex ?? 0)
+      const nameColor = e.is_npc === false ? '#7ab3d4' : '#f5f2ee'
+      const initChip = init !== 0 ? ` <span style="color:#7fc458">${init > 0 ? '+' : ''}${init} Init</span>` : ''
+      const dropChip = e.drop !== 0 ? ` <span style="color:#f5a89a">${e.drop} Drop</span>` : ''
+      const sep = i < arr.length - 1 ? 'border-bottom:1px solid #2e2e2e' : ''
+      return `<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;${sep}">
+  <span style="font-size:13px;font-weight:700;color:${nameColor};text-transform:uppercase;min-width:90px">${esc(e.name ?? '')}</span>
+  <span style="font-size:13px;color:#d4cfc9">[${e.d1}+${e.d2}]${initChip}${dropChip}</span>
+  <span style="margin-left:auto;font-size:14px;font-weight:700;color:#EF9F27">${e.total}</span>
+</div>`
+    }).join('')
+    return `<div class="banner banner-initiative">
+  <div class="banner-head"><span class="banner-title">⚔️ Initiative</span><span class="time">${esc(time)}</span></div>
+  ${rows}
+</div>`
+  }
+  // drop - amber banner with "acts alone" footer
+  if (r.outcome === 'drop') {
+    return `<div class="banner banner-amber">
+  <div class="banner-head"><span class="banner-title amber">${esc(r.label)}</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body">Acts alone with 1 action before initiative is rolled.</div>
+</div>`
+  }
+  // defer - blue, single-line tag
+  if (r.outcome === 'defer') {
+    return `<div class="banner banner-defer">
+  <div class="banner-head"><span class="banner-title-sm blue">${esc(r.label)}</span><span class="time">${esc(time)}</span></div>
+</div>`
+  }
+  // sprint - amber banner; export-time we always show the breakdown
+  // (no expand/collapse toggle in static HTML).
+  if (r.outcome === 'sprint') {
+    const tr = (r.damage_json as any)?.trimmedRoll
+    const windedFlag = (r.damage_json as any)?.winded
+    const isWinded = typeof windedFlag === 'boolean'
+      ? windedFlag
+      : (tr?.rollOutcome === 'Failure' || tr?.rollOutcome === 'Dire Failure')
+    let trBlock = ''
+    if (tr) {
+      const dice = Array.isArray(tr.diceRolled) && tr.diceRolled.length > 0 ? tr.diceRolled.join('+') : `${tr.die1}+${tr.die2}`
+      const amodChip = tr.amod !== 0 ? ` <span style="color:${tr.amod > 0 ? '#7fc458' : '#c0392b'}">${tr.amod > 0 ? '+' : ''}${tr.amod} AMod</span>` : ''
+      const smodChip = tr.smod !== 0 ? ` <span style="color:${tr.smod > 0 ? '#7fc458' : '#c0392b'}">${tr.smod > 0 ? '+' : ''}${tr.smod} SMod</span>` : ''
+      const cmodChip = tr.cmod !== 0 ? ` <span style="color:${tr.cmod > 0 ? '#7ab3d4' : '#EF9F27'}">${tr.cmod > 0 ? '+' : ''}${tr.cmod} CMod</span>` : ''
+      const oc = outcomeColor(tr.rollOutcome)
+      trBlock = `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #3a3a3a;font-size:13px;color:#d4cfc9">
+  <div>[${dice}]${amodChip}${smodChip}${cmodChip} <span style="color:#f5f2ee;font-weight:700"> = ${tr.total}</span> <span style="margin-left:8px;color:${oc};font-weight:700">${esc(tr.rollOutcome ?? '')}</span></div>
+  <div style="margin-top:4px;color:${isWinded ? '#f5a89a' : '#7fc458'};font-weight:600">${isWinded ? 'Loses 1 Combat Action next round.' : 'Full 2 actions next round.'}</div>
+</div>`
+    }
+    const sprintLabel = r.label.replace(/^🏃\s*/, '')
+    return `<div class="banner banner-amber">
+  <div class="banner-head"><span class="banner-title amber">🏃 Sprint</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body">${esc(sprintLabel)}</div>
+  ${trBlock}
+</div>`
+  }
+  // death - dark red banner; uses character_name as the header
+  if (r.outcome === 'death' || r.character_name === 'Death is in the air') {
+    return `<div class="banner banner-death">
+  <div class="banner-head"><span class="banner-title red">${esc(r.character_name)}</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body" style="color:#f5a89a">${esc(r.label)}</div>
+</div>`
+  }
+  // incap - amber, less alarming than death
+  if (r.outcome === 'incap' || r.character_name === 'Lights Out' || r.character_name === 'Lights out') {
+    return `<div class="banner banner-incap">
+  <div class="banner-head"><span class="banner-title amber">${esc(r.character_name)}</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body" style="color:#f5d8a0">${esc(r.label)}</div>
+</div>`
+  }
+  // revive - green palette
+  if (r.outcome === 'revive' || r.character_name === 'Coming around') {
+    return `<div class="banner banner-revive">
+  <div class="banner-head"><span class="banner-title green">${esc(r.character_name)}</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-body" style="color:#c4e8a8">${esc(r.label)}</div>
+</div>`
+  }
+  return null
+}
+
+function renderChat(m: ChatMessageRow): string {
+  const time = formatTime(m.created_at)
+  const isW = m.is_whisper
+  // Whispers get a distinct purple palette; regular chat is neutral.
+  const cls = isW ? 'chat whisper' : 'chat'
+  const tag = isW ? `<span class="whisper-tag">whisper</span>` : ''
+  return `<div class="${cls}">
+  <div class="chat-head"><span class="chat-name">${esc(m.character_name ?? '')}</span>${tag}<span class="time">${esc(time)}</span></div>
+  <div class="chat-body">${esc(m.message ?? '')}</div>
+</div>`
+}
+
 function renderRow(r: RollLogRow): string {
+  // Bespoke banners short-circuit — high-signal row types (combat
+  // start/end, drop, defer, sprint, death, incap, revive, initiative)
+  // each have their own template that mirrors RollsFeed.tsx.
+  const bespoke = renderBespokeBanner(r)
+  if (bespoke) return bespoke
+
   // Compute the compact narrative the same way RollsFeed does, with the
   // safety fallback for unknown types.
   const compactRaw = compactRollSummary(r)
@@ -113,11 +255,17 @@ function renderRow(r: RollLogRow): string {
 </div>`
 }
 
-function renderHtml(args: { campaignName: string; sessionNumber: number; exportedAt: string; rows: RollLogRow[] }): string {
+// Combined feed item — discriminated union so the interleave can sort
+// rolls + chat by created_at and render each through its own template.
+type FeedItem =
+  | { kind: 'roll'; created_at: string; row: RollLogRow }
+  | { kind: 'chat'; created_at: string; msg: ChatMessageRow }
+
+function renderHtml(args: { campaignName: string; sessionNumber: number; exportedAt: string; items: FeedItem[] }): string {
   const title = `${args.campaignName} - Session ${args.sessionNumber} Log`
-  const body = args.rows.length > 0
-    ? args.rows.map(renderRow).join('\n')
-    : '<div class="empty">No roll-log entries for this session.</div>'
+  const body = args.items.length > 0
+    ? args.items.map(it => it.kind === 'roll' ? renderRow(it.row) : renderChat(it.msg)).join('\n')
+    : '<div class="empty">No roll-log or chat entries for this session.</div>'
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,11 +295,40 @@ function renderHtml(args: { campaignName: string; sessionNumber: number; exporte
   .badge { display: inline-block; font-size: 13px; color: var(--green); background: #1a2e10; border: 1px solid #2d5a1b; padding: 1px 5px; border-radius: 2px; margin-left: 6px; }
   .spent { font-size: 13px; color: var(--green); margin-top: 2px; }
   .empty { color: #888; font-style: italic; padding: 1rem; }
+  /* Bespoke banners — mirror the live feed Tier-A row types. */
+  .banner { margin-bottom: 8px; padding: 8px 10px; border-radius: 3px; border: 1px solid var(--border); border-left-width: 3px; border-left-style: solid; }
+  .banner-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .banner-title { font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-family: 'Carlito', sans-serif; }
+  .banner-title-sm { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; font-family: 'Carlito', sans-serif; }
+  .banner-title.amber, .banner-title-sm.amber { color: var(--amber); }
+  .banner-title.blue, .banner-title-sm.blue { color: var(--blue); }
+  .banner-title.green, .banner-title-sm.green { color: var(--green); }
+  .banner-title.red, .banner-title-sm.red { color: var(--red); }
+  .banner-body { font-size: 15px; color: var(--text); font-family: 'Carlito', sans-serif; line-height: 1.5; }
+  .banner-combat-start { background: #1a1010; border-color: var(--red); border-left-color: var(--red); }
+  .banner-combat-start .banner-title { color: #f5a89a; }
+  .banner-combat-end { background: #0f2035; border-color: #1a3a5c; border-left-color: var(--blue); }
+  .banner-combat-end .banner-title { color: var(--blue); }
+  .banner-initiative { background: #1a1a1a; border-color: var(--amber); border-left-color: var(--amber); padding: 8px; }
+  .banner-initiative .banner-title { color: var(--amber); }
+  .banner-amber { background: #1a2010; border-color: var(--amber); border-left-color: var(--amber); }
+  .banner-defer { background: #0f1a2e; border-color: var(--blue); border-left-color: var(--blue); padding: 8px 10px; }
+  .banner-death { background: #1a0a0a; border-color: #5a1b1b; border-left-color: var(--red); }
+  .banner-incap { background: #1a1408; border-color: #5a4218; border-left-color: var(--amber); }
+  .banner-revive { background: #0f1f08; border-color: #2d5a1b; border-left-color: var(--green); }
+  /* Chat messages — interleaved with rolls by created_at. */
+  .chat { margin-bottom: 6px; padding: 6px 10px; background: #14181c; border: 1px solid #2e2e2e; border-radius: 3px; }
+  .chat.whisper { background: #1a0f1a; border-color: #5a2e5a; }
+  .chat-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+  .chat-name { font-size: 13px; font-weight: 700; color: var(--text-strong); letter-spacing: .04em; text-transform: uppercase; }
+  .whisper-tag { font-size: 13px; color: #d48bd4; background: #2a102a; border: 1px solid #5a2e5a; padding: 0 5px; border-radius: 2px; text-transform: uppercase; letter-spacing: .04em; }
+  .chat-body { font-size: 14px; color: var(--text); font-family: 'Carlito', sans-serif; }
+  .chat .time { margin-left: auto; }
 </style>
 </head>
 <body>
 <h1>${esc(title)}</h1>
-<div class="meta">Exported ${esc(args.exportedAt)} · ${args.rows.length} entries</div>
+<div class="meta">Exported ${esc(args.exportedAt)} · ${args.items.length} entries</div>
 <div class="feed">
 ${body}
 </div>
@@ -160,30 +337,52 @@ ${body}
 `
 }
 
-// Main entry point. Fetches roll_log + writes a download.
+// Main entry point. Fetches roll_log + chat_messages, interleaves
+// them by created_at, and writes a download. RLS applies to both
+// fetches so whispers the exporter can't see stay invisible; the
+// GM (who owns the campaign) sees everything they would see live.
 export async function exportSessionLog(args: {
   campaignId: string
   campaignName: string
   sessionNumber: number
 }): Promise<void> {
   const supabase = createClient()
-  const { data, error } = await supabase
-    .from('roll_log')
-    .select('id, character_name, label, die1, die2, amod, smod, cmod, total, outcome, insight_awarded, insight_used, target_name, damage_json, created_at')
-    .eq('campaign_id', args.campaignId)
-    .order('created_at', { ascending: true })
-  if (error) {
-    console.error('[session-export] roll_log fetch failed:', error.message)
-    alert(`Export failed: ${error.message}`)
+  // Parallel fetches — independent tables.
+  const [rollsRes, chatRes] = await Promise.all([
+    supabase
+      .from('roll_log')
+      .select('id, character_name, label, die1, die2, amod, smod, cmod, total, outcome, insight_awarded, insight_used, target_name, damage_json, created_at')
+      .eq('campaign_id', args.campaignId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('chat_messages')
+      .select('id, user_id, character_name, message, is_whisper, recipient_user_id, created_at')
+      .eq('campaign_id', args.campaignId)
+      .order('created_at', { ascending: true }),
+  ])
+  if (rollsRes.error) {
+    console.error('[session-export] roll_log fetch failed:', rollsRes.error.message)
+    alert(`Export failed: ${rollsRes.error.message}`)
     return
   }
-  const rows = (data ?? []) as RollLogRow[]
+  if (chatRes.error) {
+    // Don't fail the export on chat-fetch error — the roll log is the
+    // higher-signal payload. Log + continue without chat.
+    console.warn('[session-export] chat_messages fetch failed (continuing without chat):', chatRes.error.message)
+  }
+  const rows = (rollsRes.data ?? []) as RollLogRow[]
+  const chat = (chatRes.data ?? []) as ChatMessageRow[]
+  // Interleave by created_at — rolls and chat ordered chronologically.
+  const items: FeedItem[] = [
+    ...rows.map(r => ({ kind: 'roll' as const, created_at: r.created_at, row: r })),
+    ...chat.map(m => ({ kind: 'chat' as const, created_at: m.created_at, msg: m })),
+  ].sort((a, b) => a.created_at.localeCompare(b.created_at))
   const exportedAt = new Date().toLocaleString('en-US')
   const html = renderHtml({
     campaignName: args.campaignName,
     sessionNumber: args.sessionNumber,
     exportedAt,
-    rows,
+    items,
   })
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
   const url = URL.createObjectURL(blob)
