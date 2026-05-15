@@ -43,7 +43,7 @@ import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
-import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer } from '../../../../lib/playtest-recorder'
+import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, getRecorder } from '../../../../lib/playtest-recorder'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
@@ -258,67 +258,45 @@ export default function TablePage() {
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
   // anything outside that closes the menu.
-  // Recorder state sync — read the global config once on mount and
-  // subscribe to Realtime UPDATEs so the toggle's UI stays in step with
-  // /record-page changes (in case the GM also has /record open) and
-  // with the live ON/STOP buttons on this page.
+  // Recorder state sync — TAB-LOCAL ONLY (2026-05-17, Xero rewrite).
+  // Each browser controls its OWN recorder; the button no longer
+  // touches `playtest_recorder_config`. Previous shape wrote to the
+  // shared DB row + subscribed via Realtime so any GM/Thriver click
+  // flipped every connected client. That's wrong for the playtester
+  // workflow: a player records THEIR session, independent of the GM.
+  //
+  // On mount, mirror whatever state the global PlaytestRecorder lib
+  // currently shows (the lib's gate eval from /record-page or its
+  // own subscription may already have flipped it). After that, the
+  // button drives state purely locally.
   useEffect(() => {
-    const supabase = createClient()
-    let cancelled = false
-    supabase
-      .from('playtest_recorder_config')
-      .select('enabled')
-      .eq('id', 1)
-      .maybeSingle()
-      .then(({ data }: any) => { if (!cancelled) setRecorderEnabled(!!data?.enabled) })
-    const ch = supabase.channel('table_recorder_state')
-      .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'playtest_recorder_config', filter: 'id=eq.1' },
-        (payload: any) => { setRecorderEnabled(!!payload?.new?.enabled) })
-      .subscribe()
-    return () => { cancelled = true; supabase.removeChannel(ch) }
+    const r = getRecorder()
+    if (r) setRecorderEnabled(!!r.enabled)
   }, [])
 
-  // Toggle the recorder ON/OFF from the table page.
+  // Toggle the recorder ON/OFF from the table page — TAB-LOCAL.
   //
-  // The same-tab effects fire DIRECTLY here (not via the Realtime
-  // round-trip + evaluateGate path) because there's a race in that
-  // path: if the initial evaluateGate is still in-flight when the
-  // Realtime UPDATE fires, prevEnabledRef.current is still null and
-  // the transition is skipped — the auto-download never runs in the
-  // tab that clicked the button. Doing it inline guarantees the
-  // current tab's buffer gets handled even under load.
-  //
-  // Other tabs still get notified via the DB UPDATE → Realtime →
-  // PlaytestRecorder transition logic.
+  // No DB write. Same-tab wipe (on) / download (off) + flip the
+  // local recorder lib's enabled flag. Other tabs are unaffected.
   async function toggleRecorder() {
     if (recorderToggling) return
     setRecorderToggling(true)
     const next = !recorderEnabled
-    // Same-tab effect first, then DB write. If the DB write fails, at
-    // least this tab's buffer is preserved (download) or cleared
-    // (wipe) per the user's intent.
     if (next) {
       // ON: wipe this tab's buffer so the session starts clean.
       recorderWipeBuffer()
+      recorderSetEnabled(true)
     } else {
-      // OFF: download this tab's buffer immediately. Browser-blocked
-      // downloads only happen for un-focused tabs, and this tab is
-      // the one that just got clicked, so the download proceeds.
+      // OFF: download this tab's buffer immediately + flip the
+      // recorder off. Browser-blocked downloads only happen for
+      // un-focused tabs, and this tab is the one that just got
+      // clicked, so the download proceeds.
       const filename = recorderDownloadDump()
       if (filename) console.warn('[recorder] auto-downloaded:', filename)
-    }
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('playtest_recorder_config')
-      .update({ enabled: next, updated_at: new Date().toISOString(), updated_by: userId })
-      .eq('id', 1)
-    setRecorderToggling(false)
-    if (error) {
-      alert(`Recorder toggle failed: ${error.message}\n(Same-tab ${next ? 'wipe' : 'download'} still ran.)`)
-      return
+      recorderSetEnabled(false)
     }
     setRecorderEnabled(next)
+    setRecorderToggling(false)
   }
 
   useEffect(() => {
