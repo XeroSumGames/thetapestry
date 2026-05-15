@@ -101,12 +101,15 @@ export default function VehiclePage() {
   const [crew, setCrew] = useState<CrewMember[]>([])
   const [check, setCheck] = useState<CheckState | null>(null)
   const [myUserId, setMyUserId] = useState<string | null>(null)
-  // Slot-assignment Confirm-gate state (2026-05-15). Each select stages
-  // its candidate value here on change; the existing setter is not
-  // called until the user clicks Confirm. Keyed by slot identifier:
+  // Slot-assignment staging state (2026-05-15). Each select stages its
+  // candidate value here on change; the existing setter is not called
+  // until the user clicks MOVE HERE, which acts as the implicit confirm
+  // and snaps the token to the seat. To revert a stage, pick the
+  // original value back in the dropdown (stagePending clears the entry
+  // when the new value matches the saved one). Keyed by slot identifier:
   //   'driver' | 'brewer' | 'navigator' | `passenger:${0..5}` | `shooter:${0..N}`
-  // Submitting holds the slots whose confirm is currently in flight so
-  // the buttons disable until the await chain resolves.
+  // Submitting holds the slots whose commit is currently in flight so
+  // the button disables until the await chain resolves.
   const [pendingSlot, setPendingSlot] = useState<Record<string, string>>({})
   const [submittingSlot, setSubmittingSlot] = useState<Set<string>>(new Set())
 
@@ -866,20 +869,35 @@ export default function VehiclePage() {
   const lbl: React.CSSProperties = { fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }
   const bigVal: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }
 
-  // MOVE HERE button — snaps the slot's currently-assigned PC/NPC
-  // token onto the floorplan cell for that slot on the active scene.
-  // Independent of the Confirm gate: this acts on whatever is SAVED in
-  // vehicle.<slot>, not the pending dropdown value. Use when a player
-  // has wandered off and needs to be put back in their seat without
-  // re-assigning. Disabled when the slot has no current occupant.
+  // MOVE HERE button — acts as both the implicit Confirm for a staged
+  // dropdown change AND the on-demand "snap token to seat" action.
+  // When the dropdown has been changed (pendingSlot set), clicking
+  // this commits the new assignment AND snaps the token. When no
+  // pending change exists, it just snaps the saved assignee's token
+  // back to its seat. Disabled when there's nothing to do (no pending
+  // change AND no saved occupant).
   function renderMoveHere(slot: SlotKey, accent: string) {
     const savedId = getSavedSlotValue(slot)
-    const empty = !savedId
+    const pending = pendingSlot[slot]
+    const hasPending = pending !== undefined
+    const submitting = submittingSlot.has(slot)
+    const empty = !hasPending && !savedId
+    const title = submitting ? 'Working...'
+      : hasPending && !pending ? 'Click to clear this seat\'s assignment'
+      : hasPending && pending !== savedId ? 'Click to assign + snap token to seat'
+      : empty ? 'Slot is empty - assign someone via the dropdown'
+      : 'Snap this seat\'s token to its cell on the map'
     return (
       <button
-        onClick={() => { if (savedId) moveAssigneeToSlotCell(slot, savedId) }}
-        disabled={empty || !canEdit}
-        title={empty ? 'Slot is empty - assign someone first' : 'Snap this slot\'s token to its seat on the map'}
+        onClick={async () => {
+          if (hasPending) {
+            await confirmPending(slot)
+          } else if (savedId) {
+            await moveAssigneeToSlotCell(slot, savedId)
+          }
+        }}
+        disabled={empty || submitting || !canEdit}
+        title={title}
         style={{
           padding: '6px 10px',
           background: empty ? '#242424' : '#1a2e10',
@@ -890,39 +908,11 @@ export default function VehiclePage() {
           fontFamily: 'Carlito, sans-serif',
           letterSpacing: '.06em',
           textTransform: 'uppercase',
-          cursor: empty ? 'not-allowed' : 'pointer',
+          cursor: empty || submitting ? 'not-allowed' : 'pointer',
           flexShrink: 0,
         }}>
-        🪑 Move Here
+        {submitting ? '...' : '🪑 Move Here'}
       </button>
-    )
-  }
-
-  // Confirm / Cancel chip for a pending slot change. Renders nothing
-  // when no pending value, a green Confirm + grey Cancel pair when one
-  // exists. Describes the staged change so the user sees "Confirm:
-  // Mikey -> Driver" instead of an anonymous green button.
-  function renderSlotConfirm(slot: SlotKey, slotLabel: string) {
-    const pending = pendingSlot[slot]
-    if (pending === undefined) return null
-    const submitting = submittingSlot.has(slot)
-    const assigneeName = pending
-      ? (crew.find(c => c.id === pending)?.name ?? 'unknown')
-      : '(empty)'
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', fontSize: '13px' }}>
-        <span style={{ color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
-          Stage: <strong>{assigneeName}</strong> -&gt; {slotLabel}
-        </span>
-        <button onClick={() => confirmPending(slot)} disabled={submitting}
-          style={{ padding: '4px 10px', background: submitting ? '#242424' : '#1a3a1a', border: `1px solid ${submitting ? '#3a3a3a' : '#7fc458'}`, borderRadius: '3px', color: submitting ? '#5a5550' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: submitting ? 'wait' : 'pointer' }}>
-          {submitting ? '...' : 'Confirm'}
-        </button>
-        <button onClick={() => cancelPending(slot)} disabled={submitting}
-          style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#888', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: submitting ? 'wait' : 'pointer' }}>
-          Cancel
-        </button>
-      </div>
     )
   }
 
@@ -981,7 +971,6 @@ export default function VehiclePage() {
                 🚗 Driving Check
               </button>
             </div>
-            {renderSlotConfirm('driver', 'Driver')}
           </div>
 
           {/* Navigator (promoted from Passenger Seats — has its own
@@ -1017,7 +1006,6 @@ export default function VehiclePage() {
                 🧭 Navigate
               </button>
             </div>
-            {renderSlotConfirm('navigator', 'Navigator')}
           </div>
         </div>
 
@@ -1053,7 +1041,6 @@ export default function VehiclePage() {
                 ⚗️ Brew Check
               </button>
             </div>
-            {renderSlotConfirm('brewer', 'Brewer')}
           </div>
         )}
       </div>
@@ -1095,7 +1082,6 @@ export default function VehiclePage() {
                   </select>
                   {renderMoveHere(slotKey, '#7fc458')}
                 </div>
-                {renderSlotConfirm(slotKey, `Seat ${i + 1}`)}
               </div>
             )
           })}
@@ -1178,7 +1164,6 @@ export default function VehiclePage() {
                       </button>
                     )}
                   </div>
-                  {renderSlotConfirm(`shooter:${i}` as SlotKey, `${w.name} Shooter`)}
                 </div>
               )
             })}
