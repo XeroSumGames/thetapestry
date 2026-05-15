@@ -297,6 +297,16 @@ export const EQUIPMENT: EquipmentItem[] = [
   { name: "Workman's Toolkit",      rarity: 'Uncommon', enc: 1, notes: '+2 Mechanics* check' },
 ];
 
+// Case-insensitive, whitespace-tolerant lookup. Use this when matching
+// free-text user input (paste, autocomplete) against the SRD catalog.
+// For strict canonical-name lookups (dropdown values already canonical),
+// inline `EQUIPMENT.find(eq => eq.name === name)` directly.
+export function findEquipmentByName(input: string): EquipmentItem | undefined {
+  const needle = input.trim().toLowerCase()
+  if (!needle) return undefined
+  return EQUIPMENT.find(eq => eq.name.toLowerCase() === needle)
+}
+
 // ----------------------------
 // RATIONS (Quickstart Table 16) — canon
 // ----------------------------

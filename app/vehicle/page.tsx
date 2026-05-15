@@ -11,7 +11,7 @@ import { decrementInitiativeAction } from '../../lib/initiative-actions'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
-import { EQUIPMENT } from '../../lib/xse-schema'
+import { EQUIPMENT, findEquipmentByName } from '../../lib/xse-schema'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
@@ -977,7 +977,7 @@ export default function VehiclePage() {
                     // Exact-match autofill kept as a backstop for users
                     // who prefer typing the full name + Enter. The new
                     // dropdown below also writes enc when clicked.
-                    const match = EQUIPMENT.find(eq => eq.name.toLowerCase() === e.target.value.trim().toLowerCase())
+                    const match = findEquipmentByName(e.target.value)
                     if (match) setAddEnc(String(match.enc))
                   }} placeholder="Type to search catalog…"
                     autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
@@ -1040,7 +1040,7 @@ export default function VehiclePage() {
                   // Match the new shape — include enc/rarity/custom so
                   // future writes stay consistent. Catalog hit sets
                   // custom=false; otherwise treated as a custom item.
-                  const catalogHit = EQUIPMENT.find(eq => eq.name.toLowerCase() === trimmedName.toLowerCase())
+                  const catalogHit = findEquipmentByName(trimmedName)
                   const raw = vehicle.cargo ?? []
                   const existingIdx = raw.findIndex(c => normalizeInventoryItem(c).name === trimmedName)
                   const newItem: InventoryItem = {

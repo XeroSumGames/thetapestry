@@ -7,7 +7,7 @@ import { logEvent } from '../lib/events'
 import CommunityMoraleModal from './CommunityMoraleModal'
 import CommunityProxyRecruitModal from './CommunityProxyRecruitModal'
 import { type InventoryItem } from '../lib/inventory'
-import { EQUIPMENT } from '../lib/xse-schema'
+import { findEquipmentByName } from '../lib/xse-schema'
 import { LABEL_STYLE_LG, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import { advance as advanceCampaignClock } from '../lib/campaign-clock'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
@@ -2503,7 +2503,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
                             <input value={addStockName} onChange={e => {
                               setAddStockName(e.target.value)
-                              const match = EQUIPMENT.find(eq => eq.name.toLowerCase() === e.target.value.trim().toLowerCase())
+                              const match = findEquipmentByName(e.target.value)
                               if (match) setAddStockEnc(String(match.enc))
                             }} placeholder="Item name (catalog autofills enc)"
                               autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
@@ -2518,7 +2518,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           <button onClick={async () => {
                             if (!addStockName.trim()) return
                             const trimmedName = addStockName.trim()
-                            const catalogHit = EQUIPMENT.find(eq => eq.name.toLowerCase() === trimmedName.toLowerCase())
+                            const catalogHit = findEquipmentByName(trimmedName)
                             await addStockpileItem(c.id, {
                               name: trimmedName,
                               qty: Math.max(1, parseInt(addStockQty, 10) || 1),
