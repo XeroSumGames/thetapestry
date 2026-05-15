@@ -2461,10 +2461,11 @@ export default function TablePage() {
     // Queue Wound Infection checks as roll modals — one per wounded
     // combatant (canon §06: one PHY check per character per combat).
     // The patient (or GM) sees each modal, can layer CMod / Insight
-    // Dice / Stress like any other roll. Modals fire sequentially:
-    // first one opens immediately, subsequent ones drain from
-    // closeRollModal.
-    queueWoundInfectionChecks()
+    // Dice / Stress like any other roll. PCs get a broadcast to
+    // their owner's client; NPCs drain sequentially through
+    // closeRollModal on the GM's client. Awaited so the queue is
+    // populated before the rest of endCombat clears state.
+    await queueWoundInfectionChecks()
     // Stress for mortal/incap is now applied on-entry to those states (see
     // the damage paths in executeRoll + handleInsightSave). The old combat-end
     // sweep was a workaround for the absence of on-entry stress; removing
@@ -2482,29 +2483,46 @@ export default function TablePage() {
 
   // End-of-combat Wound Infection sweep. Called from endCombat after
   // the Combat Ended row lands. For every character (PC or NPC) who
-  // got a wound_infection_warning during this combat, push a check
-  // onto pendingInfectionChecksRef. The queue is drained by
-  // closeRollModal — each modal close fires the next, so the rolls
-  // are sequential (one modal at a time). This way the patient (or
-  // GM) gets the full roll-modal experience for each check:
-  // CMod adjustment, Insight Dice spending, etc. Canon §06 outcome
-  // resolution already lives in executeRoll's "Infection Check ("
-  // label branch, so the existing flow handles state writes.
+  // got a wound_infection_warning during this combat, broadcast or
+  // queue a roll-modal check.
   //
-  // Identifying wounded characters: scan rollsFeed.rolls for warning
-  // rows whose created_at is after the most recent combat_start.
-  // Dedup by character_name. Skip names already carrying an active
-  // infection (canon: one check per incident, no stacking).
-  function queueWoundInfectionChecks() {
-    const feed = rollsFeed.rolls
-    let combatStartedAt: string | null = null
-    for (let i = feed.length - 1; i >= 0; i--) {
-      if ((feed[i] as any).outcome === OUTCOME.combat_start) { combatStartedAt = (feed[i] as any).created_at; break }
-    }
+  // PCs: broadcast `infection_check_request` to the PC's owning
+  // userId — the player's client opens the modal on its own screen.
+  // NPCs: queued on the GM's local pendingInfectionChecksRef; first
+  // opens immediately, the rest drain from closeRollModal as each
+  // modal closes.
+  //
+  // Canon §06 outcome resolution lives in executeRoll's
+  // "Infection Check (" label branch and runs on whichever client
+  // wrote the roll_log row, so this function only orchestrates the
+  // modals — state writes happen there.
+  //
+  // Source of truth = DIRECT DB QUERY, not rollsFeed.rolls. The
+  // in-memory feed can lag the DB by seconds after a warning emits,
+  // so a fast End Combat click (< the feed refetch round-trip) would
+  // see zero warnings and skip the sweep entirely. Documented bug
+  // hit on the 21:20 playtest. Going direct is one extra query per
+  // End Combat — cheap and infrequent.
+  async function queueWoundInfectionChecks() {
+    const { data: combatStartRows, error: csErr } = await supabase
+      .from('roll_log')
+      .select('created_at')
+      .eq('campaign_id', id)
+      .eq('outcome', OUTCOME.combat_start)
+      .order('created_at', { ascending: false })
+      .limit(1)
+    if (csErr) { console.error('[end-combat-infection] combat_start lookup error:', csErr.message); return }
+    const combatStartedAt: string | undefined = (combatStartRows as any[])?.[0]?.created_at
+    if (!combatStartedAt) return
+    const { data: warningRows, error: wErr } = await supabase
+      .from('roll_log')
+      .select('character_name')
+      .eq('campaign_id', id)
+      .eq('outcome', OUTCOME.wound_infection_warning)
+      .gte('created_at', combatStartedAt)
+    if (wErr) { console.error('[end-combat-infection] warning lookup error:', wErr.message); return }
     const wounded = new Set<string>()
-    for (const r of feed as any[]) {
-      if (r.outcome !== OUTCOME.wound_infection_warning) continue
-      if (combatStartedAt && r.created_at < combatStartedAt) continue
+    for (const r of (warningRows ?? []) as any[]) {
       if (r.character_name) wounded.add(r.character_name)
     }
     if (wounded.size === 0) return
