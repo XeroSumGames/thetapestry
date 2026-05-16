@@ -577,6 +577,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           addMeasurePoint(pin.lat, pin.lng)
           return
         }
+        // Route mode + alt-click on a pin: bypass the popup and use the
+        // pin's coords as a route waypoint. Plain click stays as
+        // popup-open so the player can read pin info mid-plot.
+        if (routeModeRef.current && oe?.altKey) {
+          void handleRouteClick(pin.lat, pin.lng)
+          return
+        }
         if (oe?.altKey) {
           const color = isGM ? '#ff3a1d' : '#39ff14'
           dropPing(pin.lat, pin.lng, color)
@@ -606,6 +613,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const center = a.layer.getLatLng()
       if (measureModeRef.current) {
         addMeasurePoint(center.lat, center.lng)
+        return
+      }
+      // Route mode + alt-click on a cluster: use the cluster centroid
+      // as a route waypoint. Plain click still zooms to the cluster
+      // so the player can pick a specific pin underneath.
+      if (routeModeRef.current && oe?.altKey) {
+        void handleRouteClick(center.lat, center.lng)
         return
       }
       if (oe?.altKey) {
@@ -1106,7 +1120,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           final distance + ETA). */}
       {routeMode && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(42,32,16,0.95)', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px' }}>
-          <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point...')}</span>
+          <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point... (Alt+click a pin to snap)')}</span>
           <span style={{ marginLeft: 'auto', color: '#EF9F27', fontSize: '13px' }}>Esc to clear</span>
         </div>
       )}
