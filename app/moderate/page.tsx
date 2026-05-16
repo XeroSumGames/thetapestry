@@ -155,6 +155,41 @@ export default function ModerationPage() {
     void loadPendingCounts()
   }
 
+  // One-click JSON export of every currently-loaded bug report. Built
+  // so Xero can paste the file straight into a Claude chat and get
+  // structured fields instead of formatted text. Mirrors the
+  // session-log export pattern: Blob + ObjectURL + auto-click anchor.
+  // Stamps a timestamp in the filename so successive exports don't
+  // overwrite each other in the Downloads folder.
+  function exportBugsJson() {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      count: bugs.length,
+      bugs: bugs.map((b: any) => ({
+        id: b.id,
+        created_at: b.created_at,
+        status: b.status,
+        reporter_name: b.reporter_name ?? null,
+        reporter_email: b.reporter_email ?? null,
+        reporter_id: b.reporter_id ?? null,
+        page_url: b.page_url ?? null,
+        description: b.description ?? null,
+        user_agent: b.user_agent ?? null,
+        thriver_notes: b.thriver_notes ?? null,
+      })),
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `tapestry-bug-reports-${stamp}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  }
+
   useEffect(() => {
     async function check() {
       const { user } = await getCachedAuth()
@@ -1384,8 +1419,28 @@ export default function ModerationPage() {
       {/* ── Bug reports (Tier A) ── */}
       {section === 'bugs' && (
         <div>
-          <div style={{ fontSize: '18px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '12px' }}>
-            🐛 Bug Reports
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '18px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+              🐛 Bug Reports
+            </div>
+            <button
+              onClick={exportBugsJson}
+              disabled={bugs.length === 0}
+              title="Download every currently-loaded bug report as a JSON file - paste into a Claude chat for structured triage"
+              style={{
+                padding: '6px 12px',
+                background: bugs.length === 0 ? '#242424' : '#1a2e10',
+                border: `1px solid ${bugs.length === 0 ? '#3a3a3a' : '#2d5a1b'}`,
+                borderRadius: '3px',
+                color: bugs.length === 0 ? '#5a5550' : '#7fc458',
+                fontSize: '13px',
+                fontFamily: 'Carlito, sans-serif',
+                letterSpacing: '.06em',
+                textTransform: 'uppercase',
+                cursor: bugs.length === 0 ? 'not-allowed' : 'pointer',
+              }}>
+              ⬇ Export JSON ({bugs.length})
+            </button>
           </div>
           {bugsLoading ? (
             <div style={{ padding: '20px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Loading…</div>
