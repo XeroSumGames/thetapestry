@@ -35,8 +35,8 @@ import BugReportButton from './BugReportButton'
 //     Moderation Queue
 //     Logs
 //     Create Tokens
-//     Migrate Character Photos
-//     Publish Module from Snapshot
+//     Character Photos
+//     Publish from Snapshot
 //     Rescale Tactical Scenes
 //     Reseed Campaign
 //     Campaign Explorer
@@ -259,8 +259,8 @@ export default function Sidebar() {
           </Link>
           <Link href="/logging"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</Link>
           <Link href="/tools/token-creator"          style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Create Tokens</Link>
-          <Link href="/tools/migrate-character-photos" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Migrate Character Photos</Link>
-          <Link href="/rumors/import"                style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Publish Module from Snapshot</Link>
+          <Link href="/tools/migrate-character-photos" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Character Photos</Link>
+          <Link href="/rumors/import"                style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Publish from Snapshot</Link>
           <Link href="/tools/rescale-tactical-scenes" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rescale Tactical Scenes</Link>
           <Link href="/tools/reseed-campaign"        style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Reseed Campaign</Link>
           <Link href="/tools/campaign-explorer"      style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Campaign Explorer</Link>
