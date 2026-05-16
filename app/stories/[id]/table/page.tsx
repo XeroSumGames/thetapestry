@@ -3134,6 +3134,23 @@ export default function TablePage() {
     }
   })
 
+  // Cross-tab signal from the vehicle popout. The popout writes a
+  // localStorage key on every successful seat-write; the 'storage'
+  // event fires on every OTHER same-origin tab. Browser-native, no
+  // network round-trip, more reliable than the Supabase broadcast
+  // path which has dropped under load. Same-machine popout +
+  // table-page pair updates instantly via this path.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const key = `vehicle_updated_${id}`
+    function onStorage(e: StorageEvent) {
+      if (e.key !== key) return
+      void refetchVehicles()
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [id, refetchVehicles])
+
   const handleMapObjectMove = useStableCallback((tokenId: string) => {
     // Mirror the same speed × current_speed × 30ft logic the
     // ObjectCard's onMove uses, so the in-map panel's Move

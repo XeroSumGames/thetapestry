@@ -346,13 +346,18 @@ export default function VehiclePage() {
       console.error('[vehicle-popout] updateVehicle RPC failed:', error.message)
       return
     }
-    // Broadcast vehicle_updated on the long-lived tactical channel.
-    // TacticalMap subscribes to the same channel name and forwards
-    // to the parent's refetchVehicles. Sending through the ALREADY-
-    // subscribed channel avoids the previous race where an ad-hoc
-    // channel got torn down before the server fanned out the message.
-    // If the channel hasn't connected yet (ref still null on first
-    // render), fall back to the ad-hoc pattern as a one-shot.
+    // Belt-and-suspenders cross-tab signal:
+    //   (1) localStorage 'storage' event - browser-native, fires
+    //       synchronously on every OTHER same-origin tab on this
+    //       machine. The reliable path. Supabase broadcasts kept
+    //       around for the remote-tab case (player viewing the GM
+    //       map from a different browser session).
+    //   (2) Supabase broadcast on the long-lived tactical channel.
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(`vehicle_updated_${campaignId}`, `${updated.id}:${Date.now()}`)
+      }
+    } catch { /* private mode / quota - fall through */ }
     if (tacticalChannelRef.current) {
       try {
         await tacticalChannelRef.current.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
