@@ -61,33 +61,80 @@ in-flight; main is at `67555a1` clean.
 
 ---
 
-## Still open (priority order)
+## Closing-bundle sweep (`475592c`)
 
-### Bug-class follow-ups
-- **Sickness Dire Failure → drop to Mortally Wounded on Day 0** — canon says this should fire alongside the Lasting Damage check. Drainer currently only handles the wound, not the mortal-wound state writes / death_countdown. Medium effort.
-- **Typo: "Hatchet attacked was deflected"** — shipped verbatim per Xero. Likely meant `attack`. One-line edit when confirmed.
+After the initial handoff was written, Xero asked to knock out the
+remaining cheap follow-ups. One commit covering 7 items:
 
-### Schema-class follow-ups
-- **NPC `lastingWounds` field** — `campaign_npcs` has no place to persist Day-0 wounds for NPCs. They log to feed only. Mirrors the NPC ACU gap.
-- **NPC ACU (Acuity) column** — `campaign_npcs` lacks acuity; ACU-based skills (Navigation, Farming, Gambling, Lock-Picking) read AMod=0 for NPC navigators. Schema migration + every NPC seed in `lib/setting-npcs.ts`.
+1. **Sickness Dire Failure → Mortally Wounded on Day 0** — drainer
+   sets wp_current=0 + death_countdown=max(1, 4+PHY) when severity='auto'
+   AND kind='sickness'. Wound-kind Dire skips the mortal drop (canon:
+   the wound IS the consequence). System feed row gets `+ Mortally
+   Wounded` tag for sickness rows.
+2. **NPC `lasting_wounds jsonb`** column + write path in drainer +
+   executeRoll's Lasting Damage Check branch. NPCs now persist
+   wounds same shape as PCs (array of names).
+3. **NPC `acuity smallint`** column + vehicle popout reads it into
+   `attributes.ACU`. NPC navigators rolling Navigation / Farming /
+   Gambling / Lock-Picking now get correct AMod.
+4. **`DROP TABLE playtest_recorder_config`** — zero callers post
+   `e53211b` + `20aee55`. Dropped clean.
+5. **Typo**: `Hatchet attacked was deflected` → `Hatchet attack was
+   deflected` (`lib/roll-helpers.ts` + preview HTML).
+6. **All 11 Lasting Wound narrative overrides** locked in
+   `LASTING_WOUND_NARRATIVE`. Skittish stays Xero's verbatim
+   `-1 CMod on initiative rolls`; the other 10 follow the pattern
+   I proposed (`-N XYZ attribute` / `-1 max RP|WP` / `-N CMod on ...
+   checks`).
+7. **`todo.md` updates**: marked vehicle drag-lock shipped (parallel
+   session `8ee54f4` made it moot via passenger-vanish), marked
+   NPC ACU shipped schema-wise, queued NpcCard surfaces for both
+   new NPC columns.
 
-### Feature follow-ups (queued in `tasks/todo.md`)
-- **Lock passenger tokens from independent drag while assigned to vehicle slot** — `TacticalMap.tsx:~2846` `canDrag` clause. Small.
-- **More LASTING_WOUND_NARRATIVE overrides** — only Skittish locked. Other 10 fall back to canon effect strings.
+## Still open (genuinely, after the closing sweep)
 
-### Cleanup
-- **`DROP TABLE playtest_recorder_config`** — zero callers post-`e53211b` / `20aee55`. Trivial DB cleanup. Optional.
+### Schema present, UI surface missing
+- **NpcCard editor for NPC `acuity`** — column exists, defaults to
+  0, no UI to set per NPC.
+- **NpcCard display for NPC `lasting_wounds`** — column exists,
+  drainer writes to it, no UI shows the array yet.
+
+### Untouched by today's work
+- `tasks/polish-pass-2026-05-14-testplan.md` and
+  `tasks/thriver-godmode-sweep-testplan.md` are still listed
+  "untested live" in `tasks/todo.md` — those carry forward.
 
 ---
 
 ## Lessons captured today
 
-- `tasks/lessons.md` head section gained 4 new entries: hit-test parity, worktree freshness, stale-closure refs, dump-vs-commit-timestamps, PC vs NPC verification.
+`tasks/lessons.md` head section gained 5 new entries:
+- Hit-test parity across getTokenAt + handleMouseUp
+- Worktree freshness — `git log HEAD..origin/main` in state check
+- Stale-closure gate in long-lived realtime listeners (use refs)
+- Dump timestamps vs fix commit timestamps
+- Verify PC vs NPC before treating infection-modal-on-GM as a bug
+
+---
+
+## Schema migrations applied (live DB, today)
+
+1. `infection_severity text` on `character_states` + `campaign_npcs`
+2. `infection_pending_lasting_check boolean NOT NULL DEFAULT false` on both
+3. `campaign_npcs.lasting_wounds jsonb NOT NULL DEFAULT '[]'`
+4. `campaign_npcs.acuity smallint NOT NULL DEFAULT 0`
+5. `DROP TABLE playtest_recorder_config`
+
+Plus backfills: Cree's `damage_json` (wound metadata) and her
+Lasting Wound announcement row (Skittish, 23:09:11.001 UTC).
 
 ---
 
 ## State at handoff
 
-- Worktree: `claude/keen-lamarr-7b6cf7` clean, rebased onto origin/main.
-- Main checkout `/c/TheTapestry`: synced to `67555a1`. Pre-existing local edits on `tasks/backlog-2026-05-11-comprehensive.md` + the CRB-rewrite untracked files left untouched per the original handoff.
-- 5 stash entries in main checkout, all from parallel sessions, none mine.
+- Worktree: `claude/keen-lamarr-7b6cf7` at `475592c`, clean, rebased.
+- Main checkout `/c/TheTapestry`: synced to `475592c`. Pre-existing
+  local edits on `tasks/backlog-2026-05-11-comprehensive.md` and the
+  CRB-rewrite untracked files left untouched per the original handoff.
+- 5 stash entries in main checkout, all from parallel sessions,
+  none mine.
