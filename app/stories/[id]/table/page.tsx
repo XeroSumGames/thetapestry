@@ -3134,21 +3134,38 @@ export default function TablePage() {
     }
   })
 
-  // Cross-tab signal from the vehicle popout. The popout writes a
-  // localStorage key on every successful seat-write; the 'storage'
-  // event fires on every OTHER same-origin tab. Browser-native, no
-  // network round-trip, more reliable than the Supabase broadcast
-  // path which has dropped under load. Same-machine popout +
-  // table-page pair updates instantly via this path.
+  // Cross-tab vehicle-update signals - four independent paths because
+  // a single one keeps dropping under load:
+  //   1. localStorage 'storage' event - browser-native, OTHER tab only
+  //   2. BroadcastChannel - browser-native, OTHER context only
+  //   3. window 'focus' - whenever this tab regains focus
+  //   4. 3-second polling - last-resort guarantee
+  // Whatever fires first wins; refetchVehicles is idempotent.
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const key = `vehicle_updated_${id}`
+    const storageKey = `vehicle_updated_${id}`
+    const channelName = `tapestry-vehicle-updates-${id}`
     function onStorage(e: StorageEvent) {
-      if (e.key !== key) return
+      if (e.key !== storageKey) return
       void refetchVehicles()
     }
+    function onFocus() {
+      void refetchVehicles()
+    }
+    let bc: BroadcastChannel | null = null
+    try {
+      bc = new BroadcastChannel(channelName)
+      bc.onmessage = () => { void refetchVehicles() }
+    } catch { bc = null }
+    const pollId = window.setInterval(() => { void refetchVehicles() }, 3000)
     window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    window.addEventListener('focus', onFocus)
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('focus', onFocus)
+      window.clearInterval(pollId)
+      try { bc?.close() } catch {}
+    }
   }, [id, refetchVehicles])
 
   const handleMapObjectMove = useStableCallback((tokenId: string) => {

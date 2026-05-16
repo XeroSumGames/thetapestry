@@ -358,6 +358,17 @@ export default function VehiclePage() {
         window.localStorage.setItem(`vehicle_updated_${campaignId}`, `${updated.id}:${Date.now()}`)
       }
     } catch { /* private mode / quota - fall through */ }
+    // BroadcastChannel - second browser-native cross-context signal,
+    // separate from 'storage' so a flaky 'storage' event doesn't take
+    // down the whole cross-tab path. Listeners on other same-origin
+    // contexts get postMessage on their bc.onmessage handler.
+    try {
+      if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel(`tapestry-vehicle-updates-${campaignId}`)
+        bc.postMessage({ vehicle_id: updated.id, ts: Date.now() })
+        setTimeout(() => { try { bc.close() } catch {} }, 100)
+      }
+    } catch { /* unsupported / disabled - fall through */ }
     if (tacticalChannelRef.current) {
       try {
         await tacticalChannelRef.current.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
