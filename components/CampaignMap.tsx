@@ -147,6 +147,19 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const travelModeRef = useRef<TravelMode>('walking')
   useEffect(() => { travelModeRef.current = travelMode }, [travelMode])
   useEffect(() => { measureModeRef.current = measureMode }, [measureMode])
+
+  // Route planner — click two points, OSRM road routing draws the
+  // real-world driving path. Distinct from Measure (which is straight-
+  // line, multi-waypoint). Route is exactly two points: start +
+  // destination. Esc/toggle clears. Local-only just like Measure.
+  const routeModeRef = useRef(false)
+  const routeStartRef = useRef<{ lat: number; lng: number } | null>(null)
+  const routeMarkersRef = useRef<any[]>([])
+  const routeLineRef = useRef<any>(null)
+  const [routeMode, setRouteMode] = useState(false)
+  const [routeStatus, setRouteStatus] = useState('')
+  const [routeLoading, setRouteLoading] = useState(false)
+  useEffect(() => { routeModeRef.current = routeMode }, [routeMode])
   // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
   // dblclick handler registered in the init effect can always call the
   // current parent version without re-subscribing.
@@ -204,6 +217,19 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [measureMode])
+
+  // Esc bails out of the route tool too.
+  useEffect(() => {
+    if (!routeMode) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        clearRoute()
+        setRouteMode(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [routeMode])
 
   // Inject ping pulse keyframes ONCE (per browser tab). Three staggered
   // rings (red -> green -> red) at 0.6s each with 0.4s stagger pop in
@@ -313,6 +339,74 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     if (measurePointsRef.current.length >= 2) recomputeMeasureLabels()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [travelMode])
+
+  // ── Route planner helpers ──────────────────────────────────────
+  // Wipe route-tool layers + reset state.
+  function clearRoute() {
+    const map = mapInstanceRef.current
+    routeMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
+    routeMarkersRef.current = []
+    if (routeLineRef.current) { try { map?.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
+    routeStartRef.current = null
+    setRouteStatus('')
+    setRouteLoading(false)
+  }
+
+  // Handle a click while route mode is active. First click drops the
+  // start marker and waits. Second click drops the end marker, fires
+  // an OSRM request for road-following geometry, and renders the
+  // result. OSRM demo server (router.project-osrm.org) is free + no-
+  // auth; rate-limited to ~1 req/sec which is fine for tabletop pace.
+  // On API failure, falls back to a dashed straight line so the user
+  // still gets visual feedback.
+  async function handleRouteClick(lat: number, lng: number) {
+    const L = (window as any).L
+    const map = mapInstanceRef.current
+    if (!L || !map) return
+    // First click: drop start marker, wait for the second.
+    if (!routeStartRef.current) {
+      routeStartRef.current = { lat, lng }
+      const startHtml = `<div style="width:20px;height:20px;border-radius:50%;background:#7fc458;border:2px solid #f5f2ee;box-shadow:0 0 8px rgba(127,196,88,.9);display:flex;align-items:center;justify-content:center;color:#0f1a0f;font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">A</div>`
+      const startIcon = L.divIcon({ html: startHtml, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
+      const mk = L.marker([lat, lng], { icon: startIcon, interactive: false, keyboard: false, zIndexOffset: 9100 }).addTo(map)
+      routeMarkersRef.current.push(mk)
+      setRouteStatus('Click destination…')
+      return
+    }
+    // Second click: drop end marker, call OSRM.
+    const start = routeStartRef.current
+    const end = { lat, lng }
+    const endHtml = `<div style="width:20px;height:20px;border-radius:50%;background:#c0392b;border:2px solid #f5f2ee;box-shadow:0 0 8px rgba(192,57,43,.9);display:flex;align-items:center;justify-content:center;color:#2a0f0a;font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">B</div>`
+    const endIcon = L.divIcon({ html: endHtml, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
+    const mk = L.marker([end.lat, end.lng], { icon: endIcon, interactive: false, keyboard: false, zIndexOffset: 9100 }).addTo(map)
+    routeMarkersRef.current.push(mk)
+    setRouteLoading(true)
+    setRouteStatus('Plotting…')
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`OSRM returned ${res.status}`)
+      const json = await res.json()
+      const route = json?.routes?.[0]
+      if (!route?.geometry?.coordinates) throw new Error('No route in response')
+      // OSRM returns [lng, lat] - Leaflet wants [lat, lng].
+      const latlngs = route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]) as [number, number][]
+      routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 4, opacity: 0.85 }).addTo(map)
+      const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
+      const meters = route.distance ?? 0
+      setRouteStatus(`${formatDistance(meters)} via roads · ${mode.emoji} ${formatTravelTime(meters, mode.mph)}`)
+    } catch (err) {
+      console.error('[campaign-map] OSRM route failed:', err)
+      // Fallback: dashed straight line so the user still sees something.
+      const latlngs: [number, number][] = [[start.lat, start.lng], [end.lat, end.lng]]
+      routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 3, opacity: 0.7, dashArray: '6,6' }).addTo(map)
+      const meters = haversineMeters(start, end)
+      const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
+      setRouteStatus(`Routing unavailable - showing straight line (${formatDistance(meters)} · ${mode.emoji} ${formatTravelTime(meters, mode.mph)})`)
+    } finally {
+      setRouteLoading(false)
+    }
+  }
 
   // Wipe every measure-tool layer + reset state. Used by the toggle
   // button, Esc keypress, and unmount cleanup.
@@ -670,6 +764,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           addMeasurePoint(e.latlng.lat, e.latlng.lng)
           return
         }
+        if (routeModeRef.current) {
+          void handleRouteClick(e.latlng.lat, e.latlng.lng)
+          return
+        }
         if (e?.originalEvent?.altKey) {
           const color = isGM ? '#ff3a1d' : '#39ff14'
           dropPing(e.latlng.lat, e.latlng.lng, color)
@@ -848,6 +946,41 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
             {measureMode ? '✕ Stop' : '📏 Measure'}
           </button>
+          {/* Route planner — pick start, pick destination, OSRM returns
+              real road geometry. Distinct from Measure (which is
+              straight-line, multi-waypoint). Anyone can plot a route;
+              local-only display just like Measure. Esc clears. */}
+          <button type="button"
+            onClick={() => {
+              if (routeMode) {
+                clearRoute()
+                setRouteMode(false)
+              } else {
+                setRouteMode(true)
+                setMeasureMode(false)
+                clearMeasure()
+                setPlacing(false)
+                setNewPin(null)
+                setRouteStatus('Click your starting point…')
+              }
+            }}
+            title={routeMode ? 'Stop planning (Esc)' : 'Plot a road route from A to B'}
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeMode ? '#EF9F27' : '#3a3a3a'}`, background: routeMode ? '#2a2010' : 'rgba(15,15,15,.85)', color: routeMode ? '#EF9F27' : '#d4cfc9' }}>
+            {routeMode ? '✕ Stop' : '🛣 Route'}
+          </button>
+          {/* Travel-mode picker reused for route ETA. Same dropdown as
+              Measure, just visible when EITHER tool is active. */}
+          {routeMode && (
+            <select value={travelMode} onChange={e => setTravelMode(e.target.value as TravelMode)}
+              title="How are the characters traveling? Affects the ETA shown for the route."
+              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #EF9F27', background: '#2a2010', color: '#cce0f5', width: '175px' }}>
+              {Object.entries(TRAVEL_MODES).map(([key, m]) => (
+                <option key={key} value={key} style={{ background: '#0f0f0f', color: '#cce0f5' }}>
+                  {m.emoji} {m.label} ({m.mph} mph)
+                </option>
+              ))}
+            </select>
+          )}
           {/* Travel-mode picker — appears only while measure mode is
               active. Switching mode recomputes every leg + the TOTAL
               row in place, including the on-map midpoint chips, via
@@ -964,6 +1097,17 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Route planner banner — mirrors the measure-tool banner but
+          orange-tinted to keep the two visually distinct. Shows the
+          current step (click start, click destination, plotting, or
+          final distance + ETA). */}
+      {routeMode && (
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(42,32,16,0.95)', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px' }}>
+          <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point...')}</span>
+          <span style={{ marginLeft: 'auto', color: '#EF9F27', fontSize: '13px' }}>Esc to clear</span>
         </div>
       )}
 
