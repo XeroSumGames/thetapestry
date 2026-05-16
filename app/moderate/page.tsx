@@ -109,6 +109,10 @@ export default function ModerationPage() {
   const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number; forums: number; warstories: number; lfg: number; bugs: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0, forums: 0, warstories: 0, lfg: 0, bugs: 0 })
   const [bugs, setBugs] = useState<any[]>([])
   const [bugsLoading, setBugsLoading] = useState(false)
+  // Inline RESPOND state per bug row. Maps bug id -> draft text shown
+  // in the response textarea. Cleared on Send / Cancel.
+  const [bugResponseDraft, setBugResponseDraft] = useState<Record<string, string>>({})
+  const [bugResponseSending, setBugResponseSending] = useState<Set<string>>(new Set())
   const router = useRouter()
   const supabase = createClient()
 
@@ -142,7 +146,7 @@ export default function ModerationPage() {
     setBugsLoading(true)
     const { data } = await supabase
       .from('bug_reports')
-      .select('id, reporter_id, reporter_email, reporter_name, page_url, description, user_agent, status, thriver_notes, created_at')
+      .select('id, reporter_id, reporter_email, reporter_name, page_url, description, user_agent, status, thriver_notes, response_text, responded_at, created_at')
       .order('created_at', { ascending: false })
       .limit(100)
     setBugs(data ?? [])
@@ -153,6 +157,46 @@ export default function ModerationPage() {
     await supabase.from('bug_reports').update({ status: nextStatus }).eq('id', bugId)
     setBugs(prev => prev.map(b => b.id === bugId ? { ...b, status: nextStatus } : b))
     void loadPendingCounts()
+  }
+
+  // Persist the Thriver's reply to a bug + drop an in-app notification
+  // for the reporter (so they see the response without having to dig
+  // back into the moderate page they can't access anyway). Skips the
+  // notification cleanly when reporter_id is null (unauthenticated
+  // guest report) - the response still lands in the bug row for the
+  // audit trail. Mirrors the module-approval notification shape.
+  async function sendBugResponse(bug: any) {
+    const draft = (bugResponseDraft[bug.id] ?? '').trim()
+    if (!draft) return
+    setBugResponseSending(prev => { const next = new Set(prev); next.add(bug.id); return next })
+    try {
+      const { user } = await getCachedAuth()
+      const nowIso = new Date().toISOString()
+      const { error: updErr } = await supabase
+        .from('bug_reports')
+        .update({ response_text: draft, responded_at: nowIso, responded_by: user?.id ?? null })
+        .eq('id', bug.id)
+      if (updErr) {
+        console.error('[bug-response] update failed:', updErr.message)
+        alert('Could not save response: ' + updErr.message)
+        return
+      }
+      if (bug.reporter_id) {
+        const truncated = draft.length > 140 ? draft.slice(0, 140) + '...' : draft
+        const { error: notifErr } = await supabase.from('notifications').insert({
+          user_id: bug.reporter_id,
+          type: 'bug_report_response',
+          title: 'Thriver replied to your bug report',
+          body: truncated,
+          metadata: { bug_id: bug.id, page_url: bug.page_url ?? null },
+        })
+        if (notifErr) console.warn('[bug-response] notification insert:', notifErr.message)
+      }
+      setBugs(prev => prev.map(b => b.id === bug.id ? { ...b, response_text: draft, responded_at: nowIso } : b))
+      setBugResponseDraft(prev => { const { [bug.id]: _, ...rest } = prev; return rest })
+    } finally {
+      setBugResponseSending(prev => { const next = new Set(prev); next.delete(bug.id); return next })
+    }
   }
 
   // One-click JSON export of every currently-loaded bug report. Built
@@ -176,6 +220,8 @@ export default function ModerationPage() {
         description: b.description ?? null,
         user_agent: b.user_agent ?? null,
         thriver_notes: b.thriver_notes ?? null,
+        response_text: b.response_text ?? null,
+        responded_at: b.responded_at ?? null,
       })),
     }
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -1506,7 +1552,89 @@ export default function ModerationPage() {
                           {s}
                         </button>
                       ))}
+                      {/* RESPOND - opens the inline textarea below.
+                          Toggles closed if already open. Shows a check
+                          if a response has already been sent. */}
+                      {(() => {
+                        const draftOpen = bugResponseDraft[b.id] !== undefined
+                        const hasResponse = !!b.response_text
+                        const label = draftOpen ? 'Cancel reply' : (hasResponse ? '✓ Replied' : 'Respond')
+                        const accent = hasResponse ? '#7fc458' : '#a78bfa'
+                        return (
+                          <button onClick={() => {
+                            if (draftOpen) {
+                              setBugResponseDraft(prev => { const { [b.id]: _, ...rest } = prev; return rest })
+                            } else {
+                              setBugResponseDraft(prev => ({ ...prev, [b.id]: b.response_text ?? '' }))
+                            }
+                          }}
+                            style={{
+                              padding: '5px 10px',
+                              background: 'transparent',
+                              border: `1px solid ${accent}`,
+                              borderRadius: '3px',
+                              color: accent,
+                              fontSize: '13px',
+                              fontFamily: 'Carlito, sans-serif',
+                              letterSpacing: '.06em',
+                              textTransform: 'uppercase',
+                              cursor: 'pointer',
+                            }}>
+                            {label}
+                          </button>
+                        )
+                      })()}
                     </div>
+                    {/* Existing response readout (if any). Shown even
+                        when the draft textarea is closed so the audit
+                        trail is always visible. */}
+                    {b.response_text && !(bugResponseDraft[b.id] !== undefined) && (
+                      <div style={{ marginTop: '8px', padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderLeft: '3px solid #7fc458', borderRadius: '3px' }}>
+                        <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                          Reply · {b.responded_at ? new Date(b.responded_at).toLocaleString() : ''}
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap' }}>
+                          {b.response_text}
+                        </div>
+                      </div>
+                    )}
+                    {/* Inline reply textarea + Send. Visible only while
+                        Respond is toggled open. */}
+                    {bugResponseDraft[b.id] !== undefined && (
+                      <div style={{ marginTop: '8px' }}>
+                        <textarea
+                          value={bugResponseDraft[b.id]}
+                          onChange={e => setBugResponseDraft(prev => ({ ...prev, [b.id]: e.target.value }))}
+                          placeholder="Type your reply. Player gets an in-app notification when sent."
+                          rows={3}
+                          style={{ width: '100%', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, resize: 'vertical', boxSizing: 'border-box' }} />
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                          <button
+                            onClick={() => sendBugResponse(b)}
+                            disabled={bugResponseSending.has(b.id) || !(bugResponseDraft[b.id] ?? '').trim()}
+                            style={{
+                              padding: '5px 14px',
+                              background: bugResponseSending.has(b.id) ? '#242424' : '#241a3a',
+                              border: `1px solid ${bugResponseSending.has(b.id) ? '#3a3a3a' : '#a78bfa'}`,
+                              borderRadius: '3px',
+                              color: bugResponseSending.has(b.id) ? '#5a5550' : '#a78bfa',
+                              fontSize: '13px',
+                              fontFamily: 'Carlito, sans-serif',
+                              letterSpacing: '.06em',
+                              textTransform: 'uppercase',
+                              cursor: bugResponseSending.has(b.id) ? 'wait' : 'pointer',
+                              fontWeight: 600,
+                            }}>
+                            {bugResponseSending.has(b.id) ? 'Sending...' : (b.response_text ? 'Update Reply' : 'Send Reply')}
+                          </button>
+                          {!b.reporter_id && (
+                            <span style={{ alignSelf: 'center', fontSize: '13px', color: '#EF9F27', fontStyle: 'italic', fontFamily: 'Carlito, sans-serif' }}>
+                              Guest reporter - reply saved but no notification fires.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })}
