@@ -502,7 +502,7 @@ export default function PortraitResizerPage() {
 
   return (
     <div>
-      <h1 style={h1Style}>Portrait Resizer</h1>
+      <h1 style={h1Style}>Create Tokens</h1>
       <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Carlito, sans-serif' }}>
         Drop any image and export it as a 256×256 JPEG — ready for the NPC portrait bank.
         Drag the circle to choose what gets captured, or resize it to zoom.
