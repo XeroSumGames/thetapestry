@@ -33,9 +33,13 @@ import BugReportButton from './BugReportButton'
 //   ——— divider ———
 //   Tools (header, Thriver-only)
 //     Moderation Queue
-//     Create Tokens
-//     Rescale Tactical Scenes
 //     Logs
+//     Create Tokens
+//     Migrate Character Photos
+//     Publish Module from Snapshot
+//     Rescale Tactical Scenes
+//     Reseed Campaign
+//     Campaign Explorer
 //     Copy Map Position
 //   [Create Account / Sign In] or [Log Out]
 //   [Xero Sum Games tiny logo]
@@ -243,19 +247,23 @@ export default function Sidebar() {
       {roleIsThriver(userRole) && (
         <>
           <div style={sectionHeading}>Tools</div>
+          {/* Order locked 2026-05-16 per Xero: the four daily-driver
+              tools (Moderation, Logs, Create Tokens, Migrate Photos)
+              ride at the top; the rest of the admin surfaces sit
+              below in their previous relative order. */}
           <Link href="/moderate"
             style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
             onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
             Moderation Queue
             {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
           </Link>
-          <Link href="/rumors/import"                style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Publish Module from Snapshot</Link>
+          <Link href="/logging"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</Link>
           <Link href="/tools/token-creator"          style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Create Tokens</Link>
+          <Link href="/tools/migrate-character-photos" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Migrate Character Photos</Link>
+          <Link href="/rumors/import"                style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Publish Module from Snapshot</Link>
           <Link href="/tools/rescale-tactical-scenes" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rescale Tactical Scenes</Link>
           <Link href="/tools/reseed-campaign"        style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Reseed Campaign</Link>
           <Link href="/tools/campaign-explorer"      style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Campaign Explorer</Link>
-          <Link href="/tools/migrate-character-photos" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Migrate Character Photos</Link>
-          <Link href="/logging"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</Link>
           <a href="#"
             onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('tapestry-copy-map-position')) }}
             style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
