@@ -156,7 +156,7 @@ export default function VehiclePage() {
           .eq('campaign_id', campaignId)
           .not('character_id', 'is', null),
         supabase.from('campaign_npcs')
-          .select('id, name, reason, dexterity, physicality, influence, acuity, skills, status, wp_current, death_countdown')
+          .select('id, name, reason, dexterity, physicality, influence, acumen, skills, status, wp_current, death_countdown')
           .eq('campaign_id', campaignId),
       ])
       // Surface partial failures. Pre-fix both .data fell through to
@@ -218,7 +218,7 @@ export default function VehiclePage() {
             RSN: n.reason ?? 0,
             PHY: n.physicality ?? 0,
             INF: n.influence ?? 0,
-            ACU: n.acuity ?? 0,
+            ACU: n.acumen ?? 0,
           }
           return {
             id: n.id, name: n.name, kind: 'npc' as const,

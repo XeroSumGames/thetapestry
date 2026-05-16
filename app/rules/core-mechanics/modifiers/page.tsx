@@ -39,7 +39,7 @@ export default function Page() {
       <RuleSection id="amod" title="Attribute Modifier (AMod)">
         <P>
           Each character has five attributes — <Term>R A P I D</Term>{' '}
-          (Reason, Acuity, Physicality, Influence, Dexterity). Attributes
+          (Reason, Acumen, Physicality, Influence, Dexterity). Attributes
           range from −2 to +4 for humans (animals and machines can reach
           +5). Each value is the AMod applied to any Dice Check using that
           attribute.

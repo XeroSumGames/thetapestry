@@ -74,9 +74,16 @@ remaining cheap follow-ups. One commit covering 7 items:
 2. **NPC `lasting_wounds jsonb`** column + write path in drainer +
    executeRoll's Lasting Damage Check branch. NPCs now persist
    wounds same shape as PCs (array of names).
-3. **NPC `acuity smallint`** column + vehicle popout reads it into
-   `attributes.ACU`. NPC navigators rolling Navigation / Farming /
-   Gambling / Lock-Picking now get correct AMod.
+3. **NPC ACU read path fixed** — initially shipped a duplicate
+   `acuity smallint` column thinking ACU was missing from
+   campaign_npcs. Xero caught it: ACU = **Acumen**, not Acuity.
+   The `acumen` column existed all along; my diag query missed it
+   because I filtered against 'acuity' (stale rules-page wording)
+   instead of listing every column. Dropped the duplicate
+   (`sql/drop-duplicate-acuity-column.sql`); vehicle popout's NPC
+   mapper now reads the real `acumen`. Three stale rules pages
+   (`character-overview/rapid`, `combat/combat-rounds`,
+   `core-mechanics/modifiers`) updated to say Acumen.
 4. **`DROP TABLE playtest_recorder_config`** — zero callers post
    `e53211b` + `20aee55`. Dropped clean.
 5. **Typo**: `Hatchet attacked was deflected` → `Hatchet attack was
@@ -88,14 +95,12 @@ remaining cheap follow-ups. One commit covering 7 items:
    checks`).
 7. **`todo.md` updates**: marked vehicle drag-lock shipped (parallel
    session `8ee54f4` made it moot via passenger-vanish), marked
-   NPC ACU shipped schema-wise, queued NpcCard surfaces for both
-   new NPC columns.
+   NPC ACU (Acumen) gap resolved as non-issue (column existed
+   all along), queued NpcCard surface for `lasting_wounds` display.
 
 ## Still open (genuinely, after the closing sweep)
 
 ### Schema present, UI surface missing
-- **NpcCard editor for NPC `acuity`** — column exists, defaults to
-  0, no UI to set per NPC.
 - **NpcCard display for NPC `lasting_wounds`** — column exists,
   drainer writes to it, no UI shows the array yet.
 
@@ -108,12 +113,13 @@ remaining cheap follow-ups. One commit covering 7 items:
 
 ## Lessons captured today
 
-`tasks/lessons.md` head section gained 5 new entries:
+`tasks/lessons.md` head section gained 6 new entries:
 - Hit-test parity across getTokenAt + handleMouseUp
 - Worktree freshness — `git log HEAD..origin/main` in state check
 - Stale-closure gate in long-lived realtime listeners (use refs)
 - Dump timestamps vs fix commit timestamps
 - Verify PC vs NPC before treating infection-modal-on-GM as a bug
+- ACU = Acumen, not Acuity — cross-check canon sources; use `SELECT column_name FROM information_schema.columns` (no filter) for column-existence diagnostics
 
 ---
 
@@ -122,8 +128,8 @@ remaining cheap follow-ups. One commit covering 7 items:
 1. `infection_severity text` on `character_states` + `campaign_npcs`
 2. `infection_pending_lasting_check boolean NOT NULL DEFAULT false` on both
 3. `campaign_npcs.lasting_wounds jsonb NOT NULL DEFAULT '[]'`
-4. `campaign_npcs.acuity smallint NOT NULL DEFAULT 0`
-5. `DROP TABLE playtest_recorder_config`
+4. `DROP TABLE playtest_recorder_config`
+5. `DROP COLUMN acuity` on `campaign_npcs` (the duplicate I mistakenly added; `acumen` already existed)
 
 Plus backfills: Cree's `damage_json` (wound metadata) and her
 Lasting Wound announcement row (Skittish, 23:09:11.001 UTC).

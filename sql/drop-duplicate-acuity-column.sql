@@ -1,0 +1,11 @@
+-- DROP the duplicate `acuity` column I added today.
+--
+-- campaign_npcs.acumen has existed all along (it's the canon name for
+-- the 5th RAPID attribute, ACU = Acumen). My earlier diag query
+-- filtered against 'acuity' / 'perception' / 'instinct' etc. but NOT
+-- 'acumen', so I missed it and shipped a duplicate column.
+--
+-- All existing NPCs have meaningful values in `acumen`; the `acuity`
+-- column I added today is empty (default 0, never written). Safe to
+-- drop.
+ALTER TABLE campaign_npcs DROP COLUMN IF EXISTS acuity;

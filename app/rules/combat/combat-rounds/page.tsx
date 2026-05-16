@@ -76,7 +76,7 @@ export default function Page() {
         </P>
         <P>
           If multiple characters attempt it, the one with the highest
-          combined <Term>Dexterity + Acuity AMods</Term> wins. If there's
+          combined <Term>Dexterity + Acumen AMods</Term> wins. If there's
           no clear winner, no one gets the drop and combat moves directly
           to Initiative.
         </P>

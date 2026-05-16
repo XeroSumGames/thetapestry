@@ -51,7 +51,7 @@ export default function Page() {
         </thead>
         <tbody>
           {row('Reason (RSN)', 'The ability to process data, think critically, and make logical assumptions.')}
-          {row('Acuity (ACU)', 'The mixture of instinct and cunning required for good situational awareness.')}
+          {row('Acumen (ACU)', 'The mixture of instinct and cunning required for good situational awareness.')}
           {row('Physicality (PHY)', 'A measure of athleticism, conditioning, discipline, and self-control.')}
           {row('Influence (INF)', 'A combination of charisma, charm, and attractiveness.')}
           {row('Dexterity (DEX)', 'A reflection of agility, reflexes, and hand-eye coordination.')}
