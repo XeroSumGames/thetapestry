@@ -159,6 +159,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const [routeMode, setRouteMode] = useState(false)
   const [routeStatus, setRouteStatus] = useState('')
   const [routeLoading, setRouteLoading] = useState(false)
+  // Persist the last plotted route's distance + whether OSRM resolved
+  // it (vs a straight-line fallback) so flipping the travel-mode
+  // dropdown can recompute the ETA without re-hitting OSRM.
+  const [routeDistanceMeters, setRouteDistanceMeters] = useState<number | null>(null)
+  const [routeIsFallback, setRouteIsFallback] = useState(false)
   useEffect(() => { routeModeRef.current = routeMode }, [routeMode])
   // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
   // dblclick handler registered in the init effect can always call the
@@ -350,6 +355,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     routeStartRef.current = null
     setRouteStatus('')
     setRouteLoading(false)
+    setRouteDistanceMeters(null)
+    setRouteIsFallback(false)
   }
 
   // Handle a click while route mode is active. First click drops the
@@ -394,6 +401,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 4, opacity: 0.85 }).addTo(map)
       const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
       const meters = route.distance ?? 0
+      setRouteDistanceMeters(meters)
+      setRouteIsFallback(false)
       setRouteStatus(`${formatDistance(meters)} via roads · ${mode.emoji} ${formatTravelTime(meters, mode.mph)}`)
     } catch (err) {
       console.error('[campaign-map] OSRM route failed:', err)
@@ -402,11 +411,28 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 3, opacity: 0.7, dashArray: '6,6' }).addTo(map)
       const meters = haversineMeters(start, end)
       const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
-      setRouteStatus(`Routing unavailable - showing straight line (${formatDistance(meters)} · ${mode.emoji} ${formatTravelTime(meters, mode.mph)})`)
+      setRouteDistanceMeters(meters)
+      setRouteIsFallback(true)
+      setRouteStatus(`Routing unavailable - straight line (${formatDistance(meters)} · ${mode.emoji} ${formatTravelTime(meters, mode.mph)})`)
     } finally {
       setRouteLoading(false)
     }
   }
+
+  // Recompute the route status whenever travel mode flips. Route
+  // distance is whatever OSRM returned (or haversine on fallback) and
+  // doesn't change with mode - just the ETA does, so we don't need
+  // to re-hit OSRM.
+  useEffect(() => {
+    if (routeDistanceMeters == null) return
+    const mode = TRAVEL_MODES[travelMode] ?? TRAVEL_MODES.walking
+    const meters = routeDistanceMeters
+    if (routeIsFallback) {
+      setRouteStatus(`Routing unavailable - straight line (${formatDistance(meters)} · ${mode.emoji} ${formatTravelTime(meters, mode.mph)})`)
+    } else {
+      setRouteStatus(`${formatDistance(meters)} via roads · ${mode.emoji} ${formatTravelTime(meters, mode.mph)}`)
+    }
+  }, [travelMode, routeDistanceMeters, routeIsFallback])
 
   // Wipe every measure-tool layer + reset state. Used by the toggle
   // button, Esc keypress, and unmount cleanup.
