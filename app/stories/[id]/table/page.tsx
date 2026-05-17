@@ -862,7 +862,11 @@ export default function TablePage() {
   // (+N coord bonus + leadCmod) to its CMod.
   const [coordEffortParticipants, setCoordEffortParticipants] = useState<Set<string>>(new Set())
   const [coordEffortSkill, setCoordEffortSkill] = useState('')
-  const coordEffortRef = useRef<{ participantIds: string[]; totalParticipants: number; leadCmod: number; isActive: boolean; leadRollPending: boolean } | null>(null)
+  // chainId is minted on chain-start and stamped onto every roll_log
+  // row in the chain so the per-participant Withdraw button can find
+  // them all and retcon (Option B locked 2026-05-17: cmod -= 1 / total
+  // -= 1 / outcome recomputed across already-rolled chain rows).
+  const coordEffortRef = useRef<{ participantIds: string[]; totalParticipants: number; leadCmod: number; isActive: boolean; leadRollPending: boolean; chainId: string } | null>(null)
   // UI tick so the active-banner / End button can react when the ref
   // changes (refs don't trigger re-renders). Bumped whenever
   // coordEffortRef state changes meaningfully.
@@ -4307,6 +4311,7 @@ export default function TablePage() {
       leadCmod: 0,
       isActive: false,
       leadRollPending: true,
+      chainId: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `chain-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     }
     setCoordEffortTick(t => t + 1)
     handleRollRequest(`Coordinated Effort - ${coordEffortSkill}`, amod, smod)
@@ -4320,6 +4325,62 @@ export default function TablePage() {
   function endCoordinatedEffort() {
     coordEffortRef.current = null
     setCoordEffortTick(t => t + 1)
+  }
+
+  // Withdraw a single participant from an active Coordinated Effort.
+  // Per Xero's design call (2026-05-17): if a participant has to drop
+  // mid-chain, the math fully retcons - every already-rolled chain
+  // row gets cmod -= 1 / total -= 1 / outcome recomputed, the new
+  // bonus going forward is (newTotal - 1).
+  //
+  // Edge: if the WITHDRAWING participant has already rolled, their
+  // own row stays untouched (they took the action; the bonus they
+  // had at the time stays in the log).  Everyone else gets the
+  // retcon. We tag rows as "already rolled" by checking
+  // character_name against the leaving participant.
+  async function withdrawFromCoordinatedEffort(characterId: string) {
+    const cef = coordEffortRef.current
+    if (!cef || !cef.isActive) return
+    // Identify the leaving participant by character name (roll_log
+    // stores names, not ids).
+    const leaver = entries.find(e => e.character.id === characterId)
+    if (!leaver) return
+    if (!confirm(`Withdraw ${leaver.character.name} from the Coordinated Effort? Every other participant's already-logged roll will have -1 CMod / -1 total / outcome recomputed.`)) return
+    // Pull every row in the chain that ISN'T the leaver's own roll.
+    const { data: chainRows, error: fetchErr } = await supabase
+      .from('roll_log')
+      .select('id, die1, die2, amod, smod, cmod, total, character_name')
+      .eq('coord_chain_id', cef.chainId)
+    if (fetchErr) {
+      alert(`Withdraw failed: ${fetchErr.message}`)
+      return
+    }
+    const toRetcon = (chainRows ?? []).filter((r: any) => r.character_name !== leaver.character.name)
+    // Apply -1 to cmod + total, recompute outcome from the saved
+    // d2 + d2 + mods. Insight pair (die1===die2) flips outcome to
+    // High/Low Insight per canon - getOutcome handles that already.
+    await Promise.all(toRetcon.map(async (r: any) => {
+      const newCmod = (r.cmod ?? 0) - 1
+      const newTotal = (r.total ?? 0) - 1
+      const newOutcome = getOutcome(newTotal, r.die1, r.die2)
+      await supabase
+        .from('roll_log')
+        .update({ cmod: newCmod, total: newTotal, outcome: newOutcome })
+        .eq('id', r.id)
+    }))
+    // Drop the leaver from the chain. Decrement totalParticipants
+    // so forward rolls use the new bonus baseline.
+    coordEffortRef.current = {
+      ...cef,
+      participantIds: cef.participantIds.filter(pid => pid !== characterId),
+      totalParticipants: Math.max(1, cef.totalParticipants - 1),
+    }
+    setCoordEffortTick(t => t + 1)
+    // If only one participant remains, the chain has nothing left
+    // to coordinate - tear it down.
+    if (coordEffortRef.current!.totalParticipants <= 1) {
+      endCoordinatedEffort()
+    }
   }
 
   function getAutoRangeBand(attackerCharId?: string, attackerNpcId?: string, targetName?: string): 'engaged' | 'close' | 'medium' | 'long' | 'distant' | null {
@@ -4696,6 +4757,21 @@ export default function TablePage() {
       ? { ...(damageData || {}), die3 }
       : (damageData || null)
 
+    // Stamp the Coord Effort chain id on every roll that belongs to
+    // the active chain. The withdraw-retcon handler queries roll_log
+    // by this id to find every row needing cmod -= 1 / total -= 1 /
+    // outcome recomputed. Chain participants are matched by character
+    // name vs participantIds → entries lookup.
+    const cef = coordEffortRef.current
+    let coordChainId: string | null = null
+    if (cef && (cef.isActive || cef.leadRollPending)) {
+      const isParticipantRoll = cef.participantIds.some(pid => {
+        const ent = entries.find(e => e.character.id === pid)
+        return ent?.character.name === characterName
+      })
+      if (isParticipantRoll) coordChainId = cef.chainId
+    }
+
     await supabase.from('roll_log').insert({
       campaign_id: id, user_id: userId, character_name: characterName,
       label: isReroll ? `${label} (Re-roll)` : label,
@@ -4707,6 +4783,7 @@ export default function TablePage() {
       // stacks) and 3d6 spends where d2+d3 ≤ 6 (the legacy heuristic
       // misses ~17% of those).
       insight_used: insightUsed,
+      coord_chain_id: coordChainId,
     })
     logEvent('roll', { campaign_id: id, label, total, outcome, target, character: characterName })
 
@@ -7208,10 +7285,30 @@ export default function TablePage() {
                 {' '}= <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{sign}{coordBonus + cef.leadCmod} CMod</span>
               </span>
             </div>
-            <button onClick={endCoordinatedEffort}
-              style={{ padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              End Effort
-            </button>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Per-participant Withdraw chips. One per character
+                  still in the chain. Click → retcon every other
+                  participant's logged rolls by -1 CMod / -1 total /
+                  outcome recomputed (Option B locked 2026-05-17).
+                  Should rarely fire - canon expects committed chains
+                  to ride to the end - but GM + table consensus can
+                  force it. */}
+              {cef.participantIds.map(pid => {
+                const ent = entries.find(e => e.character.id === pid)
+                if (!ent) return null
+                return (
+                  <button key={pid} onClick={() => withdrawFromCoordinatedEffort(pid)}
+                    title={`Withdraw ${ent.character.name} from the chain - retcons everyone else's already-rolled CMod by -1`}
+                    style={{ padding: '4px 8px', background: '#2a1210', border: '1px solid #5a3a3a', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    🚪 {ent.character.name}
+                  </button>
+                )
+              })}
+              <button onClick={endCoordinatedEffort}
+                style={{ padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                End Effort
+              </button>
+            </div>
           </div>
         )
       })()}
