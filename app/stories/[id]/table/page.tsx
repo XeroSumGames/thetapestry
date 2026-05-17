@@ -19,6 +19,7 @@ import InitiativeBar from '../../../../components/InitiativeBar'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
 import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components/RollsFeed'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -553,15 +554,15 @@ export default function TablePage() {
   useEffect(() => {
     if (!id) return
     const channel = supabase.channel(`init-scene-tags-${id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'scene_tokens' }, () => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'scene_tokens' }, wrapDbChange('scene_tokens:UPDATE', () => {
         setTokenScenesRefreshKey(k => k + 1)
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scene_tokens' }, () => {
+      }))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scene_tokens' }, wrapDbChange('scene_tokens:INSERT', () => {
         setTokenScenesRefreshKey(k => k + 1)
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${id}` }, () => {
+      }))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${id}` }, wrapDbChange('tactical_scenes:UPDATE', () => {
         setTokenScenesRefreshKey(k => k + 1)
-      })
+      }))
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [id, supabase])
@@ -1320,9 +1321,9 @@ export default function TablePage() {
         await loadRevealedNpcs(null, cnpcs)
         if (cancelled) return
         revealChannelRef.current = supabase.channel(`reveals_${id}`)
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, () => {
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, wrapDbChange('npc_relationships:*', () => {
             loadRevealedNpcs(null, cnpcs)
-          })
+          }))
           .subscribe()
       } else {
         const myMember = (members ?? []).find((m: any) => m.user_id === user.id)
@@ -1331,9 +1332,9 @@ export default function TablePage() {
           await loadRevealedNpcs(myMember.character_id, cnpcs)
           if (cancelled) return
           revealChannelRef.current = supabase.channel(`reveals_${id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, () => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, wrapDbChange('npc_relationships:*', () => {
               if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, cnpcs)
-            })
+            }))
             .subscribe()
         }
       }
@@ -1342,19 +1343,19 @@ export default function TablePage() {
       // Keep the community map fresh - when an NPC is recruited, the
       // player roster should immediately show the community bucket.
       communityMembersChannelRef.current = supabase.channel(`community_members_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, wrapDbChange('community_members:*', () => {
           loadPlayerNpcCommunityMap(id)
-        })
+        }))
         .subscribe()
 
       if (cancelled) return
       channelRef.current = supabase.channel(`table_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, wrapDbChange('character_states:*', () => loadEntries(id)))
         .subscribe()
 
       if (cancelled) return
       membersChannelRef.current = supabase.channel(`members_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members', filter: `campaign_id=eq.${id}` }, async () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members', filter: `campaign_id=eq.${id}` }, wrapDbChange('campaign_members:*', async () => {
           // Refetch members with character data, ensure their character_state exists,
           // then refresh entries. Without ensureCharacterStates here, a player who
           // picks a character won't appear in the GM's table until they navigate to
@@ -1368,7 +1369,7 @@ export default function TablePage() {
             await ensureCharacterStates(id, refreshedMembers as any[])
           }
           await loadEntries(id)
-        })
+        }))
         .subscribe()
 
       // Chat realtime channel now lives inside useChatPanel - no
@@ -1376,23 +1377,23 @@ export default function TablePage() {
 
       if (cancelled) return
       initChannelRef.current = supabase.channel(`initiative_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
-        .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) })
-        .on('broadcast', { event: 'player_kicked' }, (msg: any) => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, wrapDbChange('initiative_order:*', () => loadInitiative(id)))
+        .on('broadcast', { event: 'combat_ended' }, wrapBroadcast('combat_ended', () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) }))
+        .on('broadcast', { event: 'player_kicked' }, wrapBroadcast('player_kicked', (msg: any) => {
           if (msg.payload?.userId === user.id) {
             alert('You have been removed from this session by the GM.')
             window.location.href = `/stories/${id}`
           }
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, (payload: any) => {
+        }))
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, wrapDbChange('notifications:INSERT', (payload: any) => {
           if (payload.new?.type === 'session_kick') {
             alert('You have been removed from this session by the GM.')
             window.location.href = `/stories/${id}`
           }
-        })
-        .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); rollsFeed.refetch() })
-        .on('broadcast', { event: 'tactical_shared' }, (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); setShowTacticalMap(msg.payload?.shared ?? false) })
-        .on('broadcast', { event: 'tactical_unshared' }, () => { setTacticalShared(false); setShowTacticalMap(false) })
+        }))
+        .on('broadcast', { event: 'combat_started' }, wrapBroadcast('combat_started', () => { loadInitiative(id); rollsFeed.refetch() }))
+        .on('broadcast', { event: 'tactical_shared' }, wrapBroadcast('tactical_shared', (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); setShowTacticalMap(msg.payload?.shared ?? false) }))
+        .on('broadcast', { event: 'tactical_unshared' }, wrapBroadcast('tactical_unshared', () => { setTacticalShared(false); setShowTacticalMap(false) }))
         // GM force-push view: when a scene is activated AND the GM has
         // tactical-sharing on, every player's pane opens (or re-opens)
         // on the new scene so they automatically follow along. Without
@@ -1401,13 +1402,13 @@ export default function TablePage() {
         // re-opened the pane manually. Broadcast fires from the GM-side
         // activateScene paths in TacticalMap, /scene-controls-popout,
         // and the pin onOpenScene callback below.
-        .on('broadcast', { event: 'scene_activated' }, () => {
+        .on('broadcast', { event: 'scene_activated' }, wrapBroadcast('scene_activated', () => {
           if (tacticalSharedRef.current) setShowTacticalMap(true)
           setTokenRefreshKey(k => k + 1)
-        })
-        .on('broadcast', { event: 'token_changed' }, () => { setTokenRefreshKey(k => k + 1) })
-        .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() })
-        .on('broadcast', { event: 'turn_advance_requested' }, async () => {
+        }))
+        .on('broadcast', { event: 'token_changed' }, wrapBroadcast('token_changed', () => { setTokenRefreshKey(k => k + 1) }))
+        .on('broadcast', { event: 'turn_changed' }, wrapBroadcast('turn_changed', () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() }))
+        .on('broadcast', { event: 'turn_advance_requested' }, wrapBroadcast('turn_advance_requested', async () => {
           // A remote page (e.g. /vehicle popout firing a mounted weapon)
           // decremented an action and hit 0. We own the nextTurn state
           // here, so run the full advance flow on its behalf. nextTurn
@@ -1415,16 +1416,16 @@ export default function TablePage() {
           // call unconditionally. BUG-3 from the 2026-05-04 playtest fix.
           await nextTurn()
           await loadInitiative(id)
-        })
-        .on('broadcast', { event: 'logs_cleared' }, () => {
+        }))
+        .on('broadcast', { event: 'logs_cleared' }, wrapBroadcast('logs_cleared', () => {
           // GM started/ended a session - clear local chat + roll state, then
           // refetch from DB so every client converges to the post-clear state.
           rollsFeed.clear()
           chat.clear()
           rollsFeed.refetch()
           chat.refetch()
-        })
-        .on('broadcast', { event: 'npc_damaged' }, async (msg: any) => {
+        }))
+        .on('broadcast', { event: 'npc_damaged' }, wrapBroadcast('npc_damaged', async (msg: any) => {
           // Another client dealt damage to an NPC - apply the patch locally.
           // Two payload shapes:
           //   - { npcId, patch } - single-target attack (legacy, fast path)
@@ -1459,32 +1460,32 @@ export default function TablePage() {
               }))
             }
           }
-        })
-        .on('broadcast', { event: 'pc_damaged' }, (msg: any) => {
+        }))
+        .on('broadcast', { event: 'pc_damaged' }, wrapBroadcast('pc_damaged', (msg: any) => {
           // Another client dealt damage to a PC - apply optimistic patch then refresh
           const { stateId: sid, patch } = msg.payload ?? {}
           if (sid && patch) {
             setEntries(prev => prev.map(e => e.stateId === sid ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
           }
           loadEntries(id)
-        })
-        .on('broadcast', { event: 'inventory_transfer' }, () => {
+        }))
+        .on('broadcast', { event: 'inventory_transfer' }, wrapBroadcast('inventory_transfer', () => {
           // Another player gave an item - refresh entries to see updated inventory
           loadEntries(id)
-        })
-        .on('broadcast', { event: 'pc_mortal_wound' }, (msg: any) => {
+        }))
+        .on('broadcast', { event: 'pc_mortal_wound' }, wrapBroadcast('pc_mortal_wound', (msg: any) => {
           // Show insight save modal on the player's screen or GM's screen
           const data = msg.payload
           if (data && (data.targetUserId === userId || gmLike)) {
             setInsightSavePrompt(data)
           }
-        })
-        .on('broadcast', { event: 'pc_mortal_wound_resolved' }, () => {
+        }))
+        .on('broadcast', { event: 'pc_mortal_wound_resolved' }, wrapBroadcast('pc_mortal_wound_resolved', () => {
           // Another client resolved the insight save - close our modal and refresh
           setInsightSavePrompt(null)
           loadEntries(id)
-        })
-        .on('broadcast', { event: 'lasting_damage_check_request' }, (msg: any) => {
+        }))
+        .on('broadcast', { event: 'lasting_damage_check_request' }, wrapBroadcast('lasting_damage_check_request', (msg: any) => {
           // Day-0 Lasting Damage check (canon §06.lasting-damage). Fired
           // by drainInfectionDays in lib/campaign-clock.ts when an
           // infected character's days_left hits 0 with severity='check'.
@@ -1518,8 +1519,8 @@ export default function TablePage() {
             phyAmod = (npcRow as any)?.physicality ?? 0
           }
           handleRollRequest(`${data.name} - Lasting Damage Check`, phyAmod, 0)
-        })
-        .on('broadcast', { event: 'infection_check_request' }, (msg: any) => {
+        }))
+        .on('broadcast', { event: 'infection_check_request' }, wrapBroadcast('infection_check_request', (msg: any) => {
           // End-of-combat Wound Infection check (canon §06). The GM's
           // endCombat broadcasts this for every wounded PC, scoped to
           // that PC's owning userId. The target's client opens the
@@ -1538,12 +1539,12 @@ export default function TablePage() {
           const data = msg.payload
           if (!data || data.targetUserId !== userIdRef.current) return
           handleRollRequest(`${data.name} - Infection Check (Wound)`, data.amod ?? 0, 0)
-        })
+        }))
         // Players' postgres_changes subscription on npc_relationships is
         // unreliable (RLS / publication), so mid-combat reveals go over this
         // broadcast channel instead. Refetch cnpcs fresh so newly-added roster
         // NPCs aren't missed due to a stale closure.
-        .on('broadcast', { event: 'npcs_revealed' }, async () => {
+        .on('broadcast', { event: 'npcs_revealed' }, wrapBroadcast('npcs_revealed', async () => {
           const { data: fresh } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
           const freshList = fresh ?? []
           if (freshList.length > 0) {
@@ -1555,12 +1556,12 @@ export default function TablePage() {
             }))
           }
           loadRevealedNpcs(myCharIdRef.current, freshList)
-        })
+        }))
         .subscribe()
 
       if (cancelled) return
       campaignChannelRef.current = supabase.channel(`campaign_${id}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${id}` }, (payload: any) => {
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${id}` }, wrapDbChange('campaigns:UPDATE', (payload: any) => {
           const row = payload.new
           setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
           setSessionCount(row.session_count ?? 0)
@@ -1575,7 +1576,7 @@ export default function TablePage() {
           if (Array.isArray(row.vehicles)) {
             setVehicles(row.vehicles)
           }
-        })
+        }))
         .subscribe()
 
       if (cancelled) return
@@ -1583,7 +1584,7 @@ export default function TablePage() {
       // the DB but the GM (and players) keep seeing the old HP because
       // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
       npcsChannelRef.current = supabase.channel(`campaign_npcs_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, (payload: any) => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, wrapDbChange('campaign_npcs:*', (payload: any) => {
           // For UPDATEs, apply the row from the payload directly - no round trip,
           // no race with the in-flight-ref guard. INSERT/DELETE fall through to
           // a full refetch since payload.new may be incomplete/absent.
@@ -1622,7 +1623,7 @@ export default function TablePage() {
               }))
             }
           })()
-        })
+        }))
         .subscribe()
 
       if (cancelled) return

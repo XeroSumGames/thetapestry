@@ -15,7 +15,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [x] ~~**R3 — Sentry user context.**~~ SHIPPED 2026-05-17 (`1894455`). `Sentry.setUser({ id: user.id })` wired into `lib/auth-cache.ts` — central choke point, covers every consumer of `getCachedAuth`. ID only, no email/username/role.
 - [ ] **R4 — Slack webhook.** Wire Sentry -> #alerts Slack channel. ~15 min config.
 - [ ] **R5 — `/api/health` endpoint.** Ping Supabase auth + dummy DB query; return 200/503. Pair with free uptime monitor.
-- [ ] **R6 — Realtime handler try/catch.** Wrap each broadcast listener in `app/stories/[id]/table/page.tsx:1380-1559`; `Sentry.captureException` on catch.
+- [x] ~~**R6 — Realtime handler try/catch.**~~ SHIPPED 2026-05-17. `lib/sentry-realtime.ts` exposes `wrapBroadcast(name, fn)` + `wrapDbChange(name, fn)`; every realtime listener in `app/stories/[id]/table/page.tsx` is wrapped (18 broadcast + 12 postgres_changes = 30 handlers). Exceptions go to console + Sentry with `realtime_kind` + `realtime_event` tags; one bad payload no longer breaks the dispatch chain. Direct prep for Phase 3 page.tsx decomposition - every handler is now an independently-observable failure mode.
 - [ ] **Y1 — Edge function role normalization.** `supabase/functions/delete-user/index.ts:70` add `.toLowerCase()` or normalize.
 - [ ] **Y2 — `notify-thriver` caller auth.** Add thriver role check + Authorization header JWT verification in `supabase/functions/notify-thriver/index.ts`.
 - [ ] **Y3 — moderation_status CHECK / RPC.** DB-side CHECK or RPC validation so clients cannot craft `moderation_status='approved'` + fake `approved_by` on forum/war-story/lfg inserts.
