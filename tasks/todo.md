@@ -36,7 +36,7 @@
 - [ ] **King's Crossroads Mall — tactical scenes** — author battle maps and wire into [lib/setting-scenes.ts](../lib/setting-scenes.ts) under `kings_crossroads_mall` (NOTE: key is `kings_crossroads_mall`, NOT `kings_crossing_mall`)
 - [ ] **King's Crossroads Mall — handouts** — port broadcasts/journals into [lib/setting-handouts.ts](../lib/setting-handouts.ts) under same key
 - [ ] **Streamline player login flow** — too many steps; needs design call before build
-- [ ] **PCs riding vehicles don't move with the vehicle** — BUG-2 from 2026-05-04 playtest; passenger stickiness unimplemented for Minnie + other vehicles
+- [x] ~~**PCs riding vehicles don't move with the vehicle**~~ — RESOLVED 2026-05-16 by the vanish-inside-vehicle model + canvas redraw deps fix (commits `8ee54f4` + `16e33d6`). Aboard tokens are hidden from the canvas; the passenger-count badge rides on the vehicle token. No ghost tokens left behind. Xero confirmed fixed in playtest.
 - [ ] **Tactical map pan via mouse drag — broken** ([tasks/long-term-fixes.md](long-term-fixes.md)). WASD/arrow workaround exists. Deferred since 2026-04-27.
 
 ### Bigger builds
