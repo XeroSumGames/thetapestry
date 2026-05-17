@@ -1,5 +1,19 @@
 # Lessons Learned
 
+## Canvas redraw deps - when state updates but the screen doesn't (2026-05-16)
+
+If a feature lives inside an imperative draw function (`draw()` / `render()` etc) called from a `useEffect(() => { draw() }, [...deps])`, and the feature reads a value via closure - **that value must be in the deps array**. Otherwise:
+
+- Parent state updates fire.
+- Component re-renders with new props.
+- Canvas keeps painting the old frame because draw() never re-runs.
+
+Symptom: hard refresh works (mount-time draw sees fresh data), live updates don't.
+
+Spent half a day on this one chasing realtime / broadcast / localStorage cross-tab signaling when all four signal paths were working perfectly - the canvas just wasn't being told to repaint. Vehicle aboard-filter case: `vehicles` was missing from the `draw()` useEffect deps in components/TacticalMap.tsx.
+
+**Check pattern for imperative canvas/draw features:** every prop or state value the draw function reads must appear in the deps array of the useEffect that invokes it.
+
 ## ALWAYS VERIFY. NEVER GO FROM MEMORY.
 
 **If Einstein didn't trust memory, why would we?** (locked 2026-05-17)
