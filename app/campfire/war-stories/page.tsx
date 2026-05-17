@@ -396,8 +396,16 @@ export default function WarStoriesPage() {
 
     // Upload each picked file to <author>/<story>/<filename>. upsert:true
     // lets an editor overwrite a same-named file instead of erroring.
+    // Pre-launch audit Y6: cap at 10MB per file. Without this the bucket
+    // would happily accept a 100MB image and serve it back to every
+    // reader, blowing through bandwidth budget.
+    const MAX_BYTES = 10 * 1024 * 1024
     const uploaded: Attachment[] = []
     for (const file of newFiles) {
+      if (file.size > MAX_BYTES) {
+        alert(`${file.name} is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB.`)
+        continue
+      }
       const path = `${myId}/${storyId}/${file.name}`
       const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true })
       if (upErr) { alert(`Upload failed for ${file.name}: ${upErr.message}`); continue }

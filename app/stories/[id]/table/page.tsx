@@ -766,7 +766,10 @@ export default function TablePage() {
     ;(async () => {
       const [{ data: comm }, { data: stockpile }] = await Promise.all([
         supabase.from('communities').select('id, name, leader_npc_id, leader_user_id').eq('id', tradeTarget.id).maybeSingle(),
-        supabase.from('community_stockpile_items').select('*').eq('community_id', tradeTarget.id).order('name'),
+        // Pre-launch audit Y7: cap at 500. Long-running campaigns can
+        // accumulate large stockpiles; rendering more in the trade modal
+        // is not the UX we want anyway. 500 is well above realistic.
+        supabase.from('community_stockpile_items').select('*').eq('community_id', tradeTarget.id).order('name').limit(500),
       ])
       if (cancelled) return
       // Resolve leader's Barter SMod. Leader could be an NPC or a PC.

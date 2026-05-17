@@ -262,14 +262,26 @@ export default function LfgPage() {
       return
     }
     const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
-    // Pull all interests we're allowed to see in one shot. RLS already
-    // restricts this to (a) our own interests and (b) interests on posts
-    // we authored — so nothing private leaks.
-    const { data: ints } = await supabase
-      .from('lfg_interests')
-      .select('post_id, interested_user_id')
-
-    const intRows = (ints ?? []) as { post_id: string; interested_user_id: string }[]
+    // Pre-launch audit R7. Previously this fetched every lfg_interests
+    // row visible via RLS in one unbounded query — at scale (10k posts +
+    // power authors with hundreds of interest replies each) that fails.
+    // Split into two bounded queries, each cheap:
+    //   1. my own interests (naturally bounded by user's own activity)
+    //   2. interest rosters for the visible posts I authored
+    const myId0 = (await getCachedAuth()).user?.id ?? null
+    const myAuthoredInList = list.filter(p => p.author_user_id === myId0).map(p => p.id)
+    const [{ data: ownInts }, { data: rosterInts }] = await Promise.all([
+      myId0
+        ? supabase.from('lfg_interests').select('post_id, interested_user_id').eq('interested_user_id', myId0)
+        : Promise.resolve({ data: [] }),
+      myAuthoredInList.length > 0
+        ? supabase.from('lfg_interests').select('post_id, interested_user_id').in('post_id', myAuthoredInList)
+        : Promise.resolve({ data: [] }),
+    ])
+    const intRows = [
+      ...((ownInts ?? []) as { post_id: string; interested_user_id: string }[]),
+      ...((rosterInts ?? []) as { post_id: string; interested_user_id: string }[]),
+    ]
 
     const interestUserIds = intRows.map(r => r.interested_user_id)
     const allUserIds = Array.from(new Set([...authorIds, ...interestUserIds]))
@@ -280,7 +292,7 @@ export default function LfgPage() {
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
     const avatarMap: Record<string, string | null> = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
 
-    const myCurrentId = (await getCachedAuth()).user?.id ?? null
+    const myCurrentId = myId0
     const myInts = new Set<string>()
     const byPost: Record<string, { user_id: string; username: string }[]> = {}
     intRows.forEach(r => {

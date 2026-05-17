@@ -1,9 +1,25 @@
 /**
  * Resize an image file to fit within maxSize x maxSize pixels.
  * Returns a base64 data URL (JPEG at 80% quality).
+ *
+ * Pre-launch audit Y6: reject anything over MAX_INPUT_BYTES up front
+ * instead of letting the browser try to decode it. A 100MB TIFF would
+ * grind a low-end client to a halt before this check existed.
  */
+export const MAX_INPUT_BYTES = 10 * 1024 * 1024  // 10 MB
+export class ImageTooLargeError extends Error {
+  constructor(public size: number) {
+    super(`Image too large (${(size / 1024 / 1024).toFixed(1)} MB). Max ${MAX_INPUT_BYTES / 1024 / 1024} MB.`)
+    this.name = 'ImageTooLargeError'
+  }
+}
+
 export function resizeImage(file: File, maxSize = 256): Promise<string> {
   return new Promise((resolve, reject) => {
+    if (file.size > MAX_INPUT_BYTES) {
+      reject(new ImageTooLargeError(file.size))
+      return
+    }
     const img = new Image()
     img.onload = () => {
       let { width, height } = img
