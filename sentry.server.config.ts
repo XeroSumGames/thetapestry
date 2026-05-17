@@ -2,6 +2,7 @@
 // params that can carry auth secrets are scrubbed in beforeSend.
 
 import * as Sentry from "@sentry/nextjs";
+import { dropBenignEvent } from "./lib/sentry-filters";
 
 Sentry.init({
   dsn: "https://15db6e222c63c57dbbf88464fb067958@o4511332957683712.ingest.us.sentry.io/4511332964237312",
@@ -18,6 +19,6 @@ Sentry.init({
       if ("authorization" in headers) headers.authorization = "[Filtered]";
       if ("cookie" in headers) headers.cookie = "[Filtered]";
     }
-    return event;
+    return dropBenignEvent(event);
   },
 });

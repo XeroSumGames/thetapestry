@@ -4,6 +4,7 @@
 // are scrubbed in beforeSend.
 
 import * as Sentry from "@sentry/nextjs";
+import { dropBenignEvent } from "./lib/sentry-filters";
 
 Sentry.init({
   dsn: "https://15db6e222c63c57dbbf88464fb067958@o4511332957683712.ingest.us.sentry.io/4511332964237312",
@@ -12,7 +13,8 @@ Sentry.init({
   tracesSampleRate: 0.1,
 
   beforeSend(event) {
-    return scrubAuthSecrets(event);
+    const scrubbed = scrubAuthSecrets(event);
+    return dropBenignEvent(scrubbed);
   },
 });
 
