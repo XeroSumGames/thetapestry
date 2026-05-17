@@ -30,7 +30,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [x] ~~**Y7 — community_stockpile limit.**~~ SHIPPED 2026-05-17. `.limit(500)` added to the trade-modal stockpile query at `app/stories/[id]/table/page.tsx:769`. 500 is comfortably above realistic long-campaign stockpiles; the UX wouldn't render more anyway.
 
 **Phase 2 — Schema sanity**
-- [ ] **R9 — Canonical `initiative_order` DDL.** Reconstruct CREATE TABLE from live DB; commit as `sql/000_create_initiative_order.sql`.
+- [x] ~~**R9 — Canonical `initiative_order` DDL.**~~ SHIPPED 2026-05-17. `sql/000-initiative-order-canonical-2026-05-17.sql` reverse-engineered from live DB: 24 columns + types + defaults + NOT NULLs + FK on campaign_id (CASCADE) + ALL 5 RLS policies + thriver bypass. Idempotent. Bonus finding: added `idx_initiative_order_campaign (campaign_id, roll DESC)` — the table previously had ONLY the pkey, so every initiative load was a seq scan.
 - [ ] **R10 — Migration ordering discipline.** Adopt Supabase `migrations/` directory for new work; one-time audit of `sql/` to produce ordered applied-list.
 - [ ] **R12 — User-delete cascade for characters / character_states.** Define stance; fix FKs; add end-to-end deletion test.
 - [ ] **Y11 — Soft-delete stance per table.** Document which tables soft-delete vs hard-delete; converge inconsistencies.
