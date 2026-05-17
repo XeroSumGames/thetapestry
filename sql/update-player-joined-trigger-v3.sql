@@ -62,3 +62,17 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ── Triggers ────────────────────────────────────────────────────
+-- on_player_joined is defined in sql/pass2-notification-triggers.sql
+-- and continues to use the v3 function body via CREATE OR REPLACE above.
+--
+-- on_character_changed was created manually in the dashboard when the v3
+-- function was added; the CREATE TRIGGER was missing from this file
+-- until the 2026-05-17 schema-drift report surfaced it. Restoring the
+-- canonical CREATE TRIGGER here so the file is self-contained.
+DROP TRIGGER IF EXISTS on_character_changed ON public.campaign_members;
+CREATE TRIGGER on_character_changed
+  AFTER UPDATE ON public.campaign_members
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_character_changed();
