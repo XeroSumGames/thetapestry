@@ -5839,6 +5839,45 @@ export default function TablePage() {
         }
         healResult = `Botched treatment - ${hp.targetName} loses 1 WP.`
       } else if (infectionPrompt) {
+        // Heal-LI cascade (canon §06): the medic botched in a way that
+        // infects the wound. Patient owes a PHY Infection Check. Route
+        // it through the same broadcast pipeline the end-of-combat
+        // sweep uses (init channel + 'infection_check_request' event,
+        // listener at L1522).
+        //   - PC patient with a different owning user: broadcast,
+        //     scoped to their userId; the owning client opens the
+        //     standard roll modal so the player rolls their own check.
+        //   - PC patient who is the medic themselves (self-heal LI):
+        //     open locally - no point round-tripping a broadcast back.
+        //   - NPC patient: GM rolls. Push onto pendingInfectionChecksRef
+        //     so it drains through closeRollModal's queue like the
+        //     end-of-combat case; if no modal is open right now, fire
+        //     the first one immediately.
+        const targetEntry = entries.find(e => e.character.id === hp.targetCharId)
+        const targetNpc = !targetEntry ? campaignNpcs.find((n: any) => n.name === hp.targetName) : null
+        if (targetEntry) {
+          const targetPhy = targetEntry.character.data?.rapid?.PHY ?? 0
+          if (targetEntry.userId && targetEntry.userId !== userIdRef.current) {
+            initChannelRef.current?.send({
+              type: 'broadcast',
+              event: 'infection_check_request',
+              payload: { targetUserId: targetEntry.userId, name: hp.targetName, amod: targetPhy },
+            })
+          } else {
+            // Self-heal LI, or owning user is the current client - just open.
+            handleRollRequest(`${hp.targetName} - Infection Check (Wound)`, targetPhy, 0)
+          }
+        } else if (targetNpc) {
+          const npcPhy = (targetNpc as any).physicality ?? 0
+          // If the post-resolve flow has another modal still active
+          // (rare - this branch runs at modal close), queue; otherwise
+          // open the check modal now.
+          if (pendingRoll) {
+            pendingInfectionChecksRef.current.push({ name: hp.targetName, amod: npcPhy })
+          } else {
+            handleRollRequest(`${hp.targetName} - Infection Check (Wound)`, npcPhy, 0)
+          }
+        }
         healResult = `Botched treatment - ${hp.targetName} must make a Wound Infection check.`
       } else {
         healResult = 'Treatment failed - no effect.'
