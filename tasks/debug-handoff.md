@@ -7,7 +7,7 @@ Diagnostic companion to `tasks/handoff.md`. Open this file when:
 - A playtest surfaces a regression and you need to triage it under pressure.
 - You're deciding "is this a quick fix or a structural issue?"
 
-Updated when architecture/risk shifts, not every session. Last full review: 2026-05-16.
+Updated when architecture/risk shifts, not every session. Last full review: 2026-05-16 (added test-infra paid-down entry; updated Confidence Ledger TESTED row from "nothing" to 141-test inventory).
 
 ---
 
@@ -82,11 +82,11 @@ Each entry: what we did, what it costs today, what it costs if untouched in 6 mo
 - **Cost in 6 months:** more sites accumulate, type guarantees erode further.
 - **Right fix when ready:** define a `DamagePayload` interface, type the writes, type the reads.
 
-### No automated tests
-- **What:** zero test files. Guardrail scripts (font sizes, role literals) exist but those are linters, not tests.
-- **Cost today:** every refactor is "typecheck passed, fingers crossed." Regressions land in production for users to find.
-- **Cost in 6 months:** the bigger the codebase gets, the more this hurts. Refactor velocity drops because each one feels riskier.
-- **Right fix when ready:** Vitest + unit tests on the high-value pure helpers in `lib/`. ~60 tests covering 80% of game logic is achievable in a single afternoon of setup work. See `tasks/debug-handoff.md#5-pre-ship-checklist` for what tests would have caught today.
+### ~~No automated tests~~ — **PAID DOWN 2026-05-16**
+- **Was:** zero test files. Every refactor was "typecheck passed, fingers crossed."
+- **Now:** 141 unit tests across 7 files in `tests/lib/` cover the high-value pure helpers (roll-helpers, cdp-costs, community-logic, encumbrance, damage, xse-engine, roll-outcomes). Pre-commit hook runs the suite (~230ms); GitHub Actions runs it again on every push.
+- **Still missing:** component tests, integration tests against a real DB, E2E browser tests. Those land separately if/when warranted - the cost/benefit on those is much higher than on pure-helper unit tests.
+- **Habit going forward:** every bug we fix gets one test added. Over months that suite grows to cover real failure modes, not hypothetical ones.
 
 ### `compactRollSummary` parses labels via regex
 - **What:** `lib/roll-helpers.ts` derives structured data ("X searched the corpse of Y") by regex-matching the `label` field.
@@ -100,7 +100,7 @@ Each entry: what we did, what it costs today, what it costs if untouched in 6 mo
 
 Mapped to: if a player reports a bug in area X today, how surprised should I be?
 
-- **TESTED (automated):** nothing yet. Test setup is queued (see Sec. 5).
+- **TESTED (automated):** 141 unit tests across `tests/lib/` covering roll-helpers (getOutcome, outcomeColor, compactRollSummary verbatim branches), cdp-costs (the full cost ladder + Lv4 gate), community-logic (morale CMod / departure pct / labor pool math / departure picker priority), encumbrance (limit math + backpack + overload), damage (DM stacking + Stun rpFromRaw + reactive-melee-only armor), xse-engine (cumulative attrs/skills + step up/down), roll-outcomes (every OUTCOME constant value locked). Suite runs in ~230ms on every commit + every push to main.
 - **TYPECHECKED + GUARDRAILS PASSED:** everything that shipped this week. Catches type errors, font sizes, role-literal violations. Does NOT catch logic bugs.
 - **PLAYTESTED RECENTLY (within last 2 weeks):** Phase 2 features, character sheet basics, weapon attack flow, Coordinated Effort partial.
 - **HOPED-FOR (shipped + typechecked but not played):**
@@ -140,6 +140,8 @@ This list belongs at the top of `tasks/handoff.md` too, as a daily reminder. The
 ---
 
 ## 6. What testing would have caught
+
+As of 2026-05-16 the listed examples below ARE covered. Kept here as a calibration record of what unit tests buy us.
 
 A look back at recent ships to calibrate "what would tests have prevented?"
 
