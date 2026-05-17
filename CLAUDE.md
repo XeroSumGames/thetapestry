@@ -1,4 +1,5 @@
 @AGENTS.md
+@tasks/operating-mode.md
 
 ## Workflow Orchestration
 ### Helping me:
