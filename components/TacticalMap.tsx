@@ -876,7 +876,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, wallRectStart, wallRectEnd, firingArcs, toggleLabel])
+  // `vehicles` MUST be in this dep array — the aboard-token filter +
+  // passenger-count badge live inside draw() and read from the
+  // vehicles prop via closure. Without this dep, boarding/disembarking
+  // updated parent state but the canvas kept rendering the prior frame
+  // until something else in the dep list happened to change. Cost is
+  // one extra draw per vehicle update (cheap — single rAF tick).
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, wallRectStart, wallRectEnd, firingArcs, toggleLabel, vehicles])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
