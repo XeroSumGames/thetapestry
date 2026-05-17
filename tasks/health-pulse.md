@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-17 15:10 UTC
+
+**Status:** DRIFT *(RED resolved — `next` upgraded to 16.2.6 since 12:13 check)*
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [141 passed]
+
+**Audit:** npm audit [clean] — `next` 16.2.6 confirmed installed; previous 3-check SSRF/DoS/bypass RED is now resolved.
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR 2026-05-13 batch (4 days, no playtest): Phase 3 a/b/c/d (campaign-clock drainers), 10 feed-audit drift fixes. Still unverified; risk accumulates.
+- HOPED-FOR 2026-05-14 batch (3 days, threshold): Coord Effort, Healing on time-tick, Year-0, Export Log, Weapon Repair, die3, Luxury Ration consume.
+
+**Action:** Audit RED resolved. Schedule live playtest of 2026-05-13 Phase 3 batch — campaign-clock drainers now 4 days unverified.
+
+---
+
 ## 2026-05-17 12:13 UTC
 
 **Status:** RED+DRIFT *(findings unchanged from 09:08 — no fix landed yet)*
