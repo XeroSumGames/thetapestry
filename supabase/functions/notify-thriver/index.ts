@@ -9,6 +9,17 @@ Deno.serve(async (req) => {
     return new Response('Method not allowed', { status: 405 })
   }
 
+  // Pre-launch audit Y2: gate this function on the service-role key.
+  // The only legitimate caller is the DB pg_net trigger
+  // (call_notify_thriver in sql/restore-call-notify-thriver.sql), which
+  // sends `Authorization: Bearer <service_role_key>`. Without this gate
+  // anyone with the function URL could spam every Thriver's inbox.
+  const authHeader = req.headers.get('Authorization') ?? ''
+  const expected = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+  if (authHeader !== expected) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
+  }
+
   try {
     const { type, title, body, link } = await req.json()
 

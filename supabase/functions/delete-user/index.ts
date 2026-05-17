@@ -52,14 +52,29 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_id, caller_id } = await req.json()
-    if (!user_id || !caller_id) {
-      return new Response(JSON.stringify({ error: 'user_id and caller_id required' }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+    const body = await req.json()
+    const user_id: string | undefined = body?.user_id
+    if (!user_id) {
+      return new Response(JSON.stringify({ error: 'user_id required' }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Authorization. Two callers are allowed:
+    // Authorization. Derive the caller from the Authorization Bearer JWT
+    // (pre-launch audit Y4) — do NOT trust caller_id from the request body.
+    // The body field is still accepted from legacy callers but ignored.
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Missing Authorization' }), { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+    }
+    const { data: callerData, error: callerErr } = await supabase.auth.getUser(token)
+    const caller_id = callerData?.user?.id
+    if (callerErr || !caller_id) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+    }
+
+    // Two callers are allowed:
     //   1. A Thriver deleting any other user (the original moderation flow).
     //   2. A user deleting their OWN account (the /account "Danger Zone"
     //      flow — required for GDPR-style data-deletion compliance).
@@ -67,7 +82,10 @@ Deno.serve(async (req) => {
     const isSelfDelete = user_id === caller_id
     if (!isSelfDelete) {
       const { data: caller } = await supabase.from('profiles').select('role').eq('id', caller_id).single()
-      if (!caller || caller.role !== 'thriver') {
+      // Pre-launch audit Y1: normalize the role compare. The DB trigger
+      // lowercases on write, but defense in depth costs us nothing.
+      const role = String(caller?.role ?? '').toLowerCase()
+      if (role !== 'thriver') {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
       }
     }

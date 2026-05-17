@@ -16,10 +16,10 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [ ] **R4 — Slack webhook.** Wire Sentry -> #alerts Slack channel. ~15 min config.
 - [ ] **R5 — `/api/health` endpoint.** Ping Supabase auth + dummy DB query; return 200/503. Pair with free uptime monitor.
 - [x] ~~**R6 — Realtime handler try/catch.**~~ SHIPPED 2026-05-17. `lib/sentry-realtime.ts` exposes `wrapBroadcast(name, fn)` + `wrapDbChange(name, fn)`; every realtime listener in `app/stories/[id]/table/page.tsx` is wrapped (18 broadcast + 12 postgres_changes = 30 handlers). Exceptions go to console + Sentry with `realtime_kind` + `realtime_event` tags; one bad payload no longer breaks the dispatch chain. Direct prep for Phase 3 page.tsx decomposition - every handler is now an independently-observable failure mode.
-- [ ] **Y1 — Edge function role normalization.** `supabase/functions/delete-user/index.ts:70` add `.toLowerCase()` or normalize.
-- [ ] **Y2 — `notify-thriver` caller auth.** Add thriver role check + Authorization header JWT verification in `supabase/functions/notify-thriver/index.ts`.
+- [x] ~~**Y1 — Edge function role normalization.**~~ SHIPPED 2026-05-17. delete-user role compare now `String(caller?.role ?? '').toLowerCase() !== 'thriver'` — defense-in-depth normalization on top of the DB trigger lowercase.
+- [x] ~~**Y2 — `notify-thriver` caller auth.**~~ SHIPPED 2026-05-17. Function rejects 403 unless `Authorization` header exactly matches `Bearer <SUPABASE_SERVICE_ROLE_KEY>`. Legitimate caller is pg_net via `call_notify_thriver()` which already sends that header. External URL-stuffing can no longer spam Thriver inboxes.
 - [ ] **Y3 — moderation_status CHECK / RPC.** DB-side CHECK or RPC validation so clients cannot craft `moderation_status='approved'` + fake `approved_by` on forum/war-story/lfg inserts.
-- [ ] **Y4 — `delete-user` derive caller from JWT.** Stop trusting `caller_id` from request body in `supabase/functions/delete-user/index.ts:55,70`.
+- [x] ~~**Y4 — `delete-user` derive caller from JWT.**~~ SHIPPED 2026-05-17. Caller identity now comes from `supabase.auth.getUser(token)` against the `Authorization` Bearer JWT. The legacy `caller_id` body field is still accepted (backward compat) but ignored. A spoofed body can no longer impersonate a Thriver to delete other users.
 
 **Phase 1 — Scalability blockers**
 - [ ] **R7 — Paginate lfg_interests.** `app/campfire/lfg/page.tsx:269` - add `.limit()` or batch only for visible posts.
