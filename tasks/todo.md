@@ -6,6 +6,41 @@
 
 ## 🎯 CURRENT OPEN — 2026-05-15
 
+### Pre-launch audit (2026-05-17, structural)
+Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md). Items below are the operational checklist.
+
+**Phase 0 — Observability + security YELLOW (do BEFORE any structural refactor)**
+- [ ] **R1 — Sentry PII scrub.** Remove `sendDefaultPii: true` from `instrumentation-client.ts:12`, `sentry.server.config.ts:12`, `sentry.edge.config.ts`. Add `beforeSend` filtering `auth`, `user`, query params.
+- [ ] **R2 — Sentry sample rate.** Set `tracesSampleRate: 0.1` in all three init blocks. Keep exception rate at 1.0.
+- [ ] **R3 — Sentry user context.** Call `Sentry.setUser({ id: user.id })` after auth resolves in the live-session page.
+- [ ] **R4 — Slack webhook.** Wire Sentry -> #alerts Slack channel. ~15 min config.
+- [ ] **R5 — `/api/health` endpoint.** Ping Supabase auth + dummy DB query; return 200/503. Pair with free uptime monitor.
+- [ ] **R6 — Realtime handler try/catch.** Wrap each broadcast listener in `app/stories/[id]/table/page.tsx:1380-1559`; `Sentry.captureException` on catch.
+- [ ] **Y1 — Edge function role normalization.** `supabase/functions/delete-user/index.ts:70` add `.toLowerCase()` or normalize.
+- [ ] **Y2 — `notify-thriver` caller auth.** Add thriver role check + Authorization header JWT verification in `supabase/functions/notify-thriver/index.ts`.
+- [ ] **Y3 — moderation_status CHECK / RPC.** DB-side CHECK or RPC validation so clients cannot craft `moderation_status='approved'` + fake `approved_by` on forum/war-story/lfg inserts.
+- [ ] **Y4 — `delete-user` derive caller from JWT.** Stop trusting `caller_id` from request body in `supabase/functions/delete-user/index.ts:55,70`.
+
+**Phase 1 — Scalability blockers**
+- [ ] **R7 — Paginate lfg_interests.** `app/campfire/lfg/page.tsx:269` - add `.limit()` or batch only for visible posts.
+- [ ] **R8 — scene_tokens index + scoped subscription.** Add `CREATE INDEX scene_tokens_scene_id_idx ON scene_tokens(scene_id)`; scope realtime sub at `app/stories/[id]/table/page.tsx:555` to current scene only.
+- [ ] **R11 — Index hot tables.** `(campaign_id, created_at)` on roll_log; `(conversation_id, created_at)` or `(campaign_id, created_at)` on chat_messages; `(user_id, created_at)` on notifications.
+- [ ] **Y5 — Batch npc_relationships loop.** `app/stories/[id]/table/page.tsx:1091-1092` - single `.in('character_id', charIds)` then fan-out locally.
+- [ ] **Y6 — Image upload size cap.** Pre-resize check at 5MB; verify Supabase storage bucket size policies for War Stories attachments.
+- [ ] **Y7 — community_stockpile limit.** Add `.limit(100)` at `app/stories/[id]/table/page.tsx:768`.
+
+**Phase 2 — Schema sanity**
+- [ ] **R9 — Canonical `initiative_order` DDL.** Reconstruct CREATE TABLE from live DB; commit as `sql/000_create_initiative_order.sql`.
+- [ ] **R10 — Migration ordering discipline.** Adopt Supabase `migrations/` directory for new work; one-time audit of `sql/` to produce ordered applied-list.
+- [ ] **R12 — User-delete cascade for characters / character_states.** Define stance; fix FKs; add end-to-end deletion test.
+- [ ] **Y11 — Soft-delete stance per table.** Document which tables soft-delete vs hard-delete; converge inconsistencies.
+- [ ] **Y12 — Backup / restore playbook.** Document PITR procedure + a tested restore drill.
+
+**Phase 3-5** (the four committed structural workstreams from chat — sequenced AFTER Phase 0-2)
+- [ ] **Decompose `app/stories/[id]/table/page.tsx`** (12,429 lines) - extract by concern into hooks + sub-components. Realtime subscription audit folds into this.
+- [ ] **Modal unification finish** - Stabilize / Distract / Group Check / Gut Instinct / First Impression to `<RollModal>` shape.
+- [ ] **CMod Stack extraction** - Recruit / Grapple / First Impression / Attack converge on shared component. Do LAST after Phase 3 reshapes table page.
+
 ### Untested live
 - [ ] **Polish-pass-2026-05-14 testplan** ([tasks/polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md)) — 11 sections covering everything that shipped 2026-05-14 (Coord Effort, Healing, Year-0, Campaign Sheet header/Edit Clock modal, Export Log, Luxury Ration, die3, Weapon Repair, CampaignObjects "found nothing", 4 polish bundles). Not playtested yet.
 - [ ] **Thriver-godmode-sweep testplan** ([tasks/thriver-godmode-sweep-testplan.md](thriver-godmode-sweep-testplan.md)) — 6 sections covering today's sweep (commit `07652f8` → merged `98d81c9`). Thriver-on-non-owned-campaign + GM regression + Survivor no-leak. Not playtested yet.

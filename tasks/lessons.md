@@ -1,5 +1,15 @@
 # Lessons Learned
 
+## Parallel-agent audit beats sequential survey (2026-05-17)
+
+`/pre-launch-audit` ran as 5 parallel Explore subagents (auth/RLS, payment, scalability, observability, data model), each with a focused brief + word budget + file:line citation requirement. Synthesis cost about 10 minutes after the agents returned. Total wall-clock under 30 minutes. The same audit done sequentially in the main context would have cost an order of magnitude more tokens and would have run out of context before finishing.
+
+**Pattern for structural audits:**
+- One axis per agent. Don't let agents overlap scope; have the synthesizer do the cross-referencing.
+- Give each agent the same boilerplate: known facts (so they don't rediscover), what to surface (numbered list), citation requirement (file:line), severity grouping (RED/YELLOW/GREEN), word budget (~600-1000).
+- Synthesizer reconciles overlapping findings (e.g., scene_tokens index gap appeared in both scalability + data model audits) and assigns final severity.
+- Deliverable goes to a dated file (`tasks/pre-launch-audit-YYYY-MM-DD.md`), not generic `tasks/audit.md` — same naming discipline as testplans.
+
 ## Canvas redraw deps - when state updates but the screen doesn't (2026-05-16)
 
 If a feature lives inside an imperative draw function (`draw()` / `render()` etc) called from a `useEffect(() => { draw() }, [...deps])`, and the feature reads a value via closure - **that value must be in the deps array**. Otherwise:
