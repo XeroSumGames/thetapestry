@@ -24,7 +24,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 **Phase 1 — Scalability blockers**
 - [ ] **R7 — Paginate lfg_interests.** `app/campfire/lfg/page.tsx:269` - add `.limit()` or batch only for visible posts.
 - [ ] **R8 — scene_tokens index + scoped subscription.** Add `CREATE INDEX scene_tokens_scene_id_idx ON scene_tokens(scene_id)`; scope realtime sub at `app/stories/[id]/table/page.tsx:555` to current scene only.
-- [ ] **R11 — Index hot tables.** `(campaign_id, created_at)` on roll_log; `(conversation_id, created_at)` or `(campaign_id, created_at)` on chat_messages; `(user_id, created_at)` on notifications.
+- [x] ~~**R11 — Index hot tables.**~~ SHIPPED 2026-05-17. `sql/hot-table-indexes-2026-05-17.sql` adds: `idx_roll_log_campaign_created (campaign_id, created_at DESC)`, `idx_chat_messages_campaign_created (campaign_id, created_at DESC)`, `idx_notifications_user_created (user_id, created_at DESC)`. DESC ordering matches UI's newest-first reads. Verified live via pg_indexes.
 - [ ] **Y5 — Batch npc_relationships loop.** `app/stories/[id]/table/page.tsx:1091-1092` - single `.in('character_id', charIds)` then fan-out locally.
 - [ ] **Y6 — Image upload size cap.** Pre-resize check at 5MB; verify Supabase storage bucket size policies for War Stories attachments.
 - [ ] **Y7 — community_stockpile limit.** Add `.limit(100)` at `app/stories/[id]/table/page.tsx:768`.
