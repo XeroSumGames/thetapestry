@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-17 12:13 UTC
+
+**Status:** RED+DRIFT *(findings unchanged from 09:08 — no fix landed yet)*
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [141 passed]
+
+**Audit:** npm audit [2 high, 0 critical]
+- HIGH: `next` — SSRF via WebSocket (CVSS 8.6) + middleware bypass + DoS; fix: `npm i next@^16.2.6`
+- HIGH: `fast-uri` ≤3.1.1 — host confusion via percent-encoded authority
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR 2026-05-13 batch (4 days, no playtest): Phase 3 a/b/c/d (campaign-clock drainers), 10 feed-audit drift fixes.
+- HOPED-FOR 2026-05-14 batch (3 days): Coord Effort, Healing on time-tick, Year-0, Export Log, Weapon Repair, die3, Luxury Ration consume.
+- Stale-todo: Intimidation still live in `lib/npc-generator.ts` + `lib/setting-npcs.ts`; todo item correctly open.
+
+**Action:** This is the 3rd consecutive check with the same RED. `npm i next@^16.2.6` is a non-breaking patch — run it.
+
+---
+
 ## 2026-05-17 09:08 UTC
 
 **Status:** RED+DRIFT *(findings unchanged from 06:09 — no fix landed yet)*
