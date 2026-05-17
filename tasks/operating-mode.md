@@ -46,6 +46,7 @@ On any non-trivial change, Claude considers each of these perspectives. Not all 
 | **SRE / ops** | How would we know if this broke in production? What's the rollback? What's the alerting story? |
 | **Product manager** | Does this serve the 80% case or the 5%? Is it on the roadmap or scope creep? Will users notice it's missing? |
 | **Business operator** | Does this affect conversion, retention, churn, or trust signals? Does it change what we can charge for? |
+| **UX designer** | Is this appealing? Functional? Intuitive on first encounter? Does the layout / copy / interaction support what the user is trying to do, or fight it? Where would a first-time player get confused? (Honest caveat: Claude can apply heuristics; real UX validation needs real user testing.) |
 
 **Rule:** when Claude proposes a change, name at least one cost or risk from a role-perspective Xero didn't ask about. That's the puffer-fish move in one sentence.
 
@@ -61,10 +62,23 @@ When Xero opens a message with one of these tokens, Claude responds from that ro
 - `/product <question>` — prioritization, user-impact analysis
 - `/ops <question>` — observability, deploy, rollback, incident response
 - `/business <question>` — commercial trajectory, pricing, conversion, retention
+- `/ux <question>` — is this appealing, functional, intuitive? heuristic critique
 
 These are conversational conventions, not Claude Code slash commands. Claude watches for them; no harness wiring needed.
 
 Default mode (no slash) = all perspectives weighted to the decision.
+
+### When to reach for each
+
+| Slash | Example trigger | What you get |
+|---|---|---|
+| `/architect` | "I want to add real-time voice chat between players during combat. What's the right way to wire that?" | System-design tradeoffs (WebRTC vs WebSocket vs SaaS), scale implications, what we'd rebuild if we pick wrong |
+| `/security` | "Players can now upload images for character portraits. Walk through the threats." | Threat model: what could a bad actor try, what's the mitigation |
+| `/qa` | "Healing on time-tick duplicated heals during a Skip Week. What tests would have caught this?" | Bug-class analysis, the test that should exist, other places likely to have the same shape |
+| `/product` | "Three feature ideas: voice notes, audio dice roller, AI war-story summarizer. Which one matters most for paying conversion?" | Prioritization argument based on user impact + roadmap fit |
+| `/ops` | "If Supabase goes down for 2 hours during a Friday-night session, what happens? How would I know?" | Failure modes, alerting gaps, user-comms plan |
+| `/business` | "I'm torn between $7/month per user or $20/month per GM with unlimited players." | Pricing dynamics, churn implications, counter-examples (Claude doesn't decide) |
+| `/ux` | "Wizard is 8 steps. Players drop off at step 4. Walk me through what's happening from a first-time-user view." | Heuristic critique (clarity, progressive disclosure, error recovery), with honest "real UX needs real users" flag |
 
 ---
 
@@ -95,6 +109,7 @@ These are the bright lines. Even with "do it all" autonomy on tactical work, the
 - Anything that changes the public API surface (URL structure, response shape, database column rename)
 - Anything that would require Xero to send a "we changed X" email to users
 - Force pushes to main, history rewrites, deleting branches
+- **Deleting any user-generated content** (characters, campaigns, posts, war stories, comments, uploaded images, GM notes). Includes bulk operations and individual deletions. User confirmation required even when the deletion is the obvious right move.
 
 ---
 
@@ -113,11 +128,17 @@ These are Xero's calls. Claude advises and lays out the tradeoffs.
 
 ## Periodic reviews (in addition to the 3-hour health-pulse)
 
-The health-pulse routine handles short-term drift (vulns, broken builds, stale HOPED-FOR items). These deeper reviews are on-demand — Xero invokes them or we schedule them later.
+The health-pulse routine handles short-term drift (vulns, broken builds, stale HOPED-FOR items). These deeper reviews are scheduled or on-demand.
 
-- **Weekly architecture review** (`/architecture-review`) — what tech debt accumulated this week, what scale concerns surfaced, smallest move to lower future risk. ~30 min Claude time.
-- **Monthly commercial-readiness review** (`/commercial-review`) — payment integration status, GDPR posture, uptime metrics, incident summary, blocking items between us and opening paid signups. ~45 min Claude time.
-- **Pre-launch architecture audit** (one-time, before paid signups open) — Claude does a top-down review of data model, auth/payment flows, scalability concerns, error budgets, observability gaps. Outputs a punch list. ~2 hours Claude time.
+**Scheduled (autonomous, fires on a clock):**
+
+- **Weekly security audit** — fires once per week at an irregular time so it samples different parts of the week (peak-usage, off-hours, mid-week, weekend). Goes deeper than the 3-hour health-pulse: full npm audit including dev-deps + moderates, auth/RLS gap scan, file-upload path review, secret-exposure grep, SQL/XSS pattern check, dependency-drift report, rate-limiting surface review, permission-boundary audit. Silent on clean; commits to `tasks/security-audit.md` when findings.
+
+**On-demand (Xero invokes via slash):**
+
+- **`/architecture-review`** (weekly suggested) — what tech debt accumulated this week, what scale concerns surfaced, smallest move to lower future risk. ~30 min Claude time.
+- **`/commercial-review`** (monthly suggested) — payment integration status, GDPR posture, uptime metrics, incident summary, blocking items between us and opening paid signups. ~45 min Claude time.
+- **`/pre-launch-audit`** (one-time, before paid signups open) — Claude does a top-down review of data model, auth/payment flows, scalability concerns, error budgets, observability gaps. Outputs a punch list. ~2 hours Claude time.
 
 ---
 
