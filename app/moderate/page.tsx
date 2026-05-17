@@ -1467,7 +1467,7 @@ export default function ModerationPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
             <div style={{ fontSize: '18px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
-              🐛 Bug Reports
+              🐞 Bug Reports
             </div>
             <button
               onClick={exportBugsJson}

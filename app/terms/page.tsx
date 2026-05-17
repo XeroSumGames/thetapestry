@@ -37,7 +37,7 @@ export default function TermsPage() {
         <div style={card}>
           <div style={cardTitle}>What this is</div>
           <div style={body}>
-            <p>The Tapestry is a companion app for the Distemper / XSE TTRPG, in active beta. It&apos;s provided as-is. We&apos;re building in the open with real users; expect bugs, expect breakage, expect features to change. Use the 🐛 icon in the sidebar to report anything that goes wrong — we read every report.</p>
+            <p>The Tapestry is a companion app for the Distemper / XSE TTRPG, in active beta. It&apos;s provided as-is. We&apos;re building in the open with real users; expect bugs, expect breakage, expect features to change. Use the 🐞 icon in the sidebar to report anything that goes wrong — we read every report.</p>
           </div>
         </div>
 
@@ -100,7 +100,7 @@ export default function TermsPage() {
         <div style={card}>
           <div style={cardTitle}>Contact</div>
           <div style={body}>
-            <p>Questions: <a href="mailto:xerosumstudio@gmail.com" style={{ color: '#c4a7f0' }}>xerosumstudio@gmail.com</a> or the 🐛 icon in the sidebar.</p>
+            <p>Questions: <a href="mailto:xerosumstudio@gmail.com" style={{ color: '#c4a7f0' }}>xerosumstudio@gmail.com</a> or the 🐞 icon in the sidebar.</p>
           </div>
         </div>
 

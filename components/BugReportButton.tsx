@@ -1,5 +1,5 @@
 'use client'
-// BugReportButton — 🐛 icon in the sidebar's user-header icon row.
+// BugReportButton — 🐞 icon in the sidebar's user-header icon row.
 // Click opens a modal with a textarea; submit inserts a bug_reports
 // row, the DB trigger fires call_notify_thriver to email Xero.
 //
@@ -79,14 +79,14 @@ export default function BugReportButton() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: '#cce0f5',
         }}>
-        🐛
+        🐞
       </button>
 
       {open && (
         <ModalBackdrop onClose={() => { if (!submitting) setOpen(false) }} zIndex={Z_INDEX.criticalModal} opacity={0.85} padding="1rem">
           <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1.25rem', width: '460px', maxWidth: '94vw' }}>
             <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
-              🐛 Report a Bug
+              🐞 Report a Bug
             </div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '12px', lineHeight: 1.4 }}>
               What broke, what you expected, and anything else useful. We capture the page URL + your browser automatically.
@@ -119,7 +119,7 @@ export default function BugReportButton() {
                   letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600,
                   cursor: !draft.trim() || submitting ? 'not-allowed' : 'pointer',
                 }}>
-                {submitting ? 'Submitting…' : submitted ? '✓ Sent — thanks' : '🐛 Submit'}
+                {submitting ? 'Submitting…' : submitted ? '✓ Sent — thanks' : '🐞 Submit'}
               </button>
               <button onClick={() => { if (!submitting) setOpen(false) }}
                 disabled={submitting}

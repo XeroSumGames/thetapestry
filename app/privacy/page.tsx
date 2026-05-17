@@ -100,7 +100,7 @@ export default function PrivacyPage() {
         <div style={card}>
           <div style={cardTitle}>Questions</div>
           <div style={body}>
-            <p>This policy will get a proper legal pass before public launch. If you have a privacy question during beta, reach out to <a href="mailto:xerosumstudio@gmail.com" style={{ color: '#c4a7f0' }}>xerosumstudio@gmail.com</a> or use the 🐛 bug report icon in the sidebar.</p>
+            <p>This policy will get a proper legal pass before public launch. If you have a privacy question during beta, reach out to <a href="mailto:xerosumstudio@gmail.com" style={{ color: '#c4a7f0' }}>xerosumstudio@gmail.com</a> or use the 🐞 bug report icon in the sidebar.</p>
           </div>
         </div>
 
