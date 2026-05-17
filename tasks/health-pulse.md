@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-17 18:08 UTC
+
+**Status:** DRIFT *(4th consecutive DRIFT-only entry — gates/audit clean; playtest remains the only blocker)*
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [141 passed]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR 2026-05-13 batch (4+ days, no playtest): Phase 3 a/b/c/d (campaign-clock drainers), 10 feed-audit drift fixes. `lib/campaign-clock.ts` still YELLOW in Risk Register.
+- HOPED-FOR 2026-05-14 batch (3+ days, no playtest): Coord Effort, Healing on time-tick, Year-0, Export Log, Weapon Repair, die3, Luxury Ration consume.
+- Stale-todo candidates: todo.md Tier 1 items #1 (Item Condition + Upkeep), #3 (Activity Block taxonomy), #5 (Falling/Drowning/Subsistence Damage) remain `[ ]` but "2026-05-14 canon shipped" audit note in the same file lists all three as shipped. Rules pages exist (`app/rules/equipment/item-condition/page.tsx`). Possible audit-correction needed — verify platform-side vs rules-only scope then close or re-scope.
+
+**Action:** Playtest 2026-05-13 Phase 3 batch — campaign-clock drainers 4+ days unverified. Then audit Tier 1 items #1/#3/#5 in todo.md (close or split rules-done / platform-pending).
+
+---
+
 ## 2026-05-17 15:10 UTC
 
 **Status:** DRIFT *(RED resolved — `next` upgraded to 16.2.6 since 12:13 check)*
