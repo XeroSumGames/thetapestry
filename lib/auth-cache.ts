@@ -28,6 +28,7 @@
 // 30-second-stale identity is harmless.
 
 import type { Session, User } from '@supabase/supabase-js'
+import * as Sentry from '@sentry/nextjs'
 import { createClient } from './supabase-browser'
 
 type AuthSnapshot = { user: User | null; session: Session | null }
@@ -38,12 +39,23 @@ let listenerAttached = false
 
 const TTL_MS = 30_000
 
+function syncSentryUser(user: User | null) {
+  // Attach only the auth.users UUID. Email / username / role are NOT sent
+  // (sendDefaultPii is off; we re-confirm by passing id only).
+  try {
+    if (user) Sentry.setUser({ id: user.id })
+    else Sentry.setUser(null)
+  } catch {
+    // Sentry init may not have completed yet on cold start; silently skip.
+  }
+}
+
 function attachAuthListener() {
   if (listenerAttached || typeof window === 'undefined') return
   listenerAttached = true
   try {
     const supabase = createClient()
-    supabase.auth.onAuthStateChange((event: string) => {
+    supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
       // Any real identity transition invalidates the cache. TOKEN_REFRESHED
       // doesn't change identity but the session object changes, so refresh
       // too to keep callers' tokens current.
@@ -54,6 +66,7 @@ function attachAuthListener() {
         event === 'TOKEN_REFRESHED'
       ) {
         snapshot = null
+        syncSentryUser(session?.user ?? null)
       }
     })
   } catch {
@@ -74,6 +87,7 @@ export async function getCachedAuth(): Promise<AuthSnapshot> {
       const { data: { session } } = await supabase.auth.getSession()
       const value: AuthSnapshot = { user: session?.user ?? null, session: session ?? null }
       snapshot = { value, fetchedAt: Date.now() }
+      syncSentryUser(value.user)
       return value
     } catch {
       return { user: null, session: null }
