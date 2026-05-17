@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-17 09:08 UTC
+
+**Status:** RED+DRIFT *(findings unchanged from 06:09 — no fix landed yet)*
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [141 passed]
+
+**Audit:** npm audit [2 high, 0 critical]
+- HIGH: `next` 16.2.1 — DoS (GHSA-q4gf-8mx6-v5v3, GHSA-8h8q-6873-q5fj, GHSA-mg66-mrh9-m8jx), SSRF via WebSocket (GHSA-c4j6-fc7j-m34r, CVSS 8.6), middleware bypass (GHSA-26hh-7cqf-hhc6, GHSA-492v-c6pp-mqqv, GHSA-267c-6grr-h53f, GHSA-36qx-fr4f-26g5); fix: `npm i next@^16.2.6`
+- HIGH: `fast-uri` ≤3.1.1 — host confusion via percent-encoded authority (GHSA-v39h-62p7-jpjc)
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR 2026-05-13 batch (4 days, no playtest): Phase 3 a/b/c/d (campaign-clock drainers), 10 feed-audit drift fixes. Load-bearing; risk increases with each unverified day.
+- HOPED-FOR 2026-05-14 batch (3 days, borderline): Coord Effort, Healing on time-tick, Year-0 calendar shift, Export Session Log, Weapon Repair, die3, Luxury Ration consume.
+
+**Action:** Priority 1 — `npm i next@^16.2.6` (patches SSRF + middleware bypass, CVSS 8.6). Priority 2 — schedule live playtest of 2026-05-13 Phase 3 batch.
+
+---
+
 ## 2026-05-17 06:09 UTC
 
 **Status:** RED+DRIFT
