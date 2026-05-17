@@ -198,6 +198,12 @@ export interface CampaignNpc {
   inventory?: { name: string; qty: number; enc?: number; rarity?: string; notes?: string; custom?: boolean }[] | null
   folder: string | null
   hidden_from_players?: boolean
+  // Lasting wounds rolled from Table 12 (Distemper Quickstart / canon
+  // §06) on a failed Lasting Damage Check. jsonb on the DB side -
+  // string[] of wound names. Added 2026-05-15 (see
+  // sql/npc-lasting-wounds-and-acuity.sql); written by the table page's
+  // Lasting Damage executeRoll branch.
+  lasting_wounds?: string[] | null
 }
 
 interface Relationship {
@@ -868,6 +874,23 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     await hideNpcsByIds(npcs.map(n => n.id))
   }
 
+  // Panic-hide: belt-and-suspenders cross-folder hide for the "oh god,
+  // players, look away" moment. Hits both the per-PC reveal rows
+  // (npc_relationships) and the RLS gate (hidden_from_players) so a
+  // player who refreshes mid-panic still gets a sanitized roster.
+  // Tactical map tokens fade via is_visible=false. Distinct from the
+  // toggle button so the GM doesn't have to read the current state
+  // before clicking.
+  async function panicHideAll() {
+    if (npcs.length === 0) return
+    const allIds = npcs.map(n => n.id)
+    // RLS hard-hide first - if anything else fails, this still keeps
+    // the NPCs invisible to players.
+    await supabase.from('campaign_npcs').update({ hidden_from_players: true }).in('id', allIds)
+    // Then the soft-reveal rows + scene tokens via the existing helper.
+    await hideNpcsByIds(allIds)
+  }
+
   // Inline disposition update for the roster card. Wraps the supabase
   // write + local state update so the picker on each card can fire
   // without opening the full Edit modal — fastest way to fix a
@@ -1082,6 +1105,18 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             </button>
           )
         })()}
+        {/* Cross-folder panic hide. Distinct from the Show/Hide toggle:
+            always hides, every folder, both the RLS gate AND the per-PC
+            reveal rows AND scene tokens. One click. Use mid-session
+            when players walk into the wrong scene and you need every
+            NPC off their screen NOW. */}
+        {npcs.length > 0 && (
+          <button onClick={() => panicHideAll()}
+            title="Hide every NPC across every folder, including RLS gate + per-PC reveals + scene tokens"
+            style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>
+            🚨 Hide All
+          </button>
+        )}
         {npcs.length > 1 && (
           <button
             onClick={() => { setSelectMode(s => !s); setSelectedIds(new Set()) }}

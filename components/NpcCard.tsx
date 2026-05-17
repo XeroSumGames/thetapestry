@@ -6,6 +6,7 @@ import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitVal
 import { createClient } from '../lib/supabase-browser'
 import { openPopout } from '../lib/popout'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
+import { LASTING_WOUNDS } from '../lib/xse-schema'
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   bystander: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
@@ -274,6 +275,26 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           </div>
         </div>
       </div>
+
+      {/* Lasting Wounds (Table 12). Each chip shows the wound name +
+          canon effect on hover. Comes from campaign_npcs.lasting_wounds
+          jsonb, written by the table page's Lasting Damage check
+          branch. Hidden when no wounds. */}
+      {(npc.lasting_wounds?.length ?? 0) > 0 && (
+        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
+          {(npc.lasting_wounds ?? []).map((name, i) => {
+            const def = Object.values(LASTING_WOUNDS).find(w => w.name === name)
+            const effect = def?.effect ?? ''
+            return (
+              <span key={i}
+                title={effect ? `${name} - ${effect}` : name}
+                style={{ fontSize: '13px', padding: '1px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                🩸 {name}{effect ? ` (${effect})` : ''}
+              </span>
+            )
+          })}
+        </div>
+      )}
 
       {/* Skills — clickable */}
       {(skillEntries.length > 0 || onRoll) && (
