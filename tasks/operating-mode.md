@@ -68,17 +68,7 @@ These are conversational conventions, not Claude Code slash commands. Claude wat
 
 Default mode (no slash) = all perspectives weighted to the decision.
 
-### When to reach for each
-
-| Slash | Example trigger | What you get |
-|---|---|---|
-| `/architect` | "I want to add real-time voice chat between players during combat. What's the right way to wire that?" | System-design tradeoffs (WebRTC vs WebSocket vs SaaS), scale implications, what we'd rebuild if we pick wrong |
-| `/security` | "Players can now upload images for character portraits. Walk through the threats." | Threat model: what could a bad actor try, what's the mitigation |
-| `/qa` | "Healing on time-tick duplicated heals during a Skip Week. What tests would have caught this?" | Bug-class analysis, the test that should exist, other places likely to have the same shape |
-| `/product` | "Three feature ideas: voice notes, audio dice roller, AI war-story summarizer. Which one matters most for paying conversion?" | Prioritization argument based on user impact + roadmap fit |
-| `/ops` | "If Supabase goes down for 2 hours during a Friday-night session, what happens? How would I know?" | Failure modes, alerting gaps, user-comms plan |
-| `/business` | "I'm torn between $7/month per user or $20/month per GM with unlimited players." | Pricing dynamics, churn implications, counter-examples (Claude doesn't decide) |
-| `/ux` | "Wizard is 8 steps. Players drop off at step 4. Walk me through what's happening from a first-time-user view." | Heuristic critique (clarity, progressive disclosure, error recovery), with honest "real UX needs real users" flag |
+**Full quick-reference with example triggers and what-you-get for each slash:** [tasks/slash-conventions.md](slash-conventions.md). Open that when you want to remember which slash fits a given situation.
 
 ---
 
@@ -110,6 +100,15 @@ These are the bright lines. Even with "do it all" autonomy on tactical work, the
 - Anything that would require Xero to send a "we changed X" email to users
 - Force pushes to main, history rewrites, deleting branches
 - **Deleting any user-generated content** (characters, campaigns, posts, war stories, comments, uploaded images, GM notes). Includes bulk operations and individual deletions. User confirmation required even when the deletion is the obvious right move.
+- **Content moderation actions** — banning users, locking forum threads, hiding posts, removing comments at scale. Reputational + legal stakes; wrong call = real harm.
+- **Sending email to users** — transactional templates, broadcast, marketing. Irreversible once delivered.
+- **Anything broadcast to all users at once** — in-app announcements, push notifications, banner messages. Same logic as email: can't unsend, asymmetric downside.
+- **Modifying CI/CD secrets, environment variables, or deployment config** — one bad env var = production breakage that may not surface until users hit it.
+- **Restoring from backup or running DB migrations against production data** — destructive at scale. Always confirm intent, dry-run when possible.
+- **Anything that creates new billable usage on third-party APIs** (OpenAI calls at scale, Stripe operations, Supabase tier upgrades, new SaaS subscriptions). Real money — always confirm.
+- **Modifying Terms of Service, Privacy Policy, or any user-facing legal text** — legal exposure. Needs Xero's sign-off, and at scale a lawyer's.
+- **Changing password hashing parameters or encryption settings for stored data** — wrong here = either insecure DB or all users locked out. Asymmetric risk.
+- **Bulk operations across user data** (e.g., "delete all draft characters older than 90 days", "reset all stress to 0", "rename column for all rows"). Cascading consequences; always preview the count + sample before acting.
 
 ---
 
