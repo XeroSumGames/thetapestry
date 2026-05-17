@@ -1,0 +1,39 @@
+name: tests
+
+# Runs the same gates the pre-commit hook runs locally, plus the TS
+# compiler. Second line of defense - if a pre-commit bypass (--no-verify)
+# or a hook-not-installed contributor slips a broken commit to main,
+# this catches it and emails the repo owner.
+#
+# Free GitHub Actions tier covers this easily at solo-dev push volume.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Font-size guardrail
+        run: node scripts/check-font-sizes.mjs
+
+      - name: Role-literal guardrail
+        run: node scripts/check-role-literals.mjs
+
+      - name: TypeScript typecheck
+        run: npx tsc --noEmit
+
+      - name: Vitest unit suite
+        run: npm test
