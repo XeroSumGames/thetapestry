@@ -3386,9 +3386,24 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (outOfRange) {
       alert(`Can't move that far — max ${maxMoveCells} cell${maxMoveCells === 1 ? '' : 's'} (${cellFt * maxMoveCells}ft) per Move action.`)
     }
+    // Snap the token's anchor (top-left) cell from dragPosRef rather than
+    // pos.gx/gy. dragPosRef tracks where the anchor center actually is,
+    // honoring dragging.offsetX/offsetY — so grabbing Minnie by her center
+    // cell keeps her top-left offset on release. Using pos.gx/gy directly
+    // (the cursor's cell) would snap the anchor to the cursor and Minnie
+    // would jump +N cells beyond where the drag ended.
+    const cellSize = getCellSize()
+    const gCols = sceneRef.current?.grid_cols ?? 30
+    const gRows = sceneRef.current?.grid_rows ?? 30
+    const tokW = tok?.grid_w ?? 1
+    const tokH = tok?.grid_h ?? 1
+    const rawGx = dragPosRef.current ? Math.round((dragPosRef.current.px - cellSize / 2) / cellSize) : pos!.gx
+    const rawGy = dragPosRef.current ? Math.round((dragPosRef.current.py - cellSize / 2) / cellSize) : pos!.gy
+    const newGx = Math.max(0, Math.min(gCols - tokW, rawGx))
+    const newGy = Math.max(0, Math.min(gRows - tokH, rawGy))
     if (moved && dragPosRef.current && !outOfRange) {
-      const toX = pos!.gx * cellPx + cellPx / 2
-      const toY = pos!.gy * cellPx + cellPx / 2
+      const toX = newGx * cellPx + cellPx / 2
+      const toY = newGy * cellPx + cellPx / 2
       tokenAnimRef.current.set(tokenId, { fromX: dragPosRef.current.px, fromY: dragPosRef.current.py, toX, toY, t: 0 })
     }
     // Clear drag state synchronously — never block cursor release on DB I/O
@@ -3399,10 +3414,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     setDragging(null)
     if (moved && !outOfRange) {
-      const dx = pos!.gx - tok!.grid_x
-      const dy = pos!.gy - tok!.grid_y
-      setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: pos!.gx, grid_y: pos!.gy } : t))
-      supabase.from('scene_tokens').update({ grid_x: pos!.gx, grid_y: pos!.gy }).eq('id', tokenId).then(({ error }: any) => {
+      const dx = newGx - tok!.grid_x
+      const dy = newGy - tok!.grid_y
+      setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: newGx, grid_y: newGy } : t))
+      supabase.from('scene_tokens').update({ grid_x: newGx, grid_y: newGy }).eq('id', tokenId).then(({ error }: any) => {
         if (error) console.warn('[TacticalMap] token move failed:', error)
         else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
       })
