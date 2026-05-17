@@ -6,6 +6,8 @@ This file shapes how Claude works on Tapestry. It sits alongside the other opera
 - `tasks/handoff.md` — operational scaffold ("resume the work").
 - `tasks/debug-handoff.md` — diagnostic scaffold ("where do I look when something breaks?").
 - `tasks/operating-mode.md` (this file) — relational scaffold ("how does Claude think alongside Xero?").
+- `tasks/workflow-guide.md` — practical "how do I actually use this day to day" companion to this file.
+- `tasks/slash-conventions.md` — quick reference for the explicit-role-invocation slash commands.
 
 ---
 
