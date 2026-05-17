@@ -10,9 +10,9 @@
 Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md). Items below are the operational checklist.
 
 **Phase 0 — Observability + security YELLOW (do BEFORE any structural refactor)**
-- [ ] **R1 — Sentry PII scrub.** Remove `sendDefaultPii: true` from `instrumentation-client.ts:12`, `sentry.server.config.ts:12`, `sentry.edge.config.ts`. Add `beforeSend` filtering `auth`, `user`, query params.
-- [ ] **R2 — Sentry sample rate.** Set `tracesSampleRate: 0.1` in all three init blocks. Keep exception rate at 1.0.
-- [ ] **R3 — Sentry user context.** Call `Sentry.setUser({ id: user.id })` after auth resolves in the live-session page.
+- [x] ~~**R1 — Sentry PII scrub.**~~ SHIPPED 2026-05-17 (`1894455`). `sendDefaultPii: false` across all three configs; `beforeSend` scrubs `code`/`token`/`access_token`/`refresh_token` URL params + `[Filtered]`s Authorization + Cookie headers.
+- [x] ~~**R2 — Sentry sample rate.**~~ SHIPPED 2026-05-17 (`1894455`). `tracesSampleRate: 0.1` on all three configs; exceptions stay at 1.0.
+- [x] ~~**R3 — Sentry user context.**~~ SHIPPED 2026-05-17 (`1894455`). `Sentry.setUser({ id: user.id })` wired into `lib/auth-cache.ts` — central choke point, covers every consumer of `getCachedAuth`. ID only, no email/username/role.
 - [ ] **R4 — Slack webhook.** Wire Sentry -> #alerts Slack channel. ~15 min config.
 - [ ] **R5 — `/api/health` endpoint.** Ping Supabase auth + dummy DB query; return 200/503. Pair with free uptime monitor.
 - [ ] **R6 — Realtime handler try/catch.** Wrap each broadcast listener in `app/stories/[id]/table/page.tsx:1380-1559`; `Sentry.captureException` on catch.
