@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## DB triggers obsoleting client-side logic - flag, don't remove same-session (2026-05-17)
+
+When you land a server-side enforcement (e.g. the moderation trigger from Y3 in `sql/moderation-enforce-trigger-2026-05-17.sql`), the matching client-side logic becomes dead — `app/campfire/forums/page.tsx:270` and ~5 sibling LFG / war-stories / modules call sites still compute `moderation_status = autoApprove ? 'approved' : 'pending'` and `approved_by: isThriver ? myId : null`, but the trigger overrides both for non-thrivers.
+
+Leaving the dead client logic in place is fine (DB is the safety net), and removing it in the same commit as the trigger means double-revert if either piece is wrong. So: **flag in lessons + todo, clean up later as part of the surrounding feature's next touch.** Don't rip out dead code in the same ship as the new enforcement. If the trigger turns out wrong, the dead client code is the only thing keeping anything in the queue.
+
+How to spot: after any new BEFORE INSERT / BEFORE UPDATE trigger that overrides client-supplied fields, grep call sites for the now-overridden field names and add a one-liner in `tasks/todo.md` under "Cleanup follow-ups."
+
 ## Parallel-agent audit beats sequential survey (2026-05-17)
 
 `/pre-launch-audit` ran as 5 parallel Explore subagents (auth/RLS, payment, scalability, observability, data model), each with a focused brief + word budget + file:line citation requirement. Synthesis cost about 10 minutes after the agents returned. Total wall-clock under 30 minutes. The same audit done sequentially in the main context would have cost an order of magnitude more tokens and would have run out of context before finishing.

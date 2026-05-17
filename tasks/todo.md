@@ -9,6 +9,21 @@
 ### Pre-launch audit (2026-05-17, structural)
 Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md). Items below are the operational checklist.
 
+**Phase 2 follow-ups (surfaced by today's drift report, [tasks/schema-drift-report-2026-05-17.md](schema-drift-report-2026-05-17.md))**
+- [ ] **15 orphan tables** — no canonical CREATE TABLE in sql/. Tier 1 (`profiles`, `campaigns`, `characters`, `character_states`, `campaign_members`), Tier 2 (`roll_log`, `chat_messages`, `notifications`), Tier 3 (`campaign_notes`, `map_pins`, `session_attachments`, `sessions`, `user_events`, `visitor_logs`, `world_npcs`). Same reverse-engineering pattern as `sql/000-initiative-order-canonical-2026-05-17.sql`. ~3-5 sessions total. **Do NOT touch `characters` / `character_states` / `profiles` until after the 2026-05-18 playtest.**
+- [ ] **1 orphan trigger** — `on_character_changed` exists live but has no `CREATE TRIGGER` in sql/. Extract via `pg_get_triggerdef`. ~10 min.
+
+**Cleanup follow-ups (low priority, do during next surrounding-feature touch)**
+- [ ] **Dead client-side moderation_status logic** at `app/campfire/forums/page.tsx:270` and ~5 sibling sites (war-stories, lfg, modules). Trigger from Y3 (sql/moderation-enforce-trigger-2026-05-17.sql) now overrides for non-thrivers. Safe to leave; clean up when forums/war-stories/lfg gets its next refactor pass.
+
+**Phase 3 planning artifact**
+- [ ] **`page.tsx` decomposition plan** at [tasks/page-tsx-decomposition-plan.md](page-tsx-decomposition-plan.md) — 18-step extraction sequence over ~12-14 sessions, with per-step LOC removal targets + smoke gates + risk register. Read this before starting Phase 3.
+
+**Pre-playtest verification (2026-05-18)**
+- [ ] **Sentry pipeline check** — [tasks/sentry-verification-2026-05-17.md](sentry-verification-2026-05-17.md). 15 min manual.
+- [ ] **2026-05-13 batch watch-fors** — [tasks/2026-05-13-batch-review-2026-05-17.md](2026-05-13-batch-review-2026-05-17.md). 8-item playtest checklist.
+
+
 **Phase 0 — Observability + security YELLOW (do BEFORE any structural refactor)**
 - [x] ~~**R1 — Sentry PII scrub.**~~ SHIPPED 2026-05-17 (`1894455`). `sendDefaultPii: false` across all three configs; `beforeSend` scrubs `code`/`token`/`access_token`/`refresh_token` URL params + `[Filtered]`s Authorization + Cookie headers.
 - [x] ~~**R2 — Sentry sample rate.**~~ SHIPPED 2026-05-17 (`1894455`). `tracesSampleRate: 0.1` on all three configs; exceptions stay at 1.0.
