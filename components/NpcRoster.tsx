@@ -867,11 +867,22 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   }
 
   async function revealAllNpcs() {
-    await revealNpcsByIds(npcs.map(n => n.id))
+    const allIds = npcs.map(n => n.id)
+    // Also flip the RLS gate so the per-PC reveal rows aren't fighting
+    // an opposing hidden_from_players=true on the underlying NPC. The
+    // per-NPC quickReveal already does this; without the same write
+    // here, "Show All" left some NPCs invisible to players even after
+    // their relationship row said revealed=true.
+    await supabase.from('campaign_npcs').update({ hidden_from_players: false }).in('id', allIds)
+    await revealNpcsByIds(allIds)
   }
 
   async function hideAllNpcs() {
-    await hideNpcsByIds(npcs.map(n => n.id))
+    const allIds = npcs.map(n => n.id)
+    // Mirror of revealAllNpcs - keep RLS gate in lockstep with the
+    // per-PC reveal rows so the two surfaces never disagree.
+    await supabase.from('campaign_npcs').update({ hidden_from_players: true }).in('id', allIds)
+    await hideNpcsByIds(allIds)
   }
 
   // Panic-hide: belt-and-suspenders cross-folder hide for the "oh god,

@@ -15,7 +15,7 @@ import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition,
 import { computeEncumbrance } from '../lib/encumbrance'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
-import { SKILLS, normalizeRations } from '../lib/xse-schema'
+import { SKILLS, normalizeRations, LASTING_WOUNDS } from '../lib/xse-schema'
 
 const ATTR_KEYS = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 
@@ -671,6 +671,27 @@ function CharacterCardImpl({
                 )}
               </div>
             </div>
+            {/* Lasting Wounds (Table 12). One red chip per wound name
+                stored on characters.data.lastingWounds; tooltip carries
+                the canon effect from LASTING_WOUNDS. Written by the
+                table page's Lasting Damage executeRoll branch on a
+                failed Lasting Damage Check post-infection or
+                post-wound. Hidden when none. */}
+            {Array.isArray((c.data as any)?.lastingWounds) && ((c.data as any).lastingWounds as string[]).length > 0 && (
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '8px' }}>
+                {((c.data as any).lastingWounds as string[]).map((name, i) => {
+                  const def = Object.values(LASTING_WOUNDS).find(w => w.name === name)
+                  const effect = def?.effect ?? ''
+                  return (
+                    <span key={i}
+                      title={effect ? `${name} - ${effect}` : name}
+                      style={{ fontSize: '13px', padding: '1px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                      🩸 {name}{effect ? ` (${effect})` : ''}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-around' }}>
               {/* Stress bar with Breaking Point trigger */}
               <div style={{ textAlign: 'center' }}>
