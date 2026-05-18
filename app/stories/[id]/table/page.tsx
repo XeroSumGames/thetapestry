@@ -6831,11 +6831,25 @@ export default function TablePage() {
   const gmEntry = entries.find(e => e.userId === campaign.gm_user_id) ?? null
   const playerEntries = (() => {
     const filtered = entries.filter(e => e.userId !== campaign.gm_user_id)
-    // Float the current viewer's own character to position 0 (right next to GM).
-    if (!userId) return filtered
-    const meIdx = filtered.findIndex(e => e.userId === userId)
-    if (meIdx <= 0) return filtered
-    return [filtered[meIdx], ...filtered.slice(0, meIdx), ...filtered.slice(meIdx + 1)]
+    // Order rule (per Xero 2026-05-18): currently-online players sit
+    // closest to the GM, offline players after. `onlineUserIds` is a
+    // React-state Set populated by the table-page presence channel
+    // (the same source that drives the green border at L9082-9083),
+    // so this reorders live as players join/leave. Stable sort by
+    // online-bit only — within each group the underlying `entries`
+    // order (≈ campaign join order) is preserved.
+    const sorted = [...filtered].sort((a, b) => {
+      const aOnline = onlineUserIds.has(a.userId) ? 1 : 0
+      const bOnline = onlineUserIds.has(b.userId) ? 1 : 0
+      return bOnline - aOnline
+    })
+    // Float the current viewer's own character to position 0 (right
+    // next to GM). Applies only to non-GM viewers (the GM was filtered
+    // out above, so meIdx is -1 for them and this is a no-op).
+    if (!userId) return sorted
+    const meIdx = sorted.findIndex(e => e.userId === userId)
+    if (meIdx <= 0) return sorted
+    return [sorted[meIdx], ...sorted.slice(0, meIdx), ...sorted.slice(meIdx + 1)]
   })()
   const syncedSelectedEntry = selectedEntry ? entries.find(e => e.stateId === selectedEntry.stateId) ?? selectedEntry : null
   const myEntry = entries.find(e => e.userId === userId) ?? null
