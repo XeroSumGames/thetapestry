@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-18 06:08 UTC
+
+**Status:** DRIFT *(6th consecutive DRIFT-only — gates/audit clean; two new signals below)*
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [160 passed — up from 141]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR 2026-05-13 batch (5 days, no playtest): Phase 3 a/b/c/d drainers, 10 feed-audit fixes. Still YELLOW in Risk Register.
+- HOPED-FOR 2026-05-14 batch (4 days, no playtest): Coord Effort, Healing on time-tick, Year-0, Export Log, Weapon Repair, die3, Luxury Ration.
+- HOPED-FOR 2026-05-15 batch (3 days, threshold): fog cache, RollOutcome refactor, role-check sweep, helpers extraction.
+- **NEW:** Confidence Ledger says "141 unit tests" — now 160 pass. Ledger is stale; update `tasks/debug-handoff.md` §3.
+- **Stale-open candidate:** `- [ ] 1 orphan trigger — on_character_changed` in todo.md. Commit `3fc28e6` (2026-05-17) explicitly closes it ("Closes the only orphan trigger flagged by today's schema-drift report"). Mark shipped.
+- **Playtest scheduled TODAY (2026-05-18):** Pre-playtest verification items still `[ ]` in todo.md (Sentry pipeline check + 2026-05-13 batch watch-fors).
+
+**Action:** Before playtest — run Sentry verification + 2026-05-13 watch-fors. After playtest — update Confidence Ledger (141→160 tests; promote HOPED-FOR items that pass). Close orphan-trigger todo.
+
+---
+
 ## 2026-05-17 21:05 UTC
 
 **Status:** DRIFT *(5th consecutive DRIFT-only entry — gates/audit clean; playtest remains the only blocker)*
