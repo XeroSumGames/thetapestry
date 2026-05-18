@@ -69,7 +69,7 @@ const TILE_LAYERS: Record<string, { url: string; attr: string; maxZoom: number }
 const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }> = {
   walking: { mph: 3,  label: 'Walking',  emoji: '🚶' },
   bicycle: { mph: 10, label: 'Bicycle',  emoji: '🚴' },
-  minnie:  { mph: 32, label: 'Minnie',   emoji: '🚐' },
+  minnie:  { mph: 22, label: 'Minnie',   emoji: '🚐' },
 }
 
 // Local PIN_CATEGORIES — mirrors lib/pin-categories.ts canonical list
@@ -139,8 +139,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const [measureLegs, setMeasureLegs] = useState<string[]>([])
   const [measureTotalText, setMeasureTotalText] = useState<string>('')
   // Travel mode for the measure tool. Walking = 3 mph (sustained foot
-  // pace), Bicycle = 10 mph (post-apoc mixed terrain), Minnie = 32 mph
-  // (midpoint of her 30-35 realistic cruise per the Mongrels doc).
+  // pace), Bicycle = 10 mph (post-apoc mixed terrain), Minnie = 22 mph
+  // (sustained cross-country cruise per Xero 2026-05-18; was 32 mph
+  // midpoint of 30-35 from the Mongrels doc, lowered for realism on
+  // mixed terrain + fuel conservation).
   // Session-scoped — no localStorage. Defaults to walking.
   type TravelMode = 'walking' | 'bicycle' | 'minnie'
   const [travelMode, setTravelMode] = useState<TravelMode>('walking')
@@ -294,8 +296,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   }
   // Travel time at the picked mode's mph. Walking is 3 mph (sustained
   // foot pace, unencumbered, flat ground). Bicycle is 10 mph (mixed
-  // post-apoc terrain). Minnie is 32 mph (midpoint of her 30-35
-  // realistic cruise per `Minnie ^0 The Magnificent Mongrels v04.docx`).
+  // post-apoc terrain). Minnie is 22 mph (sustained cross-country
+  // cruise per Xero 2026-05-18; was 32 mph from `Minnie ^0 The
+  // Magnificent Mongrels v04.docx`).
   // Output: "23 min" sub-hour, "2h 4m" once past 60 min, "<1 min" for
   // very short legs so a chip never reads "0 min."
   function formatTravelTime(meters: number, mph: number): string {
