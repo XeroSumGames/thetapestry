@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-18 09:09 UTC
+
+**Status:** DRIFT *(7th consecutive DRIFT-only — gates/audit clean; playtest prep active)*
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [160 passed]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR 2026-05-13 batch (5 days, no playtest): Phase 3 a/b/c/d drainers, 10 feed-audit fixes.
+- HOPED-FOR 2026-05-14 batch (4 days, no playtest): Coord Effort, Healing on time-tick, Year-0, Export Log, Weapon Repair, Luxury Ration.
+- HOPED-FOR 2026-05-15 batch (3 days): fog cache, RollOutcome refactor, role-check sweep, helpers extraction.
+- Stale Confidence Ledger: still says "141 unit tests" — 160 pass now (flagged since 06:08).
+- **POSITIVE:** `0375865` (pre-playtest smoke testplan) just landed — playtest prep is active today.
+- **New untracked ship:** `a9a68b2 perf(sentry)` dropped benign Sentry noise (not gameplay-critical; watch if error visibility drops unexpectedly).
+
+**Action:** Playtest in progress today per 06:08 note — after session, update Confidence Ledger (141→160), promote HOPED-FOR items that pass, close orphan-trigger todo.
+
+---
+
 ## 2026-05-18 06:08 UTC
 
 **Status:** DRIFT *(6th consecutive DRIFT-only — gates/audit clean; two new signals below)*
