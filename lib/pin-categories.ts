@@ -21,7 +21,7 @@ export interface PinCategory {
 //
 // Label-only renames (DB value unchanged for back-compat):
 //   business    -> "Commercial"
-//   world_event -> "World Pin" (was "Distemper Timeline")
+//   world_event -> "A Timeline of the Dog Flu" (was "World Pin", was "Distemper Timeline")
 export const PIN_CATEGORIES: ReadonlyArray<PinCategory> = [
   // ── Row 1 ──
   { value: 'rumor',       label: 'Rumor',      emoji: '❓' },
@@ -40,7 +40,7 @@ export const PIN_CATEGORIES: ReadonlyArray<PinCategory> = [
   { value: 'resource',    label: 'Resource',   emoji: '📦' },
   { value: 'medical',     label: 'Medical',    emoji: '🩸' },
   { value: 'animals',     label: 'Animals',    emoji: '🐾' },
-  { value: 'world_event', label: 'World Pin',  emoji: '🌍' },
+  { value: 'world_event', label: 'A Timeline of the Dog Flu',  emoji: '🌍' },
 ]
 
 export function getCategoryEmoji(category: string | null | undefined): string {

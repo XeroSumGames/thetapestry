@@ -95,7 +95,7 @@ const PIN_CATEGORIES = [
   { value: 'resource',   label: 'Resource',   emoji: '📦' },
   { value: 'medical',    label: 'Medical',    emoji: '🩸' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },
-  { value: 'world_event', label: 'World Pin', emoji: '🌍' },
+  { value: 'world_event', label: 'A Timeline of the Dog Flu', emoji: '🌍' },
 ]
 
 function getCategoryEmoji(category: string): string {
