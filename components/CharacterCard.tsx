@@ -172,6 +172,16 @@ function CharacterCardImpl({
   const [stressCheckPending, setStressCheckPending] = useState(false)
   const [stressCheckCmod, setStressCheckCmod] = useState<number>(0)
   const [stressCheckResult, setStressCheckResult] = useState<RollResult | null>(null)
+  // Two distinct flows share the same modal shell:
+  //   - 'mid-play':  GM-called stress check during play. Roll, success = no
+  //                  change, failure = +1 stress (cap 5). If +1 brings the
+  //                  bar to 5, cascade into 'at-max' immediately.
+  //   - 'at-max':    Auto-fires when stress hits 5 (watcher at L227-240) or
+  //                  via cascade from mid-play. Success = drop to 4. Failure
+  //                  = Breaking Point (Table 13).
+  // Mode resets to 'at-max' after every close so the watcher's auto-open
+  // path always lands in at-max semantics.
+  const [stressCheckMode, setStressCheckMode] = useState<'mid-play' | 'at-max'>('at-max')
   const [breakingPointPending, setBreakingPointPending] = useState(false)
   const [breakingPointCmod, setBreakingPointCmod] = useState<number>(0)
   // Breaking Point + Lasting Wound now carry the table-lookup result
@@ -697,10 +707,22 @@ function CharacterCardImpl({
               <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '3px' }}>
                   <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Stress</span>
-                  {onRoll && (
-                    <button onClick={() => { const sm = (rapid.RSN ?? 0) + (rapid.ACU ?? 0); onRoll('Stress Check', sm, 0) }}
-                      style={{ padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Check</button>
-                  )}
+                  {/* Manual Stress Check: GM-called mid-play. Opens the
+                      dedicated modal in 'mid-play' mode (success = no
+                      change, failure = +1 stress, cascades to 'at-max'
+                      if +1 fills the bar). Bypasses onRoll because that
+                      path would lose the cascade. Always rollable (no
+                      stress-level gate) — players are commanded to
+                      check at the GM's discretion regardless of
+                      current pip count. */}
+                  <button onClick={() => {
+                    if (stressCheckPending || breakingPointPending) return
+                    setStressCheckMode('mid-play')
+                    setStressCheckCmod(0)
+                    setStressCheckResult(null)
+                    setStressCheckPending(true)
+                  }}
+                    style={{ padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Check</button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                   <button disabled={!canEdit || localState.stress <= 0}
@@ -1095,13 +1117,20 @@ function CharacterCardImpl({
       )}
 
       {/* ── Phase 4F: unified roll modals via <RollModal> shell ────── */}
-      {/* Stress Check — fires when stress hits 5. RSN+ACU drives AMod;
-          success ≥ 7 = drop to 4, failure = Breaking Point cascade. */}
+      {/* Stress Check — two modes share this shell.
+          'mid-play' (manual CHECK button): success = no change, failure
+            = +1 stress (cap 5). If +1 fills the bar to 5, cascade into
+            'at-max' on the same close.
+          'at-max'   (auto-fires when stress hits 5, watcher at L227-240,
+            or via mid-play cascade): success ≥ 7 = drop to 4,
+            failure = Breaking Point (Table 13). */}
       <RollModal
         open={stressCheckPending}
-        onClose={() => { setStressCheckPending(false); setStressCheckResult(null); setStressCheckCmod(0) }}
+        onClose={() => { setStressCheckPending(false); setStressCheckResult(null); setStressCheckCmod(0); setStressCheckMode('at-max') }}
         title="Stress Check"
-        subtitle={`${c.name} — Stress at maximum`}
+        subtitle={stressCheckMode === 'at-max'
+          ? `${c.name} - Stress at maximum`
+          : `${c.name} - Stress Check`}
         rollFormula="2d6 + RSN + ACU + CMod"
         amod={(rapid.RSN ?? 0) + (rapid.ACU ?? 0)}
         smod={0}
@@ -1109,7 +1138,9 @@ function CharacterCardImpl({
         setCmod={stressCheckResult ? undefined : setStressCheckCmod}
         warnings={stressCheckResult ? null : (
           <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', textAlign: 'center' }}>
-            Success ≥ 7 → drop to 4 stress · Failure → Breaking Point
+            {stressCheckMode === 'at-max'
+              ? 'Success ≥ 7 → drop to 4 stress · Failure → Breaking Point'
+              : 'Success ≥ 7 → no change · Failure → +1 stress (Breaking Point if it fills the bar)'}
           </div>
         )}
         onRoll={() => {
@@ -1117,37 +1148,82 @@ function CharacterCardImpl({
           const d1 = Math.floor(Math.random() * 6) + 1
           const d2 = Math.floor(Math.random() * 6) + 1
           const total = d1 + d2 + amod + stressCheckCmod
+          // Outcome strings differ per mode so the postRollCloseLabel +
+          // onPostRollClose branches can read them unambiguously.
+          const success = total >= 7
+          let outcomeStr: string
+          if (stressCheckMode === 'at-max') {
+            outcomeStr = success ? 'Success - Held It Together' : 'Failure - Breaking Point'
+          } else {
+            outcomeStr = success ? 'Success - No new stress' : 'Failure - +1 stress'
+          }
           setStressCheckResult({
             die1: d1, die2: d2, amod, smod: 0, cmod: stressCheckCmod, total,
-            outcome: total >= 7 ? 'Success — Held It Together' : 'Failure — Breaking Point',
+            outcome: outcomeStr,
           })
         }}
         rollLabel="Roll Stress Check"
         result={stressCheckResult}
-        postRollCloseLabel={stressCheckResult?.outcome.startsWith('Success') ? 'Continue' : 'Roll on Breaking Point Table'}
+        postRollCloseLabel={(() => {
+          if (!stressCheckResult) return 'Continue'
+          const success = stressCheckResult.outcome.startsWith('Success')
+          if (stressCheckMode === 'at-max') {
+            return success ? 'Continue' : 'Roll on Breaking Point Table'
+          }
+          return 'Continue'
+        })()}
         onPostRollClose={async () => {
           if (!localState || !stressCheckResult) return
           const r = stressCheckResult
           const success = r.outcome.startsWith('Success')
+          const mode = stressCheckMode
+          // Close current modal first; cascade re-opens below if needed.
           setStressCheckPending(false)
-          if (success) {
-            updateStat(localState.id, 'stress', 4)
-          } else {
-            updateStat(localState.id, 'stress', 5)
-            setBreakingPointPending(true)
-            setBreakingPointCmod(0)
-          }
           setStressCheckResult(null)
-          // Log to roll_log so the GM + table see who held it together.
+          if (mode === 'at-max') {
+            if (success) {
+              updateStat(localState.id, 'stress', 4)
+              setStressCheckMode('at-max') // already at-max; explicit reset
+            } else {
+              updateStat(localState.id, 'stress', 5)
+              setBreakingPointPending(true)
+              setBreakingPointCmod(0)
+              setStressCheckMode('at-max')
+            }
+          } else {
+            // mid-play
+            if (success) {
+              // No state change. Just reset mode for next manual open.
+              setStressCheckMode('at-max')
+            } else {
+              const newStress = Math.min(5, localState.stress + 1)
+              updateStat(localState.id, 'stress', newStress)
+              if (newStress === 5) {
+                // Cascade: open at-max modal immediately. Cleared
+                // result + cmod above so the at-max render starts
+                // fresh. The auto-fire watcher won't double-fire
+                // because pending is true before liveState echoes back.
+                setStressCheckMode('at-max')
+                setStressCheckCmod(0)
+                setStressCheckPending(true)
+              } else {
+                setStressCheckMode('at-max') // reset for next manual open
+              }
+            }
+          }
+          // Log to roll_log so the GM + table see the result.
+          // Label format matches the new attribute-check narrative shape
+          // (ASCII hyphen, no em-dash per project rule).
           if (campaignIdProp) {
             try {
               const { user } = await getCachedAuth()
               if (user) {
+                const labelSuffix = mode === 'at-max' ? 'Stress Check (at max)' : 'Stress Check'
                 await supabase.from('roll_log').insert({
                   campaign_id: campaignIdProp,
                   user_id: user.id,
                   character_name: c.name,
-                  label: `${c.name} — Stress Check`,
+                  label: `${c.name} - ${labelSuffix}`,
                   die1: r.die1, die2: r.die2,
                   amod: r.amod, smod: 0, cmod: r.cmod,
                   total: r.total,
