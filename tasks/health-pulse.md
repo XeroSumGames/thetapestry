@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-18 18:05 UTC
+
+**Status:** DRIFT *(10th consecutive DRIFT-only — gates/audit clean; orphan-trigger todo still open; playtest confirmation still pending)*
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [160 passed]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR 2026-05-13 batch (5 days): Phase 3 a/b/c/d, 10 feed-audit fixes. No playtest confirmation.
+- HOPED-FOR 2026-05-14 batch (4 days): Coord Effort, Healing time-tick, Year-0, Export Log, Weapon Repair, Luxury Ration. No playtest confirmation.
+- HOPED-FOR 2026-05-15 batch (3 days): fog cache, RollOutcome refactor, role-check sweep, helpers extraction.
+- Stale Confidence Ledger: still reads "141 unit tests" — 160 pass (10th flag).
+- Stale-open: `- [ ] 1 orphan trigger` in todo.md — commit `3fc28e6` (2026-05-17) closed it.
+
+**Action:** Post-playtest session overdue: update Ledger (141→160), promote HOPED-FOR items that passed, mark orphan-trigger todo shipped.
+
+---
+
 ## 2026-05-18 15:05 UTC
 
 **Status:** DRIFT *(9th consecutive DRIFT-only — gates/audit clean; no commits since 12:05 UTC health-pulse; playtest not yet confirmed complete)*
