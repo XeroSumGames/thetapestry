@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-18 — DRIFT DRAINED (manual entry)
+
+**Status:** GREEN
+
+**Trigger:** Xero ran all three open testplans this session
+(preplay-testsmoke-2026-05-17 + polish-pass-2026-05-14 +
+thriver-godmode-sweep). All sections passed.
+
+**Drained:**
+- HOPED-FOR 2026-05-13 batch (Phase 3 a/b/c/d drainers, 10 feed-audit fixes) → PLAYTESTED RECENTLY.
+- HOPED-FOR 2026-05-14 batch (Coord Effort, Healing on time-tick, Year-0, Export Log, Weapon Repair, die3, Luxury Ration) → PLAYTESTED RECENTLY.
+- HOPED-FOR 2026-05-15 batch (effective fog cache, insight uncap, role-check sweep, helper consolidations, RollOutcome refactor) → PLAYTESTED RECENTLY.
+- HOPED-FOR 2026-05-15→17 ships (vehicle subsystem, Lasting Wound chips, Coord Effort Withdraw retcon, Heal-LI infection cascade, Day-0 Lasting Damage modal, pin sidebar OSRM, drag-end grab-offset fix, GM Notes draft, Tools sidebar, moderation tooling) → PLAYTESTED RECENTLY.
+
+**Updated:**
+- `tasks/debug-handoff.md` §3 Confidence Ledger — HOPED-FOR list now empty; test count 141 → 160; PLAYTESTED RECENTLY expanded.
+- `tasks/debug-handoff.md` §1 Risk Register — `lib/campaign-clock.ts`, `roll_log` writer, Initiative state machine, TacticalMap canvas all note "playtested green 2026-05-18" as demote candidates next review.
+- `tasks/todo.md` — three testplan items closed.
+
+**Action:** None. The 10 consecutive DRIFT-only entries below (06:08 → 18:05 UTC) were the signal that prompted this drain; preserved as historical context. Next health-pulse run should be clean.
+
+---
+
 ## 2026-05-18 18:05 UTC
 
 **Status:** DRIFT *(10th consecutive DRIFT-only — gates/audit clean; orphan-trigger todo still open; playtest confirmation still pending)*

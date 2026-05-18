@@ -57,8 +57,9 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [ ] **CMod Stack extraction** - Recruit / Grapple / First Impression / Attack converge on shared component. Do LAST after Phase 3 reshapes table page.
 
 ### Untested live
-- [ ] **Polish-pass-2026-05-14 testplan** ([tasks/polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md)) — 11 sections covering everything that shipped 2026-05-14 (Coord Effort, Healing, Year-0, Campaign Sheet header/Edit Clock modal, Export Log, Luxury Ration, die3, Weapon Repair, CampaignObjects "found nothing", 4 polish bundles). Not playtested yet.
-- [ ] **Thriver-godmode-sweep testplan** ([tasks/thriver-godmode-sweep-testplan.md](thriver-godmode-sweep-testplan.md)) — 6 sections covering today's sweep (commit `07652f8` → merged `98d81c9`). Thriver-on-non-owned-campaign + GM regression + Survivor no-leak. Not playtested yet.
+- [x] ~~**Polish-pass-2026-05-14 testplan**~~ — PLAYTESTED 2026-05-18, all sections passed. Coord Effort, Healing, Year-0, Campaign Sheet header/Edit Clock modal, Export Log, Luxury Ration, die3, Weapon Repair, CampaignObjects "found nothing", 4 polish bundles all working as intended.
+- [x] ~~**Thriver-godmode-sweep testplan**~~ — PLAYTESTED 2026-05-18, all sections passed. Thriver-on-non-owned-campaign + GM regression + Survivor no-leak all green.
+- [x] ~~**Preplay-testsmoke-2026-05-17**~~ — PLAYTESTED 2026-05-18 ([tasks/preplay-testsmoke-2026-05-17.md](preplay-testsmoke-2026-05-17.md)). Covered 2026-05-15→17 ships: drag-end grab-offset fix, vehicle passenger model, Coord Effort Withdraw retcon, Heal-LI infection cascade, Day-0 Lasting Damage modal, Lasting Wound chips, HIDE ALL panic button, vehicle sheet redesign, pin sidebar OSRM router, GM Notes draft, Tools sidebar, moderation email triggers, bug report tools. All green.
 
 ### Ready to build (small)
 - [x] ~~**Vehicle passenger auto-positioning**~~ — SHIPPED 2026-05-15. MOVE HERE button on every popout slot + rotation-aware offset map (Minnie floorplan locked: driver right-front, navigator right-mid, shooter center, brewer far-left, passengers spread across back). Shipping commits: `c6c8ad1` (sheet redesign + MOVE HERE buttons), `5a54773` (confirm-gate auto-snap), parallel session `2bd03dd` (one-click Disembark covers the "exit vehicle" action). Drag-lock follow-up queued below.

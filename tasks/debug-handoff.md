@@ -25,25 +25,25 @@ Each entry: where it lives, what depends on it, current health, what a player se
 ### `lib/campaign-clock.ts` — **YELLOW**
 - **What it is:** the only writer of `campaigns.clock`. Owns advance() + drainers (rations, subsistence, pending heals).
 - **What players see if it breaks:** time doesn't advance, or it does but the wrong things drain (rations don't decrement, heals don't tick, world events don't expire).
-- **Why yellow:** Phase 3 a/b/c/d shipped 2026-05-13 still untested live. Drainer logic touches multiple state surfaces.
+- **Why yellow:** Phase 3 a/b/c/d shipped 2026-05-13, playtested green 2026-05-18. Demote candidate next review — keeping YELLOW one more cycle because the drainers touch multiple state surfaces and one clean playtest isn't a full audit.
 - **First-place-to-look:** if anything time-related misbehaves, here.
 
 ### `roll_log` writer path — **YELLOW**
 - **What it is:** every event that produces a feed row. Touches `lib/roll-outcomes.ts`, `lib/roll-helpers.ts`, the 49 insert sites migrated to `OUTCOME.X` on 2026-05-15.
 - **What players see if it breaks:** feed rows render wrong, don't render, or render with wrong colors/labels.
-- **Why yellow:** the 49-site RollOutcome migration shipped today is the largest single-day change to this path in the project's history. Runtime behavior should be unchanged but the surface is large.
+- **Why yellow:** the 49-site RollOutcome migration shipped 2026-05-15 is the largest single-day change to this path in the project's history. Playtested green 2026-05-18 — keeping YELLOW one cycle because feed-rendering bugs can be subtle (wrong color, slightly-off label).
 - **First-place-to-look:** if a feed row looks off post-2026-05-15, suspect the migration first.
 
 ### Initiative state machine — **YELLOW**
 - **What it is:** turn order, `actions_remaining` decrement, nextTurn cascades, initiative_order RLS.
 - **What players see if it breaks:** turns stick (stuck on one player), skip (player gets passed over), or duplicate (two players think it's their turn).
-- **Why yellow:** Nana 2-attack initiative-stuck bug fixed via SQL RLS tightening on 2026-05-15. Untested live since the fix.
+- **Why yellow:** Nana 2-attack initiative-stuck bug fixed via SQL RLS tightening on 2026-05-15. No fresh stuck-turn reports as of 2026-05-18 playtest; demote candidate after one more playtest with active combat.
 - **First-place-to-look:** combat-turn bugs → `sql/initiative-order-rls-*.sql` + `lib/initiative-actions.ts` + the consumeAction wrapper in the table page.
 
 ### TacticalMap canvas — **YELLOW**
 - **What it is:** `components/TacticalMap.tsx`. Renders the grid, tokens, fog, range circles, blast overlays.
 - **What players see if it breaks:** stale fog (cells stay dark after a PC walks past), wrong range overlay (range circle drawn at wrong size), invisible token movement, fog not clearing when a wall is opened.
-- **Why yellow:** today's `effective` fog cache (commit `e83514b`) drops O(n²) draw work to zero on cache hit, but the cache key surface is non-trivial. Cache invalidation bugs would manifest as stale visual state.
+- **Why yellow:** the `effective` fog cache (commit `e83514b`, 2026-05-15) drops O(n²) draw work to zero on cache hit, but the cache key surface is non-trivial. Cache invalidation bugs would manifest as stale visual state. Playtested green 2026-05-18; also drag-end grab-offset fix (`d2ba6b6`, 2026-05-17) validated same day.
 - **First-place-to-look:** map-render bugs → `TacticalMap.tsx:1401-1437` (effective fog cache), `:1356-1399` (visible cache).
 
 ### Realtime channels (Supabase) — **GREEN-ish**
@@ -100,13 +100,10 @@ Each entry: what we did, what it costs today, what it costs if untouched in 6 mo
 
 Mapped to: if a player reports a bug in area X today, how surprised should I be?
 
-- **TESTED (automated):** 141 unit tests across `tests/lib/` covering roll-helpers (getOutcome, outcomeColor, compactRollSummary verbatim branches), cdp-costs (the full cost ladder + Lv4 gate), community-logic (morale CMod / departure pct / labor pool math / departure picker priority), encumbrance (limit math + backpack + overload), damage (DM stacking + Stun rpFromRaw + reactive-melee-only armor), xse-engine (cumulative attrs/skills + step up/down), roll-outcomes (every OUTCOME constant value locked). Suite runs in ~230ms on every commit + every push to main.
+- **TESTED (automated):** 160 unit tests across `tests/lib/` covering roll-helpers (getOutcome, outcomeColor, compactRollSummary verbatim branches), cdp-costs (the full cost ladder + Lv4 gate), community-logic (morale CMod / departure pct / labor pool math / departure picker priority), encumbrance (limit math + backpack + overload), damage (DM stacking + Stun rpFromRaw + reactive-melee-only armor), xse-engine (cumulative attrs/skills + step up/down), roll-outcomes (every OUTCOME constant value locked). Suite runs in ~250ms on every commit + every push to main.
 - **TYPECHECKED + GUARDRAILS PASSED:** everything that shipped this week. Catches type errors, font sizes, role-literal violations. Does NOT catch logic bugs.
-- **PLAYTESTED RECENTLY (within last 2 weeks):** Phase 2 features, character sheet basics, weapon attack flow, Coordinated Effort partial.
-- **HOPED-FOR (shipped + typechecked but not played):**
-  - 2026-05-15 batch: effective fog cache, insight uncap, role-check sweep (5 sites), weapon helper consolidation, equipment helper extraction, dead-export sweep, RollOutcome 3-commit refactor.
-  - 2026-05-14 batch: Coord Effort, Healing on Time-Tick, Year-0 calendar shift, Campaign Sheet header, Export Session Log, Weapon Repair, die3 in expanded log, CampaignObjects "found nothing", Luxury Ration consume.
-  - 2026-05-13 batch: Phase 3 a/b/c/d, 10 feed-audit drift fixes.
+- **PLAYTESTED RECENTLY (within last 2 weeks):** Phase 2 features, character sheet basics, weapon attack flow, Coordinated Effort full (per-participant Withdraw retcon validated), vehicle subsystem (passenger vanish model + count badge + drag-end grab-offset + MOVE HERE + Disembark + cross-tab sync), Heal-LI infection cascade, Day-0 Lasting Damage modal + reload-resume, Lasting Wound chips (PC + NPC), HIDE ALL panic button, pin sidebar (search + OSRM route planner + Alt+click waypoints + travel-mode ETA), QuickAddModal pin picker, GM Notes draft persistence, Token Creator rename + Tools sidebar reorder, moderation email triggers, bug report RESPOND + Export JSON, all 2026-05-13/14/15 ships (Phase 3 a/b/c/d drainers, 10 feed-audit drift fixes, Healing on Time-Tick, Year-0 calendar, Export Session Log, Weapon Repair, die3, Luxury Ration consume, effective fog cache, insight uncap, role-check sweep, helper consolidations, RollOutcome refactor, Thriver godmode UI sweep). Validated 2026-05-18 via three testplans (preplay-testsmoke-2026-05-17, polish-pass-2026-05-14, thriver-godmode-sweep).
+- **HOPED-FOR (shipped + typechecked but not played):** *(empty — drained 2026-05-18)*
 
 When a player reports a bug in something on the HOPED-FOR list, your default reaction should be "that's plausible, let me check" not "weird, that should work."
 
