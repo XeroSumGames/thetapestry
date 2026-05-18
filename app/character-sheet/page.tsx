@@ -109,7 +109,7 @@ export default function CharacterSheetPage() {
           // same-origin only; if the user's table tab isn't open, the click
           // is a no-op (UX gap to revisit if it bites).
           const prefixed = (!isMySheet && isGM && character?.name && !label.startsWith(character.name))
-            ? `${character.name} — ${label}`
+            ? `${character.name} - ${label}`
             : label
           const ch = new BroadcastChannel(`roll-requests-${campaignId}`)
           ch.postMessage({ label: prefixed, amod, smod, weapon })

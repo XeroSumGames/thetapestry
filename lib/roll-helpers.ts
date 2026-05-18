@@ -71,7 +71,16 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   //    (-1 CMod on initiative rolls)"
   // Return verbatim - no compact transformation needed.
   if (r.outcome === 'lasting_wound_acquired') return r.label
-  const suffix = r.label.startsWith(r.character_name + ' - ') ? r.label.slice(r.character_name.length + 3) : r.label
+  // Strip the "<name> - " or "<name> — " prefix that GM-from-popout rolls
+  // and some legacy paths bake into the label, so the downstream regex
+  // matchers see the bare suffix ("ACU Check", "Medicine* (RSN)", etc.).
+  // Handles ASCII hyphen (current convention per project rule "no em-dash
+  // anywhere") AND em-dash (legacy DB rows + any code path that hasn't
+  // been swept yet).
+  let suffix = r.label
+  const namePrefix = r.character_name + ' '
+  if (r.label.startsWith(namePrefix + '- ')) suffix = r.label.slice(namePrefix.length + 2)
+  else if (r.label.startsWith(namePrefix + '— ')) suffix = r.label.slice(namePrefix.length + 2)
   const hit = r.outcome === OUTCOME.Success || r.outcome === OUTCOME.WildSuccess || r.outcome === OUTCOME.HighInsight
   // Outcome suffix appended to the trim sentence. Canon rule per Xero
   // (2026-05-11): the phrase "a Moment of Insight" ONLY applies to High
@@ -755,12 +764,16 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       DEX: 'dexterity',
     }
     const attrName = ATTR_FULL[attr] ?? attr.toLowerCase()
-    if (r.outcome === 'Wild Success') return `${r.character_name} was wildly successful at a ${attrName} check`
-    if (r.outcome === 'High Insight') return `${r.character_name} was successful at a ${attrName} check and has a Moment of Insight as to why it went so well`
-    if (r.outcome === 'Dire Failure') return `${r.character_name} failed miserably at a ${attrName} check`
-    if (r.outcome === 'Low Insight') return `${r.character_name} failed at a ${attrName} check but has a Moment of Insight as to why it went so badly`
-    return hit ? `${r.character_name} was successful at a ${attrName} check`
-               : `${r.character_name} failed at a ${attrName} check`
+    // Format per Xero 2026-05-18: "ATTRIBUTE CHECK <name> {success-adverb}
+    // attempted to use their <attribute>". Category prefix on every
+    // outcome so feed scanners can spot attribute checks at a glance.
+    const prefix = 'ATTRIBUTE CHECK'
+    if (r.outcome === 'Wild Success') return `${prefix} ${r.character_name} wildly succeeded at using their ${attrName}`
+    if (r.outcome === 'High Insight') return `${prefix} ${r.character_name} successfully attempted to use their ${attrName} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'Dire Failure') return `${prefix} ${r.character_name} disastrously failed at using their ${attrName}`
+    if (r.outcome === 'Low Insight') return `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName} and has a Moment of Insight as to why it went so badly`
+    return hit ? `${prefix} ${r.character_name} successfully attempted to use their ${attrName}`
+               : `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName}`
   }
   // Last-resort fallback for old verbose labels that predate compactRollSummary.
   // These rows have baked-in outcome text (Moment of Insight, wildly successful,

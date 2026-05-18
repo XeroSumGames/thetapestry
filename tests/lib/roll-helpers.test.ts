@@ -96,4 +96,52 @@ describe('compactRollSummary', () => {
     const label = 'Cree Hask has picked up a Lasting Wound and is now Skittish (-1 CMod on initiative rolls)'
     expect(compactRollSummary({ label, character_name: 'Cree Hask', outcome: 'lasting_wound_acquired' })).toBe(label)
   })
+
+  // Attribute check narrative (canon copy locked 2026-05-18). Locks the
+  // wording per outcome so a future copy refactor can't silently regress
+  // it. Also locks the em-dash prefix strip in suffix calculation -
+  // legacy DB rows + GM-from-popout paths bake "<name> — <label>" into
+  // the label and the regex matcher needs to see the bare suffix.
+  it('attribute check Failure: ATTRIBUTE CHECK prefix + unsuccessfully', () => {
+    expect(compactRollSummary({ label: 'ACU Check', character_name: 'Enya', outcome: 'Failure' }))
+      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen')
+  })
+
+  it('attribute check Success: ATTRIBUTE CHECK prefix + successfully', () => {
+    expect(compactRollSummary({ label: 'PHY Check', character_name: 'Enya', outcome: 'Success' }))
+      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their physicality')
+  })
+
+  it('attribute check Wild Success: wildly succeeded', () => {
+    expect(compactRollSummary({ label: 'DEX Check', character_name: 'Enya', outcome: 'Wild Success' }))
+      .toBe('ATTRIBUTE CHECK Enya wildly succeeded at using their dexterity')
+  })
+
+  it('attribute check Dire Failure: disastrously failed', () => {
+    expect(compactRollSummary({ label: 'INF Check', character_name: 'Enya', outcome: 'Dire Failure' }))
+      .toBe('ATTRIBUTE CHECK Enya disastrously failed at using their influence')
+  })
+
+  it('attribute check High Insight: success + Moment of Insight', () => {
+    expect(compactRollSummary({ label: 'RSN Check', character_name: 'Enya', outcome: 'High Insight' }))
+      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their reason and has a Moment of Insight as to why it went so well')
+  })
+
+  it('attribute check Low Insight: failure + Moment of Insight', () => {
+    expect(compactRollSummary({ label: 'ACU Check', character_name: 'Enya', outcome: 'Low Insight' }))
+      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen and has a Moment of Insight as to why it went so badly')
+  })
+
+  it('attribute check with em-dash prefix in label still matches', () => {
+    // GM-from-popout path historically baked "<name> — <label>" with
+    // an em-dash. Suffix strip must handle both ASCII hyphen and
+    // em-dash so the narrative branch fires either way.
+    expect(compactRollSummary({ label: 'Enya — ACU Check', character_name: 'Enya', outcome: 'Failure' }))
+      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen')
+  })
+
+  it('attribute check with ASCII hyphen prefix in label still matches', () => {
+    expect(compactRollSummary({ label: 'Enya - ACU Check', character_name: 'Enya', outcome: 'Failure' }))
+      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen')
+  })
 })
