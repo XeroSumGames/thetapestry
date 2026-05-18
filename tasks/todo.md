@@ -11,7 +11,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 
 **Phase 2 follow-ups (surfaced by today's drift report, [tasks/schema-drift-report-2026-05-17.md](schema-drift-report-2026-05-17.md))**
 - [ ] **15 orphan tables** — no canonical CREATE TABLE in sql/. Tier 1 (`profiles`, `campaigns`, `characters`, `character_states`, `campaign_members`), Tier 2 (`roll_log`, `chat_messages`, `notifications`), Tier 3 (`campaign_notes`, `map_pins`, `session_attachments`, `sessions`, `user_events`, `visitor_logs`, `world_npcs`). Same reverse-engineering pattern as `sql/000-initiative-order-canonical-2026-05-17.sql`. ~3-5 sessions total. **Do NOT touch `characters` / `character_states` / `profiles` until after the 2026-05-18 playtest.**
-- [ ] **1 orphan trigger** — `on_character_changed` exists live but has no `CREATE TRIGGER` in sql/. Extract via `pg_get_triggerdef`. ~10 min.
+- [x] ~~**1 orphan trigger**~~ — SHIPPED 2026-05-17 (`3fc28e6`). `notify_character_changed()` function was defined in `sql/update-player-joined-trigger-v3.sql` but the matching CREATE TRIGGER had only been applied manually in the dashboard. Added DROP IF EXISTS + CREATE TRIGGER block to the bottom of the same file (v3 migration now self-contained) and re-applied to live (no-op as expected).
 
 **Cleanup follow-ups (low priority, do during next surrounding-feature touch)**
 - [ ] **Dead client-side moderation_status logic** at `app/campfire/forums/page.tsx:270` and ~5 sibling sites (war-stories, lfg, modules). Trigger from Y3 (sql/moderation-enforce-trigger-2026-05-17.sql) now overrides for non-thrivers. Safe to leave; clean up when forums/war-stories/lfg gets its next refactor pass.
