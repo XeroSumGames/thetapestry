@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-19 06:08 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [188 passed]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- `tasks/todo.md` CURRENT OPEN has duplicate entries for the same unstarted work:
+  - Line 56: "Modal unification finish" duplicates line 80: "Modal unification (5 of 6 remaining)" — same 5 modals listed, line 80 is more detailed (notes `6640b1a` Coordinated Effort migration)
+  - Line 57: "CMod Stack extraction" duplicates line 84: "CMod Stack reusable component" — same task, line 84 has fuller scope notes
+  - Both pairs also have a third copy further down in the backlog (lines 580, 621)
+- HOPED-FOR: empty (drained 2026-05-18) — no drift
+
+**Action:** Deduplicate todo.md — keep the more-detailed version (lines 80 + 84) in CURRENT OPEN; remove lines 56 + 57
+
+---
+
 ## 2026-05-19 00:10 UTC
 
 **Status:** DRIFT
