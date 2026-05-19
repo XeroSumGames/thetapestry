@@ -295,6 +295,14 @@ export const EQUIPMENT: EquipmentItem[] = [
   { name: 'Walkie-Talkies',         rarity: 'Uncommon', enc: 1, notes: 'Range of 20 miles' },
   { name: 'Weapons Toolkit',        rarity: 'Uncommon', enc: 1, notes: 'Required for Weapons maintenance and repairs' },
   { name: "Workman's Toolkit",      rarity: 'Uncommon', enc: 1, notes: '+2 Mechanics* check' },
+  // 55-Gallon Drum (Q4-c, added 2026-05-19): scavengeable fuel-storage
+  // unit. Sits in cargo until installed on a vehicle via the Fuel
+  // Storage panel on the vehicle popout - install +1 day to that
+  // vehicle's fuel_max (capped at the vehicle's fuel_storage_max);
+  // uninstall returns the drum to cargo. enc=2 because they're heavy
+  // and bulky. Rarity Common - mid/late-game parties find them in
+  // industrial yards, fuel depots, scrapyards.
+  { name: '55-Gallon Drum',         rarity: 'Common',   enc: 2, notes: 'Install on a vehicle to add 1 day of fuel storage (uninstall to recover the drum). Cap is per-vehicle.' },
 ];
 
 // Case-insensitive, whitespace-tolerant lookup. Use this when matching

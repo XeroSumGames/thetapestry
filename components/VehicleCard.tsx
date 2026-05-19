@@ -22,6 +22,20 @@ export interface Vehicle {
   stress: number
   fuel_max: number
   fuel_current: number
+  // Per-vehicle fuel storage expansion (Q4-c, 2026-05-19). Two optional
+  // columns let the player install scavenged 55-Gallon Drums to bump
+  // fuel_max beyond the vehicle's stock capacity:
+  //   fuel_max_base    - the un-expanded capacity (Minnie = 4). Acts as
+  //                      the floor for un-install. If absent, defaults
+  //                      to whatever fuel_max is at read time (i.e., no
+  //                      drums currently installed = base = max).
+  //   fuel_storage_max - absolute cap on fuel_max after install
+  //                      (Minnie = 6). If absent or <= fuel_max_base,
+  //                      the install button is disabled — feature opt-in
+  //                      per vehicle. Smaller vehicles default to no cap
+  //                      expansion until rules figure out their numbers.
+  fuel_max_base?: number
+  fuel_storage_max?: number
   three_words: string
   notes: string
   image_url: string | null

@@ -23,6 +23,8 @@ UPDATE campaigns SET vehicles = '[
     "stress": 0,
     "fuel_max": 4,
     "fuel_current": 4,
+    "fuel_max_base": 4,
+    "fuel_storage_max": 6,
     "three_words": "Cramped and Noisy",
     "notes": "An alcohol Distillery has been fitted to this Winnebago \"Minnie\".\n- The still can only be operated when the vehicle is stopped or it has a 50% chance (1-3 on 1d6) of catching fire or exploding.\n- It takes 1 day of gathering materials and 1 day of distilling to produce 2 days of fuel. Requires a Tinkerer or Mechanic* check.\n- There are storage tanks built into the RV''s bodywork that allow for the storage of up to 4 days of fuel.\n- Has a weapon nest built on the top, between the AC units, with a fitted M60 that only fires forward in a 90 degree arc.",
     "image_url": null,

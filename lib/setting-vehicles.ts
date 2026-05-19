@@ -36,6 +36,12 @@ export interface SeedVehicle {
   stress: number
   fuel_max: number
   fuel_current: number
+  // Per-vehicle fuel storage expansion (Q4-c, 2026-05-19). See
+  // VehicleCard.tsx for the rationale. fuel_max_base = floor for
+  // uninstall; fuel_storage_max = cap on install. Both optional —
+  // a vehicle without these fields can't have drums added.
+  fuel_max_base?: number
+  fuel_storage_max?: number
   three_words?: string
   notes?: string
   image_url?: string | null
@@ -76,6 +82,8 @@ const MINNIE: SeedVehicle = {
   stress: 0,
   fuel_max: 4,
   fuel_current: 4,
+  fuel_max_base: 4,
+  fuel_storage_max: 6,
   three_words: 'Cramped and Noisy',
   notes:
     'An alcohol Distillery has been fitted to this Winnebago "Minnie".\n' +

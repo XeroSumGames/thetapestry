@@ -12,6 +12,10 @@ import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT, findEquipmentByName, SKILLS } from '../../lib/xse-schema'
+import {
+  installFuelDrum, removeFuelDrum, effectiveFuelMaxBase,
+  installedDrumCount, remainingDrumCapacity, drumsInCargo,
+} from '../../lib/fuel-storage'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
@@ -103,6 +107,11 @@ export default function VehiclePage() {
   const [canEdit, setCanEdit] = useState(false)
   const [loading, setLoading] = useState(true)
   const [editingNotes, setEditingNotes] = useState(false)
+  // Last error from the Fuel Storage install/uninstall buttons (Q4-c).
+  // Cleared when the next action succeeds. Surface stays inline under
+  // the storage row so the player sees WHY install failed (no drum in
+  // cargo / at cap / feature disabled).
+  const [fuelStorageError, setFuelStorageError] = useState<string | null>(null)
   const [notesValue, setNotesValue] = useState('')
   const [showAddCargo, setShowAddCargo] = useState(false)
   const [addName, setAddName] = useState('')
@@ -1546,6 +1555,62 @@ export default function VehiclePage() {
               ))}
             </div>
           </div>
+
+          {/* Fuel Storage Expansion (Q4-c, 2026-05-19). Only renders for
+              vehicles that have fuel_storage_max > fuel_max_base (i.e.,
+              feature opted-in via the seed or backfill). Install pulls
+              a 55-Gallon Drum out of cargo and bumps fuel_max by 1;
+              Remove returns the drum to cargo and decrements fuel_max
+              (clamping fuel_current down if it'd exceed the new cap). */}
+          {vehicle.fuel_storage_max != null
+            && vehicle.fuel_storage_max > effectiveFuelMaxBase(vehicle) && (
+            <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={lbl}>Fuel Storage</span>
+                <span style={{ fontSize: '15px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
+                  {installedDrumCount(vehicle)} / {(vehicle.fuel_storage_max ?? 0) - effectiveFuelMaxBase(vehicle)} drum{installedDrumCount(vehicle) === 1 ? '' : 's'} installed
+                  &nbsp;·&nbsp;
+                  <span style={{ color: '#5a5550' }}>{drumsInCargo(vehicle.cargo)} in cargo</span>
+                </span>
+                {canEdit && (
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={() => {
+                        const r = removeFuelDrum(vehicle)
+                        if (r.error || !r.vehicle) {
+                          setFuelStorageError(r.error ?? 'Unknown error')
+                          return
+                        }
+                        setFuelStorageError(null)
+                        updateVehicle(r.vehicle)
+                      }}
+                      disabled={installedDrumCount(vehicle) === 0}
+                      title={installedDrumCount(vehicle) === 0 ? 'No drums installed' : 'Uninstall one drum (returns to cargo)'}
+                      style={{ padding: '2px 8px', background: installedDrumCount(vehicle) > 0 ? '#2a1210' : '#1a1a1a', border: `1px solid ${installedDrumCount(vehicle) > 0 ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: installedDrumCount(vehicle) > 0 ? '#f5a89a' : '#3a3a3a', fontSize: '13px', cursor: installedDrumCount(vehicle) > 0 ? 'pointer' : 'not-allowed', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>− Uninstall</button>
+                    <button
+                      onClick={() => {
+                        const r = installFuelDrum(vehicle)
+                        if (r.error || !r.vehicle) {
+                          setFuelStorageError(r.error ?? 'Unknown error')
+                          return
+                        }
+                        setFuelStorageError(null)
+                        updateVehicle(r.vehicle)
+                      }}
+                      disabled={remainingDrumCapacity(vehicle) === 0 || drumsInCargo(vehicle.cargo) === 0}
+                      title={remainingDrumCapacity(vehicle) === 0 ? 'At cap' : drumsInCargo(vehicle.cargo) === 0 ? 'No 55-Gallon Drum in cargo' : 'Install one drum (+1 day of fuel storage)'}
+                      style={{ padding: '2px 8px', background: (remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${(remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: (remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? '#7fc458' : '#3a3a3a', fontSize: '13px', cursor: (remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? 'pointer' : 'not-allowed', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>+ Install</button>
+                  </div>
+                )}
+              </div>
+              {fuelStorageError && (
+                <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{fuelStorageError}</div>
+              )}
+              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+                Base capacity {effectiveFuelMaxBase(vehicle)} days · cap {vehicle.fuel_storage_max} days. Each 55-Gallon Drum installed adds 1 day of fuel storage.
+              </div>
+            </div>
+          )}
 
           {/* Floorplan */}
           {(vehicle as any).floorplan_url && (
