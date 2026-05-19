@@ -1,5 +1,15 @@
 # Lessons Learned
 
+## Never offer "quick" - always full, complete, thorough, competent (2026-05-19)
+
+Locked verbatim: "i never want quick, I always want 'full, complete, thorough, competent'."
+
+**The rule:** when there's a choice between a shortcut and a real fix, do NOT present them as A/B. Draft only the full version. If the full version is multi-session, present it as phases (phasing for risk is different from offering a smaller alternative).
+
+**What earned this correction:** FI streamline asked as `A. Quick ~15min auto-fire / B. Full ~2hr collapse modal`. Wrong frame. Xero only wants B. If B is long, propose breaking B into phases.
+
+Also captured in cross-session memory at `memory/feedback_never_offer_quick.md`.
+
 ## DO NOT recommend when Xero should stop / sleep / rest / pause for the night (2026-05-19)
 
 **BANNED behavior.** Xero is the agent here. Claude is the tool. Tools do not tell their operator when to clock off.
