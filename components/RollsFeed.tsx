@@ -25,7 +25,7 @@
 // reviewable. Hook + state extraction here gives the bulk of the parse-
 // time win.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { compactRollSummary, outcomeColor, formatTime } from '../lib/roll-helpers'
 
@@ -100,6 +100,80 @@ export interface UseRollsFeedReturn {
   scrollToBottom: () => void
 }
 
+// Aggregate Coordinated Effort chain rows into a single banner row.
+// Per Xero 2026-05-18: every chain of N participants should appear as
+// ONE summary row in the feed ("Cree Hask successfully uses Tactics*
+// to coordinate an effort with Marcus, Knox, and Enya"). Individual
+// participant rolls move to the expanded view (^ pip).
+//
+// Lead row identification: every row in a chain carries the same
+// `coord_chain_id`. The lead's label starts with "Coordinated Effort -
+// <skill>". Participants' labels are normal skill checks. We enrich
+// the lead row with `damage_json.coordChainParticipants` (an array of
+// { name, outcome, total, die1, die2, amod, smod, cmod }) and drop
+// the participant rows from the visible list. Chains with only a
+// lead (no participants logged yet) pass through unchanged.
+export function collapseCoordEffortChains(raw: RollEntry[]): RollEntry[] {
+  // Group by coord_chain_id; pass-through rows without a chain id.
+  const byChain = new Map<string, RollEntry[]>()
+  const passthrough: RollEntry[] = []
+  for (const r of raw) {
+    const cid = (r as any).coord_chain_id as string | null
+    if (cid) {
+      const arr = byChain.get(cid) ?? []
+      arr.push(r)
+      byChain.set(cid, arr)
+    } else {
+      passthrough.push(r)
+    }
+  }
+  if (byChain.size === 0) return raw
+  // For each chain: extract lead, build participants, emit enriched
+  // lead. Order preservation: keep the original index of the lead in
+  // the result so the feed timeline doesn't reshuffle.
+  const collapsed: Array<{ idx: number; row: RollEntry }> = []
+  for (const r of passthrough) {
+    const idx = raw.indexOf(r)
+    collapsed.push({ idx, row: r })
+  }
+  for (const [, chainRows] of byChain) {
+    const leadRow = chainRows.find(cr => typeof cr.label === 'string' && cr.label.startsWith('Coordinated Effort - '))
+    if (!leadRow) {
+      // Pathological chain with no lead row stamped - pass through
+      // every row as-is rather than swallow them silently.
+      for (const cr of chainRows) collapsed.push({ idx: raw.indexOf(cr), row: cr })
+      continue
+    }
+    const participantRows = chainRows.filter(cr => cr !== leadRow)
+    if (participantRows.length === 0) {
+      // Lead-only chain (no participants rolled yet). Keep the lead
+      // visible as a normal row so the GM can see the chain started.
+      collapsed.push({ idx: raw.indexOf(leadRow), row: leadRow })
+      continue
+    }
+    const skill = (leadRow.label.match(/^Coordinated Effort\s+-\s+(.+)$/) ?? [])[1]?.trim() ?? ''
+    const participants = participantRows.map(pr => ({
+      name: pr.character_name,
+      outcome: pr.outcome,
+      total: pr.total,
+      die1: pr.die1, die2: pr.die2,
+      amod: pr.amod, smod: pr.smod, cmod: pr.cmod,
+    }))
+    const enrichedLead: RollEntry = {
+      ...leadRow,
+      damage_json: {
+        ...(leadRow.damage_json as any || {}),
+        coordChainSkill: skill,
+        coordChainParticipants: participants,
+      } as any,
+    }
+    collapsed.push({ idx: raw.indexOf(leadRow), row: enrichedLead })
+  }
+  // Restore original order by index.
+  collapsed.sort((a, b) => a.idx - b.idx)
+  return collapsed.map(c => c.row)
+}
+
 export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedReturn {
   const supabase = createClient()
   const [rolls, setRolls] = useState<RollEntry[]>([])
@@ -169,7 +243,11 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [campaignId, refetch])
 
-  return { rolls, refetch, clear, expandedRollIds, toggleExpanded, rollFeedRef, scrollToBottom }
+  // Apply Coord Effort chain collapse before exposing. Memoized on
+  // `rolls` reference so we don't re-walk the list on every render
+  // unrelated to roll data (e.g., expandedRollIds toggle).
+  const collapsedRolls = useMemo(() => collapseCoordEffortChains(rolls), [rolls])
+  return { rolls: collapsedRolls, refetch, clear, expandedRollIds, toggleExpanded, rollFeedRef, scrollToBottom }
 }
 
 // ---------------------------------------------------------------------------
@@ -678,6 +756,90 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
               <span style={{ marginLeft: '8px', color: outcomeColorVal, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.outcome}</span>
             </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Coordinated Effort - bespoke Tier A banner. Sibling to Group Check
+  // above. Triggered by collapseCoordEffortChains in useRollsFeed
+  // having enriched the lead row with damage_json.coordChainParticipants.
+  // Narrative format locked 2026-05-18 per Xero:
+  //   "<lead> {success-adverb} uses <skill> to coordinate an effort
+  //    with <participants>"
+  // Expanded view shows per-participant dice math.
+  if ((r.damage_json as any)?.coordChainParticipants && r.label.startsWith('Coordinated Effort - ')) {
+    const dj = r.damage_json as any
+    const skill: string = dj.coordChainSkill ?? ''
+    const participants: Array<{ name: string; outcome: string; total: number; die1: number; die2: number; amod: number; smod: number; cmod: number }> = dj.coordChainParticipants
+    const outcomeColorVal = outcomeColor(r.outcome)
+    const formatNames = (names: string[]) => {
+      if (names.length <= 1) return names[0] ?? ''
+      if (names.length === 2) return `${names[0]} and ${names[1]}`
+      return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
+    }
+    const adverbClause: string = (() => {
+      switch (r.outcome) {
+        case 'Wild Success':  return `wildly succeeds using ${skill}`
+        case 'High Insight':  return `successfully uses ${skill}`
+        case 'Success':       return `successfully uses ${skill}`
+        case 'Failure':       return `unsuccessfully uses ${skill}`
+        case 'Dire Failure':  return `disastrously fails using ${skill}`
+        case 'Low Insight':   return `unsuccessfully uses ${skill}`
+        default:              return `attempts ${skill}`
+      }
+    })()
+    const insightTail =
+      r.outcome === 'High Insight' ? ' and has a Moment of Insight as to why it went so well'
+      : r.outcome === 'Low Insight' ? ' and has a Moment of Insight as to why it went so badly'
+      : ''
+    const participantNames = participants.map(p => p.name)
+    const isExpanded = expandedRollIds.has(r.id)
+    return (
+      <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${outcomeColorVal}33`, borderRadius: '3px', borderLeft: `3px solid ${outcomeColorVal}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: outcomeColorVal, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Coordinated Effort</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+            <button onClick={() => toggleExpanded(r.id)}
+              title={isExpanded ? 'Hide participants' : 'View participants'}
+              style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
+              {isExpanded ? '▾' : '▸'}
+            </button>
+          </div>
+        </div>
+        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+          {r.character_name} {adverbClause} to coordinate an effort with {formatNames(participantNames)}{insightTail}
+          {r.insight_awarded && (r.outcome === 'High Insight' || r.outcome === 'Low Insight') && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+        </div>
+        {isExpanded && (
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+            {/* Lead row dice */}
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#cce0f5', fontWeight: 600 }}>{r.character_name} (lead):</span>{' '}
+              [{r.die1}+{r.die2}]
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              <span style={{ marginLeft: '8px', color: outcomeColorVal, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.outcome}</span>
+            </div>
+            {/* Per-participant dice */}
+            {participants.map((p, i) => {
+              const pColor = outcomeColor(p.outcome)
+              return (
+                <div key={`${r.id}-p-${i}`} style={{ marginBottom: '2px' }}>
+                  <span style={{ color: '#cce0f5', fontWeight: 600 }}>{p.name}:</span>{' '}
+                  [{p.die1}+{p.die2}]
+                  {p.amod !== 0 && <span style={{ color: p.amod > 0 ? '#7fc458' : '#c0392b' }}> {p.amod > 0 ? '+' : ''}{p.amod} AMod</span>}
+                  {p.smod !== 0 && <span style={{ color: p.smod > 0 ? '#7fc458' : '#c0392b' }}> {p.smod > 0 ? '+' : ''}{p.smod} SMod</span>}
+                  {p.cmod !== 0 && <span style={{ color: p.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {p.cmod > 0 ? '+' : ''}{p.cmod} CMod</span>}
+                  <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {p.total}</span>
+                  <span style={{ marginLeft: '8px', color: pColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{p.outcome}</span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
