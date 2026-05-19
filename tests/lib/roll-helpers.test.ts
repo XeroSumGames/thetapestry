@@ -590,4 +590,50 @@ describe('compactRollSummary', () => {
       character_name: 'Knox Koss', outcome: 'Low Insight',
     })).toBe("Knox Koss botches the brew in Minnie's still but has a Moment of Insight as to why it went so badly")
   })
+
+  // First Impression narrative (canon locked 2026-05-10 + 11 with
+  // bespoke HI/LI tails - kept verbatim per Xero option-a 2026-05-19
+  // despite the new canonical rule. LI present-tense fix 2026-05-19:
+  // "made" -> "makes" so all 6 outcomes share tense.
+  it('first impression Wild Success', () => {
+    expect(compactRollSummary({
+      label: 'Cree Hask - First Impression (Avery Xavier)',
+      character_name: 'Cree Hask', outcome: 'Wild Success',
+    })).toBe('Cree Hask makes a strong First Impression on Avery Xavier')
+  })
+
+  it('first impression High Insight: bespoke "they did so well" tail kept', () => {
+    expect(compactRollSummary({
+      label: 'Cree Hask - First Impression (Avery Xavier)',
+      character_name: 'Cree Hask', outcome: 'High Insight',
+    })).toBe('Cree Hask makes a strong First Impression on Avery Xavier and has a Moment of Insight as to why they did so well')
+  })
+
+  it('first impression Success', () => {
+    expect(compactRollSummary({
+      label: 'Cree Hask - First Impression (Avery Xavier)',
+      character_name: 'Cree Hask', outcome: 'Success',
+    })).toBe('Cree Hask makes a First Impression on Avery Xavier')
+  })
+
+  it('first impression Failure', () => {
+    expect(compactRollSummary({
+      label: 'Cree Hask - First Impression (Avery Xavier)',
+      character_name: 'Cree Hask', outcome: 'Failure',
+    })).toBe('Cree Hask makes a bad First Impression on Avery Xavier')
+  })
+
+  it('first impression Dire Failure', () => {
+    expect(compactRollSummary({
+      label: 'Cree Hask - First Impression (Avery Xavier)',
+      character_name: 'Cree Hask', outcome: 'Dire Failure',
+    })).toBe('Cree Hask makes a terrible First Impression on Avery Xavier')
+  })
+
+  it('first impression Low Insight: present-tense "makes" + bespoke "what went wrong" tail', () => {
+    expect(compactRollSummary({
+      label: 'Cree Hask - First Impression (Avery Xavier)',
+      character_name: 'Cree Hask', outcome: 'Low Insight',
+    })).toBe('Cree Hask makes a terrible First Impression on Avery Xavier, but has a Moment of Insight as to what went wrong')
+  })
 })

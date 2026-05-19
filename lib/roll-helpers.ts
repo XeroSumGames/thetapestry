@@ -617,8 +617,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       if (r.outcome === 'Dire Failure') {
         return `${r.character_name} makes a terrible First Impression${fiTarget}`
       }
-      // Low Insight - bespoke phrasing per Xero (2026-05-10).
-      return `${r.character_name} made a terrible First Impression${fiTarget}, but has a Moment of Insight as to what went wrong`
+      // Low Insight - bespoke phrasing per Xero (2026-05-10, present-
+      // tense parity fix 2026-05-19: "made" -> "makes"). Bespoke tail
+      // "what went wrong" kept verbatim per Xero (option a, 2026-05-19);
+      // does not align to the canonical "as to why it went so badly".
+      return `${r.character_name} makes a terrible First Impression${fiTarget}, but has a Moment of Insight as to what went wrong`
     }
     // Fallthrough - should never hit given the regex.
     return `${r.character_name} - ${check}${hit ? '' : ' (failed)'}${outcomeTag}`
