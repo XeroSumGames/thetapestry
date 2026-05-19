@@ -821,6 +821,15 @@ export default function TablePage() {
     scrollFeedToBottom: () => { rollsFeed.rollFeedRef.current?.scrollTo(0, rollsFeed.rollFeedRef.current.scrollHeight) },
   })
   const [whisperTarget, setWhisperTarget] = useState<{ userId: string; characterName: string } | null>(null)
+  // Gut Instinct GM detail prompt. When a player (or GM-on-behalf-of-player)
+  // resolves a Gut Instinct roll, the rolling client broadcasts
+  // 'gut_instinct_resolved'; the GM/Thriver clients open this modal to
+  // whisper a private detail to the rolling player. The standard
+  // narrative feed row lands for everyone immediately; this whisper is
+  // the GM color on top. Skipped on self-roll (pcOwnerId === GM userId).
+  const [gutInstinctPrompt, setGutInstinctPrompt] = useState<{ pcOwnerId: string; characterName: string; outcome: string } | null>(null)
+  const [gutInstinctDetail, setGutInstinctDetail] = useState('')
+  const [gutInstinctSending, setGutInstinctSending] = useState(false)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [viewingObjects, setViewingObjects] = useState<{ tokenId: string; name: string; color: string; portraitUrl: string | null }[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -1342,6 +1351,19 @@ export default function TablePage() {
         .on('broadcast', { event: 'scene_activated' }, wrapBroadcast('scene_activated', () => {
           if (tacticalSharedRef.current) setShowTacticalMap(true)
           setTokenRefreshKey(k => k + 1)
+        }))
+        // Gut Instinct resolved - GM/Thriver clients open a modal to
+        // whisper a private detail to the rolling player. Skipped if
+        // the rolling player IS the GM (self-roll for color). The
+        // standard narrative feed row already lands separately via
+        // saveRollToLog; this is the additional GM color cue.
+        .on('broadcast', { event: 'gut_instinct_resolved' }, wrapBroadcast('gut_instinct_resolved', (msg: any) => {
+          if (!gmLikeRef.current) return
+          const { pcOwnerId, characterName, outcome } = msg.payload ?? {}
+          if (!pcOwnerId || !characterName || !outcome) return
+          if (pcOwnerId === userIdRef.current) return
+          setGutInstinctPrompt({ pcOwnerId, characterName, outcome })
+          setGutInstinctDetail('')
         }))
         .on('broadcast', { event: 'token_changed' }, wrapBroadcast('token_changed', () => { setTokenRefreshKey(k => k + 1) }))
         .on('broadcast', { event: 'turn_changed' }, wrapBroadcast('turn_changed', () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() }))
@@ -6489,6 +6511,21 @@ export default function TablePage() {
         augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), ...lastingDamageJson }
       }
       await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3)
+      // Gut Instinct: broadcast resolved so the GM/Thriver client
+      // auto-opens a whisper-detail modal (option a per Xero 2026-05-19).
+      // Standard narrative feed row already landed via saveRollToLog;
+      // this fires the additional "GM color" prompt. Receiver gates
+      // on gmLikeRef + pcOwnerId !== userIdRef to skip self-roll.
+      if (pendingRoll.label.includes('Gut Instinct')) {
+        const pcEntry = entries.find(e => e.character.name === characterName)
+        if (pcEntry?.userId && initChannelRef.current) {
+          initChannelRef.current.send({
+            type: 'broadcast',
+            event: 'gut_instinct_resolved',
+            payload: { pcOwnerId: pcEntry.userId, characterName, outcome }
+          })
+        }
+      }
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack
@@ -12774,6 +12811,72 @@ export default function TablePage() {
         </div>
         )
       })()}
+
+      {/* Gut Instinct GM detail modal - opens on the GM/Thriver client
+          when a player resolves a Gut Instinct roll. GM types a private
+          detail; Send writes a chat_messages whisper to the rolling
+          player. Skip dismisses without sending. Fires per Xero
+          option-a 2026-05-19 (feed narrative + private whisper). */}
+      {gutInstinctPrompt && (
+        <div onClick={e => e.stopPropagation()}
+          style={{ position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 10000, background: '#1a1a1a', border: '1px solid #5a4a1b', borderRadius: '4px', width: '420px', boxShadow: '0 4px 16px rgba(0,0,0,0.6)' }}>
+          <div style={{ padding: '10px 12px', borderBottom: '1px solid #3a3a3a', background: '#2a2010' }}>
+            <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
+              Gut Instinct - {gutInstinctPrompt.outcome}
+            </div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '2px' }}>
+              {gutInstinctPrompt.characterName}
+            </div>
+          </div>
+          <div style={{ padding: '12px' }}>
+            <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', lineHeight: 1.5 }}>
+              Whisper a private detail to {gutInstinctPrompt.characterName}'s player. They'll see it in their Chat tab. Skip if nothing to add.
+            </div>
+            <textarea
+              value={gutInstinctDetail}
+              onChange={e => setGutInstinctDetail(e.target.value)}
+              autoFocus
+              rows={4}
+              placeholder="What does the PC sense?"
+              style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }}
+            />
+          </div>
+          <div style={{ padding: '8px 12px', borderTop: '1px solid #3a3a3a', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <button
+              onClick={() => { setGutInstinctPrompt(null); setGutInstinctDetail('') }}
+              disabled={gutInstinctSending}
+              style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: gutInstinctSending ? 'not-allowed' : 'pointer' }}>
+              Skip
+            </button>
+            <button
+              onClick={async () => {
+                const detail = gutInstinctDetail.trim()
+                if (!detail || gutInstinctSending || !gutInstinctPrompt) return
+                setGutInstinctSending(true)
+                const { error } = await supabase.from('chat_messages').insert({
+                  campaign_id: id,
+                  user_id: userId,
+                  character_name: 'GM',
+                  message: `Gut Instinct: ${detail}`,
+                  is_whisper: true,
+                  recipient_user_id: gutInstinctPrompt.pcOwnerId,
+                })
+                setGutInstinctSending(false)
+                if (error) {
+                  console.error('[gut-instinct] whisper insert error:', error.message)
+                  alert('Failed to send whisper: ' + error.message)
+                  return
+                }
+                setGutInstinctPrompt(null)
+                setGutInstinctDetail('')
+              }}
+              disabled={!gutInstinctDetail.trim() || gutInstinctSending}
+              style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (!gutInstinctDetail.trim() || gutInstinctSending) ? 'not-allowed' : 'pointer', opacity: (!gutInstinctDetail.trim() || gutInstinctSending) ? 0.5 : 1 }}>
+              {gutInstinctSending ? 'Sending...' : 'Send Whisper'}
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   )
