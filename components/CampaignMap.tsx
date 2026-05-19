@@ -831,8 +831,20 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
       await loadPins(L)
 
+      // Pin sync. Two listeners on the same channel:
+      //   - postgres_changes is the lossy fallback (known flaky on RLS'd
+      //     tables — see CampaignPins.tsx L151-153 + lessons memo
+      //     2026-04-11). Kept as a belt.
+      //   - broadcast 'pins_changed' is the reliable signal — every pin
+      //     mutation in CampaignPins (toggleReveal / revealAll / hideAll /
+      //     edit / delete / reorder) fires this. Pre-this-fix
+      //     (post-2026-05-18-playtest), CampaignMap relied only on
+      //     postgres_changes; a GM's "Show pin" click reliably updated
+      //     the sidebar list but NOT the map markers until refresh.
+      //     Adding the broadcast listener closes the gap.
       supabase.channel(`campaign_pins_${campaignId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
+        .on('broadcast', { event: 'pins_changed' }, () => loadPins())
         .subscribe()
 
       supabase.channel(`campaign_npcs_map_${campaignId}`)
