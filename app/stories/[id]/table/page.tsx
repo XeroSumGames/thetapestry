@@ -20,6 +20,7 @@ import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../
 import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components/RollsFeed'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
+import { reportSupabaseError } from '../../../../lib/supabase-errors'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -6492,7 +6493,7 @@ export default function TablePage() {
           : 'catastrophic first impression'
         void appendProgressionLog(firstImpressionTarget.characterId, 'relationship', `Met ${npcName} - ${vibe} (CMod ${cmodDelta >= 0 ? '+' : ''}${cmodDelta}).`)
       } catch (err) {
-        console.error('[first-impression] relationship upsert failed:', err)
+        reportSupabaseError(err as any, 'first-impression')
       }
       firstImpressionTargetRef.current = null
     }
@@ -12096,7 +12097,7 @@ export default function TablePage() {
                   p_character_id: myEntry.character.id,
                   p_delta: -1,
                 })
-              if (bumpErr) console.error('[barter] relationship damage failed:', bumpErr.message)
+              if (bumpErr) reportSupabaseError(bumpErr, 'barter-relationship-damage')
             }}
             onApply={async ({ pcGives, pcGets, rollSummary, outcome }) => {
               // Apply the deal as a single batch:
