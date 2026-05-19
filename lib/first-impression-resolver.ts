@@ -13,7 +13,9 @@
 // tier +1 (Success gave +1 instead of 0, Low Insight gave -2 instead
 // of -3, etc). Tests below enshrine the corrected mapping.
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { OUTCOME } from './roll-outcomes'
+import { appendProgressionEntry } from './progression-log'
 
 // CMod delta by outcome. Stacks atomically via the
 // bump_npc_relationship_cmod RPC, clamped to +/-3 server-side.
@@ -55,4 +57,101 @@ export function firstImpressionProgressionMessage(npcName: string, delta: number
   const vibe = firstImpressionVibe(delta)
   const sign = delta >= 0 ? '+' : ''
   return `Met ${npcName} - ${vibe} (CMod ${sign}${delta}).`
+}
+
+// ── Phase 2: side-effectful resolver ──────────────────────────────
+// Single entry point for "First Impression roll completed — write
+// everything." Used by the new <FirstImpressionModal> component to
+// resolve a roll in one call instead of routing through executeRoll +
+// RollModal. The legacy executeRoll FI branch stays alive during
+// Phase 2 as a fallback; Phase 3 removes it.
+//
+// Does three best-effort writes (each independent — a failure in one
+// doesn't block the others, and the caller surfaces the warnings):
+//   1. roll_log row — the dice + outcome (mirrors executeRoll's
+//      saveRollToLog shape for the FI label).
+//   2. bump_npc_relationship_cmod RPC — atomic accumulate-with-clamp
+//      on npc_relationships.relationship_cmod (±3). RPC runs as
+//      SECURITY DEFINER per c30a34d so non-GM PCs can write their
+//      own relationship rows.
+//   3. progression_log append — "Met X - <vibe> (CMod <signed>).";
+//      best-effort, never throws (matches appendProgressionEntry's
+//      contract).
+//
+// Returns the canonical cmodDelta + vibe + any warnings the caller
+// can surface inline.
+
+export interface ResolveFirstImpressionArgs {
+  supabase: SupabaseClient
+  campaignId: string
+  userId: string
+  characterId: string
+  characterName: string
+  npcId: string
+  npcName: string
+  die1: number
+  die2: number
+  amod: number
+  smod: number
+  cmod: number
+  total: number
+  outcome: string
+}
+
+export interface ResolveFirstImpressionResult {
+  cmodDelta: number
+  vibe: string
+  warnings: string[]
+}
+
+export async function resolveFirstImpression(
+  args: ResolveFirstImpressionArgs,
+): Promise<ResolveFirstImpressionResult> {
+  const { supabase, campaignId, userId, characterId, characterName, npcId, npcName,
+          die1, die2, amod, smod, cmod, total, outcome } = args
+  const cmodDelta = firstImpressionCmodDelta(outcome)
+  const vibe = firstImpressionVibe(cmodDelta)
+  const warnings: string[] = []
+
+  // 1. roll_log entry.
+  try {
+    const { error } = await supabase.from('roll_log').insert({
+      campaign_id: campaignId,
+      user_id: userId,
+      character_name: characterName,
+      label: `${characterName} - First Impression (${npcName})`,
+      die1, die2, amod, smod, cmod, total, outcome,
+    })
+    if (error) warnings.push(`roll_log: ${error.message}`)
+  } catch (e: any) {
+    warnings.push(`roll_log: ${e?.message ?? String(e)}`)
+  }
+
+  // 2. Atomic relationship bump (SECURITY DEFINER, RPC at
+  // sql/npc-relationship-cmod-rpc-security-definer-2026-05-19.sql).
+  try {
+    const { error } = await supabase.rpc('bump_npc_relationship_cmod', {
+      p_npc_id: npcId,
+      p_character_id: characterId,
+      p_delta: cmodDelta,
+      p_set_revealed: true,
+      p_reveal_level: 'name_portrait',
+    })
+    if (error) warnings.push(`bump_npc_relationship_cmod: ${error.message}`)
+  } catch (e: any) {
+    warnings.push(`bump: ${e?.message ?? String(e)}`)
+  }
+
+  // 3. Progression log entry. appendProgressionEntry swallows its own
+  // errors but we still try/catch as belt + suspenders.
+  try {
+    await appendProgressionEntry(
+      supabase, characterId, 'relationship',
+      firstImpressionProgressionMessage(npcName, cmodDelta),
+    )
+  } catch (e: any) {
+    warnings.push(`progression_log: ${e?.message ?? String(e)}`)
+  }
+
+  return { cmodDelta, vibe, warnings }
 }

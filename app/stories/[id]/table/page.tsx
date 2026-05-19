@@ -25,7 +25,9 @@ import { useHeaderMenus } from './hooks/useHeaderMenus'
 import {
   firstImpressionCmodDelta,
   firstImpressionProgressionMessage,
+  resolveFirstImpression,
 } from '../../../../lib/first-impression-resolver'
+import FirstImpressionModal, { type FiPc, type FiNpc } from './components/FirstImpressionModal'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -11331,7 +11333,92 @@ export default function TablePage() {
       })()}
 
       {/* Special Check Modal */}
-      {showSpecialCheck && (
+      {/* First Impression now has its own modal (Phase 2 of FI streamline,
+          2026-05-19). New <FirstImpressionModal> mounts independently
+          and owns the entire pick + roll + result flow. Other special-
+          check variants still render inside the shared modal frame
+          below. Phase 3 will move the rest into per-check components
+          using the same pattern. */}
+      {showSpecialCheck === 'first_impression' && (() => {
+        // Build the eligible-PC list. Players only see their own PCs;
+        // GM/Thriver sees all visible.
+        const visiblePcs = entries.filter(en => gmLike || en.userId === userId)
+        const eligiblePcs: FiPc[] = visiblePcs.map(en => {
+          const rapid = en.character.data?.rapid ?? {}
+          const skills = en.character.data?.skills ?? []
+          const lvl = (name: string): number => (skills.find((s: any) => s.skillName === name)?.level ?? 0)
+          const manipLevel = lvl('Manipulation')
+          const streetLevel = lvl('Streetwise')
+          const psychLevel = lvl('Psychology')
+          // Ties pick Manipulation first (declaration order).
+          const cands: Array<['Manipulation' | 'Streetwise' | 'Psychology', number]> = [
+            ['Manipulation', manipLevel],
+            ['Streetwise', streetLevel],
+            ['Psychology', psychLevel],
+          ]
+          cands.sort((a, b) => b[1] - a[1])
+          const [bestSkillName, bestSkillLevel] = cands[0]
+          return {
+            characterId: en.character.id,
+            characterName: en.character.name,
+            infMod: rapid.INF ?? 0,
+            bestSkillName, bestSkillLevel, manipLevel, streetLevel, psychLevel,
+          }
+        })
+        // Build eligible NPC list — on the active tactical map OR revealed
+        // to any PC. Same dedup + alive filter as the prior FI picker.
+        const onMap = mapTokens.filter(t => t.token_type !== 'object' && t.npc_id)
+        const byId = new Map<string, any>()
+        for (const n of revealedNpcs) byId.set(n.id, n)
+        for (const t of onMap) {
+          if (!t.npc_id || byId.has(t.npc_id)) continue
+          const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
+          if (npc) byId.set(npc.id, npc)
+        }
+        const eligibleNpcs: FiNpc[] = [...byId.values()]
+          .filter((n: any) => {
+            const wp = n.wp_current ?? n.wp_max ?? 10
+            return wp > 0 && n.status !== 'dead'
+          })
+          .sort((a: any, b: any) => String(a.name).localeCompare(String(b.name)))
+          .map((n: any) => ({ id: n.id, name: n.name }))
+        // Default PC pick — single eligible PC, or active combatant in GM-led combat.
+        let defaultPcId: string | undefined
+        if (eligiblePcs.length === 1) defaultPcId = eligiblePcs[0].characterId
+        else if (gmLike && combatActive) {
+          const activeIE = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
+          if (activeIE?.character_id) defaultPcId = activeIE.character_id
+        }
+        return (
+          <FirstImpressionModal
+            isGm={gmLike}
+            eligiblePcs={eligiblePcs}
+            eligibleNpcs={eligibleNpcs}
+            defaultPcId={defaultPcId}
+            onClose={() => { setShowSpecialCheck(null); setFirstImpressionNpcId(''); setFirstImpressionSkill('best') }}
+            onRoll={async ({ pc, npc, amod, smod, cmod, die1, die2, total, outcome }) => {
+              if (!userId) return { cmodDelta: 0, vibe: '', warnings: ['no userId'] }
+              const result = await resolveFirstImpression({
+                supabase, campaignId: id, userId,
+                characterId: pc.characterId,
+                characterName: pc.characterName,
+                npcId: npc.id,
+                npcName: npc.name,
+                die1, die2, amod, smod, cmod, total, outcome,
+              })
+              // Refresh local revealedNpcs so the sidebar/cards reflect
+              // the new CMod without waiting for a realtime broadcast.
+              if (myCharIdRef.current) {
+                void loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
+              }
+              // Refresh the rolls feed so the new roll_log entry appears.
+              void rollsFeed.refetch()
+              return result
+            }}
+          />
+        )
+      })()}
+      {showSpecialCheck && showSpecialCheck !== 'first_impression' && (
         <div onClick={() => { setShowSpecialCheck(null); setFirstImpressionNpcId(''); setFirstImpressionSkill('best') }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '380px' }}>
             {showSpecialCheck === 'perception' && (
@@ -11361,143 +11448,11 @@ export default function TablePage() {
                 </div>
               </>
             )}
-            {showSpecialCheck === 'first_impression' && (() => {
-              // Eligible NPCs = on the active tactical map OR revealed
-              // to any PC. Dedupe by id. Drop dead/mortal NPCs since
-              // First Impression doesn't apply to corpses.
-              const onMap = mapTokens.filter(t => t.token_type !== 'object' && t.npc_id)
-              const revealed = revealedNpcs
-              const byId = new Map<string, any>()
-              for (const n of revealed) byId.set(n.id, n)
-              for (const t of onMap) {
-                if (!t.npc_id || byId.has(t.npc_id)) continue
-                const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
-                if (npc) byId.set(npc.id, npc)
-              }
-              const eligibleNpcs = [...byId.values()].filter((n: any) => {
-                const wp = n.wp_current ?? n.wp_max ?? 10
-                return wp > 0 && n.status !== 'dead'
-              }).sort((a: any, b: any) => String(a.name).localeCompare(String(b.name)))
-              const npcChosen = eligibleNpcs.find((n: any) => n.id === firstImpressionNpcId) ?? null
-              return (
-              <>
-                <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>First Impression</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Influence + the social skill you pick below. Result sets the Relationship CMod between the rolling PC and the target NPC - feeds future Recruitment / social checks.</div>
-
-                {/* Skill picker - player chooses which social skill to
-                    roll under. 'Best' keeps the legacy auto-pick of the
-                    highest level Manipulation/Streetwise/Psychology;
-                    the named buttons force that specific skill. Picker
-                    sits above the NPC selector so the picked skill is
-                    locked in when the auto-fire-on-NPC path triggers. */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skill</div>
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                    {(['best', 'Manipulation', 'Streetwise', 'Psychology'] as const).map(opt => {
-                      const selected = firstImpressionSkill === opt
-                      return (
-                        <button key={opt} type="button" onClick={() => setFirstImpressionSkill(opt)}
-                          style={{ flex: 1, minWidth: '110px', padding: '6px 10px', background: selected ? '#2a1210' : '#242424', border: `1px solid ${selected ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: selected ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          {opt === 'best' ? 'Best Social' : opt}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* NPC target picker */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target NPC</div>
-                  {eligibleNpcs.length === 0 ? (
-                    <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
-                      No NPCs visible on the map or in your sidebar. A GM needs to place an NPC or reveal one first.
-                    </div>
-                  ) : (
-                    <select value={firstImpressionNpcId} onChange={e => {
-                      const npcId = e.target.value
-                      setFirstImpressionNpcId(npcId)
-                      // Auto-fire when there's a clear single PC choice -
-                      // skips the second click on the PC button below.
-                      // Same heuristic as Perception/Gut Instinct
-                      // (shortCircuitForSpecialCheck): single eligible PC,
-                      // or active combatant during combat. Otherwise fall
-                      // through to the PC button list. Reported tonight
-                      // as "First Impression goes to a redundant first
-                      // modal - should go to the standard roll modal".
-                      if (!npcId) return
-                      const visibleNow = entries.filter(en => gmLike || en.userId === userId)
-                      let auto: typeof visibleNow[0] | undefined
-                      if (visibleNow.length === 1) auto = visibleNow[0]
-                      else if (gmLike && combatActive) {
-                        const activeIE = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
-                        if (activeIE?.character_id) {
-                          auto = visibleNow.find(en => en.character.id === activeIE.character_id)
-                        }
-                      }
-                      const targetNpc = eligibleNpcs.find((n: any) => n.id === npcId)
-                      if (auto && targetNpc) {
-                        triggerFirstImpression(auto.character.name, targetNpc.id, targetNpc.name, firstImpressionSkill)
-                      }
-                    }}
-                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                      <option value="">- pick an NPC -</option>
-                      {eligibleNpcs.map((n: any) => (
-                        <option key={n.id} value={n.id}>{n.name}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                {/* PC roller buttons - players only see their own PC(s);
-                    GMs can roll for any PC (they orchestrate NPC reactions
-                    and may need to fire a First Impression on a PC's
-                    behalf during an absent player's turn).
-                    Hidden when the NPC-picker auto-fire path will catch
-                    this - i.e. exactly one eligible PC OR (combat-active
-                    GM with a PC-active turn). Avoids visual redundancy. */}
-                {(() => {
-                  const visibleNow = entries.filter(en => gmLike || en.userId === userId)
-                  const willAutoFireOnNpcPick =
-                    visibleNow.length === 1 ||
-                    (gmLike && combatActive && initiativeOrder.find(ie => ie.is_active && !ie.is_npc && ie.character_id && visibleNow.some(en => en.character.id === ie.character_id)))
-                  if (willAutoFireOnNpcPick) {
-                    // Show a thin hint instead of the PC button list - the
-                    // moment they pick an NPC, the roll modal opens for
-                    // the auto-picked PC.
-                    return (
-                      <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginTop: '2px' }}>
-                        Picking an NPC above will roll for {visibleNow.length === 1
-                          ? visibleNow[0].character.name
-                          : (() => {
-                              const activeIE = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
-                              return visibleNow.find(en => en.character.id === activeIE?.character_id)?.character.name ?? 'the active PC'
-                            })()
-                        }.
-                      </div>
-                    )
-                  }
-                  return (
-                    <>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {visibleNow.map(e => {
-                          const ready = !!npcChosen
-                          return (
-                            <button key={e.character.id}
-                              disabled={!ready}
-                              onClick={() => { if (npcChosen) triggerFirstImpression(e.character.name, npcChosen.id, npcChosen.name, firstImpressionSkill) }}
-                              style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), opacity: ready ? 1 : 0.4, cursor: ready ? 'pointer' : 'not-allowed' }}>
-                              {e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </>
-                  )
-                })()}
-              </>
-              )
-            })()}
+            {/* First Impression branch deleted 2026-05-19 (FI streamline Phase 2).
+                Replaced by the top-level <FirstImpressionModal> mount above.
+                The supporting state (firstImpressionNpcId / firstImpressionSkill /
+                firstImpressionTargetRef) and the FI branch in executeRoll stay
+                alive in this commit; Phase 3 removes them. */}
             {showSpecialCheck === 'group' && (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Group Check</div>
