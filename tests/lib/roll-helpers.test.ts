@@ -547,48 +547,103 @@ describe('compactRollSummary', () => {
     })).toBe("Knox Koss fires Minnie's Sniper's Rifle and the shot goes wide but has a Moment of Insight as to why it went so badly")
   })
 
-  // Vehicle Driving check narrative (canon locked 2026-05-19).
-  it('driving Wild Success: masterful control', () => {
-    expect(compactRollSummary({
-      label: '🚗 Driving check · Minnie · Knox Koss · DEX + Driving · Wild Success',
-      character_name: 'Knox Koss', outcome: 'Wild Success',
-    })).toBe('Knox Koss drives Minnie with masterful control')
+  // Drive narrative (canon locked 2026-05-19, supersedes earlier
+  // "🚗 Driving check · ..." flat-string format). Label shape:
+  //   "<name> - Drive - <vehicle>". DRIVE prefix mirrors HEAL /
+  // UNJAM / REPAIR / STABILIZE pattern.
+  it('drive Wild Success', () => {
+    expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Wild Success' }))
+      .toBe('DRIVE Joe drives Minnie with flawless precision')
+  })
+  it('drive High Insight', () => {
+    expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'High Insight' }))
+      .toBe('DRIVE Joe drives Minnie and has a Moment of Insight as to why it went so well')
+  })
+  it('drive Success', () => {
+    expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Success' }))
+      .toBe('DRIVE Joe drives Minnie smoothly')
+  })
+  it('drive Failure', () => {
+    expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Failure' }))
+      .toBe('DRIVE Joe loses control of Minnie briefly')
+  })
+  it('drive Dire Failure', () => {
+    expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Dire Failure' }))
+      .toBe('DRIVE Joe wrecks Minnie\'s run')
+  })
+  it('drive Low Insight', () => {
+    expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Low Insight' }))
+      .toBe('DRIVE Joe loses control of Minnie but has a Moment of Insight as to why it went so badly')
   })
 
-  it('driving Dire Failure: loses control', () => {
-    expect(compactRollSummary({
-      label: '🚗 Driving check · Minnie · Knox Koss · DEX + Driving · Dire Failure',
-      character_name: 'Knox Koss', outcome: 'Dire Failure',
-    })).toBe('Knox Koss loses control of Minnie')
+  // Brew narrative (canon locked 2026-05-19, fuel state in line per
+  // Xero "tangible outcome" rule). Three label tails distinguish
+  // the narrative paths.
+  it('brew Wild Success: produces fuel, after/max in line', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'Wild Success' }))
+      .toBe('BREW Enya brews a flawless batch of fuel for Minnie — 3/5 days')
+  })
+  it('brew High Insight: produces fuel, HI tail after the count', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'High Insight' }))
+      .toBe('BREW Enya brews a tank of fuel for Minnie — 3/5 days, and has a Moment of Insight as to why it went so well')
+  })
+  it('brew Success: produces fuel, simple line', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'Success' }))
+      .toBe('BREW Enya brews a tank of fuel for Minnie — 3/5 days')
+  })
+  it('brew Failure: dry, no fuel', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Failure' }))
+      .toBe('BREW Enya\'s brew runs dry — no fuel produced')
+  })
+  it('brew Dire Failure: ruined batch', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Dire Failure' }))
+      .toBe('BREW Enya ruins the batch — no fuel produced')
+  })
+  it('brew Low Insight: dry + LI tail', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Low Insight' }))
+      .toBe('BREW Enya\'s brew runs dry — no fuel produced, but has a Moment of Insight as to why it went so badly')
+  })
+  // Brew edge case - tank already full going in; success branch swaps
+  // to the "reserves are already full" variant.
+  it('brew Wild Success but already full: full-tank variant', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) full 5/5', character_name: 'Enya', outcome: 'Wild Success' }))
+      .toBe('BREW Enya brews a flawless batch but Minnie\'s reserves are already full (5/5 days)')
+  })
+  it('brew High Insight but already full: HI tail on full-tank variant', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) full 5/5', character_name: 'Enya', outcome: 'High Insight' }))
+      .toBe('BREW Enya brews a tank but Minnie\'s reserves are already full (5/5 days), and has a Moment of Insight as to why it went so well')
+  })
+  it('brew Success but already full: simple full-tank variant', () => {
+    expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) full 5/5', character_name: 'Enya', outcome: 'Success' }))
+      .toBe('BREW Enya brews a tank but Minnie\'s reserves are already full (5/5 days)')
   })
 
-  it('driving Low Insight: struggles + canonical tail', () => {
-    expect(compactRollSummary({
-      label: '🚗 Driving check · Minnie · Knox Koss · DEX + Driving · Low Insight',
-      character_name: 'Knox Koss', outcome: 'Low Insight',
-    })).toBe('Knox Koss struggles to keep control of Minnie but has a Moment of Insight as to why it went so badly')
+  // Navigate narrative (canon locked 2026-05-19). Vehicle navigator
+  // seat. Skill name (Navigation / Geography / etc.) is dropped from
+  // the narrative line - the SMOD chip below shows the contribution.
+  it('navigate Wild Success', () => {
+    expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Wild Success' }))
+      .toBe('NAVIGATE Bea charts a flawless route for Minnie')
   })
-
-  // Vehicle Brew check narrative (canon locked 2026-05-19).
-  it('brew Wild Success: distills exceptional fuel', () => {
-    expect(compactRollSummary({
-      label: "⚗️ Brew check · Minnie · Knox Koss · INF + Brewing · Wild Success",
-      character_name: 'Knox Koss', outcome: 'Wild Success',
-    })).toBe("Knox Koss distills exceptional fuel in Minnie's still")
+  it('navigate High Insight', () => {
+    expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'High Insight' }))
+      .toBe('NAVIGATE Bea charts the route for Minnie and has a Moment of Insight as to why it went so well')
   })
-
-  it('brew Dire Failure: ruins the brew', () => {
-    expect(compactRollSummary({
-      label: "⚗️ Brew check · Minnie · Knox Koss · INF + Brewing · Dire Failure",
-      character_name: 'Knox Koss', outcome: 'Dire Failure',
-    })).toBe("Knox Koss ruins the brew in Minnie's still")
+  it('navigate Success', () => {
+    expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Success' }))
+      .toBe('NAVIGATE Bea charts the route for Minnie')
   })
-
-  it('brew Low Insight: botches + canonical tail', () => {
-    expect(compactRollSummary({
-      label: "⚗️ Brew check · Minnie · Knox Koss · INF + Brewing · Low Insight",
-      character_name: 'Knox Koss', outcome: 'Low Insight',
-    })).toBe("Knox Koss botches the brew in Minnie's still but has a Moment of Insight as to why it went so badly")
+  it('navigate Failure', () => {
+    expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Failure' }))
+      .toBe('NAVIGATE Bea loses the route briefly')
+  })
+  it('navigate Dire Failure', () => {
+    expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Dire Failure' }))
+      .toBe('NAVIGATE Bea leads Minnie into a worse spot')
+  })
+  it('navigate Low Insight', () => {
+    expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Low Insight' }))
+      .toBe('NAVIGATE Bea loses the route but has a Moment of Insight as to why it went so badly')
   })
 
   // First Impression narrative (canon locked 2026-05-10 + 11 with

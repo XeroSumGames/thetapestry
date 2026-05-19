@@ -974,7 +974,45 @@ export default function VehiclePage() {
       : fuelDelta > 0
         ? ' — full tank but reserves are already full'
         : ''
-    const label = `${verb} · ${vehicle.name} · ${member?.name ?? '—'} · ${skillLabel} · ${outcome}${fuelNote}`
+    // 2026-05-19 narrative-polish: switch driving/brew/navigate to the
+    // "<name> - <Verb> - <vehicle>" shape the prefix-CAPS parsers in
+    // lib/roll-helpers.ts expect (DRIVE / BREW / NAVIGATE — mirrors
+    // HEAL / UNJAM / REPAIR / STABILIZE). Old "🚗 Driving check · ..."
+    // flat-string format bypassed every narrative path we'd built.
+    // Mounted-weapon attacks still use the legacy "🎯 ... · ... · ..."
+    // shape because the existing attack-narrative parser (commit
+    // 54c46a1) already handles it well.
+    const driverName = member?.name ?? '—'
+    // Skill name only (no "(DEX)" / "(RSN)" attribute parens) for
+    // the new label format - the parser uses `(<skill>)` as a
+    // delimiter and double parens would break it. AMOD on the
+    // roll_log row already carries the attribute contribution.
+    const bareSkill = check.kind === 'brew'
+      ? (check.brewSkill === 'tinkerer' ? 'Tinkerer' : 'Mechanic*')
+      : check.kind === 'navigate'
+        ? (check.navigateSkill ?? 'Navigation')
+        : skillLabel  // attack path; unused below
+    let label: string
+    if (check.kind === 'driving') {
+      label = `${driverName} - Drive - ${vehicle.name}`
+    } else if (check.kind === 'brew') {
+      // Three label tails for the brew narrative paths:
+      //   "<after>/<max>"        had room, produced 1 day
+      //   "full <max>/<max>"     tank already full, no delta
+      //   ""                     failure path, no fuel
+      const tail = fuelDelta > 0 && newFuel > vehicle.fuel_current
+        ? ` ${newFuel}/${vehicle.fuel_max}`
+        : fuelDelta > 0
+          ? ` full ${vehicle.fuel_max}/${vehicle.fuel_max}`
+          : ''
+      label = `${driverName} - Brew - ${vehicle.name} (${bareSkill})${tail}`
+    } else if (check.kind === 'navigate') {
+      label = `${driverName} - Navigate - ${vehicle.name} (${bareSkill})`
+    } else {
+      // Attack path - keep the legacy flat-string format; the
+      // attack-narrative parser at L730+ of roll-helpers.ts handles it.
+      label = `${verb} · ${vehicle.name} · ${driverName} · ${skillLabel} · ${outcome}${fuelNote}`
+    }
 
     // ── Damage resolution for mounted-weapon attacks ──
     // Pre-fix this block didn't exist — the vehicle popup logged the

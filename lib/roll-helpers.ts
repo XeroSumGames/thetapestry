@@ -764,38 +764,83 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       default:              return `${crew} fires ${verbTail}`
     }
   }
-  // Vehicle Driving check. Per-outcome cinematic narrative locked
-  // 2026-05-19 per Xero. WS 'masterful control', DF 'loses control',
-  // tail rule applied.
-  const drivingMatch = r.label.match(/^🚗\s+Driving check\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·/)
-  if (drivingMatch) {
-    const vehicle = drivingMatch[1].trim()
-    const driver  = drivingMatch[2].trim()
+  // Drive - "<name> - Drive - <vehicle>". Vehicle driving check.
+  // Canon locked 2026-05-19 per Xero (supersedes the earlier
+  // 🚗 Driving check · ... format). DRIVE prefix mirrors HEAL /
+  // UNJAM / REPAIR / STABILIZE pattern; mechanical bits stripped
+  // (AMOD chip below the narrative shows the DEX contribution).
+  const driveMatch = suffix.match(/^Drive\s+-\s+(.+?)$/)
+  if (driveMatch) {
+    const veh = driveMatch[1].trim()
+    const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `${driver} drives ${vehicle} with masterful control`
-      case 'High Insight':  return `${driver} drives ${vehicle} and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `${driver} drives ${vehicle}`
-      case 'Failure':       return `${driver} struggles to keep control of ${vehicle}`
-      case 'Dire Failure':  return `${driver} loses control of ${vehicle}`
-      case 'Low Insight':   return `${driver} struggles to keep control of ${vehicle} but has a Moment of Insight as to why it went so badly`
-      default:              return `${driver} ${hit ? 'drives' : 'struggles to keep control of'} ${vehicle}`
+      case 'Wild Success':  return `DRIVE ${name} drives ${veh} with flawless precision`
+      case 'High Insight':  return `DRIVE ${name} drives ${veh} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `DRIVE ${name} drives ${veh} smoothly`
+      case 'Failure':       return `DRIVE ${name} loses control of ${veh} briefly`
+      case 'Dire Failure':  return `DRIVE ${name} wrecks ${veh}'s run`
+      case 'Low Insight':   return `DRIVE ${name} loses control of ${veh} but has a Moment of Insight as to why it went so badly`
+      default:              return `DRIVE ${name} ${hit ? 'drives' : 'loses control of'} ${veh}`
     }
   }
-  // Vehicle Brew check. Per-outcome cinematic narrative locked
-  // 2026-05-19 per Xero. WS 'distills exceptional fuel', DF 'ruins
-  // the brew', tail rule applied.
-  const brewMatch = r.label.match(/^⚗️\s+Brew check\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·/)
-  if (brewMatch) {
-    const vehicle = brewMatch[1].trim()
-    const brewer  = brewMatch[2].trim()
+  // Brew - "<name> - Brew - <vehicle> (<skill>) [<after>/<max>|full <max>/<max>]".
+  // Vehicle fuel-brewing check (Mechanic* / Tinkerer). Canon locked
+  // 2026-05-19 per Xero (supersedes the earlier ⚗️ Brew check · ...
+  // format). BREW prefix mirrors HEAL / UNJAM / REPAIR. Fuel state
+  // is tangible game outcome (Xero rule 2026-05-19): the after/max
+  // numbers stay in the narrative line. Three label tails distinguish:
+  //   "<n>/<m>"           - had room, produced 1 day, n = before+1
+  //   "full <m>/<m>"      - tank already full, no delta
+  //   ""                  - failure path, no fuel produced
+  // Parser branches on the tail + outcome together.
+  const brewVehicleMatch = suffix.match(/^Brew\s+-\s+(.+?)\s+\((.+?)\)(?:\s+(.+))?$/)
+  if (brewVehicleMatch) {
+    const veh = brewVehicleMatch[1].trim()
+    const tail = (brewVehicleMatch[3] ?? '').trim()
+    const name = r.character_name
+    const fullMatch = tail.match(/^full\s+(\d+)\/(\d+)$/)
+    const deltaMatch = tail.match(/^(\d+)\/(\d+)$/)
+    if (fullMatch && hit) {
+      const max = fullMatch[2]
+      switch (r.outcome) {
+        case 'Wild Success':  return `BREW ${name} brews a flawless batch but ${veh}'s reserves are already full (${max}/${max} days)`
+        case 'High Insight':  return `BREW ${name} brews a tank but ${veh}'s reserves are already full (${max}/${max} days), and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `BREW ${name} brews a tank but ${veh}'s reserves are already full (${max}/${max} days)`
+      }
+    }
+    if (deltaMatch && hit) {
+      const after = deltaMatch[1], max = deltaMatch[2]
+      switch (r.outcome) {
+        case 'Wild Success':  return `BREW ${name} brews a flawless batch of fuel for ${veh} — ${after}/${max} days`
+        case 'High Insight':  return `BREW ${name} brews a tank of fuel for ${veh} — ${after}/${max} days, and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `BREW ${name} brews a tank of fuel for ${veh} — ${after}/${max} days`
+      }
+    }
+    // Failure paths - no fuel produced regardless of tail.
     switch (r.outcome) {
-      case 'Wild Success':  return `${brewer} distills exceptional fuel in ${vehicle}'s still`
-      case 'High Insight':  return `${brewer} brews fuel in ${vehicle}'s still and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `${brewer} brews fuel in ${vehicle}'s still`
-      case 'Failure':       return `${brewer} botches the brew in ${vehicle}'s still`
-      case 'Dire Failure':  return `${brewer} ruins the brew in ${vehicle}'s still`
-      case 'Low Insight':   return `${brewer} botches the brew in ${vehicle}'s still but has a Moment of Insight as to why it went so badly`
-      default:              return `${brewer} ${hit ? 'brews fuel' : 'botches the brew'} in ${vehicle}'s still`
+      case 'Failure':       return `BREW ${name}'s brew runs dry — no fuel produced`
+      case 'Dire Failure':  return `BREW ${name} ruins the batch — no fuel produced`
+      case 'Low Insight':   return `BREW ${name}'s brew runs dry — no fuel produced, but has a Moment of Insight as to why it went so badly`
+    }
+    return `BREW ${name} ${hit ? 'brews fuel for' : 'fails to brew fuel for'} ${veh}`
+  }
+  // Navigate - "<name> - Navigate - <vehicle> (<skill>)". Vehicle
+  // navigator-seat check. Canon locked 2026-05-19. NAVIGATE prefix
+  // mirrors HEAL / UNJAM / REPAIR. Skill (Navigation, Geography,
+  // etc.) is stripped from the narrative line; SMOD chip below
+  // shows the contribution.
+  const navigateMatch = suffix.match(/^Navigate\s+-\s+(.+?)\s+\((.+?)\)$/)
+  if (navigateMatch) {
+    const veh = navigateMatch[1].trim()
+    const name = r.character_name
+    switch (r.outcome) {
+      case 'Wild Success':  return `NAVIGATE ${name} charts a flawless route for ${veh}`
+      case 'High Insight':  return `NAVIGATE ${name} charts the route for ${veh} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `NAVIGATE ${name} charts the route for ${veh}`
+      case 'Failure':       return `NAVIGATE ${name} loses the route briefly`
+      case 'Dire Failure':  return `NAVIGATE ${name} leads ${veh} into a worse spot`
+      case 'Low Insight':   return `NAVIGATE ${name} loses the route but has a Moment of Insight as to why it went so badly`
+      default:              return `NAVIGATE ${name} ${hit ? 'charts the route for' : 'loses the route for'} ${veh}`
     }
   }
   // Loot - label "🎒 <name> looted <items> from <container>". Narrative
