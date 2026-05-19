@@ -786,6 +786,10 @@ export default function TablePage() {
   // consume twice (idempotent at the DB level via the .is(consumed_at,
   // null) guard, but the UI flicker is avoidable).
   const [useInFlight, setUseInFlight] = useState<Set<string>>(new Set())
+  // Phase 4: source_roll_log_id pre-fill when granting via the
+  // per-row "⭐ Award" button on the rolls feed. Null when granting
+  // from GM Tools → ⭐ Grant Advantage (free-form path A1).
+  const [grantSourceRollLogId, setGrantSourceRollLogId] = useState<string | null>(null)
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
@@ -7157,6 +7161,7 @@ export default function TablePage() {
                 setGrantSkill('')
                 setGrantCmod(1)
                 setGrantDescription('')
+                setGrantSourceRollLogId(null)   // free-form path A1
                 setGrantError(null)
                 setShowGrantAdvantage(true)
               },
@@ -8001,14 +8006,42 @@ export default function TablePage() {
                   </div>
                 </div>
               ) : (
-                rollsFeed.rolls.map(r => (
-                  <RollEntryCard
-                    key={r.id}
-                    r={r as any}
-                    expandedRollIds={rollsFeed.expandedRollIds}
-                    toggleExpanded={rollsFeed.toggleExpanded}
-                  />
-                ))
+                rollsFeed.rolls.map(r => {
+                  // Phase 4: GM-only "⭐ Award" button overlay on dice-
+                  // result rows. Pre-fills the Grant Advantage modal
+                  // with the roller as PC + this row's id as the source.
+                  // Skipped for system / banner rows (combat_start,
+                  // drop, action, etc) — only meaningful on rolls a PC
+                  // actually made.
+                  const isDiceRow = (r.die1 ?? 0) > 0 || (r.die2 ?? 0) > 0
+                  const rollerPc = isDiceRow ? entries.find(e => e.character.name === r.character_name) : null
+                  return (
+                    <div key={r.id} style={{ position: 'relative' }}>
+                      <RollEntryCard
+                        r={r as any}
+                        expandedRollIds={rollsFeed.expandedRollIds}
+                        toggleExpanded={rollsFeed.toggleExpanded}
+                      />
+                      {gmLike && isDiceRow && rollerPc && (
+                        <button type="button"
+                          title={`Grant an advantage to ${rollerPc.character.name} based on this roll`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setGrantPcId(rollerPc.character.id)
+                            setGrantSkill('')
+                            setGrantCmod(1)
+                            setGrantDescription('')
+                            setGrantSourceRollLogId(r.id)
+                            setGrantError(null)
+                            setShowGrantAdvantage(true)
+                          }}
+                          style={{ position: 'absolute', top: '4px', right: '4px', padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', opacity: 0.8 }}>
+                          ⭐
+                        </button>
+                      )}
+                    </div>
+                  )
+                })
               )
             )}
             {/* Chat messages (Chat tab only) - render delegated. */}
@@ -8034,15 +8067,39 @@ export default function TablePage() {
               )
               return merged.map(item => item.type === 'chat' ? (
                 <ChatMessageRow key={`chat-${item.data.id}`} message={item.data} viewerUserId={userId} entries={entries} formatTime={formatTime} />
-              ) : (
-                <RollEntryCard
-                  key={`roll-${item.data.id}`}
-                  r={item.data as any}
-                  expandedRollIds={rollsFeed.expandedRollIds}
-                  toggleExpanded={rollsFeed.toggleExpanded}
-                  simple
-                />
-              ))
+              ) : (() => {
+                const r = item.data
+                const isDiceRow = (r.die1 ?? 0) > 0 || (r.die2 ?? 0) > 0
+                const rollerPc = isDiceRow ? entries.find(e => e.character.name === r.character_name) : null
+                return (
+                  <div key={`roll-${r.id}`} style={{ position: 'relative' }}>
+                    <RollEntryCard
+                      r={r as any}
+                      expandedRollIds={rollsFeed.expandedRollIds}
+                      toggleExpanded={rollsFeed.toggleExpanded}
+                      simple
+                    />
+                    {gmLike && isDiceRow && rollerPc && (
+                      <button type="button"
+                        title={`Grant an advantage to ${rollerPc.character.name} based on this roll`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setGrantPcId(rollerPc.character.id)
+                          setGrantSkill('')
+                          setGrantCmod(1)
+                          setGrantDescription('')
+                          setGrantSourceRollLogId(r.id)
+                          setGrantError(null)
+                          setShowGrantAdvantage(true)
+                        }}
+                        style={{ position: 'absolute', top: '4px', right: '4px', padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', opacity: 0.8 }}>
+                        ⭐
+                      </button>
+                    )}
+                  </div>
+                )
+              })()
+              )
             })()}
           </div>
           {/* Bottom: chat composer (textarea + Send + whisper indicator).
@@ -9187,6 +9244,27 @@ export default function TablePage() {
                                   alert(`Use failed: ${error}`)
                                   setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
                                   return
+                                }
+                                // Phase 5: C3 shared-narrative feed broadcast.
+                                // Insert a roll_log entry so the whole campaign
+                                // sees the redemption. Best-effort: a failed
+                                // log doesn't undo the consume.
+                                const sign = a.cmod_delta > 0 ? `+${a.cmod_delta}` : `${a.cmod_delta}`
+                                const holder2 = entries.find(e => e.character.id === a.character_id)
+                                const holderName2 = holder2?.character.name ?? 'Unknown PC'
+                                const holderUserId = holder2?.userId ?? userId
+                                try {
+                                  await supabase.from('roll_log').insert({
+                                    campaign_id: id,
+                                    user_id: holderUserId,
+                                    character_name: holderName2,
+                                    label: `${holderName2} used their ${sign} ${a.skill_name} advantage (${a.description})`,
+                                    die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                                    outcome: 'advantage_used',
+                                  })
+                                  void rollsFeed.refetch()
+                                } catch (e) {
+                                  console.warn('[advantages] feed broadcast failed', e)
                                 }
                                 // Optimistic local update — realtime will reconcile too.
                                 setAdvantages(prev => prev.filter(x => x.id !== a.id))
@@ -10337,6 +10415,7 @@ export default function TablePage() {
                       grantedBy: userId,
                       skillName: grantSkill, cmodDelta: grantCmod,
                       description: grantDescription,
+                      sourceRollLogId: grantSourceRollLogId,
                     })
                     setGrantSubmitting(false)
                     if (error || !advantage) {

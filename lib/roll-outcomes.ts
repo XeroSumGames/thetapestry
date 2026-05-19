@@ -78,6 +78,11 @@ export const OUTCOME = {
   // data.lastingWounds). Reader sees: dice roll row -> announcement
   // row "X has picked up a Lasting Wound and is now <wound> (<effect>)".
   lasting_wound_acquired: 'lasting_wound_acquired',
+  // Advantage consumed - feed broadcast for the whole party (C3 share).
+  // Inserted alongside the consumeAdvantage update so the rolls feed
+  // shows the redemption: "X used their +N <skill> advantage (<desc>)".
+  // Label is the full sentence; renderer returns it verbatim.
+  advantage_used: 'advantage_used',
 } as const
 
 export type RollOutcome = typeof OUTCOME[keyof typeof OUTCOME]

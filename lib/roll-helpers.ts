@@ -71,6 +71,10 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   //    (-1 CMod on initiative rolls)"
   // Return verbatim - no compact transformation needed.
   if (r.outcome === 'lasting_wound_acquired') return r.label
+  // Advantage consumed (C3 share). Label is the full sentence —
+  // "X used their +N <skill> advantage (<description>)" — return
+  // verbatim so the feed shows the redemption cleanly.
+  if (r.outcome === 'advantage_used') return r.label
   // Strip the "<name> - " or "<name> — " prefix that GM-from-popout rolls
   // and some legacy paths bake into the label, so the downstream regex
   // matchers see the bare suffix ("ACU Check", "Medicine* (RSN)", etc.).
