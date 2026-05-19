@@ -1644,15 +1644,23 @@ export default function TablePage() {
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        if (pendingRoll) { closeRollModal(); return }
-        if (selectedEntry) { setSelectedEntry(null); return }
-        if (showEndSessionModal) { setShowEndSessionModal(false); return }
-      }
+      if (e.key !== 'Escape') return
+      // Skip Esc when typing — let the input handle it (e.g. clear
+      // text). Same guard as the route/measure tool's Esc handler.
+      const active = document.activeElement as HTMLElement | null
+      if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return
+      // Modal priority order. Each branch returns to keep Esc one-shot
+      // (don't both close a roll modal AND clear NPC cards at once).
+      if (pendingRoll) { closeRollModal(); return }
+      if (selectedEntry) { setSelectedEntry(null); return }
+      if (showEndSessionModal) { setShowEndSessionModal(false); return }
+      // Close-all NPC cards (post-playtest mark 02:37:45, Q4-a). Only
+      // when 2+ are open — single-card view uses its own Close button.
+      if (viewingNpcs.length >= 2) { setViewingNpcs([]); return }
     }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
-  }, [pendingRoll, selectedEntry, showEndSessionModal])
+  }, [pendingRoll, selectedEntry, showEndSessionModal, viewingNpcs.length])
 
   async function handleStatUpdate(stateId: string, field: string, value: number | string | boolean | null) {
     // Optimistic flip first so the UI responds instantly. If the
@@ -8029,6 +8037,18 @@ export default function TablePage() {
           {/* NPC Card(s) - grid overlay when out of combat, draggable inline when in combat */}
           {viewingNpcs.length > 0 && !combatActive && !showTacticalMap && (
             <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>
+              {/* Close-all chip (post-playtest mark 02:37:45, Q4-a). Spans
+                  the full row at the top so it's always reachable. Only
+                  renders when 2+ cards are open — single-card view uses
+                  the per-card Close button. */}
+              {viewingNpcs.length >= 2 && (
+                <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
+                  <button onClick={() => setViewingNpcs([])}
+                    style={{ padding: '6px 14px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>
+                    ✕ Close All ({viewingNpcs.length})
+                  </button>
+                </div>
+              )}
               {viewingNpcs.map(npc => {
                 const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
                 const liveNpc = fresh ? { ...fresh } as CampaignNpc : npc
@@ -8083,6 +8103,17 @@ export default function TablePage() {
                 )
               })}
             </div>
+          )}
+          {/* Combat / tactical-map mode: floating Close All chip when
+              2+ cards are open. Cards are draggable absolute-positioned
+              tiles so a row-spanning button doesn't fit; instead a small
+              chip in the top-right corner of the viewport (under any
+              header chrome). Post-playtest mark 02:37:45, Q4-a. */}
+          {viewingNpcs.length >= 2 && (combatActive || showTacticalMap) && (
+            <button onClick={() => setViewingNpcs([])}
+              style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 1200, padding: '6px 12px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+              ✕ Close All NPCs ({viewingNpcs.length})
+            </button>
           )}
           {viewingNpcs.length > 0 && (combatActive || showTacticalMap) && (() => {
             const activeIdx = initiativeOrder.findIndex(e => e.is_active)
