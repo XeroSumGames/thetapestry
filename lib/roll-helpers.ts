@@ -650,8 +650,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (drivingMatch) {
     const vehicle = drivingMatch[1].trim()
     const driver  = drivingMatch[2].trim()
+    // Adverb matches the Attack / Stabilize pattern - "successfully" on
+    // hit, "struggles driving" on miss makes hit/miss legible from the
+    // narrative alone. Per Xero 2026-05-19 post-playtest wording call.
     return hit
-      ? `${driver} drives ${vehicle}${outcomeTag}`
+      ? `${driver} successfully drives ${vehicle}${outcomeTag}`
       : `${driver} struggles driving ${vehicle}${outcomeTag}`
   }
   const brewMatch = r.label.match(/^⚗️\s+Brew check\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·/)

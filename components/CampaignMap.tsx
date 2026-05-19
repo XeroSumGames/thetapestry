@@ -225,18 +225,26 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     return () => window.removeEventListener('keydown', onKey)
   }, [measureMode])
 
-  // Esc bails out of the route tool too.
+  // Esc bails out of the route tool — AND clears a lingering route line
+  // even after route mode is off. Pre-2026-05-19 the listener only
+  // attached while routeMode was true, so a completed route that the
+  // user thought they could Esc away never cleared. Now attached on
+  // mount; checks refs to decide what to do.
   useEffect(() => {
-    if (!routeMode) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key !== 'Escape') return
+      const hasRouteState = routeModeRef.current
+        || !!routeLineRef.current
+        || routeMarkersRef.current.length > 0
+        || !!routeStartRef.current
+      if (hasRouteState) {
         clearRoute()
         setRouteMode(false)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [routeMode])
+  }, [])
 
   // Inject ping pulse keyframes ONCE (per browser tab). Three staggered
   // rings (red -> green -> red) at 0.6s each with 0.4s stagger pop in
@@ -375,6 +383,18 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     if (!L || !map) return
     // First click: drop start marker, wait for the second.
     if (!routeStartRef.current) {
+      // If a previous route is still visible (line + markers from a
+      // completed route), wipe it before starting fresh. Pre-2026-05-19
+      // this was missing: the third click of the cycle would land in
+      // the "second click" branch (because routeStartRef was never
+      // cleared after a successful route) and OSRM would draw a new
+      // line from the OLD start to the new click, stacking routes
+      // visually. Now: completed routes get wiped on the next first-
+      // click, and routeStartRef is nulled after every successful
+      // OSRM round-trip below.
+      if (routeLineRef.current || routeMarkersRef.current.length > 0) {
+        clearRoute()
+      }
       routeStartRef.current = { lat, lng }
       const startHtml = `<div style="width:20px;height:20px;border-radius:50%;background:#7fc458;border:2px solid #f5f2ee;box-shadow:0 0 8px rgba(127,196,88,.9);display:flex;align-items:center;justify-content:center;color:#0f1a0f;font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">A</div>`
       const startIcon = L.divIcon({ html: startHtml, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
@@ -419,6 +439,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       setRouteStatus(`Routing unavailable - straight line (${formatDistance(meters)} · ${mode.emoji} ${formatTravelTime(meters, mode.mph)})`)
     } finally {
       setRouteLoading(false)
+      // Reset routeStartRef so the next click is treated as the FIRST
+      // click of a new route (which will also call clearRoute via the
+      // wipe-stale guard above). Without this, every odd-numbered click
+      // after the first would stack a new line onto the old start point.
+      routeStartRef.current = null
     }
   }
 
@@ -606,10 +631,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           addMeasurePoint(pin.lat, pin.lng)
           return
         }
-        // Route mode + alt-click on a pin: bypass the popup and use the
-        // pin's coords as a route waypoint. Plain click stays as
-        // popup-open so the player can read pin info mid-plot.
-        if (routeModeRef.current && oe?.altKey) {
+        // Route mode: plain-click on a pin uses the pin's coords as the
+        // route waypoint. Pre-2026-05-19 this required alt+click, with
+        // plain click falling through to popup-open; playtest feedback
+        // (P1 #5) said that swallowed too many clicks meant for routing.
+        // Widened to plain-click. Alt+click in route mode still hits
+        // the ping branch below for parity with empty-map alt+click.
+        if (routeModeRef.current && !oe?.altKey) {
           void handleRouteClick(pin.lat, pin.lng)
           return
         }
