@@ -1,5 +1,20 @@
 # Lessons Learned
 
+## Verify shipped state before assuming uncontested scope (2026-05-19)
+
+**Rule:** Before starting any non-trivial feature work, run `git fetch && git log --oneline origin/main -10` to see what's actually shipped. Other chats may have landed competing or overlapping work since the session started.
+
+**Trigger:** Worked through Q1 ("drives Minnie" narrative) with Xero, got explicit narrative approvals for DRIVE / BREW / NAVIGATE, committed locally, tried to push — only then discovered commit `54c46a1 feat(feed): Vehicle Attack / Driving / Brew per-outcome cinematic narratives` had landed on origin during the same session. Different design (no prefix CAPS, no fuel state in line, no NAVIGATE) shipped from another chat track.
+
+**Cost:** Aborted rebase, reset, re-applied the approved design on top of the conflicting work, surgically replacing Drive + Brew while preserving Vehicle Attack. Extra 15-20 minutes + a confusing commit ("supersedes 54c46a1").
+
+**Fix-forward:**
+- Open any new feature work with `git fetch && git log --oneline origin/main -10` and grep for the touched module names. Pre-existing memory rule `feedback_check_before_quoting_scope.md` covers "scope" claims — extend the same habit to feature starts.
+- Multi-chat memory rule (`process_multi_chat_tracks.md`) already says coordinate via shared substrate — this is the cost of not doing that.
+- When two chats touch the same narrative path: the one with the most recent explicit Xero approval wins; the loser's design gets backed out with a "supersedes \<sha\>" commit message.
+
+
+
 ## High Insight / Low Insight tail phrasing in compact narratives (2026-05-19, final)
 
 **Rule (Xero, locked 2026-05-19, final pass):** the Moment-of-Insight tail appended to every HI / LI compact narrative is canon-locked to:
