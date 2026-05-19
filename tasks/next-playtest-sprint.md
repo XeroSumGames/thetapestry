@@ -5,16 +5,23 @@ build by Saturday, smoke-tested by Sunday.
 
 ---
 
-## Day 1-2 (Mon-Tue): Modal Unification batch
+## Day 1-2 (Mon-Tue): Modal Unification + Feed Polish batch
 
-5 bespoke modals migrate to `<RollModal>` shape. Pattern already
-proven on Coord Effort, Stress Check, Breaking Point, Lasting Wound.
+### Shipped (Sunday warmup)
+- [x] **Coordinated Effort summary banner** (`137be68` + `9a3eb94`) — N participant chain rows fold into single Tier A banner with new Xero-locked narrative; individual rolls in expanded ▸ view. 6 unit tests + RollEntry type extended with coord_chain_id.
+- [x] **Em-dash sweep, batch 1** (`87f0e46`) — 10 hits across 7 files (NpcCard attack label, CommunityMoraleModal weekly checks, ApprenticeCreationWizard tooltip, CharacterCard subtitle, MapView marker, PlayerNpcCard tooltip). Parser-affecting + display-only. 188 tests still passing.
+- [x] **Confidence Ledger drain** (`328035e`) — test count 160 → 174 (now 188 after collapse + drift catch-up).
 
-- [ ] **Stabilize** — `<RollModal>` migration
-- [ ] **Distract** — `<RollModal>` migration
-- [ ] **First Impression** — verify if PlayerNpcCard path is already unified; finish if not
+### Open
+- [ ] **Stress Check narrative rewrite** — proposed `STRESS CHECK <name>` prefix pattern, *AWAITING Q5 ANSWER from Xero*.
+- [ ] **Distract migration** — *attempting Sunday night as pattern test.* Pull out of `pendingRoll` into dedicated `<RollModal>`. If clean in <3h, Stabilize + First Impression follow same pattern.
+- [ ] **Stabilize migration** — gated on Distract result. Multi-day if Distract spirals.
+- [ ] **First Impression migration** — gated on Distract result. Likely smallest.
 - [ ] **Group Check** — *BLOCKED on design call (Q3 below)*
 - [ ] **Gut Instinct** — *BLOCKED on design call (Q4 below)*
+
+### Findings to surface
+- The original "modal unification" todo conflated label-dispatched paths through `pendingRoll` with bespoke modals. Stabilize/Distract/First Impression aren't bespoke - they reuse pendingRoll but route distinct post-roll logic on label substring. "Migration" here means pulling each out of pendingRoll into its own `<RollModal>` instance, which means duplicating pieces of pendingRoll's plumbing (action consumption gates, RLS write echoes, broadcast firing). Distract attempt will tell us the real cost.
 
 ---
 
