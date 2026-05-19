@@ -144,4 +144,73 @@ describe('compactRollSummary', () => {
     expect(compactRollSummary({ label: 'Enya - ACU Check', character_name: 'Enya', outcome: 'Failure' }))
       .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen')
   })
+
+  // Stress Check narrative (canon copy locked 2026-05-19). Six outcomes
+  // x two modes (mid-play vs at-max) = 12 strings. Mid-play fires from
+  // the manual CHECK button on the stress bar (GM-called, success = no
+  // change, failure = +1 stress). At-max fires when stress hits 5 or
+  // via mid-play cascade (success = drop to 4, failure = Breaking Point).
+  // Label suffix " (at max)" distinguishes the two on the saved row.
+
+  // --- mid-play ---
+  it('stress check mid-play Wild Success', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Wild Success' }))
+      .toBe('STRESS CHECK Enya is wildly composed under pressure')
+  })
+
+  it('stress check mid-play High Insight', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'High Insight' }))
+      .toBe('STRESS CHECK Enya holds steady against the pressure and has a Moment of Insight as to why it went so well')
+  })
+
+  it('stress check mid-play Success', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Success' }))
+      .toBe('STRESS CHECK Enya holds steady against the pressure')
+  })
+
+  it('stress check mid-play Failure', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Failure' }))
+      .toBe('STRESS CHECK Enya feels the weight (+1 stress)')
+  })
+
+  it('stress check mid-play Dire Failure', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Dire Failure' }))
+      .toBe('STRESS CHECK Enya disastrously buckles under the pressure (+1 stress)')
+  })
+
+  it('stress check mid-play Low Insight', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Low Insight' }))
+      .toBe('STRESS CHECK Enya feels the weight (+1 stress) and has a Moment of Insight as to why it went so badly')
+  })
+
+  // --- at-max ---
+  it('stress check at-max Wild Success', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Wild Success' }))
+      .toBe('STRESS CHECK Enya is wildly composed and shrugs the pressure off')
+  })
+
+  it('stress check at-max High Insight', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'High Insight' }))
+      .toBe('STRESS CHECK Enya calms themselves down and has a Moment of Insight as to why it went so well')
+  })
+
+  it('stress check at-max Success', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Success' }))
+      .toBe('STRESS CHECK Enya calms themselves down')
+  })
+
+  it('stress check at-max Failure', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Failure' }))
+      .toBe('STRESS CHECK Enya fails to calm and reaches their Breaking Point')
+  })
+
+  it('stress check at-max Dire Failure', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Dire Failure' }))
+      .toBe('STRESS CHECK Enya disastrously cracks and reaches their Breaking Point')
+  })
+
+  it('stress check at-max Low Insight', () => {
+    expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Low Insight' }))
+      .toBe('STRESS CHECK Enya fails to calm and reaches their Breaking Point and has a Moment of Insight as to why it went so badly')
+  })
 })

@@ -341,13 +341,45 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const adverb = hit ? 'Successfully' : 'Unsuccessfully'
     return `${r.character_name} ${adverb} used Unarmed Combat on ${r.target_name}${outcomeTag}`
   }
-  // Stress Check - label "<name> - Stress Check" written by CharacterCard
-  // when an at-max stress prompt resolves. Hit (Success) reads "Calms
-  // Themselves"; miss (Failure) reads "fails to" and the Breaking Point
-  // flow takes over.
-  if (/^Stress Check\b/.test(suffix)) {
-    if (hit) return `${r.character_name} Successfully Calms Themselves${outcomeTag}`
-    return `${r.character_name} Unsuccessfully Attempts to Calm Themselves${outcomeTag}`
+  // Stress Check - canon copy locked 2026-05-19 per Xero. Two distinct
+  // labels written by CharacterCard's onPostRollClose:
+  //   "<name> - Stress Check"           = mid-play (GM-called).
+  //                                       Success = no change.
+  //                                       Failure = +1 stress.
+  //   "<name> - Stress Check (at max)"  = at-max (auto-fires when stress
+  //                                       hits 5, or via mid-play cascade).
+  //                                       Success = drop to 4.
+  //                                       Failure = Breaking Point.
+  // Old DB rows pre-2026-05-19 used bare "Stress Check" without the
+  // (at max) suffix but were always at-max behavior. They render with
+  // mid-play wording in the feed - not a regression vs the prior generic
+  // "Successfully Calms Themselves" copy, just mode-mismatched on
+  // <50 pre-existing rows. New rows are correctly distinguished.
+  const stressMatch = suffix.match(/^Stress Check(?:\s+\(at max\))?$/)
+  if (stressMatch) {
+    const isAtMax = /\(at max\)/.test(suffix)
+    const name = r.character_name
+    if (isAtMax) {
+      switch (r.outcome) {
+        case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed and shrugs the pressure off`
+        case 'High Insight':  return `STRESS CHECK ${name} calms themselves down and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `STRESS CHECK ${name} calms themselves down`
+        case 'Failure':       return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point`
+        case 'Dire Failure':  return `STRESS CHECK ${name} disastrously cracks and reaches their Breaking Point`
+        case 'Low Insight':   return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point and has a Moment of Insight as to why it went so badly`
+        default:              return `STRESS CHECK ${name} ${hit ? 'calms themselves down' : 'fails to calm and reaches their Breaking Point'}`
+      }
+    }
+    // mid-play
+    switch (r.outcome) {
+      case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed under pressure`
+      case 'High Insight':  return `STRESS CHECK ${name} holds steady against the pressure and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `STRESS CHECK ${name} holds steady against the pressure`
+      case 'Failure':       return `STRESS CHECK ${name} feels the weight (+1 stress)`
+      case 'Dire Failure':  return `STRESS CHECK ${name} disastrously buckles under the pressure (+1 stress)`
+      case 'Low Insight':   return `STRESS CHECK ${name} feels the weight (+1 stress) and has a Moment of Insight as to why it went so badly`
+      default:              return `STRESS CHECK ${name} ${hit ? 'holds steady against the pressure' : 'feels the weight (+1 stress)'}`
+    }
   }
   // Stabilize - label "<name> - Stabilize <target>". Adverb pattern
   // matches the Attack / Unarmed branches so hit/miss is legible from
