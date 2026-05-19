@@ -21,6 +21,7 @@ import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
 import { reportSupabaseError } from '../../../../lib/supabase-errors'
+import { useHeaderMenus } from './hooks/useHeaderMenus'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -119,17 +120,11 @@ export default function TablePage() {
   const entriesRef = useRef<TableEntry[]>([])
   const campaignNpcsRef = useRef<CampaignNpc[]>([])
 
-  // Header-bar nested dropdowns (Checks / Community / GM Tools). Only
-  // one menu opens at a time - clicking another closes the previous;
-  // clicking outside closes whatever's open. Declared up here so the
-  // outside-click useEffect below can reference it.
-  const [openHeaderMenu, setOpenHeaderMenu] = useState<string | null>(null)
-  // Pinned = user clicked the trigger (as opposed to just hovering).
-  // When pinned, mouse-leave does NOT collapse the menu - you have to
-  // click the trigger again or click outside. Fixes the "I'm chasing
-  // the buttons" jitter where moving toward a child accidentally
-  // crossed a dead zone and collapsed the menu.
-  const [isMenuPinned, setIsMenuPinned] = useState(false)
+  // Header-bar nested dropdowns (Checks / Community / GM Tools).
+  // State + outside-click / ESC handling live in useHeaderMenus
+  // (extracted 2026-05-19 as Phase 3.0 step 2 of the page.tsx
+  // decomposition). Behavior unchanged.
+  const { openHeaderMenu, setOpenHeaderMenu, isMenuPinned, setIsMenuPinned } = useHeaderMenus()
 
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
@@ -194,29 +189,8 @@ export default function TablePage() {
     setRecorderToggling(false)
   }
 
-  useEffect(() => {
-    if (!openHeaderMenu) return
-    function handleClick(e: MouseEvent) {
-      const t = e.target as HTMLElement | null
-      if (!t) return
-      if (!t.closest('[data-header-menu]')) {
-        setOpenHeaderMenu(null)
-        setIsMenuPinned(false)
-      }
-    }
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        setOpenHeaderMenu(null)
-        setIsMenuPinned(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('mousedown', handleClick)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [openHeaderMenu])
+  // outside-click + ESC handling for header menus now lives inside
+  // useHeaderMenus (see import at top + hook call above).
   // Per-PC stress memory - used to detect the <5 → 5 transition at the
   // table-page level so the Stress Check modal fires even when the target's
   // CharacterCard sheet isn't mounted.
