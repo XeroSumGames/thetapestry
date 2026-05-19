@@ -8528,7 +8528,16 @@ export default function TablePage() {
                   }
                   const newVehicles = vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v)
                   setVehicles(newVehicles)
-                  const { error } = await supabase.from('campaigns').update({ vehicles: newVehicles }).eq('id', id)
+                  // RPC instead of direct UPDATE so non-GM members succeed
+                  // (post-playtest Q3 scope A, 2026-05-19). Direct UPDATE is
+                  // RLS-blocked for non-GM; the RPC is SECURITY DEFINER +
+                  // member-authorized.
+                  const updated = newVehicles[targetIdx]
+                  const { error } = await supabase.rpc('update_vehicle_in_campaign', {
+                    p_campaign_id: id,
+                    p_vehicle_id: updated.id,
+                    p_new_vehicle: updated as any,
+                  })
                   if (error) { alert(`Stash failed: ${error.message}`); return }
                 }}
                 onInventoryChange={(newInventory: InventoryItem[]) => {
@@ -8934,12 +8943,24 @@ export default function TablePage() {
                                 given that the folder header already groups
                                 them. expandedVehicleId state retained for
                                 forward-compat (other surfaces may want it). */}
-                            <VehicleCard vehicle={v} campaignId={id} canEdit={gmLike}
+                            {/* canEdit opened to all campaign members 2026-05-19
+                                (post-playtest Mark 02:12:29 - Q3 scope A).
+                                Writes routed through update_vehicle_in_campaign
+                                RPC since direct campaigns.update is GM-RLS-blocked. */}
+                            <VehicleCard vehicle={v} campaignId={id} canEdit={true}
                               onClickInline={() => { setSelectedEntry(null); setSheetPos(null); setSelectedVehicleId(v.id) }}
                               onUpdate={async (updated: Vehicle) => {
                                 const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
                                 setVehicles(newVehicles)
-                                await supabase.from('campaigns').update({ vehicles: newVehicles }).eq('id', id)
+                                const { error } = await supabase.rpc('update_vehicle_in_campaign', {
+                                  p_campaign_id: id,
+                                  p_vehicle_id: updated.id,
+                                  p_new_vehicle: updated as any,
+                                })
+                                if (error) {
+                                  console.error('[vehicle-asset] updateVehicle RPC failed:', error.message)
+                                  reportSupabaseError(error as any, 'vehicle-asset-update')
+                                }
                               }} />
                           </div>
                         ))}
