@@ -12229,11 +12229,21 @@ export default function TablePage() {
         const rollerEntry = entries.find(e => e.character.id === recruitRollerId)
         const cmods = computeRecruitCmods()
         const suggestedSkills = suggestedSkillsForApproach(recruitApproach)
+        // Recruit Tier-2 Phase C lock-gate. Pulled from the picked NPC's
+        // recruit_locked_approaches array (per-NPC, global across PCs).
+        // Today only 'convert' gets locked (via Convert+Intimidation
+        // Failure). The picker disables locked buttons and the roll
+        // gate refuses to fire if the selected approach is locked.
+        const lockedApproaches: RecruitApproach[] = Array.isArray((pickedNpc as any)?.recruit_locked_approaches)
+          ? ((pickedNpc as any).recruit_locked_approaches as string[]).filter((s): s is RecruitApproach => s === 'cohort' || s === 'conscript' || s === 'convert')
+          : []
+        const allApproachesLocked = lockedApproaches.length >= 3
+        const currentApproachLocked = lockedApproaches.includes(recruitApproach)
         const hasAnyCommunity = recruitCommunityList.length > 0
         const resolvedCommunityName = recruitCommunityId === '__new__'
           ? (recruitNewCommunityName.trim() || '- new community -')
           : (recruitCommunityList.find(c => c.id === recruitCommunityId)?.name ?? '')
-        const canRoll = !!rollerEntry && !!pickedNpc && !!recruitSkill && (
+        const canRoll = !!rollerEntry && !!pickedNpc && !!recruitSkill && !currentApproachLocked && (
           recruitCommunityId === '__new__'
             ? recruitNewCommunityName.trim().length > 0
             : !!recruitCommunityId
@@ -12332,13 +12342,31 @@ export default function TablePage() {
                       />
                     </div>
                     <div style={{ display: 'flex', gap: '4px' }}>
-                      {(['cohort', 'conscript', 'convert'] as RecruitApproach[]).map(ap => (
-                        <button key={ap} onClick={() => { setRecruitApproach(ap); setRecruitSkill('') }}
-                          style={{ flex: 1, padding: '8px 6px', background: recruitApproach === ap ? '#2d5a1b' : '#242424', border: `1px solid ${recruitApproach === ap ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: recruitApproach === ap ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          {ap}
-                        </button>
-                      ))}
+                      {(['cohort', 'conscript', 'convert'] as RecruitApproach[]).map(ap => {
+                        const isLocked = lockedApproaches.includes(ap)
+                        const isSelected = recruitApproach === ap
+                        return (
+                          <button key={ap}
+                            disabled={isLocked}
+                            onClick={() => { if (isLocked) return; setRecruitApproach(ap); setRecruitSkill('') }}
+                            title={isLocked ? `${ap.toUpperCase()} permanently locked on this NPC - a prior Intimidation Failure on a Convert attempt ruled out the approach. Try a different approach.` : undefined}
+                            style={{ flex: 1, padding: '8px 6px', background: isLocked ? '#1a1010' : (isSelected ? '#2d5a1b' : '#242424'), border: `1px solid ${isLocked ? '#3a1a1a' : (isSelected ? '#7fc458' : '#3a3a3a')}`, borderRadius: '3px', color: isLocked ? '#5a3030' : (isSelected ? '#7fc458' : '#d4cfc9'), fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isLocked ? 'not-allowed' : 'pointer', textDecoration: isLocked ? 'line-through' : 'none' }}>
+                            {ap}{isLocked ? ' 🔒' : ''}
+                          </button>
+                        )
+                      })}
                     </div>
+                    {/* Lock-state warnings per Recruit Tier-2 Phase C. */}
+                    {allApproachesLocked && pickedNpc && (
+                      <div style={{ marginTop: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+                        🔒 <span style={{ fontWeight: 700 }}>All recruit approaches are permanently locked on this NPC.</span> Prior Intimidation Failures have ruled out every approach. This NPC cannot be recruited.
+                      </div>
+                    )}
+                    {currentApproachLocked && !allApproachesLocked && (
+                      <div style={{ marginTop: '8px', padding: '8px 10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+                        🔒 <span style={{ fontWeight: 700 }}>{recruitApproach.toUpperCase()} locked on this NPC.</span> Pick a different approach above.
+                      </div>
+                    )}
                     <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                       {recruitApproach === 'cohort' ? 'Shared interest or goal - joins until the next Morale Check.'
                         : recruitApproach === 'conscript' ? 'Coerced by credible threat - follows orders while coercion holds.'
