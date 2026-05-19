@@ -781,7 +781,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     }
     const adverbClause: string = (() => {
       switch (r.outcome) {
-        case 'Wild Success':  return `wildly succeeds using ${skill}`
+        case 'Wild Success':  return `is wildly successful using ${skill}`
         case 'High Insight':  return `successfully uses ${skill}`
         case 'Success':       return `successfully uses ${skill}`
         case 'Failure':       return `unsuccessfully uses ${skill}`
