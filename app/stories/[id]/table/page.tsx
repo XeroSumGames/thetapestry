@@ -673,17 +673,18 @@ export default function TablePage() {
   // Lightweight community name map for all users (players + GM). Maps npc_id → community name.
   // Loaded at startup so the player NPC list shows "Community - {name}" buckets.
   const [playerNpcCommunityMap, setPlayerNpcCommunityMap] = useState<Record<string, string>>({})
-  // First Impression NPC picker: which NPC the check is TARGETED at.
-  // Cleared when the modal closes. On roll-time the npcId is copied
-  // into firstImpressionTargetRef so executeRoll can write the
-  // relationship CMod post-outcome.
+  // First Impression NPC picker — used as the modal's defaultNpcId when
+  // entry is via PlayerNpcCard's quick-fire button (player clicks the
+  // FI chip on an NPC card, we pre-select that NPC and open the modal).
+  // The modal owns its own internal npcId / skillChoice / cmod state;
+  // this top-level state is just the pre-selection hand-off. Cleared
+  // when the modal closes.
   const [firstImpressionNpcId, setFirstImpressionNpcId] = useState<string>('')
-  // Player-picked social skill for the First Impression roll. 'best'
-  // keeps the original auto-pick (highest of Manipulation/Streetwise/
-  // Psychology); explicit names use that skill regardless of level.
-  // Reset back to 'best' alongside firstImpressionNpcId on modal close.
-  const [firstImpressionSkill, setFirstImpressionSkill] = useState<'best' | 'Manipulation' | 'Streetwise' | 'Psychology'>('best')
-  const firstImpressionTargetRef = useRef<{ characterId: string; npcId: string; npcName: string } | null>(null)
+  // firstImpressionSkill + firstImpressionTargetRef both removed
+  // 2026-05-19 (FI streamline Phase 3). The skill picker now lives
+  // inside <FirstImpressionModal>'s local state; the ref-based stash
+  // was only there because executeRoll's FI branch (also deleted)
+  // wrote the relationship-bump AFTER the roll resolved.
   // Group Check stash - set by triggerGroupCheck just before the dice
   // modal opens, read by executeRoll's saveRollToLog branch so the
   // bespoke "Group Check" banner in RollsFeed has the full participant
@@ -3648,28 +3649,13 @@ export default function TablePage() {
   // writes `npc_relationships.relationship_cmod` so future Recruitment
   // Checks (and other social interactions) have the right CMod baked in.
   // See SRD §02 First Impressions + §08 Communities Recruitment Check.
-  function triggerFirstImpression(characterName: string, npcId: string, npcName: string, skillChoice: 'best' | 'Manipulation' | 'Streetwise' | 'Psychology' = 'best') {
-    const charEntry = entries.find(e => e.character.name === characterName)
-    if (!charEntry) return
-    const rapid = charEntry.character.data?.rapid ?? {}
-    const infMod = rapid.INF ?? 0
-    const skills = charEntry.character.data?.skills ?? []
-    let smod: number
-    if (skillChoice === 'best') {
-      const socialSkills = ['Manipulation', 'Streetwise', 'Psychology']
-      const bestSkill = skills.filter((s: any) => socialSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
-      smod = bestSkill?.level ?? 0
-    } else {
-      const picked = skills.find((s: any) => s.skillName === skillChoice)
-      smod = picked?.level ?? 0
-    }
-    // Stash the NPC target so executeRoll can write the relationship
-    // CMod when the outcome lands. Ref not state - executeRoll runs
-    // inside a state update chain and would miss a re-render.
-    firstImpressionTargetRef.current = { characterId: charEntry.character.id, npcId, npcName }
-    handleRollRequest(`${characterName} - First Impression (${npcName})`, infMod, smod)
-    setShowSpecialCheck(null)
-  }
+  // triggerFirstImpression() deleted 2026-05-19 (FI streamline Phase 3).
+  // Old flow: stash target ref + open standard RollModal, with the
+  // relationship-bump happening inside executeRoll's FI branch.
+  // New flow: <FirstImpressionModal> owns the whole pick + roll + bump
+  // cycle via resolveFirstImpression. Callers (PlayerNpcCard quick-fire
+  // buttons + the special-check picker entry) now set
+  // firstImpressionNpcId + open showSpecialCheck = 'first_impression'.
 
   // ── Recruitment Check (Communities Phase B) ─────────────────────────
   // Flow: openRecruitModal() preps state + loads dependencies, then the
@@ -6451,44 +6437,13 @@ export default function TablePage() {
       if (jamErr) console.error('[weapon-malfunction] roll_log insert error:', jamErr.message)
     }
 
-    // First Impression - write outcome to npc_relationships.relationship_cmod.
-    // CMod ladder + vibe labels + progression message all live in
-    // lib/first-impression-resolver.ts (Phase 1 of the FI streamline,
-    // extracted 2026-05-19). Side-effectful RPC + log calls stay here
-    // for now; Phase 2 folds them into the resolver. The atomic
-    // accumulate-with-clamp behavior of bump_npc_relationship_cmod is
-    // unchanged — same RPC, same SECURITY DEFINER auth (c30a34d).
-    const firstImpressionTarget = firstImpressionTargetRef.current
-    if (firstImpressionTarget && pendingRoll.label.includes('First Impression')) {
-      const cmodDelta = firstImpressionCmodDelta(outcome)
-      try {
-        const { error: bumpErr } = await supabase
-          .rpc('bump_npc_relationship_cmod', {
-            p_npc_id: firstImpressionTarget.npcId,
-            p_character_id: firstImpressionTarget.characterId,
-            p_delta: cmodDelta,
-            p_set_revealed: true,
-            p_reveal_level: 'name_portrait',
-          })
-        if (bumpErr) throw bumpErr
-        // Local refresh so the sidebar + cards pick up the new CMod
-        // without waiting on a realtime broadcast.
-        if (myCharIdRef.current) {
-          void loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
-        }
-        // Progression log: a meeting that left a mark on the PC.
-        const metNpc = campaignNpcs.find((n: any) => n.id === firstImpressionTarget.npcId)
-        const npcName = metNpc?.name ?? 'an NPC'
-        void appendProgressionLog(
-          firstImpressionTarget.characterId,
-          'relationship',
-          firstImpressionProgressionMessage(npcName, cmodDelta),
-        )
-      } catch (err) {
-        reportSupabaseError(err as any, 'first-impression')
-      }
-      firstImpressionTargetRef.current = null
-    }
+    // First Impression branch deleted 2026-05-19 (FI streamline Phase 3).
+    // The FI flow now runs entirely inside <FirstImpressionModal>:
+    //   - Pick + roll + dice render: in the modal.
+    //   - roll_log insert + bump_npc_relationship_cmod + progression_log:
+    //     resolveFirstImpression() in lib/first-impression-resolver.ts.
+    // executeRoll no longer needs to peek at firstImpressionTargetRef or
+    // bump relationships; that ref is gone too (was at L686 pre-cleanup).
 
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
@@ -8113,7 +8068,7 @@ export default function TablePage() {
                     // PlayerNpcCard hides the button if no
                     // viewingCharacterId.
                     onFirstImpression={myEntry
-                      ? () => triggerFirstImpression(myEntry.character.name, npc.id, npc.name)
+                      ? () => { setFirstImpressionNpcId(npc.id); setShowSpecialCheck('first_impression') }
                       : undefined}
                   />
                 )
@@ -8214,7 +8169,7 @@ export default function TablePage() {
                       viewingCharacterId={myEntry?.character.id}
                       onRecruit={sessionStatus === 'active' ? () => openRecruitModal(npc.id) : undefined}
                       onFirstImpression={myEntry
-                        ? () => triggerFirstImpression(myEntry.character.name, npc.id, npc.name)
+                        ? () => { setFirstImpressionNpcId(npc.id); setShowSpecialCheck('first_impression') }
                         : undefined}
                     />
                   )}
@@ -11361,8 +11316,10 @@ export default function TablePage() {
           return {
             characterId: en.character.id,
             characterName: en.character.name,
+            stateId: en.stateId,
             infMod: rapid.INF ?? 0,
             bestSkillName, bestSkillLevel, manipLevel, streetLevel, psychLevel,
+            insightDice: en.liveState?.insight_dice ?? 0,
           }
         })
         // Build eligible NPC list — on the active tactical map OR revealed
@@ -11395,16 +11352,35 @@ export default function TablePage() {
             eligiblePcs={eligiblePcs}
             eligibleNpcs={eligibleNpcs}
             defaultPcId={defaultPcId}
-            onClose={() => { setShowSpecialCheck(null); setFirstImpressionNpcId(''); setFirstImpressionSkill('best') }}
-            onRoll={async ({ pc, npc, amod, smod, cmod, die1, die2, total, outcome }) => {
+            defaultNpcId={firstImpressionNpcId || undefined}
+            onClose={() => { setShowSpecialCheck(null); setFirstImpressionNpcId('') }}
+            onRoll={async ({ pc, npc, amod, smod, cmod, die1, die2, die3, total, outcome, insightUsed, insightDieDelta }) => {
               if (!userId) return { cmodDelta: 0, vibe: '', warnings: ['no userId'] }
+              // 1. Apply the Insight Die delta to character_states FIRST so
+              //    resolveFirstImpression's roll_log row writes against the
+              //    post-spend state (matches executeRoll's pre-spend
+              //    decrement order at L4762).
+              if (insightDieDelta !== 0) {
+                const nextInsight = Math.max(0, pc.insightDice + insightDieDelta)
+                const { error: idErr } = await supabase
+                  .from('character_states')
+                  .update({ insight_dice: nextInsight, updated_at: new Date().toISOString() })
+                  .eq('id', pc.stateId)
+                if (!idErr) {
+                  setEntries(prev => prev.map(e => e.stateId === pc.stateId
+                    ? { ...e, liveState: { ...e.liveState, insight_dice: nextInsight } }
+                    : e))
+                }
+              }
+              // 2. Resolver does the three writes (roll_log + RPC + progression).
               const result = await resolveFirstImpression({
                 supabase, campaignId: id, userId,
                 characterId: pc.characterId,
                 characterName: pc.characterName,
                 npcId: npc.id,
                 npcName: npc.name,
-                die1, die2, amod, smod, cmod, total, outcome,
+                die1, die2, die3, amod, smod, cmod, total, outcome,
+                insightUsed,
               })
               // Refresh local revealedNpcs so the sidebar/cards reflect
               // the new CMod without waiting for a realtime broadcast.
@@ -11419,7 +11395,7 @@ export default function TablePage() {
         )
       })()}
       {showSpecialCheck && showSpecialCheck !== 'first_impression' && (
-        <div onClick={() => { setShowSpecialCheck(null); setFirstImpressionNpcId(''); setFirstImpressionSkill('best') }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div onClick={() => { setShowSpecialCheck(null); setFirstImpressionNpcId('') }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '380px' }}>
             {showSpecialCheck === 'perception' && (
               <>

@@ -1,17 +1,47 @@
 'use client'
 
-// FirstImpressionModal — Phase 2 of the FI streamline.
+// FirstImpressionModal — single-modal First Impression flow.
 //
-// Replaces the two-modal sequence (special-check picker + RollModal)
-// with a single self-contained modal that owns the entire FI flow:
-// skill picker + NPC picker + CMod stepper + Roll button + inline dice
-// render + outcome + vibe + Done. Parent passes eligible PCs/NPCs and
-// the resolver callback; this component owns the picker state and the
-// d6 throws.
+// Replaces the legacy two-modal sequence (special-check picker +
+// RollModal) with a self-contained modal that owns the entire FI
+// cycle: skill picker + NPC picker + CMod stepper + Insight Die
+// spend + Roll button + inline dice render + outcome + vibe + Done.
+// Parent passes eligible PCs/NPCs and a single onRoll callback; this
+// component owns picker state, d6 throws, Insight Die accounting,
+// and result rendering.
 //
-// Phase 2 scope: pick + roll + result. Insight Die spend is NOT
-// surfaced here yet — Phase 3 will fold that in alongside the cutover
-// (and the same one-modal pattern for the other special checks).
+// Shipped in three phases:
+//   Phase 1 (2026-05-19) — pure helpers (cmodDelta / vibe / message)
+//     extracted to lib/first-impression-resolver.ts.
+//   Phase 2 (2026-05-19) — new modal + resolveFirstImpression side-
+//     effectful function; replaced the picker modal.
+//   Phase 3 (2026-05-19) — Insight Die pre-roll spend + HI/LI auto-
+//     award accounting; deleted the legacy triggerFirstImpression +
+//     executeRoll FI branch + firstImpressionTargetRef.
+//
+// ── TEMPLATE PATTERN ──────────────────────────────────────────────
+// This is the blueprint for collapsing the other 4 special checks
+// (Perception, Gut Instinct, Group Check, Heal) into single-modal
+// flows. Each follows the same shape:
+//   1. Pure resolver helpers in lib/<check>-resolver.ts:
+//        outcomeFunction(outcome) -> mechanical delta
+//        narrativeFunction(delta) -> player-facing vibe text
+//        resolveFn(args) -> async; does roll_log + side-effects;
+//          returns { delta, vibe, warnings }
+//   2. Per-check modal component at
+//      app/stories/[id]/table/components/<Check>Modal.tsx:
+//        - props: eligible inputs + onClose + onRoll (returns
+//          resolver result)
+//        - state: picker state + Insight Die preSpend
+//        - phases: 'pick' / 'rolling' / 'result'
+//        - signed() helper for label rendering
+//   3. Page-level wire-up: top-level mount gated on
+//      showSpecialCheck === '<check>'; old branch deleted from the
+//      shared special-check modal frame.
+//   4. Tests: ladder + narrative + signed-zero + resolver success/
+//      error paths via mocked supabase client.
+// Each migration shrinks page.tsx and moves us toward the Phase 3
+// decomposition end state from tasks/page-tsx-decomposition-plan.md.
 
 import { useState, useMemo, useEffect } from 'react'
 import { getOutcome, outcomeColor } from '../../../../../lib/roll-helpers'
@@ -27,12 +57,14 @@ function rollD6(): number {
 export interface FiPc {
   characterId: string
   characterName: string
+  stateId: string         // character_states row id (needed for insight_dice writes)
   infMod: number
   bestSkillName: 'Manipulation' | 'Streetwise' | 'Psychology'
   bestSkillLevel: number
   manipLevel: number
   streetLevel: number
   psychLevel: number
+  insightDice: number     // currently-available Insight Die count for pre-roll spend
 }
 
 export interface FiNpc {
@@ -53,10 +85,19 @@ export interface FirstImpressionModalProps {
   // Auto-selected when there's an unambiguous PC (single visible PC,
   // or active combatant during GM-rolled combat).
   defaultPcId?: string
+  // Pre-selected NPC when the modal is opened from the quick-fire FI
+  // button on an NPC card (PlayerNpcCard / NpcCard). Player can still
+  // change it inside the modal.
+  defaultNpcId?: string
   onClose: () => void
-  // Called when the player clicks Roll. Parent owns the side-effectful
-  // resolveFirstImpression call (supabase writes) and returns its
-  // result so the modal can render the vibe + any warnings inline.
+  // Called when the player clicks Roll. Parent owns:
+  //   - the side-effectful resolveFirstImpression call (roll_log + RPC
+  //     + progression_log writes)
+  //   - applying insightDieDelta to character_states.insight_dice
+  //     (negative for pre-spend, positive for HI/LI auto-award; net
+  //     is what the parent writes)
+  //   - returning the resolver's cmodDelta/vibe/warnings so the modal
+  //     can render the result inline
   onRoll: (args: {
     pc: FiPc
     npc: FiNpc
@@ -66,8 +107,11 @@ export interface FirstImpressionModalProps {
     cmod: number
     die1: number
     die2: number
+    die3: number | null            // null on normal 2d6; raw d3 on a 3d6 Insight spend
     total: number
     outcome: string
+    insightUsed: '3d6' | '+3cmod' | null
+    insightDieDelta: number        // net change to character_states.insight_dice
   }) => Promise<FiResolveResult>
 }
 
@@ -76,6 +120,7 @@ export default function FirstImpressionModal({
   eligiblePcs,
   eligibleNpcs,
   defaultPcId,
+  defaultNpcId,
   onClose,
   onRoll,
 }: FirstImpressionModalProps) {
@@ -83,9 +128,16 @@ export default function FirstImpressionModal({
   const [pcId, setPcId] = useState<string>(
     defaultPcId ?? (eligiblePcs.length === 1 ? eligiblePcs[0].characterId : ''),
   )
-  const [npcId, setNpcId] = useState<string>('')
+  const [npcId, setNpcId] = useState<string>(defaultNpcId ?? '')
   const [skillChoice, setSkillChoice] = useState<'best' | 'Manipulation' | 'Streetwise' | 'Psychology'>('best')
   const [cmod, setCmod] = useState<number>(0)
+  // Pre-roll Insight Die spend. Two canonical variants (SRD v1.1.17 §05):
+  //   '3d6'     - roll three dice, keep all three (storage packs d2+d3
+  //               into die2 per saveRollToLog convention so the existing
+  //               getOutcome math still works on die1+die2)
+  //   '+3cmod'  - just add +3 to the CMod for this single roll
+  // Either variant costs 1 Insight Die. Disabled when pc.insightDice === 0.
+  const [preSpend, setPreSpend] = useState<'3d6' | '+3cmod' | null>(null)
 
   // Roll lifecycle.
   const [phase, setPhase] = useState<'pick' | 'rolling' | 'result'>('pick')
@@ -130,13 +182,44 @@ export default function FirstImpressionModal({
     if (!pc || !npc || phase !== 'pick') return
     setError(null)
     setPhase('rolling')
-    const die1 = rollD6()
-    const die2 = rollD6()
-    const total = die1 + die2 + amod + smod + cmod
+    // Roll lifecycle. Three modes depending on preSpend:
+    //   null     - normal 2d6
+    //   '3d6'    - roll 3 dice, pack d2+d3 into die2 storage so the
+    //              existing 2d6 outcome math works unchanged. die3
+    //              stored separately for the renderer.
+    //   '+3cmod' - normal 2d6 + 3 added to the effective CMod.
+    let die1 = rollD6()
+    let die2 = rollD6()
+    let die3: number | null = null
+    let effectiveCmod = cmod
+    let insightUsed: '3d6' | '+3cmod' | null = null
+    if (preSpend === '3d6' && pc.insightDice > 0) {
+      const d3 = rollD6()
+      die3 = d3
+      die2 = die2 + d3                // packed convention
+      insightUsed = '3d6'
+    } else if (preSpend === '+3cmod' && pc.insightDice > 0) {
+      effectiveCmod = cmod + 3
+      insightUsed = '+3cmod'
+    }
+    const total = die1 + die2 + amod + smod + effectiveCmod
+    // Outcome computed from the raw d1 + d2 pair the renderer will
+    // show. For 3d6, die2 already holds d2+d3 so the snake-eyes /
+    // boxcars triggers depend on the raw d1 + (d2+d3) values — matches
+    // the existing saveRollToLog convention.
     const outcome = getOutcome(total, die1, die2)
+    // Insight Die accounting.
+    //   pre-spend: -1 when preSpend was applied
+    //   HI/LI auto-award: +1 on either Moment outcome (PC always gets
+    //     it; this modal only runs for PC rollers).
+    const preSpendCost = insightUsed != null ? -1 : 0
+    const autoAward = (outcome === 'High Insight' || outcome === 'Low Insight') ? 1 : 0
+    const insightDieDelta = preSpendCost + autoAward
     try {
       const resolved = await onRoll({
-        pc, npc, skillChoice, amod, smod, cmod, die1, die2, total, outcome,
+        pc, npc, skillChoice, amod, smod, cmod: effectiveCmod,
+        die1, die2, die3, total, outcome,
+        insightUsed, insightDieDelta,
       })
       setResult({
         die1, die2, total, outcome,
@@ -147,8 +230,6 @@ export default function FirstImpressionModal({
       setPhase('result')
     } catch (e: any) {
       setError(e?.message ?? String(e))
-      // Show the dice but flag the error. The vibe + cmodDelta come
-      // from pure helpers so we can still render them.
       const cmodDelta = firstImpressionCmodDelta(outcome)
       const vibe = firstImpressionVibe(cmodDelta)
       setResult({ die1, die2, total, outcome, cmodDelta, vibe, warnings: [e?.message ?? String(e)] })
@@ -282,14 +363,54 @@ export default function FirstImpressionModal({
               </div>
             </div>
 
+            {/* Insight Die pre-roll spend (optional). Two canonical
+                variants per SRD §05; player can pick one or neither.
+                Buttons disabled when the rolling PC has 0 Insight Dice
+                available. */}
+            {pc && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={sectionLabelStyle}>
+                  Insight Die <span style={{ color: '#5a5550', textTransform: 'none', letterSpacing: 0 }}>
+                    ({pc.insightDice} available)
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {(['3d6', '+3cmod'] as const).map(opt => {
+                    const selected = preSpend === opt
+                    const disabled = pc.insightDice === 0 && !selected
+                    const label = opt === '3d6' ? 'Spend: 3d6 keep all' : 'Spend: +3 CMod'
+                    return (
+                      <button key={opt} type="button"
+                        onClick={() => setPreSpend(prev => prev === opt ? null : opt)}
+                        disabled={disabled}
+                        style={{
+                          flex: 1, padding: '6px 10px',
+                          background: selected ? '#1a2e10' : '#242424',
+                          border: `1px solid ${selected ? '#7fc458' : '#3a3a3a'}`,
+                          borderRadius: '3px',
+                          color: selected ? '#7fc458' : disabled ? '#3a3a3a' : '#d4cfc9',
+                          fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                          letterSpacing: '.06em', textTransform: 'uppercase',
+                          cursor: disabled ? 'not-allowed' : 'pointer',
+                          opacity: disabled ? 0.4 : 1,
+                        }}>
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Breakdown preview */}
             <div style={{
               padding: '8px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e',
               borderRadius: '3px', fontSize: '13px', color: '#cce0f5', marginBottom: '14px',
               fontFamily: 'Carlito, sans-serif',
             }}>
-              Roll: 2d6 + AMod {signed(amod)} + SMod {signed(smod)}
+              Roll: {preSpend === '3d6' ? '3d6 (keep all)' : '2d6'} + AMod {signed(amod)} + SMod {signed(smod)}
               {cmod !== 0 ? ` + CMod ${signed(cmod)}` : ''}
+              {preSpend === '+3cmod' ? ` + 3 (Insight Die)` : ''}
             </div>
 
             {/* Action buttons */}

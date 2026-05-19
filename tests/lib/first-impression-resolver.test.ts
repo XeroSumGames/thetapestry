@@ -177,4 +177,64 @@ describe('resolveFirstImpression', () => {
     // RPC still attempted despite log failure.
     expect(rpcCalls).toHaveLength(1)
   })
+
+  // ── Phase 3 additions: insightUsed + die3 storage + insight_awarded ───
+  it("stamps insight_used='3d6' and packs die3 into damage_json", async () => {
+    const { supabase, insertCalls } = makeMockSupabase()
+    await resolveFirstImpression({
+      supabase, campaignId: 'c', userId: 'u', characterId: 'char', characterName: 'Enya',
+      npcId: 'n', npcName: 'Stranger',
+      die1: 5, die2: 7, die3: 4, amod: 2, smod: 2, cmod: 0, total: 16,
+      outcome: 'High Insight',
+      insightUsed: '3d6',
+    })
+    const log = insertCalls.find(c => c.table === 'roll_log')
+    expect(log).toBeTruthy()
+    expect(log!.payload.insight_used).toBe('3d6')
+    expect(log!.payload.damage_json).toEqual({ die3: 4 })
+  })
+
+  it("stamps insight_used='+3cmod' with damage_json=null when no die3", async () => {
+    const { supabase, insertCalls } = makeMockSupabase()
+    await resolveFirstImpression({
+      supabase, campaignId: 'c', userId: 'u', characterId: 'char', characterName: 'Enya',
+      npcId: 'n', npcName: 'Stranger',
+      die1: 3, die2: 4, amod: 2, smod: 2, cmod: 3, total: 14,
+      outcome: 'Wild Success',
+      insightUsed: '+3cmod',
+    })
+    const log = insertCalls.find(c => c.table === 'roll_log')
+    expect(log!.payload.insight_used).toBe('+3cmod')
+    expect(log!.payload.damage_json).toBeNull()
+  })
+
+  it('marks insight_awarded=true on High Insight outcome', async () => {
+    const { supabase, insertCalls } = makeMockSupabase()
+    await resolveFirstImpression({
+      supabase, campaignId: 'c', userId: 'u', characterId: 'char', characterName: 'X',
+      npcId: 'n', npcName: 'Y',
+      die1: 6, die2: 6, amod: 0, smod: 0, cmod: 0, total: 12, outcome: 'High Insight',
+    })
+    expect(insertCalls[0].payload.insight_awarded).toBe(true)
+  })
+
+  it('marks insight_awarded=true on Low Insight outcome', async () => {
+    const { supabase, insertCalls } = makeMockSupabase()
+    await resolveFirstImpression({
+      supabase, campaignId: 'c', userId: 'u', characterId: 'char', characterName: 'X',
+      npcId: 'n', npcName: 'Y',
+      die1: 1, die2: 1, amod: 0, smod: 0, cmod: 0, total: 2, outcome: 'Low Insight',
+    })
+    expect(insertCalls[0].payload.insight_awarded).toBe(true)
+  })
+
+  it('marks insight_awarded=false on plain Success', async () => {
+    const { supabase, insertCalls } = makeMockSupabase()
+    await resolveFirstImpression({
+      supabase, campaignId: 'c', userId: 'u', characterId: 'char', characterName: 'X',
+      npcId: 'n', npcName: 'Y',
+      die1: 4, die2: 5, amod: 0, smod: 0, cmod: 0, total: 9, outcome: 'Success',
+    })
+    expect(insertCalls[0].payload.insight_awarded).toBe(false)
+  })
 })

@@ -91,11 +91,20 @@ export interface ResolveFirstImpressionArgs {
   npcName: string
   die1: number
   die2: number
+  // Phase 3 (2026-05-19): when the player pre-spent an Insight Die on
+  // 3d6, the raw d3 lands here and die2 holds the packed (d2+d3) value
+  // per saveRollToLog's existing storage convention. null on normal
+  // 2d6 + on the '+3cmod' Insight Die spend.
+  die3?: number | null
   amod: number
   smod: number
   cmod: number
   total: number
   outcome: string
+  // Which Insight Die variant (if any) the player pre-spent on this
+  // roll. Stored in roll_log.insight_used so the extended log can
+  // flag the 3d6 / +3cmod spends. null on no-spend.
+  insightUsed?: '3d6' | '+3cmod' | null
 }
 
 export interface ResolveFirstImpressionResult {
@@ -109,18 +118,30 @@ export async function resolveFirstImpression(
 ): Promise<ResolveFirstImpressionResult> {
   const { supabase, campaignId, userId, characterId, characterName, npcId, npcName,
           die1, die2, amod, smod, cmod, total, outcome } = args
+  const die3 = args.die3 ?? null
+  const insightUsed = args.insightUsed ?? null
   const cmodDelta = firstImpressionCmodDelta(outcome)
   const vibe = firstImpressionVibe(cmodDelta)
   const warnings: string[] = []
+  // HI/LI auto-award flag matches saveRollToLog at page.tsx:4643. PC
+  // rollers always qualify (the FI modal only runs for PC rollers,
+  // and non-antagonist NPC carve-out doesn't apply here).
+  const insightAwarded = outcome === 'High Insight' || outcome === 'Low Insight'
 
-  // 1. roll_log entry.
+  // 1. roll_log entry. die3 lives in damage_json per saveRollToLog's
+  // existing convention so the extended-log renderer can show
+  // [d1 + (d2 + die3 insight)] for 3d6 spends.
   try {
+    const damageJson = die3 != null ? { die3 } : null
     const { error } = await supabase.from('roll_log').insert({
       campaign_id: campaignId,
       user_id: userId,
       character_name: characterName,
       label: `${characterName} - First Impression (${npcName})`,
       die1, die2, amod, smod, cmod, total, outcome,
+      insight_awarded: insightAwarded,
+      insight_used: insightUsed,
+      damage_json: damageJson,
     })
     if (error) warnings.push(`roll_log: ${error.message}`)
   } catch (e: any) {
