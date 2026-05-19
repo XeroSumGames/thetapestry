@@ -22,6 +22,10 @@ import { getCachedAuth } from '../../../../lib/auth-cache'
 import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
 import { reportSupabaseError } from '../../../../lib/supabase-errors'
 import { useHeaderMenus } from './hooks/useHeaderMenus'
+import {
+  firstImpressionCmodDelta,
+  firstImpressionProgressionMessage,
+} from '../../../../lib/first-impression-resolver'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -6446,41 +6450,16 @@ export default function TablePage() {
     }
 
     // First Impression - write outcome to npc_relationships.relationship_cmod.
-    // Outcome → CMod mapping (SRD v1.1.17 §07, canonical):
-    //   Moment of High Insight (6+6) → +2  (+ Insight Die, auto-awarded
-    //                                       by the generic HI handler
-    //                                       earlier in this function)
-    //   Wild Success (14+)           → +1
-    //   Success (9-13)               →  0  (we still upsert revealed=true
-    //                                       so the NPC appears in the PC's
-    //                                       sidebar going forward)
-    //   Failure (4-8)                → -1
-    //   Dire Failure (0-3)           → -2
-    //   Moment of Low Insight (1+1)  → -3  (+ Insight Die, auto-awarded
-    //                                       by the generic LI handler)
-    // Stacks atomically via bump_npc_relationship_cmod RPC (clamped ±3),
-    // not overwrite - the same NPC can be met multiple times and small
-    // shifts accumulate. GM can hand-edit later via NpcRoster.
-    // ladder fix 2026-05-10: prior code shifted every tier +1 (Success
-    // gave +1 instead of 0, Low Insight gave -2 instead of -3, etc.).
-    // See tasks/rules-extract-recruitment-inspiration.md.
+    // CMod ladder + vibe labels + progression message all live in
+    // lib/first-impression-resolver.ts (Phase 1 of the FI streamline,
+    // extracted 2026-05-19). Side-effectful RPC + log calls stay here
+    // for now; Phase 2 folds them into the resolver. The atomic
+    // accumulate-with-clamp behavior of bump_npc_relationship_cmod is
+    // unchanged — same RPC, same SECURITY DEFINER auth (c30a34d).
     const firstImpressionTarget = firstImpressionTargetRef.current
     if (firstImpressionTarget && pendingRoll.label.includes('First Impression')) {
-      const cmodDelta = outcome === 'High Insight' ? 2
-        : outcome === 'Wild Success' ? 1
-        : outcome === 'Success' ? 0
-        : outcome === 'Failure' ? -1
-        : outcome === 'Dire Failure' ? -2
-        : outcome === 'Low Insight' ? -3
-        : 0
+      const cmodDelta = firstImpressionCmodDelta(outcome)
       try {
-        // Atomic accumulate-with-clamp via the bump_npc_relationship_cmod
-        // RPC. Pre-fix this was select-then-insert/update which had two
-        // races (unique-constraint blow-up + lost-update) AND silently
-        // overwrote relationship_cmod instead of stacking - so meeting
-        // the same NPC twice erased the first roll's impact. Now the +/-
-        // delta is added to whatever's already there (clamped to ±3),
-        // matching the SRD First Impression intent.
         const { error: bumpErr } = await supabase
           .rpc('bump_npc_relationship_cmod', {
             p_npc_id: firstImpressionTarget.npcId,
@@ -6498,15 +6477,11 @@ export default function TablePage() {
         // Progression log: a meeting that left a mark on the PC.
         const metNpc = campaignNpcs.find((n: any) => n.id === firstImpressionTarget.npcId)
         const npcName = metNpc?.name ?? 'an NPC'
-        // Vibe labels track the SRD ladder: +2 great / +1 good /
-        //  0 neutral / -1 rough / -2 bad / -3 catastrophic.
-        const vibe = cmodDelta === 2 ? 'great first impression'
-          : cmodDelta === 1 ? 'good first impression'
-          : cmodDelta === 0 ? 'neutral first impression'
-          : cmodDelta === -1 ? 'rough start'
-          : cmodDelta === -2 ? 'bad blood'
-          : 'catastrophic first impression'
-        void appendProgressionLog(firstImpressionTarget.characterId, 'relationship', `Met ${npcName} - ${vibe} (CMod ${cmodDelta >= 0 ? '+' : ''}${cmodDelta}).`)
+        void appendProgressionLog(
+          firstImpressionTarget.characterId,
+          'relationship',
+          firstImpressionProgressionMessage(npcName, cmodDelta),
+        )
       } catch (err) {
         reportSupabaseError(err as any, 'first-impression')
       }
