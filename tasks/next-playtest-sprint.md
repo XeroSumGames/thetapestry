@@ -51,15 +51,9 @@ Log drift, fix small bugs inline, queue big ones.
 
 ## Day 5 (Fri): GM Force-Push View to Players (#10)
 
-Add `view_changed` broadcast event so GM moving the camera /
-switching scenes pushes the same view to all player clients.
-Concrete missing piece, well-trodden Supabase broadcast pattern.
-
-- [ ] Spec the payload (scene_id? camera xy + zoom? both?)
-- [ ] Broadcast on GM scene switch + (optional) pan/zoom
-- [ ] Player listener applies the view
-- [ ] Opt-out per client (don't trap players if they're navigating)
-- [ ] Test 2-client: GM moves, player follows; player can break-follow
+- [x] SHIPPED 2026-05-19 (`8f5821e`). Mirrors the existing CampaignMap "👁 Share View" button (added 2026-05-11). One-shot deliberate push, NOT a continuous follow per Xero 2026-05-19 ("not a drag-follow mechanism"). Payload: `{ scrollLeft, scrollTop, zoom, imgScale }`. Player listener smooth-scrolls. Flash green for ~1.5s after click as confirmation. GM-only button placed next to the zoom control top-right of the tactical map.
+- [x] Pre-existing complementary syncs kept: `scene_activated` (scene switch), `tactical_zoom` (zoom slider), `tactical_shared` / `tactical_unshared` (pane on/off).
+- [ ] **Manual smoke test (Xero):** 2-client (GM + player) on a tactical scene, GM scrolls + zooms + clicks Share View, confirm player's view smooth-scrolls to match.
 
 ---
 
