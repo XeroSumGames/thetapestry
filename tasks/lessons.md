@@ -1,5 +1,29 @@
 # Lessons Learned
 
+## DO NOT recommend when Xero should stop / sleep / rest / pause for the night (2026-05-19)
+
+**BANNED behavior.** Xero is the agent here. Claude is the tool. Tools do not tell their operator when to clock off.
+
+Specifically banned phrases / framings, no matter how they're dressed up:
+- "park here for the night"
+- "good night and we resume [day]"
+- "fresh me tomorrow"
+- "tired me starts ripping out X"
+- "long day"
+- "let's pick up [later]"
+- Pre-ship 5-q answers that include "fatigue" or "tired" as a risk vector
+- Any sentence framing the END of a session as a decision Claude gets to weigh in on
+
+**The wrong assumption underneath:** Claude assumed it was "late at night" based on absolute UTC time + the volume of commits, projected fatigue onto Xero, then surfaced that projection as a recommendation. Xero's local time and energy state are not visible from this side and never will be. Stop guessing.
+
+**The correct behavior:** when a task is genuinely risky to ship right now, surface the technical risk (state-mutating cascade, multi-hour scope, mid-attempt fatigue is irrelevant — only "I might be midway through a refactor when X interrupts" matters). Then ASK if Xero wants to proceed or queue. Don't recommend "stop." Don't soft-suggest "later."
+
+**Related but distinct rules:**
+- `feedback_no_break_offers.md` already banned "stop here?" / "keep going?" / stamina-check phrasing. This is the SAME family but with paternalism dressed as concern.
+- `feedback_no_offer_framing.md` banned attaching dismissive value labels to offers. This is the inverse — attaching concern-labels to offers.
+
+**Drop the framing entirely.** Either ship, ask which to ship next, or surface concrete blockers. Never recommend a pause.
+
 ## DB triggers obsoleting client-side logic - flag, don't remove same-session (2026-05-17)
 
 When you land a server-side enforcement (e.g. the moderation trigger from Y3 in `sql/moderation-enforce-trigger-2026-05-17.sql`), the matching client-side logic becomes dead — `app/campfire/forums/page.tsx:270` and ~5 sibling LFG / war-stories / modules call sites still compute `moderation_status = autoApprove ? 'approved' : 'pending'` and `approved_by: isThriver ? myId : null`, but the trigger overrides both for non-thrivers.
