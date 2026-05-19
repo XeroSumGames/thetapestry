@@ -85,7 +85,7 @@ candidates (Stress Check narrative rewrite, etc.).
 
 1. ~~**Coordinated Effort summary banner**~~ — ANSWERED + SHIPPED 2026-05-18 (`137be68`). Format: "<lead> {success-adverb} uses <skill> to coordinate an effort with <participants>". Per-participant rolls hidden in default feed, visible in expanded ▸ view.
 2. **Recruitment / Inspiration / Apprentice Tier-2 semantics** (#21) — 3 items
-3. **Group Check redesign** (#26) — 3 open questions
+3. ~~**Group Check redesign**~~ — RESOLVED. The "individual-rolls-feed-leader" redesign was killed 2026-05-13 per [tasks/spec-group-check.md](spec-group-check.md). Current Group Check (leader rolls with summed AMods + SMods from helpers) is locked canon. Today's polish (present-tense banner, `cd5e030`) is the only change.
 4. **Gut Instinct results presentation** (#8) — what does the result card look like?
 
 ---
