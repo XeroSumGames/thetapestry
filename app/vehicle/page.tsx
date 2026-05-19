@@ -80,6 +80,18 @@ interface CheckState {
   result: { die1: number; die2: number; total: number; outcome: string } | null
 }
 
+// Render a signed integer for display: '+2' / '-3' / '0'. Used in the
+// crew dropdown + brew skill picker labels so negative skill levels
+// don't render as "+-3" (hardcoded '+' prefix collided with the
+// numeric sign). Post-2026-05-18 playtest: that ugly "+-3" was misread
+// as "+3" and reported as "brew showed Mechanic* +3 when the player
+// didn't have it."
+function signed(n: number): string {
+  if (n > 0) return `+${n}`
+  if (n < 0) return `${n}`
+  return '0'
+}
+
 export default function VehiclePage() {
   const supabase = createClient()
   const params = useSearchParams()
@@ -1271,12 +1283,12 @@ export default function VehiclePage() {
                 <option value="">— Select brewer —</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
-                    {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (M* +${c.mechanicLevel} · Tink +${c.tinkererLevel})`))}
+                    {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (M* ${signed(c.mechanicLevel)} · Tink ${signed(c.tinkererLevel)})`))}
                   </optgroup>
                 )}
                 {crew.filter(c => c.kind === 'npc').length > 0 && (
                   <optgroup label="NPCs">
-                    {crew.filter(c => c.kind === 'npc').map(c => renderCrewOption(c, ` (M* +${c.mechanicLevel} · Tink +${c.tinkererLevel})`))}
+                    {crew.filter(c => c.kind === 'npc').map(c => renderCrewOption(c, ` (M* ${signed(c.mechanicLevel)} · Tink ${signed(c.tinkererLevel)})`))}
                   </optgroup>
                 )}
               </select>
@@ -1823,7 +1835,7 @@ export default function VehiclePage() {
                   <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                     {(['mechanic', 'tinkerer'] as BrewSkill[]).map(s => {
                       const selected = check.brewSkill === s
-                      const label = s === 'mechanic' ? `Mechanic* (RSN +${member?.rsn ?? 0} · Skill +${member?.mechanicLevel ?? 0})` : `Tinkerer (DEX +${member?.dex ?? 0} · Skill +${member?.tinkererLevel ?? 0})`
+                      const label = s === 'mechanic' ? `Mechanic* (RSN ${signed(member?.rsn ?? 0)} · Skill ${signed(member?.mechanicLevel ?? 0)})` : `Tinkerer (DEX ${signed(member?.dex ?? 0)} · Skill ${signed(member?.tinkererLevel ?? 0)})`
                       return (
                         <button key={s} onClick={() => switchBrewSkill(s)}
                           style={{ flex: 1, padding: '6px', background: selected ? accentBg : '#242424', border: `1px solid ${selected ? accent : '#3a3a3a'}`, borderRadius: '3px', color: selected ? accent : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
