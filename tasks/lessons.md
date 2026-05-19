@@ -10,6 +10,31 @@ Locked verbatim: "i never want quick, I always want 'full, complete, thorough, c
 
 Also captured in cross-session memory at `memory/feedback_never_offer_quick.md`.
 
+## Compact log narratives NEVER show mechanical bits - those go in the expanded view (2026-05-19)
+
+**Rule (Xero, locked 2026-05-19):** in the rolls feed compact narrative, never include mechanical effect tags like:
+- `(+1 stress)` / `(-1 stress)` / `(+1 WP)` / etc.
+- `(+1 action)` / `(-1 action)` / `(-2 CMod)` / etc.
+- `(+1 CMod for the chain)` / `(-3 CMod)` / etc.
+- Any parenthetical with a numeric delta tied to game state
+
+Those belong in the **expanded ▸ view** alongside the dice math, breakdowns, and damage box.
+
+**Why:** the feed is for narrative reading at session speed. Mechanical bits clutter the line, force players to parse numbers when they wanted story, and duplicate info that's already visible elsewhere (the target's HP/stress/action pips on their card update in real time).
+
+**Where this rule has been violated and needs cleanup:**
+1. Stress Check narrative shipped today (`dd7a7eb`) has `(+1 stress)` in mid-play Failure, Dire Failure, and Low Insight. Needs rewrite.
+2. Coord Effort legacy single-row narrative in `lib/roll-helpers.ts:417-426` has `(+1 CMod for the chain)`, `(+2 ...)`, `(+3 ...)`, `(-1 CMod)`, `(-3 CMod)`. Fires only when a chain has a lead but no participants (lead-only state). Needs rewrite.
+3. Audit pass needed: grep `compactRollSummary` and surrounding bespoke banners for any `(\+\d|-\d)` patterns.
+
+**Where this rule does NOT apply:**
+- Expanded ▸ view dice math + damage box (mechanical by design)
+- Alert dialogs / post-roll banners shown to the GM (different surface)
+- The character card pips themselves (HP / stress / action display — not narrative)
+- Roll modal warnings BEFORE the roll fires (e.g., "Success >= 7 -> drop to 4 stress · Failure -> Breaking Point" — that's instructional copy)
+
+**When in doubt:** strip the paren. Story first, numbers second.
+
 ## DO NOT recommend when Xero should stop / sleep / rest / pause for the night (2026-05-19)
 
 **BANNED behavior.** Xero is the agent here. Claude is the tool. Tools do not tell their operator when to clock off.
