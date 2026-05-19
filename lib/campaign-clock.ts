@@ -98,6 +98,36 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
   } catch (e) {
     console.error('[campaign-clock] drainInfectionDays failed:', e)
   }
+  // System entry in the roll feed so players can see time pass. Pre-
+  // 2026-05-18 the table page's Advance Time modal wrote a roll_log
+  // entry only when someone was over-encumbered — every other path
+  // (campaign-sheet +1h / +8h buttons, drainer-only ticks) was silent.
+  // Players had no in-band signal that the clock had advanced.
+  //
+  // Single source of truth: log from here. character_name='System',
+  // user_id = the campaign's GM (every roll_log row needs a non-null
+  // user_id; the GM is the canonical owner of clock-state).
+  try {
+    const { data: camp } = await supabase
+      .from('campaigns')
+      .select('gm_user_id')
+      .eq('id', campaignId)
+      .maybeSingle()
+    const gmUserId = (camp as any)?.gm_user_id ?? null
+    if (gmUserId) {
+      const hoursText = hours === 1 ? '1 hour' : `${hours} hours`
+      const dayCrossed = dayDelta > 0 ? ` (Day ${current.canon_day} -> ${next.canon_day})` : ''
+      await supabase.from('roll_log').insert({
+        campaign_id: campaignId, user_id: gmUserId, character_name: 'System',
+        label: `Time advances ${hoursText}${dayCrossed}`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+        outcome: OUTCOME.encumbrance,
+      })
+    }
+  } catch (e) {
+    // Best-effort: a failed log insert never blocks the clock tick.
+    console.warn('[campaign-clock] roll_log insert failed:', e)
+  }
   // Realtime broadcast — every viewer's campaign sheet gets the new
   // clock state immediately, without waiting for postgres_changes to
   // propagate (faster + works around postgres_changes' UPDATE event

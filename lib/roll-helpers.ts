@@ -502,23 +502,30 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       // separate tag needed since the bespoke phrasing already conveys
       // the wild/dire beat. (Canon rule per Xero 2026-05-11: "Moment of
       // Insight" only on HI/LI; WS/DF use distinct phrasing.)
+      //
+      // 2026-05-19 playtest feedback: the bare verb "makes a First
+      // Impression" loses the target NPC. Extract it from the label's
+      // parenthesized suffix ("First Impression (NpcName)") and append
+      // " on <NpcName>" so the feed reads as a sentence.
+      const fiMatch = suffix.match(/^First Impression\s+\((.+?)\)\s*$/)
+      const fiTarget = fiMatch?.[1] ? ` on ${fiMatch[1]}` : ''
       if (r.outcome === 'High Insight') {
-        return `${r.character_name} makes a strong First Impression and has a Moment of Insight as to why they did so well`
+        return `${r.character_name} makes a strong First Impression${fiTarget} and has a Moment of Insight as to why they did so well`
       }
       if (r.outcome === 'Wild Success') {
-        return `${r.character_name} makes a strong First Impression`
+        return `${r.character_name} makes a strong First Impression${fiTarget}`
       }
       if (r.outcome === 'Success') {
-        return `${r.character_name} makes a First Impression`
+        return `${r.character_name} makes a First Impression${fiTarget}`
       }
       if (r.outcome === 'Failure') {
-        return `${r.character_name} makes a bad First Impression`
+        return `${r.character_name} makes a bad First Impression${fiTarget}`
       }
       if (r.outcome === 'Dire Failure') {
-        return `${r.character_name} makes a terrible First Impression`
+        return `${r.character_name} makes a terrible First Impression${fiTarget}`
       }
       // Low Insight - bespoke phrasing per Xero (2026-05-10).
-      return `${r.character_name} made a terrible First Impression, but has a Moment of Insight as to what went wrong`
+      return `${r.character_name} made a terrible First Impression${fiTarget}, but has a Moment of Insight as to what went wrong`
     }
     // Fallthrough - should never hit given the regex.
     return `${r.character_name} - ${check}${hit ? '' : ' (failed)'}${outcomeTag}`
