@@ -1,5 +1,22 @@
 # Lessons Learned
 
+## Tab-local default-OFF UX fails when ONE user forgets to flip it (2026-05-19)
+
+**Rule:** When a feature requires N independent user actions to "all work" (every player hits Record), redesign so the N actions collapse to 1 (GM hits Record, broadcast cascades to N). Default-off + per-user opt-in is the wrong shape for any coordination problem where one missing user breaks the whole.
+
+**Trigger:** Session 3 (2026-05-18). Recorder was tab-local with each user's Record button toggling only their own tab. Alex (player) hit Stop without ever hitting Start — dumped an empty file, lost 16 minutes of session coverage. We didn't find out until the next morning when his JSON was inspected.
+
+**Fix-forward:** Shipped `653ff86` — GM-cascade design. GM clicks once, every player tab flips on via Supabase broadcast on `initChannelRef`. Per-campaign localStorage flag persists state across refresh / back-nav / late mount. `beforeunload` flush closes the "close-tab loses 60s" hole. Player Record button removed entirely; Ctrl+Shift+L hotkey kept as ad-hoc fallback.
+
+**Pattern:** for any "every-user-needs-to-do-X" coordination problem, ask three questions before designing the UX:
+1. Is X load-bearing if even ONE user forgets? (Recorder: yes — that user's session is lost.)
+2. Can one central actor (GM, host, leader) trigger X for everyone? (Recorder: yes — broadcast.)
+3. Does the platform already have a fan-out channel? (Recorder: yes — `initChannelRef` carries 30 other broadcast events.)
+
+If all three are yes, default to GM-cascade. Otherwise, default to tab-local but instrument the "did everyone actually do X" check.
+
+**Don't regress:** the previous tab-local rewrite (2026-05-15 in `lib/playtest-recorder.ts:143-151`) was itself a fix for a "GM's button toggled everyone" bug. Both extremes lose. The right middle is GM-cascade with explicit broadcast + localStorage persistence.
+
 ## Verify shipped state before assuming uncontested scope (2026-05-19)
 
 **Rule:** Before starting any non-trivial feature work, run `git fetch && git log --oneline origin/main -10` to see what's actually shipped. Other chats may have landed competing or overlapping work since the session started.

@@ -146,7 +146,7 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ## Current main HEAD
 
-`f3b20fb feat(vehicles): brewing-supplies stockpile + Gather Materials (Q4-d)`
+`653ff86 feat(playtest-recorder): GM-cascade start/stop + localStorage resume`
 
 ## The arc this session (2026-05-19)
 
@@ -163,6 +163,7 @@ Continuation chat that picked up from a context-compacted session mid-way throug
 | `ba472f6` | `docs(preview):` 7th-pass changelog entry in `roll-feed-log-preview.html` documenting the DRIVE/BREW/NAVIGATE supersession. | Docs |
 | `c31e564` | `feat(vehicles):` per-vehicle fuel storage via installable 55-Gallon Drums (Q4-c). New `lib/fuel-storage.ts` with pure helpers; new optional `fuel_max_base` + `fuel_storage_max` cols on Vehicle (Minnie base=4, cap=6). New "Fuel Storage" panel on vehicle popout with Install/Uninstall buttons. Drum is a new EQUIPMENT item (Common, enc 2). Brew "already full" detection Just Works at the new expanded cap (keys off fuel_max which install bumps directly). SQL backfill applied live to existing Minnie rows. 21 new tests. | Untested live |
 | `f3b20fb` | `feat(vehicles):` brewing-supplies stockpile + Gather Materials (Q4-d). New `lib/brewing-supplies.ts` pure helpers; new optional `brewing_supplies_current` + `brewing_supplies_max` cols on Vehicle (Minnie current=0, max=2). New "Brewing Supplies" panel under Fuel Storage with [+ Gather Materials] button. Gather = passive no-dice action that bumps current by 1 and inserts a `gather_materials` feed event. Brew check is blocked when supplies=0; every brew attempt consumes 1 supply (success or fail) batched with the fuel update. SQL backfill applied live. 19 new tests. | Untested live |
+| `653ff86` | `feat(playtest-recorder):` GM-cascade start/stop + localStorage resume. Record button is now GM-only. GM click broadcasts `recorder_start` / `recorder_stop` on `initChannelRef` (wrapped via `wrapBroadcast`); every connected player tab flips its capture flag in lockstep and writes `tapestry_recorder_enabled_<campaignId>` to localStorage. Table-page mount reads that flag and resumes capture without user action (survives refresh / back-nav / late mount). `beforeunload` listener does a one-shot flush so close-tab loses ≤1 event instead of up to 60s. Players keep Ctrl+Shift+L for ad-hoc dumps. Closes the "Alex hit Stop without ever hitting Start and dumped an empty recording" failure mode from 2026-05-18 session 3. 6 new tests. | Untested live |
 
 ## Playtest punch list (2026-05-18) — final status
 
