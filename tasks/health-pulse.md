@@ -6,6 +6,23 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-19 00:10 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [168 passed]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not authenticated in sandbox — skipped
+
+**Drift:**
+- Stale Confidence Ledger: reads "160 unit tests" — 168 now pass (+8 since last drain). New tests: sentry-realtime (5) + image-utils (3).
+
+**Action:** Update `tasks/debug-handoff.md` §3 Confidence Ledger test count: 160 → 168; expand coverage description to include sentry-realtime + image-utils.
+
+---
+
 ## 2026-05-18 — DRIFT DRAINED (manual entry)
 
 **Status:** GREEN
