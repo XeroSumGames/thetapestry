@@ -12,6 +12,7 @@ import type { InventoryItem } from '../lib/inventory'
 import PortraitBankPicker from './PortraitBankPicker'
 import { openPopout } from '../lib/popout'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from '../lib/npc-drag-drop'
 
 function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
@@ -374,26 +375,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   async function handleNpcDrop(targetId: string) {
     if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return }
-    const fromIdx = npcs.findIndex(n => n.id === dragId)
-    const toIdx = npcs.findIndex(n => n.id === targetId)
-    if (fromIdx < 0 || toIdx < 0) { setDragId(null); setDragOverId(null); return }
-    const next = [...npcs]
-    const [moved] = next.splice(fromIdx, 1)
-    next.splice(toIdx, 0, moved)
-    const renumbered = next.map((n, i) => ({ ...n, sort_order: i + 1 }))
-    setNpcs(renumbered)
+    const renumbered = reorderNpcs(npcs, dragId, targetId)
+    if (renumbered === npcs) { setDragId(null); setDragOverId(null); return }
+    setNpcs(renumbered as typeof npcs)
     setDragId(null)
     setDragOverId(null)
-    // Only persist rows whose sort_order actually changed. A drag from
-    // index 2 → 5 only mutates positions 2..5 — the rest of the roster
-    // keeps its existing sort_order, so we skip those updates.
-    const prevOrder = new Map(npcs.map(n => [n.id, n.sort_order ?? null]))
-    const dirty = renumbered.filter(n => prevOrder.get(n.id) !== n.sort_order)
-    if (dirty.length > 0) {
-      await Promise.all(dirty.map(n =>
-        supabase.from('campaign_npcs').update({ sort_order: n.sort_order }).eq('id', n.id)
-      ))
-    }
+    await persistNpcSort(supabase, dirtyNpcSortRows(npcs, renumbered))
   }
 
   useEffect(() => {
@@ -633,7 +620,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   }
 
   async function moveNpcToFolder(npcId: string, folderName: string) {
-    await supabase.from('campaign_npcs').update({ folder: folderName === 'Uncategorized' ? null : folderName }).eq('id', npcId)
+    await persistNpcFolder(supabase, npcId, folderName)
     setNpcs(prev => prev.map(n => n.id === npcId ? { ...n, folder: folderName === 'Uncategorized' ? null : folderName } : n))
   }
 

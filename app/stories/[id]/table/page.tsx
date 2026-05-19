@@ -28,6 +28,7 @@ import {
   resolveFirstImpression,
 } from '../../../../lib/first-impression-resolver'
 import FirstImpressionModal, { type FiPc, type FiNpc } from './components/FirstImpressionModal'
+import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from '../../../../lib/npc-drag-drop'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -673,6 +674,14 @@ export default function TablePage() {
   // Lightweight community name map for all users (players + GM). Maps npc_id → community name.
   // Loaded at startup so the player NPC list shows "Community - {name}" buckets.
   const [playerNpcCommunityMap, setPlayerNpcCommunityMap] = useState<Record<string, string>>({})
+  // Player-side NPC drag/drop state (Q2 scope C, post-playtest mark
+  // 01:32:51, 2026-05-19). The GM's NpcRoster has its own drag state;
+  // these mirror that on the player-side inline render at L8602+.
+  // Drag persists via lib/npc-drag-drop helpers (same RLS path as GM).
+  const [playerNpcDragId, setPlayerNpcDragId] = useState<string | null>(null)
+  const [playerNpcDragOverId, setPlayerNpcDragOverId] = useState<string | null>(null)
+  const [playerNpcDragOverFolder, setPlayerNpcDragOverFolder] = useState<string | null>(null)
+
   // First Impression NPC picker — used as the modal's defaultNpcId when
   // entry is via PlayerNpcCard's quick-fire button (player clicks the
   // FI chip on an NPC card, we pre-select that NPC and open the modal).
@@ -8669,21 +8678,58 @@ export default function TablePage() {
                 folders.push({ name: f, key: f, npcs: byFolder.get(f)!.sort((a, b) => a.name.localeCompare(b.name)) })
               }
 
-              function renderNpcRow(npc: any) {
+              function renderNpcRow(npc: any, bucket: { name: string; key: string; npcs: any[] }) {
                 const isOpen = viewingNpcs.some(n => n.id === npc.id)
                 const inCombat = combatIdSet.has(npc.id)
                 const freshNpc = campaignNpcs.find((n: any) => n.id === npc.id)
                 const npcWP = freshNpc?.wp_current ?? npc.wp_current ?? npc.wp_max ?? 10
                 const npcIsDead = freshNpc?.status === 'dead' || (npcWP === 0 && freshNpc?.death_countdown != null && freshNpc.death_countdown <= 0)
                 const npcIsMortal = npcWP === 0 && !npcIsDead
+                // Drag/drop only inside custom folders. Combat + community
+                // buckets are computed views, not editable groupings —
+                // reordering them would just confuse players when the next
+                // render snaps them back into initiative / community order.
+                const isCombatBucket = bucket.key === '__combat__'
+                const isCommunityBucket = bucket.key.startsWith('__community__')
+                const canDragHere = !isCombatBucket && !isCommunityBucket
+                const isDragOver = playerNpcDragOverId === npc.id && playerNpcDragId !== npc.id
                 return (
                   <div
                     key={npc.id}
+                    draggable={canDragHere}
+                    onDragStart={e => {
+                      if (!canDragHere) { e.preventDefault(); return }
+                      e.stopPropagation()
+                      setPlayerNpcDragId(npc.id)
+                    }}
+                    onDragEnd={() => { setPlayerNpcDragId(null); setPlayerNpcDragOverId(null); setPlayerNpcDragOverFolder(null) }}
+                    onDragOver={e => {
+                      if (!playerNpcDragId || !canDragHere) return
+                      e.preventDefault()
+                      setPlayerNpcDragOverId(npc.id)
+                    }}
+                    onDragLeave={() => { if (playerNpcDragOverId === npc.id) setPlayerNpcDragOverId(null) }}
+                    onDrop={async e => {
+                      if (!playerNpcDragId || playerNpcDragId === npc.id || !canDragHere) {
+                        setPlayerNpcDragId(null); setPlayerNpcDragOverId(null); return
+                      }
+                      e.stopPropagation()
+                      // Reorder within the bucket — operate on bucket.npcs.
+                      // Note: bucket.npcs are sorted by name in the player
+                      // view (L8669); after this drop sort_order persists to
+                      // DB and the GM/player view will reorder accordingly
+                      // on the next render.
+                      const renumbered = reorderNpcs(bucket.npcs, playerNpcDragId, npc.id)
+                      setPlayerNpcDragId(null)
+                      setPlayerNpcDragOverId(null)
+                      if (renumbered === bucket.npcs) return
+                      await persistNpcSort(supabase, dirtyNpcSortRows(bucket.npcs, renumbered))
+                    }}
                     onClick={() => {
                       setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
                       setSelectedEntry(null)
                     }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isDragOver ? '#242424' : isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isDragOver ? '#7fc458' : isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: canDragHere ? 'grab' : 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
                   >
                     {(() => {
                       // Player-side NPC list. Pull disposition + npc_type
@@ -8734,11 +8780,36 @@ export default function TablePage() {
                   const isCommunityBucket = bucket.key.startsWith('__community__')
                   const isOpen = isCombatBucket || playerFolderOpen.has(bucket.key)
                   const headerColor = isCombatBucket ? '#f5a89a' : isCommunityBucket ? '#7fc458' : '#EF9F27'
+                  // Folder header is a valid drop target for cross-folder
+                  // NPC moves. Combat + community buckets reject drops
+                  // because they're computed views, not editable folders.
+                  const canAcceptDrop = !isCombatBucket && !isCommunityBucket
+                  const isFolderDragOver = playerNpcDragOverFolder === bucket.key && playerNpcDragId !== null
                   return (
                     <div key={bucket.key} style={{ marginBottom: '6px' }}>
                       <div
                         onClick={() => !isCombatBucket && togglePlayerFolder(bucket.key)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', cursor: isCombatBucket ? 'default' : 'pointer', userSelect: 'none' }}>
+                        onDragOver={e => {
+                          if (!playerNpcDragId || !canAcceptDrop) return
+                          e.preventDefault()
+                          setPlayerNpcDragOverFolder(bucket.key)
+                        }}
+                        onDragLeave={() => { if (playerNpcDragOverFolder === bucket.key) setPlayerNpcDragOverFolder(null) }}
+                        onDrop={async e => {
+                          if (!playerNpcDragId || !canAcceptDrop) {
+                            setPlayerNpcDragId(null); setPlayerNpcDragOverFolder(null); return
+                          }
+                          e.stopPropagation()
+                          // Cross-folder move: bucket.name IS the folder
+                          // string (with 'Unfiled' mapping to null inside
+                          // persistNpcFolder, matching the GM's convention).
+                          const dragId = playerNpcDragId
+                          setPlayerNpcDragId(null)
+                          setPlayerNpcDragOverFolder(null)
+                          const { error } = await persistNpcFolder(supabase, dragId, bucket.name)
+                          if (error) reportSupabaseError(error as any, 'player-npc-folder-move')
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', cursor: isCombatBucket ? 'default' : 'pointer', userSelect: 'none', background: isFolderDragOver ? '#1a2e10' : 'transparent', border: isFolderDragOver ? '1px dashed #7fc458' : '1px solid transparent', borderRadius: '3px', transition: 'background 0.15s' }}>
                         {!isCombatBucket && (
                           <span style={{ fontSize: '13px', color: '#5a5550', width: '10px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         )}
@@ -8749,7 +8820,7 @@ export default function TablePage() {
                           ({bucket.npcs.length})
                         </span>
                       </div>
-                      {isOpen && bucket.npcs.map(renderNpcRow)}
+                      {isOpen && bucket.npcs.map(npc => renderNpcRow(npc, bucket))}
                     </div>
                   )
                 })}
