@@ -521,7 +521,7 @@ export default function ApprenticeCreationWizard({
                       <span style={{ fontSize: '13px', color: trainable ? '#7ab3d4' : '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '60px', textAlign: 'right' }}
                         title={trainable
                           ? `Master PC has ${s.name} ${pcLevel}; cap = ${cap}`
-                          : `Master PC doesn't have ${s.name} — can't train`}>
+                          : `Master PC doesn't have ${s.name} - can't train`}>
                         {trainable ? `cap ${cap}` : 'untrainable'}
                       </span>
                       <button onClick={() => canDec && setSkillDelta(d => ({ ...d, [s.name]: (d[s.name] ?? 0) - 1 }))} disabled={!canDec}

@@ -440,7 +440,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 title={
                   cmod != null && cmod !== 0
                     ? `Re-roll First Impression on ${npc.name} (current: ${cmod > 0 ? '+' : ''}${cmod}). Result stacks with the existing CMod, clamped +/-3.`
-                    : `Roll a First Impression on ${npc.name} — INF + best of Manipulation / Streetwise / Psychology.`
+                    : `Roll a First Impression on ${npc.name} - INF + best of Manipulation / Streetwise / Psychology.`
                 }
                 style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
                 🤝 {cmod != null && cmod !== 0 ? 'Re-roll 1st' : 'First Impression'}

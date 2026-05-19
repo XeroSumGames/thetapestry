@@ -78,6 +78,12 @@ export interface RollEntry {
   insight_used: '3d6' | '+3cmod' | null
   created_at: string
   damage_json: DamageResult | null
+  // Stamped on every row that belongs to an active Coordinated
+  // Effort chain (lead + participants share the same id). Used by
+  // collapseCoordEffortChains to fold the chain into a single
+  // bespoke feed banner, and by the Withdraw retcon handler in
+  // the table page to query siblings.
+  coord_chain_id?: string | null
 }
 
 export interface UseRollsFeedArgs {

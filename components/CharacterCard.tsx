@@ -1303,7 +1303,7 @@ function CharacterCardImpl({
         open={lastingWoundPending}
         onClose={() => { setLastingWoundPending(false); setLastingWoundResult(null); setLastingWoundCmod(0) }}
         title="Lasting Wound Check"
-        subtitle={`${c.name} — Physicality check failed`}
+        subtitle={`${c.name} - Physicality check failed`}
         rollFormula="2d6 + CMod (Table 12)"
         amod={0}
         smod={0}

@@ -379,7 +379,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             const unwieldy = getTraitValue(eqWeapon.traits, 'Unwieldy')
             if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
             return (
-              <button key={i} onClick={() => onRoll!(`${npc.name} — Attack (${eqWeapon.name})`, amod, smod, { weaponName: eqWeapon.name, damage: eqWeapon.damage, rpPercent: eqWeapon.rpPercent, conditionCmod: traitCmod, traitCmod, traitLabel, traits: eqWeapon.traits })}
+              <button key={i} onClick={() => onRoll!(`${npc.name} - Attack (${eqWeapon.name})`, amod, smod, { weaponName: eqWeapon.name, damage: eqWeapon.damage, rpPercent: eqWeapon.rpPercent, conditionCmod: traitCmod, traitCmod, traitLabel, traits: eqWeapon.traits })}
                 style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 ⚔️ {eqWeapon.name} ({eqWeapon.damage})
               </button>

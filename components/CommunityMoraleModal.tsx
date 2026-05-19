@@ -667,16 +667,16 @@ export default function CommunityMoraleModal({
     //    designated leader (per SRD p.22); Fed/Clothed stay credited to
     //    the community since SRD p.24 says those are assumed to be
     //    rolled by generic NPCs of reasonable proficiency.
-    const fedLabel = `🌾 Week ${newWeek} · ${community.name} — Fed Check: ${fed.outcome}`
-    const clothedLabel = `🔧 Week ${newWeek} · ${community.name} — Clothed Check: ${clothed.outcome}`
+    const fedLabel = `🌾 Week ${newWeek} · ${community.name} - Fed Check: ${fed.outcome}`
+    const clothedLabel = `🔧 Week ${newWeek} · ${community.name} - Clothed Check: ${clothed.outcome}`
     const moraleSuffix = reallyDissolves
-      ? ` — Community dissolved`
+      ? ` - Community dissolved`
       : retentionSucceeded
-        ? ` — Retention pending`
+        ? ` - Retention pending`
         : departureIds.length > 0
-          ? ` — ${departureIds.length} member${departureIds.length === 1 ? '' : 's'} left`
+          ? ` - ${departureIds.length} member${departureIds.length === 1 ? '' : 's'} left`
           : ''
-    const moraleLabel = `📊 Week ${newWeek} · ${community.name} — ${leaderName} rolls ${moraleSkillName}: ${morale.outcome}${moraleSuffix}`
+    const moraleLabel = `📊 Week ${newWeek} · ${community.name} - ${leaderName} rolls ${moraleSkillName}: ${morale.outcome}${moraleSuffix}`
 
     // Base rows — Fed, Clothed, Morale. Retention row appended below
     // if attempted so the feed tells the story: Morale failed → Leader
@@ -728,7 +728,7 @@ export default function CommunityMoraleModal({
           membersBefore, membersAfter,
           departureCount: reallyDissolves ? membersBefore : departureIds.length,
           departureNames: reallyDissolves
-            ? ['— all members —']
+            ? ['- all members -']
             : departureIds.map(id => memberNameById.get(id) ?? '(unknown)'),
           consecutiveFailuresAfter,
           willDissolve: reallyDissolves,
@@ -740,8 +740,8 @@ export default function CommunityMoraleModal({
     ]
     if (retention) {
       const retLabel = retention.survived
-        ? `🙏 Week ${newWeek} · ${community.name} — ${leaderName} rallies the survivors: ${retention.outcome}`
-        : `🙏 Week ${newWeek} · ${community.name} — ${leaderName} fails to hold the community together: ${retention.outcome}`
+        ? `🙏 Week ${newWeek} · ${community.name} - ${leaderName} rallies the survivors: ${retention.outcome}`
+        : `🙏 Week ${newWeek} · ${community.name} - ${leaderName} fails to hold the community together: ${retention.outcome}`
       // Bump retention log timestamp by 1ms so it sorts after the failed
       // Morale row in the feed (same-tick inserts can sort unpredictably).
       const retTime = new Date(Date.now() + 1).toISOString()

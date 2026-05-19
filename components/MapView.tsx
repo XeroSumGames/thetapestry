@@ -785,7 +785,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         // with a thin dark outline + subtle glow. No emoji — the
         // shape itself reads as "settled place".
         const icon = leaflet.divIcon({
-          html: `<div style="width:${sizePx}px;height:${sizePx}px;background:${dotColor};border:2px solid #1a1a1a;border-radius:50%;box-shadow:0 0 8px rgba(212,139,212,0.6);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-family:'Carlito',sans-serif;font-size:${Math.max(11, sizePx / 2.5)}px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;" title="${(row.name || '').replace(/"/g, '&quot;')} — ${sizeBand}"></div>`,
+          html: `<div style="width:${sizePx}px;height:${sizePx}px;background:${dotColor};border:2px solid #1a1a1a;border-radius:50%;box-shadow:0 0 8px rgba(212,139,212,0.6);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-family:'Carlito',sans-serif;font-size:${Math.max(11, sizePx / 2.5)}px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;" title="${(row.name || '').replace(/"/g, '&quot;')} - ${sizeBand}"></div>`,
           className: '',
           iconSize: [sizePx, sizePx],
           iconAnchor: [sizePx / 2, sizePx / 2],
