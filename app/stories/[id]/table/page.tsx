@@ -687,6 +687,15 @@ export default function TablePage() {
   const [playerNpcDragId, setPlayerNpcDragId] = useState<string | null>(null)
   const [playerNpcDragOverId, setPlayerNpcDragOverId] = useState<string | null>(null)
   const [playerNpcDragOverFolder, setPlayerNpcDragOverFolder] = useState<string | null>(null)
+  // Phase B (Q2 follow-up): player-side folder REORDERING. Mirrors the
+  // GM's `folderOrder` in NpcRoster (localStorage per user-per-campaign).
+  // Combat + community buckets stay computed views — only the regular
+  // custom folders + 'Unfiled' participate in the user-driven order.
+  // Key: `npc_folder_order_player_${campaignId}` — distinct from the
+  // GM's `npc_folder_order_${campaignId}` so a user who GMs one campaign
+  // and plays another doesn't cross-pollute orderings.
+  const [playerFolderDragId, setPlayerFolderDragId] = useState<string | null>(null)
+  const [playerFolderDragOverId, setPlayerFolderDragOverId] = useState<string | null>(null)
 
   // First Impression NPC picker — used as the modal's defaultNpcId when
   // entry is via PlayerNpcCard's quick-fire button (player clicks the
@@ -3607,6 +3616,42 @@ export default function TablePage() {
       }
       return next
     })
+  }
+  // Phase B player-folder reorder (companion to playerFolderDragId at L687).
+  // Mirrors the GM's `folderOrder` in NpcRoster but keyed under
+  // `npc_folder_order_player_${id}` so a single user's GM order and
+  // player order on different campaigns stay independent. Persists
+  // immediately on every reorder; survives reload because the player
+  // tab is the only place we surface NPC folders to non-GMs.
+  const [playerFolderOrder, setPlayerFolderOrder] = useState<string[]>([])
+  const playerFolderOrderLoadedRef = useRef(false)
+  useEffect(() => {
+    if (playerFolderOrderLoadedRef.current || !id) return
+    if (typeof window === 'undefined') return
+    try {
+      const saved = localStorage.getItem(`npc_folder_order_player_${id}`)
+      if (saved) setPlayerFolderOrder(JSON.parse(saved))
+    } catch { /* ignore quota / parse errors */ }
+    playerFolderOrderLoadedRef.current = true
+  }, [id])
+  function handlePlayerFolderReorder(targetKey: string) {
+    if (!playerFolderDragId || playerFolderDragId === targetKey) {
+      setPlayerFolderDragId(null); setPlayerFolderDragOverId(null); return
+    }
+    setPlayerFolderOrder(prev => {
+      const fromIdx = prev.indexOf(playerFolderDragId!)
+      const toIdx = prev.indexOf(targetKey)
+      if (fromIdx < 0 || toIdx < 0) return prev
+      const next = [...prev]
+      const [moved] = next.splice(fromIdx, 1)
+      next.splice(toIdx, 0, moved)
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem(`npc_folder_order_player_${id}`, JSON.stringify(next)) } catch {}
+      }
+      return next
+    })
+    setPlayerFolderDragId(null)
+    setPlayerFolderDragOverId(null)
   }
   const [focusPin, setFocusPin] = useState<{ id: string; lat: number; lng: number } | null>(null)
 
@@ -8817,13 +8862,51 @@ export default function TablePage() {
               for (const [cname, cnpcs] of [...communityBuckets.entries()].sort(([a], [b]) => a.localeCompare(b))) {
                 folders.push({ name: `🏘 Community - ${cname}`, key: `__community__${cname}`, npcs: cnpcs.sort((a, b) => a.name.localeCompare(b.name)) })
               }
-              const folderNames = [...byFolder.keys()].sort((a, b) => {
+              // Default alphabetical with Unfiled last - mirrors prior
+              // behavior. Phase B: a saved playerFolderOrder overrides
+              // this for any folder it covers; unknown / new folders
+              // fall back to the alpha tail so they're discoverable
+              // (and the user can drag them into place from there).
+              const alpha = [...byFolder.keys()].sort((a, b) => {
                 if (a === 'Unfiled') return 1
                 if (b === 'Unfiled') return -1
                 return a.localeCompare(b)
               })
-              for (const f of folderNames) {
+              const orderedFolderNames: string[] = []
+              const alphaSet = new Set(alpha)
+              for (const key of playerFolderOrder) {
+                if (alphaSet.has(key)) { orderedFolderNames.push(key); alphaSet.delete(key) }
+              }
+              for (const key of alpha) {
+                if (alphaSet.has(key)) orderedFolderNames.push(key)
+              }
+              for (const f of orderedFolderNames) {
                 folders.push({ name: f, key: f, npcs: byFolder.get(f)!.sort((a, b) => a.name.localeCompare(b.name)) })
+              }
+              // Phase B sync: keep playerFolderOrder current with what
+              // actually rendered. Guarded with a length+order check so
+              // it's a no-op when nothing changed (no render loop).
+              // Stale keys (folder renamed by GM / NPCs revealed/hidden
+              // such that a folder vanishes) drop out; new folders get
+              // pinned in their alpha position so the saved order
+              // stays exhaustive.
+              if (
+                playerFolderOrderLoadedRef.current &&
+                (orderedFolderNames.length !== playerFolderOrder.length ||
+                 orderedFolderNames.some((k, i) => k !== playerFolderOrder[i]))
+              ) {
+                // Defer to avoid the React "set state during render"
+                // warning while still keeping the write batched with
+                // the next render commit. Guarded on the load-done
+                // ref so the first-mount render (before localStorage
+                // load fires in the effect) doesn't clobber a saved
+                // order with the bare alphabetical tail.
+                queueMicrotask(() => {
+                  setPlayerFolderOrder(orderedFolderNames)
+                  if (typeof window !== 'undefined') {
+                    try { localStorage.setItem(`npc_folder_order_player_${id}`, JSON.stringify(orderedFolderNames)) } catch {}
+                  }
+                })
               }
 
               function renderNpcRow(npc: any, bucket: { name: string; key: string; npcs: any[] }) {
@@ -8932,30 +9015,63 @@ export default function TablePage() {
                   // NPC moves. Combat + community buckets reject drops
                   // because they're computed views, not editable folders.
                   const canAcceptDrop = !isCombatBucket && !isCommunityBucket
-                  const isFolderDragOver = playerNpcDragOverFolder === bucket.key && playerNpcDragId !== null
+                  // Two distinct drag types both target the folder header:
+                  //   1. NPC card -> drop here = cross-folder move
+                  //   2. Folder header -> drop on another header = reorder
+                  // Visual feedback merges into one green-dashed border so
+                  // the user sees "yes, this is a valid drop target" for
+                  // either op. Branch on which dragId is set inside onDrop.
+                  const isNpcDragOver = playerNpcDragOverFolder === bucket.key && playerNpcDragId !== null
+                  const isFolderReorderDragOver = playerFolderDragOverId === bucket.key && playerFolderDragId !== null && playerFolderDragId !== bucket.key
+                  const isFolderDragOver = isNpcDragOver || isFolderReorderDragOver
                   return (
                     <div key={bucket.key} style={{ marginBottom: '6px' }}>
                       <div
+                        draggable={canAcceptDrop}
                         onClick={() => !isCombatBucket && togglePlayerFolder(bucket.key)}
-                        onDragOver={e => {
-                          if (!playerNpcDragId || !canAcceptDrop) return
-                          e.preventDefault()
-                          setPlayerNpcDragOverFolder(bucket.key)
+                        onDragStart={e => {
+                          if (!canAcceptDrop) { e.preventDefault(); return }
+                          e.stopPropagation()
+                          setPlayerFolderDragId(bucket.key)
                         }}
-                        onDragLeave={() => { if (playerNpcDragOverFolder === bucket.key) setPlayerNpcDragOverFolder(null) }}
+                        onDragEnd={() => { setPlayerFolderDragId(null); setPlayerFolderDragOverId(null) }}
+                        onDragOver={e => {
+                          if (!canAcceptDrop) return
+                          if (playerNpcDragId) {
+                            e.preventDefault()
+                            setPlayerNpcDragOverFolder(bucket.key)
+                          } else if (playerFolderDragId && playerFolderDragId !== bucket.key) {
+                            e.preventDefault()
+                            setPlayerFolderDragOverId(bucket.key)
+                          }
+                        }}
+                        onDragLeave={() => {
+                          if (playerNpcDragOverFolder === bucket.key) setPlayerNpcDragOverFolder(null)
+                          if (playerFolderDragOverId === bucket.key) setPlayerFolderDragOverId(null)
+                        }}
                         onDrop={async e => {
-                          if (!playerNpcDragId || !canAcceptDrop) {
-                            setPlayerNpcDragId(null); setPlayerNpcDragOverFolder(null); return
+                          if (!canAcceptDrop) {
+                            setPlayerNpcDragId(null); setPlayerNpcDragOverFolder(null)
+                            setPlayerFolderDragId(null); setPlayerFolderDragOverId(null)
+                            return
                           }
                           e.stopPropagation()
-                          // Cross-folder move: bucket.name IS the folder
-                          // string (with 'Unfiled' mapping to null inside
-                          // persistNpcFolder, matching the GM's convention).
-                          const dragId = playerNpcDragId
-                          setPlayerNpcDragId(null)
-                          setPlayerNpcDragOverFolder(null)
-                          const { error } = await persistNpcFolder(supabase, dragId, bucket.name)
-                          if (error) reportSupabaseError(error as any, 'player-npc-folder-move')
+                          if (playerNpcDragId) {
+                            // Cross-folder NPC move (Phase A behavior):
+                            // bucket.name IS the folder string ('Unfiled'
+                            // maps to null inside persistNpcFolder).
+                            const dragId = playerNpcDragId
+                            setPlayerNpcDragId(null)
+                            setPlayerNpcDragOverFolder(null)
+                            const { error } = await persistNpcFolder(supabase, dragId, bucket.name)
+                            if (error) reportSupabaseError(error as any, 'player-npc-folder-move')
+                          } else if (playerFolderDragId) {
+                            // Folder reorder (Phase B): local-only,
+                            // localStorage-backed. No DB write because
+                            // folder order is per-user-per-campaign and
+                            // never broadcast.
+                            handlePlayerFolderReorder(bucket.key)
+                          }
                         }}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', cursor: isCombatBucket ? 'default' : 'pointer', userSelect: 'none', background: isFolderDragOver ? '#1a2e10' : 'transparent', border: isFolderDragOver ? '1px dashed #7fc458' : '1px solid transparent', borderRadius: '3px', transition: 'background 0.15s' }}>
                         {!isCombatBucket && (
