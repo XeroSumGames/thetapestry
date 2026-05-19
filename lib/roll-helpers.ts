@@ -90,8 +90,12 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // which conflated the intensity modifier (WS/DF) with the Insight Die
   // award (HI/LI). Order matters: HI/LI checked before WS/DF since HI
   // is also a hit and LI is also a fail.
+  // Tail phrasing locked per Xero 2026-05-19 (second pass). HI is short
+  // ("as to why") because the surrounding success narrative conveys
+  // direction; LI keeps the longer "it went so badly" tail because
+  // failure narratives are often neutral-toned. WS / DF tails unchanged.
   const outcomeTag =
-    r.outcome === 'High Insight'  ? ' and has a Moment of Insight as to why it went so well'
+    r.outcome === 'High Insight'  ? ' and has a Moment of Insight as to why'
     : r.outcome === 'Low Insight' ? ' but has a Moment of Insight as to why it went so badly'
     : r.outcome === 'Wild Success' ? ' and was wildly successful'
     : r.outcome === 'Dire Failure' ? ' and failed miserably'
@@ -237,11 +241,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const name = r.character_name
     const tgt = r.target_name
     switch (r.outcome) {
-      case 'Wild Success':
-      case 'High Insight':  return `${name} distracts ${tgt} so badly they seem to become confused`
+      case 'Wild Success':  return `${name} distracts ${tgt} so badly they seem to become confused`
+      case 'High Insight':  return `${name} distracts ${tgt} so badly they seem to become confused and has a Moment of Insight as to why`
       case 'Success':       return `${name} distracts ${tgt}, breaking their focus`
-      case 'Failure':
-      case 'Low Insight':   return `${name} tries to distract ${tgt} but they shrug it off`
+      case 'Failure':       return `${name} tries to distract ${tgt} but they shrug it off`
+      case 'Low Insight':   return `${name} tries to distract ${tgt} but they shrug it off but has a Moment of Insight as to why it went so badly`
       case 'Dire Failure':  return `${name} tries to distract ${tgt} but only sharpens their focus`
       default:              return `${name} ${hit ? 'distracts' : 'tries to distract'} ${tgt}`
     }
@@ -375,11 +379,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (isAtMax) {
       switch (r.outcome) {
         case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed and shrugs the pressure off`
-        case 'High Insight':  return `STRESS CHECK ${name} calms themselves down and has a Moment of Insight as to why it went so well`
+        case 'High Insight':  return `STRESS CHECK ${name} calms themselves down and has a Moment of Insight as to why`
         case 'Success':       return `STRESS CHECK ${name} calms themselves down`
         case 'Failure':       return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point`
         case 'Dire Failure':  return `STRESS CHECK ${name} disastrously cracks and reaches their Breaking Point`
-        case 'Low Insight':   return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point and has a Moment of Insight as to why it went so badly`
+        case 'Low Insight':   return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly`
         default:              return `STRESS CHECK ${name} ${hit ? 'calms themselves down' : 'fails to calm and reaches their Breaking Point'}`
       }
     }
@@ -390,11 +394,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     // duplication.
     switch (r.outcome) {
       case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed under pressure`
-      case 'High Insight':  return `STRESS CHECK ${name} holds steady against the pressure and has a Moment of Insight as to why it went so well`
+      case 'High Insight':  return `STRESS CHECK ${name} holds steady against the pressure and has a Moment of Insight as to why`
       case 'Success':       return `STRESS CHECK ${name} holds steady against the pressure`
       case 'Failure':       return `STRESS CHECK ${name} feels the weight`
       case 'Dire Failure':  return `STRESS CHECK ${name} buckles under the pressure`
-      case 'Low Insight':   return `STRESS CHECK ${name} feels the weight and has a Moment of Insight as to why it went so badly`
+      case 'Low Insight':   return `STRESS CHECK ${name} feels the weight but has a Moment of Insight as to why it went so badly`
       default:              return `STRESS CHECK ${name} ${hit ? 'holds steady against the pressure' : 'feels the weight'}`
     }
   }
@@ -445,12 +449,12 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const target = healMatch[1].trim()
     const kit = healMatch[2].trim()
     const kitPhrase = kit === 'naked Medicine*' ? 'with a naked Medicine* check' : `with a ${kit}`
-    if (r.outcome === 'High Insight') return `${r.character_name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'High Insight') return `${r.character_name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why`
     if (r.outcome === 'Wild Success') return `${r.character_name} expertly treats ${target} ${kitPhrase} - exceptional care`
     if (r.outcome === 'Success') return `${r.character_name} treats ${target} ${kitPhrase}`
     if (r.outcome === 'Failure') return `${r.character_name} fails to make progress treating ${target}`
     if (r.outcome === 'Dire Failure') return `${r.character_name} botches the treatment - ${target} takes 1 WP damage`
-    if (r.outcome === 'Low Insight') return `${r.character_name} botches the treatment - ${target} must make a Wound Infection check and has a Moment of Insight as to why it went so badly`
+    if (r.outcome === 'Low Insight') return `${r.character_name} botches the treatment - ${target} must make a Wound Infection check but has a Moment of Insight as to why it went so badly`
     return `${r.character_name} attempts to treat ${target} ${kitPhrase}`
   }
   // Pending heal tick - System row emitted by drainPendingHeals when a
@@ -471,10 +475,10 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const coordEffortMatch = suffix.match(/^Coordinated Effort\s+-\s+(.+)$/)
   if (coordEffortMatch) {
     const skill = coordEffortMatch[1].trim()
-    if (r.outcome === 'Low Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the plan falls apart on a Moment of Low Insight`
+    if (r.outcome === 'Low Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the plan falls apart and has a Moment of Insight as to why it went so badly`
     if (r.outcome === 'Dire Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but it goes badly for the team`
     if (r.outcome === 'Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the team gets off to a rough start`
-    if (r.outcome === 'High Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'High Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and has a Moment of Insight as to why`
     if (r.outcome === 'Wild Success') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and is wildly successful`
     if (r.outcome === 'Success') return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
     return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
@@ -809,7 +813,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (skillMatch) {
     const skill = skillMatch[1]
     if (r.outcome === 'Wild Success') return `${r.character_name} was wildly successful at ${skill}`
-    if (r.outcome === 'High Insight') return `${r.character_name} was successful at ${skill} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'High Insight') return `${r.character_name} was successful at ${skill} and has a Moment of Insight as to why`
     if (r.outcome === 'Dire Failure') return `${r.character_name} failed miserably at ${skill}`
     if (r.outcome === 'Low Insight') return `${r.character_name} failed at ${skill} but has a Moment of Insight as to why it went so badly`
     return hit ? `${r.character_name} was successful at ${skill}`
@@ -833,9 +837,9 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     // outcome so feed scanners can spot attribute checks at a glance.
     const prefix = 'ATTRIBUTE CHECK'
     if (r.outcome === 'Wild Success') return `${prefix} ${r.character_name} wildly succeeded at using their ${attrName}`
-    if (r.outcome === 'High Insight') return `${prefix} ${r.character_name} successfully attempted to use their ${attrName} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'High Insight') return `${prefix} ${r.character_name} successfully attempted to use their ${attrName} and has a Moment of Insight as to why`
     if (r.outcome === 'Dire Failure') return `${prefix} ${r.character_name} disastrously failed at using their ${attrName}`
-    if (r.outcome === 'Low Insight') return `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName} and has a Moment of Insight as to why it went so badly`
+    if (r.outcome === 'Low Insight') return `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName} but has a Moment of Insight as to why it went so badly`
     return hit ? `${prefix} ${r.character_name} successfully attempted to use their ${attrName}`
                : `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName}`
   }

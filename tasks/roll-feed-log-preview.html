@@ -6,6 +6,7 @@
 <!--
   Roll Feed - Complete Log Preview
   =================================
+  Last updated: 2026-05-19
   Current state after the 2026-05-19 log-trimming pass.
 
   THIS FILE IS THE CANONICAL VISUAL REFERENCE for compact-narrative
@@ -15,6 +16,17 @@
   roll-feed-log-preview.html when amending log messages (2026-05-19)".
 
   Recent updates:
+  - 2026-05-19 (2nd pass): HI/LI tail wording locked. HI is now the
+                short tail "and has a Moment of Insight as to why"
+                (was "and has a Moment of Insight as to why it went
+                so well"); LI is the long tail "but has a Moment of
+                Insight as to why it went so badly" (some branches
+                used "and has" — standardized to "but has"). Asymmetry
+                is intentional — failure narratives are neutral-toned
+                and need the explicit "badly" cue. Distract HI/LI
+                rows split out (were folded with WS/F). Coord Effort
+                legacy LI rewrote "Moment of Low Insight" to the
+                canonical tail.
   - 2026-05-19: Distract bespoke narrative (4 outcomes -> 6 codes);
                 Stress Check mid-play + at-max distinction with
                 STRESS CHECK prefix; Coordinated Effort Tier A banner
@@ -26,7 +38,7 @@
 
   Outcome tags (global):
     Wild Success                   ' and was wildly successful'  (NO badge - WS is intensity, not Insight)
-    High Insight                   ' and has a Moment of Insight as to why it went so well'  (+1 Insight Die badge)
+    High Insight                   ' and has a Moment of Insight as to why'  (+1 Insight Die badge, short tail locked 2026-05-19)
     Low Insight                    ' but has a Moment of Insight as to why it went so badly'  (+1 Insight Die badge)
     Dire Failure                   ' and failed miserably'  (no badge)
     First Impression (bespoke):
@@ -570,7 +582,7 @@
   <h3 id="attack-weapon">Weapon attack - outcome variants</h3>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:10 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully Attacked Avery Xavier using a Pistol</div></div>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:11 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully Attacked Avery Xavier using a Pistol and was wildly successful</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:11 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully Attacked Avery Xavier using a Pistol and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:11 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully Attacked Avery Xavier using a Pistol and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:12 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully Attacked Avery Xavier using a Pistol</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully Attacked Avery Xavier using a Pistol but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Ivan Hayes</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Ivan Hayes' Hatchet attack was deflected by Cree Hask</div></div>
@@ -581,21 +593,21 @@
 
   <h3 id="subdue">Subdue</h3>
   <div class="row green"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully Subdued Avery Xavier using a Makeshift Club and was wildly successful</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully Subdued Avery Xavier using a Makeshift Club and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully Subdued Avery Xavier using a Makeshift Club and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h3 id="unarmed">Unarmed</h3>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:15 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully used Unarmed Combat on Nolan Penn</div></div>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:15 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask had a Moment of Insight when using Unarmed Combat on Nolan Penn <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:16 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully used Unarmed Combat on Nolan Penn</div></div>
 
-  <h3 id="distract">Distract (bespoke narrative locked 2026-05-19, no mechanical bits)</h3>
+  <h3 id="distract">Distract (bespoke narrative locked 2026-05-19, no mechanical bits, HI/LI tails)</h3>
   <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv distracts Avery Xavier so badly they seem to become confused</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv distracts Avery Xavier so badly they seem to become confused <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv distracts Avery Xavier so badly they seem to become confused and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv distracts Avery Xavier, breaking their focus</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier but they shrug it off</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier but they shrug it off <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier but they shrug it off but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier but only sharpens their focus</div></div>
-  <p class="note">Action delta (-2/-1/+1 to target's actions_remaining) is hidden from the compact narrative per project rule "Compact log narratives NEVER show mechanical bits"; it lives in the expanded ▸ view + the target's action pips updating live.</p>
+  <p class="note">Action delta (-2/-1/+1 to target's actions_remaining) is hidden from the compact narrative per project rule "Compact log narratives NEVER show mechanical bits"; it lives in the expanded ▸ view + the target's action pips updating live. The LI row has a slight "but ... but" stutter — surface for Xero's call on whether to rephrase the Failure narrative to avoid the doubled connector.</p>
 
   <h3 id="explosives">Explosives</h3>
   <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:19 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson threw a Molotov at Avery Xavier</div></div>
@@ -604,7 +616,7 @@
 
   <h3 id="multiword">Rapid Fire / Fire from Cover</h3>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:21 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask used their Assault Rifle Rapid Fire on Avery Xavier and was wildly successful</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:21 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask used their Assault Rifle Rapid Fire on Avery Xavier and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:21 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask used their Assault Rifle Rapid Fire on Avery Xavier and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:22 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask used their Pistol Fire from Cover on Avery Xavier</div></div>
 
   <h2>Special checks</h2>
@@ -659,7 +671,7 @@
   </div>
   <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #7fc45833; border-left: 3px solid var(--green);">
     <div class="banner-head"><span class="banner-title" style="color: var(--green);">Coordinated Effort</span><div class="right"><span class="time">2:30 PM</span><span class="toggle">▸</span></div></div>
-    <div class="banner-body">Cree Hask successfully uses Tactics* to coordinate an effort with Marcus, Knox, and Enya and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div>
+    <div class="banner-body">Cree Hask successfully uses Tactics* to coordinate an effort with Marcus, Knox, and Enya and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div>
   </div>
   <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #EF9F2733; border-left: 3px solid var(--amber);">
     <div class="banner-head"><span class="banner-title" style="color: var(--amber);">Coordinated Effort</span><div class="right"><span class="time">2:30 PM</span><span class="toggle">▸</span></div></div>
@@ -671,17 +683,17 @@
   </div>
   <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #c0392b33; border-left: 3px solid var(--red);">
     <div class="banner-head"><span class="banner-title" style="color: var(--red);">Coordinated Effort</span><div class="right"><span class="time">2:30 PM</span><span class="toggle">▸</span></div></div>
-    <div class="banner-body">Cree Hask unsuccessfully uses Tactics* to coordinate an effort with Marcus, Knox, and Enya and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div>
+    <div class="banner-body">Cree Hask unsuccessfully uses Tactics* to coordinate an effort with Marcus, Knox, and Enya but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div>
   </div>
   <p class="note">Expanded ▸ view (not shown above): lead row's dice + AMod/SMod/CMod/total/outcome, followed by per-participant rows in the same format. Mechanical CMod chain effect lives in expanded view + the participants' visible cmod values mid-roll.</p>
 
   <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">Legacy single-row (lead-only chain, no participants yet)</h4>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and is wildly successful</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics*</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but the team gets off to a rough start</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but it goes badly for the team</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but the plan falls apart on a Moment of Low Insight <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but the plan falls apart and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h2>Recovery / status</h2>
   <h3 id="stress-check">Stress Check (mid-play CHECK button + at-max auto-fire, locked 2026-05-19)</h3>
@@ -690,19 +702,19 @@
 
   <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 12px 0 6px;">Mid-play (manual CHECK button)</h4>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:35 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask is wildly composed under pressure</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:35 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask holds steady against the pressure and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:35 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask holds steady against the pressure and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:35 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask holds steady against the pressure</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask feels the weight</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask buckles under the pressure</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask feels the weight and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask feels the weight but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">At-max (auto-fires at stress 5, or via mid-play cascade)</h4>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask is wildly composed and shrugs the pressure off</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask calms themselves down and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask calms themselves down and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask calms themselves down</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask fails to calm and reaches their Breaking Point</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask disastrously cracks and reaches their Breaking Point</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask fails to calm and reaches their Breaking Point and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h3 id="stabilize">Stabilize</h3>
   <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Successfully Stabilizes Cree Hask and was wildly successful</div></div>
@@ -733,11 +745,11 @@
   <h3 id="heal">Heal (Medicine*)</h3>
   <p class="note">Medicine* check on a target. Outcome decides heal amount (banked +12h/+24h) or harm. Naked check heals Medicine* level WP; First Aid Kit heals 1+1d3; Doctor's Bag heals 1+2d3. WS adds +1, HI adds +2. Failure = nothing. Dire Failure = -1 WP immediate. Low Insight = target makes Wound Infection check.</p>
   <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie expertly treats Marv with a Doctor's Bag - exceptional care</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie treats Marv with a First Aid Kit</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie fails to make progress treating Marv</div></div>
   <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie botches the treatment - Marv takes 1 WP damage</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie botches the treatment - Marv must make a Wound Infection check and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie botches the treatment - Marv must make a Wound Infection check but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">3:30 AM</span></div></div><div class="narrative">Treatment applied: Marv (+2 WP, 4 to 6)</div></div>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">3:30 PM</span></div></div><div class="narrative">Treatment applied: Marv (+3 WP, 6 to 9)</div></div>
 
@@ -749,7 +761,7 @@
 
   <h3 id="upkeep">Upkeep - 6 outcome variants</h3>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:00 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tunes up their Sniper's Rifle and was wildly successful</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:00 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tunes up their Sniper's Rifle and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:00 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tunes up their Sniper's Rifle and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:01 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask maintains the condition of their Sniper's Rifle</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:02 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask fails to upkeep the condition of their Sniper's Rifle and it degrades</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:03 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask irreparably damages their Sniper's Rifle while performing upkeep</div></div>
@@ -823,7 +835,7 @@
   <h3>3d6 Insight Die spend - High Insight (badge present)</h3>
   <div class="row green">
     <div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:11 PM</span><span class="toggle">▾</span></div></div>
-    <div class="narrative">Cree Hask was successful at Athletics and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div>
+    <div class="narrative">Cree Hask was successful at Athletics and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div>
     <div class="expanded-details" style="display: block;">
       <div class="dice-preview">
         [<span class="die">6</span>+<span class="die">6</span>+<span class="die">2</span> <span style="color: var(--green); font-size: 13px;">(insight die)</span>]
@@ -857,18 +869,18 @@
   <h2>Generic skill / attribute</h2>
   <h3 id="skill">Skill check</h3>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask was wildly successful at Athletics</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask was successful at Athletics and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask was successful at Athletics and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask was successful at Athletics</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Avery Xavier</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Avery Xavier failed at Athletics</div></div>
   <div class="row red"><div class="row-head"><span class="name">Avery Xavier</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Avery Xavier failed at Athletics but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h3 id="attribute">Attribute check (ATTRIBUTE CHECK prefix locked 2026-05-18)</h3>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:05 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask wildly succeeded at using their physicality</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:05 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask successfully attempted to use their physicality and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:05 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask successfully attempted to use their physicality and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:05 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask successfully attempted to use their physicality</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:06 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask unsuccessfully attempted to use their physicality</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:06 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask disastrously failed at using their physicality</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:06 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask unsuccessfully attempted to use their physicality and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:06 PM</span><span class="toggle">▸</span></div></div><div class="narrative">ATTRIBUTE CHECK Cree Hask unsuccessfully attempted to use their physicality but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
 </div>
 

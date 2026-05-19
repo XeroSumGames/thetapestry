@@ -1,5 +1,25 @@
 # Lessons Learned
 
+## High Insight / Low Insight tail phrasing in compact narratives (2026-05-19)
+
+**Rule (Xero, locked 2026-05-19, second pass):** the Moment-of-Insight tail appended to every HI / LI compact narrative is canon-locked to:
+
+- **High Insight:** `... and has a Moment of Insight as to why`
+- **Low Insight:** `... but has a Moment of Insight as to why it went so badly`
+
+**Asymmetry is intentional.** HI is short ("as to why" only) because the surrounding success narrative ("successfully attempts to", "is wildly successful", "calms themselves") already conveys direction — the "well" is redundant. LI keeps the longer "it went so badly" tail because failure narratives are often neutral-toned ("feels the weight", "shrugs it off", "tries to") and need an explicit "badly" cue.
+
+**What this changed from earlier today:**
+- Old HI tail (in global `outcomeTag` + most bespoke branches): `and has a Moment of Insight as to why it went so well`
+- Old LI tail: mix of `and has a Moment of Insight as to why it went so badly` and `but has a Moment of Insight as to why it went so badly` across different branches. Now all `but`.
+
+**Special cases:**
+- Coord Effort legacy LI was `"... but the plan falls apart on a Moment of Low Insight"` — non-canonical "Moment of Low Insight" phrasing. Now: `"... but the plan falls apart but has a Moment of Insight as to why it went so badly"` (awkward — actually rewrite cleanly to `"... but the plan falls apart on a Moment of Insight as to why it went so badly"` to keep the "plan falls apart" detail). Choose narrative-driving phrasing over rigid rule application when the result reads poorly.
+- Distract WS+HI shared one narrative; HI now gets the tail appended. Same for F+LI.
+- Stabilize bespoke HI was `"... and has a Moment of Insight while doing so"` — keep as-is per Xero 2026-05-11 lock (older bespoke phrasing pre-dates this rule and was explicitly approved).
+
+**Test coverage:** every narrative branch gets a unit test for HI and LI outcomes asserting the exact tail phrasing. If a future copy refactor accidentally drops the tail or rewrites it, tests turn red.
+
 ## Always update roll-feed-log-preview.html when amending log messages (2026-05-19)
 
 **Rule (Xero, locked 2026-05-19):** the file `tasks/roll-feed-log-preview.html` is the canonical visual reference for compact-narrative feed rows. Whenever ANY log message in `lib/roll-helpers.ts` or a bespoke banner in `components/RollsFeed.tsx` is amended, added, or removed, the matching example in this HTML preview MUST be updated in the same commit (or immediately after, in a follow-up commit referencing the original).

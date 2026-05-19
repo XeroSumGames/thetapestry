@@ -124,12 +124,12 @@ describe('compactRollSummary', () => {
 
   it('attribute check High Insight: success + Moment of Insight', () => {
     expect(compactRollSummary({ label: 'RSN Check', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their reason and has a Moment of Insight as to why it went so well')
+      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their reason and has a Moment of Insight as to why')
   })
 
   it('attribute check Low Insight: failure + Moment of Insight', () => {
     expect(compactRollSummary({ label: 'ACU Check', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen and has a Moment of Insight as to why it went so badly')
+      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen but has a Moment of Insight as to why it went so badly')
   })
 
   it('attribute check with em-dash prefix in label still matches', () => {
@@ -160,7 +160,7 @@ describe('compactRollSummary', () => {
 
   it('stress check mid-play High Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('STRESS CHECK Enya holds steady against the pressure and has a Moment of Insight as to why it went so well')
+      .toBe('STRESS CHECK Enya holds steady against the pressure and has a Moment of Insight as to why')
   })
 
   it('stress check mid-play Success', () => {
@@ -180,7 +180,7 @@ describe('compactRollSummary', () => {
 
   it('stress check mid-play Low Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('STRESS CHECK Enya feels the weight and has a Moment of Insight as to why it went so badly')
+      .toBe('STRESS CHECK Enya feels the weight but has a Moment of Insight as to why it went so badly')
   })
 
   // --- at-max ---
@@ -191,7 +191,7 @@ describe('compactRollSummary', () => {
 
   it('stress check at-max High Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('STRESS CHECK Enya calms themselves down and has a Moment of Insight as to why it went so well')
+      .toBe('STRESS CHECK Enya calms themselves down and has a Moment of Insight as to why')
   })
 
   it('stress check at-max Success', () => {
@@ -211,7 +211,7 @@ describe('compactRollSummary', () => {
 
   it('stress check at-max Low Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('STRESS CHECK Enya fails to calm and reaches their Breaking Point and has a Moment of Insight as to why it went so badly')
+      .toBe('STRESS CHECK Enya fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly')
   })
 
   // Distract bespoke narrative (canon copy locked 2026-05-19). 4 outcomes
@@ -222,9 +222,9 @@ describe('compactRollSummary', () => {
       .toBe('Cree distracts Goon so badly they seem to become confused')
   })
 
-  it('distract High Insight folds into WS narrative', () => {
+  it('distract High Insight: WS narrative + HI tail', () => {
     expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'High Insight' }))
-      .toBe('Cree distracts Goon so badly they seem to become confused')
+      .toBe('Cree distracts Goon so badly they seem to become confused and has a Moment of Insight as to why')
   })
 
   it('distract Success', () => {
@@ -237,9 +237,9 @@ describe('compactRollSummary', () => {
       .toBe('Cree tries to distract Goon but they shrug it off')
   })
 
-  it('distract Low Insight folds into F narrative', () => {
+  it('distract Low Insight: F narrative + LI tail', () => {
     expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Low Insight' }))
-      .toBe('Cree tries to distract Goon but they shrug it off')
+      .toBe('Cree tries to distract Goon but they shrug it off but has a Moment of Insight as to why it went so badly')
   })
 
   it('distract Dire Failure', () => {
@@ -257,7 +257,7 @@ describe('compactRollSummary', () => {
 
   it('coord effort legacy High Insight', () => {
     expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'High Insight' }))
-      .toBe('Cree kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why it went so well')
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why')
   })
 
   it('coord effort legacy Success', () => {
@@ -277,6 +277,6 @@ describe('compactRollSummary', () => {
 
   it('coord effort legacy Low Insight', () => {
     expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Low Insight' }))
-      .toBe('Cree kicks off a Coordinated Effort with Tactics* but the plan falls apart on a Moment of Low Insight')
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* but the plan falls apart and has a Moment of Insight as to why it went so badly')
   })
 })
