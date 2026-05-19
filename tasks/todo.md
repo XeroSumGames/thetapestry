@@ -56,6 +56,27 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - *(Modal unification + CMod Stack dedup-removed 2026-05-19 - canonical entries live at lines 78+82 below.)*
 
 ### Untested live
+
+**2026-05-18 playtest punch-list closeout — all Xero-blocked items SHIPPED 2026-05-19, awaiting next-playtest verification**
+
+- [ ] **#2 / mark 01:05:31** — ping not working. **Pending** — needs next-playtest repro signal (current code path unclear without watching it fail live).
+- [ ] **#3 / marks 01:13:55 + 02:37:59** — map non-responsive (dead-click bursts). **Pending** — needs repro pattern (intermittent; suspect cache invalidation race in TacticalMap).
+- [ ] **#4 / mark 01:14:04** — work around map pins (partially shipped). **Pending** — needs repro on whatever's still broken after the partial ship.
+- [x] ~~**#5 / mark 01:18:54**~~ — FI modal missing CMod. Shipped earlier in the session arc (FI streamline Phase 1).
+- [x] ~~**#6 / mark 01:32:51**~~ — player drag/drop NPCs in their tab (Phase A). Shipped `4b9ce21`.
+- [x] ~~**#7 / mark 02:07:35**~~ — "drives Minnie" breakdown formatting. Shipped `faa60ab` (DRIVE / BREW / NAVIGATE prefix-CAPS narratives + fuel state baked into BREW line; supersedes the parallel-chat `54c46a1` mid-session collision).
+- [x] ~~**#8 / mark 02:12:29**~~ — Minnie inventory player-editable. Shipped `1f79e08`.
+- [x] ~~**#9 / mark 02:21:57**~~ — fuel storage fungible (+1 day per drum). Shipped `c31e564` — per-vehicle cap via new optional `fuel_max_base` + `fuel_storage_max` cols, 55-Gallon Drum scavengeable item, Install/Uninstall UI on vehicle popout. Minnie 4 → 6 cap.
+- [x] ~~**#10 / mark 02:25:36**~~ — storage for 2 days of brewing supplies. Shipped `f3b20fb` — new optional `brewing_supplies_current` + `brewing_supplies_max` cols, [+ Gather Materials] button (passive 1-day action, no dice), brew blocked at 0, every brew burns 1 supply. Minnie cap 2.
+- [x] ~~**#11 / mark 02:28:30**~~ — generic Advantage tab based on scavenging roles. Shipped 5 phases: `054c04d` (schema + helpers), `47a1f36` (GM grant dialog + player tab + Use button), `011c55e` (P4 ⭐ Award button on roll feed + P5 C3 consumed broadcast — fixed JSX from the prior compacted session).
+- [x] ~~**#12 / mark 02:37:45**~~ — CLOSE ALL on multi-NPC-card view. Shipped `fcd8a9d`.
+- [x] ~~**#13 / mark 01:29:32**~~ — Pin SHOW broadcast to players. Shipped `236167c`.
+- [x] ~~**#14 / mark 01:44:00**~~ — FI wording with NPC target. Shipped `89ad835`.
+- [x] ~~**#15 / mark 02:03:06**~~ — time-advance log entry. Shipped `89ad835`.
+- [x] ~~**#16 / mark 02:13:19**~~ — routes vanish on Esc + auto-clear on new. Shipped `d17b1c1`.
+- [x] ~~**#17 / mark 02:15:12**~~ — brew check Mechanic* +-3 display bug. Shipped `a6376c9`.
+- [x] ~~**#18 / Q2 Phase B**~~ — player-side folder reordering (companion to Phase A drag/drop within folders). Shipped `18989f3` — drag folder headers, saved per-user-per-campaign under `npc_folder_order_player_<id>`, combat + community buckets stay non-draggable.
+
 - [x] ~~**Polish-pass-2026-05-14 testplan**~~ — PLAYTESTED 2026-05-18, all sections passed. Coord Effort, Healing, Year-0, Campaign Sheet header/Edit Clock modal, Export Log, Luxury Ration, die3, Weapon Repair, CampaignObjects "found nothing", 4 polish bundles all working as intended.
 - [x] ~~**Thriver-godmode-sweep testplan**~~ — PLAYTESTED 2026-05-18, all sections passed. Thriver-on-non-owned-campaign + GM regression + Survivor no-leak all green.
 - [x] ~~**Preplay-testsmoke-2026-05-17**~~ — PLAYTESTED 2026-05-18 ([tasks/preplay-testsmoke-2026-05-17.md](preplay-testsmoke-2026-05-17.md)). Covered 2026-05-15→17 ships: drag-end grab-offset fix, vehicle passenger model, Coord Effort Withdraw retcon, Heal-LI infection cascade, Day-0 Lasting Damage modal, Lasting Wound chips, HIDE ALL panic button, vehicle sheet redesign, pin sidebar OSRM router, GM Notes draft, Tools sidebar, moderation email triggers, bug report tools. All green.
