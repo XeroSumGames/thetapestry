@@ -16,6 +16,13 @@
   roll-feed-log-preview.html when amending log messages (2026-05-19)".
 
   Recent updates:
+  - 2026-05-19 (4th pass): HEAL prefix locked across all 6 outcomes.
+                DF stripped of "takes 1 WP damage" mechanical bit
+                (visible on target's HP pips, not in narrative).
+                LI kept "the wound may become infected" directional
+                cue (auto-cascade fires on the patient's client).
+                Naked-Medicine kit phrase simplified from "with a
+                naked Medicine* check" to "by hand".
   - 2026-05-19 (3rd pass): Stabilize narrative locked with STABILIZE
                 prefix (mirrors ATTRIBUTE CHECK / STRESS CHECK); HI
                 keeps bespoke "while doing so" per 2026-05-11 lock.
@@ -753,14 +760,15 @@
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:23 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask unjams their Pistol</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:23 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask fails to unjam their Pistol</div></div>
 
-  <h3 id="heal">Heal (Medicine*)</h3>
-  <p class="note">Medicine* check on a target. Outcome decides heal amount (banked +12h/+24h) or harm. Naked check heals Medicine* level WP; First Aid Kit heals 1+1d3; Doctor's Bag heals 1+2d3. WS adds +1, HI adds +2. Failure = nothing. Dire Failure = -1 WP immediate. Low Insight = target makes Wound Infection check.</p>
-  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie expertly treats Marv with a Doctor's Bag - exceptional care</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
-  <div class="row blue"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie treats Marv with a First Aid Kit</div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie fails to make progress treating Marv</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie botches the treatment - Marv takes 1 WP damage</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Junie botches the treatment - Marv must make a Wound Infection check but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <h3 id="heal">Heal (Medicine*) (HEAL prefix locked 2026-05-19, no mechanical bits)</h3>
+  <p class="note">Medicine* check on a target. Outcome decides heal amount (banked +12h/+24h) or harm. Naked check heals Medicine* level WP; First Aid Kit heals 1+1d3; Doctor's Bag heals 1+2d3. WS adds +1, HI adds +2. Failure = nothing. Dire Failure = -1 WP immediate (visible on target's HP pips, not in narrative). Low Insight = target makes Wound Infection check (auto-cascade fires on the patient's client). Naked-Medicine kit phrase shipped 2026-05-19 simplified from "with a naked Medicine* check" to "by hand".</p>
+  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie expertly treats Marv with a Doctor's Bag with exceptional care</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie treats Marv with a First Aid Kit</div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie treats Marv by hand</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie fails to make progress treating Marv</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie botches the treatment, making Marv worse</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie botches the treatment, the wound may become infected, but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">3:30 AM</span></div></div><div class="narrative">Treatment applied: Marv (+2 WP, 4 to 6)</div></div>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">3:30 PM</span></div></div><div class="narrative">Treatment applied: Marv (+3 WP, 6 to 9)</div></div>
 

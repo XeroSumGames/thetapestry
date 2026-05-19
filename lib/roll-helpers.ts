@@ -445,21 +445,30 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (r.outcome === 'coordinate') {
     return r.label.replace(/^🎯\s*/, '')
   }
-  // Heal check - "<healer> - Heal <target> (<kit>)". Narrative carries
-  // the outcome flavor and the target's name. Actual WP queued lives in
-  // the post-roll System rows emitted by the drainPendingHeals.
+  // Heal check - "<healer> - Heal <target> (<kit>)". Canon locked
+  // 2026-05-19 per Xero. HEAL prefix mirrors ATTRIBUTE / STRESS /
+  // STABILIZE pattern. DF + LI narratives stripped of mechanical
+  // bits ("takes 1 WP damage" was a clear rule violation; the WP
+  // delta is visible on the target's HP pips). LI keeps the
+  // "the wound may become infected" cue because it's directional
+  // not numeric (auto-cascade fires the actual Wound Infection
+  // check on the patient's client). Naked-Medicine kit phrase
+  // simplified from "with a naked Medicine* check" to "by hand".
   const healMatch = suffix.match(/^Heal\s+(.+?)\s+\((.+?)\)$/)
   if (healMatch) {
     const target = healMatch[1].trim()
     const kit = healMatch[2].trim()
-    const kitPhrase = kit === 'naked Medicine*' ? 'with a naked Medicine* check' : `with a ${kit}`
-    if (r.outcome === 'High Insight') return `${r.character_name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why`
-    if (r.outcome === 'Wild Success') return `${r.character_name} expertly treats ${target} ${kitPhrase} - exceptional care`
-    if (r.outcome === 'Success') return `${r.character_name} treats ${target} ${kitPhrase}`
-    if (r.outcome === 'Failure') return `${r.character_name} fails to make progress treating ${target}`
-    if (r.outcome === 'Dire Failure') return `${r.character_name} botches the treatment - ${target} takes 1 WP damage`
-    if (r.outcome === 'Low Insight') return `${r.character_name} botches the treatment - ${target} must make a Wound Infection check but has a Moment of Insight as to why it went so badly`
-    return `${r.character_name} attempts to treat ${target} ${kitPhrase}`
+    const kitPhrase = kit === 'naked Medicine*' ? 'by hand' : `with a ${kit}`
+    const name = r.character_name
+    switch (r.outcome) {
+      case 'Wild Success':  return `HEAL ${name} expertly treats ${target} ${kitPhrase} with exceptional care`
+      case 'High Insight':  return `HEAL ${name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why`
+      case 'Success':       return `HEAL ${name} treats ${target} ${kitPhrase}`
+      case 'Failure':       return `HEAL ${name} fails to make progress treating ${target}`
+      case 'Dire Failure':  return `HEAL ${name} botches the treatment, making ${target} worse`
+      case 'Low Insight':   return `HEAL ${name} botches the treatment, the wound may become infected, but has a Moment of Insight as to why it went so badly`
+      default:              return `HEAL ${name} attempts to treat ${target} ${kitPhrase}`
+    }
   }
   // Pending heal tick - System row emitted by drainPendingHeals when a
   // queued heal applies at its +12h or +24h checkpoint. Label already

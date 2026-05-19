@@ -313,4 +313,43 @@ describe('compactRollSummary', () => {
     expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Low Insight' }))
       .toBe('STABILIZE Marv fails to stabilize Cree Hask but has a Moment of Insight as to why it went so badly')
   })
+
+  // Heal narrative (canon locked 2026-05-19). HEAL prefix added. DF
+  // stripped of mechanical "takes 1 WP damage"; LI kept the
+  // directional "wound may become infected" cue. Naked-Medicine
+  // kit phrase simplified to "by hand".
+  it('heal Wild Success with kit', () => {
+    expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Wild Success' }))
+      .toBe("HEAL Junie expertly treats Marv with a Doctor's Bag with exceptional care")
+  })
+
+  it('heal High Insight with kit', () => {
+    expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'High Insight' }))
+      .toBe("HEAL Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why")
+  })
+
+  it('heal Success with kit', () => {
+    expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Success' }))
+      .toBe("HEAL Junie treats Marv with a Doctor's Bag")
+  })
+
+  it('heal Failure: no mechanical bits', () => {
+    expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Failure' }))
+      .toBe('HEAL Junie fails to make progress treating Marv')
+  })
+
+  it('heal Dire Failure: no "1 WP damage" mechanical bit', () => {
+    expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Dire Failure' }))
+      .toBe('HEAL Junie botches the treatment, making Marv worse')
+  })
+
+  it('heal Low Insight: directional infection cue + canonical LI tail', () => {
+    expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Low Insight' }))
+      .toBe('HEAL Junie botches the treatment, the wound may become infected, but has a Moment of Insight as to why it went so badly')
+  })
+
+  it('heal naked Medicine kit phrase is "by hand"', () => {
+    expect(compactRollSummary({ label: 'Junie - Heal Marv (naked Medicine*)', character_name: 'Junie', outcome: 'Success' }))
+      .toBe('HEAL Junie treats Marv by hand')
+  })
 })
