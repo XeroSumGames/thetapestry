@@ -29,6 +29,12 @@ import {
 } from '../../../../lib/first-impression-resolver'
 import FirstImpressionModal, { type FiPc, type FiNpc } from './components/FirstImpressionModal'
 import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from '../../../../lib/npc-drag-drop'
+import {
+  type Advantage,
+  grantAdvantage,
+  consumeAdvantage,
+  listCampaignPendingAdvantages,
+} from '../../../../lib/advantages'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -761,7 +767,25 @@ export default function TablePage() {
   // useEffect below only intervenes when the user is on the OTHER
   // mode's default - explicit picks like Assets or Notes survive
   // mode switches.
-  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('pins')
+  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'advantages' | 'notes'>('pins')
+
+  // Advantage feature (post-playtest task #11). Pending advantages for
+  // the campaign, refreshed on load + realtime postgres_changes. RLS
+  // scopes the visible set: GM sees all pending; players see their own
+  // pending + the whole campaign's consumed history.
+  const [advantages, setAdvantages] = useState<Advantage[]>([])
+  // GM Grant Advantage modal state.
+  const [showGrantAdvantage, setShowGrantAdvantage] = useState(false)
+  const [grantPcId, setGrantPcId] = useState<string>('')
+  const [grantSkill, setGrantSkill] = useState<string>('')
+  const [grantCmod, setGrantCmod] = useState<number>(1)
+  const [grantDescription, setGrantDescription] = useState<string>('')
+  const [grantSubmitting, setGrantSubmitting] = useState(false)
+  const [grantError, setGrantError] = useState<string | null>(null)
+  // Per-advantage "Use" submission lock so a double-click doesn't fire
+  // consume twice (idempotent at the DB level via the .is(consumed_at,
+  // null) guard, but the UI flicker is avoidable).
+  const [useInFlight, setUseInFlight] = useState<Set<string>>(new Set())
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
@@ -1640,6 +1664,27 @@ export default function TablePage() {
       rollRequestRef.current?.(label, amod, smod, weapon)
     }
     return () => { ch.close() }
+  }, [id])
+
+  // ── Advantages: load + realtime sync (P3 Q4-b) ──────────────────
+  // RLS shapes the visible set per role automatically; we just refetch
+  // on any advantages-table change for this campaign. Best-effort: a
+  // failed initial load leaves advantages=[] and the UI shows "none."
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    async function load() {
+      const { rows } = await listCampaignPendingAdvantages(supabase, id)
+      if (!cancelled) setAdvantages(rows)
+    }
+    void load()
+    const ch = supabase.channel(`advantages_${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'advantages', filter: `campaign_id=eq.${id}` }, wrapDbChange('advantages:*', () => { void load() }))
+      .subscribe()
+    return () => {
+      cancelled = true
+      supabase.removeChannel(ch)
+    }
   }, [id])
 
   useEffect(() => {
@@ -7102,6 +7147,21 @@ export default function TablePage() {
               onClick: () => { setCdpAmount(1); setCdpRecipients(new Set(entries.map(e => e.stateId))); setShowCdpModal(true) },
             },
             {
+              // Grant Advantage - post-playtest task #11. Opens a dialog
+              // where the GM picks a PC + skill + CMod amount +
+              // description. Result lands as a pending row in the
+              // advantages table (see lib/advantages.ts).
+              label: '⭐ Grant Advantage',
+              onClick: () => {
+                setGrantPcId(entries[0]?.character.id ?? '')
+                setGrantSkill('')
+                setGrantCmod(1)
+                setGrantDescription('')
+                setGrantError(null)
+                setShowGrantAdvantage(true)
+              },
+            },
+            {
               label: 'Populate',
               onClick: () => { setPopulateCount(5); setShowPopulateModal(true) },
             },
@@ -8608,10 +8668,10 @@ export default function TablePage() {
             NPCs (revealed only) and Assets (read-only). */}
         <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'notes'] as const : ['pins', 'npcs', 'assets', 'notes'] as const).map(tab => (
+            {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'advantages', 'notes'] as const : ['pins', 'npcs', 'assets', 'advantages', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : gmLike ? 'GM Notes' : 'Notes'}
+                {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : tab === 'advantages' ? `⭐${advantages.length > 0 ? ` ${advantages.length}` : ''}` : gmLike ? 'GM Notes' : 'Notes'}
               </button>
             ))}
           </div>
@@ -9074,6 +9134,88 @@ export default function TablePage() {
             )}
             {gmTab === 'notes' && gmLike && <GmNotes campaignId={id} />}
             {gmTab === 'notes' && !gmLike && <PlayerNotes campaignId={id} />}
+            {gmTab === 'advantages' && (() => {
+              // C3 visibility: RLS already scopes the rows. GM sees all
+              // pending in campaign; players see only their own pending.
+              // Consumed advantages don't appear here — they're recorded
+              // in the rolls feed via the consume flow (Phase 5).
+              const myCharIds = new Set(entries.filter(e => e.userId === userId).map(e => e.character.id))
+              const visible = gmLike
+                ? advantages
+                : advantages.filter(a => myCharIds.has(a.character_id))
+              if (visible.length === 0) {
+                return (
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      No advantages pending
+                    </div>
+                    {gmLike && (
+                      <div style={{ textAlign: 'center', padding: '0 1rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', marginTop: '8px', fontStyle: 'italic' }}>
+                        Grant one via GM Tools → ⭐ Grant Advantage.
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+              return (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                  {visible.map(a => {
+                    const holder = entries.find(e => e.character.id === a.character_id)
+                    const holderName = holder?.character.name ?? 'Unknown PC'
+                    const isMyOwn = myCharIds.has(a.character_id)
+                    const inFlight = useInFlight.has(a.id)
+                    return (
+                      <div key={a.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1a1a', border: '1px solid #2a2010', borderLeft: '3px solid #EF9F27', borderRadius: '3px' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            {a.cmod_delta > 0 ? `+${a.cmod_delta}` : a.cmod_delta} {a.skill_name}
+                          </div>
+                          {gmLike && !isMyOwn && (
+                            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', whiteSpace: 'nowrap' }}>{holderName}</div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', lineHeight: 1.4 }}>
+                          {a.description}
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {(isMyOwn || gmLike) && (
+                            <button type="button" disabled={inFlight}
+                              onClick={async () => {
+                                setUseInFlight(prev => new Set(prev).add(a.id))
+                                const { error } = await consumeAdvantage(supabase, a.id, null)
+                                if (error) {
+                                  alert(`Use failed: ${error}`)
+                                  setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
+                                  return
+                                }
+                                // Optimistic local update — realtime will reconcile too.
+                                setAdvantages(prev => prev.filter(x => x.id !== a.id))
+                                setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
+                              }}
+                              style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: inFlight ? 'not-allowed' : 'pointer', opacity: inFlight ? 0.5 : 1, fontWeight: 700 }}>
+                              {inFlight ? 'Using…' : '✓ Use'}
+                            </button>
+                          )}
+                          {gmLike && (
+                            <button type="button"
+                              onClick={async () => {
+                                if (!confirm(`Delete advantage "+${a.cmod_delta} ${a.skill_name}" for ${holderName}? This is for mistakes — Use is the normal path.`)) return
+                                const { deleteAdvantage } = await import('../../../../lib/advantages')
+                                const { error } = await deleteAdvantage(supabase, a.id)
+                                if (error) { alert(`Delete failed: ${error}`); return }
+                                setAdvantages(prev => prev.filter(x => x.id !== a.id))
+                              }}
+                              style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #5a1f1f', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
           </div>
         </div>
 
@@ -10111,6 +10253,101 @@ export default function TablePage() {
                 }} disabled={advanceTimeBusy || total === 0}
                   style={{ flex: 2, padding: '10px', background: total === 0 ? '#1a1a1a' : '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: total === 0 ? '#5a5550' : '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: advanceTimeBusy || total === 0 ? 'not-allowed' : 'pointer', opacity: advanceTimeBusy ? 0.6 : 1, fontWeight: 700 }}>
                   {advanceTimeBusy ? 'Applying…' : total === 0 ? 'Nothing to apply' : `Apply ${hours}h to ${total}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Grant Advantage Modal (P3 Q4-b). GM picks PC + skill + CMod + description. */}
+      {showGrantAdvantage && (() => {
+        const pcOptions = entries.map(e => ({ id: e.character.id, name: e.character.name }))
+        const canSubmit = !!grantPcId && !!grantSkill.trim() && !!grantDescription.trim() && Number.isFinite(grantCmod) && grantCmod !== 0 && !grantSubmitting
+        return (
+          <div onClick={() => !grantSubmitting && setShowGrantAdvantage(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#0f0f0f', border: '1px solid #5a4a1b', borderRadius: '4px', padding: '20px 24px', width: '460px', maxWidth: '100%', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
+              <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>⭐ Grant Advantage</div>
+              <div style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '14px' }}>
+                Track a contextual CMod
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '14px', lineHeight: 1.5 }}>
+                The PC redeems this on a future roll matching the skill. They manually adjust the CMod stepper and click Use in their Advantages tab to consume it.
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>PC</div>
+                <select value={grantPcId} onChange={e => setGrantPcId(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', appearance: 'none' }}>
+                  <option value="">- pick a PC -</option>
+                  {pcOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skill</div>
+                <select value={grantSkill} onChange={e => setGrantSkill(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', appearance: 'none' }}>
+                  <option value="">- pick a skill -</option>
+                  {SKILLS.map((s: any) => <option key={s.name} value={s.name}>{s.name}</option>)}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>CMod</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button type="button" onClick={() => setGrantCmod(c => (c > -10 ? c - 1 : c))} disabled={grantSubmitting}
+                    style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer' }}>−</button>
+                  <span style={{ fontSize: '18px', fontWeight: 700, color: grantCmod > 0 ? '#7fc458' : grantCmod < 0 ? '#c0392b' : '#cce0f5', minWidth: '40px', textAlign: 'center' }}>
+                    {grantCmod > 0 ? `+${grantCmod}` : grantCmod}
+                  </span>
+                  <button type="button" onClick={() => setGrantCmod(c => (c < 10 ? c + 1 : c))} disabled={grantSubmitting}
+                    style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer' }}>+</button>
+                  <span style={{ fontSize: '13px', color: '#5a5550', marginLeft: 'auto', fontStyle: 'italic' }}>0 is invalid</span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Description</div>
+                <textarea value={grantDescription} onChange={e => setGrantDescription(e.target.value)}
+                  rows={3} placeholder="found a chemistry textbook in the warehouse"
+                  style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', resize: 'vertical', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+              </div>
+
+              {grantError && (
+                <div style={{ padding: '8px 12px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', marginBottom: '12px' }}>
+                  {grantError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" onClick={() => setShowGrantAdvantage(false)} disabled={grantSubmitting}
+                  style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button type="button" disabled={!canSubmit}
+                  onClick={async () => {
+                    if (!userId || !canSubmit) return
+                    setGrantSubmitting(true)
+                    setGrantError(null)
+                    const { advantage, error } = await grantAdvantage({
+                      supabase, campaignId: id, characterId: grantPcId,
+                      grantedBy: userId,
+                      skillName: grantSkill, cmodDelta: grantCmod,
+                      description: grantDescription,
+                    })
+                    setGrantSubmitting(false)
+                    if (error || !advantage) {
+                      setGrantError(error ?? 'unknown error')
+                      return
+                    }
+                    setAdvantages(prev => [advantage, ...prev])
+                    setShowGrantAdvantage(false)
+                  }}
+                  style={{ flex: 2, padding: '10px', background: canSubmit ? '#2a2010' : '#1a1a1a', border: '1px solid #5a4a1b', borderRadius: '3px', color: canSubmit ? '#EF9F27' : '#5a5550', fontSize: '13px', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canSubmit ? 'pointer' : 'not-allowed', fontWeight: 700 }}>
+                  {grantSubmitting ? 'Granting…' : '⭐ Grant'}
                 </button>
               </div>
             </div>
