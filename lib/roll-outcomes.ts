@@ -83,6 +83,12 @@ export const OUTCOME = {
   // shows the redemption: "X used their +N <skill> advantage (<desc>)".
   // Label is the full sentence; renderer returns it verbatim.
   advantage_used: 'advantage_used',
+  // Brewing materials gathered (Q4-d, 2026-05-19). Fires when a player
+  // clicks Gather Materials on a vehicle's brewing-supplies panel.
+  // Passive 1-day action (no dice, no failure mode per Q4-d spec).
+  // Label is the full sentence; renderer returns it verbatim:
+  // "<name> gathers a day of brewing materials for <vehicle> (now N/M)".
+  gather_materials: 'gather_materials',
 } as const
 
 export type RollOutcome = typeof OUTCOME[keyof typeof OUTCOME]

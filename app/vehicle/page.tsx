@@ -16,6 +16,10 @@ import {
   installFuelDrum, removeFuelDrum, effectiveFuelMaxBase,
   installedDrumCount, remainingDrumCapacity, drumsInCargo,
 } from '../../lib/fuel-storage'
+import {
+  canBrew, canGatherMaterials, gatherMaterials, consumeBrewingSupplies,
+  effectiveBrewingMax, currentBrewingSupplies,
+} from '../../lib/brewing-supplies'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
@@ -112,6 +116,10 @@ export default function VehiclePage() {
   // the storage row so the player sees WHY install failed (no drum in
   // cargo / at cap / feature disabled).
   const [fuelStorageError, setFuelStorageError] = useState<string | null>(null)
+  // Last error from the Brewing Supplies Gather button + the brew-blocked
+  // guard. Cleared on the next successful action. Surfaced inline under
+  // the supplies row (and under the Brew button when the guard fires).
+  const [brewingSuppliesError, setBrewingSuppliesError] = useState<string | null>(null)
   const [notesValue, setNotesValue] = useState('')
   const [showAddCargo, setShowAddCargo] = useState(false)
   const [addName, setAddName] = useState('')
@@ -946,6 +954,17 @@ export default function VehiclePage() {
   // time-cost).
   async function rollCheck() {
     if (!check || !vehicle || !campaignId || !myUserId) return
+    // Brew check guard (Q4-d, 2026-05-19): block when no brewing
+    // supplies on hand. UI disables the button via canBrew(), but
+    // a stale client could still fire this — defense in depth. The
+    // feature is opt-in per vehicle; vehicles without
+    // brewing_supplies_max skip the guard entirely (no still / no
+    // stockpile, no constraint).
+    if (check.kind === 'brew' && effectiveBrewingMax(vehicle) > 0 && !canBrew(vehicle)) {
+      setBrewingSuppliesError('No brewing materials on hand — click Gather Materials first.')
+      return
+    }
+    setBrewingSuppliesError(null)
     setCheck({ ...check, rolling: true })
     const die1 = Math.floor(Math.random() * 6) + 1
     const die2 = Math.floor(Math.random() * 6) + 1
@@ -1113,8 +1132,21 @@ export default function VehiclePage() {
         ...damageJsonExtras,
       },
     })
-    if (newFuel !== vehicle.fuel_current) {
-      await updateVehicle({ ...vehicle, fuel_current: newFuel })
+    // Combined vehicle update: fuel delta from the brew (if any) PLUS
+    // brewing-supplies decrement (Q4-d 4a: every brew attempt consumes
+    // 1 supply, success or fail). Batched so a single updateVehicle
+    // call covers both - the realtime broadcast lands once and the
+    // UI flips clean.
+    const needsFuelUpdate = newFuel !== vehicle.fuel_current
+    const needsSupplyDecrement = check.kind === 'brew' && effectiveBrewingMax(vehicle) > 0 && canBrew(vehicle)
+    if (needsFuelUpdate || needsSupplyDecrement) {
+      let next: typeof vehicle = vehicle
+      if (needsFuelUpdate) next = { ...next, fuel_current: newFuel }
+      if (needsSupplyDecrement) {
+        const consumed = consumeBrewingSupplies(next)
+        if (consumed.vehicle) next = consumed.vehicle
+      }
+      await updateVehicle(next)
     }
 
     // Consume an action on the active initiative entry. Only attacks cost
@@ -1608,6 +1640,64 @@ export default function VehiclePage() {
               )}
               <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                 Base capacity {effectiveFuelMaxBase(vehicle)} days · cap {vehicle.fuel_storage_max} days. Each 55-Gallon Drum installed adds 1 day of fuel storage.
+              </div>
+            </div>
+          )}
+
+          {/* Brewing Supplies stockpile (Q4-d, 2026-05-19). Renders for
+              vehicles where brewing_supplies_max > 0 (feature opt-in).
+              Per canon: 1 day of gathering materials + 1 day of distilling
+              produces 2 days of fuel. The stockpile lets the party gather
+              ahead so they can brew on consecutive days. Brew check is
+              blocked when current = 0 (per Q4-d spec — see rollCheck).
+              [Gather] is a passive 1-day action, no dice (per Q4-d 2a):
+              clicking just bumps current by 1 and logs a feed event. */}
+          {effectiveBrewingMax(vehicle) > 0 && (
+            <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={lbl}>Brewing Supplies</span>
+                <span style={{ fontSize: '15px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
+                  {currentBrewingSupplies(vehicle)} / {effectiveBrewingMax(vehicle)} days
+                </span>
+                {canEdit && (
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={async () => {
+                        const r = gatherMaterials(vehicle)
+                        if (r.error || !r.vehicle) {
+                          setBrewingSuppliesError(r.error ?? 'Unknown error')
+                          return
+                        }
+                        setBrewingSuppliesError(null)
+                        await updateVehicle(r.vehicle)
+                        // Feed broadcast (gather_materials event tag).
+                        // Verbatim renderer in lib/roll-helpers.ts returns
+                        // the label as-is. Best-effort: a failed insert
+                        // doesn't undo the gather; supplies counter is
+                        // the source of truth.
+                        if (campaignId && myUserId) {
+                          const newCur = r.vehicle.brewing_supplies_current ?? 1
+                          await supabase.from('roll_log').insert({
+                            campaign_id: campaignId,
+                            user_id: myUserId,
+                            character_name: null,
+                            label: `${vehicle.name} stockpile updated — gathered 1 day of brewing materials (now ${newCur}/${effectiveBrewingMax(vehicle)})`,
+                            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                            outcome: 'gather_materials',
+                          })
+                        }
+                      }}
+                      disabled={!canGatherMaterials(vehicle)}
+                      title={!canGatherMaterials(vehicle) ? 'Stockpile is full' : 'Spend 1 day gathering raw materials (+1 supply)'}
+                      style={{ padding: '2px 8px', background: canGatherMaterials(vehicle) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${canGatherMaterials(vehicle) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: canGatherMaterials(vehicle) ? '#7fc458' : '#3a3a3a', fontSize: '13px', cursor: canGatherMaterials(vehicle) ? 'pointer' : 'not-allowed', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>+ Gather Materials</button>
+                  </div>
+                )}
+              </div>
+              {brewingSuppliesError && (
+                <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{brewingSuppliesError}</div>
+              )}
+              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+                Brew check consumes 1 day per attempt (success or fail). Brew is blocked when supplies hit 0.
               </div>
             </div>
           )}

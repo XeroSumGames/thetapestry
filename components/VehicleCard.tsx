@@ -36,6 +36,19 @@ export interface Vehicle {
   //                      expansion until rules figure out their numbers.
   fuel_max_base?: number
   fuel_storage_max?: number
+  // Brewing supplies stockpile (Q4-d, 2026-05-19). Per Minnie's canon:
+  // brewing fuel takes 1 day of gathering materials + 1 day of distilling.
+  // Pre-fix the gather and distill steps were lock-step (no way to stockpile),
+  // so the party couldn't brew on consecutive days. These two columns let
+  // them gather ahead:
+  //   brewing_supplies_current - days of materials on hand (consumed
+  //                              by Brew check, +1 per Gather Materials).
+  //   brewing_supplies_max     - cap on the stockpile (Minnie = 2).
+  // Brew check is BLOCKED when current = 0 (per Q4-d spec). Both optional
+  // per-vehicle — absence disables the feature (no still on this vehicle
+  // anyway, typically).
+  brewing_supplies_current?: number
+  brewing_supplies_max?: number
   three_words: string
   notes: string
   image_url: string | null

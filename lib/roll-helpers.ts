@@ -75,6 +75,10 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // "X used their +N <skill> advantage (<description>)" — return
   // verbatim so the feed shows the redemption cleanly.
   if (r.outcome === 'advantage_used') return r.label
+  // Brewing materials gathered (Q4-d). Label is the full sentence —
+  // "<name> gathers a day of brewing materials for <vehicle> (now N/M)"
+  // — return verbatim. Passive 1-day action, no dice.
+  if (r.outcome === 'gather_materials') return r.label
   // Strip the "<name> - " or "<name> — " prefix that GM-from-popout rolls
   // and some legacy paths bake into the label, so the downstream regex
   // matchers see the bare suffix ("ACU Check", "Medicine* (RSN)", etc.).
