@@ -513,13 +513,22 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       default:              return `UNJAM ${name} ${hit ? 'unjams' : 'fails to unjam'} their ${wName}`
     }
   }
-  // Repair (melee) - "Repair - <weaponName> (<skill>)". Mirror of Unjam for
-  // melee weapons - they malfunction rather than jam, so the verb is repair.
+  // Repair (melee) - "Repair - <weaponName> (<skill>)". Mirror of Unjam
+  // for melee. Canon locked 2026-05-19. REPAIR prefix mirrors
+  // ATTRIBUTE / STRESS / STABILIZE / HEAL / UNJAM pattern.
   const repairMatch = suffix.match(/^Repair\s+-\s+(.+?)(?:\s*\(|$)/)
   if (repairMatch) {
     const wName = repairMatch[1].trim()
-    return hit ? `${r.character_name} repairs their ${wName}${outcomeTag}`
-               : `${r.character_name} fails to repair their ${wName}${outcomeTag}`
+    const name = r.character_name
+    switch (r.outcome) {
+      case 'Wild Success':  return `REPAIR ${name} restores their ${wName} to fighting shape`
+      case 'High Insight':  return `REPAIR ${name} repairs their ${wName} and has a Moment of Insight as to why`
+      case 'Success':       return `REPAIR ${name} repairs their ${wName}`
+      case 'Failure':       return `REPAIR ${name} fails to repair their ${wName}`
+      case 'Dire Failure':  return `REPAIR ${name} damages their ${wName} further`
+      case 'Low Insight':   return `REPAIR ${name} fails to repair their ${wName} but has a Moment of Insight as to why it went so badly`
+      default:              return `REPAIR ${name} ${hit ? 'repairs' : 'fails to repair'} their ${wName}`
+    }
   }
   // Upkeep - "Upkeep - <weaponName>". Each outcome maps to its own
   // narrative because the mechanical effect varies (improve vs.

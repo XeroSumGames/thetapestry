@@ -383,4 +383,35 @@ describe('compactRollSummary', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Low Insight' }))
       .toBe('UNJAM Cree fails to unjam their Pistol but has a Moment of Insight as to why it went so badly')
   })
+
+  // Repair narrative (canon locked 2026-05-19). Melee mirror of Unjam.
+  it('repair Wild Success', () => {
+    expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Wild Success' }))
+      .toBe('REPAIR Frankie restores their Machete to fighting shape')
+  })
+
+  it('repair High Insight', () => {
+    expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'High Insight' }))
+      .toBe('REPAIR Frankie repairs their Machete and has a Moment of Insight as to why')
+  })
+
+  it('repair Success', () => {
+    expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Success' }))
+      .toBe('REPAIR Frankie repairs their Machete')
+  })
+
+  it('repair Failure', () => {
+    expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Failure' }))
+      .toBe('REPAIR Frankie fails to repair their Machete')
+  })
+
+  it('repair Dire Failure: damages it further', () => {
+    expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Dire Failure' }))
+      .toBe('REPAIR Frankie damages their Machete further')
+  })
+
+  it('repair Low Insight: F narrative + canonical LI tail', () => {
+    expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Low Insight' }))
+      .toBe('REPAIR Frankie fails to repair their Machete but has a Moment of Insight as to why it went so badly')
+  })
 })
