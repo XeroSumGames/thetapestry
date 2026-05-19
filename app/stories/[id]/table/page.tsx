@@ -4027,13 +4027,36 @@ export default function TablePage() {
     const applyApprentice = unlocksApprentice && recruitApprenticeToggle && !apprenticeByCharacter[recruitRollerId]
     const recruitmentType: RecruitApproach | 'apprentice' = applyApprentice ? 'apprentice' : recruitApproach
 
+    // Tier-2 approach-specific Success / Failure flags per Xero
+    // 2026-05-19 (Phase A: schema + flag-setting). Phase B (morale
+    // drainer + GM escape surface) and Phase C (modal lock gate) ship
+    // separately. Canon mapping:
+    //   Success (any approach)         → temporary_until_morale = true
+    //   Wild Success / HI (any)        → permanent (default flags)
+    //   Conscript Failure              → escape_pending = true, still
+    //                                     inserts the membership
+    //   Convert + Intimidation Failure → no membership; append
+    //                                     'convert' to NPC's
+    //                                     recruit_locked_approaches array
+    //   Cohort/Convert Failure or any  → no membership, no lock
+    //   Dire Failure / Low Insight     → no membership, no lock
+    //                                     (narrative-only)
+    const isSuccessTier = outcome === 'Success'  // plain Success, NOT Wild/HI
+    const isConscriptFailure = recruitApproach === 'conscript' && (outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight')
+    const isConvertIntimidationFailure = recruitApproach === 'convert' && recruitSkill === 'Intimidation' && (outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight')
+    // Membership-shape: who gets a row? Successes always do; Conscript
+    // Failure gets a row WITH escape_pending so the GM can fire the
+    // escape later. Convert+Intimidation Failure NEVER gets a row;
+    // the NPC just gets the approach locked.
+    const writesMembership = isSuccess || isConscriptFailure
+
     // On success, INSERT community_members. If the NPC is currently in
     // another community (poaching), leave that row alone - narratively
     // the NPC is switching allegiance but the GM may want to retain
     // history. MVP behavior: just insert the new membership; GM can
     // manually remove old one if desired.
     let inserted = false
-    if (isSuccess) {
+    if (writesMembership) {
       const { error: memErr } = await supabase.from('community_members').insert({
         community_id: finalCommunityId,
         npc_id: recruitNpcId,
@@ -4042,14 +4065,50 @@ export default function TablePage() {
         recruitment_type: recruitmentType,
         apprentice_of_character_id: applyApprentice ? recruitRollerId : null,
         joined_at: new Date().toISOString(),
+        // Tier-2 flags: plain Success → temporary; Conscript Failure
+        // → escape_pending. Wild Success / HI leave both false
+        // (permanent commit per canon).
+        temporary_until_morale: isSuccessTier,
+        escape_pending: isConscriptFailure,
       })
       if (memErr) {
         alert(`Failed to add member: ${memErr.message}`)
       } else {
         inserted = true
-        // Progression log entry on the recruiter PC.
-        const recruitedAs = applyApprentice ? 'an Apprentice' : `a ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)}`
+        // Progression log entry on the recruiter PC. Wording varies
+        // by outcome: Conscript Failure reads as "appears to comply"
+        // so the GM has a clear in-fiction beat to work with.
+        let recruitedAs: string
+        if (isConscriptFailure) {
+          recruitedAs = `a Conscript (appears to comply, but will escape at the first opportunity)`
+        } else if (applyApprentice) {
+          recruitedAs = 'an Apprentice'
+        } else {
+          const baseLabel = recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)
+          recruitedAs = isSuccessTier ? `a temporary ${baseLabel} (drops at next Morale Check)` : `a ${baseLabel}`
+        }
         if (rollerEntry.character?.id) void appendProgressionLog(rollerEntry.character.id, 'community', `🤝 Recruited ${npc.name} as ${recruitedAs} to ${finalCommunityName}.`)
+      }
+    }
+    // Convert + Intimidation Failure: lock the 'convert' approach on
+    // this NPC permanently (any future PC, any future attempt). The
+    // Recruit modal (Phase C) will hide the locked approach in its
+    // picker. Dedupe in JS - array_append in SQL would also work but
+    // requires a fetch-or-RPC roundtrip; this is one read + one
+    // update either way.
+    if (isConvertIntimidationFailure) {
+      const existing: string[] = Array.isArray((npc as any).recruit_locked_approaches) ? (npc as any).recruit_locked_approaches : []
+      if (!existing.includes('convert')) {
+        const next = [...existing, 'convert']
+        const { error: lockErr } = await supabase
+          .from('campaign_npcs')
+          .update({ recruit_locked_approaches: next })
+          .eq('id', recruitNpcId)
+        if (lockErr) console.error('[recruit-tier2] lock-approach update error:', lockErr.message)
+        else {
+          // Local state patch so the picker reflects the lock without a refetch.
+          setCampaignNpcs(prev => prev.map(n => n.id === recruitNpcId ? { ...n, recruit_locked_approaches: next } as any : n))
+        }
       }
     }
 
