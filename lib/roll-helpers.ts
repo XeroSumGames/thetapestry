@@ -90,12 +90,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // which conflated the intensity modifier (WS/DF) with the Insight Die
   // award (HI/LI). Order matters: HI/LI checked before WS/DF since HI
   // is also a hit and LI is also a fail.
-  // Tail phrasing locked per Xero 2026-05-19 (second pass). HI is short
-  // ("as to why") because the surrounding success narrative conveys
-  // direction; LI keeps the longer "it went so badly" tail because
-  // failure narratives are often neutral-toned. WS / DF tails unchanged.
+  // Tail phrasing locked per Xero 2026-05-19 (final). Symmetric long
+  // form on both HI and LI - earlier short HI tail attempt was wrong.
+  // WS / DF tails unchanged.
   const outcomeTag =
-    r.outcome === 'High Insight'  ? ' and has a Moment of Insight as to why'
+    r.outcome === 'High Insight'  ? ' and has a Moment of Insight as to why it went so well'
     : r.outcome === 'Low Insight' ? ' but has a Moment of Insight as to why it went so badly'
     : r.outcome === 'Wild Success' ? ' and was wildly successful'
     : r.outcome === 'Dire Failure' ? ' and failed miserably'
@@ -242,7 +241,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const tgt = r.target_name
     switch (r.outcome) {
       case 'Wild Success':  return `${name} distracts ${tgt} so badly they seem to become confused`
-      case 'High Insight':  return `${name} distracts ${tgt} so badly they seem to become confused and has a Moment of Insight as to why`
+      case 'High Insight':  return `${name} distracts ${tgt} so badly they seem to become confused and has a Moment of Insight as to why it went so well`
       case 'Success':       return `${name} distracts ${tgt}, breaking their focus`
       case 'Failure':       return `${name} tries to distract ${tgt}, who shrugs it off`
       case 'Low Insight':   return `${name} tries to distract ${tgt}, who shrugs it off but has a Moment of Insight as to why it went so badly`
@@ -379,7 +378,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (isAtMax) {
       switch (r.outcome) {
         case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed and shrugs the pressure off`
-        case 'High Insight':  return `STRESS CHECK ${name} calms themselves down and has a Moment of Insight as to why`
+        case 'High Insight':  return `STRESS CHECK ${name} calms themselves down and has a Moment of Insight as to why it went so well`
         case 'Success':       return `STRESS CHECK ${name} calms themselves down`
         case 'Failure':       return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point`
         case 'Dire Failure':  return `STRESS CHECK ${name} disastrously cracks and reaches their Breaking Point`
@@ -394,7 +393,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     // duplication.
     switch (r.outcome) {
       case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed under pressure`
-      case 'High Insight':  return `STRESS CHECK ${name} holds steady against the pressure and has a Moment of Insight as to why`
+      case 'High Insight':  return `STRESS CHECK ${name} holds steady against the pressure and has a Moment of Insight as to why it went so well`
       case 'Success':       return `STRESS CHECK ${name} holds steady against the pressure`
       case 'Failure':       return `STRESS CHECK ${name} feels the weight`
       case 'Dire Failure':  return `STRESS CHECK ${name} buckles under the pressure`
@@ -462,7 +461,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const name = r.character_name
     switch (r.outcome) {
       case 'Wild Success':  return `HEAL ${name} expertly treats ${target} ${kitPhrase} with exceptional care`
-      case 'High Insight':  return `HEAL ${name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why`
+      case 'High Insight':  return `HEAL ${name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why it went so well`
       case 'Success':       return `HEAL ${name} treats ${target} ${kitPhrase}`
       case 'Failure':       return `HEAL ${name} fails to make progress treating ${target}`
       case 'Dire Failure':  return `HEAL ${name} botches the treatment, making ${target} worse`
@@ -491,7 +490,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (r.outcome === 'Low Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and the plan falls apart but has a Moment of Insight as to why it went so badly`
     if (r.outcome === 'Dire Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but it goes badly for the team`
     if (r.outcome === 'Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the team gets off to a rough start`
-    if (r.outcome === 'High Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and has a Moment of Insight as to why`
+    if (r.outcome === 'High Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and has a Moment of Insight as to why it went so well`
     if (r.outcome === 'Wild Success') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and is wildly successful`
     if (r.outcome === 'Success') return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
     return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
@@ -505,7 +504,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const name = r.character_name
     switch (r.outcome) {
       case 'Wild Success':  return `UNJAM ${name} clears the jam on their ${wName} with practiced ease`
-      case 'High Insight':  return `UNJAM ${name} unjams their ${wName} and has a Moment of Insight as to why`
+      case 'High Insight':  return `UNJAM ${name} unjams their ${wName} and has a Moment of Insight as to why it went so well`
       case 'Success':       return `UNJAM ${name} unjams their ${wName}`
       case 'Failure':       return `UNJAM ${name} fails to unjam their ${wName}`
       case 'Dire Failure':  return `UNJAM ${name} makes the jam on their ${wName} worse`
@@ -522,7 +521,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const name = r.character_name
     switch (r.outcome) {
       case 'Wild Success':  return `REPAIR ${name} restores their ${wName} to fighting shape`
-      case 'High Insight':  return `REPAIR ${name} repairs their ${wName} and has a Moment of Insight as to why`
+      case 'High Insight':  return `REPAIR ${name} repairs their ${wName} and has a Moment of Insight as to why it went so well`
       case 'Success':       return `REPAIR ${name} repairs their ${wName}`
       case 'Failure':       return `REPAIR ${name} fails to repair their ${wName}`
       case 'Dire Failure':  return `REPAIR ${name} damages their ${wName} further`
@@ -640,43 +639,51 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // mechanical "- Failure / Dire Failure / Low Insight" suffix the
   // stored label carries.
   if (r.outcome === 'recruit') {
+    // Recruit narrative polish locked 2026-05-19 per Xero (option D:
+    // no prefix, present tense, HI/LI tails on success rows, failure
+    // copy tightened). Stored label still says "tried to recruit" /
+    // "recruited" (past tense, written by the recruit modal at table
+    // page); narrative re-renders in present tense.
     const failMatch = r.label.match(/^🤝\s+(.+?)\s+tried to recruit\s+(.+?)\s+-\s+(.+)$/)
     if (failMatch) {
       const name = failMatch[1]
       const target = failMatch[2]
       const rollOutcome = failMatch[3]
-      // LI carries the canon Moment-of-Insight tag; DF does not (HI/LI only
-      // per Xero 2026-05-11). Earlier version lumped both into the same
-      // "it went badly" branch with no LI tag.
       if (rollOutcome === 'Low Insight') {
-        return `${name} tried to recruit ${target} - it went badly but has a Moment of Insight as to why it went so badly`
+        return `${name} tries to recruit ${target} and fails but has a Moment of Insight as to why it went so badly`
       }
       if (rollOutcome === 'Dire Failure') {
-        return `${name} tried to recruit ${target} - it went badly`
+        return `${name} tries to recruit ${target} and the attempt goes badly`
       }
-      return `${name} tried to recruit ${target} but it didn't go well`
+      return `${name} tries to recruit ${target} and doesn't quite land it`
     }
     // Success label format:
     //   "🤝 <recruiter> recruited <target> as <article> <type> to <community>"
     // where <type> is Cohort | Conscript | Convert | Apprentice.
-    // Each type has bespoke flavor per Xero's playtest copy (2026-05-10).
+    // Each type has bespoke flavor per Xero's playtest copy (2026-05-10),
+    // present-tense polish 2026-05-19, and HI/LI tail appended when
+    // r.outcome indicates a Moment of Insight (stored label doesn't
+    // distinguish HI from regular Success - r.outcome does).
     const successMatch = r.label.match(/^🤝\s+(.+?)\s+recruited\s+(.+?)\s+as\s+(?:a|an)\s+(Cohort|Conscript|Convert|Apprentice)\s+to\s+(.+)$/)
     if (successMatch) {
       const recruiter = successMatch[1]
       const target = successMatch[2]
       const recType = successMatch[3]
       const community = successMatch[4]
-      if (recType === 'Apprentice') {
-        return `${recruiter} takes ${target} as their Apprentice`
-      }
-      if (recType === 'Conscript') {
-        return `${recruiter} forced ${target} into service as a Conscript to ${community}`
-      }
-      if (recType === 'Convert') {
-        return `${recruiter} Converted ${target} as a recruit to ${community}`
-      }
-      // Cohort - keep the canonical phrasing.
-      return `${recruiter} recruited ${target} as a Cohort to ${community}`
+      // Recruit rows are stored with outcome='recruit' (special tag),
+      // not the dice outcome. The actual dice outcome lives in
+      // damage_json.rollOutcome (written by the recruit modal at table
+      // page L3938). Read from there so HI/LI tails can attach.
+      const diceOutcome = (r.damage_json as any)?.rollOutcome ?? ''
+      const insightTail = diceOutcome === 'High Insight' ? ' and has a Moment of Insight as to why it went so well'
+                        : diceOutcome === 'Low Insight'  ? ' but has a Moment of Insight as to why it went so badly'
+                        : ''
+      let base: string
+      if (recType === 'Apprentice')      base = `${recruiter} takes ${target} as their Apprentice`
+      else if (recType === 'Conscript')  base = `${recruiter} forces ${target} into service as a Conscript to ${community}`
+      else if (recType === 'Convert')    base = `${recruiter} Converts ${target} as a recruit to ${community}`
+      else                               base = `${recruiter} recruits ${target} as a Cohort to ${community}`
+      return base + insightTail
     }
     // Unknown structure - strip the emoji and pass through.
     return r.label.replace(/^🤝\s*/, '')
@@ -845,7 +852,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (skillMatch) {
     const skill = skillMatch[1]
     if (r.outcome === 'Wild Success') return `${r.character_name} was wildly successful at ${skill}`
-    if (r.outcome === 'High Insight') return `${r.character_name} was successful at ${skill} and has a Moment of Insight as to why`
+    if (r.outcome === 'High Insight') return `${r.character_name} was successful at ${skill} and has a Moment of Insight as to why it went so well`
     if (r.outcome === 'Dire Failure') return `${r.character_name} failed miserably at ${skill}`
     if (r.outcome === 'Low Insight') return `${r.character_name} failed at ${skill} but has a Moment of Insight as to why it went so badly`
     return hit ? `${r.character_name} was successful at ${skill}`
@@ -869,7 +876,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     // outcome so feed scanners can spot attribute checks at a glance.
     const prefix = 'ATTRIBUTE CHECK'
     if (r.outcome === 'Wild Success') return `${prefix} ${r.character_name} wildly succeeded at using their ${attrName}`
-    if (r.outcome === 'High Insight') return `${prefix} ${r.character_name} successfully attempted to use their ${attrName} and has a Moment of Insight as to why`
+    if (r.outcome === 'High Insight') return `${prefix} ${r.character_name} successfully attempted to use their ${attrName} and has a Moment of Insight as to why it went so well`
     if (r.outcome === 'Dire Failure') return `${prefix} ${r.character_name} disastrously failed at using their ${attrName}`
     if (r.outcome === 'Low Insight') return `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName} but has a Moment of Insight as to why it went so badly`
     return hit ? `${prefix} ${r.character_name} successfully attempted to use their ${attrName}`

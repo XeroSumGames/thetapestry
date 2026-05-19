@@ -797,7 +797,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
       }
     })()
     const insightTail =
-      r.outcome === 'High Insight' ? ' and has a Moment of Insight as to why'
+      r.outcome === 'High Insight' ? ' and has a Moment of Insight as to why it went so well'
       : r.outcome === 'Low Insight' ? ' but has a Moment of Insight as to why it went so badly'
       : ''
     const participantNames = participants.map(p => p.name)

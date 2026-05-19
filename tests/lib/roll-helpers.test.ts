@@ -124,7 +124,7 @@ describe('compactRollSummary', () => {
 
   it('attribute check High Insight: success + Moment of Insight', () => {
     expect(compactRollSummary({ label: 'RSN Check', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their reason and has a Moment of Insight as to why')
+      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their reason and has a Moment of Insight as to why it went so well')
   })
 
   it('attribute check Low Insight: failure + Moment of Insight', () => {
@@ -160,7 +160,7 @@ describe('compactRollSummary', () => {
 
   it('stress check mid-play High Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('STRESS CHECK Enya holds steady against the pressure and has a Moment of Insight as to why')
+      .toBe('STRESS CHECK Enya holds steady against the pressure and has a Moment of Insight as to why it went so well')
   })
 
   it('stress check mid-play Success', () => {
@@ -191,7 +191,7 @@ describe('compactRollSummary', () => {
 
   it('stress check at-max High Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('STRESS CHECK Enya calms themselves down and has a Moment of Insight as to why')
+      .toBe('STRESS CHECK Enya calms themselves down and has a Moment of Insight as to why it went so well')
   })
 
   it('stress check at-max Success', () => {
@@ -224,7 +224,7 @@ describe('compactRollSummary', () => {
 
   it('distract High Insight: WS narrative + HI tail', () => {
     expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'High Insight' }))
-      .toBe('Cree distracts Goon so badly they seem to become confused and has a Moment of Insight as to why')
+      .toBe('Cree distracts Goon so badly they seem to become confused and has a Moment of Insight as to why it went so well')
   })
 
   it('distract Success', () => {
@@ -257,7 +257,7 @@ describe('compactRollSummary', () => {
 
   it('coord effort legacy High Insight', () => {
     expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'High Insight' }))
-      .toBe('Cree kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why')
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why it went so well')
   })
 
   it('coord effort legacy Success', () => {
@@ -325,7 +325,7 @@ describe('compactRollSummary', () => {
 
   it('heal High Insight with kit', () => {
     expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'High Insight' }))
-      .toBe("HEAL Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why")
+      .toBe("HEAL Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why it went so well")
   })
 
   it('heal Success with kit', () => {
@@ -361,7 +361,7 @@ describe('compactRollSummary', () => {
 
   it('unjam High Insight', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'High Insight' }))
-      .toBe('UNJAM Cree unjams their Pistol and has a Moment of Insight as to why')
+      .toBe('UNJAM Cree unjams their Pistol and has a Moment of Insight as to why it went so well')
   })
 
   it('unjam Success', () => {
@@ -392,7 +392,7 @@ describe('compactRollSummary', () => {
 
   it('repair High Insight', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'High Insight' }))
-      .toBe('REPAIR Frankie repairs their Machete and has a Moment of Insight as to why')
+      .toBe('REPAIR Frankie repairs their Machete and has a Moment of Insight as to why it went so well')
   })
 
   it('repair Success', () => {
@@ -413,5 +413,71 @@ describe('compactRollSummary', () => {
   it('repair Low Insight: F narrative + canonical LI tail', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Low Insight' }))
       .toBe('REPAIR Frankie fails to repair their Machete but has a Moment of Insight as to why it went so badly')
+  })
+
+  // Recruit narrative (canon polish locked 2026-05-19, option D: no
+  // prefix, present tense, HI/LI tails on success rows, failure copy
+  // tightened). Stored label uses past tense ("recruited", "tried to
+  // recruit"); narrative re-renders in present tense.
+
+  // --- Success types (4 recruit kinds) ---
+  it('recruit Cohort success', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask recruited Marcus as a Cohort to The Farm',
+      character_name: 'Cree Hask', outcome: 'recruit',
+    })).toBe('Cree Hask recruits Marcus as a Cohort to The Farm')
+  })
+
+  it('recruit Conscript success: present tense "forces"', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask recruited Marcus as a Conscript to The Farm',
+      character_name: 'Cree Hask', outcome: 'recruit',
+    })).toBe('Cree Hask forces Marcus into service as a Conscript to The Farm')
+  })
+
+  it('recruit Convert success: present tense "Converts"', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask recruited Marcus as a Convert to The Farm',
+      character_name: 'Cree Hask', outcome: 'recruit',
+    })).toBe('Cree Hask Converts Marcus as a recruit to The Farm')
+  })
+
+  it('recruit Apprentice success', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask recruited Marcus as an Apprentice to The Farm',
+      character_name: 'Cree Hask', outcome: 'recruit',
+    })).toBe('Cree Hask takes Marcus as their Apprentice')
+  })
+
+  // --- HI/LI tails on success rows (per 2026-05-19 rule) ---
+  it('recruit Cohort with HI outcome appends well tail (HI flagged in damage_json.rollOutcome)', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask recruited Marcus as a Cohort to The Farm',
+      character_name: 'Cree Hask',
+      outcome: 'recruit',  // stored outcome is always 'recruit' for these rows
+      damage_json: { rollOutcome: 'High Insight' },  // actual dice outcome
+    })).toBe('Cree Hask recruits Marcus as a Cohort to The Farm and has a Moment of Insight as to why it went so well')
+  })
+
+  // --- Failure tiers ---
+  it('recruit Failure: "doesn\'t quite land it"', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask tried to recruit Marcus - Failure',
+      character_name: 'Cree Hask', outcome: 'recruit',
+    })).toBe("Cree Hask tries to recruit Marcus and doesn't quite land it")
+  })
+
+  it('recruit Dire Failure: "attempt goes badly"', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask tried to recruit Marcus - Dire Failure',
+      character_name: 'Cree Hask', outcome: 'recruit',
+    })).toBe('Cree Hask tries to recruit Marcus and the attempt goes badly')
+  })
+
+  it('recruit Low Insight: present-tense failure + canonical LI tail', () => {
+    expect(compactRollSummary({
+      label: '🤝 Cree Hask tried to recruit Marcus - Low Insight',
+      character_name: 'Cree Hask', outcome: 'recruit',
+    })).toBe('Cree Hask tries to recruit Marcus and fails but has a Moment of Insight as to why it went so badly')
   })
 })

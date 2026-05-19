@@ -1,17 +1,17 @@
 # Lessons Learned
 
-## High Insight / Low Insight tail phrasing in compact narratives (2026-05-19)
+## High Insight / Low Insight tail phrasing in compact narratives (2026-05-19, final)
 
-**Rule (Xero, locked 2026-05-19, second pass):** the Moment-of-Insight tail appended to every HI / LI compact narrative is canon-locked to:
+**Rule (Xero, locked 2026-05-19, final pass):** the Moment-of-Insight tail appended to every HI / LI compact narrative is canon-locked to:
 
-- **High Insight:** `... and has a Moment of Insight as to why`
+- **High Insight:** `... and has a Moment of Insight as to why it went so well`
 - **Low Insight:** `... but has a Moment of Insight as to why it went so badly`
 
-**Asymmetry is intentional.** HI is short ("as to why" only) because the surrounding success narrative ("successfully attempts to", "is wildly successful", "calms themselves") already conveys direction — the "well" is redundant. LI keeps the longer "it went so badly" tail because failure narratives are often neutral-toned ("feels the weight", "shrugs it off", "tries to") and need an explicit "badly" cue.
+**Symmetric long form.** Both tails carry the directional cue ("well" / "badly"). The "and" / "but" connector differs so the LI version reads as a contrast against the failure narrative.
 
-**What this changed from earlier today:**
-- Old HI tail (in global `outcomeTag` + most bespoke branches): `and has a Moment of Insight as to why it went so well`
-- Old LI tail: mix of `and has a Moment of Insight as to why it went so badly` and `but has a Moment of Insight as to why it went so badly` across different branches. Now all `but`.
+**Iteration history (do not regress):**
+- First attempt: HI short "as to why" (no directional cue). REJECTED 2026-05-19 by Xero — "moments of high insight should say 'and has a Moment of Insight as to why it went so well'".
+- Earlier still: LI inconsistent ("and has" / "but has" across branches). Standardized to "but has".
 
 **Special cases:**
 - Coord Effort legacy LI: leading clause flipped from "but the plan falls apart" to "and the plan falls apart" so the canonical "but has..." LI tail composes without doubled "but". Tracked as a deliberate flex away from the original wording to preserve readability.
