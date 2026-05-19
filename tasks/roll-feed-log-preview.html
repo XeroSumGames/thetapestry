@@ -16,7 +16,15 @@
   roll-feed-log-preview.html when amending log messages (2026-05-19)".
 
   Recent updates:
-  - 2026-05-19 (5th pass / final): HI tail reverted to long form
+  - 2026-05-19 (6th pass): Vehicle Attack / Driving / Brew polished
+                with per-outcome cinematic narrative + HI/LI tails.
+                Vehicle Attack DF flips focus from target to weapon
+                (misfires catastrophically). No-target attack variant
+                uses 'and the shot goes wide' on F so LI tail
+                composes cleanly. Driving: 'masterful control' /
+                'loses control of' bookends. Brew: 'distills
+                exceptional fuel' / 'ruins the brew' bookends.
+  - 2026-05-19 (5th pass): HI tail reverted to long form
                 'and has a Moment of Insight as to why it went so well'
                 (4th-pass short tail was wrong, per Xero correction).
                 Now symmetric with LI 'but has a Moment of Insight as
@@ -803,18 +811,40 @@
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">11:04 AM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask breaks their Sniper's Rifle while attempting to maintain its condition but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h2>Vehicle</h2>
-  <h3 id="vehicle-attack">Vehicle Attack</h3>
-  <div class="row blue"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:31 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss shot at and hit Avery Xavier using Minnie's Sniper's Rifle</div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:32 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss shot at and missed Avery Xavier using Minnie's Sniper's Rifle</div></div>
-  <div class="row blue"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss fired using Minnie's Sniper's Rifle</div></div>
+  <h3 id="vehicle-attack">Vehicle Attack (per-outcome cinematic locked 2026-05-19)</h3>
+  <p class="note">DF flips focus from the target to the weapon ('misfires X catastrophically') — weapon malfunction outweighs the missed shot. No-target variant ('fires for effect') uses 'and the shot goes wide' on Failure so the LI tail composes without doubled connector.</p>
 
-  <h3 id="driving">Driving</h3>
+  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 12px 0 6px;">With target</h4>
+  <div class="row green"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:31 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss devastates Avery Xavier using Minnie's Sniper's Rifle</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:31 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss hits Avery Xavier using Minnie's Sniper's Rifle and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:31 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss hits Avery Xavier using Minnie's Sniper's Rifle</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:32 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss misses Avery Xavier using Minnie's Sniper's Rifle</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:32 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss misfires Minnie's Sniper's Rifle catastrophically</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:32 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss misses Avery Xavier using Minnie's Sniper's Rifle but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">No target (firing for effect)</h4>
+  <div class="row green"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss fires Minnie's Sniper's Rifle with stunning precision</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss fires Minnie's Sniper's Rifle and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss fires Minnie's Sniper's Rifle</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss fires Minnie's Sniper's Rifle and the shot goes wide</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss misfires Minnie's Sniper's Rifle catastrophically</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Knox Koss</span><div class="right"><span class="time">2:33 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Knox Koss fires Minnie's Sniper's Rifle and the shot goes wide but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h3 id="driving">Driving (per-outcome cinematic locked 2026-05-19)</h3>
+  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:40 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv drives Minnie with masterful control</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:40 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv drives Minnie and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:40 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv drives Minnie</div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:41 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv struggles driving Minnie</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:41 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv struggles to keep control of Minnie</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:41 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv loses control of Minnie</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:41 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv struggles to keep control of Minnie but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
-  <h3 id="brew">Brew</h3>
+  <h3 id="brew">Brew (per-outcome cinematic locked 2026-05-19)</h3>
+  <div class="row green"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:45 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson distills exceptional fuel in Minnie's still</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:45 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson brews fuel in Minnie's still and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:45 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson brews fuel in Minnie's still</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson botches the brew in Minnie's still</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson ruins the brew in Minnie's still</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson botches the brew in Minnie's still but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h2>System / out-of-combat</h2>
   <h3 id="loot">Loot (NPC corpse vs object container)</h3>

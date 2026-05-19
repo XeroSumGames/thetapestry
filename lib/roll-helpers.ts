@@ -727,10 +727,11 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // Vehicle mounted-weapon attack - label format from /vehicle popout:
   //   "🎯 <weapon> attack → <target> · <vehicle> · <crew> · Ranged Combat (DEX) · <outcome>"
   //   (or without "→ <target>" when no target was selected)
-  // Narrative form: "Knox Koss shot at and hit <target> using Minnie's
-  // Sniper's Rifle". Expanded view keeps the original label/dice for
-  // GMs who want to audit. Lives ahead of the loot block because the
-  // 🎯 prefix is unambiguous.
+  // Per-outcome cinematic narrative locked 2026-05-19 per Xero - WS
+  // 'devastates', HI/S 'hits', F/LI 'misses', DF 'misfires
+  // catastrophically' (weapon malfunction outweighs target). No-target
+  // variant uses 'fires ... goes wide' so the LI tail composes without
+  // doubled connector.
   const vehAtkMatch = r.label.match(/^🎯\s+(.+?)\s+attack(?:\s+→\s+(.+?))?\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·\s+Ranged Combat/)
   if (vehAtkMatch) {
     const weapon  = vehAtkMatch[1].trim()
@@ -739,32 +740,60 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const crew    = vehAtkMatch[4].trim()
     const verbTail = `using ${vehicle}'s ${weapon}`
     if (target) {
-      if (hit)  return `${crew} shot at and hit ${target} ${verbTail}${outcomeTag}`
-      return `${crew} shot at and missed ${target} ${verbTail}${outcomeTag}`
+      switch (r.outcome) {
+        case 'Wild Success':  return `${crew} devastates ${target} ${verbTail}`
+        case 'High Insight':  return `${crew} hits ${target} ${verbTail} and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `${crew} hits ${target} ${verbTail}`
+        case 'Failure':       return `${crew} misses ${target} ${verbTail}`
+        case 'Dire Failure':  return `${crew} misfires ${vehicle}'s ${weapon} catastrophically`
+        case 'Low Insight':   return `${crew} misses ${target} ${verbTail} but has a Moment of Insight as to why it went so badly`
+        default:              return `${crew} ${hit ? 'hits' : 'misses'} ${target} ${verbTail}`
+      }
     }
-    return hit
-      ? `${crew} fired ${verbTail}${outcomeTag}`
-      : `${crew} missed firing ${verbTail}${outcomeTag}`
+    // No target - firing into the air or for effect.
+    switch (r.outcome) {
+      case 'Wild Success':  return `${crew} fires ${vehicle}'s ${weapon} with stunning precision`
+      case 'High Insight':  return `${crew} fires ${vehicle}'s ${weapon} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${crew} fires ${vehicle}'s ${weapon}`
+      case 'Failure':       return `${crew} fires ${vehicle}'s ${weapon} and the shot goes wide`
+      case 'Dire Failure':  return `${crew} misfires ${vehicle}'s ${weapon} catastrophically`
+      case 'Low Insight':   return `${crew} fires ${vehicle}'s ${weapon} and the shot goes wide but has a Moment of Insight as to why it went so badly`
+      default:              return `${crew} fires ${verbTail}`
+    }
   }
-  // Vehicle Driving / Brew checks - keep them readable in the feed too.
+  // Vehicle Driving check. Per-outcome cinematic narrative locked
+  // 2026-05-19 per Xero. WS 'masterful control', DF 'loses control',
+  // tail rule applied.
   const drivingMatch = r.label.match(/^🚗\s+Driving check\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·/)
   if (drivingMatch) {
     const vehicle = drivingMatch[1].trim()
     const driver  = drivingMatch[2].trim()
-    // Adverb matches the Attack / Stabilize pattern - "successfully" on
-    // hit, "struggles driving" on miss makes hit/miss legible from the
-    // narrative alone. Per Xero 2026-05-19 post-playtest wording call.
-    return hit
-      ? `${driver} successfully drives ${vehicle}${outcomeTag}`
-      : `${driver} struggles driving ${vehicle}${outcomeTag}`
+    switch (r.outcome) {
+      case 'Wild Success':  return `${driver} drives ${vehicle} with masterful control`
+      case 'High Insight':  return `${driver} drives ${vehicle} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${driver} drives ${vehicle}`
+      case 'Failure':       return `${driver} struggles to keep control of ${vehicle}`
+      case 'Dire Failure':  return `${driver} loses control of ${vehicle}`
+      case 'Low Insight':   return `${driver} struggles to keep control of ${vehicle} but has a Moment of Insight as to why it went so badly`
+      default:              return `${driver} ${hit ? 'drives' : 'struggles to keep control of'} ${vehicle}`
+    }
   }
+  // Vehicle Brew check. Per-outcome cinematic narrative locked
+  // 2026-05-19 per Xero. WS 'distills exceptional fuel', DF 'ruins
+  // the brew', tail rule applied.
   const brewMatch = r.label.match(/^⚗️\s+Brew check\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·/)
   if (brewMatch) {
     const vehicle = brewMatch[1].trim()
     const brewer  = brewMatch[2].trim()
-    return hit
-      ? `${brewer} brews fuel in ${vehicle}'s still${outcomeTag}`
-      : `${brewer} botches the brew in ${vehicle}'s still${outcomeTag}`
+    switch (r.outcome) {
+      case 'Wild Success':  return `${brewer} distills exceptional fuel in ${vehicle}'s still`
+      case 'High Insight':  return `${brewer} brews fuel in ${vehicle}'s still and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${brewer} brews fuel in ${vehicle}'s still`
+      case 'Failure':       return `${brewer} botches the brew in ${vehicle}'s still`
+      case 'Dire Failure':  return `${brewer} ruins the brew in ${vehicle}'s still`
+      case 'Low Insight':   return `${brewer} botches the brew in ${vehicle}'s still but has a Moment of Insight as to why it went so badly`
+      default:              return `${brewer} ${hit ? 'brews fuel' : 'botches the brew'} in ${vehicle}'s still`
+    }
   }
   // Loot - label "🎒 <name> looted <items> from <container>". Narrative
   // compact banner hides WHAT was looted (keeps players reading the log
