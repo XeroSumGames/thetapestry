@@ -170,17 +170,17 @@ describe('compactRollSummary', () => {
 
   it('stress check mid-play Failure', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('STRESS CHECK Enya feels the weight (+1 stress)')
+      .toBe('STRESS CHECK Enya feels the weight')
   })
 
   it('stress check mid-play Dire Failure', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Dire Failure' }))
-      .toBe('STRESS CHECK Enya disastrously buckles under the pressure (+1 stress)')
+      .toBe('STRESS CHECK Enya buckles under the pressure')
   })
 
   it('stress check mid-play Low Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('STRESS CHECK Enya feels the weight (+1 stress) and has a Moment of Insight as to why it went so badly')
+      .toBe('STRESS CHECK Enya feels the weight and has a Moment of Insight as to why it went so badly')
   })
 
   // --- at-max ---
@@ -212,5 +212,71 @@ describe('compactRollSummary', () => {
   it('stress check at-max Low Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Low Insight' }))
       .toBe('STRESS CHECK Enya fails to calm and reaches their Breaking Point and has a Moment of Insight as to why it went so badly')
+  })
+
+  // Distract bespoke narrative (canon copy locked 2026-05-19). 4 outcomes
+  // map to 6 outcome codes (WS=HI, F=LI, Success, DF). Mechanical bits
+  // stripped per project rule.
+  it('distract Wild Success', () => {
+    expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Wild Success' }))
+      .toBe('Cree distracts Goon so badly they seem to become confused')
+  })
+
+  it('distract High Insight folds into WS narrative', () => {
+    expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'High Insight' }))
+      .toBe('Cree distracts Goon so badly they seem to become confused')
+  })
+
+  it('distract Success', () => {
+    expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Success' }))
+      .toBe('Cree distracts Goon, breaking their focus')
+  })
+
+  it('distract Failure', () => {
+    expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Failure' }))
+      .toBe('Cree tries to distract Goon but they shrug it off')
+  })
+
+  it('distract Low Insight folds into F narrative', () => {
+    expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Low Insight' }))
+      .toBe('Cree tries to distract Goon but they shrug it off')
+  })
+
+  it('distract Dire Failure', () => {
+    expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Dire Failure' }))
+      .toBe('Cree tries to distract Goon but only sharpens their focus')
+  })
+
+  // Coord Effort legacy single-row narrative (lead-only chain, before
+  // participants roll in). Tense shifted to present per banner parity.
+  // Mechanical CMod parens stripped.
+  it('coord effort legacy Wild Success', () => {
+    expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Wild Success' }))
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* and is wildly successful')
+  })
+
+  it('coord effort legacy High Insight', () => {
+    expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'High Insight' }))
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why it went so well')
+  })
+
+  it('coord effort legacy Success', () => {
+    expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Success' }))
+      .toBe('Cree kicks off a Coordinated Effort with Tactics*')
+  })
+
+  it('coord effort legacy Failure', () => {
+    expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Failure' }))
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* but the team gets off to a rough start')
+  })
+
+  it('coord effort legacy Dire Failure', () => {
+    expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Dire Failure' }))
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* but it goes badly for the team')
+  })
+
+  it('coord effort legacy Low Insight', () => {
+    expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Low Insight' }))
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* but the plan falls apart on a Moment of Low Insight')
   })
 })

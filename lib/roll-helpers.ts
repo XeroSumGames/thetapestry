@@ -228,10 +228,23 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   }
   // Distract - roll-resolved as of 2026-04-29. Label format:
   // "<name> - Distract" (no target in label; target lives in r.target_name
-  // via the dropdown selection). Compact reads as a hit/miss sentence.
+  // via the dropdown selection). Bespoke narrative per outcome locked
+  // 2026-05-19 per Xero - outcome carries narrative weight, mechanical
+  // bits (action delta) live in the expanded view + target's action
+  // pips updating live. Per project rule "Compact log narratives NEVER
+  // show mechanical bits" (lessons.md 2026-05-19).
   if (/^Distract$/.test(suffix) && r.target_name) {
-    const adverb = hit ? 'Successfully' : 'Failed to'
-    return `${r.character_name} ${adverb} Distract${hit ? 's' : ''} ${r.target_name}${outcomeTag}`
+    const name = r.character_name
+    const tgt = r.target_name
+    switch (r.outcome) {
+      case 'Wild Success':
+      case 'High Insight':  return `${name} distracts ${tgt} so badly they seem to become confused`
+      case 'Success':       return `${name} distracts ${tgt}, breaking their focus`
+      case 'Failure':
+      case 'Low Insight':   return `${name} tries to distract ${tgt} but they shrug it off`
+      case 'Dire Failure':  return `${name} tries to distract ${tgt} but only sharpens their focus`
+      default:              return `${name} ${hit ? 'distracts' : 'tries to distract'} ${tgt}`
+    }
   }
   // Social action banners - Cover Fire / Inspire. Label format
   // "<name> - <Action> → <target> (...)" written by applySocialAction
@@ -370,15 +383,19 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         default:              return `STRESS CHECK ${name} ${hit ? 'calms themselves down' : 'fails to calm and reaches their Breaking Point'}`
       }
     }
-    // mid-play
+    // mid-play — no mechanical bits per project rule "Compact log
+    // narratives NEVER show mechanical bits" (lessons.md 2026-05-19).
+    // The +1 stress consequence is visible via the live stress pips
+    // on the character card; repeating it in the feed line is
+    // duplication.
     switch (r.outcome) {
       case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed under pressure`
       case 'High Insight':  return `STRESS CHECK ${name} holds steady against the pressure and has a Moment of Insight as to why it went so well`
       case 'Success':       return `STRESS CHECK ${name} holds steady against the pressure`
-      case 'Failure':       return `STRESS CHECK ${name} feels the weight (+1 stress)`
-      case 'Dire Failure':  return `STRESS CHECK ${name} disastrously buckles under the pressure (+1 stress)`
-      case 'Low Insight':   return `STRESS CHECK ${name} feels the weight (+1 stress) and has a Moment of Insight as to why it went so badly`
-      default:              return `STRESS CHECK ${name} ${hit ? 'holds steady against the pressure' : 'feels the weight (+1 stress)'}`
+      case 'Failure':       return `STRESS CHECK ${name} feels the weight`
+      case 'Dire Failure':  return `STRESS CHECK ${name} buckles under the pressure`
+      case 'Low Insight':   return `STRESS CHECK ${name} feels the weight and has a Moment of Insight as to why it went so badly`
+      default:              return `STRESS CHECK ${name} ${hit ? 'holds steady against the pressure' : 'feels the weight'}`
     }
   }
   // Stabilize - label "<name> - Stabilize <target>". Adverb pattern
@@ -443,19 +460,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     return r.label.replace(/^🩹\s*/, '')
   }
   // Coordinated Effort lead roll - "Coordinated Effort - <skill>".
-  // Subsequent participant rolls in the chain use normal skill-check
-  // labels (they aren't tagged as part of a Coordinated Effort in the
-  // feed; only the lead roll surfaces the effort itself).
+  // Fires only when the chain is lead-only (no participants yet). Once
+  // participants exist, collapseCoordEffortChains in RollsFeed enriches
+  // the lead row and renders the bespoke Tier A banner instead. So this
+  // path is the "chain just started, waiting for the rest to roll" view.
+  // Tense matches the new banner (present, not past). No mechanical
+  // bits per project rule "Compact log narratives NEVER show mechanical
+  // bits" (lessons.md 2026-05-19) - the CMod chain effect is visible on
+  // the chain banner once participants join.
   const coordEffortMatch = suffix.match(/^Coordinated Effort\s+-\s+(.+)$/)
   if (coordEffortMatch) {
     const skill = coordEffortMatch[1].trim()
-    if (r.outcome === 'Low Insight') return `${r.character_name} kicked off a Coordinated Effort with ${skill} but the plan fell apart on a Moment of Low Insight`
-    if (r.outcome === 'Dire Failure') return `${r.character_name} kicked off a Coordinated Effort with ${skill} - it went badly (everyone in the chain takes -3 CMod)`
-    if (r.outcome === 'Failure') return `${r.character_name} kicked off a Coordinated Effort with ${skill} - rough start (-1 CMod for the chain)`
-    if (r.outcome === 'High Insight') return `${r.character_name} kicked off a Coordinated Effort with ${skill} and has a Moment of Insight (+3 CMod for the chain)`
-    if (r.outcome === 'Wild Success') return `${r.character_name} kicked off a Coordinated Effort with ${skill} and was wildly successful (+2 CMod for the chain)`
-    if (r.outcome === 'Success') return `${r.character_name} kicked off a Coordinated Effort with ${skill} (+1 CMod for the chain)`
-    return `${r.character_name} kicked off a Coordinated Effort with ${skill}`
+    if (r.outcome === 'Low Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the plan falls apart on a Moment of Low Insight`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but it goes badly for the team`
+    if (r.outcome === 'Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the team gets off to a rough start`
+    if (r.outcome === 'High Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'Wild Success') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and is wildly successful`
+    if (r.outcome === 'Success') return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
+    return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
   }
   // Unjam (firearm) - "Unjam - <weaponName> (<skill>)"
   const unjamMatch = suffix.match(/^Unjam\s+-\s+(.+?)(?:\s*\(|$)/)
