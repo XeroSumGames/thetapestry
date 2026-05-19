@@ -16,6 +16,15 @@
   roll-feed-log-preview.html when amending log messages (2026-05-19)".
 
   Recent updates:
+  - 2026-05-19 (3rd pass): Stabilize narrative locked with STABILIZE
+                prefix (mirrors ATTRIBUTE CHECK / STRESS CHECK); HI
+                keeps bespoke "while doing so" per 2026-05-11 lock.
+                Distract Failure rephrased "but they shrug it off" ->
+                "who shrugs it off" so LI tail composes without
+                doubled "but". Coord Effort legacy LI flipped leading
+                "but the plan falls apart" -> "and the plan falls
+                apart" so canonical "but has..." LI tail composes
+                cleanly.
   - 2026-05-19 (2nd pass): HI/LI tail wording locked. HI is now the
                 short tail "and has a Moment of Insight as to why"
                 (was "and has a Moment of Insight as to why it went
@@ -604,10 +613,10 @@
   <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv distracts Avery Xavier so badly they seem to become confused</div></div>
   <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv distracts Avery Xavier so badly they seem to become confused and has a Moment of Insight as to why <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv distracts Avery Xavier, breaking their focus</div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier but they shrug it off</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier but they shrug it off but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier, who shrugs it off</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier, who shrugs it off but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:17 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv tries to distract Avery Xavier but only sharpens their focus</div></div>
-  <p class="note">Action delta (-2/-1/+1 to target's actions_remaining) is hidden from the compact narrative per project rule "Compact log narratives NEVER show mechanical bits"; it lives in the expanded ▸ view + the target's action pips updating live. The LI row has a slight "but ... but" stutter — surface for Xero's call on whether to rephrase the Failure narrative to avoid the doubled connector.</p>
+  <p class="note">Action delta (-2/-1/+1 to target's actions_remaining) is hidden from the compact narrative per project rule "Compact log narratives NEVER show mechanical bits"; it lives in the expanded ▸ view + the target's action pips updating live. Failure narrative rephrased 2026-05-19 from "but they shrug it off" to "who shrugs it off" so the LI tail composes cleanly without "but ... but" doubling.</p>
 
   <h3 id="explosives">Explosives</h3>
   <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:19 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson threw a Molotov at Avery Xavier</div></div>
@@ -693,7 +702,7 @@
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics*</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but the team gets off to a rough start</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but it goes badly for the team</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but the plan falls apart and has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and the plan falls apart but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h2>Recovery / status</h2>
   <h3 id="stress-check">Stress Check (mid-play CHECK button + at-max auto-fire, locked 2026-05-19)</h3>
@@ -716,11 +725,13 @@
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask disastrously cracks and reaches their Breaking Point</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:36 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STRESS CHECK Cree Hask fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
-  <h3 id="stabilize">Stabilize</h3>
-  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Successfully Stabilizes Cree Hask and was wildly successful</div></div>
-  <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Successfully Stabilizes Cree Hask</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv Successfully Stabilizes Cree Hask and has a Moment of Insight while doing so <span class="insight-badge">+1 Insight Die</span></div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:38 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Marv is Unsuccessful in attempting to Stabilize Cree Hask</div></div>
+  <h3 id="stabilize">Stabilize (STABILIZE prefix locked 2026-05-19, HI keeps bespoke "while doing so")</h3>
+  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STABILIZE Marv wildly succeeds at stabilizing Cree Hask</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STABILIZE Marv stabilizes Cree Hask and has a Moment of Insight while doing so <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:37 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STABILIZE Marv stabilizes Cree Hask</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:38 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STABILIZE Marv fails to stabilize Cree Hask</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:38 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STABILIZE Marv disastrously fails to stabilize Cree Hask</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:38 PM</span><span class="toggle">▸</span></div></div><div class="narrative">STABILIZE Marv fails to stabilize Cree Hask but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h3 id="stress">Stress (mortal / incapacitated)</h3>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:18 PM</span></div></div><div class="narrative">Cree Hask is Mortally Wounded by Avery Xavier</div></div>

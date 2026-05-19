@@ -244,8 +244,8 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       case 'Wild Success':  return `${name} distracts ${tgt} so badly they seem to become confused`
       case 'High Insight':  return `${name} distracts ${tgt} so badly they seem to become confused and has a Moment of Insight as to why`
       case 'Success':       return `${name} distracts ${tgt}, breaking their focus`
-      case 'Failure':       return `${name} tries to distract ${tgt} but they shrug it off`
-      case 'Low Insight':   return `${name} tries to distract ${tgt} but they shrug it off but has a Moment of Insight as to why it went so badly`
+      case 'Failure':       return `${name} tries to distract ${tgt}, who shrugs it off`
+      case 'Low Insight':   return `${name} tries to distract ${tgt}, who shrugs it off but has a Moment of Insight as to why it went so badly`
       case 'Dire Failure':  return `${name} tries to distract ${tgt} but only sharpens their focus`
       default:              return `${name} ${hit ? 'distracts' : 'tries to distract'} ${tgt}`
     }
@@ -402,20 +402,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       default:              return `STRESS CHECK ${name} ${hit ? 'holds steady against the pressure' : 'feels the weight'}`
     }
   }
-  // Stabilize - label "<name> - Stabilize <target>". Adverb pattern
-  // matches the Attack / Unarmed branches so hit/miss is legible from
-  // the narrative alone - bordered card's left color cue is too subtle
-  // when rolls scroll fast.
+  // Stabilize - label "<name> - Stabilize <target>". Canon locked
+  // 2026-05-19 per Xero. STABILIZE prefix mirrors ATTRIBUTE CHECK /
+  // STRESS CHECK pattern. HI keeps the bespoke "while doing so" tail
+  // (Xero 2026-05-11 lock); other outcomes follow the standard
+  // success/failure narrative + HI/LI tail rule.
   const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
   if (stabilizeMatch) {
     const tgt = stabilizeMatch[1]
-    // Bespoke HI phrasing per Xero's wording - the moment-of-insight
-    // beat is woven into "while doing so" rather than the generic tag.
-    if (r.outcome === 'High Insight') {
-      return `${r.character_name} Successfully Stabilizes ${tgt} and has a Moment of Insight while doing so`
+    const name = r.character_name
+    switch (r.outcome) {
+      case 'Wild Success':  return `STABILIZE ${name} wildly succeeds at stabilizing ${tgt}`
+      case 'High Insight':  return `STABILIZE ${name} stabilizes ${tgt} and has a Moment of Insight while doing so`
+      case 'Success':       return `STABILIZE ${name} stabilizes ${tgt}`
+      case 'Failure':       return `STABILIZE ${name} fails to stabilize ${tgt}`
+      case 'Dire Failure':  return `STABILIZE ${name} disastrously fails to stabilize ${tgt}`
+      case 'Low Insight':   return `STABILIZE ${name} fails to stabilize ${tgt} but has a Moment of Insight as to why it went so badly`
+      default:              return `STABILIZE ${name} ${hit ? 'stabilizes' : 'fails to stabilize'} ${tgt}`
     }
-    if (hit) return `${r.character_name} Successfully Stabilizes ${tgt}${outcomeTag}`
-    return `${r.character_name} is Unsuccessful in attempting to Stabilize ${tgt}${outcomeTag}`
   }
   // Coordinate - "<name> - Coordinate (vs <target>)"
   const coordMatch = suffix.match(/^Coordinate\s*\(vs\s+([^)]+)\)/)
@@ -475,7 +479,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const coordEffortMatch = suffix.match(/^Coordinated Effort\s+-\s+(.+)$/)
   if (coordEffortMatch) {
     const skill = coordEffortMatch[1].trim()
-    if (r.outcome === 'Low Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the plan falls apart and has a Moment of Insight as to why it went so badly`
+    if (r.outcome === 'Low Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and the plan falls apart but has a Moment of Insight as to why it went so badly`
     if (r.outcome === 'Dire Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but it goes badly for the team`
     if (r.outcome === 'Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the team gets off to a rough start`
     if (r.outcome === 'High Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and has a Moment of Insight as to why`

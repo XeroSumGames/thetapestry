@@ -234,12 +234,12 @@ describe('compactRollSummary', () => {
 
   it('distract Failure', () => {
     expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Failure' }))
-      .toBe('Cree tries to distract Goon but they shrug it off')
+      .toBe('Cree tries to distract Goon, who shrugs it off')
   })
 
-  it('distract Low Insight: F narrative + LI tail', () => {
+  it('distract Low Insight: F narrative + LI tail (no double-but stutter)', () => {
     expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Low Insight' }))
-      .toBe('Cree tries to distract Goon but they shrug it off but has a Moment of Insight as to why it went so badly')
+      .toBe('Cree tries to distract Goon, who shrugs it off but has a Moment of Insight as to why it went so badly')
   })
 
   it('distract Dire Failure', () => {
@@ -277,6 +277,40 @@ describe('compactRollSummary', () => {
 
   it('coord effort legacy Low Insight', () => {
     expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Low Insight' }))
-      .toBe('Cree kicks off a Coordinated Effort with Tactics* but the plan falls apart and has a Moment of Insight as to why it went so badly')
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* and the plan falls apart but has a Moment of Insight as to why it went so badly')
+  })
+
+  // Stabilize narrative (canon locked 2026-05-19). STABILIZE prefix
+  // mirrors ATTRIBUTE CHECK / STRESS CHECK. HI keeps the bespoke
+  // "while doing so" tail per Xero 2026-05-11 lock; other outcomes
+  // follow the standard success/failure pattern + HI/LI tail rule.
+  it('stabilize Wild Success', () => {
+    expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Wild Success' }))
+      .toBe('STABILIZE Marv wildly succeeds at stabilizing Cree Hask')
+  })
+
+  it('stabilize High Insight keeps bespoke "while doing so" tail', () => {
+    expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'High Insight' }))
+      .toBe('STABILIZE Marv stabilizes Cree Hask and has a Moment of Insight while doing so')
+  })
+
+  it('stabilize Success', () => {
+    expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Success' }))
+      .toBe('STABILIZE Marv stabilizes Cree Hask')
+  })
+
+  it('stabilize Failure', () => {
+    expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Failure' }))
+      .toBe('STABILIZE Marv fails to stabilize Cree Hask')
+  })
+
+  it('stabilize Dire Failure', () => {
+    expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Dire Failure' }))
+      .toBe('STABILIZE Marv disastrously fails to stabilize Cree Hask')
+  })
+
+  it('stabilize Low Insight: F narrative + canonical LI tail', () => {
+    expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Low Insight' }))
+      .toBe('STABILIZE Marv fails to stabilize Cree Hask but has a Moment of Insight as to why it went so badly')
   })
 })

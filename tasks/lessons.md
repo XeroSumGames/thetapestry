@@ -14,9 +14,9 @@
 - Old LI tail: mix of `and has a Moment of Insight as to why it went so badly` and `but has a Moment of Insight as to why it went so badly` across different branches. Now all `but`.
 
 **Special cases:**
-- Coord Effort legacy LI was `"... but the plan falls apart on a Moment of Low Insight"` — non-canonical "Moment of Low Insight" phrasing. Now: `"... but the plan falls apart but has a Moment of Insight as to why it went so badly"` (awkward — actually rewrite cleanly to `"... but the plan falls apart on a Moment of Insight as to why it went so badly"` to keep the "plan falls apart" detail). Choose narrative-driving phrasing over rigid rule application when the result reads poorly.
-- Distract WS+HI shared one narrative; HI now gets the tail appended. Same for F+LI.
-- Stabilize bespoke HI was `"... and has a Moment of Insight while doing so"` — keep as-is per Xero 2026-05-11 lock (older bespoke phrasing pre-dates this rule and was explicitly approved).
+- Coord Effort legacy LI: leading clause flipped from "but the plan falls apart" to "and the plan falls apart" so the canonical "but has..." LI tail composes without doubled "but". Tracked as a deliberate flex away from the original wording to preserve readability.
+- Distract WS+HI / F+LI: split into separate cases. HI/LI get the canonical tails appended. Failure narrative was originally "but they shrug it off" but was rephrased to "who shrugs it off" so the LI tail composes without doubled "but".
+- Stabilize bespoke HI keeps "... and has a Moment of Insight while doing so" per Xero 2026-05-11 lock (older bespoke phrasing pre-dates this rule and was explicitly approved). Shipped 2026-05-19 with STABILIZE prefix added across all 6 outcomes.
 
 **Test coverage:** every narrative branch gets a unit test for HI and LI outcomes asserting the exact tail phrasing. If a future copy refactor accidentally drops the tail or rewrites it, tests turn red.
 
