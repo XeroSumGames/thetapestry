@@ -710,14 +710,19 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     // Canon rule per Xero 2026-05-11: "Moment of Insight" only on HI/LI;
     // Wild Success says "wildly successful"; Dire Failure says "failed
     // miserably". Earlier version lumped HI into Wildly Successful and
-    // used "failed miserably" for LI (now reserved for DF).
+    // used "failed miserably" for LI (now reserved for DF). Present-
+    // tense polish 2026-05-19 (option c): 'were' -> 'are', 'failed'
+    // -> 'fail' so this matches the rest of today's narratives.
+    // Bespoke "collectively have a Moment of Insight" tail kept per
+    // option c (preserves multi-participant flavor; does not align
+    // to the canonical "has a Moment of Insight" tail).
     const adverb =
-      r.outcome === 'Wild Success' ? 'were Wildly Successful at'
-      : r.outcome === 'High Insight' ? 'were Successful at'
-      : r.outcome === 'Success' ? 'were Successful at'
-      : r.outcome === 'Dire Failure' ? 'failed miserably at'
-      : r.outcome === 'Low Insight' ? 'were Unsuccessful at'
-      : 'were Unsuccessful at'
+      r.outcome === 'Wild Success' ? 'are Wildly Successful at'
+      : r.outcome === 'High Insight' ? 'are Successful at'
+      : r.outcome === 'Success' ? 'are Successful at'
+      : r.outcome === 'Dire Failure' ? 'fail miserably at'
+      : r.outcome === 'Low Insight' ? 'are Unsuccessful at'
+      : 'are Unsuccessful at'
     const skillTail = skill
     // Group-flavored Insight Die tags: HI and LI both apply to the
     // whole party here, not just the leader.
