@@ -12,6 +12,11 @@
 // the diagnostic console.warns. Memory cost is ~4MB worst case.
 const MAX_EVENTS = 20000
 const STORAGE_KEY = 'tapestry_playtest_buffer'
+// Per-campaign persisted enabled flag. Survives refresh / back-nav /
+// tab-close so a GM-cascade Record toggle restores capture on the
+// next /table mount without user action. Key shape:
+//   tapestry_recorder_enabled_<campaignId> = '1' | (absent)
+const ENABLED_KEY_PREFIX = 'tapestry_recorder_enabled_'
 // Min ms between localStorage writes — protects against jank if something
 // throws/marks in a tight loop (each persist is a sync JSON.stringify of
 // up to PERSIST_BACKUP_COUNT events).
@@ -94,6 +99,36 @@ function persistTrailing(now: number) {
   lastPersistMs = now
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(r.buffer.slice(-PERSIST_BACKUP_COUNT)))
+  } catch { /* quota / no storage */ }
+}
+
+// One-shot full flush of the trailing buffer to localStorage. Called
+// on beforeunload (tab close / refresh / nav-away) so we lose ≤1
+// event instead of up to PERIODIC_FLUSH_MS worth of trailing context.
+// No throttle: the unload window is short and we want every last
+// event we have.
+export function flushAllNow() {
+  const r = getRecorder()
+  if (!r || !r.enabled) return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(r.buffer.slice(-PERSIST_BACKUP_COUNT)))
+  } catch { /* quota / no storage */ }
+}
+
+// Per-campaign persisted-enabled accessors. Used by the table page
+// to resume capture after refresh / back-nav and by the recorder
+// broadcast handlers to propagate GM-cascade state to all subscribed
+// tabs' localStorage. Safe to call SSR — returns false / no-ops.
+export function readCampaignEnabled(campaignId: string): boolean {
+  if (typeof window === 'undefined') return false
+  try { return localStorage.getItem(ENABLED_KEY_PREFIX + campaignId) === '1' } catch { return false }
+}
+
+export function writeCampaignEnabled(campaignId: string, enabled: boolean) {
+  if (typeof window === 'undefined') return
+  try {
+    if (enabled) localStorage.setItem(ENABLED_KEY_PREFIX + campaignId, '1')
+    else localStorage.removeItem(ENABLED_KEY_PREFIX + campaignId)
   } catch { /* quota / no storage */ }
 }
 

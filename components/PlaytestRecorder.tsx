@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { getCachedAuth } from '../lib/auth-cache'
 import { createClient } from '../lib/supabase-browser'
-import { record, downloadDump, getRecorder, startPeriodicFlush } from '../lib/playtest-recorder'
+import { record, downloadDump, getRecorder, startPeriodicFlush, flushAllNow } from '../lib/playtest-recorder'
 
 // Warns we never want in the dump — already filtered from the console by the
 // head script in app/layout.tsx, but our recorder runs upstream of that
@@ -161,6 +161,12 @@ export default function PlaytestRecorder() {
       })
     }
     window.addEventListener('unhandledrejection', onRejection)
+
+    // beforeunload: full flush to localStorage so close-tab / refresh /
+    // nav-away loses ≤1 event instead of up to PERIODIC_FLUSH_MS (60s)
+    // of trailing context. No-ops when capture is OFF.
+    const onBeforeUnload = () => { try { flushAllNow() } catch {} }
+    window.addEventListener('beforeunload', onBeforeUnload)
 
     // ── console.error / console.warn pass-through capture ────────────────
     // Cap the deep-cloned snapshot of each arg at ~10 KB so a stray

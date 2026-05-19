@@ -45,7 +45,7 @@ import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
-import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, getRecorder } from '../../../../lib/playtest-recorder'
+import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, getRecorder, readCampaignEnabled, writeCampaignEnabled } from '../../../../lib/playtest-recorder'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
@@ -142,34 +142,53 @@ export default function TablePage() {
   // Wrong for the playtester workflow: a player records THEIR
   // session, independent of the GM.
   //
-  // On mount, mirror the lib's current `enabled` flag (defaults to
-  // false at page mount per lib/playtest-recorder.ts). After that,
-  // toggleRecorder drives state purely locally.
+  // Mount: resume capture if a previous tab on this campaign persisted
+  // the enabled flag to localStorage (refresh / back-nav / GM-cascade
+  // start from another tab). Otherwise mirror the in-memory flag.
+  // Key: tapestry_recorder_enabled_<campaignId>. Written by the GM's
+  // toggleRecorder AND by every tab's recorder_start / recorder_stop
+  // broadcast handler, so this survives every nav path including the
+  // "Alex hit Stop without ever hitting Start" failure mode (the Stop
+  // button is now GM-only, see the button JSX below).
   useEffect(() => {
-    const r = getRecorder()
-    if (r) setRecorderEnabled(!!r.enabled)
-  }, [])
+    const persisted = readCampaignEnabled(id)
+    if (persisted) {
+      recorderSetEnabled(true)
+      setRecorderEnabled(true)
+    } else {
+      const r = getRecorder()
+      if (r) setRecorderEnabled(!!r.enabled)
+    }
+  }, [id])
 
-  // Toggle the recorder ON/OFF from the table page — TAB-LOCAL.
+  // Toggle the recorder ON/OFF from the table page — GM-CASCADED.
   //
-  // No DB write. Same-tab wipe (on) / download (off) + flip the
-  // local recorder lib's enabled flag. Other tabs are unaffected.
+  // GM owns the lifecycle. GM's click does the work locally AND
+  // broadcasts recorder_start / recorder_stop on initChannelRef so
+  // every connected player tab flips its capture flag in lockstep.
+  // The localStorage write (writeCampaignEnabled) survives refresh /
+  // back-nav / tab-close on every tab, so capture resumes on the
+  // next /table mount without user action.
+  //
+  // Supabase broadcasts do not loop back to the sender by default —
+  // this handler does the local actions explicitly (wipe / dump /
+  // setEnabled). The matching .on('broadcast', ...) handlers below
+  // run the same actions on every receiving tab.
   async function toggleRecorder() {
     if (recorderToggling) return
     setRecorderToggling(true)
     const next = !recorderEnabled
     if (next) {
-      // ON: wipe this tab's buffer so the session starts clean.
       recorderWipeBuffer()
       recorderSetEnabled(true)
+      writeCampaignEnabled(id, true)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'recorder_start', payload: { campaignId: id } })
     } else {
-      // OFF: download this tab's buffer immediately + flip the
-      // recorder off. Browser-blocked downloads only happen for
-      // un-focused tabs, and this tab is the one that just got
-      // clicked, so the download proceeds.
       const filename = recorderDownloadDump()
       if (filename) console.warn('[recorder] auto-downloaded:', filename)
       recorderSetEnabled(false)
+      writeCampaignEnabled(id, false)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'recorder_stop', payload: { campaignId: id } })
     }
     setRecorderEnabled(next)
     setRecorderToggling(false)
@@ -1247,6 +1266,28 @@ export default function TablePage() {
       if (cancelled) return
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, wrapDbChange('initiative_order:*', () => loadInitiative(id)))
+        .on('broadcast', { event: 'recorder_start' }, wrapBroadcast('recorder_start', () => {
+          // GM-cascade: a Record click on the GM's tab fans out to
+          // every player tab. Wipe so each player's buffer starts
+          // clean for this session, persist to localStorage so a
+          // refresh / back-nav resumes capture without user action.
+          recorderWipeBuffer()
+          recorderSetEnabled(true)
+          writeCampaignEnabled(id, true)
+          setRecorderEnabled(true)
+        }))
+        .on('broadcast', { event: 'recorder_stop' }, wrapBroadcast('recorder_stop', () => {
+          // GM-cascade Stop: every player tab auto-downloads its dump.
+          // Some browsers block auto-download on un-focused tabs;
+          // when that happens the dump stays accessible via Ctrl+Shift+L
+          // since the buffer + localStorage backup remain in place
+          // until the next recorder_start wipes.
+          const filename = recorderDownloadDump()
+          if (filename) console.warn('[recorder] GM-stopped auto-download:', filename)
+          recorderSetEnabled(false)
+          writeCampaignEnabled(id, false)
+          setRecorderEnabled(false)
+        }))
         .on('broadcast', { event: 'combat_ended' }, wrapBroadcast('combat_ended', () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) }))
         .on('broadcast', { event: 'player_kicked' }, wrapBroadcast('player_kicked', (msg: any) => {
           if (msg.payload?.userId === user.id) {
@@ -6886,10 +6927,17 @@ export default function TablePage() {
             table page so the user never leaves the session tab —
             closing the session tab kills its localStorage-backed
             recorder buffer before any auto-download can fire. */}
-        {/* TEMP WIDENED: was `isThriver`, now visible to everyone */ true && (
+        {/* GM-CASCADE (2026-05-18): Record button is GM-only. GM's
+            click broadcasts recorder_start / recorder_stop to every
+            connected player tab via initChannelRef, which flips each
+            tab's capture flag + persists to localStorage. Removes the
+            Alex-failure-mode where a player could hit Stop without
+            ever hitting Start and dump an empty recording. Players
+            still have Ctrl+Shift+L for ad-hoc dumps. */}
+        {gmLike && (
           <button onClick={toggleRecorder} disabled={recorderToggling}
             className="hdr-btn"
-            title={recorderEnabled ? 'Stop the playtest recorder — every open tab auto-downloads its buffer' : 'Start the playtest recorder — every open tab wipes its buffer and captures fresh'}
+            title={recorderEnabled ? 'Stop recording — every connected player tab auto-downloads its buffer' : 'Start recording — every connected player tab wipes its buffer and captures fresh'}
             style={{ ...hdrBtn(recorderEnabled ? '#2a1210' : '#242424', recorderEnabled ? '#f5a89a' : '#d4cfc9', recorderEnabled ? '#c0392b' : '#3a3a3a'), opacity: recorderToggling ? 0.5 : 1, cursor: recorderToggling ? 'not-allowed' : 'pointer' }}>
             {recorderToggling ? '...' : recorderEnabled ? '⏺ Stop Recording' : '⏺ Record'}
           </button>
