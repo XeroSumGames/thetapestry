@@ -3905,10 +3905,19 @@ export default function TablePage() {
       if (rollerEntry) {
         // Inspiration skill: every level = +1 SMod to recruitment
         // attempts per Distemper CRB. Stored as SMod on top of the
-        // chosen-skill SMod. Treated as CMod here (in the UI total)
-        // for clarity; the actual roll adds it to SMod.
-        const insp = (rollerEntry.character.data?.skills ?? []).find((s: any) => s.skillName === 'Inspiration')
-        inspiration = insp?.level ?? 0
+        // chosen-skill SMod. Summed into the UI breakdown alongside
+        // CMod values for total-mod display; the actual roll adds it
+        // to SMod (not CMod). UI label flags it as "SMod" so the
+        // player isn't confused (rules-extract Tier-2 fix, 2026-05-19).
+        //
+        // Double-count suppression (Tier-2 fix, 2026-05-19): when the
+        // chosen recruit skill IS Inspiration, its level is already in
+        // SMod via the chosen-skill path. Adding the Inspiration auto-
+        // bonus on top would double-count. Suppress here.
+        if (recruitSkill !== 'Inspiration') {
+          const insp = (rollerEntry.character.data?.skills ?? []).find((s: any) => s.skillName === 'Inspiration')
+          inspiration = insp?.level ?? 0
+        }
       }
     }
     // First Impression CMod - needs a fetch from npc_relationships;
@@ -12320,9 +12329,12 @@ export default function TablePage() {
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Inspiration skill (+1/level)</span>
+                        <span>Inspiration skill SMod (+1/level)</span>
                         <span style={{ color: cmods.inspiration > 0 ? '#7fc458' : '#5a5550' }}>
                           {cmods.inspiration > 0 ? `+${cmods.inspiration}` : '0'}
+                          {recruitSkill === 'Inspiration' && cmods.inspiration === 0 && (
+                            <span style={{ color: '#5a5550', fontSize: '13px', marginLeft: '4px' }}>(in SMod above)</span>
+                          )}
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
