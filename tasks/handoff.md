@@ -37,6 +37,7 @@ These exist because I broke them and Xero corrected me. Do not violate.
 - **Push to live, test on live.** No staging. Every change ships straight to main.
 - **Long-term fix over quick fix.** Root-cause path always wins. Surface latent bugs even when off-request.
 - **Verify shipped state before quoting scope.** Grep + git log first. Don't trust master inventories or specs.
+- **Pre-feature-start origin check.** Before starting any non-trivial feature work, run `git fetch && git log --oneline origin/main -10` and grep the touched modules. Multi-chat tracks routinely ship competing or overlapping work mid-session — the most recent explicit Xero approval wins, but discovering the collision at push-time costs 20+ minutes of rebase/supersede work. (Logged 2026-05-19 after the DRIVE/BREW vs `54c46a1` collision.)
 - **Cold-audit findings are hypotheses, not facts.** When running a 4-agent audit or following up on `file:line` claims from any subagent report, verify the cited line before changing code. Audits have ~30% noise rate on specifics - findings get hallucinated, get pre-fixed by other work, or are misframed. When dispatching audit agents, require the prompt to quote 2 surrounding lines per finding so the cite can be spot-verified.
 - **Remote agents default to feature branches.** When dispatching via `RemoteTrigger`, expect the spawned agent to create `claude/<name>` or named feature branches despite explicit "push directly to main" instructions - the safety prior wins. Easier to accept and merge than fight. Always specify a fallback branch name (e.g. `perf/<topic>-canvas`) in the prompt so you can find the branch by name afterward.
 - **Capture lessons + todo immediately.** After every meaningful ship, edit `tasks/lessons.md` + `tasks/todo.md` in the same response. Never offer "want me to add this?"
@@ -141,13 +142,54 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-17
+# Session state - 2026-05-19 (post-playtest punch-list closeout)
 
 ## Current main HEAD
 
-`d2ba6b6 fix(tactical-map): drag-end honors grab offset for multi-cell tokens`
+`f3b20fb feat(vehicles): brewing-supplies stockpile + Gather Materials (Q4-d)`
 
-## The arc since 2026-05-15
+## The arc this session (2026-05-19)
+
+Continuation chat that picked up from a context-compacted session mid-way through the advantages-feature Phase 4 build (broken JSX). Fix-and-finish on that, then drained the rest of the post-2026-05-18 playtest punch list. Every Xero-blocked item from that list now ships.
+
+## What shipped this session
+
+| Commit | What | Risk |
+|---|---|---|
+| `011c55e` | `feat(advantages):` Award button on roll feed + C3 consumed broadcast (P3 Q4-b phases 4+5). Fixes the leftover JSX syntax error at L8102 (extra `)` in merged-feed IIFE) that blocked the prior session. GM-only star button overlays dice-result rows; Use button now inserts `outcome='advantage_used'` roll_log entry for whole-party narrative. | Untested live |
+| `18989f3` | `feat(npcs):` player-side folder reorder (Q2 Phase B). Players drag folder headers to reorder their NPC tab (saved per-user-per-campaign in localStorage under `npc_folder_order_player_<id>`). Combat + Community buckets stay non-draggable. Phase A NPC drops still work; drop handler branches on dragId type. Microtask-deferred sync keeps saved order current with new/renamed folders. | Untested live |
+| `faa60ab` | `feat(feed):` DRIVE / BREW / NAVIGATE prefix-CAPS narratives + fuel state baked in (Q1, supersedes `54c46a1`). Multi-chat collision — another chat shipped competing Driving/Brew narratives mid-session. My design (prefix CAPS + fuel state in line + NAVIGATE added + new label format `<name> - Drive - <vehicle>` etc.) had Xero approval in chat. Surgically replaced their Drive + Brew, kept their Vehicle Attack, added NAVIGATE new. Label rewrite in `app/vehicle/page.tsx`; 21 new tests; preview HTML rewritten. | Untested live |
+| `85809b0` | `lessons:` verify shipped state before assuming uncontested scope. The lesson from the `faa60ab` collision — codified the pre-feature-start origin check. | Docs |
+| `ba472f6` | `docs(preview):` 7th-pass changelog entry in `roll-feed-log-preview.html` documenting the DRIVE/BREW/NAVIGATE supersession. | Docs |
+| `c31e564` | `feat(vehicles):` per-vehicle fuel storage via installable 55-Gallon Drums (Q4-c). New `lib/fuel-storage.ts` with pure helpers; new optional `fuel_max_base` + `fuel_storage_max` cols on Vehicle (Minnie base=4, cap=6). New "Fuel Storage" panel on vehicle popout with Install/Uninstall buttons. Drum is a new EQUIPMENT item (Common, enc 2). Brew "already full" detection Just Works at the new expanded cap (keys off fuel_max which install bumps directly). SQL backfill applied live to existing Minnie rows. 21 new tests. | Untested live |
+| `f3b20fb` | `feat(vehicles):` brewing-supplies stockpile + Gather Materials (Q4-d). New `lib/brewing-supplies.ts` pure helpers; new optional `brewing_supplies_current` + `brewing_supplies_max` cols on Vehicle (Minnie current=0, max=2). New "Brewing Supplies" panel under Fuel Storage with [+ Gather Materials] button. Gather = passive no-dice action that bumps current by 1 and inserts a `gather_materials` feed event. Brew check is blocked when supplies=0; every brew attempt consumes 1 supply (success or fail) batched with the fuel update. SQL backfill applied live. 19 new tests. | Untested live |
+
+## Playtest punch list (2026-05-18) — final status
+
+| # | Mark | Status |
+|---|---|---|
+| 1 | (n/a, in-flight task tracker) | — |
+| 2 | 01:05:31 ping not working | **Pending** — needs next-playtest repro |
+| 3 | 01:13:55 + 02:37:59 dead-click bursts on map | **Pending** — needs repro |
+| 4 | 01:14:04 work around map pins | **Pending** (partially shipped) — needs repro |
+| 5 | 01:18:54 FI modal missing CMod | Shipped earlier this session arc |
+| 6 | 01:32:51 player drag/drop NPCs (Phase A) | Shipped `4b9ce21` (prior session) |
+| 7 | 02:07:35 "drives Minnie" breakdown | Shipped `faa60ab` |
+| 8 | 02:12:29 Minnie inventory player-editable | Shipped `1f79e08` (prior) |
+| 9 | 02:21:57 fuel storage fungible | Shipped `c31e564` |
+| 10 | 02:25:36 brewing supplies storage | Shipped `f3b20fb` |
+| 11 | 02:28:30 advantage tab (5 phases) | Shipped `054c04d` + `47a1f36` + `011c55e` |
+| 12 | 02:37:45 CLOSE ALL multi-NPC | Shipped `fcd8a9d` |
+| 13 | 01:29:32 Pin SHOW broadcast | Shipped `236167c` |
+| 14 | 01:44:00 FI wording with NPC target | Shipped `89ad835` |
+| 15 | 02:03:06 time-advance log | Shipped `89ad835` |
+| 16 | 02:13:19 routes vanish on Esc | Shipped `d17b1c1` |
+| 17 | 02:15:12 brew check +-3 display | Shipped `a6376c9` |
+| 18 | Q2 Phase B player folder reorder | Shipped `18989f3` |
+
+Every Xero-blocked mark from 2026-05-18 is now shipped. The 3 pending marks (2, 3, 4) need fresh repro data from your next live session — can't move on them without that.
+
+## The arc since 2026-05-15 (carry-forward context)
 
 Two parallel tracks converged this stretch:
 
@@ -199,41 +241,47 @@ Plus the vehicle popout / Minnie passenger system arc, route planner on campaign
 
 ## Verified vs untested
 
-- **VERIFIED via automated tests:** the 141 cases in `tests/lib/` run on every commit (pre-commit hook) and every push (CI). Covers: roll-helpers thresholds, cdp-costs ladder, community-logic morale/departure/labor math, encumbrance, damage (DM stacking + Stun rpFromRaw + reactive-melee armor), xse-engine cumulative attrs/skills, roll-outcomes literal-string locks.
-- **VERIFIED via `npm audit`:** 0 high / 0 critical vulnerabilities after the `next` + `fast-uri` patches.
-- **VERIFIED via pre-commit guardrails:** font-sizes + role-literals + tsc + tests all green on current main.
-- **UNTESTED live (load-bearing, awaiting Monday playtest):**
-  - 2026-05-13 Phase 3 a/b/c/d batch (campaign-clock drainers + 10 feed-audit drift fixes). HOPED-FOR for 4+ days per health-pulse drift report.
-  - 2026-05-14 batch (Coord Effort, Healing on time-tick, Year-0, Export Log, Weapon Repair, die3 in expanded log, CampaignObjects found-nothing, Luxury Ration). 3 days HOPED-FOR.
-  - 2026-05-15 batch: TacticalMap effective-fog cache, Insight cap removal, role-check sweep, helper consolidations (weapon + equipment), dead-export sweep, RollOutcome 49-site migration.
-  - 2026-05-16 / 17 tactical track: vehicle popout / passenger system, Lasting Wounds chips, Heal-LI cascade, Coord Effort Withdraw, panic-hide, route planner, multi-cell drag-end.
+- **VERIFIED via automated tests:** 368 cases in `tests/lib/` (up from 141 over the punch-list batch). New coverage this session: 21 fuel-storage helpers, 19 brewing-supplies helpers, 21 DRIVE/BREW/NAVIGATE narrative parsers. Plus the inherited 12 npc-drag-drop helpers, 14 advantages helpers, 18 FI resolver, etc. `npm test` runs in ~400ms.
+- **VERIFIED via pre-commit guardrails:** font-sizes + role-literals + tsc + tests all green on current main (`f3b20fb`).
+- **UNTESTED live (this session — load-bearing, awaiting next playtest):**
+  - **Advantages Phase 4 + 5** (`011c55e`): ⭐ Award button on roll feed + `advantage_used` consumed broadcast.
+  - **Player folder reorder Phase B** (`18989f3`): drag folder headers in the player NPC tab.
+  - **DRIVE / BREW / NAVIGATE narratives** (`faa60ab`): new label format from `app/vehicle/page.tsx`; old `🚗/⚗️` rows render as plain rolls (no retro migration).
+  - **Fuel storage drums** (`c31e564`): Install/Uninstall buttons on vehicle popout; Minnie expands 4 → 6 days via 2 scavengeable 55-Gallon Drums.
+  - **Brewing supplies stockpile** (`f3b20fb`): Gather Materials button; brew check blocked at 0; every brew burns 1 supply.
+- **UNTESTED carry-forward:** 2026-05-13/14/15/16/17 batches plus the parallel-chat tactical track (vehicle popout / Lasting Wounds chips / Heal-LI cascade / Coord Effort Withdraw / route planner / multi-cell drag-end). Health-pulse DRIFT note may persist on these.
 
 ## Risks the next session should know
 
-- **Persistent DRIFT entry from the health-pulse routine.** The 2026-05-13 Phase 3 batch keeps flagging because it's been HOPED-FOR for >3 days. Monday playtest clears it. The routine will keep nagging on every run (3rd consecutive RED report self-noted "this is the 3rd consecutive check with the same finding").
-- **RollOutcome migration is large surface.** 51 insert sites touched. Runtime behavior is identical (`OUTCOME.loot` evaluates to `'loot'`). Tests cover the OUTCOME constants and the read-side functions. If a feed row renders wrong post-2026-05-15, suspect this first.
-- **TacticalMap caches are stacking.** `moveZoneCacheRef`, `throwZoneCacheRef`, `blastZoneCacheRef`, `fogVisibleCacheRef`, and now `fogEffectiveCacheRef`. Each has its own invalidation key. If you see stale visual state (token shows old movement zone, fog stuck after door open), suspect the cache key shape at `components/TacticalMap.tsx:388-394` first.
-- **Vehicle canvas-redraw lesson.** The parallel chat hit a half-day bug where parent state updated and the memo re-rendered but the canvas never repainted — because `vehicles` was missing from the canvas `draw()` `useEffect` deps array. Lesson logged in `tasks/lessons.md`. When adding new state to canvas-driven components, audit the deps.
-- **Auto-routine quirks:** Health-pulse re-commits the same DRIFT every 3 hours when the finding hasn't changed. The 3rd-run self-noted "no fix landed yet" but still posts. Could tune the prompt to only re-commit on state CHANGE. Skip for now; treat it as a nag-feature.
-- **`gh` not authenticated in the routine sandboxes.** Both health-pulse and security-audit skip the GitHub Actions status check with a noted skip. GitHub Actions still emails on failure anyway, so this is a "nice to have" fix.
-- **Carried-forward 2026-05-13 risks (still live):** `out_since_day` math in Phase 3c, Skip Week prompt semantics, Recruit LI MOI tag retroactive.
+- **Multi-chat collision is real.** Mid-session `54c46a1` shipped competing Vehicle Attack / Driving / Brew narratives from another chat. Caught at push-time; cost ~20 min to rebase + supersede. The new evergreen rule (pre-feature-start origin check) is the prevention; the lesson is logged at `tasks/lessons.md` top. **Always `git fetch && git log --oneline origin/main -10` before starting non-trivial feature work.**
+- **Vehicle JSONB schema additions are stacking.** This session added `fuel_max_base`, `fuel_storage_max`, `brewing_supplies_current`, `brewing_supplies_max` — all optional. Read-site fallbacks handle missing fields. Per-vehicle opt-in. Backfills applied live for Minnie; other vehicle types stay opt-in until rules are spec'd post-campaign per Xero. If you see "feature disabled" on a vehicle that should have it, check whether the relevant cap field is present in the JSONB.
+- **Backward-compat for old roll_log rows.** Old `🚗 Driving check · ...` / `⚗️ Brew check · ...` labels no longer match the new parsers — they render as plain rolls. Acceptable per Xero (no retro migration). If you see a "blank narrative" complaint on a row from before 2026-05-19, that's why.
+- **Carry-forward from prior sessions:** TacticalMap cache stacking (`moveZoneCacheRef` + 4 siblings), vehicle canvas-redraw deps lesson, persistent health-pulse DRIFT entry, RollOutcome migration surface (51 insert sites), `out_since_day` Phase 3c, Skip Week semantics, Recruit LI MOI tag retroactive.
 
 ## Open threads
 
-### Blocked on Xero design calls (unchanged from 2026-05-13)
+### Blocked on next-playtest repro (the only pending punch-list items)
+- **#2** mark 01:05:31 — ping not working
+- **#3** marks 01:13:55 + 02:37:59 — map non-responsive (dead-click bursts)
+- **#4** mark 01:14:04 — work around map pins (partially shipped)
+
+### Blocked on Xero design calls (carry-forward, unchanged)
 - **Playtest-marks system** (4 Qs)
-- **Healing on GM time-tick** (5 Qs) — partial answer via Heal-LI cascade ship (`e1163fc`); still open on the deeper coordination
-- **Group Check redesign** (4 Qs)
+- **Healing on GM time-tick** (5 Qs) — partial answer via Heal-LI cascade ship (`e1163fc`); deeper coordination still open
+- **Group Check redesign** (4 Qs) — sprint tracker says resolved as dead per spec (`15c9139`); confirm with Xero
 - **GM Notes / Assets merge** (3 options)
 - **Lv4 Skill Traits full list** (blocks all Lv4 auto-bonuses)
 
-### Audit residue (low priority)
-- A4's two remaining perf follow-ups: `getWeaponByName` memo at `components/TacticalMap.tsx:1177/1184`, `ResizeObserver` rAF redirect at `:956`. Dismissed earlier as sub-millisecond payoff; pick up if a perf complaint surfaces.
-- Two local re-implementations of `outcomeColor` still inline at `app/stories/[id]/community/page.tsx:42` and `components/RollModal.tsx:120`. Consolidate to canonical when convenient.
-- `tasks/decisions.md` stub not yet seeded. Lazy-created on next architectural decision worth remembering.
+### Audit / cleanup residue (low priority)
+- Mounted-weapon attack narrative still uses the legacy `🎯 ... · ... · ...` label format (Vehicle Attack parser from `54c46a1` kept; not yet upgraded to prefix-CAPS). Deferred — damage_json + bursts tangle on that path.
+- A4 perf follow-ups: `getWeaponByName` memo at `TacticalMap.tsx:1177/1184`, `ResizeObserver` rAF redirect at `:956`. Sub-ms payoff; pick up if a perf complaint surfaces.
+- Two local `outcomeColor` duplicates at `app/stories/[id]/community/page.tsx:42` and `components/RollModal.tsx:120`. Consolidate when convenient.
+- `tasks/decisions.md` stub not yet seeded.
 
-### From the parallel chat
-- ~53 open items in `tasks/todo.md`. Active threads: Coordinated Effort follow-up tuning, Modal Unification (5 of 6 remaining), Character Evolution route, King's Crossroads Mall content, CRB rewrite workstreams.
+### From parallel chat tracks
+- Recruit Tier-2 work landed mid-session (`f131736`, `6287480`, `1951d77`): Inspiration SMod relabel + approach-specific S/F flags + morale-tick drainer + GM Escape Pending surface. Untested live.
+- GM Share View for tactical map (`6a4669b` + `9f02479`). Untested live.
+- ~53 open items in `tasks/todo.md`. Active: Modal Unification (5 of 6 remaining), Character Evolution route, King's Crossroads Mall content, CRB rewrite workstreams.
 
 ### Multi-day builds (carried)
 - VehicleSheet refactor (~half day)
@@ -241,11 +289,11 @@ Plus the vehicle popout / Minnie passenger system arc, route planner on campaign
 
 ## Suggested next moves (in order)
 
-1. **Monday playtest** — clears the persistent DRIFT + the accumulated HOPED-FOR list. Highest signal-to-effort. Health-pulse will go quiet after.
-2. **Address whatever Monday surfaces.** Triage via `tasks/debug-handoff.md` Sec. 4. Use the 15-minute revert-first rule for anything that's not obvious. Add a unit test per bug fixed (`tests/lib/`).
-3. **Tune health-pulse to only commit on state CHANGE.** Quick prompt edit to the routine. Eliminates the nag-spam when the same DRIFT persists.
-4. **Audit residue cleanup** (outcomeColor duplicates, A4 #2 + #3) as low-priority drain-the-queue work.
-5. **Pick a blocked-on-design call** when ready. Unlocks the largest remaining build queue.
+1. **Next playtest** — clears the entire 2026-05-18 punch list (the 3 pending items need fresh repro) AND validates the 5 ships from this session (advantages P4/5, folder reorder B, DRIVE/BREW/NAVIGATE, fuel drums, brewing supplies). Highest signal-to-effort by far.
+2. **Address what the playtest surfaces.** Triage via `tasks/debug-handoff.md` Sec. 4. 15-min revert-first rule for anything not obvious. Unit test per bug fixed.
+3. **Pick a blocked-on-design call** (Group Check confirm-resolved / GM Notes-Assets merge / Lv4 Traits). Unlocks the largest remaining build queue.
+4. **Mounted-weapon attack narrative upgrade** to prefix-CAPS (the one piece of vehicle narrative still legacy). Low priority unless a player complains.
+5. **Audit residue cleanup** (outcomeColor duplicates, A4 perf follow-ups). Drain-the-queue work for slow days.
 
 ---
 
