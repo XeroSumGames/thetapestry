@@ -564,6 +564,45 @@ export default function CommunityMoraleModal({
       }
     }
 
+    // 3b) Drain temporary-until-morale members per Recruit Tier-2
+    //     Phase B (sql/recruit-tier2-flags-2026-05-19.sql, applied
+    //     2026-05-19). Cohort/Conscript/Convert Success recruits
+    //     join with temporary_until_morale=true; the morale tick
+    //     removes them unless they were already counted in
+    //     departureIds (in which case the previous block already
+    //     marked them left). Skip entirely on dissolution - the
+    //     blanket left=dissolved sweep above already covered them.
+    //     Skip if departureIds already includes any temporary
+    //     members so we don't double-mark. left_reason='manual'
+    //     because the temporary-recruit drop isn't a morale-loss
+    //     departure - it's the canon "till next Morale Check"
+    //     timeout. Future schema widening could add a
+    //     'temporary_expired' enum value; for now 'manual' is the
+    //     safe fallback that won't trip the CHECK constraint.
+    if (!reallyDissolves) {
+      const departedSet = new Set(departureIds)
+      const { data: tempRows, error: tempFetchErr } = await supabase
+        .from('community_members')
+        .select('id')
+        .eq('community_id', community.id)
+        .eq('temporary_until_morale', true)
+        .is('left_at', null)
+      if (tempFetchErr) {
+        console.warn('[morale-tick] temporary-member fetch error:', tempFetchErr.message)
+      } else if (tempRows && tempRows.length > 0) {
+        const tempIdsToDrain = tempRows
+          .map((r: any) => r.id as string)
+          .filter((id: string) => !departedSet.has(id))
+        if (tempIdsToDrain.length > 0) {
+          const { error: drainErr } = await supabase
+            .from('community_members')
+            .update({ left_at: now, left_reason: 'manual' })
+            .in('id', tempIdsToDrain)
+          if (drainErr) console.warn('[morale-tick] temporary-drain error:', drainErr.message)
+        }
+      }
+    }
+
     // 4) Update community counters (+ status transition).
     //    'forming' → 'active' on first completed weekly cycle.
     //    Retention success on a 3rd-fail keeps the community active

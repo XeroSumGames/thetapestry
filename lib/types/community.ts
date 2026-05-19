@@ -78,4 +78,12 @@ export interface Member {
   invited_by_user_id: string | null
   current_task: string | null
   assignment_pc_id: string | null
+  // Recruit Tier-2 Phase A flags (sql/recruit-tier2-flags-2026-05-19.sql).
+  // temporary_until_morale: NPC joined via plain Success — morale-tick
+  // drainer removes them at next Morale Check.
+  // escape_pending: NPC joined via Conscript Failure — GM fires the
+  // escape from CampaignCommunity's GM-only "Fire Escape" button at a
+  // story-appropriate juncture.
+  temporary_until_morale?: boolean
+  escape_pending?: boolean
 }

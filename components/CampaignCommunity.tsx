@@ -2577,6 +2577,20 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           <span style={{ flex: 1, minWidth: 0, fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {displayName || (m.npc_id ? '(NPC)' : '(PC)')}
                           </span>
+                          {/* Recruit Tier-2 status chips (shipped Phase B
+                              2026-05-19). Escape Pending takes precedence
+                              over Temporary - a Conscript Failure that
+                              also somehow got Success-tier temp flag
+                              should read as escape-pending (the more
+                              actionable state). */}
+                          {m.escape_pending && (
+                            <span title="Conscript Failure - NPC nominally complies but will escape at the first opportunity. Click Fire Escape (GM-only, right) to remove now."
+                              style={{ fontSize: '13px', color: '#EF9F27', background: '#2a2010', border: '1px solid #5a4a1b', padding: '1px 6px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>⏳ Escape Pending</span>
+                          )}
+                          {m.temporary_until_morale && !m.escape_pending && (
+                            <span title="Temporary recruit (Success tier, not Wild Success). Drops automatically at next Morale Check."
+                              style={{ fontSize: '13px', color: '#7ab3d4', background: '#0f1a2e', border: '1px solid #2e2e5a', padding: '1px 6px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>⏳ Temporary</span>
+                          )}
                           <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
                             style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
@@ -2586,6 +2600,26 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               style={{ padding: '2px 6px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '14px', textDecoration: 'none', lineHeight: 1.2 }}>
                               💬
                             </a>
+                          )}
+                          {isGM && m.escape_pending && (
+                            <button onClick={async () => {
+                              if (!confirm(`Fire ${memberLabel(m)}'s escape now? They'll be marked as departed (left_reason: manual).`)) return
+                              const now = new Date().toISOString()
+                              const { error } = await supabase
+                                .from('community_members')
+                                .update({ left_at: now, left_reason: 'manual', escape_pending: false })
+                                .eq('id', m.id)
+                              if (error) { alert('Failed to fire escape: ' + error.message); return }
+                              // Local state patch so the row drops from the list without a full refetch.
+                              setMembers(prev => {
+                                const next = { ...prev }
+                                next[m.community_id] = (next[m.community_id] || []).filter(x => x.id !== m.id)
+                                return next
+                              })
+                            }} title="Conscript Failure escape - fire it now (GM choose-the-moment per Xero 2026-05-19)"
+                              style={{ padding: '1px 6px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                              🏃 Fire Escape
+                            </button>
                           )}
                           {isGM ? (
                             <button onClick={() => handleRemoveMember(m)} title="Remove from community"
