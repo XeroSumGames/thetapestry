@@ -1,5 +1,27 @@
 # Lessons Learned
 
+## Always update roll-feed-log-preview.html when amending log messages (2026-05-19)
+
+**Rule (Xero, locked 2026-05-19):** the file `tasks/roll-feed-log-preview.html` is the canonical visual reference for compact-narrative feed rows. Whenever ANY log message in `lib/roll-helpers.ts` or a bespoke banner in `components/RollsFeed.tsx` is amended, added, or removed, the matching example in this HTML preview MUST be updated in the same commit (or immediately after, in a follow-up commit referencing the original).
+
+**Why:** the preview file is what we audit against when running the end-to-end roll/combat audit (sprint Day 3-4) and what we point at when "is this right?" questions come up about feed wording. A stale preview means audits drift from reality and we ship narrative regressions we can't see.
+
+**What counts as a trigger:**
+- Any narrative copy change in `compactRollSummary`
+- Any new bespoke banner branch (e.g., Group Check, Coord Effort Tier A)
+- Any change to outcome-tag wording (the global `outcomeTag` ladder)
+- Adding/removing/renaming a check type (skill, attribute, action, etc.)
+- Mechanical-bit strips (the "no `(+1 stress)`" rule etc.)
+
+**How to update:**
+1. Find the matching `<h3 id="X">` section in the preview
+2. Update the example rows to match the new narrative across all 6 outcomes (Wild Success / High Insight / Success / Failure / Dire Failure / Low Insight) — note that HI/WS may share a color but HI gets the insight badge; same with LI/F
+3. Add a note paragraph (`<p class="note">`) below the examples if the change introduces a new rule (e.g., "Mechanical bits live in the expanded view, not the compact narrative")
+4. Update the file's top comment block recent-updates list
+
+**Where Claude has missed this and needs to remember:**
+- Today's mechanical-bits sweep (`9e5bdf5`) updated `lib/roll-helpers.ts` but not the preview. Caught by Xero. Fixed in the follow-up commit.
+
 ## Never offer "quick" - always full, complete, thorough, competent (2026-05-19)
 
 Locked verbatim: "i never want quick, I always want 'full, complete, thorough, competent'."
