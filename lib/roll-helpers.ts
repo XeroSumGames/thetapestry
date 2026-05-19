@@ -496,12 +496,22 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (r.outcome === 'Success') return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
     return `${r.character_name} kicks off a Coordinated Effort with ${skill}`
   }
-  // Unjam (firearm) - "Unjam - <weaponName> (<skill>)"
+  // Unjam (firearm) - "Unjam - <weaponName> (<skill>)". Canon locked
+  // 2026-05-19. UNJAM prefix mirrors ATTRIBUTE / STRESS / STABILIZE /
+  // HEAL pattern. WS = quick clear; DF = wreck/break; LI = fail + tail.
   const unjamMatch = suffix.match(/^Unjam\s+-\s+(.+?)(?:\s*\(|$)/)
   if (unjamMatch) {
     const wName = unjamMatch[1].trim()
-    return hit ? `${r.character_name} unjams their ${wName}${outcomeTag}`
-               : `${r.character_name} fails to unjam their ${wName}${outcomeTag}`
+    const name = r.character_name
+    switch (r.outcome) {
+      case 'Wild Success':  return `UNJAM ${name} clears the jam on their ${wName} with practiced ease`
+      case 'High Insight':  return `UNJAM ${name} unjams their ${wName} and has a Moment of Insight as to why`
+      case 'Success':       return `UNJAM ${name} unjams their ${wName}`
+      case 'Failure':       return `UNJAM ${name} fails to unjam their ${wName}`
+      case 'Dire Failure':  return `UNJAM ${name} makes the jam on their ${wName} worse`
+      case 'Low Insight':   return `UNJAM ${name} fails to unjam their ${wName} but has a Moment of Insight as to why it went so badly`
+      default:              return `UNJAM ${name} ${hit ? 'unjams' : 'fails to unjam'} their ${wName}`
+    }
   }
   // Repair (melee) - "Repair - <weaponName> (<skill>)". Mirror of Unjam for
   // melee weapons - they malfunction rather than jam, so the verb is repair.

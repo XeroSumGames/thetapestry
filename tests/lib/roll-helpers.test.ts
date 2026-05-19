@@ -352,4 +352,35 @@ describe('compactRollSummary', () => {
     expect(compactRollSummary({ label: 'Junie - Heal Marv (naked Medicine*)', character_name: 'Junie', outcome: 'Success' }))
       .toBe('HEAL Junie treats Marv by hand')
   })
+
+  // Unjam narrative (canon locked 2026-05-19). UNJAM prefix added.
+  it('unjam Wild Success', () => {
+    expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Wild Success' }))
+      .toBe('UNJAM Cree clears the jam on their Pistol with practiced ease')
+  })
+
+  it('unjam High Insight', () => {
+    expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'High Insight' }))
+      .toBe('UNJAM Cree unjams their Pistol and has a Moment of Insight as to why')
+  })
+
+  it('unjam Success', () => {
+    expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Success' }))
+      .toBe('UNJAM Cree unjams their Pistol')
+  })
+
+  it('unjam Failure', () => {
+    expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Failure' }))
+      .toBe('UNJAM Cree fails to unjam their Pistol')
+  })
+
+  it('unjam Dire Failure: makes it worse', () => {
+    expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Dire Failure' }))
+      .toBe('UNJAM Cree makes the jam on their Pistol worse')
+  })
+
+  it('unjam Low Insight: F narrative + canonical LI tail', () => {
+    expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Low Insight' }))
+      .toBe('UNJAM Cree fails to unjam their Pistol but has a Moment of Insight as to why it went so badly')
+  })
 })
