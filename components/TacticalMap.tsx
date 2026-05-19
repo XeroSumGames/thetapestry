@@ -262,6 +262,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
   const [cellPx, setCellPx] = useState(35)
+  // Share View button feedback - flashes green for 1.5s after the GM
+  // pushes their view to players. Sibling of CampaignMap's shareFlash
+  // (added 2026-05-11). Tactical map ships the same pattern 2026-05-19.
+  const [tacticalShareFlash, setTacticalShareFlash] = useState(false)
   // GM-painted fog editor state. fogEditMode null = play mode (fog is
   // a render-only display). 'paint' = drag to fog cells; 'erase' =
   // drag to clear cells. fogPainting = pointer is down + dragging.
@@ -770,6 +774,28 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (!isGM) {
           const nextZoom = msg?.payload?.zoom
           if (typeof nextZoom === 'number' && nextZoom > 0) setZoom(nextZoom)
+        }
+      })
+      .on('broadcast', { event: 'tactical_view_share' }, (msg: any) => {
+        // GM Share View - one-shot deliberate push (sibling of the
+        // campaign-map "👁 Share View" button added 2026-05-11). GM
+        // snapshots their current scroll position + zoom + imgScale
+        // and pushes it to every player. Players' container smooth-
+        // scrolls to the location and matches the zoom/imgScale.
+        // Not a continuous follow - players can keep panning after.
+        if (isGM) return
+        const p = msg?.payload ?? {}
+        if (typeof p.zoom === 'number' && p.zoom > 0) setZoom(p.zoom)
+        if (typeof p.imgScale === 'number' && p.imgScale > 0) setImgScale(p.imgScale)
+        // Defer the scroll write to the next frame so any zoom/imgScale
+        // change above has a chance to resize the canvas first - otherwise
+        // we'd scroll to coords inside the OLD canvas dimensions.
+        if (typeof p.scrollLeft === 'number' && typeof p.scrollTop === 'number') {
+          requestAnimationFrame(() => {
+            const container = containerRef.current
+            if (!container) return
+            container.scrollTo({ left: p.scrollLeft, top: p.scrollTop, behavior: 'smooth' })
+          })
         }
       })
       .subscribe()
@@ -3679,13 +3705,45 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
       {/* Map canvas area — scrollable when zoomed */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {/* Zoom control — top right */}
-        <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>0%</span>
-          <input type="range" min={25} max={100} step={5} value={Math.round(zoom * 100)}
-            onChange={e => setZoom(Number(e.target.value) / 100)}
-            style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
-          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>100%</span>
+        {/* Zoom control + Share View — top right. Share View is the
+            tactical-map sibling of the CampaignMap "👁 Share View"
+            button (added 2026-05-11). GM-only one-shot push of the
+            current scroll position + zoom + imgScale to all players.
+            Players' container smooth-scrolls to match. Flash green
+            for ~1.5s after click as confirmation. Not a continuous
+            follow - deliberate, GM-driven. */}
+        <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {isGM && (
+            <button type="button"
+              onClick={() => {
+                const container = containerRef.current
+                const channel = tacticalChannelRef.current
+                if (!container || !channel) return
+                channel.send({
+                  type: 'broadcast',
+                  event: 'tactical_view_share',
+                  payload: {
+                    scrollLeft: container.scrollLeft,
+                    scrollTop: container.scrollTop,
+                    zoom,
+                    imgScale,
+                  },
+                })
+                setTacticalShareFlash(true)
+                window.setTimeout(() => setTacticalShareFlash(false), 1500)
+              }}
+              title="Push your current map view (scroll + zoom) to every player"
+              style={{ padding: '3px 8px', background: tacticalShareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${tacticalShareFlash ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: tacticalShareFlash ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              {tacticalShareFlash ? '✓ Shared' : '👁 Share View'}
+            </button>
+          )}
+          <div style={{ background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>0%</span>
+            <input type="range" min={25} max={100} step={5} value={Math.round(zoom * 100)}
+              onChange={e => setZoom(Number(e.target.value) / 100)}
+              style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
+            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>100%</span>
+          </div>
         </div>
 
         {/* GM Fog editor — top left by default; draggable via the ⠿
