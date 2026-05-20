@@ -287,8 +287,8 @@ export default function TablePage() {
   const actionPreConsumedRef = useRef(false)  // Set when Sprint/Unjam pre-consumes before the roll modal (Stabilize + Distract migrated off this 2026-05-20)
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
   const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
-  const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal - refs survive React batching
-  const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn - prevents races where realtime echo + optimistic call both advance, silently skipping a combatant
+  const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal - refs survive React batching. RESET in closeRollModal after the consume-gate logic reads it (the guard is per-roll, not per-modal-open).
+  const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn - prevents races where realtime echo + optimistic call both advance, silently skipping a combatant. RESET in the try/finally of nextTurn itself (set true at top, false in finally) - guard is per-nextTurn-call, not session-scoped.
   const consumeActionInFlightRef = useRef<Set<string>>(new Set())   // Per-entry lock for consumeAction - prevents double-click races from decrementing actions_remaining twice (e.g. Aim button hit twice fast burning both actions instead of one)
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
@@ -751,6 +751,10 @@ export default function TablePage() {
   // modal opens, read by executeRoll's saveRollToLog branch so the
   // bespoke "Group Check" banner in RollsFeed has the full participant
   // list (the label only carries the leader's name, not the supporters).
+  // Mutually exclusive with healPendingRef and coordEffortRef by design - only one
+  // multi-participant modal at a time (the modal-open state gates re-entry; opening
+  // the next modal aborts the previous). Documented 2026-05-20 per
+  // tasks/audit-reentry-guards.md section 4 item 2.
   const groupCheckPayloadRef = useRef<{ participants: string[]; skill: string } | null>(null)
   const [showReadyWeaponModal, setShowReadyWeaponModal] = useState(false)
   const [showGrappleModal, setShowGrappleModal] = useState(false)
@@ -786,6 +790,8 @@ export default function TablePage() {
   // Stashed so the executeRoll post-resolve block knows it came from
   // the Heal modal (label-prefix match alone could be brittle if the
   // user labels their own roll something weird).
+  // Mutually exclusive with groupCheckPayloadRef and coordEffortRef by design (see
+  // comment on groupCheckPayloadRef above).
   const healPendingRef = useRef<{ targetCharId: string; targetName: string; kit: 'none' | 'first_aid' | 'doctors_bag' } | null>(null)
   // Coordinated Effort state - see tasks/spec-coordinated-effort.md.
   // The initiator picks participants + their first skill, fires the
@@ -798,6 +804,8 @@ export default function TablePage() {
   // row in the chain so the per-participant Withdraw button can find
   // them all and retcon (Option B locked 2026-05-17: cmod -= 1 / total
   // -= 1 / outcome recomputed across already-rolled chain rows).
+  // Mutually exclusive with groupCheckPayloadRef and healPendingRef by design (see
+  // comment on groupCheckPayloadRef above).
   const coordEffortRef = useRef<{ participantIds: string[]; totalParticipants: number; leadCmod: number; isActive: boolean; leadRollPending: boolean; chainId: string } | null>(null)
   // UI tick so the active-banner / End button can react when the ref
   // changes (refs don't trigger re-renders). Bumped whenever
