@@ -11,48 +11,48 @@ Updated when architecture/risk shifts, not every session. Last full review: 2026
 
 ---
 
-## 1. Risk Register — load-bearing parts of the app
+## 1. Risk Register - load-bearing parts of the app
 
 Each entry: where it lives, what depends on it, current health, what a player sees if it breaks.
 
-### `app/stories/[id]/table/page.tsx` — **YELLOW**
+### `app/stories/[id]/table/page.tsx` - **YELLOW**
 - **What it is:** the in-session game table. One 10,000+ line client component.
 - **Touches:** combat, initiative, loot, healing, recruitment, grappling, fog, vehicles, broadcasts, modals, every roll_log write that happens during play.
 - **What players see if it breaks:** anything from "rolls don't appear in the feed" to "I can't take my turn" to "the page crashed and I lost my place." This is the throat of the app at session time.
 - **Why yellow:** size + coupling + frequent changes + zero tests. Every refactor here is "typecheck passed, fingers crossed."
 - **First-place-to-look on a bug report from session:** here.
 
-### `lib/campaign-clock.ts` — **YELLOW**
+### `lib/campaign-clock.ts` - **YELLOW**
 - **What it is:** the only writer of `campaigns.clock`. Owns advance() + drainers (rations, subsistence, pending heals).
 - **What players see if it breaks:** time doesn't advance, or it does but the wrong things drain (rations don't decrement, heals don't tick, world events don't expire).
-- **Why yellow:** Phase 3 a/b/c/d shipped 2026-05-13, playtested green 2026-05-18. Demote candidate next review — keeping YELLOW one more cycle because the drainers touch multiple state surfaces and one clean playtest isn't a full audit.
+- **Why yellow:** Phase 3 a/b/c/d shipped 2026-05-13, playtested green 2026-05-18. Demote candidate next review - keeping YELLOW one more cycle because the drainers touch multiple state surfaces and one clean playtest isn't a full audit.
 - **First-place-to-look:** if anything time-related misbehaves, here.
 
-### `roll_log` writer path — **YELLOW**
+### `roll_log` writer path - **YELLOW**
 - **What it is:** every event that produces a feed row. Touches `lib/roll-outcomes.ts`, `lib/roll-helpers.ts`, the 49 insert sites migrated to `OUTCOME.X` on 2026-05-15.
 - **What players see if it breaks:** feed rows render wrong, don't render, or render with wrong colors/labels.
-- **Why yellow:** the 49-site RollOutcome migration shipped 2026-05-15 is the largest single-day change to this path in the project's history. Playtested green 2026-05-18 — keeping YELLOW one cycle because feed-rendering bugs can be subtle (wrong color, slightly-off label).
+- **Why yellow:** the 49-site RollOutcome migration shipped 2026-05-15 is the largest single-day change to this path in the project's history. Playtested green 2026-05-18 - keeping YELLOW one cycle because feed-rendering bugs can be subtle (wrong color, slightly-off label).
 - **First-place-to-look:** if a feed row looks off post-2026-05-15, suspect the migration first.
 
-### Initiative state machine — **YELLOW**
+### Initiative state machine - **YELLOW**
 - **What it is:** turn order, `actions_remaining` decrement, nextTurn cascades, initiative_order RLS.
 - **What players see if it breaks:** turns stick (stuck on one player), skip (player gets passed over), or duplicate (two players think it's their turn).
 - **Why yellow:** Nana 2-attack initiative-stuck bug fixed via SQL RLS tightening on 2026-05-15. No fresh stuck-turn reports as of 2026-05-18 playtest; demote candidate after one more playtest with active combat.
 - **First-place-to-look:** combat-turn bugs → `sql/initiative-order-rls-*.sql` + `lib/initiative-actions.ts` + the consumeAction wrapper in the table page.
 
-### TacticalMap canvas — **YELLOW**
+### TacticalMap canvas - **YELLOW**
 - **What it is:** `components/TacticalMap.tsx`. Renders the grid, tokens, fog, range circles, blast overlays.
 - **What players see if it breaks:** stale fog (cells stay dark after a PC walks past), wrong range overlay (range circle drawn at wrong size), invisible token movement, fog not clearing when a wall is opened.
 - **Why yellow:** the `effective` fog cache (commit `e83514b`, 2026-05-15) drops O(n²) draw work to zero on cache hit, but the cache key surface is non-trivial. Cache invalidation bugs would manifest as stale visual state. Playtested green 2026-05-18; also drag-end grab-offset fix (`d2ba6b6`, 2026-05-17) validated same day.
 - **First-place-to-look:** map-render bugs → `TacticalMap.tsx:1401-1437` (effective fog cache), `:1356-1399` (visible cache).
 
-### Realtime channels (Supabase) — **GREEN-ish**
+### Realtime channels (Supabase) - **GREEN-ish**
 - **What it is:** broadcast events for token moves, fog paint, initiative changes, chat messages, scene switches.
 - **What players see if it breaks:** desync between clients. GM moves a token, player doesn't see it move. GM opens a door, player still sees fog.
 - **Why green-ish:** older code, stable, hasn't been refactored in months. But also: zero tests, and the failure mode is hard to detect without two clients.
 - **First-place-to-look:** desync between clients → look at the broadcast send + receive pair for the affected event.
 
-### Character creation wizard — **GREEN**
+### Character creation wizard - **GREEN**
 - **What it is:** `components/wizard/*`. Multi-step character builder.
 - **What players see if it breaks:** can't create a new character, or character saves with wrong values.
 - **Why green:** isolated, doesn't run during sessions, low recent change rate. The PrintSheet + StepEight weapon-helper consolidation today (`dabf888`) is the only recent touch.
@@ -60,7 +60,7 @@ Each entry: where it lives, what depends on it, current health, what a player se
 
 ---
 
-## 2. Tech Debt Ledger — shortcuts taken, with their interest rate
+## 2. Tech Debt Ledger - shortcuts taken, with their interest rate
 
 Each entry: what we did, what it costs today, what it costs if untouched in 6 months.
 
@@ -82,7 +82,7 @@ Each entry: what we did, what it costs today, what it costs if untouched in 6 mo
 - **Cost in 6 months:** more sites accumulate, type guarantees erode further.
 - **Right fix when ready:** define a `DamagePayload` interface, type the writes, type the reads.
 
-### ~~No automated tests~~ — **PAID DOWN 2026-05-16**
+### ~~No automated tests~~ - **PAID DOWN 2026-05-16**
 - **Was:** zero test files. Every refactor was "typecheck passed, fingers crossed."
 - **Now:** 141 unit tests across 7 files in `tests/lib/` cover the high-value pure helpers (roll-helpers, cdp-costs, community-logic, encumbrance, damage, xse-engine, roll-outcomes). Pre-commit hook runs the suite (~230ms); GitHub Actions runs it again on every push.
 - **Still missing:** component tests, integration tests against a real DB, E2E browser tests. Those land separately if/when warranted - the cost/benefit on those is much higher than on pure-helper unit tests.
@@ -96,11 +96,11 @@ Each entry: what we did, what it costs today, what it costs if untouched in 6 mo
 
 ---
 
-## 3. Confidence Ledger — what's actually verified
+## 3. Confidence Ledger - what's actually verified
 
 Mapped to: if a player reports a bug in area X today, how surprised should I be?
 
-- **TESTED (automated):** 368 unit tests across 19 files in `tests/lib/` covering roll-helpers (119), community-logic (29), roll-outcomes (34), fuel-storage (21), brewing-supplies (19), first-impression-resolver (18), xse-engine (18), cdp-costs (17), damage (15), npc-drag-drop (12), sentry-filters (11), encumbrance (10), supabase-errors (8), rolls-feed-collapse (6), sentry-realtime (5), image-utils (3), signed (3), advantages, plus minor utilities. Suite runs in ~432ms on every commit + every push to main. (Updated 2026-05-19 stability audit.)
+- **TESTED (automated):** 388 unit tests across 20 files in `tests/lib/` covering roll-helpers (119), roll-outcomes (34), community-logic (29), fuel-storage (21), safe-upload (20), brewing-supplies (19), first-impression-resolver (18), xse-engine (18), cdp-costs (17), damage (15), advantages (14), npc-drag-drop (12), sentry-filters (11), encumbrance (10), supabase-errors (8), playtest-recorder (6), rolls-feed-collapse (6), sentry-realtime (5), image-utils (3), signed (3). Suite runs in ~452ms on every commit + every push to main. (Auto-refreshed 2026-05-20 via `scripts/refresh-ledger.mjs`.)
 - **TYPECHECKED + GUARDRAILS PASSED:** everything that shipped this week. Catches type errors, font sizes, role-literal violations. Does NOT catch logic bugs.
 - **PLAYTESTED RECENTLY (within last 2 weeks):** Phase 2 features, character sheet basics, weapon attack flow, Coordinated Effort full (per-participant Withdraw retcon validated), vehicle subsystem (passenger vanish model + count badge + drag-end grab-offset + MOVE HERE + Disembark + cross-tab sync), Heal-LI infection cascade, Day-0 Lasting Damage modal + reload-resume, Lasting Wound chips (PC + NPC), HIDE ALL panic button, pin sidebar (search + OSRM route planner + Alt+click waypoints + travel-mode ETA), QuickAddModal pin picker, GM Notes draft persistence, Token Creator rename + Tools sidebar reorder, moderation email triggers, bug report RESPOND + Export JSON, all 2026-05-13/14/15 ships (Phase 3 a/b/c/d drainers, 10 feed-audit drift fixes, Healing on Time-Tick, Year-0 calendar, Export Session Log, Weapon Repair, die3, Luxury Ration consume, effective fog cache, insight uncap, role-check sweep, helper consolidations, RollOutcome refactor, Thriver godmode UI sweep). Validated 2026-05-18 via three testplans (preplay-testsmoke-2026-05-17, polish-pass-2026-05-14, thriver-godmode-sweep).
 - **HOPED-FOR (shipped + typechecked but not played):** 2026-05-19 batch (~50 commits post-2026-05-18 playtest). Tier-2 Recruit (Phase A approach flags, Phase B morale-tick drainer + Escape Pending, Phase C modal locked-approach gates), Vehicles Q4-c (per-vehicle fuel storage via 55-Gal Drums) + Q4-d (brewing-supplies stockpile + Gather Materials), P3 Q4-b Advantages (schema + library + GM grant dialog + player tab + Use button + Award-on-feed + C3 broadcast), FI streamline (Phase 1 pure-helper extraction, Phase 2 single-modal flow, Phase 3 Insight Die spend + cutover), table refactor (`useHeaderMenus` extraction), First Impression RLS fix for non-GM players, Sentry-capture supabase errors, GM Share View on tactical map, NPCs CLOSE ALL + Esc + folder reorder + player drag/drop, GM-cascade playtest recorder + localStorage resume, player-bar online-near-GM sort, Stress Check 12-string narrative lock, narrative polish across HEAL / UNJAM / REPAIR / Stabilize / Gut Instinct / Group Check / First Impression / DRIVE / BREW / NAVIGATE. Drain target: 2026-05-25 playtest per `tasks/pre-playtest-smoke-2026-05-25.md`.
@@ -109,20 +109,20 @@ When a player reports a bug in something on the HOPED-FOR list, your default rea
 
 ---
 
-## 4. Triage Playbook — when a bug comes in
+## 4. Triage Playbook - when a bug comes in
 
 Run this in order, not in parallel. Each step is cheap; the goal is to spend the bare minimum before knowing what kind of bug you're dealing with.
 
 1. **What does the player see?** Get the symptom in their words, not your interpretation. "The button is grey" is data. "The button is broken" is not.
 2. **Which load-bearing part is implicated?** Cross-ref the Risk Register (Sec. 1). Most bugs route to one of the listed parts.
 3. **Is this a recent change?** Run `git log --since="7 days ago" -- <area>` for the relevant file/dir. If something shipped recently in that area, suspect it first.
-4. **Quick sanity check:** does the codebase still pass its guardrails? `npx tsc --noEmit && node scripts/check-font-sizes.mjs && node scripts/check-role-literals.mjs`. If any fail, fix those before debugging the reported bug — they're often related.
+4. **Quick sanity check:** does the codebase still pass its guardrails? `npx tsc --noEmit && node scripts/check-font-sizes.mjs && node scripts/check-role-literals.mjs`. If any fail, fix those before debugging the reported bug - they're often related.
 5. **15-minute rule:** if a recent change is implicated and the fix isn't obvious in 15 minutes, **revert first, investigate second**. The revert command is in each commit's chat summary. A reverted bug is a non-bug; a bug being actively investigated is still a live bug for any player playing right now.
 6. **After the fix lands:** add a test for it (once test infra is up). This is the single habit that bends the bug-rate curve over time.
 
 ---
 
-## 5. Pre-Ship Checklist — questions Claude must answer before shipping anything non-trivial
+## 5. Pre-Ship Checklist - questions Claude must answer before shipping anything non-trivial
 
 When Claude proposes a change, expect this report BEFORE the ship:
 
