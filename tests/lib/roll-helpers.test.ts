@@ -499,70 +499,72 @@ describe('compactRollSummary', () => {
     })).toBe('Cree Hask tries to recruit Marcus and fails but has a Moment of Insight as to why it went so badly')
   })
 
-  // Vehicle mounted-weapon attack narrative (canon locked 2026-05-19).
+  // Vehicle mounted-weapon attack narrative (canon locked 2026-05-19,
+  // FIRE prefix-CAPS added 2026-05-20 to align with DRIVE / BREW /
+  // NAVIGATE / HEAL / UNJAM / REPAIR / STABILIZE pattern).
   // Per-outcome cinematic; weapon name + crew + vehicle + target
   // composed via verbTail. DF flips focus to weapon malfunction.
   it('vehicle attack with target Wild Success: devastates', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack → Avery Xavier · Minnie · Knox Koss · Ranged Combat (DEX) · Wild Success",
       character_name: 'Knox Koss', outcome: 'Wild Success',
-    })).toBe("Knox Koss devastates Avery Xavier using Minnie's Sniper's Rifle")
+    })).toBe("FIRE Knox Koss devastates Avery Xavier using Minnie's Sniper's Rifle")
   })
 
   it('vehicle attack with target High Insight + tail', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack → Avery Xavier · Minnie · Knox Koss · Ranged Combat (DEX) · High Insight",
       character_name: 'Knox Koss', outcome: 'High Insight',
-    })).toBe("Knox Koss hits Avery Xavier using Minnie's Sniper's Rifle and has a Moment of Insight as to why it went so well")
+    })).toBe("FIRE Knox Koss hits Avery Xavier using Minnie's Sniper's Rifle and has a Moment of Insight as to why it went so well")
   })
 
   it('vehicle attack with target Success', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack → Avery Xavier · Minnie · Knox Koss · Ranged Combat (DEX) · Success",
       character_name: 'Knox Koss', outcome: 'Success',
-    })).toBe("Knox Koss hits Avery Xavier using Minnie's Sniper's Rifle")
+    })).toBe("FIRE Knox Koss hits Avery Xavier using Minnie's Sniper's Rifle")
   })
 
   it('vehicle attack with target Failure', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack → Avery Xavier · Minnie · Knox Koss · Ranged Combat (DEX) · Failure",
       character_name: 'Knox Koss', outcome: 'Failure',
-    })).toBe("Knox Koss misses Avery Xavier using Minnie's Sniper's Rifle")
+    })).toBe("FIRE Knox Koss misses Avery Xavier using Minnie's Sniper's Rifle")
   })
 
   it('vehicle attack Dire Failure: weapon misfire (target irrelevant)', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack → Avery Xavier · Minnie · Knox Koss · Ranged Combat (DEX) · Dire Failure",
       character_name: 'Knox Koss', outcome: 'Dire Failure',
-    })).toBe("Knox Koss misfires Minnie's Sniper's Rifle catastrophically")
+    })).toBe("FIRE Knox Koss misfires Minnie's Sniper's Rifle catastrophically")
   })
 
   it('vehicle attack with target Low Insight + tail', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack → Avery Xavier · Minnie · Knox Koss · Ranged Combat (DEX) · Low Insight",
       character_name: 'Knox Koss', outcome: 'Low Insight',
-    })).toBe("Knox Koss misses Avery Xavier using Minnie's Sniper's Rifle but has a Moment of Insight as to why it went so badly")
+    })).toBe("FIRE Knox Koss misses Avery Xavier using Minnie's Sniper's Rifle but has a Moment of Insight as to why it went so badly")
   })
 
   it('vehicle attack no target Wild Success: stunning precision', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack · Minnie · Knox Koss · Ranged Combat (DEX) · Wild Success",
       character_name: 'Knox Koss', outcome: 'Wild Success',
-    })).toBe("Knox Koss fires Minnie's Sniper's Rifle with stunning precision")
+    })).toBe("FIRE Knox Koss fires Minnie's Sniper's Rifle with stunning precision")
   })
 
   it('vehicle attack no target Failure: shot goes wide', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack · Minnie · Knox Koss · Ranged Combat (DEX) · Failure",
       character_name: 'Knox Koss', outcome: 'Failure',
-    })).toBe("Knox Koss fires Minnie's Sniper's Rifle and the shot goes wide")
+    })).toBe("FIRE Knox Koss fires Minnie's Sniper's Rifle and the shot goes wide")
   })
 
   it('vehicle attack no target Low Insight: clean composition (no doubled-but)', () => {
     expect(compactRollSummary({
       label: "🎯 Sniper's Rifle attack · Minnie · Knox Koss · Ranged Combat (DEX) · Low Insight",
       character_name: 'Knox Koss', outcome: 'Low Insight',
-    })).toBe("Knox Koss fires Minnie's Sniper's Rifle and the shot goes wide but has a Moment of Insight as to why it went so badly")
+    })).toBe("FIRE Knox Koss fires Minnie's Sniper's Rifle and the shot goes wide but has a Moment of Insight as to why it went so badly")
   })
 
   // Drive narrative (canon locked 2026-05-19, supersedes earlier

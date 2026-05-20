@@ -183,8 +183,8 @@ export default function Sidebar() {
                 different padding; the Campfire emoji has none). Three
                 fixed-width centred cells fix it. */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><MessagesBell /></div>
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><NotificationBell /></div>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><MessagesBell /></div>
               {/* Campfire shortcut - emoji glyphs ignore CSS color, so
                   use opacity + grayscale to actually grey the icon out
                   while it's a placeholder ('coming soon' from the
