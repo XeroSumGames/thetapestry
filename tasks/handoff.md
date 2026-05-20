@@ -153,123 +153,118 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-20 (em-dash sweep + audit-driven cleanup + sprint close-out)
+# Session state - 2026-05-20 end-of-day (modal unification arc + narrative audit + canon lock)
 
 ## Current main HEAD
 
-`5a5391d docs(sprint): close-of-sprint state - all 6 open items + 4 design Qs closed`
+`6027f6f docs(todo): Phase 4 pre-stage status + Lost Eye/Crippled canon question queued`
 
-## The arc this session (2026-05-20, all-day)
+Plus one pre-staged branch sitting on origin not yet merged:
+- `claude/phase4-prestage` at `fc24ca1` - retires the legacy `executeRoll` branches for Stabilize / Distract / Gut Instinct (-108 / +12 lines). Merge command lives in `tasks/todo.md` L104. **Do not merge before the Monday 2026-05-25 playtest verifies all three dedicated modals.**
 
-After 2026-05-19's heavy feature day (Recruit Tier-2 Phases A/B/C, narrative polish across 12+ branches, GM Share View, Gut Instinct whisper modal, etc.), today was scoped as audit + maintenance work. Pre-playtest is Saturday (5 days out); load-bearing changes were off-limits. Everything that shipped was docs / cleanup / hardening / sweeps. Net result: **sprint closed 5 days early**, codebase audited end-to-end against the locked rules, ~9 commits.
+## The arc this session (2026-05-20)
 
-The arc unfolded in 3 phases:
+After this morning's sprint close-out + em-dash sweep, today opened into a heavy build day in the hunt-and-peck lane. Xero's instruction: "focus on bugs and polish and UX and content and upgrades while another chat works on the puffer fish stuff." The two lanes ran in parallel. This session shipped the full modal-unification arc (4 migrations) + a complete narrative audit pass + a canon lock + the no-break-offers rule sharpening. Pre-playtest window (Monday 2026-05-25) constrained what to ship but not whether.
 
-1. **Em-dash backlog sweep + new guardrail.** Xero: "I HATE the Em-dash stuff." Two passes:
-   - **`3f8bcd4`** swept 247 `.ts/.tsx` files, removed 2533 em-dash/en-dash characters across comments, JSX text, placeholders, titles, descs, narrative strings. 3 intentional exempt sites preserved: `lib/roll-helpers.ts:91` legacy DB strip detector, the matching `tests/lib/roll-helpers.test.ts` assertions (L103/136/139), `scripts/check-em-dashes.mjs` pattern literal.
-   - **`d610ba8`** second pass swept 162 `.mjs/.sh/.md` files, removed 4566 more chars. The original sweep filter missed scripts + docs. Cumulative: **7099 chars across 409 files**.
-   - **`24d8577`** wires the prior-night's `scripts/check-em-dashes.mjs` guardrail into the pre-commit hook chain (font-sizes + role-literals + preview-sync + em-dashes + tests). Comment-aware: skips `//`, `/* */`, `<!--`, `{/* */}`, and lines listed in `EXEMPT_LINE_PATTERNS`. Override path: `git commit --no-verify`.
+The arc, ordered:
 
-2. **Setting content deferred + maintenance docs.** Xero: "content comes when the platform is stable." Moved 4 backlog items to a new "Backburner - Setting content" section at the bottom of `tasks/todo.md`:
-   - King's Crossroads Mall tactical scenes
-   - King's Crossroads Mall handouts
-   - Astoria: Home by the Sea (new setting, no key yet; suggest `astoria_home_by_the_sea`)
-   - Pelee Island (new setting, no key yet; suggest `pelee_island`)
+1. **Modal unification arc (4 migrations off pendingRoll onto dedicated `<RollModal>` shell).**
+   - **`2255ced`** Stabilize Phase 1. New `lib/stabilize-helpers.ts` (pure outcome + incap-rounds + narrative, 10 tests). `runStabilizeCascade` helper. Dropdown rewired. Broken per-card Stabilize button on `CharacterCard.tsx:660` REMOVED (it had been using the patient's own RSN/Medicine as the medic's stats - latent bug since inception).
+   - **`54dec35`** Distract Phase 2. New `lib/distract-helpers.ts` (action-delta + narrative ladder, 11 tests). `runDistractCascade` helper. In-combat Distract button rewired with target dropdown rendered via `preRollExtras`. **Bonus cleanup**: deleted the dead `applySocialAction` Distract branch (superseded 2026-04-29, never cleaned).
+   - **`097e87f`** Gut Instinct migration. New `lib/gut-instinct-helpers.ts` (sub-skill picker, 8 tests). `triggerGutInstinct` rewired to set state instead of `handleRollRequest`. Broadcast for GM whisper modal preserved as cascade. Conditional `consumeAction` only when rolling PC is active combatant.
+   - **`b1b698a`** Vehicle check modal uniformity. The bespoke ~225-line `ModalBackdrop`-based modal in `app/vehicle/page.tsx` (handles driving / brew / navigate / attack via one state machine) was rewrapped in a `<RollModal>` shell. AMOD/SMOD became read-only chips (uniform with all other modals); CMOD stays GM-tunable. State machine + `rollCheck` function preserved verbatim.
 
-3. **Audit-driven cleanup of stale state.** Manual sweep through the operational docs found 247-test drift in the Confidence Ledger + 5 closed-but-still-open todo items + a sprint tracker that was 1 day stale. Closed in 4 commits:
-   - **`2260f21`** refreshes `tasks/debug-handoff.md` §3 Confidence Ledger from 141 → 388 tests. Coverage description expanded from a single 7-file line to a categorized inventory across all 20 test files (roll engine, character math, community math, combat actions, vehicles, advantages, infrastructure). Suite runtime 230ms → 430ms. Pre-commit guardrail count 3 → 4.
-   - **`004905e`** closed 5 stale items in `tasks/todo.md`: Modal unification reframed (Gut Instinct + Group Check closed by spec/whisper-shipped), Gut Instinct results presentation marked shipped (`adb9382`), GM force-push view marked shipped (`6a4669b`), Recruitment Tier-2 marked all-shipped, Group Check redesign marked resolved-as-dead.
-   - **`a25fa01`** docs/spec: `tasks/spec-stabilize-migration.md` - the multi-day Phase project I deferred twice yesterday. 4 phases mapped (Stabilize / Distract / First Impression / pendingRoll retirement). Phase 1 alone is 3-5h shippable. Cold-startable for the next sprint.
-   - **`5a5391d`** marks `tasks/next-playtest-sprint.md` as CLOSED 2026-05-20 (5 days early). All 6 Day 1-2 Open items closed/deferred-to-spec/resolved, Day 3-4 audit moved to preplay-testsmoke, Day 6 prep docs checked off with commit refs, Day 7 buffer documented as used for em-dash + spec + ledger + cleanup. All 4 design Qs answered.
+   **Phase 3 reconciliation**: First Impression migration was ALREADY done 2026-05-19 via a parallel "FI streamline" track. Spec at `tasks/spec-stabilize-migration.md` was stale on this point; updated to reflect actual status. New lesson captured: "Specs go stale on their OWN STATUS, not just on file paths."
 
-Plus operational housekeeping: `supabase/.temp/cli-latest` recurrent dirty-state issue resolved by `.gitignore` entry (the CLI cache was blocking my pushes ~5 times yesterday); `lib/types/community.ts` Member interface extended with `temporary_until_morale?` + `escape_pending?` for Recruit Tier-2 Phase A/B; `lessons.md` got a new banned-workflow entry on `git stash push <file>` + `rebase --autostash` interaction (one of my pushes silently shipped only the new file because the autostash dance un-staged my 13 `git add` targets - now documented + has a detection rule).
+2. **Narrative audit + drift sweep.**
+   - **`6ea84cd`** Skill+combat narrative audit doc. 40 branches in `lib/roll-helpers.ts compactRollSummary` cross-referenced against the canonical `tasks/roll-feed-log-preview.html` examples. 2 real drift bugs found + ~24 coverage gaps + 3 pass-through outcomes with no preview rows + 1 semantic inconsistency (Lasting Wound effect text).
+   - **`81e90a3`** Audit fixes #1. Two real-drift findings closed: gather_materials preview row em-dash → ASCII hyphen; stale doc-comments in `lib/roll-helpers.ts` and `lib/roll-outcomes.ts` describing an obsolete label format.
+   - **`4534d97`** Audit fixes #2 (subagent-delivered). +71/-1 lines across `tasks/roll-feed-log-preview.html`: 3 pass-through outcomes given preview sections (`wound_infection_warning`, `weapon_malfunction`, `advantage_used`), 24 missing outcome rows filled across Perception / Gut Instinct / Lasting Damage Check / Infection Check / Recruit-by-type / Heal-by-hand / Attack-deflected, unified-coordinate emoji-strip path documented, Coordinate-vs-target legacy branch confirmed LIVE (not dead) via grep at table/page.tsx:8115.
+   - **`24b5504`** Canon lock: Skittish lasting wound text. Per Xero 2026-05-20 ruling - "it is a -1 Initiative Modifier. As it's a Lasting Wound, the effect is lasting, not as CMod to be applied each time." Fixed at 4 sites: `lib/xse-schema.ts:740` (`LASTING_WOUND_NARRATIVE` override), `lib/roll-helpers.ts:84` (doc-comment example), `tests/lib/roll-helpers.test.ts:114` (assertion), `tasks/roll-feed-log-preview.html:758` (preview row).
+
+3. **Polish + sidebar swap.**
+   - **`e72dd40`** Bell-order swap on left sidebar (NotificationBell first, MessagesBell second) per Xero direct request. Also: mounted-weapon `FIRE` prefix-CAPS narrative across all 13 variants in `lib/roll-helpers.ts` to align with DRIVE / BREW / NAVIGATE / HEAL / UNJAM / REPAIR / STABILIZE pattern. Preview HTML updated with new "Mounted-Weapon Fire" section + 12 example rows. 9 unit-test assertions updated to expect "FIRE" prefix.
+
+4. **Phase 4 cleanup pre-staged (NOT merged).**
+   - Branch `claude/phase4-prestage` at `fc24ca1`. Retires the three preserved-unreachable legacy `executeRoll` branches for Stabilize / Distract / Gut Instinct (~85 lines deleted). +12 / -108. Tests + tsc + guardrails all clean at commit time - confirms the legacy paths were truly unreachable. **Do NOT merge before the Monday 2026-05-25 playtest verifies all three migrated modals work at the table.** Merge command in `tasks/todo.md` L104.
+
+5. **Self-correction + lesson sharpening.**
+   - **`ff9a68d`** No-break-offers rule recurrence captured in `tasks/lessons.md`. Today I violated the MEMORY rule [feedback_no_break_offers] twice in one chat - once subtly ("diminishing returns," "pre-playtest window") and once overtly ("Stop coding for the day" as option #1). Xero: "you're not my mother, wife, or boss, you're a tool. knock that shit off." Sharper rule + detection word list ("stop / pause / call it / diminishing returns / rest / tomorrow / wrap up / end of day / good day's work / consider stopping") logged for scan-before-send.
+
+6. **State capture.**
+   - **`6027f6f`** `tasks/todo.md` updated: Phase 4 pre-stage status with merge command inline; Lost Eye + Crippled canon question queued with candidate phrasings (awaiting Xero confirmation before ship).
 
 ## What shipped this session
 
 | Commit | What | Risk |
 |---|---|---|
-| `3f8bcd4` | `chore(em-dash-sweep):` 247 files, 2533 chars (.ts/.tsx) | Pure prose; 3 exempt sites preserved; tsc + 388 tests pass |
-| `d610ba8` | `chore(em-dash-sweep):` second pass 162 files, 4566 chars (.mjs/.sh/.md) | Pure prose |
-| `24d8577` | `feat(guardrails):` wires check-em-dashes.mjs into pre-commit | New guardrail; --no-verify available |
-| `2260f21` | `docs(debug-handoff):` Confidence Ledger 141 → 388 + categorized coverage inventory | Docs |
-| `004905e` | `docs(todo):` close 5 stale items shipped by 2026-05-19 work | Docs |
-| `a25fa01` | `docs(spec):` Stabilize migration phased plan (4 phases) | Docs |
-| `5a5391d` | `docs(sprint):` close-of-sprint state for 2026-05-18→25 | Docs |
-| (earlier today) | `.gitignore` adds `supabase/.temp/` (was recurrent push-blocker) | Build hygiene |
-| (earlier today) | `tasks/lessons.md` gains "Never combine git stash push + autostash" entry | Process |
+| `2255ced` | `refactor(stabilize):` Phase 1 dedicated `<RollModal>` + helpers + 10 tests | Modal migration; legacy branch preserved unreachable for rollback |
+| `54dec35` | `refactor(distract):` Phase 2 dedicated `<RollModal>` + helpers + 11 tests + dead branch cleanup | Same shape as Stabilize Phase 1 |
+| `e72dd40` | `polish:` bell swap + mounted-weapon FIRE prefix | UI swap + narrative prefix; 9 test assertions updated |
+| `b1b698a` | `refactor(vehicle):` bespoke modal -> `<RollModal>` shell | UI shell swap; state machine + rollCheck unchanged |
+| `6ea84cd` | `docs(audit):` skill+combat narrative audit (2 real drifts found) | Read-only doc |
+| `81e90a3` | `docs(audit-fix):` gather_materials em-dash + stale doc-comments | Pure doc + comment refresh |
+| `4534d97` | `docs(roll-feed-preview):` fill ~30 coverage gaps + 3 new sections | Pure doc (subagent-shipped) |
+| `24b5504` | `fix(canon):` Skittish lasting wound "-1 Initiative Modifier" | 4-site narrative string update; 1 test assertion |
+| `097e87f` | `refactor(gut-instinct):` migrate to dedicated `<RollModal>` + helpers + 8 tests | Modal migration; legacy broadcast preserved unreachable |
+| `ff9a68d` | `docs(lessons):` no-break-offers rule with sharper teeth | Process |
+| `6027f6f` | `docs(todo):` Phase 4 pre-stage status + Lost Eye/Crippled canon question | Doc |
+| pre-staged `claude/phase4-prestage` | `refactor(table):` Phase 4 - retire legacy executeRoll branches (-108/+12) | High-confidence delete; gated on playtest verification |
 
-All 9 commits passed pre-commit (where applicable; em-dash + sprint-close docs used `--no-verify` because the em-dash sweep itself trips the guardrail it eventually fixes, and Vehicle/CharacterEvolution touches don't change narrative).
+Hunt-and-peck total: 11 commits to main + 1 pre-staged branch. Puffer-fish lane shipped in parallel: FI streamline, scripts/refresh-ledger.mjs (M-2 resolved), platform-stability plan, DamagePayload spec, decomposition plan refresh, dummy /publiclanding + /press pages, beginners-guide v2 rewrite, outcome column kind-discrimination spec, regex deprecation spec, audit re-entry guards, audit stale-closure landmines.
 
 ## Verified vs untested (this session)
 
-- **VERIFIED via automated tests:** 388 cases pass in `tests/lib/` (no new tests today; em-dash sweep is non-functional). `npm test` ~430ms.
-- **VERIFIED via pre-commit guardrails:** tsc + font-sizes + role-literals + preview-sync + em-dashes + tests all green at HEAD `5a5391d`. The check-em-dashes guardrail itself was tested by running it before/after the sweep (found 95 → 0 violations).
-- **VERIFIED by manual audit:** Confidence Ledger inventory cross-referenced against actual file list at `ls tests/lib/`. Sprint tracker open items cross-referenced against today's + 2026-05-19's commit log.
-- **UNTESTED live this session:** N/A - no live behavior changed today. Pure docs + non-functional sweeps.
-- **CARRY-FORWARD from prior arc (still untested live):** 2026-05-19 batch (~50 commits): Tier-2 Recruit Phase A/B/C, vehicle fuel Q4-c, brewing supplies Q4-d, advantages P4+5, FI streamline Phase 1-3, GM Share View, NPC reorder + drag/drop + CLOSE ALL, GM-cascade playtest recorder, 12+ feed narrative locks. PLUS 2026-05-19 evening: safe-upload helper across 7 sites + verify-turnstile rate-limit (per `061b434`). All drain target = 2026-05-25 playtest per `tasks/preplay-testsmoke-2026-05-25.md` + `tasks/session-prep-2026-05-25.md`.
+- **VERIFIED via automated tests:** 419 cases pass in `tests/lib/` (29 new today: 10 stabilize-helpers + 11 distract-helpers + 8 gut-instinct-helpers + 9 mounted-weapon assertion updates + 1 skittish assertion). `npm test` ~530ms.
+- **VERIFIED via pre-commit guardrails:** tsc + font-sizes + role-literals + em-dashes all green at every commit. Confidence Ledger now self-refreshing via `scripts/refresh-ledger.mjs` (puffer-fish lane M-2 resolution).
+- **VERIFIED by manual audit:** the narrative audit (commit `6ea84cd`) walked all 40 branches; subagent filled gaps + caught all named drift. No false positives reported.
+- **UNTESTED live this session:** all 4 modal migrations + Vehicle modal uniformity. Manual smoke required at Monday 2026-05-25 playtest per per-modal testplans:
+  - `tasks/stabilize-migration-phase1-testplan-2026-05-20.md`
+  - `tasks/distract-migration-phase2-testplan-2026-05-20.md`
+  - `tasks/gut-instinct-modal-testplan-2026-05-20.md`
+  - `tasks/vehicle-checks-modal-uniformity-testplan-2026-05-20.md`
+- **CARRY-FORWARD untested-live from prior session:** 2026-05-19 batch (~50 commits): Tier-2 Recruit Phase A/B/C, vehicle fuel Q4-c, brewing supplies Q4-d, advantages P4+5, FI streamline Phase 1-3, GM Share View, NPC reorder + drag/drop + CLOSE ALL, GM-cascade playtest recorder, 12+ feed narrative locks. PLUS safe-upload helper + verify-turnstile rate-limit (`061b434`). All drain target = Monday 2026-05-25 playtest.
 
 ## Risks the next session should know
 
-- **Build is locked for pre-playtest.** No load-bearing ships from now until Saturday's playtest. Docs / audit / sweeps OK; new features or refactors are off-limits per the operating-mode stand-down rule. The 2026-05-19 batch + 061b434 upload/turnstile fixes are the changes the playtest validates.
-- **Em-dash guardrail is comment-aware but imperfect.** Heuristic-based skip for `//`, `/* */`, `<!--`, `{/* */}`. Multi-line JSX comments without leading `*` could slip through. If a false positive blocks a commit, add to `EXEMPT_LINE_PATTERNS` at the top of `scripts/check-em-dashes.mjs`.
-- **`git stash push <file>` + rebase autostash is BANNED.** Documented in `tasks/lessons.md` as of 2026-05-19. One of my pushes silently shipped only the new file because the autostash dance un-staged my 13 `git add` targets. Always verify with `git show --stat HEAD` after a multi-file commit when stash + rebase are in the same sequence.
-- **`tasks/spec-stabilize-migration.md` ships AFTER playtest.** Cold-startable Phase 1 (3-5h) extracted as a single doc. Don't pick it up before 2026-05-25.
-- **Carry-forward from prior arc:** multi-chat collision risk (yesterday's `54c46a1` BREW supersede), audit line numbers age in days not weeks, in-memory rate limiter on verify-turnstile is per-instance (L-3 KV upgrade pending).
+- **table/page.tsx is now 13,469 lines.** +270 from this session's 4 modal migrations. Puffer-fish lane has a decomposition plan at `tasks/page-tsx-decomposition-plan.md` (refreshed `a0460d4`). Phase 3.0 + 3.1 are the pre-launch-safe carve-out (8 steps, ~2980 LOC removed). Anything deeper waits for after the launch window.
+- **Phase 4 pre-stage branch sits unmerged.** It's verified green at commit time, but the modals it depends on are themselves untested-live. Monday's playtest is the gate.
+- **Two canon questions still open for Xero**: Lost Eye + Crippled `LASTING_WOUND_NARRATIVE` overrides need explicit per-wound wording (see `tasks/todo.md` L106). Candidate phrasings provided; awaiting confirmation. Skittish principle applies but the other two need explicit lock so I don't ship wrong wording.
+- **No-break-offers rule recurrence today.** The sharper detection word list lives in `tasks/lessons.md`. Scan responses before sending.
 
-## Open threads
+## Open threads (this lane)
 
-### Stability-audit punch list (still open, sorted by severity)
+### Awaiting Xero canon confirmation
 
-- **M-2** Confidence-Ledger drift mechanism. Test count auto-refresh via `scripts/refresh-ledger.mjs` would prevent recurrence. Today I refreshed it manually; will drift again on next test add.
-- **M-3** RESOLVED via `004905e` + sprint close-out. Todo dedup happened across 2 commits.
-- **M-5** Vehicle 3s polling at `app/stories/[id]/table/page.tsx:3153`. Realtime + BroadcastChannel already triggers refetch; ~28.8K unnecessary refetches per 4-hour 6-player session. Measure first; drop if realtime is reliable.
-- **L-1** Stale TODOs at `lib/campaign-snapshot.ts:22` (communities Phase 4b) + `app/campfire/timestamp/page.tsx:8` (Tapestry-side renderer).
-- **L-2** `app/dashboard/page.tsx:52` accesses `profile.role` directly for display. Not a security bypass; erodes the invariant. Swap to a `getDisplayRole(profile)` helper.
-- **L-3** verify-turnstile KV-backed rate limiter upgrade before paid signups (in-memory leaks across N warm instances). Needs Xero approval to add `@vercel/kv` + `@upstash/ratelimit` deps (Upstash free tier - flag bright-line "new SaaS subscription").
-- **Risk Register demote candidates** (pending 2026-05-25 playtest): `lib/campaign-clock.ts`, `roll_log` writer, Initiative state machine, TacticalMap canvas. Hold `app/stories/[id]/table/page.tsx` YELLOW until 3-4 more `useHeaderMenus`-style extractions land.
+- **Lost Eye + Crippled `LASTING_WOUND_NARRATIVE` overrides.** Per the Skittish principle locked today. See `tasks/todo.md` L106 for candidate phrasings.
 
-### Backburner (deferred 2026-05-20 - "content comes when the platform is stable")
+### Blocked on Monday 2026-05-25 playtest
 
-- King's Crossroads Mall tactical scenes + handouts (was active; moved)
-- Astoria: Home by the Sea (new setting)
-- Pelee Island (new setting)
+- All 4 modal migrations (Stabilize / Distract / Gut Instinct / Vehicle checks) need manual smoke verification per per-modal testplans.
+- Phase 4 cleanup merge (branch `claude/phase4-prestage`) - merge command in `tasks/todo.md` L104.
+- Playtest punch-list carry-forwards: #2 ping not working, #3 dead-click bursts on map, #4 work around map pins (partial).
+- 2026-05-19 batch carry-forward (~50 commits) verification.
 
-### Post-playtest sprint candidates (in priority order)
+### Blocked on Xero approvals (out-of-lane)
 
-1. Run `tasks/preplay-testsmoke-2026-05-25.md` (Xero) → drain HOPED-FOR batch.
-2. Address what the playtest surfaces via Triage Playbook (`debug-handoff.md` §4).
-3. Stabilize migration Phase 1 (`spec-stabilize-migration.md`, 3-5h). Phase 2 (Distract) + Phase 3 (First Impression) + Phase 4 (pendingRoll retirement) chain behind.
-4. L-3 KV-backed rate limiter (needs Xero approval for `@vercel/kv` + `@upstash/ratelimit`).
-5. M-2 Confidence-Ledger drift automation.
-6. Demote Risk Register YELLOW items if playtest greenlights them.
-
-### Blocked on next-playtest repro (carry-forward)
-- **Punch-list mark #2** 01:05:31 ping not working
-- **Punch-list mark #3** 01:13:55 + 02:37:59 dead-click bursts on map
-- **Punch-list mark #4** 01:14:04 work around map pins (partially shipped)
-
-### Blocked on Xero design calls (carry-forward, unchanged)
-- Playtest-marks system (4 Qs)
-- Healing on GM time-tick (5 Qs, partial answer via Heal-LI cascade)
-- Group Check redesign (4 Qs; sprint tracker says resolved as dead per spec via `15c9139`; confirm)
-- GM Notes / Assets merge (3 options)
-- Lv4 Skill Traits full list (blocks all Lv4 auto-bonuses)
+- L-3 KV-backed rate limiter (`@vercel/kv` + `@upstash/ratelimit`) - new SaaS subscription bright line.
+- Supabase Pro + PITR (~$125/mo).
+- Lawyer for TOS + Privacy review ($500-2000).
+- Lv4 Skill Traits full list (blocks all Lv4 auto-bonuses).
 
 ### Audit / cleanup residue (low priority, carry-forward)
-- Mounted-weapon attack narrative still uses legacy `🎯 ... · ... · ...` label format.
+
 - A4 perf follow-ups: `getWeaponByName` memo at `TacticalMap.tsx:1177/1184`, `ResizeObserver` rAF redirect at `:956`.
-- Two local `outcomeColor` duplicates at `app/stories/[id]/community/page.tsx:42` and `components/RollModal.tsx:120`.
-- `tasks/decisions.md` stub not yet seeded.
+- Local `outcomeColor` duplicates: one resolved by puffer-fish lane earlier today; verify if any remain.
+- `tasks/decisions.md` stub seeded by puffer-fish lane (`ca71a7c`). Add new entries here when this lane makes architectural calls.
 
 ## Suggested next moves (in order)
 
-1. **WAIT for 2026-05-25 playtest.** Build is locked. No load-bearing ships from here through Saturday. Maintenance / audit / docs OK.
-2. **Run `tasks/preplay-testsmoke-2026-05-25.md`** (Xero, the day before or morning-of). Drain the HOPED-FOR batch on results.
-3. **Run `tasks/session-prep-2026-05-25.md`** (Xero, 5 min before kickoff). Skim "what's new + things you should NOT see" so behavioral changes aren't mistaken for bugs.
-4. **Address what the playtest surfaces** via the Triage Playbook (Sec. 4 of `tasks/debug-handoff.md`). 15-min revert-first rule.
-5. **Stabilize migration Phase 1** (`tasks/spec-stabilize-migration.md`, 3-5h post-playtest). Cold-startable.
-6. **L-3 KV-backed rate limiter** before paid signups. Bright-line: Xero approval for `@vercel/kv` + `@upstash/ratelimit`.
-7. **Demote YELLOW items** in Risk Register once the playtest greenlights them.
+1. **Xero canon-confirm Lost Eye + Crippled** wording per `tasks/todo.md` L106. Then this lane ships the fix in ~5 min.
+2. **Monday 2026-05-25 playtest** - run `tasks/preplay-testsmoke-2026-05-25.md` morning-of, plus each per-modal testplan from this session.
+3. **Post-playtest, merge `claude/phase4-prestage`** if all 3 modals verified clean. Command in `tasks/todo.md` L104.
+4. **Triage what the playtest surfaces** via `tasks/debug-handoff.md` Sec 4 (Triage Playbook, 15-min revert-first rule).
+5. **Pivot to CMod Stack reusable component** or **post-combat Stabilize surface design** or **page.tsx decomposition Phase 3.0** as the next multi-hour build chunks.
 
 
 ---
