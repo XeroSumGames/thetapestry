@@ -10026,28 +10026,12 @@ export default function TablePage() {
                               if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
                             }
                           }
-                          // Distract: only targets within 30 ft (Close range,
-                          // per CRB §06). The active themselves was already
-                          // excluded in the dead/alive checks above (it's the
-                          // active's own entry id), but double-check.
-                          if (pendingRoll.label.endsWith(' - Distract') && mapTokens.length > 0) {
-                            const active = initiativeOrder.find(ie => ie.is_active)
-                            if (active && entry.id === active.id) return false
-                            if (active) {
-                              const aTok = mapTokens.find(t => (active.character_id && t.character_id === active.character_id) || (active.npc_id && t.npc_id === active.npc_id))
-                              const tTok = mapTokens.find(t => {
-                                const pe = entries.find(e => e.character.name === entry.character_name)
-                                if (pe && t.character_id === pe.character.id) return true
-                                const npc = campaignNpcs.find((n: any) => n.name === entry.character_name)
-                                if (npc && t.npc_id === npc.id) return true
-                                return false
-                              })
-                              if (aTok && tTok) {
-                                const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
-                                if (dist * mapCellFeet > 30) return false
-                              }
-                            }
-                          }
+                          // Distract range-filter branch DELETED 2026-05-20.
+                          // Distract migrated to its own dedicated <RollModal>
+                          // 2026-05-20 (commit 54dec35); the new modal has
+                          // its own Close-range filter at button-click time.
+                          // No pendingRoll ever carries ' - Distract' anymore,
+                          // so this branch was unreachable dead code.
                           // Charge: only targets within 20ft (2 moves × 10ft)
                           if (pendingRoll.label.includes('Charge') && mapTokens.length > 0) {
                             const active = initiativeOrder.find(ie => ie.is_active)
@@ -10119,9 +10103,11 @@ export default function TablePage() {
                           "I can see it right there but can't target it" reports
                           during playtest - GMs assumed they'd placed the object
                           wrong (or mis-configured wp_max) because there was no
-                          diagnostic.
-                          Distract excluded - you can't distract a crate. */}
-                      {!pendingRoll.label.endsWith(' - Distract') && (() => {
+                          diagnostic. (Distract-exclusion gate dropped 2026-05-20
+                          when Distract moved off pendingRoll onto its own
+                          dedicated modal - this branch is now unreachable for
+                          Distract regardless.) */}
+                      {(() => {
                         const objs = mapTokens.filter(t => t.token_type === 'object')
                         if (objs.length > 0 && process.env.NODE_ENV !== 'production') {
                           console.warn('[target-dropdown] objects on map:', objs.map(o => ({
