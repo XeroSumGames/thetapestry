@@ -6,6 +6,17 @@
 
 ## 🎯 CURRENT OPEN - 2026-05-15
 
+### Launch plan (2026-06-15 limited public, ~26 days out)
+Full plan: [tasks/launch-plan-2026-06-15.md](launch-plan-2026-06-15.md). Target audience = reviewers / YouTubers / bloggers (not paying users, not closed beta). Composed 2026-05-20. **Six open Xero decisions blocking everything below; resolve this week (by 2026-05-24):**
+- [ ] **Approve Supabase Pro + PITR** (~$125/mo). Blocks Y12 drill + the entire backup story. Without this, my recommendation is delay launch.
+- [ ] **Approve Upstash KV (or @vercel/kv)** ($0-10/mo). Blocks L-3 KV-backed rate-limiter; signup-fraud vector during launch window.
+- [ ] **Approve lawyer for TOS + Privacy review** ($500-2000 one-time). Cheapest insurance against a viral GDPR/CPRA article. 2-week turnaround means draft to lawyer by 2026-05-24.
+- [ ] **Decide invite-code gate** yes/no for soft-capping launch velocity. If yes, hunt-and-peck builds by 2026-06-01.
+- [ ] **Confirm launch day** (6/15 is a Sunday; reviewers publish Tue-Thu; consider 6/16 or 6/17).
+- [ ] **Press kit content + demo video** - DIY or outsource.
+
+**MUST-DO (10 items)**, **SHOULD-DO (6 items)**, **COULD-DO (4 items)** ranked in the launch plan with effort + cost. Week-by-week timeline 5/20 -> 6/15.
+
 ### Stability audit (2026-05-19, post-playtest)
 Full punch list: [tasks/stability-audit-2026-05-19.md](stability-audit-2026-05-19.md). Read-only audit; items below are the action checklist sorted by severity.
 

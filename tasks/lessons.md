@@ -1,5 +1,25 @@
 # Lessons Learned
 
+## Long-horizon launch planning is the puffer-fish lane's job, not the chat's memory (2026-05-20)
+
+**Rule:** When a date-anchored launch is in scope (public release, paid signups open, press window), write the launch-plan as a dated file at `tasks/launch-plan-YYYY-MM-DD.md` in the same response. It captures: audience reframe, per-role gap analysis, ranked punch list (MUST / SHOULD / COULD), week-by-week timeline back-solved from the date, **Xero-bright-line budget asks with decision deadlines**, puffer-fish risks (legal, bandwidth, embargo timing), and open questions.
+
+**Trigger:** 2026-05-20 - Xero asked "if we were looking to go live to a limited public audience on 6/15, what would we need to focus on?" Initial reply was a long synthesis in chat. Without writing it down it would have been lost across sessions, and the Xero-decision items (Supabase Pro / Upstash / lawyer review) would have drifted past their deadlines silently. Memory rule `feedback_immediate_lesson_capture` covers single-ship lessons; this lesson covers the meta-shape "long-horizon plans need a doc, not just a chat reply."
+
+**Fix-forward:** Shape locked at `tasks/launch-plan-2026-06-15.md`. Future launch plans copy that shape:
+1. Reframe the audience (who, what stakes, how they differ from current users).
+2. Per-role gap analysis (architect / eng / qa / security / ops / product / business / ux).
+3. Ranked punch list with effort + cost columns.
+4. Week-by-week timeline back-solved from the launch date.
+5. **Xero-bright-line budget asks with hard decision deadlines** (this is the part chat memory loses).
+6. Puffer-fish moves (the risks the technical asks miss - legal, bandwidth, embargo, "what does limited mean").
+7. Open questions Xero must answer (with deadlines).
+8. Maintenance section explaining how to update the doc + when to archive.
+
+**How to apply:** When the user mentions a launch date or paid-signup window, this chat writes the dated launch plan before resolving "what's next." The doc is the deliverable; the chat reply is the headline summary. Wire it into `tasks/todo.md` CURRENT OPEN at the top so the open Xero decisions stay visible.
+
+---
+
 ## Multi-chat collision visibility lives at session-start, not push-time (2026-05-20)
 
 **Rule:** Run `sh scripts/start-session.sh` at the start of every non-trivial session. The script fetches origin/main, lists incoming commits + touched files, and warns if your working-tree changes overlap incoming. Cheap (~2s, no writes); makes the collision visible BEFORE you start editing instead of at push time.

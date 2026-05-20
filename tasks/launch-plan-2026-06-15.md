@@ -1,0 +1,237 @@
+# Launch Plan: Limited Public, 2026-06-15
+
+Target audience: **reviewers, YouTubers, bloggers**. Not paying users. Not closed beta. Content-creators who will publish what they see, get linked from press releases, and shape early public perception. ~26 days from this plan's authoring (2026-05-20).
+
+Composed in the puffer-fish lane; tactical follow-through belongs to the hunt-and-peck lane. This doc is the source-of-truth for "what we need to focus on between now and 6/15." Update it as items close.
+
+---
+
+## Reframe: why this is NOT closed beta
+
+- These are **content-creators**. They publish what they see. Bugs go on YouTube and stay there.
+- They are NOT paying. So optimize for **reputation cost** + **funnel-conversion downstream**, not revenue at this stage.
+- They arrive cold via a link, not a personal invite. **First 5 minutes are everything.**
+- They will hit edge cases the 10-person playtester group never has.
+- They will publish before they understand the product. **Polish > depth.**
+- Hostile-ish content (a YouTuber farming drama) is a real risk; resilience to "I tried to break it" coverage matters.
+
+---
+
+## Per-role gap analysis (as of 2026-05-20)
+
+### Architect
+- Architecture serves ~10 concurrent playtesters today. Break point under 50-200 concurrent users is unknown.
+- 13,192-line `app/stories/[id]/table/page.tsx` = high bug-investigation cost when something breaks mid-session.
+- No CDN strategy beyond Vercel defaults.
+- Supabase Free tier connection limits unknown under load.
+- Realtime channel scaling untested: 10 files use `.channel(`; 200 concurrent users = 2000+ subscriptions.
+
+### Senior eng
+- `damage_json: ... as any` casts in combat code = bug class fires on edge inputs.
+- No integration tests; no E2E.
+- **No staging environment** = cannot rehearse the launch path before reviewers walk it.
+
+### QA
+- 411 unit tests cover pure helpers. Zero component / integration / E2E coverage.
+- Multi-client realtime desync = manual-repro only. With reviewers self-publishing bug reports as content, every desync becomes a video.
+- Bug-report tool exists; not scale-tested for "200 strangers file overnight."
+
+### Security (five must-close)
+1. **L-3 KV rate-limiter** (`@vercel/kv` + `@upstash/ratelimit`). Bots will target the launch window.
+2. **CSP headers + SRI** on Turnstile / Sentry scripts. Currently unverified.
+3. **Storage bucket-level policies** at the Supabase dashboard. Currently unverified.
+4. **Secret rotation playbook.** If a key leaks mid-launch, need 10-min response, not 2 hours.
+5. **Privacy Policy + TOS update** for non-paid public use. Reviewers WILL link to these.
+
+### SRE / ops
+- **Biggest single gap: no PITR.** Free Supabase = if data corrupts, recovery is "we can't." Reputational suicide for a public launch.
+- R4 Sentry -> Slack runbook ready, not executed. Means "we'll know about outages when a YouTuber tweets."
+- No incident response runbook for launch day.
+- Y12 backup drill not run; RTO is "unknown hours."
+- Vercel + Supabase combined SLA on Free tier: no commitment.
+
+### Product
+- Onboarding flow audit is open (audit residue).
+- First-time visitor without invite link sees... the login page with no context. No public landing page.
+- No public roadmap stub for "what's coming."
+- No demo session / screenshots / 2-min walkthrough video for reviewers who want to see before installing.
+
+### Business
+- **Press kit does not exist.** Reviewers expect: logo files (PNG + SVG), 3-5 hero screenshots, key messaging (3-5 sentences), founder bio (1 paragraph), embargo-coordination email.
+- Embargo / coordinated launch timing requires outreach **2-3 weeks ahead = by 5/25-5/28 at the latest** if you want anyone published on 6/15.
+- Pricing visibility decision: hidden or shown? If hidden, reviewers ask. If shown, must be defensible.
+
+### UX
+- Visual polish: any UI surfaces with "TODO" copy, alpha debug widgets, or unfinished states visible?
+- **Mobile responsive:** likely poor today; reviewers will check.
+- Accessibility: keyboard nav, color contrast, alt text.
+- Error states: what does a 500 look like?
+- Help / FAQ surface: where does a confused reviewer go?
+
+---
+
+## Ranked punch list
+
+### MUST-DO (blocks launch; reputational floor)
+
+| # | Item | Owner / lane | Effort | Cost |
+|---|---|---|---|---|
+| 1 | **Supabase Pro + PITR upgrade** | Xero approval (bright line) | 1h setup | ~$125/mo |
+| 2 | **L-3 KV-backed rate-limiter** (Upstash + @vercel/kv) | Xero approval (new SaaS dep), then hunt-and-peck | ~3h | $0-10/mo (Upstash free tier) |
+| 3 | **R4 Sentry -> Slack click-through** | Xero (runbook ready at `tasks/ops-sentry-slack-setup-2026-05-20.md`) | ~15 min | $0 |
+| 4 | **Privacy Policy + TOS update** | Lawyer review | 1-2 weeks | $500-2000 |
+| 5 | **Public-facing landing page** | Hunt-and-peck + Xero (design call) | 1-2 days | $0 (in-house) |
+| 6 | **Press kit** at `/press` or `/about` | Xero + hunt-and-peck | 1 day | $0-500 (if logo design needed) |
+| 7 | **Y12 backup drill (live run + document RTO)** | Puffer-fish + Xero | ~2h | Pro upgrade gate |
+| 8 | **Mobile responsive audit + fix worst breaks** | Hunt-and-peck | 1-2 days | $0 |
+| 9 | **First-time user flow end-to-end audit + fixes** | Puffer-fish audit, hunt-and-peck fix | ~1 day audit + Nx fix sessions | $0 |
+| 10 | **Help / FAQ surface (even a stub)** | Hunt-and-peck | 0.5 day | $0 |
+
+### SHOULD-DO (high-leverage; reviewers WILL notice if absent)
+
+| # | Item | Owner / lane | Effort |
+|---|---|---|---|
+| 11 | Modal unification finish (Gut Instinct + Group Check) | Hunt-and-peck | ~5h total |
+| 12 | Mounted-weapon prefix-CAPS narrative | Hunt-and-peck | ~30 min |
+| 13 | Accessibility pass (keyboard / contrast / alt) | Hunt-and-peck | 1 day |
+| 14 | Demo session video or annotated GIF (2-3 min) | Xero | 2-4h |
+| 15 | Error-state polish (custom 404 + 500) | Hunt-and-peck | ~4h |
+| 16 | Lv4 Skill Traits ship | Xero supplies 22 missing traits; hunt-and-peck wires | 1-2 days once unblocked |
+
+### COULD-DO (deferred or risk-accepted)
+
+| # | Item | Why deferred |
+|---|---|---|
+| 17 | Table-page decomposition | Won't ship in 4 weeks; accept YELLOW |
+| 18 | supabase/migrations adoption (R10 full) | Deferred per R10 doc |
+| 19 | 15 orphan tables canonical DDL | Deferred |
+| 20 | Full E2E test coverage | Too big for window |
+
+---
+
+## Timeline
+
+### 5/20 - 5/24 (this week)
+- **Stop landing structural work** in either chat.
+- Punch list #1-#4 ship: Supabase Pro, KV rate-limiter, Sentry-Slack, start drafting Privacy/TOS for lawyer review.
+- **By 5/24 night: send TOS+Privacy draft to lawyer.** Two-week turnaround budgets to 6/7.
+- Begin press-kit content drafting (in parallel).
+
+### 5/25 - 5/31 (post-playtest week)
+- 5/25 playtest goes off; drain HOPED-FOR per `tasks/preplay-monday-morning-2026-05-25.md` after-section.
+- Landing page (#5) + press kit (#6) ship.
+- Mobile responsive + accessibility audit + fixes (#8, #13).
+- First-time user flow audit (#9) executed (puffer-fish pass) + fixes start (hunt-and-peck).
+- Y12 backup drill executed (#7) - **only possible after Supabase Pro lands**.
+- **Reviewer outreach starts 5/28-6/1.** Send press kits with embargo dates. Lock in who's covering.
+
+### 6/1 - 6/7 (polish week)
+- Error states (#15), FAQ stub (#10), demo video (#14).
+- Modal unification finish (#11), mounted-weapon narrative (#12).
+- Lawyer-reviewed Privacy/TOS lands; deploy.
+- Second-round fixes from any QA passes.
+- Internal walk-through: full session as a stranger would. Time it.
+
+### 6/8 - 6/14 (freeze week)
+- **NO new features.** Bug fixes only. Document any P1 issues as "known and tracked" if not blocker-tier.
+- Practice "site is broken" incident response: simulate an outage, run through the steps.
+- Re-run `/stability-audit` on 6/12 for fresh-eyes pass.
+- Re-run `node scripts/refresh-ledger.mjs` + Confidence Ledger triage.
+- Xero pastes current Supabase tier / PITR / retention into `tasks/ops-backup-playbook-2026-05-19.md` verification block.
+- Final pass: `tasks/preplay-monday-morning-2026-05-25.md` pattern adapted to a "Launch-day morning checklist."
+
+### 6/15 launch day
+- **All hands on Sentry-Slack alerts + bug reports.**
+- No deploys after morning unless P0.
+- Have the "we're aware of X, working on it" template pre-written for in-app + email.
+- Xero glued to the phone for 8h. Pre-clear the day.
+
+---
+
+## Budget asks (bright-line items - Xero decides)
+
+| Item | Cost | Decision deadline |
+|---|---|---|
+| Supabase Pro + PITR | ~$125/mo | This week (5/24) - blocks Y12 drill + #1 |
+| Upstash KV (or @vercel/kv) | $0-10/mo | This week (5/24) - blocks L-3 |
+| Lawyer for TOS + Privacy review | $500-2000 (one-time) | This week (5/24) - 2-week turnaround |
+| Logo / press-kit design (if needed) | $0-1500 (one-time) | 5/28 if outsourced; $0 if you DIY |
+| Demo walkthrough video producer (optional) | $0-2000 (one-time) | 6/1 if outsourced; $0 if you screenshare-and-narrate |
+
+**Realistic floor:** $125/mo recurring + $500-2000 one-time (the lawyer). Everything else can be in-house if you accept the time cost.
+
+**Realistic ceiling:** $125/mo + $5500 one-time. Worth it if launch coverage matters more than $5K.
+
+---
+
+## Puffer-fish moves (the easily-missed risks)
+
+### 1. Legal exposure is the biggest non-technical risk
+
+A reviewer publishes; a player signs up under the new Privacy Policy; six months later they ask for data deletion under GDPR or California's CPRA. Today's `delete-user` edge function is technically correct, but the Privacy Policy / TOS needs to:
+
+- Explicitly mention beta status and data-loss possibility.
+- Specify retention windows for `roll_log`, `chat_messages`, `whispers`.
+- Have an explicit GDPR / CPRA section.
+- Identify a "data controller" with a real email.
+
+**Claude cannot write these defensibly.** Budget the lawyer review. Cheapest insurance against a viral "Tapestry violates GDPR" article.
+
+### 2. Solo-dev bandwidth at launch is the underestimated risk
+
+A YouTuber publishes Saturday 9am; 200 signups by noon, 10 bug reports by 3pm. Solo-dev capacity = triage while the press window is open. Counter-measures:
+
+- **Schedule launch day on a day you can be glued to the phone 8 hours straight.** Not a Saturday morning if you have kids' soccer. Pick the day deliberately.
+- Pre-write "we're aware of X, working on it" templates.
+- Pre-write a "thanks for the coverage, here's what we're working on next" reply.
+- Have someone (spouse, friend, hired contractor for the day) on standby to triage non-technical questions / route press inquiries.
+
+### 3. Embargo coordination has a hard deadline that isn't obvious
+
+If you want reviewers publishing on 6/15, they need the press kit + advance access by **5/28 at the latest** (about 2-3 weeks ahead). Miss this window and 6/15 becomes "soft launch, hope someone picks it up." Working backward from 6/15:
+
+- 5/24: TOS + Privacy draft to lawyer
+- 5/27: Press kit composed
+- 5/28-6/1: Reviewer outreach + advance access
+- 6/7: Lawyer-reviewed legal text deployed
+- 6/14: Freeze
+- 6/15: Launch
+
+### 4. "Limited" needs a soft cap
+
+"Reviewers, YouTubers, bloggers" is open-ended. If 50 sign up, you have 50 cold users testing simultaneously. Decide ahead of time:
+
+- Is there an invite-code system gating signups? (Today: no.)
+- If the launch goes viral on day 1, do you flip a "we're at capacity, join the waitlist" gate? (Today: no mechanism.)
+- Or is signup unlimited and we accept the load risk?
+
+**Recommend: ship a simple invite-code gate before 6/15.** Lets you control velocity if a YouTuber's video goes harder than expected.
+
+---
+
+## Open questions for Xero (decide this week)
+
+1. **Will you pay for the Supabase Pro upgrade + lawyer review?** ~$125/mo + $500-2000 one-time. Without these, my recommendation is **delay the launch.** Public release without backups or legal review is asymmetric downside.
+2. **Invite-code gate yes or no?** If yes, who builds it (hunt-and-peck) and by when (recommend 6/1).
+3. **What day of week is 6/15?** It's a Sunday. Reviewers tend to publish Tuesday-Thursday for traffic. Consider 6/16 or 6/17 instead.
+4. **Press kit content - DIY or outsource?** Logo + screenshots you have; founder bio + key messaging you write. Decide.
+5. **Demo walkthrough video - record yourself or outsource?** ~2-3 min content; outsourcing is the speed play, DIY is the auth play (creator-tier audiences respond to founder-on-camera).
+6. **What's "limited"?** First 50 invites? First 100? Open?
+
+---
+
+## Maintenance
+
+Update this file when:
+- An item ships (mark with `[x]` + commit hash in the table).
+- A new risk surfaces.
+- Xero answers one of the open questions (write the decision below + date).
+- The 6/15 date shifts (re-run the timeline).
+
+After 6/15: archive this file as `tasks/launch-plan-2026-06-15-postmortem.md` with the actual outcome + what we'd do differently. Use the postmortem to refine the next launch plan.
+
+---
+
+## Status log
+
+- 2026-05-20: Plan composed. None of MUST-DO items shipped yet. Xero decisions pending on the 6 open questions.
