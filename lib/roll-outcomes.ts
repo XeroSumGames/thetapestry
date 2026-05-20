@@ -87,7 +87,9 @@ export const OUTCOME = {
   // clicks Gather Materials on a vehicle's brewing-supplies panel.
   // Passive 1-day action (no dice, no failure mode per Q4-d spec).
   // Label is the full sentence; renderer returns it verbatim:
-  // "<name> gathers a day of brewing materials for <vehicle> (now N/M)".
+  // "<vehicle> stockpile updated - gathered 1 day of brewing materials
+  // (now N/M)". (Comment refreshed 2026-05-20 per skill+combat narrative
+  // audit; earlier text described a draft format that never shipped.)
   gather_materials: 'gather_materials',
 } as const
 
