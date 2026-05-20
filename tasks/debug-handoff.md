@@ -7,7 +7,7 @@ Diagnostic companion to `tasks/handoff.md`. Open this file when:
 - A playtest surfaces a regression and you need to triage it under pressure.
 - You're deciding "is this a quick fix or a structural issue?"
 
-Updated when architecture/risk shifts, not every session. Last full review: 2026-05-16 (added test-infra paid-down entry; updated Confidence Ledger TESTED row from "nothing" to 141-test inventory).
+Updated when architecture/risk shifts, not every session. Last full review: 2026-05-16 (added test-infra paid-down entry; updated Confidence Ledger TESTED row from "nothing" to 141-test inventory). Refreshed 2026-05-20: test count 141 -> 388 + coverage inventory expanded; em-dash sweep across 409 files / 7099 chars + new check-em-dashes pre-commit guardrail.
 
 ---
 
@@ -84,7 +84,16 @@ Each entry: what we did, what it costs today, what it costs if untouched in 6 mo
 
 ### ~~No automated tests~~ - **PAID DOWN 2026-05-16**
 - **Was:** zero test files. Every refactor was "typecheck passed, fingers crossed."
-- **Now:** 141 unit tests across 7 files in `tests/lib/` cover the high-value pure helpers (roll-helpers, cdp-costs, community-logic, encumbrance, damage, xse-engine, roll-outcomes). Pre-commit hook runs the suite (~230ms); GitHub Actions runs it again on every push.
+- **Now:** 388 unit tests across 20 files in `tests/lib/` cover the high-value pure helpers and supporting modules:
+  - **Roll engine** - roll-helpers (getOutcome, outcomeColor, every compactRollSummary branch including ATTRIBUTE/STRESS/STABILIZE/HEAL/UNJAM/REPAIR/DISTRACT/RECRUIT/Coord-Effort/Vehicle narrative locks), roll-outcomes (OUTCOME constant union), rolls-feed-collapse (Coord Effort chain aggregation).
+  - **Character math** - cdp-costs (full ladder + Lv4 gate), xse-engine (cumulative attrs + step up/down), damage (DM stacking + Stun rpFromRaw + reactive-melee-only armor), encumbrance (limit math + backpack + overload).
+  - **Community math** - community-logic (morale CMod, departure pct, labor pool math, departure picker priority).
+  - **Combat actions** - first-impression-resolver (Phase 1 pure-helper extraction).
+  - **Vehicles** - fuel-storage (per-vehicle drum math), brewing-supplies (stockpile + Gather Materials).
+  - **Advantages (P3 Q4-b)** - advantages library (schema + grant + use + clamp).
+  - **Infrastructure** - sentry-filters (benign-event drops), sentry-realtime (event hooks), playtest-recorder (GM-cascade + tab-local + localStorage resume), supabase-errors (missing-schema message), safe-upload (filename injection guard), signed (URL signature verifier), image-utils, npc-drag-drop (player-side folder reorder).
+
+  Suite runs in ~430ms on every commit + every push to main. The pre-commit hook gates on the full suite + 4 guardrails (font-sizes, role-literals, preview-sync, em-dashes).
 - **Still missing:** component tests, integration tests against a real DB, E2E browser tests. Those land separately if/when warranted - the cost/benefit on those is much higher than on pure-helper unit tests.
 - **Habit going forward:** every bug we fix gets one test added. Over months that suite grows to cover real failure modes, not hypothetical ones.
 
