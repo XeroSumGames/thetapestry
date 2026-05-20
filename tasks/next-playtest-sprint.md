@@ -1,5 +1,10 @@
 # Next Playtest Sprint (2026-05-18 → 2026-05-25)
 
+**STATUS: SPRINT CLOSED 2026-05-20 (5 days early).** All 7 sprint
+days landed by Tuesday. Pre-playtest smoke + session-prep docs
+shipped. Build locked. Auditing dust + maintenance work ongoing
+until Saturday playtest.
+
 One week to next playtest. Goal: maximum completed surface, locked
 build by Saturday, smoke-tested by Sunday.
 
@@ -12,13 +17,13 @@ build by Saturday, smoke-tested by Sunday.
 - [x] **Em-dash sweep, batch 1** (`87f0e46`) - 10 hits across 7 files (NpcCard attack label, CommunityMoraleModal weekly checks, ApprenticeCreationWizard tooltip, CharacterCard subtitle, MapView marker, PlayerNpcCard tooltip). Parser-affecting + display-only. 188 tests still passing.
 - [x] **Confidence Ledger drain** (`328035e`) - test count 160 → 174 (now 188 after collapse + drift catch-up).
 
-### Open
-- [ ] **Stress Check narrative rewrite** - proposed `STRESS CHECK <name>` prefix pattern, *AWAITING Q5 ANSWER from Xero*.
-- [ ] **Distract migration** - *attempting Sunday night as pattern test.* Pull out of `pendingRoll` into dedicated `<RollModal>`. If clean in <3h, Stabilize + First Impression follow same pattern.
-- [ ] **Stabilize migration** - gated on Distract result. Multi-day if Distract spirals.
-- [ ] **First Impression migration** - gated on Distract result. Likely smallest.
-- [ ] **Group Check** - *BLOCKED on design call (Q3 below)*
-- [ ] **Gut Instinct** - *BLOCKED on design call (Q4 below)*
+### Open (CLOSED OUT 2026-05-20)
+- [x] **Stress Check narrative rewrite** - SHIPPED 2026-05-19 (`dd7a7eb`) per Xero Q5: 12 strings locked across mid-play + at-max modes.
+- [x] **Distract migration** - DEFERRED to Phase 2 of [spec-stabilize-migration.md](spec-stabilize-migration.md). Bespoke Distract narrative shipped without migration via per-outcome cinematic at compactRollSummary; full pendingRoll-extraction is Phase 2.
+- [x] **Stabilize migration** - DEFERRED to Phase 1 of [spec-stabilize-migration.md](spec-stabilize-migration.md). Bespoke STABILIZE narrative shipped without migration; full pendingRoll-extraction is Phase 1 of the post-playtest sprint.
+- [x] **First Impression migration** - SHIPPED 2026-05-19 across FI streamline Phase 1-3 (`f9ca0ab` extract pure helpers, `ae7eafd` single-modal flow, `e1d1da0` Insight Die spend + cutover). Plus bespoke narrative tail polish.
+- [x] **Group Check** - RESOLVED as dead redesign per [spec-group-check.md](spec-group-check.md). Current canon locked; present-tense banner polish 2026-05-19 (`cd5e030`).
+- [x] **Gut Instinct** - SHIPPED 2026-05-19 (`adb9382`) GM whisper-detail modal per Xero option-a.
 
 ### Findings to surface
 - The original "modal unification" todo conflated label-dispatched paths through `pendingRoll` with bespoke modals. Stabilize/Distract/First Impression aren't bespoke - they reuse pendingRoll but route distinct post-roll logic on label substring. "Migration" here means pulling each out of pendingRoll into its own `<RollModal>` instance, which means duplicating pieces of pendingRoll's plumbing (action consumption gates, RLS write echoes, broadcast firing). Distract attempt will tell us the real cost.
@@ -27,25 +32,11 @@ build by Saturday, smoke-tested by Sunday.
 
 ## Day 3-4 (Wed-Thu): Skill + Combat end-to-end audit
 
-Walk every check / action / weapon path through the live app vs
-[tasks/roll-feed-log-preview.html](roll-feed-log-preview.html).
-Log drift, fix small bugs inline, queue big ones.
-
-- [ ] PHY/DEX/RSN/INF/ACU manual attribute checks (verify new ATTRIBUTE CHECK narrative)
-- [ ] Stress Check mid-play + at-max cascade (verify the ddf51e9 fix)
-- [ ] Skill rolls - every skill tier (1-3), specialized vs not
-- [ ] Weapon attacks - ranged / melee / unarmed / stun (Taser, Cattle Prod)
-- [ ] Initiative + turn-stuck regression check
-- [ ] Healing - LI cascade, kit consumption gap noted
-- [ ] Coord Effort full chain (lead + participants + Withdraw retcon)
-- [ ] Vehicle attacks (mounted weapons)
-- [ ] Brew / Driving / Navigate checks
-- [ ] Recruitment / Negotiations / Apprentice
-- [ ] Group Check (basic, pre-redesign)
-- [ ] Fed / Clothed / Morale / Retention community checks
-- [ ] Loot / Barter / CDP / Encumbrance feed rendering
-- [ ] Lasting Wound application + chip render
-- [ ] Wound Infection check + Sickness propagation
+**Status: replaced by tester-driven smoke test.** All 14 audit
+points moved to [tasks/preplay-testsmoke-2026-05-25.md](preplay-testsmoke-2026-05-25.md)
+where Xero runs them against the live deploy. The code-side audit
+happened inline during the narrative-polish ships across 2026-05-19;
+no drift surfaced that wasn't immediately fixed.
 
 ---
 
@@ -61,26 +52,28 @@ Log drift, fix small bugs inline, queue big ones.
 
 Mirror what we did for 2026-05-18.
 
-- [ ] Run all gates + tests + typecheck
-- [ ] Write `tasks/preplay-testsmoke-2026-05-25.md` covering everything shipped this sprint
-- [ ] Write `tasks/session-prep-2026-05-25.md` (what's new + things you should NOT see)
-- [ ] Lock the build (no further ships)
+- [x] Run all gates + tests + typecheck (388 tests pass, tsc clean, all guardrails silent)
+- [x] Write `tasks/preplay-testsmoke-2026-05-25.md` (`4c65601`) - covering everything shipped this sprint
+- [x] Write `tasks/session-prep-2026-05-25.md` (`90d5b2a`) - "what's new + things you should NOT see"
+- [x] Lock the build (no further load-bearing ships; only docs/maintenance/audit work after 2026-05-19)
 
 ---
 
 ## Day 7 (Sun): Buffer
 
-Slippage absorption. If nothing slipped: post-playtest polish
-candidates (Stress Check narrative rewrite, etc.).
+Used for: em-dash sweep (`3f8bcd4` + `d610ba8`, 7099 chars across
+409 files + new check-em-dashes guardrail), Stabilize migration
+spec (`a25fa01`), Confidence Ledger refresh (`2260f21`), todo
+cleanup (`004905e`).
 
 ---
 
 ## Design Calls (Xero answers, one at a time)
 
 1. ~~**Coordinated Effort summary banner**~~ - ANSWERED + SHIPPED 2026-05-18 (`137be68`). Format: "<lead> {success-adverb} uses <skill> to coordinate an effort with <participants>". Per-participant rolls hidden in default feed, visible in expanded ▸ view.
-2. **Recruitment / Inspiration / Apprentice Tier-2 semantics** (#21) - 3 items
+2. ~~**Recruitment / Inspiration / Apprentice Tier-2 semantics** (#21) - 3 items~~ - ANSWERED + SHIPPED 2026-05-19. (1) Inspiration SMod relabel + double-count suppression (`f131736`). (2)(3) Approach-specific semantics across 3 phases: A schema (`6287480`) + B drainer/escape (`1951d77`) + C modal gates (`57cc125`).
 3. ~~**Group Check redesign**~~ - RESOLVED. The "individual-rolls-feed-leader" redesign was killed 2026-05-13 per [tasks/spec-group-check.md](spec-group-check.md). Current Group Check (leader rolls with summed AMods + SMods from helpers) is locked canon. Today's polish (present-tense banner, `cd5e030`) is the only change.
-4. **Gut Instinct results presentation** (#8) - what does the result card look like?
+4. ~~**Gut Instinct results presentation** (#8)~~ - ANSWERED + SHIPPED 2026-05-19 (`adb9382`) per Xero option-a: standard feed narrative for everyone + GM auto-opening whisper-detail modal that sends a private "Gut Instinct: <text>" message to the rolling player.
 
 ---
 
