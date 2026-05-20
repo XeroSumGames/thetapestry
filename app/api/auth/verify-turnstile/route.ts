@@ -1,18 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-// In-memory IP token bucket. Per-instance, not distributed - a serverless
-// function with N warm instances can leak ~N × LIMIT requests through
-// before any one instance enforces. Sufficient for "stop one client looping"
-// abuse, NOT for distributed abuse. Upgrade to a KV-backed limiter
-// (@vercel/kv + @upstash/ratelimit) before paid-signups open.
+// Distributed IP rate limiter backed by Upstash Redis (L-3 of the
+// 2026-05-19 stability audit). Replaces the previous per-instance
+// in-memory bucket - that one leaked ~N x LIMIT requests across N
+// warm Vercel instances, which is OK for casual abuse but inadequate
+// for the launch window. The Upstash sliding-window is global across
+// every instance.
+//
+// Env vars (set in Vercel dashboard, not in code):
+//   UPSTASH_REDIS_REST_URL
+//   UPSTASH_REDIS_REST_TOKEN
+// Redis.fromEnv() picks these up automatically. Upstash free tier
+// covers 10K commands/day - the launch rate-limiter window is well
+// inside that even at projected peak.
+//
+// Production behavior when env vars missing: 503 + diagnostic (deploy
+// is misconfigured; surface loudly so the operator notices). Dev
+// behavior when env vars missing: fall back to the in-memory bucket
+// so local signup still works without an Upstash account.
+
 const LIMIT_PER_MIN = 30
 const WINDOW_MS = 60_000
 const MAX_BODY_BYTES = 4096
 
+// Lazy construction so the module loads cleanly even without env vars
+// (the fallback path checks for the limiter being null).
+let _ratelimit: Ratelimit | null | undefined
+function getRatelimit(): Ratelimit | null {
+  if (_ratelimit !== undefined) return _ratelimit
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) {
+    _ratelimit = null
+    return null
+  }
+  _ratelimit = new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(LIMIT_PER_MIN, '60 s'),
+    prefix: 'verify-turnstile',
+    analytics: false,
+  })
+  return _ratelimit
+}
+
+// ── In-memory dev fallback ────────────────────────────────────────
+// Kept ONLY for local dev when Upstash env vars are not set. Same
+// per-instance leakage as the pre-KV implementation; that's fine for
+// localhost where there's one process. Production routes through
+// the Upstash-backed limiter above.
 type Bucket = { count: number; windowStart: number }
 const buckets = new Map<string, Bucket>()
 
-function rateLimit(ip: string): { ok: boolean; retryAfterMs: number } {
+function rateLimitInMemory(ip: string): { ok: boolean; retryAfterMs: number } {
   const now = Date.now()
   const b = buckets.get(ip)
   if (!b || now - b.windowStart >= WINDOW_MS) {
@@ -26,8 +67,6 @@ function rateLimit(ip: string): { ok: boolean; retryAfterMs: number } {
   return { ok: true, retryAfterMs: 0 }
 }
 
-// Periodically sweep stale buckets so the map doesn't grow unbounded under
-// IP rotation. Runs at most once per request; O(n) over active IPs.
 let lastSweep = 0
 function sweepStaleBuckets() {
   const now = Date.now()
@@ -45,15 +84,44 @@ function getClientIp(req: NextRequest): string {
 }
 
 export async function POST(req: NextRequest) {
-  sweepStaleBuckets()
-
   const ip = getClientIp(req)
-  const limit = rateLimit(ip)
-  if (!limit.ok) {
+
+  const limiter = getRatelimit()
+  if (limiter) {
+    // Upstash-backed path. Distributed across instances.
+    try {
+      const { success, reset } = await limiter.limit(ip)
+      if (!success) {
+        const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
+        return NextResponse.json(
+          { ok: false, error: 'rate limited' },
+          { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
+        )
+      }
+    } catch (e: any) {
+      // Upstash error (network blip, token expired, etc.). Log and
+      // fall through to allow the request - this is a defense-in-depth
+      // layer, not the only one. Cloudflare Turnstile below is the
+      // primary anti-bot. The body-size cap also still runs.
+      console.error('[verify-turnstile] upstash error - allowing request:', e?.message ?? String(e))
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    // Production without Upstash env vars = misconfigured deploy.
+    // Fail loud so the operator notices the missing env vars.
     return NextResponse.json(
-      { ok: false, error: 'rate limited' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil(limit.retryAfterMs / 1000)) } },
+      { ok: false, error: 'rate limiter not configured' },
+      { status: 503 },
     )
+  } else {
+    // Dev fallback. Same per-instance bucket behavior as pre-KV.
+    sweepStaleBuckets()
+    const limit = rateLimitInMemory(ip)
+    if (!limit.ok) {
+      return NextResponse.json(
+        { ok: false, error: 'rate limited' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(limit.retryAfterMs / 1000)) } },
+      )
+    }
   }
 
   // Body-size cap. A Turnstile token is ~600 bytes; 4KB is generous.
