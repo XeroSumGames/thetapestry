@@ -162,7 +162,7 @@ Lane: puffer-fish writes specs, hunt-and-peck executes.
 - [~] A1.4 `compactRollSummary` regex deprecation. **SPEC SHIPPED 2026-05-20:** [tasks/spec-compactrollsummary-regex-deprecation.md](spec-compactrollsummary-regex-deprecation.md). Replaces ~30 regex patterns with 5 structured columns (event_type, event_subtype, target_name, skill_name, weapon_name) on roll_log. 5-phase migration C1-C5 over 8-9 hunt-and-peck sessions. C3-attack (last writer migration) gates on Phase 3.4 of the decomposition plan + couples with DamagePayload D3h - all three benefit from same-session execution.
 - [~] A1.3 `outcome` column split. **SPEC SHIPPED 2026-05-20:** [tasks/spec-outcome-column-split.md](spec-outcome-column-split.md). Reframed: the right fix is TYPE-ONLY kind discrimination (sub-unions + `outcomeKind()` helper + type guards), NOT schema migration. Schema migration (Option B) deferred unless DB-integrity bug surfaces. 3 phases (O1-O3) over 2.5-4 hunt-and-peck sessions. OC-R1 risk: SQL audit before Phase O2 to surface any historical outcomes not in the OUTCOME union.
 - [x] **A2.4 Re-entry guard audit.** SHIPPED 2026-05-20: [tasks/audit-reentry-guards.md](audit-reentry-guards.md). 19 guards inventoried across 6 categories (A: in-flight locks, B: sequence guards, C: dedup Sets, D: pending-work queues, E: phase flags, F: closure-state mirrors). Reset-condition risk assessment: 6 healthy, 8 "watch" (correct but scattered comments), 0 currently risky. 5 recommended follow-up actions all low-medium priority - no launch-blockers. Pairs with the decomposition plan's R1+R2+R3 risks (informs hook-extraction co-location).
-- [ ] A2.2 Stale-closure landmine sweep (puffer-fish audit; hunt-and-peck patches)
+- [x] **A2.2 Stale-closure landmine sweep.** SHIPPED 2026-05-20: [tasks/audit-stale-closure-landmines.md](audit-stale-closure-landmines.md). 30 realtime handlers swept; 2 documented past fixes confirmed safe (infection_check_request L1534, lasting_damage_check_request L1499); 1 NEW landmine found: `pc_mortal_wound` handler at L1487-L1493 reads raw `userId` + `gmLike` instead of `userIdRef.current` + `gmLikeRef.current`. Same bug class as the L1534 fix. Hunt-and-peck follow-up: one-line fix + lift the L1534 inline comment as rationale. Section 4 documents the re-runnable sweep methodology for future audits.
 
 ### Phase P3: Recovery posture
 
@@ -232,7 +232,15 @@ When all six axes hit threshold, the platform is "stable enough." Re-evaluate ag
 
 **LAST UPDATED:** 2026-05-20 (this commit).
 **LAST CHAT:** puffer-fish (writing the plan + seeding decisions.md).
-**NEXT ACTION (puffer-fish lane):** write `tasks/audit-stale-closure-landmines.md` - companion sweep to A2.4. The decomposition plan's R1 risk explicitly names 2 documented stale-closure bugs at L1498-L1500 (lasting_damage) and L1530-L1537 (infection). Sweep the realtime handlers (~30 of them per the decomp plan's Section D) + any handler that reads state from a `[]`-deps useEffect. Output: per-handler closure-freeze risk + the mirror-ref (or equivalent) that protects it + any handlers that DON'T have a protective mirror. Read-only audit; surfaces fix candidates for hunt-and-peck.
+**NEXT ACTION (puffer-fish lane):** Phase P2 (tech debt cleanup) is now fully spec'd from this lane. **Natural checkpoint here.** All 5 P2 items have shipped specs/audits + the immediate hunt-and-peck follow-ups are queued in `tasks/todo.md`:
+  - A1.1: decomposition plan refresh (shipped)
+  - A1.2: DamagePayload migration spec (shipped)
+  - A1.3: outcome column kind-discrimination spec (shipped)
+  - A1.4: compactRollSummary regex deprecation spec (shipped)
+  - A2.4: re-entry guard audit (shipped) + 5 recommended actions
+  - A2.2: stale-closure landmine sweep (shipped) + 1 fix queued (pc_mortal_wound)
+
+  Next puffer-fish moves into Phase P3 (recovery posture - audit-log spec, incident response runbook, secret rotation playbook) OR Phase P4 (security hardening - CSP/SRI audit, storage bucket policy audit). Either is a clean session-start point. Recommend STARTING WITH P3/A4.4 incident response runbook since it has the highest ops-leverage and zero gate dependencies. **Resume here in a fresh chat or after a break.**
 
 **NEXT ACTION (hunt-and-peck lane):** start Phase P1 step 1 of the decomposition plan - move types + module constants out of `app/stories/[id]/table/page.tsx` into `app/stories/[id]/table/types.ts`. -200 LOC. Trivial leaf. Hunt-and-peck owns; puffer-fish updates Risk Register + this plan after each phase ships.
 
