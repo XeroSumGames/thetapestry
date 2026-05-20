@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Enforce UI readability rules across .ts/.tsx source:
-//   1) Inline `fontSize` must be >= 13px (9–12px get flagged / auto-bumped).
+//   1) Inline `fontSize` must be >= 13px (9-12px get flagged / auto-bumped).
 //   2) The combo `fontSize: '13px'` + `color: '#3a3a3a'` on the same line is
-//      banned — that pair is illegible on dark backgrounds. Bump color to
+//      banned - that pair is illegible on dark backgrounds. Bump color to
 //      `#cce0f5` instead. (Reported only; no auto-fix since the desired
 //      replacement color depends on context.)
 //
@@ -12,7 +12,7 @@
 //                                                 (the dim-combo is not
 //                                                 auto-fixed)
 //
-// Why: tiny font sizes (9–12px) make the UI hard to read. Minimum raised
+// Why: tiny font sizes (9-12px) make the UI hard to read. Minimum raised
 // from 12 → 13 on 2026-04-23. This script is the backstop for the "13px
 // minimum" convention documented in AGENTS.md.
 import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs'
@@ -53,7 +53,7 @@ function walk(dir) {
       if (next !== src) writeFileSync(full, next, 'utf8')
     }
 
-    // Dim-combo check — min-size + `color: '#3a3a3a'` on the same line.
+    // Dim-combo check - min-size + `color: '#3a3a3a'` on the same line.
     // Case-insensitive hex match so `#3A3A3A` also trips. Line-scoped so we
     // don't false-positive across separate style blocks in the same file.
     const dimSizeRe = new RegExp(`fontSize:\\s*['"]${MIN_PX}px['"]`)
@@ -71,7 +71,7 @@ walk(root)
 const totalProblems = offenders.length + dimCombo.length
 
 if (totalProblems === 0) {
-  console.log(`[check-font-sizes] OK — no inline fontSize below ${MIN_PX}px, no ${MIN_PX}px+#3a3a3a dim combo.`)
+  console.log(`[check-font-sizes] OK - no inline fontSize below ${MIN_PX}px, no ${MIN_PX}px+#3a3a3a dim combo.`)
   process.exit(0)
 }
 
@@ -96,7 +96,7 @@ if (dimCombo.length > 0) {
     console.log(`    ${o.snippet}`)
   }
   if (dimCombo.length > 40) console.log(`  … and ${dimCombo.length - 40} more`)
-  console.log(`Change color to \`'#cce0f5'\` (no auto-fix — replacement depends on context).`)
+  console.log(`Change color to \`'#cce0f5'\` (no auto-fix - replacement depends on context).`)
 }
 
 process.exit(1)

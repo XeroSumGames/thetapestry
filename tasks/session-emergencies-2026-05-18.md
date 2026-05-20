@@ -1,4 +1,4 @@
-# Session Emergencies — 2026-05-18
+# Session Emergencies - 2026-05-18
 
 In-session breakage cheatsheet. Keep this open in a side tab during
 play. Listed by symptom.
@@ -32,7 +32,7 @@ are subtle.
 2. Screenshot the feed area.
 3. Check browser console for any `console.warn` referencing
    `roll_log` or `outcome`.
-4. **File a bug** — include the screenshot + the action that produced
+4. **File a bug** - include the screenshot + the action that produced
    the row.
 
 ---
@@ -45,7 +45,7 @@ are subtle.
 1. Player hard-refresh first.
 2. If fog or token state is wrong: GM can toggle the scene off/on
    to force a re-render.
-3. If a token is in the wrong cell: GM can manually drag it back —
+3. If a token is in the wrong cell: GM can manually drag it back -
    the drag-end fix (`d2ba6b6`) lands on the correct cell now.
 4. **File a bug** with: scene name, token name, what cell vs what
    cell expected.
@@ -57,7 +57,7 @@ are subtle.
 **Likely:** Supabase broadcast channel dropped.
 
 **First moves:**
-1. Player hard-refresh — re-subscribes to the channel.
+1. Player hard-refresh - re-subscribes to the channel.
 2. If GM also affected, GM refreshes too.
 3. If persists across refreshes: Supabase might be having an outage.
    Check https://status.supabase.com.
@@ -128,7 +128,7 @@ a bug + work around it."
 1. Capture every bug as a bug report (don't rely on memory).
 2. Run `git log --oneline --since="6 hours ago"` to see what was live
    during the session.
-3. Drop a session summary in `tasks/handoff.md` — wins + breaks +
+3. Drop a session summary in `tasks/handoff.md` - wins + breaks +
    open questions.
 4. If something broke in a load-bearing area (campaign-clock,
    initiative, roll_log, TacticalMap), flag it RED in

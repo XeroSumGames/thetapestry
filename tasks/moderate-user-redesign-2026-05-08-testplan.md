@@ -1,13 +1,13 @@
-# Testplan — /moderate user-row redesign + Track activity dossier
+# Testplan - /moderate user-row redesign + Track activity dossier
 
 **Shipped 2026-05-08.**
 
 Two changes:
-1. **`/moderate` user-row layout** — was mushed (one line, dates and 6 buttons cramped together). Now: top row = username + email + role chip + joined date + last login; bottom row = all buttons left-aligned including new **Track** button.
-2. **`/moderate/users/[userId]/activity`** (new page) — cross-surface dossier. Characters, campaigns owned/joined, recent rolls, forum threads, forum replies, war stories, LFG posts, bug reports, map pins.
+1. **`/moderate` user-row layout** - was mushed (one line, dates and 6 buttons cramped together). Now: top row = username + email + role chip + joined date + last login; bottom row = all buttons left-aligned including new **Track** button.
+2. **`/moderate/users/[userId]/activity`** (new page) - cross-surface dossier. Characters, campaigns owned/joined, recent rolls, forum threads, forum replies, war stories, LFG posts, bug reports, map pins.
 
 DB changes:
-- New SECURITY DEFINER RPCs `admin_users_with_login()` and `admin_user_with_login(uuid)` — join `profiles` + `auth.users.last_sign_in_at`. Thriver-gated. Migration: `sql/admin-users-with-login.sql`. Applied to live.
+- New SECURITY DEFINER RPCs `admin_users_with_login()` and `admin_user_with_login(uuid)` - join `profiles` + `auth.users.last_sign_in_at`. Thriver-gated. Migration: `sql/admin-users-with-login.sql`. Applied to live.
 
 ---
 
@@ -25,7 +25,7 @@ DB changes:
 
 1. Click the **Track** button on any user row.
 2. Page should load at `/moderate/users/<userId>/activity` showing:
-   - Header — username, role chip, suspended chip (if any), email, **Joined**, **Last login**.
+   - Header - username, role chip, suspended chip (if any), email, **Joined**, **Last login**.
    - Sections (in order, each with count): Characters · Campaigns owned (GM) · Campaigns joined (player) · Recent rolls · Forum threads · Forum replies · War stories · LFG posts · Bug reports · Map pins.
    - Each section shows up to 10 (or 20 for rolls) most recent items. Empty sections render `None.`.
 3. **Characters section** has a `View all →` link in the header → `/moderate/users/<userId>/characters` (existing page).
@@ -43,14 +43,14 @@ DB changes:
 
 ## 4. Edge cases
 
-1. **User with no activity** — every section renders `None.`.
-2. **User who never signed in** — header shows `Last login never`.
-3. **User with a permanently-suspended account** — `Suspended (perm)` chip on both `/moderate` row and activity-page header.
-4. **User deleted while activity page open** — RPC returns 0 rows, page redirects back to `/moderate?section=users` with an alert.
+1. **User with no activity** - every section renders `None.`.
+2. **User who never signed in** - header shows `Last login never`.
+3. **User with a permanently-suspended account** - `Suspended (perm)` chip on both `/moderate` row and activity-page header.
+4. **User deleted while activity page open** - RPC returns 0 rows, page redirects back to `/moderate?section=users` with an alert.
 5. **High-volume user** (many rolls): `Recent rolls` count shows total, list shows 20 most recent with `showing 20 most recent` subtitle.
 
 ## 5. Smoke
 
 1. Hard-refresh `/moderate?section=users`. All users load via the new RPC. Tab counter unchanged.
-2. Watch the network panel — `loadUsers` should call `POST .../rest/v1/rpc/admin_users_with_login` (not the old `from('profiles').select('*')`).
+2. Watch the network panel - `loadUsers` should call `POST .../rest/v1/rpc/admin_users_with_login` (not the old `from('profiles').select('*')`).
 3. Open activity page for the first user in the list. All 10 sections render in under 2 seconds (parallel fetch).

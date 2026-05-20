@@ -1,13 +1,13 @@
-# Quickstart v0.8.531 → SRD v1.1.17 — copy-paste edit list
+# Quickstart v0.8.531 → SRD v1.1.17 - copy-paste edit list
 
 **Precedence applied**: Tapestry > SRD > Quickstart.
-**Excluded**: character sheet (pp. 22–23), Paradigm sheets (pp. 26–27), blank character sheet (pp. 40–41), Pesky's worked-example boxes inside the Backstory walkthrough.
+**Excluded**: character sheet (pp. 22-23), Paradigm sheets (pp. 26-27), blank character sheet (pp. 40-41), Pesky's worked-example boxes inside the Backstory walkthrough.
 
 Edits are ordered by page number. Each entry gives the page, the section heading as it appears in the PDF, and explicit FROM/TO text.
 
 ---
 
-## 1. Page 8 — "MAKING A DICE CHECK" → "Modifiers"
+## 1. Page 8 - "MAKING A DICE CHECK" → "Modifiers"
 
 The introductory paragraph for AMods overstates the player ceiling. PCs cap at +4 (Human Peak); +5 (Superhuman) is reserved for animals and machines.
 
@@ -19,11 +19,11 @@ The introductory paragraph for AMods overstates the player ceiling. PCs cap at +
 
 > The RAPID Range Attributes for player characters range from -2 (Diminished) to +4 (Human Peak). Animals and machines may reach +5 (Superhuman). This number is also their Attribute Modifier (AMod) which is added to any dice roll involving that Attribute, such as Physicality if breaking down a door, or Reason if solving a puzzle.
 
-**Also update Table 2: RAPID Range Mods** — change the top row label from "+5 Animalistic" to "+4 Human Peak". If you want to keep the +5 row visible, add a footnote "+5 Superhuman — animals and machines only."
+**Also update Table 2: RAPID Range Mods** - change the top row label from "+5 Animalistic" to "+4 Human Peak". If you want to keep the +5 row visible, add a footnote "+5 Superhuman - animals and machines only."
 
 ---
 
-## 2. Page 10 — "MOMENTS OF INSIGHT & INSIGHT DICE"
+## 2. Page 10 - "MOMENTS OF INSIGHT & INSIGHT DICE"
 
 Add the SRD's restriction that Insight Dice cannot rescue a Moment of Low Insight, and reframe the "re-roll" option as a swap-and-roll-fresh per the SRD's wording.
 
@@ -34,14 +34,14 @@ Add the SRD's restriction that Insight Dice cannot rescue a Moment of Low Insigh
 
 **TO:**
 
-> � Swapping out one or both of the rolled 2d6 dice with an Insight Dice — the Insight Dice
+> � Swapping out one or both of the rolled 2d6 dice with an Insight Dice - the Insight Dice
 >   is then rolled fresh and added to the total, at the cost of one Insight Dice per dice
 >   swapped. Insight Dice cannot be used to swap out dice from a Moment of Low Insight
 >   (snake-eyes); once you've rolled a 1+1, the result stands.
 
 ---
 
-## 3. Page 13 — "CHARACTER SHEET OVERVIEW" → "3 RAPID Range Modifiers"
+## 3. Page 13 - "CHARACTER SHEET OVERVIEW" → "3 RAPID Range Modifiers"
 
 Same AMod-ceiling fix as Page 8.
 
@@ -55,7 +55,7 @@ Same AMod-ceiling fix as Page 8.
 
 ---
 
-## 4. Page 14 — "CREATING A CHARACTER" → "Backstory Generation"
+## 4. Page 14 - "CREATING A CHARACTER" → "Backstory Generation"
 
 Backstory total is 20 CDP per SRD §04, not 25.
 
@@ -69,7 +69,7 @@ Backstory total is 20 CDP per SRD §04, not 25.
 
 ---
 
-## 5. Page 14 — "TAKING THE QUICK ROUTE"
+## 5. Page 14 - "TAKING THE QUICK ROUTE"
 
 Match the SRD's 5 / 15 split.
 
@@ -83,51 +83,51 @@ Match the SRD's 5 / 15 split.
 
 ---
 
-## 6. Page 14 / 15 — Backstory step summary box
+## 6. Page 14 / 15 - Backstory step summary box
 
-The summary box is internally inconsistent with the per-step body text and disagrees with the SRD on the skill-CDP totals for three steps. **No reordering needed** — the Quickstart's step ordering already matches SRD §04.
+The summary box is internally inconsistent with the per-step body text and disagrees with the SRD on the skill-CDP totals for three steps. **No reordering needed** - the Quickstart's step ordering already matches SRD §04.
 
-**FROM (Step One — Where They Grew Up):**
+**FROM (Step One - Where They Grew Up):**
 
 > Spend 1 CDP raising a RAPID Range Attribute from 0 to 1 (or from -3 to 1). Spend 4 CDP raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step
 
-**TO (Step One — Where They Grew Up):**
+**TO (Step One - Where They Grew Up):**
 
 > Spend 1 CDP raising a RAPID Range Attribute from 0 to 1 (or from -3 to 1). Spend 2 CDP raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step
 
-**FROM (Step Two — What They Learned):**
+**FROM (Step Two - What They Learned):**
 
 > Spend 1 CDP to raise a RAPID Range attribute from 0 to 1, or 1 to 2. Spend 2 CDP raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step.
 
-**TO (Step Two — What They Learned):**
+**TO (Step Two - What They Learned):**
 
 > Spend 1 CDP to raise a RAPID Range attribute from 0 to 1, or 1 to 2. Spend 3 CDP raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step.
 
-**FROM (Step Three — What They Liked To Do):**
+**FROM (Step Three - What They Liked To Do):**
 
 > Spend 1 CDP to raise a RAPID Range attribute from 0 to 1, or 1 to 2. Spend 4 CDP raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step.
 
-**TO (Step Three — What They Liked To Do):**
+**TO (Step Three - What They Liked To Do):**
 
 > Spend 1 CDP to raise a RAPID Range attribute from 0 to 1, or 1 to 2. Spend 3 CDP raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step.
 
-**FROM (Step Four — How They Made Money):**
+**FROM (Step Four - How They Made Money):**
 
 > Spend 2 CDP on raising RAPID Range attributes from 0 to 3, and 7 CDP on raising Skills from 0 to 3. Both attributes and skills can be raised from 2-3 during this step.
 
-**TO (Step Four — How They Made Money):**
+**TO (Step Four - How They Made Money):**
 
 > Spend 2 CDP on raising RAPID Range attributes from 0 to 3, and 4 CDP on raising Skills from 0 to 3. Both attributes and skills can be raised from 2-3 during this step.
 
-**No text change to Step Five (What They Learned After)** — it stays "Spend 3 CDP on raising Skills from 0 to 3."
+**No text change to Step Five (What They Learned After)** - it stays "Spend 3 CDP on raising Skills from 0 to 3."
 
-**No text change to Step Six (What Drives Them)** — Complications & Motivations stays at Step Six, no CDP, matching the SRD's ordering.
+**No text change to Step Six (What Drives Them)** - Complications & Motivations stays at Step Six, no CDP, matching the SRD's ordering.
 
-**Step Seven (Secondary Stats) and Step Eight (What They Have)** — no text change other than renaming "Panic Threshold" to "Stress" in the Step Seven blurb (see edit #12).
+**Step Seven (Secondary Stats) and Step Eight (What They Have)** - no text change other than renaming "Panic Threshold" to "Stress" in the Step Seven blurb (see edit #12).
 
 ---
 
-## 7. Page 17 — "STEP TWO: WHAT THEY LEARNED" body text
+## 7. Page 17 - "STEP TWO: WHAT THEY LEARNED" body text
 
 **FROM (the small blurb in the left column near the top, currently 1 + 4):**
 
@@ -155,7 +155,7 @@ The summary box is internally inconsistent with the per-step body text and disag
 
 ---
 
-## 8. Page 17 — "STEP THREE: WHAT THEY LIKED TO DO" body text
+## 8. Page 17 - "STEP THREE: WHAT THEY LIKED TO DO" body text
 
 **FROM (left-column blurb, "Add 1 Character Development Point..."):**
 
@@ -183,7 +183,7 @@ The summary box is internally inconsistent with the per-step body text and disag
 
 ---
 
-## 9. Page 18 — "STEP FOUR: HOW THEY MADE MONEY" body text
+## 9. Page 18 - "STEP FOUR: HOW THEY MADE MONEY" body text
 
 This is the Profession step. Step number unchanged.
 
@@ -217,15 +217,15 @@ This is the Profession step. Step number unchanged.
 
 ---
 
-## 10. Page 19 — "STEP FIVE: WHAT THEY LEARNED AFTER" and "STEP SIX: WHAT DRIVES THEM"
+## 10. Page 19 - "STEP FIVE: WHAT THEY LEARNED AFTER" and "STEP SIX: WHAT DRIVES THEM"
 
 **No changes.** Step Five (3 skill CDP) and Step Six (Complications & Motivations, no CDP) keep their numbers and bodies as-is. The Quickstart's step ordering already matches SRD §04.
 
 ---
 
-## 12. Page 20 — Secondary Stats body — replace Panic Threshold with Stress, and add Perception
+## 12. Page 20 - Secondary Stats body - replace Panic Threshold with Stress, and add Perception
 
-The SRD removes Panic Threshold and replaces it with a Stress system that culminates at the Breaking Point. It also adds a new Secondary Stat — Perception — that the Quickstart never references. Tapestry house rule (per `memory:project_stress_on_mortal_incap`) auto-ticks Stress on entering 0 WP or 0 RP.
+The SRD removes Panic Threshold and replaces it with a Stress system that culminates at the Breaking Point. It also adds a new Secondary Stat - Perception - that the Quickstart never references. Tapestry house rule (per `memory:project_stress_on_mortal_incap`) auto-ticks Stress on entering 0 WP or 0 RP.
 
 **Replace the entire "Panic Threshold (PT)" paragraph and "Breaking Point" paragraph with the four paragraphs below, and add a new "Perception" paragraph in the order shown.**
 
@@ -246,15 +246,15 @@ The SRD removes Panic Threshold and replaces it with a Stress system that culmin
 > Stress Recovery: Stress Level drops by 1 for each 8 uninterrupted in-game hours the character spends free from combat, conflict, or environmental threat while doing something they enjoy.
 
 **Also update Table 5: Secondary Stats** on page 20:
-- Add a Perception row: **Perception — Reason + Acumen AMods**
-- Replace the Panic Threshold row with: **Stress Modifier — Reason + Acumen AMods**
-- Keep the Breaking Point row but change its formula entry from `3 + Reason + Acumen AMod` (which is the Quickstart's old Breaking Point trigger value) to: **Breaking Point — triggered when Stress Level reaches 5**
+- Add a Perception row: **Perception - Reason + Acumen AMods**
+- Replace the Panic Threshold row with: **Stress Modifier - Reason + Acumen AMods**
+- Keep the Breaking Point row but change its formula entry from `3 + Reason + Acumen AMod` (which is the Quickstart's old Breaking Point trigger value) to: **Breaking Point - triggered when Stress Level reaches 5**
 
 ---
 
-## 13. Page 24 — Skills overview blurb
+## 13. Page 24 - Skills overview blurb
 
-The current text says SMods "range from -3 (Inept) through to +4 (Life's Work) and are applied to all dice checks using that skill. Although starting characters are initially capped at +3 (Proficient)..." — the cap label should be Professional, not Proficient.
+The current text says SMods "range from -3 (Inept) through to +4 (Life's Work) and are applied to all dice checks using that skill. Although starting characters are initially capped at +3 (Proficient)..." - the cap label should be Professional, not Proficient.
 
 **FROM:**
 
@@ -266,7 +266,7 @@ The current text says SMods "range from -3 (Inept) through to +4 (Life's Work) a
 
 ---
 
-## 14. Page 30 — "FIRST IMPRESSIONS"
+## 14. Page 30 - "FIRST IMPRESSIONS"
 
 The Dire Failure CMod is too punishing vs. the SRD, and the outcome ladder doesn't break out the Moments of Insight. Also align the skill list to the SRD's open-ended phrasing.
 
@@ -306,9 +306,9 @@ The Dire Failure CMod is too punishing vs. the SRD, and the outcome ladder doesn
 
 ---
 
-## 15. Page 30 — "GUT INSTINCTS"
+## 15. Page 30 - "GUT INSTINCTS"
 
-Default modifier is Perception, with skill substitutes. (Perception is now defined on Page 20 — see edit #12.)
+Default modifier is Perception, with skill substitutes. (Perception is now defined on Page 20 - see edit #12.)
 
 **FROM:**
 
@@ -320,15 +320,15 @@ Default modifier is Perception, with skill substitutes. (Perception is now defin
 
 ---
 
-## 16. Page 31 — "NEGOTIATIONS"
+## 16. Page 31 - "NEGOTIATIONS"
 
-The SRD does not have a Negotiations section; this stays as a Distemper-specific extension. No body changes — but verify the body text refers only to skills that exist on Quickstart's skill list (pp. 24–25). Charm and Deception, both used on the Page 38 inner-cover quick-reference, are not on the skill list — that's edit #20.
+The SRD does not have a Negotiations section; this stays as a Distemper-specific extension. No body changes - but verify the body text refers only to skills that exist on Quickstart's skill list (pp. 24-25). Charm and Deception, both used on the Page 38 inner-cover quick-reference, are not on the skill list - that's edit #20.
 
 (No FROM/TO on Page 31; flagged for verification.)
 
 ---
 
-## 17. Page 32 — "COMBAT" → "Get The Drop"
+## 17. Page 32 - "COMBAT" → "Get The Drop"
 
 **FROM:**
 
@@ -340,7 +340,7 @@ The SRD does not have a Negotiations section; this stays as a Distemper-specific
 
 ---
 
-## 18. Page 32 — "COMBAT" → "Range" → movement-between-bands list
+## 18. Page 32 - "COMBAT" → "Range" → movement-between-bands list
 
 The Quickstart's list doesn't add up (1+3+6+10 ≠ 15) and doesn't match the SRD's cumulative-from-Engaged values.
 
@@ -365,7 +365,7 @@ The Quickstart's list doesn't add up (1+3+6+10 ≠ 15) and doesn't match the SRD
 
 ---
 
-## 19. Page 33 — "COMBAT" → Damage / Mortally Wounded / Incapacitation block
+## 19. Page 33 - "COMBAT" → Damage / Mortally Wounded / Incapacitation block
 
 Three changes: incapacitation duration formula, Stabilize check skills, and add Lasting Wounds. Also replace the entire Panic block with a Breaking Point block (the Stress system on Page 20 replaces Panic; the table on Page 33 replaces the Panic Effects table with Table 13: Breaking Point).
 
@@ -443,7 +443,7 @@ Three changes: incapacitation duration formula, Stabilize check skills, and add 
 
 ---
 
-## 20. Page 38 — "Rules Reference" inner cover (Modifiers block, Initiative, Negotiations skills)
+## 20. Page 38 - "Rules Reference" inner cover (Modifiers block, Initiative, Negotiations skills)
 
 Multiple typos to repair on the quick-reference card.
 
@@ -481,7 +481,7 @@ Multiple typos to repair on the quick-reference card.
 
 ---
 
-## 21. Page 38 — "Rules Reference" inner cover → "COMBAT ROUNDS"
+## 21. Page 38 - "Rules Reference" inner cover → "COMBAT ROUNDS"
 
 The duration disagrees with the body text on Page 32 and with the SRD.
 
@@ -495,9 +495,9 @@ The duration disagrees with the body text on Page 32 and with the SRD.
 
 ---
 
-## 22. Page 38 — "Rules Reference" inner cover → "INITIATIVE CHECK" formula
+## 22. Page 38 - "Rules Reference" inner cover → "INITIATIVE CHECK" formula
 
-Stray "+ Perception SMod" — Perception is a Secondary Stat, not a skill, and it isn't part of the Initiative formula in the SRD or in the Quickstart's body text on Page 32.
+Stray "+ Perception SMod" - Perception is a Secondary Stat, not a skill, and it isn't part of the Initiative formula in the SRD or in the Quickstart's body text on Page 32.
 
 **FROM:**
 
@@ -517,7 +517,7 @@ Stray "+ Perception SMod" — Perception is a Secondary Stat, not a skill, and i
 
 ---
 
-## 23. Page 38 — "Rules Reference" inner cover → "FIRST IMPRESSIONS"
+## 23. Page 38 - "Rules Reference" inner cover → "FIRST IMPRESSIONS"
 
 Match the body text on Page 30 (edit #14) and the SRD.
 
@@ -531,9 +531,9 @@ Match the body text on Page 30 (edit #14) and the SRD.
 
 ---
 
-## 24. Page 38 — "Rules Reference" inner cover → "NEGOTIATIONS"
+## 24. Page 38 - "Rules Reference" inner cover → "NEGOTIATIONS"
 
-Charm, Deception, and Perception are not on the Quickstart's skill list (pp. 24–25). Replace them with skills that exist.
+Charm, Deception, and Perception are not on the Quickstart's skill list (pp. 24-25). Replace them with skills that exist.
 
 **FROM (Gambit skills):**
 
@@ -553,7 +553,7 @@ Charm, Deception, and Perception are not on the Quickstart's skill list (pp. 24�
 
 ---
 
-## 25. Page 39 — "Rules Reference" inner cover → "PANIC" block
+## 25. Page 39 - "Rules Reference" inner cover → "PANIC" block
 
 Replace the entire Panic block on the inner cover with a Breaking Point block matching the body change on Page 33 (edit #19).
 
@@ -565,7 +565,7 @@ Replace the entire Panic block on the inner cover with a Breaking Point block ma
 >
 > Players should roll 2d6 and check against the table below for the effect:
 >
-> [Roll Effect table — 2 Babbling through 12 Faints]
+> [Roll Effect table - 2 Babbling through 12 Faints]
 
 **TO:**
 
@@ -577,13 +577,13 @@ Replace the entire Panic block on the inner cover with a Breaking Point block ma
 >
 > Stress drops by 1 for each 8 uninterrupted in-game hours spent free from combat, conflict, or threat while doing something the character enjoys.
 
-(The full Table 13 sits on Page 33 — edit #19. The inner cover need not duplicate it, but if you want a quick lookup row here, just summarize: "See Table 13 on Page 33.")
+(The full Table 13 sits on Page 33 - edit #19. The inner cover need not duplicate it, but if you want a quick lookup row here, just summarize: "See Table 13 on Page 33.")
 
 ---
 
-## 26. Page 39 — "Rules Reference" inner cover → "COMBAT ATTACKS" formula
+## 26. Page 39 - "Rules Reference" inner cover → "COMBAT ATTACKS" formula
 
-The body text on Page 32 lists "Any Weapon-specific Modifiers" in the attack formula. The inner cover omits it. Optional polish only — flagging for consistency.
+The body text on Page 32 lists "Any Weapon-specific Modifiers" in the attack formula. The inner cover omits it. Optional polish only - flagging for consistency.
 
 **FROM:**
 
@@ -618,12 +618,12 @@ The body text on Page 32 lists "Any Weapon-specific Modifiers" in the attack for
 
 ## Things deliberately not changed
 
-- **Quickstart skill list** (pp. 24–25, including the Distemper-specific splits Tinkerer / Vehicle Repair* / Weaponsmith* / Armorsmith*, and First Aid / Pharmacology* / Surgery*) — kept as-is. The SRD consolidates these into Mechanic* and Medicine*, but the platform (`lib/xse-schema.ts` and the `characters.data.skills` jsonb) treats them as separate skills, so Tapestry > SRD precedence applies.
-- **Stealth attribute = Dexterity** (Quickstart p. 25) — kept as-is. SRD lists Stealth as Physicality, but the platform indexes Stealth under Dex.
-- **Negotiations system** (Page 31) — kept as-is. SRD has no Negotiations mechanic, but neither does it forbid one, and the Quickstart's framework is internally coherent once the inner-cover skill-list typos are fixed (edit #24).
-- **Range bands themselves (E/C/M/L/D)** and the in-band combat modifiers (+1 CMod Engaged Melee, etc.) — match the SRD; no change.
-- **Combat Actions table** (pp. 34–35) — verified in full against SRD Table 10; all action effects match exactly.
-- **Item Upkeep / Condition ladder** (pp. 28–29) — matches SRD.
+- **Quickstart skill list** (pp. 24-25, including the Distemper-specific splits Tinkerer / Vehicle Repair* / Weaponsmith* / Armorsmith*, and First Aid / Pharmacology* / Surgery*) - kept as-is. The SRD consolidates these into Mechanic* and Medicine*, but the platform (`lib/xse-schema.ts` and the `characters.data.skills` jsonb) treats them as separate skills, so Tapestry > SRD precedence applies.
+- **Stealth attribute = Dexterity** (Quickstart p. 25) - kept as-is. SRD lists Stealth as Physicality, but the platform indexes Stealth under Dex.
+- **Negotiations system** (Page 31) - kept as-is. SRD has no Negotiations mechanic, but neither does it forbid one, and the Quickstart's framework is internally coherent once the inner-cover skill-list typos are fixed (edit #24).
+- **Range bands themselves (E/C/M/L/D)** and the in-band combat modifiers (+1 CMod Engaged Melee, etc.) - match the SRD; no change.
+- **Combat Actions table** (pp. 34-35) - verified in full against SRD Table 10; all action effects match exactly.
+- **Item Upkeep / Condition ladder** (pp. 28-29) - matches SRD.
 
 ---
 
@@ -631,11 +631,11 @@ The body text on Page 32 lists "Any Weapon-specific Modifiers" in the attack for
 
 1. AMod ceiling: pp. 8, 13, 38 (edits #1, #3, #20)
 2. Backstory CDP totals: pp. 14, 15, 17, 18, 19 (edits #4, #5, #6, #7, #8, #9)
-3. Backstory step renumbering: pp. 14–15, 19 (edits #6, #10, #11)
+3. Backstory step renumbering: pp. 14-15, 19 (edits #6, #10, #11)
 4. Insight Dice restriction + swap wording: p. 10 (edit #2)
 5. Skill cap label: p. 24 (edit #13)
 6. First Impression / Gut Instinct: p. 30 (edits #14, #15)
 7. Get The Drop: p. 32 (edit #17)
 8. Range-band movement: p. 32 (edit #18)
 9. Incapacitation / Stabilize / Lasting Wounds / Stress: pp. 20, 33 (edits #12, #19)
-10. Inner cover quick-ref: pp. 38–39 (edits #20, #21, #22, #23, #24, #25, #26)
+10. Inner cover quick-ref: pp. 38-39 (edits #20, #21, #22, #23, #24, #25, #26)

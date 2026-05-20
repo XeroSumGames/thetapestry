@@ -1,4 +1,4 @@
-# Role Helper Consolidation — 2026-05-14
+# Role Helper Consolidation - 2026-05-14
 
 ## Summary
 
@@ -68,11 +68,11 @@ pattern going forward.
 
 ### Guardrail (commit: `chore(guardrails)`)
 
-`scripts/check-role-literals.mjs` — extended with two new regex patterns:
+`scripts/check-role-literals.mjs` - extended with two new regex patterns:
 - **Pattern 2**: `.role?.toLowerCase()` or `.role.toLowerCase()` followed by `==`/`===` comparison to a role string
 - **Pattern 3**: `.role === 'thriver'` / `.role == 'survivor'` / `.role === 'ghost'` (profile role values only; requires `==` or `===` to avoid matching SQL `=` in comments)
 
-Added `lib/community-logic.ts` to `SKIP_PATHS` — that file uses `.role` for community labor roles (`gatherer`/`maintainer`/`safety`/`assigned`/`unassigned`), not profile roles.
+Added `lib/community-logic.ts` to `SKIP_PATHS` - that file uses `.role` for community labor roles (`gatherer`/`maintainer`/`safety`/`assigned`/`unassigned`), not profile roles.
 
 ---
 
@@ -81,12 +81,12 @@ Added `lib/community-logic.ts` to `SKIP_PATHS` — that file uses `.role` for co
 | File | Line(s) | Reason |
 |------|---------|--------|
 | `app/logging/page.tsx` | ~183 | `'Ghost'`/`'Survivor'` are Leaflet popup display strings, not comparisons. Already in original `SKIP_PATHS`. |
-| `app/stories/[id]/community/page.tsx` | 143-146 | `m.role === 'gatherer'` etc. — community labor roles, not profile roles |
-| `components/CampaignCommunity.tsx` | multiple | `m.role === 'assigned'`, `m.role === 'gatherer'` etc. — labor roles |
+| `app/stories/[id]/community/page.tsx` | 143-146 | `m.role === 'gatherer'` etc. - community labor roles, not profile roles |
+| `components/CampaignCommunity.tsx` | multiple | `m.role === 'assigned'`, `m.role === 'gatherer'` etc. - labor roles |
 | `lib/community-logic.ts` | 79-142 | Labor pool role comparisons (gatherer/maintainer/safety/unassigned) |
-| `lib/style-helpers.tsx` | 293 | `variant === 'ghost'` — a UI variant string, not a profile role |
-| `components/Sidebar.tsx` | 68 | `(profile.role as string).toLowerCase()` to set state — normalization assignment, not comparison |
-| `app/dashboard/page.tsx` | 51 | `(profile.role as string).toLowerCase()` to set state — same |
+| `lib/style-helpers.tsx` | 293 | `variant === 'ghost'` - a UI variant string, not a profile role |
+| `components/Sidebar.tsx` | 68 | `(profile.role as string).toLowerCase()` to set state - normalization assignment, not comparison |
+| `app/dashboard/page.tsx` | 51 | `(profile.role as string).toLowerCase()` to set state - same |
 
 ## Import Alias Convention
 
@@ -96,4 +96,4 @@ import { isThriver as roleIsThriver } from '...'
 ```
 Files where no local `isThriver` exists could import directly, but we used the alias consistently for clarity.
 
-`app/moderate/page.tsx` already had this convention (`isThriver as roleIsThriver`) — the remaining three inline patterns in that file were just missed in the original migration.
+`app/moderate/page.tsx` already had this convention (`isThriver as roleIsThriver`) - the remaining three inline patterns in that file were just missed in the original migration.

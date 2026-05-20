@@ -1,4 +1,4 @@
-# Polish Pass Test Plan — 2026-05-14
+# Polish Pass Test Plan - 2026-05-14
 
 Tests for the four-bundle polish pass (DB migrations + prose fixes +
 Thriver godmode widening + CampaignObjects "found nothing"). Plus the
@@ -18,9 +18,9 @@ Run on `thetapestry.distemperverse.com` after the Vercel deploy lands.
 
 ---
 
-## Bundle 1 — DB migrations applied
+## Bundle 1 - DB migrations applied
 
-### 1.1  `sql/initiative-order-rls-members-write.sql` — Nana attack bug
+### 1.1  `sql/initiative-order-rls-members-write.sql` - Nana attack bug
 
 **What this fixes:** Cover Fire / Inspire / Distract used to silently
 fail when the GM ran the action as a non-owning player (RLS blocked the
@@ -42,7 +42,7 @@ write to `initiative_order`).
 **Pass condition:** all three actions land their downstream effect on a
 non-GM-owned PC's turn.
 
-### 1.2  `sql/player-notes-session-tag.sql` — player notes session-scoped
+### 1.2  `sql/player-notes-session-tag.sql` - player notes session-scoped
 
 **What this fixes:** Player notes from prior sessions weren't tagged
 with a session id, so they'd carry forward forever.
@@ -58,7 +58,7 @@ with a session id, so they'd carry forward forever.
 
 ---
 
-## Bundle 2 — Prose fixes
+## Bundle 2 - Prose fixes
 
 ### 2.1  Insight Dice on Death wording
 
@@ -85,7 +85,7 @@ with a session id, so they'd carry forward forever.
 
 ---
 
-## Bundle 3 — Thriver godmode widening
+## Bundle 3 - Thriver godmode widening
 
 **Setup:** you'll need a SECOND account with `role='thriver'` (the
 account you mentioned setting up earlier). Log in as that account.
@@ -103,7 +103,7 @@ account you mentioned setting up earlier). Log in as that account.
 2. Confirm Thrivers see edit affordances (cargo add/remove, fuel
    adjust, notes edit) that a non-GM-non-Thriver wouldn't.
 
-### 3.3  Regression check — non-Thriver non-GM stays gated
+### 3.3  Regression check - non-Thriver non-GM stays gated
 
 1. Log in as a Survivor or Ghost account (or just a player who isn't
    the campaign's GM).
@@ -112,7 +112,7 @@ account you mentioned setting up earlier). Log in as that account.
 
 ---
 
-## Bundle 4 — CampaignObjects "found nothing"
+## Bundle 4 - CampaignObjects "found nothing"
 
 ### 4.1  Search button on empty destroyed container
 
@@ -135,7 +135,7 @@ account you mentioned setting up earlier). Log in as that account.
 
 ---
 
-## Pre-existing mechanics (also shipped this session — re-test)
+## Pre-existing mechanics (also shipped this session - re-test)
 
 ### 5.1  Coordinated Effort end-to-end (from `tasks/spec-coordinated-effort.md`)
 
@@ -180,7 +180,7 @@ account you mentioned setting up earlier). Log in as that account.
 
 ### 5.3  Weapon Repair (Repair button on melee)
 
-1. Get any PC's primary weapon into a "needs repair" state — easiest:
+1. Get any PC's primary weapon into a "needs repair" state - easiest:
    roll a Low Insight attack with a melee weapon (intentionally low
    AMod/SMod and stack -CMod to make it likely) to jam it AND drop
    condition.
@@ -273,7 +273,7 @@ account you mentioned setting up earlier). Log in as that account.
 1. Open Campaign Sheet for a campaign where a PC has Luxury Rations in
    inventory AND at least 1 Stress pip.
 2. In the Party Status panel, that PC's card should show:
-   `🍷 Consume Luxury Ration (N left) — Stress -1` button.
+   `🍷 Consume Luxury Ration (N left) - Stress -1` button.
 3. Click. Confirm:
    - Stress drops by 1 (pip clears in the row).
    - Luxury Ration count decrements by 1 (button updates to show new count).
@@ -302,14 +302,14 @@ account you mentioned setting up earlier). Log in as that account.
 ## Known caveats / out-of-scope
 
 - The Wound Infection check on a Healing Low Insight is currently a
-  feed prompt only — actual check resolution is GM-driven (no auto-
+  feed prompt only - actual check resolution is GM-driven (no auto-
   trigger).
 - Kit consumption (First Aid Kit / Doctor's Bag have no charges
-  tracked) — canon doesn't specify, treated as infinite-use for now.
-- Per-participant opt-out for Coordinated Effort — current UI only has
+  tracked) - canon doesn't specify, treated as infinite-use for now.
+- Per-participant opt-out for Coordinated Effort - current UI only has
   "End Effort" (terminates whole chain). Per-participant opt-out is in
   the spec but not built.
-- Bespoke summary banner for Coordinated Effort feed — currently each
+- Bespoke summary banner for Coordinated Effort feed - currently each
   roll in the chain shows up as its own row. Summary banner deferred.
 - The `dayToCalendar` strict-Gregorian math returns September 17th for
   canon_day 564 (you said September 15th in your example). The

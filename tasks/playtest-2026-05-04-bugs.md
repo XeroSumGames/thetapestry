@@ -1,4 +1,4 @@
-# Playtest 5/4/26 — Bugs from Session Marks
+# Playtest 5/4/26 - Bugs from Session Marks
 
 Three bugs flagged via `Ctrl+Shift+M` during the session. Source: localStorage
 recovery of `tapestry_playtest_buffer` on `thetapestry.distemperverse.com`
@@ -12,7 +12,7 @@ Combat ran end-to-end with 15 NPCs.
 
 ---
 
-## BUG-1 — Perception check has a redundant first modal
+## BUG-1 - Perception check has a redundant first modal
 
 **Reported (mark):** 01:37:01 UTC
 > "the perception check modal initially shouldn't exist, it should go straight
@@ -26,7 +26,7 @@ Combat ran end-to-end with 15 NPCs.
 3. Click a PC (e.g. "Juno Lask (PER 3)") → roll modal opens.
 4. Cancel → console shows `[closeRollModal] didRoll: false, combatActive: false, preConsumed: false, cost: 1`.
 
-**Expected:** clicking Perception should go straight to the roll modal — the
+**Expected:** clicking Perception should go straight to the roll modal - the
 PC-picker step is friction. Either:
 - Auto-pick the active PC if one is selected/active.
 - If multiple, fold picker + roll into one combined modal.
@@ -36,11 +36,11 @@ PC-picker step is friction. Either:
 **Files likely involved:** the Perception header button handler. Search for
 `Perception` button click handler + the modal that lists PCs by PER.
 
-**Priority:** medium — friction, not blocking.
+**Priority:** medium - friction, not blocking.
 
 ---
 
-## BUG-2 — PCs riding Minnie don't move with her
+## BUG-2 - PCs riding Minnie don't move with her
 
 **Reported (mark):** 01:52:55 UTC
 > "if a pc is 'on' Minnie, they should be 'sticky' and move with the token"
@@ -50,7 +50,7 @@ position changed, PCs whose grid cell was on/inside her did NOT follow.
 
 **Expected:** when a token moves and another token's grid cell is inside its
 footprint (or marked as a passenger), those passenger tokens move along with
-the carrier — preserving their relative offset.
+the carrier - preserving their relative offset.
 
 **Design questions for Xero before implementing:**
 - Is this purely positional ("any PC standing in Minnie's footprint follows")
@@ -58,26 +58,26 @@ the carrier — preserving their relative offset.
 - Does it apply to all multi-cell tokens, or just vehicles?
 - What happens if Minnie moves to terrain a PC can't enter?
 
-**Files likely involved:** tactical token-move handler — search for the
+**Files likely involved:** tactical token-move handler - search for the
 `tactical_tokens` update path. The carrier needs to either (a) push passenger
 deltas in the same transaction, or (b) the move handler needs to detect
 overlap and cascade.
 
-**Priority:** medium — affects every vehicle/mount scene from now on.
+**Priority:** medium - affects every vehicle/mount scene from now on.
 
 ---
 
-## BUG-3 — Firing Minnie's mounted weapon doesn't cost an action
+## BUG-3 - Firing Minnie's mounted weapon doesn't cost an action
 
 **Reported (mark):** 01:56:12 UTC
 > "reading Minnie's weapon and firing it should use actions"
 
 **Repro inferred from buffer:**
 
-- 01:55:17 — Enya posted attack: "🎯 M60 (Mounted) attack → Justice Morse · Minnie · Enya · Ranged Com..."
+- 01:55:17 - Enya posted attack: "🎯 M60 (Mounted) attack → Justice Morse · Minnie · Enya · Ranged Com..."
 - The attack went through (Justice Morse ended up "mortally wounded").
 - **No `[consumeAction]` warn fired** for that shot in the recorder buffer.
-- Compare to Frank Wallace's grenade earlier (01:44–01:45): aim → attack(Grenade)
+- Compare to Frank Wallace's grenade earlier (01:44-01:45): aim → attack(Grenade)
   → roll → `[damage] cell-throw` → `[consumeAction] entryId, ... cost: 1` →
   `[consumeAction] newRemaining: 0` → auto `nextTurn`. That's the correct path.
 
@@ -89,7 +89,7 @@ the active initiative entry.
 bypassing the central `consumeAction` call. Search for "Mounted" in the
 attack-flow code to find where the path diverges from regular ranged attacks.
 
-**Priority:** high — unlimited free actions per turn for any PC riding a
+**Priority:** high - unlimited free actions per turn for any PC riding a
 vehicle is a balance break.
 
 ---
@@ -100,13 +100,13 @@ vehicle is a balance break.
   still being recorded by the playtest recorder (1× on initial load,
   occasionally on map-switch). The head-script filter in `app/layout.tsx`
   drops them from the console UI but our recorder runs before that filter.
-  **Fix shipped alongside this doc** — recorder now skips known-benign warns.
+  **Fix shipped alongside this doc** - recorder now skips known-benign warns.
 - **All combat `[nextTurn]` and `[consumeAction]` warns are firing cleanly.**
-  No errors or unhandled rejections in the entire 44-minute session — the
+  No errors or unhandled rejections in the entire 44-minute session - the
   table held up well.
 - **Auth-attach bug:** all dumps showed `user_email: null` because the
   recorder resolved auth at mount time, before login. **Fix shipped
-  alongside this doc** — recorder now subscribes to Supabase auth state
+  alongside this doc** - recorder now subscribes to Supabase auth state
   changes, so future dumps will be tagged with the GM's email.
 
 ---

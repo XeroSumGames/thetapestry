@@ -1,4 +1,4 @@
-# `ghost` Button variant + cancel-button sweep — 2026-05-03 testplan
+# `ghost` Button variant + cancel-button sweep - 2026-05-03 testplan
 
 New `variant: 'solid' | 'ghost'` prop on `<Button>` + sweep of 6 modal cancel/back buttons. One PR. Ship to live.
 
@@ -9,13 +9,13 @@ New `variant: 'solid' | 'ghost'` prop on `<Button>` + sweep of 6 modal cancel/ba
 [lib/style-helpers.tsx](lib/style-helpers.tsx). Adds:
 
 - A new `variant?: 'solid' | 'ghost'` prop (default `'solid'`).
-- A `chroma` field on each tone in `BUTTON_TONES` — the tone's signature color, used by ghost for both border and text.
+- A `chroma` field on each tone in `BUTTON_TONES` - the tone's signature color, used by ghost for both border and text.
 
 For `info` (the most common ghost), chroma = `#7ab3d4` (matches the existing pattern). For `primary` / `danger`, chroma = `#c0392b` (red on transparent). For `confirm` / `magic` / `warning`, chroma = the bright accent color of each tone.
 
-Solid behavior is unchanged — the existing 5 sites (Continue / Save / Send Offers / Confirm Schism / Publish / Assign) render bit-for-bit identical to before.
+Solid behavior is unchanged - the existing 5 sites (Continue / Save / Send Offers / Confirm Schism / Publish / Assign) render bit-for-bit identical to before.
 
-### Sweep — 6 cancel/back buttons
+### Sweep - 6 cancel/back buttons
 
 | File | Button | Tone | Variant |
 |---|---|---|---|
@@ -26,11 +26,11 @@ Solid behavior is unchanged — the existing 5 sites (Continue / Save / Send Off
 | [components/CampaignCommunity.tsx](components/CampaignCommunity.tsx) | Publish Cancel | `info` | `ghost` |
 | [components/CampaignCommunity.tsx](components/CampaignCommunity.tsx) | Assignment Cancel | `info` | `ghost` |
 
-All 6 are `padding: '6px 12px'` or `'6px 14px'` — slightly tighter than the helper's `size="md"` default (`'8px 12px'`). I preserved exact padding via `style={{ padding: '6px 14px' }}` (Wizard) or `{ padding: '6px 12px' }` (others) overrides so this is a pixel-identical render.
+All 6 are `padding: '6px 12px'` or `'6px 14px'` - slightly tighter than the helper's `size="md"` default (`'8px 12px'`). I preserved exact padding via `style={{ padding: '6px 14px' }}` (Wizard) or `{ padding: '6px 12px' }` (others) overrides so this is a pixel-identical render.
 
 CharacterEvolution gained a `Button` import alongside its existing `ModalBackdrop` + `Z_INDEX`.
 
-Other tone variants of the ghost pattern (e.g. `tone="primary" variant="ghost"` for red-outline destructive cancels at [CampaignCommunity:2341](components/CampaignCommunity.tsx:2341), [:2382](components/CampaignCommunity.tsx:2382), [:2750](components/CampaignCommunity.tsx:2750), [CampaignSnapshots:230](components/CampaignSnapshots.tsx:230)) also work via the new variant, but I deferred those to a separate sweep — keeping this PR focused on the proven info-blue cancel pattern.
+Other tone variants of the ghost pattern (e.g. `tone="primary" variant="ghost"` for red-outline destructive cancels at [CampaignCommunity:2341](components/CampaignCommunity.tsx:2341), [:2382](components/CampaignCommunity.tsx:2382), [:2750](components/CampaignCommunity.tsx:2750), [CampaignSnapshots:230](components/CampaignSnapshots.tsx:230)) also work via the new variant, but I deferred those to a separate sweep - keeping this PR focused on the proven info-blue cancel pattern.
 
 No DB migration. No functional behavior change.
 
@@ -60,12 +60,12 @@ Side-by-side compare against the prior look. Each ghost cancel should be:
 ## Followup
 
 The `ghost` variant unblocks a larger sweep:
-- **Primary-red ghost cancels** at [CampaignCommunity.tsx:2341, :2382, :2750](components/CampaignCommunity.tsx:2341), [CampaignSnapshots.tsx:230](components/CampaignSnapshots.tsx:230) — these match `tone="primary" variant="ghost"` exactly.
-- **Confirm-green ghost** at [CampaignCommunity.tsx:2480](components/CampaignCommunity.tsx:2480) — matches `tone="confirm" variant="ghost"`.
-- **Magic-purple ghost** at [CampaignCommunity.tsx:2743](components/CampaignCommunity.tsx:2743) — matches `tone="magic" variant="ghost"`.
+- **Primary-red ghost cancels** at [CampaignCommunity.tsx:2341, :2382, :2750](components/CampaignCommunity.tsx:2341), [CampaignSnapshots.tsx:230](components/CampaignSnapshots.tsx:230) - these match `tone="primary" variant="ghost"` exactly.
+- **Confirm-green ghost** at [CampaignCommunity.tsx:2480](components/CampaignCommunity.tsx:2480) - matches `tone="confirm" variant="ghost"`.
+- **Magic-purple ghost** at [CampaignCommunity.tsx:2743](components/CampaignCommunity.tsx:2743) - matches `tone="magic" variant="ghost"`.
 
 Deferred so this PR's blast radius stays focused.
 
 ## Rollback
 
-`git revert <commit>` then redeploy. The `ghost` variant + `chroma` field stay in place — additive, harmless.
+`git revert <commit>` then redeploy. The `ghost` variant + `chroma` field stay in place - additive, harmless.

@@ -1,12 +1,12 @@
-# Session Prep — 2026-05-25
+# Session Prep - 2026-05-25
 
-What's new at the table since 2026-05-18 playtest. Skim 5 min before kickoff. Focus on "things you should NOT see" — those are your tripwires for "this is broken" vs "this is the new behavior."
+What's new at the table since 2026-05-18 playtest. Skim 5 min before kickoff. Focus on "things you should NOT see" - those are your tripwires for "this is broken" vs "this is the new behavior."
 
 ---
 
 ## Behavioral changes (you might mistake these for bugs if you forget)
 
-### Recruit Tier-2 — three new behaviors
+### Recruit Tier-2 - three new behaviors
 
 Schema migration shipped, `community_members` + `campaign_npcs` got new columns. Side effects you'll notice at the table:
 
@@ -21,7 +21,7 @@ The CHECK button on the stress bar now fires the canonical mid-play check. Succe
 - **Mid-play check** narrative reads `STRESS CHECK <name> feels the weight` on failure, `holds steady against the pressure` on success.
 - **At-max check** reads `STRESS CHECK <name> calms themselves down` on success → drops to 4; `fails to calm and reaches their Breaking Point` on failure → Breaking Point modal.
 
-If you click CHECK at stress 4 and fail, watch for two modals firing in sequence — that's correct.
+If you click CHECK at stress 4 and fail, watch for two modals firing in sequence - that's correct.
 
 ### Gut Instinct GM whisper
 
@@ -37,11 +37,11 @@ New **👁 Share View** button top-right of the tactical map, GM-only. Mirrors t
 - **Not a continuous follow mode.** One-shot push. Players can keep panning after.
 - Use it when you want to draw everyone's eye to a specific area or pull them out of the weeds and back to the action.
 
-### Narrative polish — 15 branches reworked
+### Narrative polish - 15 branches reworked
 
-Every check/action narrative got polished today. Don't be surprised by the new wording — it's not a bug, it's the new canon. Key changes:
+Every check/action narrative got polished today. Don't be surprised by the new wording - it's not a bug, it's the new canon. Key changes:
 - **Prefix tags** on most check types: `ATTRIBUTE CHECK`, `STRESS CHECK`, `STABILIZE`, `HEAL`, `UNJAM`, `REPAIR`, `COORDINATED EFFORT`.
-- **No prefix** on Recruit, First Impression, Distract, Vehicle Attack/Driving/Brew, Group Check (deliberate — those have richer narrative bodies).
+- **No prefix** on Recruit, First Impression, Distract, Vehicle Attack/Driving/Brew, Group Check (deliberate - those have richer narrative bodies).
 - **Mechanical bits banned in compact narrative.** Things like `(+1 stress)`, `(-2 CMod)`, `(+1 action)` are GONE from feed lines. Still visible in expanded ▸ view + on the affected character's pips. Story first, numbers second.
 - **HI tail always reads** `and has a Moment of Insight as to why it went so well`. **LI tail always reads** `but has a Moment of Insight as to why it went so badly`. Symmetric long form.
 
@@ -57,7 +57,7 @@ Chains of N participants now collapse into a single banner row in the feed. Indi
 
 ## Things you should NOT see during the session
 
-If you see any of these, file a bug — they were validated in the smoke test, so they're regressions:
+If you see any of these, file a bug - they were validated in the smoke test, so they're regressions:
 
 - Recruit modal allowing Convert approach on an NPC that has it locked (button should be greyed out + 🔒)
 - Plain Success recruits with NO Temporary chip (should always chip)
@@ -85,10 +85,10 @@ If you see any of these, file a bug — they were validated in the smoke test, s
 
 ## Sentry status
 
-Last verified alive 2026-05-18. Tunnel returns 200; SDK loaded. If something throws unexpectedly during the session, it should land in https://xero-sum-games.sentry.io/issues — check post-session for anything you didn't notice live.
+Last verified alive 2026-05-18. Tunnel returns 200; SDK loaded. If something throws unexpectedly during the session, it should land in https://xero-sum-games.sentry.io/issues - check post-session for anything you didn't notice live.
 
 ---
 
 ## Stand-down
 
-Don't ship anything from now until post-playtest. SRE rule: no load-bearing changes inside the playtest window. If a player reports something mid-session, capture via bug report — don't try to fix it live.
+Don't ship anything from now until post-playtest. SRE rule: no load-bearing changes inside the playtest window. If a player reports something mid-session, capture via bug report - don't try to fix it live.

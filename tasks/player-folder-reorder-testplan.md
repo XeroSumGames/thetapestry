@@ -1,4 +1,4 @@
-# Player NPC folder reorder (Q2 Phase B) — test plan
+# Player NPC folder reorder (Q2 Phase B) - test plan
 
 Companion to commit `feat(npcs): player-side folder reorder (Q2 Phase B)`.
 
@@ -7,7 +7,7 @@ Companion to commit `feat(npcs): player-side folder reorder (Q2 Phase B)`.
 Player-side NPC tab now lets the player drag folder HEADERS to reorder
 the folder list (mirrors GM's NpcRoster reorder, localStorage-backed).
 Combat (`__combat__`) and Community (`__community__*`) buckets stay
-non-draggable — they're computed views and would just snap back.
+non-draggable - they're computed views and would just snap back.
 
 - Saved per `(user, campaign)` under localStorage key
   `npc_folder_order_player_<campaignId>` (distinct from the GM's
@@ -64,7 +64,7 @@ revealed (or are auto-revealed via npc_relationships).
 
 ## Automated coverage
 
-No new unit tests for this commit — the new logic is pure DOM drag
+No new unit tests for this commit - the new logic is pure DOM drag
 state + localStorage + array reorder, which is identical in shape to
 the GM's `handleFolderDrop` that already ships and hasn't regressed.
 The shared NPC-move/reorder helpers in `lib/npc-drag-drop.ts` are

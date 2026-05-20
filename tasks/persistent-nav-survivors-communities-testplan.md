@@ -1,17 +1,17 @@
 # Persistent GM Nav + Survivors Gallery + Community Auto-expand
-Commit: af15ca1 — pushed to main 2026-04-29
+Commit: af15ca1 - pushed to main 2026-04-29
 
 ## What changed
-- **`components/StoryToolsNav.tsx`** (new) — Launch / GM Tools / Edit /
+- **`components/StoryToolsNav.tsx`** (new) - Launch / GM Tools / Edit /
   Snapshot / Sessions / Community / Share button row, with active-page
   highlighting via `usePathname()`.
 - **Mounted at** `/stories/[id]/edit`, `/snapshots`, `/sessions`, `/community`.
-  Hub page (`/stories/[id]`) is intentionally NOT updated — its full
+  Hub page (`/stories/[id]`) is intentionally NOT updated - its full
   inline button row already has GM Kit, Publish Module, Archive, Delete
   which the shared nav doesn't carry.
 - **Evolution button** added to `CharacterCard.tsx` between Inventory
   and Apprentice. Purple. Scrolls to Progression Log on the same card.
-- **My Survivors gallery** swapped to CSS grid `auto-fill 1fr` — tiles
+- **My Survivors gallery** swapped to CSS grid `auto-fill 1fr` - tiles
   fill the row evenly.
 - **`/communities/[id]`** auto-expands the clicked community via new
   `initialOpenId` prop on `CampaignCommunity`.
@@ -31,14 +31,14 @@ Commit: af15ca1 — pushed to main 2026-04-29
 5. Click **Community** → same nav, Community highlighted, Community
    Dashboard loads below.
 6. Click **GM Tools** → returns to hub. Click **Launch** → opens table
-   in a new tab (new-tab is intentional only for Launch — all other
+   in a new tab (new-tab is intentional only for Launch - all other
    in-nav links are same-tab).
 7. Click **Share** on any sub-page → clipboard now contains the invite
    link, button briefly shows "Copied!".
 
 ### Player path
 8. Sign in as a player and visit a campaign you're a member of (not GM).
-   The hub page only shows Launch/Share/Leave — not affected by this
+   The hub page only shows Launch/Share/Leave - not affected by this
    change. Player has no need to visit Edit/Snapshot/Sessions/Community
    pages so they're not exposed via the nav for non-GMs.
 
@@ -59,13 +59,13 @@ Commit: af15ca1 — pushed to main 2026-04-29
 14. Visit `/communities` → click into a community card (e.g. "The
     Mongrels" if you have a Mongrels campaign).
 15. Confirm the Mongrels accordion is already expanded showing Homestead,
-    Leader, Role Coverage, Add Member, etc. — NO extra click needed.
+    Leader, Role Coverage, Add Member, etc. - NO extra click needed.
 16. Visit `/communities` again → click a different community → that
     one auto-expands.
 
 ## Regression checks
 - Hub page `/stories/[id]` still shows the full button row with GM Kit,
-  Publish Module, etc. — should be unchanged.
-- `/communities` list view (the parent) — unchanged.
+  Publish Module, etc. - should be unchanged.
+- `/communities` list view (the parent) - unchanged.
 - Existing CharacterCard buttons (Map / Edit / Inventory / Apprentice /
   Popout / Print / Duplicate / Delete) all still present and working.

@@ -1,4 +1,4 @@
-# Slash Conventions — quick reference
+# Slash Conventions - quick reference
 
 Start a message with one of these tokens to get a focused single-role response from Claude. No cross-role noise. Drop the slash anytime you want the all-perspectives default.
 
@@ -6,7 +6,7 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 ---
 
-## `/architect` — system design, scaling, future-proofing
+## `/architect` - system design, scaling, future-proofing
 
 **When to reach for it:** you're about to start a non-trivial feature, picking a stack, deciding between two approaches, or wondering if something will hold up at 10x users.
 
@@ -20,7 +20,7 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 ---
 
-## `/security` — threats, auth, PII, payments
+## `/security` - threats, auth, PII, payments
 
 **When to reach for it:** you're touching auth, payments, file uploads, user-supplied input, anything a bad actor could exploit, or anything that could leak/lose data.
 
@@ -34,7 +34,7 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 ---
 
-## `/qa` — bug-class analysis, test design
+## `/qa` - bug-class analysis, test design
 
 **When to reach for it:** a bug surfaced and you want me to analyze the CLASS of bug, not just patch this instance. Also good when you're about to ship something risky and want to know what tests should exist.
 
@@ -48,7 +48,7 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 ---
 
-## `/product` — prioritization, scope, "do we even build this?"
+## `/product` - prioritization, scope, "do we even build this?"
 
 **When to reach for it:** you have multiple competing things you could build, you're not sure if a feature is scope-creep or strategic, or you're trying to figure out what NOT to do.
 
@@ -62,7 +62,7 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 ---
 
-## `/ops` — reliability, observability, incident response
+## `/ops` - reliability, observability, incident response
 
 **When to reach for it:** thinking about what happens when things break in production, what you'd do at 3am during an outage, or what you'd tell users when something fails.
 
@@ -76,7 +76,7 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 ---
 
-## `/business` — pricing, retention, commercial strategy
+## `/business` - pricing, retention, commercial strategy
 
 **When to reach for it:** pricing decisions, churn analysis, paid-conversion funnel, anything about how money flows through the product.
 
@@ -86,11 +86,11 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 - *"How do I know what features paying users actually use vs free users?"*
 - *"What's the difference between churn at 30 days vs 90 days vs 365 days, and which should I worry about first?"*
 
-**What you get:** tradeoffs, second-order effects (what does this incentivize?), counter-examples from comparable products, and an honest "you decide" — Claude lays out the case, you make the commercial call.
+**What you get:** tradeoffs, second-order effects (what does this incentivize?), counter-examples from comparable products, and an honest "you decide" - Claude lays out the case, you make the commercial call.
 
 ---
 
-## `/ux` — appealing? functional? intuitive?
+## `/ux` - appealing? functional? intuitive?
 
 **When to reach for it:** deciding if something is visually right, intuitive on first encounter, accessible, or whether the interaction supports what the user is trying to do.
 
@@ -100,11 +100,11 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 - *"The combat UI has 14 buttons. Is that too many? What would a player look at first?"*
 - *"I want to add a tutorial popover but I hate intrusive tutorials. What's the right pattern?"*
 
-**What you get:** heuristic critique against UX principles (clarity, progressive disclosure, error recovery, feedback loops, affordances), specific changes that would improve the screen, and an honest flag that this is heuristic critique — real UX validation needs real user testing, which we don't have set up yet.
+**What you get:** heuristic critique against UX principles (clarity, progressive disclosure, error recovery, feedback loops, affordances), specific changes that would improve the screen, and an honest flag that this is heuristic critique - real UX validation needs real user testing, which we don't have set up yet.
 
 ---
 
-## `/stability-audit` — is anything load-bearing currently unattended?
+## `/stability-audit` - is anything load-bearing currently unattended?
 
 **When to reach for it:** post-playtest, post-big-batch-of-ships, before a planned playtest, or whenever the answer to "is the codebase stable?" feels fuzzy. Periodic on-demand companion to the autonomous 3-hour health-pulse + weekly security audit. The output is a single audit doc + new todos + Risk Register triage; no code edits in the audit pass itself.
 
@@ -114,9 +114,9 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 - *"Before I open paid signups, do a stability sweep."*
 - *"The health-pulse has been DRIFT for 5 days running. What's not being drained?"*
 
-**What you get:** the doc shape laid out in [tasks/lessons.md](lessons.md) under "Stability-audit pattern" — read existing evidence (debug-handoff Risk Register + Tech Debt + Confidence Ledger, newest health-pulse, newest security-audit, last 14 days of git log, todo CURRENT OPEN) → run live gates (tsc, font-sizes, role-literals, vitest, npm audit) → footgun grep (`as any`, `@ts-ignore`, TODO/FIXME, realtime channels, polling, upload calls) → Confidence-Ledger triage → output sorted BLOCKER / HIGH / MEDIUM / LOW at `tasks/stability-audit-YYYY-MM-DD.md` (dated; do not overwrite). Risk Register colors updated where evidence changed them. New todos added with severity prefix (H-1, M-3, L-2 etc.) so the audit checklist is actionable.
+**What you get:** the doc shape laid out in [tasks/lessons.md](lessons.md) under "Stability-audit pattern" - read existing evidence (debug-handoff Risk Register + Tech Debt + Confidence Ledger, newest health-pulse, newest security-audit, last 14 days of git log, todo CURRENT OPEN) → run live gates (tsc, font-sizes, role-literals, vitest, npm audit) → footgun grep (`as any`, `@ts-ignore`, TODO/FIXME, realtime channels, polling, upload calls) → Confidence-Ledger triage → output sorted BLOCKER / HIGH / MEDIUM / LOW at `tasks/stability-audit-YYYY-MM-DD.md` (dated; do not overwrite). Risk Register colors updated where evidence changed them. New todos added with severity prefix (H-1, M-3, L-2 etc.) so the audit checklist is actionable.
 
-**Wider than the health-pulse, narrower than `/pre-launch-audit`.** The 3-hour health-pulse catches short-term drift; the weekly security audit catches deeper security findings; `/pre-launch-audit` is the one-time top-down before paid signups open. `/stability-audit` sits between — invoke after notable batches of work to verify the verification rate is keeping up with the ship rate.
+**Wider than the health-pulse, narrower than `/pre-launch-audit`.** The 3-hour health-pulse catches short-term drift; the weekly security audit catches deeper security findings; `/pre-launch-audit` is the one-time top-down before paid signups open. `/stability-audit` sits between - invoke after notable batches of work to verify the verification rate is keeping up with the ship rate.
 
 ---
 
@@ -134,7 +134,7 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 Things that are NOT slashes, even though they look similar:
 
-- `/help`, `/clear`, `/config` etc. — those are Claude Code CLI commands, handled by the harness.
-- `/loop`, `/schedule`, `/review`, `/init`, etc. — those are skills, handled by the skill system.
+- `/help`, `/clear`, `/config` etc. - those are Claude Code CLI commands, handled by the harness.
+- `/loop`, `/schedule`, `/review`, `/init`, etc. - those are skills, handled by the skill system.
 
 The slash conventions in this file are conversational tokens Claude watches for. They don't trigger any harness behavior; they shape Claude's response.

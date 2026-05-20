@@ -1,4 +1,4 @@
-# Recorder 3-Hour Hardening — Test Plan (2026-05-11)
+# Recorder 3-Hour Hardening - Test Plan (2026-05-11)
 
 ## What changed
 
@@ -10,7 +10,7 @@ toggle off at end"):
   - localStorage backup window 500 → 5,000 trailing events.
   - **Split** `setEnabled()` from `wipeBuffer()`. Toggle OFF mid-session
     no longer destroys the buffer.
-  - New `startPeriodicFlush()` — auto-persists trailing buffer to
+  - New `startPeriodicFlush()` - auto-persists trailing buffer to
     localStorage every 60s. Crash recovery loses ≤1 min instead of
     everything since the last error/mark.
 
@@ -20,19 +20,19 @@ toggle off at end"):
   - Later gate flips (e.g., GM toggles OFF mid-session) preserve the
     buffer.
   - Subscribes to realtime `postgres_changes` UPDATE on
-    `playtest_recorder_config` — /record toggles propagate to every
+    `playtest_recorder_config` - /record toggles propagate to every
     open tab within ~1 second.
   - Kicks off the periodic flush.
 
-- **`lib/damage.ts`** — added `[playtest-trace] [damage] calculateDamage`
+- **`lib/damage.ts`** - added `[playtest-trace] [damage] calculateDamage`
   log inside the function so the math is captured for every caller
   (table page, vehicle popout, etc.). Complements the existing call-site
   trace at table/page.tsx ~line 4390.
 
-- **`sql/playtest-recorder-config-realtime.sql`** — added the config
+- **`sql/playtest-recorder-config-realtime.sql`** - added the config
   table to the `supabase_realtime` publication. Applied to live DB.
 
-- **`/record` help text** — updated to describe the 3-hour workflow,
+- **`/record` help text** - updated to describe the 3-hour workflow,
   new 20,000-event cap, 60s flush, and that the buffer survives a
   mid-session OFF toggle.
 
@@ -41,23 +41,23 @@ toggle off at end"):
 All three of the 5/11 known-flaky bugs already have
 `[playtest-trace]`-prefixed instrumentation:
 
-1. **Initiative lag** — `[nextTurn] done { total_ms, deactivate_ms, activate_ms, reload_ms, broadcast_ms, activated_name }`
-2. **Damage calc 8 → 7/7** — call-site dump at table/page.tsx ~line 4390 + my new
+1. **Initiative lag** - `[nextTurn] done { total_ms, deactivate_ms, activate_ms, reload_ms, broadcast_ms, activated_name }`
+2. **Damage calc 8 → 7/7** - call-site dump at table/page.tsx ~line 4390 + my new
    in-lib `[damage] calculateDamage` trace
-3. **Failed skill checks leaving 2 actions** — `[closeRollModal]` gate
+3. **Failed skill checks leaving 2 actions** - `[closeRollModal]` gate
    decision + `[consumeAction] CALLED` / `WROTE` with before→after.
 
 ## Pre-session smoke test (~15 min, do ~30 min before playtest)
 
-### Test 1 — Buffer cap survives load
+### Test 1 - Buffer cap survives load
 
 1. /record → toggle ON, Everyone, Save.
 2. Open the live site, log in, navigate around for ~2 min (many clicks).
 3. DevTools console: `window.__tapestryRecorder?.buffer.length`
 4. ✓ Returns a number > 50 and < 20,000.
-5. `window.__tapestryRecorder?.buffer.slice(-1)` — ✓ shows recent click.
+5. `window.__tapestryRecorder?.buffer.slice(-1)` - ✓ shows recent click.
 
-### Test 2 — Toggle OFF preserves buffer mid-session
+### Test 2 - Toggle OFF preserves buffer mid-session
 
 1. With recording ON and at least ~50 events captured, go to /record.
 2. Toggle OFF. Save. Wait 2 seconds.
@@ -68,7 +68,7 @@ All three of the 5/11 known-flaky bugs already have
    intact and `meta.event_count` matches the buffer length.
 5. Click around more → ✓ buffer length stays the same (capture is off).
 
-### Test 3 — Realtime ON propagation (no reload needed)
+### Test 3 - Realtime ON propagation (no reload needed)
 
 1. /record → toggle OFF, Save. Reload the captured-events tab so it
    starts fresh in "off" state.
@@ -77,9 +77,9 @@ All three of the 5/11 known-flaky bugs already have
 4. Within ~1 second on the other tab:
    - ✓ Red dot appears (the gate re-evaluated and flipped on).
    - `window.__tapestryRecorder?.enabled` → ✓ `true`.
-5. Click around — buffer length grows.
+5. Click around - buffer length grows.
 
-### Test 4 — Periodic flush every 60s
+### Test 4 - Periodic flush every 60s
 
 1. With recording ON, click around to put a few events in the buffer.
 2. DevTools → Application → Local Storage → site origin.
@@ -88,7 +88,7 @@ All three of the 5/11 known-flaky bugs already have
 5. Refresh the local-storage panel. ✓ `tapestry_playtest_buffer` now
    present with up to PERSIST_BACKUP_COUNT recent events.
 
-### Test 5 — Diagnostic traces fire
+### Test 5 - Diagnostic traces fire
 
 In the live combat playthrough (any campaign with active combat):
 1. End a turn (`⊘` button or end-combat).
@@ -101,7 +101,7 @@ In the live combat playthrough (any campaign with active combat):
 7. Press Ctrl+Shift+L → ✓ dump includes all three traces under
    `kind: 'console-warn'` events.
 
-### Test 6 — Per-player allowlist still works after realtime change
+### Test 6 - Per-player allowlist still works after realtime change
 
 1. /record → toggle ON, Selected only, pick just yourself, Save.
 2. ✓ Your tab's recorder stays on / activates.

@@ -1,4 +1,4 @@
-# gm-kit scope + lazy JSZip — 2026-05-03 testplan
+# gm-kit scope + lazy JSZip - 2026-05-03 testplan
 
 Two related fixes in [lib/gm-kit.ts](lib/gm-kit.ts). One PR. Ship to live.
 
@@ -12,13 +12,13 @@ Pre-fix line 62 was:
 supabase.from('scene_tokens').select('*'),
 ```
 
-inside the Wave 1 Promise.all — **no campaign or scene filter at all**. Every GM Kit export streamed the entire `scene_tokens` table across the wire, with a client-side `.filter(t => sceneIds.has(t.scene_id))` as the only narrowing. RLS was the only real defense; if RLS ever drifted, this would have leaked other campaigns' tokens.
+inside the Wave 1 Promise.all - **no campaign or scene filter at all**. Every GM Kit export streamed the entire `scene_tokens` table across the wire, with a client-side `.filter(t => sceneIds.has(t.scene_id))` as the only narrowing. RLS was the only real defense; if RLS ever drifted, this would have leaked other campaigns' tokens.
 
 Now: Wave 1 fetches campaign + pins + npcs + scenes + notes (everything filterable by `campaign_id` directly). Wave 2 sequentially fetches `scene_tokens.in('scene_id', sceneIds)` once we have the scene IDs. Pure server-side filtering.
 
 ### 2. `JSZip` was a top-level import
 
-Pre-fix `import JSZip from 'jszip'` at line 19 pulled ~50KB into any client bundle that imported `lib/gm-kit.ts` — even bundles that never reach the export button. Now it's a dynamic import inside `exportGmKit`:
+Pre-fix `import JSZip from 'jszip'` at line 19 pulled ~50KB into any client bundle that imported `lib/gm-kit.ts` - even bundles that never reach the export button. Now it's a dynamic import inside `exportGmKit`:
 
 ```
 const { default: JSZip } = await import('jszip')
@@ -41,7 +41,7 @@ No DB migration. No functional behavior change.
 
 ### B. Network trace shows scoped fetch (2 min)
 - [ ] In DevTools Network during the export, filter by `scene_tokens`. The request should now include `scene_id=in.(...)` rather than an unfiltered `select=*`.
-- [ ] Payload size on that request should drop dramatically if your DB has many campaigns. (For a single-campaign DB it's a wash — but the fetch shape is now correct regardless.)
+- [ ] Payload size on that request should drop dramatically if your DB has many campaigns. (For a single-campaign DB it's a wash - but the fetch shape is now correct regardless.)
 
 ### C. JSZip lazy-load (3 min)
 - [ ] Cold-load any page that touches `lib/gm-kit.ts` (e.g. the GM screen). In DevTools Network, JSZip's chunk should NOT load.

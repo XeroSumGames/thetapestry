@@ -1,4 +1,4 @@
-# Spec — Healing on GM Time-Tick
+# Spec - Healing on GM Time-Tick
 
 **Status:** design locked 2026-05-13. Not built yet. Builds on canon (First Aid Kit / Doctor's Bag), extends with outcome-tier upsides and queued application.
 
@@ -13,7 +13,7 @@ A Medicine\* check from one PC on another doesn't apply WP immediately. The heal
 - **Range:** Engaged with the target (matches Stabilise).
 - **Range:** Healer + target both at Engaged range when the check resolves.
 
-## Outcome table — WP healed (locked 2026-05-13)
+## Outcome table - WP healed (locked 2026-05-13)
 
 | Outcome | No kit (naked Medicine\* check) | First Aid Kit (canon) | Doctor's Bag (canon) |
 |---|---|---|---|
@@ -25,7 +25,7 @@ A Medicine\* check from one PC on another doesn't apply WP immediately. The heal
 | Low Insight | Target makes an Infection check (+ Insight Die badge to healer) | same | same |
 
 Notes:
-- "Medicine\* level" = healer's SMod in Medicine\* at roll time. A character with Medicine\* 0 (Untrained) heals 0 on a naked Success — the +1/+2 from WS/HI is the only WP they can deliver bare-handed.
+- "Medicine\* level" = healer's SMod in Medicine\* at roll time. A character with Medicine\* 0 (Untrained) heals 0 on a naked Success - the +1/+2 from WS/HI is the only WP they can deliver bare-handed.
 - The +1 / +2 from Wild Success and High Insight are FLAT additions, not multipliers on the dice/level.
 - A Medicine\* Lv4 character with a Doctor's Bag on a High Insight heals: `1+2d3+2`. Min 4, max 9.
 
@@ -57,7 +57,7 @@ Notes:
 - **Schema:** likely a row in `campaign_events` with `type='pending_heal'`, `target_character_id`, `scheduled_canon_day`, `scheduled_canon_hour`, `payload: { wp_amount }`. Two rows per heal (one for +12h, one for +24h).
 - **Roll modal trigger:** does the healer click a dedicated "Heal" button on their character card, or do they just roll Medicine\* with the target-picker open? Recommend a dedicated button to gate the "pick target" → "pick kit" flow cleanly.
 - **Kit consumption:** the existing First Aid Kit / Doctor's Bag entries in `EQUIPMENT` don't have a charges/uses field. Canon doesn't mention kit depletion. Treat kits as infinite-use for now? Flag for Xero design call later if depletion is wanted.
-- **Untargeted heals:** can a healer self-heal? Probably yes — same flow, target picker just allows self.
+- **Untargeted heals:** can a healer self-heal? Probably yes - same flow, target picker just allows self.
 - **Bystander rules:** if the target moves out of Engaged or off the map before the +24h tick, does the queued heal still apply? Default: yes, the medical care was administered, the body heals on its own clock after that.
 - **Feed shape:** one bespoke "🩹 Junie successfully treated Marv (+5 WP over 24h)" row at check time, plus "🩹 Marv recovers +2 WP (treatment continues)" system rows at the +12h and +24h ticks. Mirror the loot / rations / subsistence System-row pattern.
 

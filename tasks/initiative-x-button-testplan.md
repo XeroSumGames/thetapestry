@@ -1,4 +1,4 @@
-# Testplan — Initiative bar `×` button tooltip
+# Testplan - Initiative bar `×` button tooltip
 
 **Commit:** `21529f7` (on main)
 
@@ -13,9 +13,9 @@ The `×` button on each combatant in the initiative bar now has a context-sensit
 The button is dual-purpose by design ([page.tsx:5096-5121](app/stories/[id]/table/page.tsx:5096)):
 
 - **GM click:** Removes that combatant from initiative. If the removed combatant was active, hands activity to the next combatant in roll-desc order (deliberately avoids `nextTurn()` to skip the "New Round" wrap).
-- **Player click on own active turn:** Calls `nextTurn()` — ends their turn.
+- **Player click on own active turn:** Calls `nextTurn()` - ends their turn.
 
-Both paths are sensible. The hole was discoverability — every other button in the row (Defer `↓`, Grant +1 `+`, status icons `💀🩸💤⚡`) had tooltips, the `×` didn't.
+Both paths are sensible. The hole was discoverability - every other button in the row (Defer `↓`, Grant +1 `+`, status icons `💀🩸💤⚡`) had tooltips, the `×` didn't.
 
 ## Test steps
 

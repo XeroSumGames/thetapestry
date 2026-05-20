@@ -1,4 +1,4 @@
-# Fog blocker-gated semantic — 2026-05-04 testplan
+# Fog blocker-gated semantic - 2026-05-04 testplan
 
 Resolves the conflict between two earlier fog fixes:
 - **This morning** (commit 26f6dfc): made painted fog absolute, fixing maps where unbounded sight cleared all painted fog on no-walls scenes.
@@ -6,7 +6,7 @@ Resolves the conflict between two earlier fog fixes:
 
 ## What's fixed
 
-[components/TacticalMap.tsx:1244](components/TacticalMap.tsx:1244) onward — the visibility sweep + painted-fog-defeasibility logic now both gate on whether the scene has authored vision blockers (walls / closed doors / closed windows / wall-tagged tokens).
+[components/TacticalMap.tsx:1244](components/TacticalMap.tsx:1244) onward - the visibility sweep + painted-fog-defeasibility logic now both gate on whether the scene has authored vision blockers (walls / closed doors / closed windows / wall-tagged tokens).
 
 ```
 hasBlockers = visionSegs.length > 0 || cellBlockers.size > 0
@@ -26,22 +26,22 @@ No DB migration. No data shape change.
 
 ## Test plan
 
-### A. Open-window restores vision (the regression case) — 3 min
+### A. Open-window restores vision (the regression case) - 3 min
 - [ ] On a scene with authored wall segments (window in a wall), GM paints fog inside the room behind the window. Player has a PC outside.
 - [ ] Window starts closed → player can't see through (painted fog + LoS-blocked).
-- [ ] GM clicks the window to open it. Within ~1 second (wall-persist debounce + realtime), player sees through the window — painted fog along the LoS path clears, room interior visible.
+- [ ] GM clicks the window to open it. Within ~1 second (wall-persist debounce + realtime), player sees through the window - painted fog along the LoS path clears, room interior visible.
 - [ ] GM closes the window again. Painted fog returns. Player can no longer see through.
 
-### B. No-walls scene preserves painted fog (this morning's fix) — 2 min
+### B. No-walls scene preserves painted fog (this morning's fix) - 2 min
 - [ ] On a scene with the building drawn into the background image but NO authored wall segments, GM paints fog over part of the map. Player has a PC anywhere.
 - [ ] Painted fog renders absolute on the player view. PC's day-mode unbounded sight does NOT clear it.
-- [ ] No auto-fog applied (the scene has no blockers, so auto-fog is gated off — the GM gets exactly what they painted, nothing more, nothing less).
+- [ ] No auto-fog applied (the scene has no blockers, so auto-fog is gated off - the GM gets exactly what they painted, nothing more, nothing less).
 
-### C. Auto-fog still works on walled scenes — 2 min
+### C. Auto-fog still works on walled scenes - 2 min
 - [ ] Scene with walls authored, GM paints NO fog. Player has a PC inside a walled area.
 - [ ] Auto-fog covers everything outside the PC's LoS. PC moves → auto-fog adjusts. Closing a door re-fogs the corridor beyond.
 
-### D. GM edit-mode preview — 1 min
+### D. GM edit-mode preview - 1 min
 - [ ] Click `EDIT FOG` as GM. Painted fog renders at 0.35 opacity (preview mode), even on a no-walls scene. Painting / erasing works as before.
 - [ ] Exit edit mode. Painted fog goes opaque again.
 

@@ -1,4 +1,4 @@
-# Test Plan — Inventory #5: Barter Trade Negotiation
+# Test Plan - Inventory #5: Barter Trade Negotiation
 
 Shipped 2026-04-30. Per CRB §05 Acumen Skills, Barter is an Opposed Check skill where the winner convinces the other side. This modal automates the roll + the item transfer for trades with NPCs and community stockpiles.
 
@@ -8,7 +8,7 @@ No SQL migration. Reuses existing inventories (PC `characters.data.inventory`, N
 
 Setup: a campaign with a session-active PC + at least one NPC with items in their inventory + a community with a stockpile (any non-empty stockpile from Inventory #4).
 
-## Golden path — trade with NPC
+## Golden path - trade with NPC
 
 1. Open an NPC's card from the roster.
 2. **Expected**: a new **⚖ Trade** button (orange) appears alongside Map/Inventory/etc.
@@ -28,12 +28,12 @@ Setup: a campaign with a session-active PC + at least one NPC with items in thei
 
 | PC Outcome | Won? | Badge |
 |---|---|---|
-| High Insight (6+6) | Yes | ✦ Generous Deal — purple |
-| Wild Success (14+) | Yes | ✓ Deal Struck — green |
-| Success (9-13) | Yes | ✓ Deal Struck — green |
-| Anything | No (NPC higher) | ⚖ Counter-offered — amber, deal not auto-applied |
-| Dire Failure (0-3) | — | ✗ Refused — red, deal not applicable |
-| Low Insight (1+1) | — | ✗ Insulted — red, deal not applicable |
+| High Insight (6+6) | Yes | ✦ Generous Deal - purple |
+| Wild Success (14+) | Yes | ✓ Deal Struck - green |
+| Success (9-13) | Yes | ✓ Deal Struck - green |
+| Anything | No (NPC higher) | ⚖ Counter-offered - amber, deal not auto-applied |
+| Dire Failure (0-3) | - | ✗ Refused - red, deal not applicable |
+| Low Insight (1+1) | - | ✗ Insulted - red, deal not applicable |
 
 Apply Deal disabled on Refused/Insulted/Counter-offered outcomes. GM adjudicates manually if they want to apply terms anyway.
 
@@ -50,31 +50,31 @@ Apply Deal disabled on Refused/Insulted/Counter-offered outcomes. GM adjudicates
 4. **Expected**: Trade modal opens. Right column shows stockpile items. NPC name = community name, subtext = "Stockpile". Barter SMod = community leader's Barter level (NPC leader's `skills.entries[].level` for `Barter`, or PC leader's `data.skills[].level`, or 0 if no leader).
 5. Build deal, roll, apply. **Expected**: stockpile rows update accordingly (qty decrement, INSERT new entries on PC give).
 
-## Edge — empty inventory on either side
+## Edge - empty inventory on either side
 
 1. NPC has no items, or PC has empty inventory.
 2. **Expected**: that column shows italic "X's inventory is empty" / "Your inventory is empty". The other side still works; deal can be one-way (e.g., gift only).
 3. Selecting items only on one side: fairness gauge shows that side overpaying / underpaying. Deal still rollable.
 
-## Edge — selecting more than available
+## Edge - selecting more than available
 
 1. Try to + an item past its `qty`.
 2. **Expected**: button disables when at max.
 
-## RLS — non-member trying to trade with another campaign's community
+## RLS - non-member trying to trade with another campaign's community
 
 1. Player A in Campaign X opens InventoryPanel and somehow targets a community in Campaign Y (UI doesn't expose this, but if it did): RLS on `community_stockpile_items` should reject the write.
-2. **Expected**: `Apply Deal` errors. (Manual test — UI doesn't actually present this option.)
+2. **Expected**: `Apply Deal` errors. (Manual test - UI doesn't actually present this option.)
 
-## Regression — existing flows untouched
+## Regression - existing flows untouched
 
-1. NPC Inventory panel (loot from NPC) still works — `Give to PC` chip still functions independently.
+1. NPC Inventory panel (loot from NPC) still works - `Give to PC` chip still functions independently.
 2. PC inventory `Give to` modal still shows PC / NPC / community recipients.
 3. Community stockpile add/remove from inline form still works.
 
 ## Followups (not shipped)
 
-- **Multi-round haggling** — current single-roll resolution is simple. If counter-offers turn out to matter in play, we add a "Counter-offer" path that lets the NPC suggest different terms and the PC re-roll.
-- **Barter Lv4 cheat** — SRD says level 4 Barter on a successful attempt gets DOUBLE what was asked. Currently silent — Lv4 traits are blocked behind the all-or-nothing Trait list per `project_lv4_traits.md`.
-- **Relationship penalty** — Dire/Low Insight should drop `npc_relationships.relationship_cmod`. Currently just shows the failure badge.
-- **Cross-PC trade sub-flow** — PC ↔ PC trade still uses the existing InventoryPanel "Give to" picker (no roll), since PCs negotiating with each other doesn't need a Barter check.
+- **Multi-round haggling** - current single-roll resolution is simple. If counter-offers turn out to matter in play, we add a "Counter-offer" path that lets the NPC suggest different terms and the PC re-roll.
+- **Barter Lv4 cheat** - SRD says level 4 Barter on a successful attempt gets DOUBLE what was asked. Currently silent - Lv4 traits are blocked behind the all-or-nothing Trait list per `project_lv4_traits.md`.
+- **Relationship penalty** - Dire/Low Insight should drop `npc_relationships.relationship_cmod`. Currently just shows the failure badge.
+- **Cross-PC trade sub-flow** - PC ↔ PC trade still uses the existing InventoryPanel "Give to" picker (no roll), since PCs negotiating with each other doesn't need a Barter check.

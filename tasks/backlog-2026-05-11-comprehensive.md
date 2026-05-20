@@ -11,7 +11,7 @@ Format: **name** - one-line description of what the change means. *Action + esti
 ## 🔥 Playtest carry-over (TOP PRIORITY)
 
 - ~~**Random character - Medic skill seed**~~ - **RESOLVED 2026-05-11**. Verified implementation in `app/characters/random/page.tsx:146-167`: profession-skill floor distributes 10 CDP across the profession's 5 canonical skills (each min 1, max 3), then merges with the paradigm via `max()`. For Medic, Medicine\* always lands at level 1+. Player report was most likely a naming-confusion ("Medicine\*" expected to be called "First Aid") or unfamiliarity with level 1 being a real skill rank. *Polish follow-up flagged in tasks/todo.md: surface skill description on hover so "Medicine\*" tooltip reads "covers first aid, diagnosis, treatment, emergency stabilization..."*
-- **Vehicle passenger sync - terrain rejection** - passengers auto-track onto walls/water when the vehicle moves. *Design call first (drag rejected vs. passengers stay behind), then plumb into move handler. **2-3h**.* `[STATUS: STILL_OPEN — vehicle seats exist; no sync-on-move or rejection logic]`
+- **Vehicle passenger sync - terrain rejection** - passengers auto-track onto walls/water when the vehicle moves. *Design call first (drag rejected vs. passengers stay behind), then plumb into move handler. **2-3h**.* `[STATUS: STILL_OPEN - vehicle seats exist; no sync-on-move or rejection logic]`
 
 ## 🐛 Bugs - need repro/decision
 
@@ -23,30 +23,30 @@ Format: **name** - one-line description of what the change means. *Action + esti
 
 - **Initiative lag** - perceived delay between End-Turn and next combatant. *Console trace added: nextTurn now emits `[playtest-trace] [nextTurn] done {total_ms, deactivate_ms, activate_ms, reload_ms, broadcast_ms, activated_name}` on every turn advance. Playtest 5/11 to capture timing. **1h** post-capture.*
 - **Damage calc spot-check** - `2+2d6(6)=8 raw → should be 7/7` reported. *Console trace added at the calculateDamage call site (app/stories/[id]/table/page.tsx:4390+): emits `[playtest-trace] [damage-calc] {weapon, diceRoll, phyBonus, unarmedBonus, totalWP_raw, rpPercent, finalWP_after_calc, finalRP_after_calc, mitigated, ...}`. Playtest 5/11 to capture. **30m** post-capture.*
-- **Failed skill checks still leave 2 actions** - consumeAction should fire on every path. *Console traces added: closeRollModal emits `[playtest-trace] [closeRollModal] gate` + `rollerIsActive?` decisions; consumeAction emits `[playtest-trace] [consumeAction] CALLED` with actions_before/cost/call-site stack and `WROTE actions_remaining: X -> Y` on every write. Playtest 5/11 — repro path: roll a skill check that fails on the active combatant's turn and watch the console. **1h** post-capture.*
-- **Tactical map mouse-pan via drag - broken** - WASD works; click-drag doesn't. *Multiple ship+revert attempts; flagged as no-fix-path 2026-04-27. **Half a day** with fresh eyes.* `[STATUS: STILL_OPEN — pan path intact at TacticalMap.tsx:2887, trace shipped 63a0b05, awaits 5/11 playtest capture]`
-- **HP render lag** - possibly already fixed by optimistic-local-patch sweep. *Runtime re-verify on Monday playtest. **15m** verify.* `[STATUS: STILL_OPEN — partial fixes in 3d80484 (open NPC card refresh); broader lag awaits playtest verify]`
+- **Failed skill checks still leave 2 actions** - consumeAction should fire on every path. *Console traces added: closeRollModal emits `[playtest-trace] [closeRollModal] gate` + `rollerIsActive?` decisions; consumeAction emits `[playtest-trace] [consumeAction] CALLED` with actions_before/cost/call-site stack and `WROTE actions_remaining: X -> Y` on every write. Playtest 5/11 - repro path: roll a skill check that fails on the active combatant's turn and watch the console. **1h** post-capture.*
+- **Tactical map mouse-pan via drag - broken** - WASD works; click-drag doesn't. *Multiple ship+revert attempts; flagged as no-fix-path 2026-04-27. **Half a day** with fresh eyes.* `[STATUS: STILL_OPEN - pan path intact at TacticalMap.tsx:2887, trace shipped 63a0b05, awaits 5/11 playtest capture]`
+- **HP render lag** - possibly already fixed by optimistic-local-patch sweep. *Runtime re-verify on Monday playtest. **15m** verify.* `[STATUS: STILL_OPEN - partial fixes in 3d80484 (open NPC card refresh); broader lag awaits playtest verify]`
 
 ## 🛡️ Rules coverage - verify/build
 
-- **Armor Phase 2** - condition tracking (Pristine→Broken), per-armor Upkeep button, auto-Upkeep on Moment of Low Insight. *Spec locked; touches xse-schema.ts + InventoryPanel + executeRoll. **3-4h**.* `[STATUS: PARTIAL — ItemCondition type + Upkeep rules page shipped; per-armor button + auto-Upkeep on LI not wired]`
-- **Subsistence Damage + Rations data-model** - promote `XSECharacter.rations` from `string` to `{type, count}` + wizard/edit/print/random/DB migration. *Design call first (2 of one type or mix-and-match), then plumb. **4-5h**.* `[STATUS: PARTIAL — rations { type, count } shipped (32c8fc0); subsistence damage doc lives at app/rules/combat/damage; gameplay tick not wired]`
-- **Recruitment/Inspiration/Apprentice disambiguation cleanup** - rules-extract done; three Tier-2 cleanups remain. *Rename Inspiration line UI to SMod, suppress double-count when rolled skill IS Inspiration, approach-specific Success semantics for Recruitment. **3-4h**.* `[STATUS: PARTIAL — rules extract (3b01cfd) + FI outcome-ladder fix (7ca9569) shipped; three Tier-2 cleanups still open]`
-- **Other explosives audit** - Grenade/Mortar/Shiv-Grenade/Flash-Bang/Rocket Launcher canon stats. *Blocked on QS Table 18 from Xero. **2h** once table lands.* `[STATUS: STILL_OPEN — Xero-blocked]`
+- **Armor Phase 2** - condition tracking (Pristine→Broken), per-armor Upkeep button, auto-Upkeep on Moment of Low Insight. *Spec locked; touches xse-schema.ts + InventoryPanel + executeRoll. **3-4h**.* `[STATUS: PARTIAL - ItemCondition type + Upkeep rules page shipped; per-armor button + auto-Upkeep on LI not wired]`
+- **Subsistence Damage + Rations data-model** - promote `XSECharacter.rations` from `string` to `{type, count}` + wizard/edit/print/random/DB migration. *Design call first (2 of one type or mix-and-match), then plumb. **4-5h**.* `[STATUS: PARTIAL - rations { type, count } shipped (32c8fc0); subsistence damage doc lives at app/rules/combat/damage; gameplay tick not wired]`
+- **Recruitment/Inspiration/Apprentice disambiguation cleanup** - rules-extract done; three Tier-2 cleanups remain. *Rename Inspiration line UI to SMod, suppress double-count when rolled skill IS Inspiration, approach-specific Success semantics for Recruitment. **3-4h**.* `[STATUS: PARTIAL - rules extract (3b01cfd) + FI outcome-ladder fix (7ca9569) shipped; three Tier-2 cleanups still open]`
+- **Other explosives audit** - Grenade/Mortar/Shiv-Grenade/Flash-Bang/Rocket Launcher canon stats. *Blocked on QS Table 18 from Xero. **2h** once table lands.* `[STATUS: STILL_OPEN - Xero-blocked]`
 
 ---
 
 ## 📜 Canon promotions - Tier 1 (high-value CRB gaps)
 
-- **Item Condition + Upkeep Check** - five-state degradation + Upkeep rules. *Mostly shipped; verify and document in canon §07. **1-2h** verify+doc.* `[STATUS: PARTIAL — rules pages at app/rules/equipment/item-condition + /upkeep shipped; condition states in schema; canon §07 doc-sync remaining]`
-- **Vehicle subsystem + Vehicles-as-Cover** - Rarity, Size 1-6, Speed 1-5, WP/Encumbrance formulas, Range with ethanol/methanol, Cover-as-RDM by size. *Biggest single gap. Verify against existing vehicle/cargo features; add to canon §07. **1-2 days**.* `[STATUS: STILL_OPEN — /vehicle exists for management; no rules page, no Size/Speed formulas, no Cover-as-RDM]`
+- **Item Condition + Upkeep Check** - five-state degradation + Upkeep rules. *Mostly shipped; verify and document in canon §07. **1-2h** verify+doc.* `[STATUS: PARTIAL - rules pages at app/rules/equipment/item-condition + /upkeep shipped; condition states in schema; canon §07 doc-sync remaining]`
+- **Vehicle subsystem + Vehicles-as-Cover** - Rarity, Size 1-6, Speed 1-5, WP/Encumbrance formulas, Range with ethanol/methanol, Cover-as-RDM by size. *Biggest single gap. Verify against existing vehicle/cargo features; add to canon §07. **1-2 days**.* `[STATUS: STILL_OPEN - /vehicle exists for management; no rules page, no Size/Speed formulas, no Cover-as-RDM]`
 - **Activity Block taxonomy** - formal Daily/Weekly/Monthly/Seasonal ladder. *Sidebar addition to canon §08. **1h**.* `[STATUS: STILL_OPEN]`
 - **NPC threat tiers** - Friendlies/Goons/Foes/Antagonists with stat templates. *Add to canon §10 as stat-block guide. **2-3h**.* `[STATUS: STILL_OPEN]`
 - **Falling damage** - 3 WP + 3 RP per 10ft fallen. *Add to canon §06b. **1h** rule + small UI prompt.* `[STATUS: STILL_OPEN]`
-- **Drowning rules** - 6+PHY AMod rounds breath; 3 WP + 3 RP per round after; -1 CMod per resist. *Add to canon §06b. **1h** rule + small UI prompt.* `[STATUS: PARTIAL — drowning section exists in app/rules/combat/damage; no UI prompt or combat wiring]`
-- **Subsistence Damage canon doc** - 1 WP + 1 RP per day past day 2. *Already mostly shipped; doc-sync in canon. **30m**.* `[STATUS: PARTIAL — rules doc lives at app/rules/combat/damage; canon-snapshot doc-sync still pending]`
+- **Drowning rules** - 6+PHY AMod rounds breath; 3 WP + 3 RP per round after; -1 CMod per resist. *Add to canon §06b. **1h** rule + small UI prompt.* `[STATUS: PARTIAL - drowning section exists in app/rules/combat/damage; no UI prompt or combat wiring]`
+- **Subsistence Damage canon doc** - 1 WP + 1 RP per day past day 2. *Already mostly shipped; doc-sync in canon. **30m**.* `[STATUS: PARTIAL - rules doc lives at app/rules/combat/damage; canon-snapshot doc-sync still pending]`
 - **Travel Times subsystem** - 8h travel + 8h rest + 8h sleep cycle; 1 RP/hour overage. *Add to canon §07 + UI for overage tick. **3-4h**.* `[STATUS: STILL_OPEN]`
-- **Resource Quality / Supplies abstraction** - Common/Uncommon/Rare units of generic Supplies. *Document in canon §07. **2h** doc, **1-2 days** if implementing as inventory currency.* `[STATUS: STILL_OPEN — "Supplies" mentioned in community rules but not formalized]`
+- **Resource Quality / Supplies abstraction** - Common/Uncommon/Rare units of generic Supplies. *Document in canon §07. **2h** doc, **1-2 days** if implementing as inventory currency.* `[STATUS: STILL_OPEN - "Supplies" mentioned in community rules but not formalized]`
 - **Per-activity yield rates** - Scavenging/Foraging/Fishing/Trapping/Hunting/Farming numbers. *Depends on Item Condition + Supplies landing first. **3-4h**.* `[STATUS: STILL_OPEN]`
 - **Base of Operations sizing** - Tiny/Small/Medium/Large/Massive thresholds + Supplies cost. *Pre-Community tier addendum to canon §08. **2-3h** doc, **2-3 days** if BoOs become first-class entities.* `[STATUS: STILL_OPEN]`
 
@@ -99,10 +99,10 @@ Stacking +1 CMod patterns; Distract↔Inspire backfire symmetry; Helper-clears-S
 
 ## 🧰 Partials to finish
 
-- **Modal unification** - Stabilize / Distract / Coordinate / Group Check / Gut Instinct / First Impression → `<RollModal>`. *Each conversion ~30m, total 6 modals. **3-4h**.* `[STATUS: STILL_OPEN — all 6 still bespoke modals]`
-- **Hide-NPCs reveal UX** - folder-level "Reveal all in folder" + panic button "reveal entire roster". *NpcRoster UI additions. **2-3h**.* `[STATUS: PARTIAL — multi-select reveal modal at NpcRoster.tsx:680-730; folder-level + panic-button not built]`
+- **Modal unification** - Stabilize / Distract / Coordinate / Group Check / Gut Instinct / First Impression → `<RollModal>`. *Each conversion ~30m, total 6 modals. **3-4h**.* `[STATUS: STILL_OPEN - all 6 still bespoke modals]`
+- **Hide-NPCs reveal UX** - folder-level "Reveal all in folder" + panic button "reveal entire roster". *NpcRoster UI additions. **2-3h**.* `[STATUS: PARTIAL - multi-select reveal modal at NpcRoster.tsx:680-730; folder-level + panic-button not built]`
 - **Featured items** - Thriver promote-to-featured for forum threads + war stories. *Schema + Thriver UI + listing page. **3-4h**.* `[STATUS: STILL_OPEN]`
-- **DZ canon layer** - District Zero-specific canon scope/UX. *Filter + setting tag UI. **2-3h**.* `[STATUS: PARTIAL — /rumors recognizes district_zero setting; dedicated canon-scope filter UI not built]`
+- **DZ canon layer** - District Zero-specific canon scope/UX. *Filter + setting tag UI. **2-3h**.* `[STATUS: PARTIAL - /rumors recognizes district_zero setting; dedicated canon-scope filter UI not built]`
 - **DZ timeline visualization** - chronological page surfacing world-event timeline pins. *New page + sort logic. **3-4h**.* `[STATUS: STILL_OPEN]`
 - **Play stats per module** - track session count + avg player count. *Schema + roll-up + display. **3-4h**.* `[STATUS: STILL_OPEN]`
 - **Tier C1 single snapshot RPC** for table-page mount. *Optimization, one RPC consolidation. **3-4h**.* `[STATUS: STILL_OPEN]`
@@ -123,13 +123,13 @@ Stacking +1 CMod patterns; Distract↔Inspire backfire symmetry; Helper-clears-S
 ## 🎨 UX / Polish
 
 - **Skill-description hover tooltips on character sheet** - every skill row should surface its canonical description on hover (Medicine\* tooltip: "covers first aid, diagnosis, treatment, emergency stabilization..."). *Description prose already lives in `lib/xse-schema.ts:SKILLS[].description`; just need to wire a title-attribute or tooltip component in `components/CharacterCard.tsx`. **30m**.* `[STATUS: STILL_OPEN]`
-- **Streamline /login → /table** - deep-link / "Resume last session" tile. *Auth callback + tile component. **2-3h**.* `[STATUS: STILL_OPEN — Resume tile mentioned in comments, not built]`
+- **Streamline /login → /table** - deep-link / "Resume last session" tile. *Auth callback + tile component. **2-3h**.* `[STATUS: STILL_OPEN - Resume tile mentioned in comments, not built]`
 - **King's Crossing Mall tactical scenes** - mall complex maps. *Asset creation + scene wiring. **1-2 days**.* `[STATUS: STILL_OPEN]`
 - **King's Crossing Mall handouts** - broadcasts, journals, ham-radio transcripts. *Content authoring + handout slots. **1-2 days**.* `[STATUS: STILL_OPEN]`
 - **CMod Stack reusable component** - extract from Recruit modal; reuse in Grapple, First Impression, main Attack. *Component extraction + four refactors. **3-4h**.* `[STATUS: STILL_OPEN]`
-- **GM force-push view to players** - switching campaign↔tactical or scene A↔B propagates. *Realtime broadcast + receiver. **2-3h**.* `[STATUS: PARTIAL — campaign-map SHARE VIEW button shipped (b921b43, one-shot push); auto-propagation on scene-switch + tactical↔campaign toggle not built]`
+- **GM force-push view to players** - switching campaign↔tactical or scene A↔B propagates. *Realtime broadcast + receiver. **2-3h**.* `[STATUS: PARTIAL - campaign-map SHARE VIEW button shipped (b921b43, one-shot push); auto-propagation on scene-switch + tactical↔campaign toggle not built]`
 - **Multi-round haggling** - Barter currently single-roll. *Modal extension + state machine. **3-4h**.* `[STATUS: STILL_OPEN]`
-- **Character Evolution / CDP Calculator** - post-creation growth tool; spend earned CDP. *Already started; finish allocation flow + roll-feed integration. **4-6h**.* `[STATUS: PARTIAL — allocation flow started; roll-feed integration incomplete]`
+- **Character Evolution / CDP Calculator** - post-creation growth tool; spend earned CDP. *Already started; finish allocation flow + roll-feed integration. **4-6h**.* `[STATUS: PARTIAL - allocation flow started; roll-feed integration incomplete]`
 
 ## 🚀 Pre-tester polish
 
@@ -208,7 +208,7 @@ Stacking +1 CMod patterns; Distract↔Inspire backfire symmetry; Helper-clears-S
 
 ## 🐞 Older bugs (genuinely open)
 
-- **Gut Instinct results presentation rework** - narrative card vs. sheet overlay vs. GM DM. *Design call. **3-4h** once decided.* `[STATUS: STILL_OPEN — design call pending]`
+- **Gut Instinct results presentation rework** - narrative card vs. sheet overlay vs. GM DM. *Design call. **3-4h** once decided.* `[STATUS: STILL_OPEN - design call pending]`
 - **Inventory migration** - auto-convert old string equipment to structured items on load. **2-3h**. `[STATUS: STILL_OPEN]`
 - **Allow characters in multiple campaigns** - schema + UX. **1-2 days**. `[STATUS: STILL_OPEN]`
 - **Transfer GM role** - move ownership without restart. **3-4h**. `[STATUS: STILL_OPEN]`
@@ -224,8 +224,8 @@ Stacking +1 CMod patterns; Distract↔Inspire backfire symmetry; Helper-clears-S
 
 ## 📋 Top-level /todo.md (mostly stale, low-stakes admin)
 
-- **Apply** `sql/initiative-order-rls-members-write.sql` (Nana attack-doesn't-advance bug). **15m**. `[STATUS: STILL_OPEN — SQL file exists; code at app/stories/[id]/table/page.tsx:3874,3913,5197 still warns "Run sql/...". Not yet applied to live DB]`
-- **Apply** `sql/player-notes-session-tag.sql`. **15m**. `[STATUS: STILL_OPEN — SQL file exists; referenced at app/stories/[id]/table/page.tsx:5986. Not yet applied to live DB]`
+- **Apply** `sql/initiative-order-rls-members-write.sql` (Nana attack-doesn't-advance bug). **15m**. `[STATUS: STILL_OPEN - SQL file exists; code at app/stories/[id]/table/page.tsx:3874,3913,5197 still warns "Run sql/...". Not yet applied to live DB]`
+- **Apply** `sql/player-notes-session-tag.sql`. **15m**. `[STATUS: STILL_OPEN - SQL file exists; referenced at app/stories/[id]/table/page.tsx:5986. Not yet applied to live DB]`
 
 ---
 

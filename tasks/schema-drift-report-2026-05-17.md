@@ -1,4 +1,4 @@
-# Schema Drift Report — 2026-05-17
+# Schema Drift Report - 2026-05-17
 
 > Pre-launch audit follow-up to R9 + R10 (tasks/pre-launch-audit-2026-05-17.md). Method: query live `information_schema` + `pg_trigger` for every table / function / trigger in the `public` schema, grep `sql/` for matching `CREATE TABLE` / `CREATE FUNCTION` / `CREATE TRIGGER`, report mismatches.
 
@@ -8,7 +8,7 @@
 
 ## Headline
 
-**15 of 68 production tables have NO canonical CREATE TABLE statement in `sql/`.** These include the most load-bearing tables in the entire application. A point-in-time restore or fresh-project recreate from `sql/` would not reproduce any of them — their schemas exist only in the live Postgres instance.
+**15 of 68 production tables have NO canonical CREATE TABLE statement in `sql/`.** These include the most load-bearing tables in the entire application. A point-in-time restore or fresh-project recreate from `sql/` would not reproduce any of them - their schemas exist only in the live Postgres instance.
 
 Functions: 0 orphans of 72 (all accounted for in `sql/`).
 Triggers: 1 orphan of 56 (`on_character_changed`).
@@ -21,7 +21,7 @@ This is R10 (migration ordering chaos) made concrete. The audit estimated this w
 
 Listed in rough order of how badly they need a canonical DDL committed:
 
-### Tier 1 — load-bearing for every session
+### Tier 1 - load-bearing for every session
 | Table | Why it matters |
 |---|---|
 | `profiles` | User identity. Has the role-normalize trigger (`trg_normalize_role`) referenced in canon, but no CREATE TABLE. |
@@ -30,14 +30,14 @@ Listed in rough order of how badly they need a canonical DDL committed:
 | `character_states` | Every live-session PC state (WP/RP/stress/infection). |
 | `campaign_members` | Who-is-in-which-campaign. RLS policy joins reference this. |
 
-### Tier 2 — high-write per-session
+### Tier 2 - high-write per-session
 | Table | Why it matters |
 |---|---|
 | `roll_log` | Every dice roll ever. Phase 1 just added indexes here. |
 | `chat_messages` | Every message ever. Phase 1 just added indexes here. |
 | `notifications` | Every notification. Phase 1 just added indexes here. |
 
-### Tier 3 — feature-specific
+### Tier 3 - feature-specific
 | Table | Why it matters |
 |---|---|
 | `campaign_notes` | GM-only notes. |
@@ -52,7 +52,7 @@ Listed in rough order of how badly they need a canonical DDL committed:
 
 ## Orphan trigger
 
-`on_character_changed` — fires somewhere on `characters` but the `CREATE TRIGGER` isn't in `sql/`. Probably wires `character_states` propagation or a notification side-effect. Unknown until we extract its definition.
+`on_character_changed` - fires somewhere on `characters` but the `CREATE TRIGGER` isn't in `sql/`. Probably wires `character_states` propagation or a notification side-effect. Unknown until we extract its definition.
 
 ---
 
@@ -76,7 +76,7 @@ That's a discrete checklist. Estimated 15-30 min per table. Could batch the Tier
 - **Don't touch `characters` / `character_states` canonical DDL until after the playtest.** Those are read by every gameplay path. A wrong reverse-engineering could mask a real divergence and we'd ship a "canonical" file that doesn't match reality. Highest-care reverse, lowest-priority to land before playtest.
 - **`profiles` canonical DDL is also high-care** because the `trg_normalize_role` trigger and the role-cascade on signup all attach there.
 - **Tier 3 tables (`campaign_notes`, `map_pins`, etc.) are safer to reverse-engineer first** because they have less in-band traffic and surprises will surface as obvious test failures rather than silent data corruption.
-- **`on_character_changed` trigger** — extract its definition (`pg_get_triggerdef` + `pg_get_functiondef`) and commit as a one-off SQL file. Probably a 10-minute fix once we look at it.
+- **`on_character_changed` trigger** - extract its definition (`pg_get_triggerdef` + `pg_get_functiondef`) and commit as a one-off SQL file. Probably a 10-minute fix once we look at it.
 
 ---
 

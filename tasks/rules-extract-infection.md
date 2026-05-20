@@ -1,9 +1,9 @@
-# Rules Extract — Infection
+# Rules Extract - Infection
 
 Source-of-record extraction for the Infection subsystem. Pulled
 from `docs/Rules/Distemper CRB v0.9.2.pdf` p.114 (and adjacent
 pages for the related Sickness & Disease branch). The XSE SRD
-v1.1.17 does **not** cover Infection — CRB is canon for this
+v1.1.17 does **not** cover Infection - CRB is canon for this
 subsystem until / unless an SRD pass replaces it.
 
 **Status:** All design questions answered by Xero on 2026-05-09.
@@ -23,7 +23,7 @@ need to be modeled separately on the platform:
 | **Wound Infection** (CRB p.114) | Took a shot / stab / cut during combat. | Sick 1d3-1d6 days; possible Lasting Damage. |
 | **Sickness & Disease** (CRB p.115) | Exposed to toxic conditions (pit of corpses, contaminated water, etc.) | Progressively unwell for 1d6 days → Mortally Wounded → possible Lasting Damage. |
 
-The user's flag was "Infection rules coverage audit" — so this
+The user's flag was "Infection rules coverage audit" - so this
 extract covers BOTH branches even though only Wound Infection is
 named "Infection" in the CRB. They share so much machinery
 (Physicality checks, day-by-day progression, Lasting Damage tie-in)
@@ -49,7 +49,7 @@ that one schema can serve both.
 > On a Dire Failure, the character is sick for **1d6 days** and
 > automatically suffers Lasting Damage.
 
-## Source quotes (CRB p.115 — Sickness and Disease)
+## Source quotes (CRB p.115 - Sickness and Disease)
 
 > In the wake of the Dog Flu, disease and pestilence remain rife.
 > Although a year on, most of the dead bodies liquified, the
@@ -68,7 +68,7 @@ that one schema can serve both.
 
 ## Distilled mechanics
 
-### Wound Infection — combat aftermath
+### Wound Infection - combat aftermath
 
 1. **Trigger**: combat ends; character took at least one wound
    that broke skin (shot / stab / cut). GM judges from the round's
@@ -87,7 +87,7 @@ that one schema can serve both.
      Damage on Day 0.
    - **Low Insight (1+1)** → Dire Failure outcome + 1 Insight Die.
 
-### Sickness & Disease — environmental
+### Sickness & Disease - environmental
 
 1. **Trigger**: GM-arbitrated exposure to toxic conditions (corpse
    pit, sewer wade, contaminated water, etc.).
@@ -98,7 +98,7 @@ that one schema can serve both.
      (no progression).
    - **Failure** → progressively unwell for **1d3 days** → on
      final day, become **Mortally Wounded** (WP=0 + 4 + PHY AMod
-     death countdown). Note: shorter than CRB's 1d6 — Xero's call
+     death countdown). Note: shorter than CRB's 1d6 - Xero's call
      2026-05-09 to flip the timeline so Dire Failure is the longer
      slide, matching player intuition.
    - **Dire Failure / Low Insight** → progressively unwell for
@@ -106,7 +106,7 @@ that one schema can serve both.
 4. **If Mortally Wounded**: third Physicality check to avoid
    Lasting Damage (parallel to combat mortal-wound flow).
 
-### "Sick" gameplay state — what it costs
+### "Sick" gameplay state - what it costs
 
 While `infection_state IS NOT NULL` and `infection_days_left > 0`:
 
@@ -116,14 +116,14 @@ While `infection_state IS NOT NULL` and `infection_days_left > 0`:
   can't be above 4 RP for the duration. If they're already
   above the cap when they get sick, current RP gets clamped down.
 - WP regen still works at the standard 1/day. RP regen still
-  works at the standard 1/round-out-of-combat — but the
+  works at the standard 1/round-out-of-combat - but the
   half-max cap is the ceiling.
 
 When days_left ticks to 0, all sick-state penalties clear (RP
 cap lifts; CMod restored). Lasting Damage may still apply
 depending on `infection_lasting_risk`.
 
-### Treatment — Medicine\* check
+### Treatment - Medicine\* check
 
 An ally with Medicine\* can attempt a single treatment per sick
 incident (not per day). One check, period. Outcomes:
@@ -144,7 +144,7 @@ the standard target picker. RLS pattern same as Stabilize.
 ### Shared shape
 
 Both mechanics resolve over **days**, not rounds. Both check
-Physicality. Both terminate (on bad outcomes) at Lasting Damage —
+Physicality. Both terminate (on bad outcomes) at Lasting Damage -
 which is already in the platform as `LASTING_WOUNDS` Table 12 in
 `lib/xse-schema.ts:572`.
 
@@ -177,7 +177,7 @@ infection_infected_by    text NULL,         -- attacker name / source descriptio
 ```
 
 Day-tick is **GM-driven** (matches existing Subsistence Damage
-pattern — GM clicks "Tick Day" / "Advance Day" and the counter
+pattern - GM clicks "Tick Day" / "Advance Day" and the counter
 decrements). No automated wallclock until the parked Campaign
 Calendar work lands.
 
@@ -215,14 +215,14 @@ two branches + reference link out to Lasting Wounds (Table 12).
 
 ## Reference: existing related rules already on the platform
 
-- **Lasting Wounds Table 12** — `lib/xse-schema.ts:572` (data) +
+- **Lasting Wounds Table 12** - `lib/xse-schema.ts:572` (data) +
   `/rules/combat/incapacitation#lasting-wounds` (rendered).
   Both Infection branches' bad outcomes converge here.
-- **Mortal Wound + Stabilise flow** — `lib/damage.ts` +
+- **Mortal Wound + Stabilise flow** - `lib/damage.ts` +
   `app/stories/[id]/table/page.tsx:5066-5104`. The Sickness &
   Disease "becomes Mortally Wounded" outcome should drop the
   character into the existing flow, not invent a parallel one.
-- **Subsistence Damage** — `/rules/combat/damage#subsistence` +
+- **Subsistence Damage** - `/rules/combat/damage#subsistence` +
   `components/CharacterCard.tsx:899` Env. Damage prompt.
   Day-counter pattern is the closest precedent for Infection's
   day-by-day tick.

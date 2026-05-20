@@ -17,9 +17,9 @@
 
 const BASE = process.env.WARMUP_BASE_URL || 'https://thetapestry.distemperverse.com'
 
-// Public routes — anything an unauthenticated visitor might land on.
+// Public routes - anything an unauthenticated visitor might land on.
 // Logged-in routes (/dashboard /characters /stories /communities)
-// require auth and would 401 — Vercel still builds them, but we'd
+// require auth and would 401 - Vercel still builds them, but we'd
 // need a cookie. The auth-gated ones get warmed by the test users
 // during their actual session.
 const PUBLIC_ROUTES = [

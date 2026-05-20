@@ -1,11 +1,11 @@
-# Pre-Playtest Smoke — 2026-05-17
+# Pre-Playtest Smoke - 2026-05-17
 
 Covers everything shipped **2026-05-15 → 2026-05-17** (37 commits since
 the Polish-pass / Thriver-godmode testplans were written).
 
 Existing testplans that ALSO need running if you haven't yet:
-- [tasks/polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md) — 2026-05-14 batch
-- [tasks/thriver-godmode-sweep-testplan.md](thriver-godmode-sweep-testplan.md) — Thriver godmode UI sweep
+- [tasks/polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md) - 2026-05-14 batch
+- [tasks/thriver-godmode-sweep-testplan.md](thriver-godmode-sweep-testplan.md) - Thriver godmode UI sweep
 
 Run on `thetapestry.distemperverse.com` after Vercel deploy lands. Hard-
 refresh each tab (Ctrl+Shift+R), keep DevTools Console open to catch
@@ -14,7 +14,7 @@ for any test marked **[2-client]**.
 
 ---
 
-## Priority 1 — Load-bearing, high detection-cost if broken
+## Priority 1 - Load-bearing, high detection-cost if broken
 
 ### A. Vehicle drag-end grab-offset (shipped today, d2ba6b6)
 
@@ -24,7 +24,7 @@ mostly unaffected.
 1. Load a tactical scene with **Minnie (3x3)** placed.
 2. Click-drag Minnie by her **center cell** (not the top-left corner).
 3. Release at a target cell several cells away.
-4. **PASS:** Minnie's top-left lands where you'd expect — the grab
+4. **PASS:** Minnie's top-left lands where you'd expect - the grab
    point stays under your cursor. **FAIL:** Minnie jumps +N cells
    past the cursor.
 5. Repeat grabbing by **bottom-right cell** and **edge cells**.
@@ -39,7 +39,7 @@ badge on the vehicle. Critical because it's the model the rest of the
 vehicle work assumes.
 
 1. Spawn vehicle (e.g. Minnie). Confirm placed at top-left (1,1) by
-   default — never top-right.
+   default - never top-right.
 2. Assign 2+ PCs to seats. **PASS:** PC tokens disappear from the
    canvas; a small count badge ("2", "3", etc.) appears on the
    vehicle token.
@@ -55,9 +55,9 @@ vehicle work assumes.
    fuel/HP on one. **PASS:** the other tab updates within ~1 sec
    without a manual refresh.
 
-### C. Coordinated Effort — per-participant Withdraw with retcon (64eb3db)
+### C. Coordinated Effort - per-participant Withdraw with retcon (64eb3db)
 
-Full retcon (Option B) — every other participant's already-logged
+Full retcon (Option B) - every other participant's already-logged
 roll gets cmod -1, total -1, outcome recomputed. Most complex shipped
 recently, easy to silently break.
 
@@ -69,7 +69,7 @@ recently, easy to silently break.
    - Participant #1 and #3's log rows update in place: cmod decremented
      by 1, total decremented by 1, outcome (Success/Failure/etc.)
      recomputed if the total now crosses a tier boundary.
-   - Participant #2's row is removed (or marked withdrawn — confirm
+   - Participant #2's row is removed (or marked withdrawn - confirm
      visual).
    - Chain banner shows only #1 and #3.
 5. Withdraw participant #3. **PASS:** chain auto-ends when only #1
@@ -85,7 +85,7 @@ patient's client (not the medic's). Easy to break if the broadcast
 pipeline regresses.
 
 1. **[2-client]** Medic-PC logged in on client A, patient-PC on client B.
-2. Medic rolls Medicine* heal on patient — force Low Insight (re-roll
+2. Medic rolls Medicine* heal on patient - force Low Insight (re-roll
    if needed; the test is the LI path).
 3. **PASS:** Patient's client B opens a Wound Infection check modal
    automatically. Medic's client A does NOT.
@@ -113,7 +113,7 @@ Canon §06 lasting-damage flow. Persists pending check across reload.
 
 ---
 
-## Priority 2 — Visible regressions, lower stakes
+## Priority 2 - Visible regressions, lower stakes
 
 ### F. Lasting Wounds chips on cards (6342556 + 0efa08c)
 
@@ -153,7 +153,7 @@ Single-click cross-folder reveal-reset.
    NPC (not stuck at 0). ACU still missing on NPCs (known schema gap;
    not this testplan's scope).
 
-### I. Pin sidebar — search + folders + route planner (88dbeb5 + 6bf1c31 + 338924a + f9ce776 + 95ce889)
+### I. Pin sidebar - search + folders + route planner (88dbeb5 + 6bf1c31 + 338924a + f9ce776 + 95ce889)
 
 1. Pin sidebar: search box filters pins by name. **PASS:** typing
    narrows the list live.
@@ -186,7 +186,7 @@ Single-click cross-folder reveal-reset.
 
 ---
 
-## Priority 3 — Backend / moderation paths
+## Priority 3 - Backend / moderation paths
 
 ### L. Moderation email triggers (2922c72)
 
@@ -208,16 +208,16 @@ moderation events.
 
 ---
 
-## Priority 4 — Drift catch-up (still HOPED-FOR)
+## Priority 4 - Drift catch-up (still HOPED-FOR)
 
 These were shipped 2026-05-13 / 2026-05-14 and the existing testplans
 cover them, but they're 3-4 days unplaytested. Cross-link from the
 relevant section in the prior testplans:
 
-- **2026-05-13 Phase 3 drainers** — campaign-clock drainers for
+- **2026-05-13 Phase 3 drainers** - campaign-clock drainers for
   ration / heal / subsistence ticks. Section in
   [polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md).
-- **2026-05-14 batch** — Coord Effort base, Healing on time-tick,
+- **2026-05-14 batch** - Coord Effort base, Healing on time-tick,
   Year-0 calendar, Export Session Log, Weapon Repair, die3 in
   expanded log, Luxury Ration consume.
 
@@ -227,12 +227,12 @@ If those weren't run yet, run them in the same session.
 
 ## What's NOT in this testplan (explicitly)
 
-- **Healing on GM time-tick** — design locked 2026-05-13 but **not
+- **Healing on GM time-tick** - design locked 2026-05-13 but **not
   yet built**. The 5 open implementation Qs are still open
   (see [spec-healing.md](spec-healing.md)).
-- **Intimidation skill removal** — blocked on 4 design Qs.
-- **Lv4 Skill Traits** — blocked on full list from Xero.
-- **Coordinated Effort summary banner** — not built yet.
+- **Intimidation skill removal** - blocked on 4 design Qs.
+- **Lv4 Skill Traits** - blocked on full list from Xero.
+- **Coordinated Effort summary banner** - not built yet.
 
 ---
 

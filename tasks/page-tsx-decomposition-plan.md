@@ -38,7 +38,7 @@ The single largest concern. One `useEffect` keyed on `[id]` holds two channels: 
 
 - **Broadcast events received (18):** `combat_ended`, `player_kicked`, `combat_started`, `tactical_shared`, `tactical_unshared`, `scene_activated`, `token_changed`, `turn_changed`, `turn_advance_requested`, `logs_cleared`, `npc_damaged`, `pc_damaged`, `inventory_transfer`, `pc_mortal_wound`, `pc_mortal_wound_resolved`, `lasting_damage_check_request`, `infection_check_request`, `npcs_revealed`.
 - **postgres_changes (12):** `notifications` (user filter), `campaigns` (id filter), `campaign_npcs` (campaign filter), `character_states`, `campaign_members`, `initiative_order`, `npc_relationships` x2, `community_members`, `scene_tokens` x2, `tactical_scenes`.
-- **Broadcast events emitted (60+ sites)** — 15 distinct event types.
+- **Broadcast events emitted (60+ sites)** - 15 distinct event types.
 
 Risk surface: stale-closure history L1498-L1500 (lasting_damage), L1530-L1537 (infection). `userIdRef`, `gmLikeRef`, `entriesRef`, `campaignNpcsRef`, `tacticalSharedRef` exist precisely because this effect is keyed `[id]` and the closures freeze at mount.
 
@@ -63,8 +63,8 @@ Risk surface: stale-closure history L1498-L1500 (lasting_damage), L1530-L1537 (i
 - **Recorder** (L678): `recorderEnabled`, `recorderToggling`, `toggleRecorder` (L290).
 
 ### F. Combat / initiative / turn management (L1777-L3146)
-- `startCombat` / `confirmStartCombat` (L1777, L1795 — ~230 LOC).
-- **`nextTurn` (L2023 — ~398 LOC, huge).** Owns turn-advance, round-rollover, sprint deferral, wound-infection / lasting-damage cascades intertwined.
+- `startCombat` / `confirmStartCombat` (L1777, L1795 - ~230 LOC).
+- **`nextTurn` (L2023 - ~398 LOC, huge).** Owns turn-advance, round-rollover, sprint deferral, wound-infection / lasting-damage cascades intertwined.
 - `consumeAction` (L2425), `handleAim` (L2502), `activateUpdate`, `clearAimIfActive`, `handleReadyWeapon`, `endCombat` (L2542), `queueWoundInfectionChecks` (L2598), `addNPC` / `addPCToCombat` / `addNpcsToCombat` / `removeFromInitiative` / `handleGrantAction` / `handleSkipTurn` / `handleInitiativeBarRemove` / `deferInitiative` (L3374).
 
 **~1300 LOC.**
@@ -77,22 +77,22 @@ Risk surface: stale-closure history L1498-L1500 (lasting_damage), L1530-L1537 (i
 **~470 LOC.**
 
 ### H. Session lifecycle (L3433-L3559)
-- `startSession` (L3433) — flips `session_status`, broadcasts `logs_cleared` + `combat_ended`, clears chat.
-- `endSession` (L3471) — submits notes, archives, writes session summary.
+- `startSession` (L3433) - flips `session_status`, broadcasts `logs_cleared` + `combat_ended`, clears chat.
+- `endSession` (L3471) - submits notes, archives, writes session summary.
 
 **~125 LOC.**
 
 ### I. Roll resolution + cmod stacks + outcome computation (L4386-L6781)
 The heaviest single block.
 - Range helpers `getAutoRangeBand`, `isInRange`, `getRangeCMod` (L4386-L4416).
-- `handleInsightSave` (L4417) — mortal-wound prompt resolution.
-- `applySocialAction` (L4450) — Manipulation / Inspiration debuff application.
-- `handleRollRequest` (L4508) — entry point. Auto-target picker (L4590-L4665).
+- `handleInsightSave` (L4417) - mortal-wound prompt resolution.
+- `applySocialAction` (L4450) - Manipulation / Inspiration debuff application.
+- `handleRollRequest` (L4508) - entry point. Auto-target picker (L4590-L4665).
 - `maybeLogWoundInfection` (L4705).
 - `saveRollToLog` (L4740).
-- **`executeRoll` (L4793 — ~1850 LOC, the worst single function in the codebase).** Branches by: PC vs NPC roller, attack vs check, burst, grenade/blast, vehicle target, mortal-wound, Insight Die, infection ladder, jam ladder, sprint deferral, coordinated-effort chain logging, recruit-roll branch, grapple branch, heal branch.
-- `spendInsightDie` (L6646) — reroll path; rebuilds most of executeRoll's damage/save lookups (DRY candidate).
-- `closeRollModal` (L6781) — drains `pendingInfectionChecksRef`, fires pending lasting-damage modal, consumes action if combat.
+- **`executeRoll` (L4793 - ~1850 LOC, the worst single function in the codebase).** Branches by: PC vs NPC roller, attack vs check, burst, grenade/blast, vehicle target, mortal-wound, Insight Die, infection ladder, jam ladder, sprint deferral, coordinated-effort chain logging, recruit-roll branch, grapple branch, heal branch.
+- `spendInsightDie` (L6646) - reroll path; rebuilds most of executeRoll's damage/save lookups (DRY candidate).
+- `closeRollModal` (L6781) - drains `pendingInfectionChecksRef`, fires pending lasting-damage modal, consumes action if combat.
 
 **~2400 LOC across the roll pipeline.**
 
@@ -148,7 +148,7 @@ Naming convention: hooks under `app/stories/[id]/table/hooks/`; sub-components u
 
 - **`useTacticalSync(campaignId, deps)`** -> `{ mapTokens, mapTokenNpcIds, mapCellFeet, tokenRefreshKey, refreshMapTokenIds, placeTokenOnMap, removeTokenFromMap, placeFolderOnMap, unmapFolderFromMap, throwMode, setThrowMode, grenadeTargetCell, moveMode, setMoveMode, entrySceneTags, showTacticalMap, setShowTacticalMap, tacticalShared, setTacticalShared }`.
 
-- **`useRollResolution(deps)`** -> `{ pendingRoll, rollResult, cmod, rolling, targetName, insightSavePrompt, handleRollRequest, executeRoll, spendInsightDie, closeRollModal, handleInsightSave, saveRollToLog }`. **Riskiest extraction** — `executeRoll` reads dozens of state values. Strategy: pass the giant slice via a single `RollContext` arg object rather than 40 closure deps.
+- **`useRollResolution(deps)`** -> `{ pendingRoll, rollResult, cmod, rolling, targetName, insightSavePrompt, handleRollRequest, executeRoll, spendInsightDie, closeRollModal, handleInsightSave, saveRollToLog }`. **Riskiest extraction** - `executeRoll` reads dozens of state values. Strategy: pass the giant slice via a single `RollContext` arg object rather than 40 closure deps.
 
 - **`useSessionLifecycle(campaignId, deps)`** -> `{ sessionStatus, sessionCount, startSession, endSession, sessionSummary, setSessionSummary, ... }`.
 
@@ -166,28 +166,28 @@ Naming convention: hooks under `app/stories/[id]/table/hooks/`; sub-components u
 
 ### Sub-components
 
-- **`<TableHeader>`** — header bar + recorder + session/tactical toggles. L6979-L7100.
-- **`<TableHeaderMenu>`** — generic dropdown extracted from `renderHeaderMenu` (L6903).
-- **`<InitiativeStrip>`** — wraps existing `<InitiativeBar/>` mount + surrounding Stabilize / Treat / action buttons (L7400-L8100).
-- **`<TacticalRegion>`** — switches between `<TacticalMap/>` and `<CampaignMap/>` on `showTacticalMap`; throwMode / moveMode plumbing.
-- **`<GmSidebar>`** — four-tab GM sidebar (Pins / NPCs / Assets / Notes), L7950-L9500. Big-but-leafy.
-- **`<FeedColumn>`** — right-rail feed: tab selector + virtualized chat + rolls.
-- **`<RollResolverModals>`** — wraps `<RollModal/>` + GrappleModal + InsightSavePrompt + ReadyWeaponModal.
-- **`<SpecialCheckModal>`** — all 7 special-check variants currently as one inline switch.
-- **`<RecruitWizard>`** — L11960-L12150.
-- **`<GmModalStack>`** — Loot, Cdp, Populate, AdvanceTime, RestorePicker, ReloadPicker, EndSession. L10042-L10900. Wires to `useGmTools`.
-- **`<TableMainGrid>`** — composes `<InitiativeStrip>`, `<TacticalRegion>`, `<GmSidebar>`, `<FeedColumn>`, character-sheet inline overlay.
+- **`<TableHeader>`** - header bar + recorder + session/tactical toggles. L6979-L7100.
+- **`<TableHeaderMenu>`** - generic dropdown extracted from `renderHeaderMenu` (L6903).
+- **`<InitiativeStrip>`** - wraps existing `<InitiativeBar/>` mount + surrounding Stabilize / Treat / action buttons (L7400-L8100).
+- **`<TacticalRegion>`** - switches between `<TacticalMap/>` and `<CampaignMap/>` on `showTacticalMap`; throwMode / moveMode plumbing.
+- **`<GmSidebar>`** - four-tab GM sidebar (Pins / NPCs / Assets / Notes), L7950-L9500. Big-but-leafy.
+- **`<FeedColumn>`** - right-rail feed: tab selector + virtualized chat + rolls.
+- **`<RollResolverModals>`** - wraps `<RollModal/>` + GrappleModal + InsightSavePrompt + ReadyWeaponModal.
+- **`<SpecialCheckModal>`** - all 7 special-check variants currently as one inline switch.
+- **`<RecruitWizard>`** - L11960-L12150.
+- **`<GmModalStack>`** - Loot, Cdp, Populate, AdvanceTime, RestorePicker, ReloadPicker, EndSession. L10042-L10900. Wires to `useGmTools`.
+- **`<TableMainGrid>`** - composes `<InitiativeStrip>`, `<TacticalRegion>`, `<GmSidebar>`, `<FeedColumn>`, character-sheet inline overlay.
 
 ### Lib modules
 
-- **`lib/table-roll-context.ts`** — pure helpers extracted from `executeRoll`'s 1850 LOC: auto-target picker, range/CMod stacker, mortal-wound math, infection ladder math, blast-radius cell enumeration, vehicle-target branch logic. Goal: shrink `executeRoll` body by inlining calls to pure helpers.
-- **`lib/initiative-engine.ts`** — pure: turn-advance order computation, round-rollover detection, sprint deferral logic, action-cost arithmetic. Hook stays side-effect site; engine is testable.
-- **`lib/table-broadcasts.ts`** — typed event union + helper `broadcast(channel, event, payload)`. Centralizes 60+ emission sites.
-- **`lib/table-loaders.ts`** — pure-ish supabase loaders.
+- **`lib/table-roll-context.ts`** - pure helpers extracted from `executeRoll`'s 1850 LOC: auto-target picker, range/CMod stacker, mortal-wound math, infection ladder math, blast-radius cell enumeration, vehicle-target branch logic. Goal: shrink `executeRoll` body by inlining calls to pure helpers.
+- **`lib/initiative-engine.ts`** - pure: turn-advance order computation, round-rollover detection, sprint deferral logic, action-cost arithmetic. Hook stays side-effect site; engine is testable.
+- **`lib/table-broadcasts.ts`** - typed event union + helper `broadcast(channel, event, payload)`. Centralizes 60+ emission sites.
+- **`lib/table-loaders.ts`** - pure-ish supabase loaders.
 
 ### Providers (optional, only if hook fan-out gets ugly)
 
-- **`<TableSessionContext>`** — `{ campaign, userId, gmLike, supabase, channelRefs, broadcast }`. Used by leaf modals to avoid drilling 8 props deep. Add only if a real prop-drill problem emerges around step 6. **Default: don't add it yet.**
+- **`<TableSessionContext>`** - `{ campaign, userId, gmLike, supabase, channelRefs, broadcast }`. Used by leaf modals to avoid drilling 8 props deep. Add only if a real prop-drill problem emerges around step 6. **Default: don't add it yet.**
 
 ---
 
@@ -195,7 +195,7 @@ Naming convention: hooks under `app/stories/[id]/table/hooks/`; sub-components u
 
 Ordering principle: leaves first (low coupling × high LOC removed), trunk last. Each step lands as one PR; file shrinks monotonically. Pre-commit hook (tsc + tests) is the floor gate.
 
-### Phase 3.0 — Prep (1 session)
+### Phase 3.0 - Prep (1 session)
 1. **Move types + module constants** to `app/stories/[id]/table/types.ts`. -200 LOC. Zero risk.
 2. **Extract `<TableHeaderMenu>`** and outside-click effect into `useHeaderMenus`. -90 LOC. Pure leaf.
 3. **Extract `useRecorderToggle`.** -30 LOC. Pure leaf.
@@ -203,7 +203,7 @@ Ordering principle: leaves first (low coupling × high LOC removed), trunk last.
 
 Gate: tsc + tests + manual click of recorder toggle + header menus.
 
-### Phase 3.1 — Leaf modal extractions (2 sessions)
+### Phase 3.1 - Leaf modal extractions (2 sessions)
 5. **Extract `useGmTools` + `<GmModalStack>`** (Loot, Cdp, Populate, AdvanceTime, RestorePicker, ReloadPicker, EndSession). -1500 LOC.
 6. **Extract `<SpecialCheckModal>`** + seven `trigger*` functions into `useSpecialChecks`. -600 LOC. Couples to `handleRollRequest` via callback prop.
 7. **Extract `<RecruitWizard>` + `useRecruitFlow`.** -400 LOC.
@@ -211,32 +211,32 @@ Gate: tsc + tests + manual click of recorder toggle + header menus.
 
 Gate per step: tsc + tests + manual: open modal, run happy path, confirm cross-tab broadcast still fires.
 
-### Phase 3.2 — Render extractions (2 sessions)
+### Phase 3.2 - Render extractions (2 sessions)
 9. **Extract `<TableHeader>`.** -250 LOC.
 10. **Extract `<FeedColumn>`** (rolls + chat + virtualization). -350 LOC. **Keep `useChatPanel` at page level** (the Both-tab merged feed needs it); pass `chat` down as prop.
 11. **Extract `<GmSidebar>` (4 tabs).** -1800 LOC. Biggest single render extraction. Internally each tab can be its own sub-component.
 
 Gate per step: tsc + tests + manual: click every tab, every header button, every right-rail tab. Re-run a session with chat + rolls + feed clear.
 
-### Phase 3.3 — Tactical + initiative (2 sessions)
+### Phase 3.3 - Tactical + initiative (2 sessions)
 12. **Extract `useTacticalSync` + `<TacticalRegion>`.** -700 LOC. Trickier: throwMode/moveMode/grenadeTargetCell cross-cut into `handleRollRequest`. Strategy: pass as a `tacticalIntent` object the roll hook reads.
-13. **Extract `useInitiative` + `<InitiativeStrip>`.** -1300 LOC. `nextTurn`'s sprint deferral interacts with rolls — pass `sprintAthleticsPendingRef` / `sprintAthleticsRoundDeferredRef` via deps object. **Ship alone.**
+13. **Extract `useInitiative` + `<InitiativeStrip>`.** -1300 LOC. `nextTurn`'s sprint deferral interacts with rolls - pass `sprintAthleticsPendingRef` / `sprintAthleticsRoundDeferredRef` via deps object. **Ship alone.**
 
-Gate per step: full combat smoke — start combat, take a turn each (PC + NPC), aim, ready weapon, sprint, charge, grenade, mortal-wound a PC, end combat, verify wound-infection queue fires.
+Gate per step: full combat smoke - start combat, take a turn each (PC + NPC), aim, ready weapon, sprint, charge, grenade, mortal-wound a PC, end combat, verify wound-infection queue fires.
 
-### Phase 3.4 — Roll pipeline (2 sessions, riskiest)
+### Phase 3.4 - Roll pipeline (2 sessions, riskiest)
 14. **Extract pure helpers from `executeRoll` into `lib/table-roll-context.ts`** WITHOUT moving the function. Tests added for: auto-target picker, range CMod stacker, infection ladder math, blast-cell enumeration, mortal-wound math. -300 LOC and a safety net.
 15. **Extract `useRollResolution`** (executeRoll + spendInsightDie + closeRollModal + handleRollRequest + handleInsightSave + saveRollToLog). -2400 LOC. **Single biggest move + highest regression risk.** See Risk Register.
 
-Gate: full roll smokes — normal attack, attack with Insight Die (3d6), attack with +3 CMod Insight, burst, grenade against cell, grenade against cell with friendlies, vehicle target, PC mortal wound + Insight save accept, PC mortal wound decline, NPC infection-check end-of-combat queue, recruit roll with reroll, grapple with insight, heal with kit, coordinated-effort lead + follow + withdraw + end.
+Gate: full roll smokes - normal attack, attack with Insight Die (3d6), attack with +3 CMod Insight, burst, grenade against cell, grenade against cell with friendlies, vehicle target, PC mortal wound + Insight save accept, PC mortal wound decline, NPC infection-check end-of-combat queue, recruit roll with reroll, grapple with insight, heal with kit, coordinated-effort lead + follow + withdraw + end.
 
-### Phase 3.5 — Data + auth + realtime (1 session)
+### Phase 3.5 - Data + auth + realtime (1 session)
 16. **Extract `useTableAuth` and `useCampaignState`.** -600 LOC.
 17. **Extract `useTableRealtime`** (the 510-LOC mega-effect). **Last** because every prior step has been tightening the callback surface so this hook's prop list is final.
 
 Gate: full session smoke (start, multi-player join, combat round, end). Cross-tab broadcast smoke. Verify Sentry traces still tag user-id.
 
-### Phase 3.6 — Polish (0.5 session)
+### Phase 3.6 - Polish (0.5 session)
 18. **Compose `<TableMainGrid>`**, prune now-unused state at page level, verify final page.tsx is the orchestrator.
 
 **End state shape:**
@@ -274,21 +274,21 @@ export default function TablePage() {
 
 | Extraction | Class | Note |
 |---|---|---|
-| Types/constants | leaf | – |
-| useHeaderMenus | leaf | – |
-| useRecorderToggle | leaf | – |
+| Types/constants | leaf | - |
+| useHeaderMenus | leaf | - |
+| useRecorderToggle | leaf | - |
 | broadcasts helper | leaf | unlocks useTableRealtime |
 | useGmTools / GmModalStack | leaf | needs broadcasts |
 | Special checks | leaf | needs handleRollRequest as prop |
-| Recruit / Trade / Apprentice | leaf | – |
-| TableHeader | leaf | – |
-| FeedColumn | leaf | – |
-| GmSidebar | leaf | – |
+| Recruit / Trade / Apprentice | leaf | - |
+| TableHeader | leaf | - |
+| FeedColumn | leaf | - |
+| GmSidebar | leaf | - |
 | TacticalRegion | trunk | feeds rolls (throwMode) |
 | Initiative | trunk | feeds rolls (sprint refs) |
 | RollResolution | trunk | depends on tactical + initiative |
 | TableAuth / CampaignState | trunk | feeds everything |
-| TableRealtime | trunk | last — depends on all callback consumers being stable |
+| TableRealtime | trunk | last - depends on all callback consumers being stable |
 
 ---
 
@@ -317,7 +317,7 @@ export default function TablePage() {
 | 11 (GmSidebar) | Each tab loads. Drag-resize sidebar works. Notes editor saves. Assets folder open/close persists. |
 | 12 (TacticalSync) | Place token. Move token. Switch scenes. Throw grenade → cell-click → blast resolves. Cross-scene chip on initiative bar updates when token moves between scenes. |
 | 13 (Initiative) | Full combat round PC + NPC. Aim → +2 CMod next attack. Ready Weapon. Sprint → 2 actions + Athletics roll + initiative reroll order. Charge. Defer initiative. End combat → wound-infection queue end-to-end. |
-| 14 (roll helpers) | All step-15 smokes pass — dress rehearsal. |
+| 14 (roll helpers) | All step-15 smokes pass - dress rehearsal. |
 | 15 (RollResolution) | **Full roll smoke matrix above.** Highest-risk gate. |
 | 16 (Auth + CampaignState) | Login as GM, Thriver, player, kicked player. Stress threshold modal fires on <5→5 transition. |
 | 17 (TableRealtime) | Two tabs cross-tab smoke: every event from the emit list. Sentry breadcrumbs still tag user_id. Tab visibility refetch on background-return. |
@@ -328,10 +328,10 @@ export default function TablePage() {
 
 Ranked highest to lowest regression risk.
 
-### R1 — `useRollResolution` extraction (Phase 3.4)
+### R1 - `useRollResolution` extraction (Phase 3.4)
 - `executeRoll` is 1850 LOC, branches on ~12 dimensions, reads 30+ state values, writes to 8 tables, emits 7 different broadcasts.
 - **Stale-closure landmines:** L1498-L1500 (lasting_damage) and L1530-L1537 (infection) document past bugs. Both went stale because the listener captured pre-load state. ANY hook extraction that re-creates closures has the same risk if `useStableCallback` discipline slips.
-- **Re-entry guards** (`nextTurnInFlightRef`, `consumeActionInFlightRef`, `rollExecutedRef`) survive React batching by being refs. Moving them into hooks is fine ONLY if the ref identity is created once at hook mount — confirm via `useRef`-in-the-hook, never `useState`.
+- **Re-entry guards** (`nextTurnInFlightRef`, `consumeActionInFlightRef`, `rollExecutedRef`) survive React batching by being refs. Moving them into hooks is fine ONLY if the ref identity is created once at hook mount - confirm via `useRef`-in-the-hook, never `useState`.
 - **Mitigation:** step 14 (extract pure helpers + add unit tests) MUST land before step 15. At minimum:
   - auto-target picker tests
   - mortal-wound branch tests
@@ -339,35 +339,35 @@ Ranked highest to lowest regression risk.
   - sprint deferral order tests
   - coordinated-effort retcon math tests
 
-### R2 — `useTableRealtime` extraction (Phase 3.5)
+### R2 - `useTableRealtime` extraction (Phase 3.5)
 - 30 handlers, all closure-sensitive.
 - `userIdRef` / `gmLikeRef` / `entriesRef` / `campaignNpcsRef` / `tacticalSharedRef` exist BECAUSE the channel is registered once. If the hook resubscribes on dep change (e.g. accidentally adding `entries` to its deps array), channel will repeatedly tear down + recreate, breaking `tactical_shared` open-state and double-firing `turn_changed` echoes.
 - **Mitigation:** hook deps array MUST be `[campaignId]` only. All other consumers pass via stable refs or stable callbacks. Add a console.warn in cleanup for duration of step 17 to catch surprise resubscriptions.
 
-### R3 — `useInitiative` extraction (Phase 3.3 step 13)
+### R3 - `useInitiative` extraction (Phase 3.3 step 13)
 - `nextTurn`'s sprint deferral + new-round detection is the second-most tangled function. `sprintAthleticsPendingRef` / `sprintAthleticsRoundDeferredRef` (L610-L611) load-bearing for log ordering.
 - `consumeActionInFlightRef` Set-based per-entry lock (L381) prevents double-decrement races. If extracted incorrectly (e.g. one ref shared across hook instances), Aim spam will burn 2 actions.
 - **Mitigation:** keep all turn-flow refs co-located in the hook; expose only setter functions, never the refs themselves.
 
-### R4 — `useTacticalSync` extraction (Phase 3.3 step 12)
+### R4 - `useTacticalSync` extraction (Phase 3.3 step 12)
 - `throwMode` / `grenadeTargetCell` are read by `executeRoll`; `moveMode` is read by the click-handler that fires on tactical cell click. Dependency direction is tactical → rolls, but click handler bridges them.
 - Active-combatant cell-reset effect (L623-L626) has explicit `EXCEPTION` carve-out for sprint/charge. Easy to drop on extraction.
 - **Mitigation:** preserve the carve-out comment verbatim. Add a guard test.
 
-### R5 — Broadcast centralization (Phase 3.0 step 4)
+### R5 - Broadcast centralization (Phase 3.0 step 4)
 - 60+ rename sites. A single missed site won't typecheck (the new helper has a typed event union), but a refactor that silently changes payload shape will.
 - **Mitigation:** pre-step grep audit: list every distinct event + payload shape. The helper type-unions cover all 15 distinct events.
 
-### R6 — `firedLastingChecksRef` lifetime (Phase 3.3)
+### R6 - `firedLastingChecksRef` lifetime (Phase 3.3)
 - Documented at L436-L441: prevents re-firing the lasting-damage modal on every `loadEntries` refresh while DB flag stays true. If moved to a hook that remounts (key change), modal will re-spam.
 - **Mitigation:** keep in hook with `[]` mount-deps, never `[id]`.
 
-### R7 — `useChatPanel` lifting (Phase 3.2 step 10)
+### R7 - `useChatPanel` lifting (Phase 3.2 step 10)
 - Currently lifted to page level (L897) so Both-tab can read merged `chat.messages` alongside rolls. If pushed inside `<FeedColumn>` naively, merged-feed path breaks.
 - **Mitigation:** keep `useChatPanel` at the page level and pass `chat` into FeedColumn as a prop.
 
-### R8 — `presence` channel teardown (Phase 3.5)
-- Presence channel is separate from broadcast channel. Cleanup is in the same useEffect at L1655. Moving them to different hooks means cleanup order changes — verify presence-leave still fires before broadcast channel close.
+### R8 - `presence` channel teardown (Phase 3.5)
+- Presence channel is separate from broadcast channel. Cleanup is in the same useEffect at L1655. Moving them to different hooks means cleanup order changes - verify presence-leave still fires before broadcast channel close.
 
 ---
 
@@ -384,7 +384,7 @@ Ranked highest to lowest regression risk.
 | 3.6 Compose + polish | 0.5 |
 | **Total** | **~10.5 sessions** |
 
-Add a 30% buffer for the roll-pipeline and realtime extractions (R1, R2) — call it **12-14 sessions** end-to-end, with two of those sessions reserved as "no-new-extraction, only fix regressions surfaced by the matrix smokes."
+Add a 30% buffer for the roll-pipeline and realtime extractions (R1, R2) - call it **12-14 sessions** end-to-end, with two of those sessions reserved as "no-new-extraction, only fix regressions surfaced by the matrix smokes."
 
 ---
 

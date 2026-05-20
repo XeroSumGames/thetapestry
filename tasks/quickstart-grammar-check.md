@@ -1,16 +1,16 @@
-# Distemper Quickstart Export v0.8.531 — grammar & spelling pass (COMPLETE LIST)
+# Distemper Quickstart Export v0.8.531 - grammar & spelling pass (COMPLETE LIST)
 
 **Source**: `C:\Users\tony_\OneDrive\Distemper\01. Rules System\02. Quickstart\Distemper Quickstart Export v0.8.531.pdf`
 **Working text**: `tasks/_work/quickstart-export-v0.8.531.txt`
-**Scope**: spelling, typos, subject-verb agreement, pronoun errors, missing/duplicated words, punctuation, internal-consistency naming. Rules content (CDP totals, range bands, etc.) is out of scope — see [`tasks/quickstart-rewrite-instructions.md`](tasks/quickstart-rewrite-instructions.md) for those.
+**Scope**: spelling, typos, subject-verb agreement, pronoun errors, missing/duplicated words, punctuation, internal-consistency naming. Rules content (CDP totals, range bands, etc.) is out of scope - see [`tasks/quickstart-rewrite-instructions.md`](tasks/quickstart-rewrite-instructions.md) for those.
 
-This is the **complete** list — every error I caught across two read-throughs of the manuscript. Each finding gives the page, the section heading as it appears in the PDF, and explicit FROM/TO copy-paste text. Page numbers refer to the printed page numbers shown in the PDF.
+This is the **complete** list - every error I caught across two read-throughs of the manuscript. Each finding gives the page, the section heading as it appears in the PDF, and explicit FROM/TO copy-paste text. Page numbers refer to the printed page numbers shown in the PDF.
 
 Findings are ordered by page number.
 
 ---
 
-## 1. Page 1 — "WHO IS DISTEMPER FOR?"
+## 1. Page 1 - "WHO IS DISTEMPER FOR?"
 
 **`who` for people, not `that`**
 
@@ -24,7 +24,7 @@ Findings are ordered by page number.
 
 ---
 
-## 2. Page 1 — "THE DISTEMPERVERSE"
+## 2. Page 1 - "THE DISTEMPERVERSE"
 
 **Awkward `stories…stories` + wrong past participle of `weave`**
 
@@ -56,7 +56,7 @@ Findings are ordered by page number.
 
 ---
 
-## 3. Pages 2–5 — "A BRIEF TIMELINE OF THE VIRUS"
+## 3. Pages 2-5 - "A BRIEF TIMELINE OF THE VIRUS"
 
 **Typo: "South Korean" should be "South Korea"** (JULY 14TH column)
 
@@ -100,7 +100,7 @@ Findings are ordered by page number.
 
 ---
 
-## 4. Page 8 — "MAKING A DICE CHECK"
+## 4. Page 8 - "MAKING A DICE CHECK"
 
 **`an` before consonant sound**
 
@@ -114,7 +114,7 @@ Findings are ordered by page number.
 
 ---
 
-## 5. Page 8 — "DICE TERMS"
+## 5. Page 8 - "DICE TERMS"
 
 **`six-side` → `six-sided`; `dice` (singular) → `die`**
 
@@ -128,7 +128,7 @@ Findings are ordered by page number.
 
 ---
 
-## 6. Page 9 — "SKILL MODIFIERS (SMOD):"
+## 6. Page 9 - "SKILL MODIFIERS (SMOD):"
 
 **`an asterisks` → `an asterisk`**
 
@@ -152,9 +152,9 @@ Findings are ordered by page number.
 
 ---
 
-## 7. Page 10 — "GROUP CHECKS"
+## 7. Page 10 - "GROUP CHECKS"
 
-**Duplicated "take" — drop the first one**
+**Duplicated "take" - drop the first one**
 
 **FROM:**
 
@@ -166,7 +166,7 @@ Findings are ordered by page number.
 
 ---
 
-## 8. Page 10 — "MAKING THE CASE" example
+## 8. Page 10 - "MAKING THE CASE" example
 
 **Redundant `that` ("…that because…that…")**
 
@@ -180,7 +180,7 @@ Findings are ordered by page number.
 
 ---
 
-## 9. Page 11 — "OPPOSED CHECKS"
+## 9. Page 11 - "OPPOSED CHECKS"
 
 **`Opposing` → `Opposed` (matches the rest of the section)**
 
@@ -194,7 +194,7 @@ Findings are ordered by page number.
 
 ---
 
-## 10. Page 12 — "CHARACTER OVERVIEW" intro
+## 10. Page 12 - "CHARACTER OVERVIEW" intro
 
 **`each players` → `each player`**
 
@@ -208,7 +208,7 @@ Findings are ordered by page number.
 
 ---
 
-## 11. Page 13 — "PARADIGMS" blurb
+## 11. Page 13 - "PARADIGMS" blurb
 
 **Inconsistency with later sections: "dozen" but Page 24 says "16 Paradigms"**
 
@@ -232,7 +232,7 @@ Findings are ordered by page number.
 
 ---
 
-## 12. Page 15 — "STEP XERO: WHO ARE THEY?" body text
+## 12. Page 15 - "STEP XERO: WHO ARE THEY?" body text
 
 **`you` → `your` (two instances in the same paragraph)**
 
@@ -264,7 +264,7 @@ Findings are ordered by page number.
 
 > Write the 3 words under Personal Information on your character sheet.
 
-(Or use the spelled-out version: "Write the three words…" — pick whichever style you use elsewhere.)
+(Or use the spelled-out version: "Write the three words…" - pick whichever style you use elsewhere.)
 
 **Pronoun shift: `you` → `your`** (in the Backstory bullet about street urchin / circus)
 
@@ -278,7 +278,7 @@ Findings are ordered by page number.
 
 ---
 
-## 13. Page 16 — "STEP ONE" Pesky narrative
+## 13. Page 16 - "STEP ONE" Pesky narrative
 
 **`shop-lifting` → `shoplifting`** (closed compound)
 
@@ -292,7 +292,7 @@ Findings are ordered by page number.
 
 ---
 
-## 14. Page 17 — "STEP TWO" Pesky narrative
+## 14. Page 17 - "STEP TWO" Pesky narrative
 
 **Missing word: `helped him up his skills` → `helped him hone his skills`** (or `level up his skills`)
 
@@ -306,7 +306,7 @@ Findings are ordered by page number.
 
 ---
 
-## 15. Page 17 — "STEP THREE" Pesky CDP-spend paragraph
+## 15. Page 17 - "STEP THREE" Pesky CDP-spend paragraph
 
 **Missing terminal period**
 
@@ -320,7 +320,7 @@ Findings are ordered by page number.
 
 ---
 
-## 16. Page 17 — "After these steps, Pesky LaRue…" summary
+## 16. Page 17 - "After these steps, Pesky LaRue…" summary
 
 **Missing terminal period**
 
@@ -334,7 +334,7 @@ Findings are ordered by page number.
 
 ---
 
-## 17. Page 18 — "STEP FOUR: HOW THEY MADE MONEY" body text
+## 17. Page 18 - "STEP FOUR: HOW THEY MADE MONEY" body text
 
 **`in you life` → `in your life`**
 
@@ -348,7 +348,7 @@ Findings are ordered by page number.
 
 ---
 
-## 18. Page 18 — Pesky narrative ("raising it to 1 (Good)")
+## 18. Page 18 - Pesky narrative ("raising it to 1 (Good)")
 
 **Missing comma before `raising`**
 
@@ -362,7 +362,7 @@ Findings are ordered by page number.
 
 ---
 
-## 19. Page 19 — "STEP FIVE" Pesky narrative
+## 19. Page 19 - "STEP FIVE" Pesky narrative
 
 **`as learning` → `as well as learning`** (missing word)
 
@@ -376,7 +376,7 @@ Findings are ordered by page number.
 
 ---
 
-## 20. Page 20 — "STEP SEVEN: SECONDARY STATS" intro
+## 20. Page 20 - "STEP SEVEN: SECONDARY STATS" intro
 
 **Missing apostrophe: `a characters Initiative Modifier`**
 
@@ -390,9 +390,9 @@ Findings are ordered by page number.
 
 ---
 
-## 21. Page 20 — "STEP SEVEN" right-column formula box
+## 21. Page 20 - "STEP SEVEN" right-column formula box
 
-**Wrong apostrophe placement: `A characters'` (singular character takes `character's`)** — two instances
+**Wrong apostrophe placement: `A characters'` (singular character takes `character's`)** - two instances
 
 **FROM:**
 
@@ -418,7 +418,7 @@ Findings are ordered by page number.
 
 ---
 
-## 22. Page 21 — "STEP NINE: FINAL FLAVOR"
+## 22. Page 21 - "STEP NINE: FINAL FLAVOR"
 
 **Missing verb: `Your character might gallows humor`**
 
@@ -432,7 +432,7 @@ Findings are ordered by page number.
 
 ---
 
-## 23. Page 24 — "SKILLS" intro
+## 23. Page 24 - "SKILLS" intro
 
 **Run-on sentence around `riding a horse and a character's familiarity`**
 
@@ -446,7 +446,7 @@ Findings are ordered by page number.
 
 ---
 
-## 24. Page 24 — "SKILLS" body, vocational-skill paragraph
+## 24. Page 24 - "SKILLS" body, vocational-skill paragraph
 
 **`anyone… are considered` → `anyone… is considered`; `an asterisks` → `an asterisk`**
 
@@ -460,7 +460,7 @@ Findings are ordered by page number.
 
 ---
 
-## 25. Page 24 — "PARADIGMS VS. PREGENS"
+## 25. Page 24 - "PARADIGMS VS. PREGENS"
 
 **Misplaced space before comma**
 
@@ -482,13 +482,13 @@ Findings are ordered by page number.
 
 > Paradigms represent a familiar trope, stereotype, or role within a group, and each comes predefined with the attributes and a skill set to match the concept.
 
-**Internal-consistency: paradigm-list naming mismatch — page 24 lists `Family Doctor`, but the actual paradigm sheet on page 26 is labeled `COSMETIC SURGEON`**
+**Internal-consistency: paradigm-list naming mismatch - page 24 lists `Family Doctor`, but the actual paradigm sheet on page 26 is labeled `COSMETIC SURGEON`**
 
 **FROM:**
 
 > The Paradigms included are: Bar Owner, Beat Cop, Biker, EMT, Family Doctor, Farmer, Flea Market Trader, Hot Rod Mechanic, Mayor, Mercenary, Petty Criminal, Preacher, Rural Sheriff, School Teacher, Semi-Pro Athlete and Trucker.
 
-**TO (assuming you intend the paradigm to be Cosmetic Surgeon — confirm which is canonical):**
+**TO (assuming you intend the paradigm to be Cosmetic Surgeon - confirm which is canonical):**
 
 > The Paradigms included are: Bar Owner, Beat Cop, Biker, EMT, Cosmetic Surgeon, Farmer, Flea Market Trader, Hot Rod Mechanic, Mayor, Mercenary, Petty Criminal, Preacher, Rural Sheriff, School Teacher, Semi-Pro Athlete, and Trucker.
 
@@ -516,7 +516,7 @@ Findings are ordered by page number.
 
 ---
 
-## 26. Page 28 — "STARTING LOAD-OUT"
+## 26. Page 28 - "STARTING LOAD-OUT"
 
 **`each character also get` → `each character also gets`; `for 2 day` → `for 2 days`** (same sentence, two errors)
 
@@ -540,7 +540,7 @@ Findings are ordered by page number.
 
 ---
 
-## 27. Page 30 — "MAKING A FIRST IMPRESSIONS CHECK"
+## 27. Page 30 - "MAKING A FIRST IMPRESSIONS CHECK"
 
 **Missing noun `check`**
 
@@ -554,7 +554,7 @@ Findings are ordered by page number.
 
 ---
 
-## 28. Page 30 — "GUT INSTINCTS"
+## 28. Page 30 - "GUT INSTINCTS"
 
 **Missing word `can`**
 
@@ -568,7 +568,7 @@ Findings are ordered by page number.
 
 ---
 
-## 29. Page 31 — "MAKING A REBUTTAL"
+## 29. Page 31 - "MAKING A REBUTTAL"
 
 **Missing terminal period**
 
@@ -582,7 +582,7 @@ Findings are ordered by page number.
 
 ---
 
-## 30. Page 32 — "INITIATIVE" / order-of-action paragraph
+## 30. Page 32 - "INITIATIVE" / order-of-action paragraph
 
 **`PC's` → `PCs`** (apostrophe is for possessive, not plural)
 
@@ -596,7 +596,7 @@ Findings are ordered by page number.
 
 ---
 
-## 31. Page 32 — "ACTIONS" paragraph
+## 31. Page 32 - "ACTIONS" paragraph
 
 **Missing apostrophe: `other players actions` → `other players' actions`**
 
@@ -610,7 +610,7 @@ Findings are ordered by page number.
 
 ---
 
-## 32. Page 32 — "RESOLUTION" paragraph
+## 32. Page 32 - "RESOLUTION" paragraph
 
 **Missing comma after closing parenthesis**
 
@@ -624,7 +624,7 @@ Findings are ordered by page number.
 
 ---
 
-## 33. Page 33 — "MORTAL WOUNDS & DEATH"
+## 33. Page 33 - "MORTAL WOUNDS & DEATH"
 
 **Two stray commas in one sentence: one separating subject from verb, one before parenthesis**
 
@@ -638,7 +638,7 @@ Findings are ordered by page number.
 
 ---
 
-## 34. Page 34 — "ATTACK" combat action description
+## 34. Page 34 - "ATTACK" combat action description
 
 **Missing subject after the conditional clause + missing terminal period**
 
@@ -652,7 +652,7 @@ Findings are ordered by page number.
 
 ---
 
-## 35. Page 36 — "ARMOR"
+## 35. Page 36 - "ARMOR"
 
 **Wrong apostrophe placement: `A characters' strength` → `A character's strength`**
 
@@ -666,7 +666,7 @@ Findings are ordered by page number.
 
 ---
 
-## 36. Page 37 — "Now What?"
+## 36. Page 37 - "Now What?"
 
 **Spelling: `though` → `through`**
 
@@ -702,7 +702,7 @@ Findings are ordered by page number.
 
 ---
 
-## 37. Page 39 — "Rules Reference" inner cover → INSIGHT DICE bullet list
+## 37. Page 39 - "Rules Reference" inner cover → INSIGHT DICE bullet list
 
 **Comma splice: `method, this costs…` + missing terminal period**
 
@@ -716,7 +716,7 @@ Findings are ordered by page number.
 
 ---
 
-## 38. Page 39 — "Rules Reference" inner cover → "TAKE COVER"
+## 38. Page 39 - "Rules Reference" inner cover → "TAKE COVER"
 
 **Sentence fragment: `on next attack`** (looks like an editorial leftover)
 
@@ -732,7 +732,7 @@ Findings are ordered by page number.
 
 ---
 
-## 39. Page 40 — Back cover
+## 39. Page 40 - Back cover
 
 **`a survivors` → `survivors` (extra `a`)**
 
@@ -782,33 +782,33 @@ Findings are ordered by page number.
 
 **TO:**
 
-> DISTEMPER is a post-apocalyptic tabletop roleplaying game set one year after a deadly mutation of `canine distemper' — transmitted by Man's Best Friend — wiped out 90% of humanity.
+> DISTEMPER is a post-apocalyptic tabletop roleplaying game set one year after a deadly mutation of `canine distemper' - transmitted by Man's Best Friend - wiped out 90% of humanity.
 
 (Em-dashes turn the "transmitted by Man's Best Friend" clause into a parenthetical, leaving "a deadly mutation … wiped out 90% of humanity" as the readable through-line.)
 
 ---
 
-## Style notes (no FROM/TO — flagging for consistency only)
+## Style notes (no FROM/TO - flagging for consistency only)
 
 These are not clear errors but worth a second pass.
 
-1. **`whilst` vs `while`** — the manuscript mixes them (`whilst` on Pages 6, 7, 9, 31, 33, 36; `while` elsewhere). Pick one. British convention favors `whilst`; American convention favors `while`.
-2. **Collective-noun verb agreement** — `Berglund's research team are no closer…` (Page 4) and `Berglund's team note that the dogs become wildly aggressive` (Page 3) use British-style plural agreement. The rest of the manuscript uses American singular agreement (`a wave… swells`, `a group… takes`). Pick one.
-3. **`any more` vs `anymore`** — Page 7 has `no one is really sure who they can trust any more`. Modern American English prefers the closed `anymore`.
-4. **Date-header capitalization on the timeline** (Pages 2–5) — most are full caps (`MARCH 2ND`, `MAY 14TH`) but a few are mixed (`MARcH 9Th`, `APrIL 19Th`). If those are intentional design choices, ignore; if they're typesetting artifacts, normalize.
-5. **`Tabletop Roleplaying Game` vs `Tabletop Role-Playing Game`** — both forms appear on Page 1. Pick one.
-6. **`Initiative Roll` vs `Initiative Check`** — both appear on Pages 32 and 38. They mean the same thing in context; pick one.
-7. **`W.H.O.` vs `WHO`** — both forms appear on Pages 4–5. Pick one.
-8. **Em-dashes** — the document mostly uses spaced hyphens (` - `) where em-dashes (`—`) would be more typographically correct. If you have a typesetting pass scheduled, batch-convert.
-9. **`Insight Dice` used as both singular and plural** — `an Insight Dice` (singular use) vs `two Insight Dice` (plural). Tabletop-jargon-acceptable, but if you want strict grammar, use `Insight Die` (singular) / `Insight Dice` (plural). This appears throughout the document; any change would be a global find-replace.
-10. **Pronoun shift `Each player… you are going to share`** (Page 15) — third-person `each player` collides with second-person `you`. Common in TTRPG manuals; acceptable but inconsistent. Consider rewording to either keep `you` throughout or reword to `Each player can decide how much of this information they share with the group`.
-11. **Pesky example boxes scattered across multi-column layouts** — Pages 16–19 — the page-break / column-flow makes some Pesky narrative boxes hard to follow on first read. Possibly a typesetting issue rather than a copy issue.
+1. **`whilst` vs `while`** - the manuscript mixes them (`whilst` on Pages 6, 7, 9, 31, 33, 36; `while` elsewhere). Pick one. British convention favors `whilst`; American convention favors `while`.
+2. **Collective-noun verb agreement** - `Berglund's research team are no closer…` (Page 4) and `Berglund's team note that the dogs become wildly aggressive` (Page 3) use British-style plural agreement. The rest of the manuscript uses American singular agreement (`a wave… swells`, `a group… takes`). Pick one.
+3. **`any more` vs `anymore`** - Page 7 has `no one is really sure who they can trust any more`. Modern American English prefers the closed `anymore`.
+4. **Date-header capitalization on the timeline** (Pages 2-5) - most are full caps (`MARCH 2ND`, `MAY 14TH`) but a few are mixed (`MARcH 9Th`, `APrIL 19Th`). If those are intentional design choices, ignore; if they're typesetting artifacts, normalize.
+5. **`Tabletop Roleplaying Game` vs `Tabletop Role-Playing Game`** - both forms appear on Page 1. Pick one.
+6. **`Initiative Roll` vs `Initiative Check`** - both appear on Pages 32 and 38. They mean the same thing in context; pick one.
+7. **`W.H.O.` vs `WHO`** - both forms appear on Pages 4-5. Pick one.
+8. **Em-dashes** - the document mostly uses spaced hyphens (` - `) where em-dashes (`-`) would be more typographically correct. If you have a typesetting pass scheduled, batch-convert.
+9. **`Insight Dice` used as both singular and plural** - `an Insight Dice` (singular use) vs `two Insight Dice` (plural). Tabletop-jargon-acceptable, but if you want strict grammar, use `Insight Die` (singular) / `Insight Dice` (plural). This appears throughout the document; any change would be a global find-replace.
+10. **Pronoun shift `Each player… you are going to share`** (Page 15) - third-person `each player` collides with second-person `you`. Common in TTRPG manuals; acceptable but inconsistent. Consider rewording to either keep `you` throughout or reword to `Each player can decide how much of this information they share with the group`.
+11. **Pesky example boxes scattered across multi-column layouts** - Pages 16-19 - the page-break / column-flow makes some Pesky narrative boxes hard to follow on first read. Possibly a typesetting issue rather than a copy issue.
 
 ---
 
 ## Summary count
 
-**Clear errors fixed: 39 distinct edits** (some sections fix multiple things at once — e.g. #25 Paradigms-vs-Pregens has four sub-edits; #21 has three).
+**Clear errors fixed: 39 distinct edits** (some sections fix multiple things at once - e.g. #25 Paradigms-vs-Pregens has four sub-edits; #21 has three).
 
 Breakdown:
 - Spelling/typo: **10** (`weaved`, `South Korean`, `than`/`that`, `six-side`, `asterisks` ×2, `define`/`defined`, `though`/`through`, `shop-lifting`, `you/your` ×6)
@@ -826,7 +826,7 @@ Plus **11 style/consistency notes** for the editorial pass.
 
 ## Files generated during this pass
 
-- `tasks/quickstart-grammar-check.md` — this file
-- `tasks/_work/quickstart-export-v0.8.531.txt` — pdftotext-layout extraction of the source PDF
+- `tasks/quickstart-grammar-check.md` - this file
+- `tasks/_work/quickstart-export-v0.8.531.txt` - pdftotext-layout extraction of the source PDF
 
 Both files live in the gifted-borg-5d7ab9 worktree until you've reviewed.

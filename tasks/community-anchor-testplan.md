@@ -1,13 +1,13 @@
-# Test Plan — Communities Phase E #C: "Start near existing community" wizard tile
+# Test Plan - Communities Phase E #C: "Start near existing community" wizard tile
 
-Shipped 2026-04-30. Closes the last actionable gap in the Phase E spec (#13 row 4) — gives a new GM a fourth start path beside Custom / Setting / Module, anchored to a community already living on the Tapestry.
+Shipped 2026-04-30. Closes the last actionable gap in the Phase E spec (#13 row 4) - gives a new GM a fourth start path beside Custom / Setting / Module, anchored to a community already living on the Tapestry.
 
 ## Pre-flight
 
-No SQL migration this round — uses existing `world_communities`, `campaign_pins`, and `community_encounters` tables.
+No SQL migration this round - uses existing `world_communities`, `campaign_pins`, and `community_encounters` tables.
 
 You'll need:
-- At least one approved, published `world_communities` row owned by a DIFFERENT account than the test account (so it shows up in the picker — your own communities are filtered out).
+- At least one approved, published `world_communities` row owned by a DIFFERENT account than the test account (so it shows up in the picker - your own communities are filtered out).
 - The test account logged in.
 
 ## Golden path
@@ -17,7 +17,7 @@ You'll need:
 3. Click one of the community cards.
 4. **Expected**:
    - Card outlines blue (#7ab3d4) and shows community state.
-   - Setting buttons all deselect (the row becomes inactive — none highlighted).
+   - Setting buttons all deselect (the row becomes inactive - none highlighted).
    - Module picker (if any) all deselect.
    - The Custom-setting Starting Location field hides.
 5. Type a Story Name. Click **Create Story**.
@@ -45,7 +45,7 @@ You'll need:
 6. Click the same Community card again.
 7. **Expected**: Module deselects; Community card becomes picked.
 8. Click the same Community card a second time.
-9. **Expected**: Card deselects (toggle off). No picker is selected — Story Name still allows Create, which would behave like Custom-setting with no starting location pinned.
+9. **Expected**: Card deselects (toggle off). No picker is selected - Story Name still allows Create, which would behave like Custom-setting with no starting location pinned.
 
 ## Self-filter
 
@@ -57,14 +57,14 @@ You'll need:
 1. As any account on a fresh DB with no approved world_communities at all, open `/stories/new`.
 2. **Expected**: the "Or start near an existing community" block does not render. Setting + Module pickers behave normally.
 
-## Edge — picked community is later unpublished
+## Edge - picked community is later unpublished
 
 1. Pick a community on `/stories/new`. Don't click Create yet.
 2. Have a Thriver flip its `moderation_status` from approved to rejected via `/moderate`.
 3. Click Create on the existing tab.
-4. **Expected**: campaign creates regardless (we resolved the picked row at click-time). Homestead pin still seeds at the captured coords. The encounter handshake row still inserts but the trigger may notify based on a now-rejected community — this is acceptable. Subsequent reloads won't show the unpublished community in the picker.
+4. **Expected**: campaign creates regardless (we resolved the picked row at click-time). Homestead pin still seeds at the captured coords. The encounter handshake row still inserts but the trigger may notify based on a now-rejected community - this is acceptable. Subsequent reloads won't show the unpublished community in the picker.
 
-## Regression — existing flows still work
+## Regression - existing flows still work
 
 Run a few:
 - Create a campaign with **Custom** setting + a typed Starting Location → still works, lat/lng pinned to typed location, no community-anchored side effects.

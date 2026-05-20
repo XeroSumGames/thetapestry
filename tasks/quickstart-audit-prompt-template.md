@@ -1,4 +1,4 @@
-# Quickstart audit — prompt template for Claude chat
+# Quickstart audit - prompt template for Claude chat
 
 This is a copy-paste prompt for **claude.ai** (web/desktop chat). It reproduces the Quickstart-vs-platform audit task using attached files only (no shell access required).
 
@@ -24,17 +24,17 @@ This is a copy-paste prompt for **claude.ai** (web/desktop chat). It reproduces 
 You are auditing a Distemper Quickstart PDF against the canonical Xero Sum Engine
 (XSE) rules. Three documents are attached:
 
-1. tapestry-rules-canon.md — The PLATFORM'S canonical rules. This is the source of
+1. tapestry-rules-canon.md - The PLATFORM'S canonical rules. This is the source of
    truth for every term, table, formula, skill, profession, paradigm, complication,
    motivation, secondary stat, weapon, and combat action. Every entry in this file
    is sourced from the live platform code (lib/xse-schema.ts and app/rules/* pages).
    When this file disagrees with the SRD or the Quickstart, this file wins.
 
-2. XSE SRD Export v1.1.17.pdf — The XSE SRD. Reference for prose and rule
+2. XSE SRD Export v1.1.17.pdf - The XSE SRD. Reference for prose and rule
    articulation. Used when the canon.md file doesn't speak to a topic (e.g., narrative
    descriptions of Filling In The Gaps).
 
-3. Distemper Quickstart Export v[VERSION].pdf — The Quickstart you are auditing.
+3. Distemper Quickstart Export v[VERSION].pdf - The Quickstart you are auditing.
    This is the document you produce edits AGAINST. Don't preserve its content over
    the canonical sources.
 
@@ -54,22 +54,22 @@ YOUR TASK
 Read the Quickstart end-to-end and produce a single audit document (markdown) that
 contains, in order:
 
-1. A "deviations from platform/SRD" list — for every place in the Quickstart that
+1. A "deviations from platform/SRD" list - for every place in the Quickstart that
    uses a term not in canon.md, list the page, section heading, the exact FROM text,
    and the exact TO text. Order by page number.
 
 2. A "wholesale rewrite" of every box on the inner-cover Rules Reference (typically
-   pages 38–39 of the Quickstart). Use canon.md as your source for every box —
+   pages 38-39 of the Quickstart). Use canon.md as your source for every box -
    Dice Checks, Outcomes, Modifiers, Insight Dice, Group Checks, Opposed Checks,
    Skill List, Combat Rounds, Initiative, Combat Actions, Combat Attacks, First
    Impressions, Gut Instincts, Stress & Breaking Point, Negotiations, Item Upkeep,
-   etc. Do NOT copy text from the Quickstart's existing inner cover — rebuild each
+   etc. Do NOT copy text from the Quickstart's existing inner cover - rebuild each
    box from canon.md.
 
-3. A "grammar and spelling" pass — typos, missing/duplicated words, subject-verb
+3. A "grammar and spelling" pass - typos, missing/duplicated words, subject-verb
    agreement, punctuation, internal inconsistency. Each item with FROM and TO.
 
-4. A "style notes" section — non-error consistency questions for the editor's
+4. A "style notes" section - non-error consistency questions for the editor's
    judgment (whilst/while, em-dashes vs hyphens, etc.). No FROM/TO required.
 
 OUTPUT FORMAT
@@ -92,10 +92,10 @@ b. THEN read the Quickstart. As you read, every time you see a skill name or tab
 
 c. NEVER copy a skill name or paradigm name from the Quickstart's existing prose
    without first verifying it's in canon.md. The Quickstart's prose is the LEAST
-   canonical source — copying from it propagates errors.
+   canonical source - copying from it propagates errors.
 
 d. When the Quickstart shows a Profession's skill bundle, check it against the
-   canon.md "Professions (Table 8)" section — the canonical bundles are 5 skills
+   canon.md "Professions (Table 8)" section - the canonical bundles are 5 skills
    each. If the Quickstart shows 7 skills per profession, the entire bundle needs
    replacing with the canonical 5-skill version.
 
@@ -143,8 +143,8 @@ START
 ## Notes on the prompt
 
 - The "CANON RECAP" section at the bottom is a fast-reference cheat sheet. It overlaps with content already in `tapestry-rules-canon.md`, but pulling it into the prompt makes the model less likely to drift if the canon file is large.
-- The methodology section (a–g) is critical. It's the difference between "Claude reads the Quickstart and reflects its prose back" (bad — propagates errors) and "Claude reads the canon first, then audits the Quickstart against it" (good — what we want).
-- The output is markdown — same format as the audit doc we produced in this Claude Code session. Drop the result into `tasks/`, work through it in Affinity Publisher.
+- The methodology section (a-g) is critical. It's the difference between "Claude reads the Quickstart and reflects its prose back" (bad - propagates errors) and "Claude reads the canon first, then audits the Quickstart against it" (good - what we want).
+- The output is markdown - same format as the audit doc we produced in this Claude Code session. Drop the result into `tasks/`, work through it in Affinity Publisher.
 
 ## When to regenerate `tapestry-rules-canon.md`
 
@@ -173,5 +173,5 @@ Compare v[NEW] against canon.md. List ONLY the deviations that are still present
 in v[NEW]. Skip anything that's been resolved between v[OLD] and v[NEW].
 
 Output: page-ordered FROM/TO list. No grammar pass needed unless I ask. No
-inner-cover rewrite — assume that's done.
+inner-cover rewrite - assume that's done.
 ```

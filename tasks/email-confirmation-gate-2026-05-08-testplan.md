@@ -1,4 +1,4 @@
-# Email-Confirmation Gate — Testplan
+# Email-Confirmation Gate - Testplan
 
 **Date:** 2026-05-08
 **Files touched:**
@@ -26,7 +26,7 @@ handler:
 - Reads the code
 - Spins up a server-side Supabase client (`@supabase/ssr` →
   `createServerClient`) with cookie wiring
-- Calls `supabase.auth.exchangeCodeForSession(code)` — this sets the
+- Calls `supabase.auth.exchangeCodeForSession(code)` - this sets the
   auth cookie on the response
 - Redirects to `?next=<path>` (sanitized to relative paths only) or
   `/dashboard` by default
@@ -35,7 +35,7 @@ handler:
 Without this route, clicking confirmation links 404s and users never
 get a session.
 
-### 2. `/signup` — `emailRedirectTo` + post-signup state
+### 2. `/signup` - `emailRedirectTo` + post-signup state
 
 `app/signup/page.tsx`:
 
@@ -51,7 +51,7 @@ get a session.
 - The new branch uses `supabase.auth.resend({ type: 'signup', email,
   options: { emailRedirectTo } })` to re-trigger the email.
 
-### 3. `/login` — `Email not confirmed` handled gracefully
+### 3. `/login` - `Email not confirmed` handled gracefully
 
 `app/login/page.tsx`:
 
@@ -65,7 +65,7 @@ get a session.
 - Other auth errors (wrong password, etc.) still surface in the red
   error block.
 
-### 4. `/login` — surface `?error=...` from callback
+### 4. `/login` - surface `?error=...` from callback
 
 If `/auth/callback` fails (missing/expired code, exchange error), it
 redirects to `/login?error=...`. Login now reads the param on mount and
@@ -80,7 +80,7 @@ Hint codes:
 This code is dormant without two settings flipped in the Supabase
 dashboard:
 
-### Step 1 — Enable email confirmation
+### Step 1 - Enable email confirmation
 1. Authentication → Sign In / Providers → Email
 2. Toggle **Confirm email** ON
 3. Save
@@ -88,7 +88,7 @@ dashboard:
 After this, new signups create the user row but the user can't sign in
 until they click the email link.
 
-### Step 2 — Add the callback URL to allowed redirects
+### Step 2 - Add the callback URL to allowed redirects
 1. Authentication → URL Configuration
 2. **Site URL** should be `https://thetapestry.distemperverse.com`
 3. **Redirect URLs** must include:
@@ -103,18 +103,18 @@ Without these in the allowlist, Supabase will refuse to redirect users
 back to your site after they click the link, even though the link
 itself works.
 
-### Step 3 — Verify email delivery
+### Step 3 - Verify email delivery
 The signup flow generates an email, but it only lands in inboxes if
 Resend (or whichever email provider) is wired in Supabase's SMTP
 settings. The 2026-05-08 handoff flagged "Domain verification spot-check
-on Resend" as still open — confirm it independently:
+on Resend" as still open - confirm it independently:
 
 1. Sign up with a real personal email address
 2. Check inbox + spam folder within ~1 minute
 3. If the email never arrives: Supabase Auth → Emails → Logs (or
    Resend dashboard → Logs) for the failed delivery
 
-## Verification — happy path
+## Verification - happy path
 
 - [ ] Open `/signup` in incognito. Sign up with a real email address
       you can check. Form submits → "Check Your Email" view appears with
@@ -122,49 +122,49 @@ on Resend" as still open — confirm it independently:
 - [ ] Confirmation email arrives within ~30s. Click the link.
 - [ ] Lands back at `/dashboard` (or whatever `?next=` was) with an
       authenticated session.
-- [ ] Try `/login` immediately — sign in succeeds.
+- [ ] Try `/login` immediately - sign in succeeds.
 
-## Verification — failure paths
+## Verification - failure paths
 
 - [ ] **Try to log in before confirming.** Sign up but don't click the
       email yet. Try `/login` with the same email/password. Expect amber
       banner: "Email not confirmed yet. Check the inbox for <email>..."
       with a Resend button. Clicking Resend re-fires the email.
 - [ ] **Wrong email at signup.** On the "Check Your Email" view, click
-      "Start over" — form clears back to empty.
+      "Start over" - form clears back to empty.
 - [ ] **Click old/expired link.** If a user clicks an old link after
       confirming via a newer one, callback redirects to
       `/login?error=callback_failed` and login shows
       "Confirmation link expired or was already used. Sign in normally..."
 - [ ] **Resend during cooldown.** Supabase rate-limits resend to 1/60s.
-      Click Resend twice fast — second click `alert()`s the rate-limit
+      Click Resend twice fast - second click `alert()`s the rate-limit
       error.
 
-## Verification — invite-link flow
+## Verification - invite-link flow
 
 - [ ] Generate a campaign invite link (e.g. `/join/abc123`).
 - [ ] Open it in incognito → bounces to `/login?redirect=/join/abc123`.
-- [ ] Click "Sign Up" — lands on `/signup?redirect=/join/abc123`.
+- [ ] Click "Sign Up" - lands on `/signup?redirect=/join/abc123`.
 - [ ] Sign up with a real email. Confirmation email arrives.
 - [ ] Click confirmation link → lands at `/join/abc123` (NOT `/dashboard`),
       preserving the invite context through the round-trip.
 
 ## Known limitations / follow-ups
 
-1. **Password reset, email change, magic link** — same Confirm-email
+1. **Password reset, email change, magic link** - same Confirm-email
    pattern applies. Password reset isn't implemented yet; if/when added,
    it needs a similar `emailRedirectTo` + `/auth/callback` round-trip.
-2. **OAuth providers** — none currently. If added, they use the same
+2. **OAuth providers** - none currently. If added, they use the same
    callback route (PKCE flow) so no additional code path needed; just
    add the OAuth redirect URLs to Supabase's allowlist.
-3. **Profile row creation** — currently happens in the signup handler
+3. **Profile row creation** - currently happens in the signup handler
    between `auth.signUp` and the redirect. With confirmation enabled,
-   the row is created with the unconfirmed user — fine, since RLS
+   the row is created with the unconfirmed user - fine, since RLS
    policies only check `auth.uid()` which is null until they confirm.
    But the `profiles` row exists even for users who never confirm.
    Trade-off: the row is small (~100 bytes); the alternative is a
    Supabase trigger that creates it on confirm, which is more setup.
    Defer.
-4. **Resend rate limit** — Supabase's built-in cooldown surfaces as an
+4. **Resend rate limit** - Supabase's built-in cooldown surfaces as an
    alert. A nicer UX would suppress the button + show countdown for 60s.
    ~10 min job if it becomes annoying.

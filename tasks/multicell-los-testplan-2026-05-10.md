@@ -1,4 +1,4 @@
-# Multi-Cell Token LoS — Test Plan
+# Multi-Cell Token LoS - Test Plan
 
 **Shipped:** 2026-05-10 (`8ac4ae2`)
 **Surface:** `components/TacticalMap.tsx:1447`
@@ -12,7 +12,7 @@ non-GM viewer iff ANY of its cells is unfogged.
 - Have a PC token on the map.
 - Open the scene as a **non-GM** viewer (a player account, or GM view
   toggled to player-perspective if you have that wired). LoS gating
-  does not apply to the GM — everything draws regardless.
+  does not apply to the GM - everything draws regardless.
 
 ## Scenarios
 
@@ -29,7 +29,7 @@ non-GM viewer iff ANY of its cells is unfogged.
 - Same vehicle, flipped: top-left cell in PC view, the other three
   cells behind the wall.
 - **Expected:** vehicle renders. (This case worked before the fix too
-  — it's a regression check, not a new behavior.)
+  - it's a regression check, not a new behavior.)
 - Note: parts of the sprite behind the wall will be dimmed by the
   35% fog overlay. Pixel-perfect occlusion is a separate cosmetic
   task (polygon vision mask).

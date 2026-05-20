@@ -1,11 +1,11 @@
-# Test Plan — Inventory #4: Shared Community Stockpile
+# Test Plan - Inventory #4: Shared Community Stockpile
 
-Shipped 2026-04-30. Communities now own a `community_stockpile_items` row-table — a shared resource pool members can deposit into via their PC's InventoryPanel and the GM/members can curate inline on the community panel.
+Shipped 2026-04-30. Communities now own a `community_stockpile_items` row-table - a shared resource pool members can deposit into via their PC's InventoryPanel and the GM/members can curate inline on the community panel.
 
 ## Pre-flight
 
 Apply migration in Supabase SQL editor:
-- [sql/community-stockpile.sql](../sql/community-stockpile.sql) — creates the `community_stockpile_items` table + RLS + UNIQUE dedup index + NOTIFY pgrst.
+- [sql/community-stockpile.sql](../sql/community-stockpile.sql) - creates the `community_stockpile_items` table + RLS + UNIQUE dedup index + NOTIFY pgrst.
 
 Verify:
 ```sql
@@ -56,7 +56,7 @@ A campaign with a community of 13+ members + at least one PC who's already a com
    - Reload the community panel → the deposited item appears in the stockpile.
    - If the community already had that item by name+custom, qty merged.
 
-## RLS — non-member can't see communities they aren't in
+## RLS - non-member can't see communities they aren't in
 
 1. As Player A in Campaign X (member of Community 1), open InventoryPanel → Give.
 2. **Expected**: only Community 1 in the chip list. NOT Community 2 or any other campaign's community.
@@ -71,9 +71,9 @@ A campaign with a community of 13+ members + at least one PC who's already a com
 1. Two browser windows on the same campaign (e.g., GM in one, Player in another).
 2. Player deposits an item via their PC sheet.
 3. GM reloads the community panel.
-4. **Expected**: deposited item appears. (No realtime sub on this table yet — manual reload required for now. Can add `community_stockpile_realtime.sql` later if it bites.)
+4. **Expected**: deposited item appears. (No realtime sub on this table yet - manual reload required for now. Can add `community_stockpile_realtime.sql` later if it bites.)
 
-## Regression — existing flows untouched
+## Regression - existing flows untouched
 
 1. PC ↔ PC inventory transfer still works.
 2. PC ↔ NPC inventory transfer still works.
@@ -82,6 +82,6 @@ A campaign with a community of 13+ members + at least one PC who's already a com
 
 ## Followups (NOT in this ship)
 
-- **Withdrawal-to-PC flow** — clicking a stockpile item routes it onto a community member's character sheet. Today removal just decrements; the GM manually adds to the receiving PC. Can build a similar give-modal pattern in reverse if it's painful in play.
-- **Realtime sub on community_stockpile_items** — currently manual reload to see another player's deposit. Cheap to add when needed.
-- **Aggregate "Supplies" stat** — sum cargo with rarity=Supplies (or named match) to feed into Maintainers' Clothed Check or Gatherers' Fed Check. Spec mentions this; not built yet.
+- **Withdrawal-to-PC flow** - clicking a stockpile item routes it onto a community member's character sheet. Today removal just decrements; the GM manually adds to the receiving PC. Can build a similar give-modal pattern in reverse if it's painful in play.
+- **Realtime sub on community_stockpile_items** - currently manual reload to see another player's deposit. Cheap to add when needed.
+- **Aggregate "Supplies" stat** - sum cargo with rarity=Supplies (or named match) to feed into Maintainers' Clothed Check or Gatherers' Fed Check. Spec mentions this; not built yet.

@@ -1,4 +1,4 @@
-# Workflow Guide — using the puffer-fish system
+# Workflow Guide - using the puffer-fish system
 
 This is the practical "how do I actually use what we built" companion to [operating-mode.md](operating-mode.md) (which describes what the system IS). Pull this up when you want a refresher.
 
@@ -8,10 +8,10 @@ This is the practical "how do I actually use what we built" companion to [operat
 
 | File | What it's for | When you open it |
 |---|---|---|
-| `CLAUDE.md` + `AGENTS.md` | Project conventions (UI, code, canon) | Rarely — Claude auto-loads them |
+| `CLAUDE.md` + `AGENTS.md` | Project conventions (UI, code, canon) | Rarely - Claude auto-loads them |
 | `tasks/handoff.md` | Operational ("resume the work") | Start of a session, paste from clipboard |
 | `tasks/debug-handoff.md` | Diagnostic ("where do I look?") | When something breaks, or before a risky ship |
-| `tasks/operating-mode.md` | Relational ("how Claude thinks alongside you") | Rarely — Claude auto-loads it |
+| `tasks/operating-mode.md` | Relational ("how Claude thinks alongside you") | Rarely - Claude auto-loads it |
 | `tasks/slash-conventions.md` | Quick reference for slash commands | When you forget which slash fits |
 | `tasks/workflow-guide.md` (this file) | How to USE the system day to day | Now and again to refresh habits |
 | `tasks/health-pulse.md` | Auto-maintained short-term drift log | When you see a new `health-pulse:` commit |
@@ -26,13 +26,13 @@ This is the practical "how do I actually use what we built" companion to [operat
 2. **State the task plainly.** Default mode = all-perspectives weighted. Claude will pick the load-bearing role perspectives and surface tradeoffs without being asked.
 
 3. **When you want focused single-role output, use a slash.** The seven:
-   - `/architect` — system design, scaling
-   - `/security` — threats, auth, PII, payments
-   - `/qa` — bug-class analysis, test design
-   - `/product` — prioritization, scope
-   - `/ops` — reliability, incidents
-   - `/business` — pricing, retention
-   - `/ux` — appealing? functional? intuitive?
+   - `/architect` - system design, scaling
+   - `/security` - threats, auth, PII, payments
+   - `/qa` - bug-class analysis, test design
+   - `/product` - prioritization, scope
+   - `/ops` - reliability, incidents
+   - `/business` - pricing, retention
+   - `/ux` - appealing? functional? intuitive?
 
    Full reference with example triggers: [slash-conventions.md](slash-conventions.md).
 
@@ -45,7 +45,7 @@ This is the practical "how do I actually use what we built" companion to [operat
 
    Listen for these. Push back if any answer is weak. Don't accept "you'll see it when it breaks."
 
-5. **Push back. Always.** When Claude proposes a change, ask *"what's the cost from a perspective I didn't think about?"* — this triggers cross-role thinking even without a slash. Over time you'll internalize the questions.
+5. **Push back. Always.** When Claude proposes a change, ask *"what's the cost from a perspective I didn't think about?"* - this triggers cross-role thinking even without a slash. Over time you'll internalize the questions.
 
 ---
 
@@ -63,9 +63,9 @@ This is the practical "how do I actually use what we built" companion to [operat
 
 You'll see commits on main with these subject prefixes:
 
-- **`health-pulse: <summary>`** — the 3-hour routine flagged something (broken gate, new vuln, drift). Open `tasks/health-pulse.md`, read the newest entry at the top, take the action, leave the entry as historical record.
+- **`health-pulse: <summary>`** - the 3-hour routine flagged something (broken gate, new vuln, drift). Open `tasks/health-pulse.md`, read the newest entry at the top, take the action, leave the entry as historical record.
 
-- **`security-audit: <summary>`** — the weekly Tuesday 10:23 MDT deep-scan routine flagged something. Open `tasks/security-audit.md`. Most findings are advisory not urgent. Check the "Top 3 priorities" line at the bottom of each entry.
+- **`security-audit: <summary>`** - the weekly Tuesday 10:23 MDT deep-scan routine flagged something. Open `tasks/security-audit.md`. Most findings are advisory not urgent. Check the "Top 3 priorities" line at the bottom of each entry.
 
 **Trust silence.** No new `health-pulse:` commit = healthy. No new `security-audit:` commit = clean. Don't go looking.
 
@@ -75,15 +75,15 @@ You'll see commits on main with these subject prefixes:
 
 These are not on a cron. You invoke them when you want.
 
-- **`/architecture-review`** (weekly suggested, Sunday evenings work well) — what tech debt accumulated, what scale concerns surfaced, smallest move to lower future risk.
-- **`/commercial-review`** (monthly suggested, 1st of the month) — payment readiness, GDPR posture, uptime metrics, blocking items between us and paid signups.
-- **`/pre-launch-audit`** (one-time, when you're ready to open paid signups) — top-down review across all 8 roles. Outputs a punch list. Multi-hour Claude session.
+- **`/architecture-review`** (weekly suggested, Sunday evenings work well) - what tech debt accumulated, what scale concerns surfaced, smallest move to lower future risk.
+- **`/commercial-review`** (monthly suggested, 1st of the month) - payment readiness, GDPR posture, uptime metrics, blocking items between us and paid signups.
+- **`/pre-launch-audit`** (one-time, when you're ready to open paid signups) - top-down review across all 8 roles. Outputs a punch list. Multi-hour Claude session.
 
 ---
 
 ## Multi-chat workflow
 
-You'll have multiple Claude chats open at once — one for tactical shipping, this one for infrastructure/strategic, sometimes a "organize my thoughts" chat. Here's how they coexist:
+You'll have multiple Claude chats open at once - one for tactical shipping, this one for infrastructure/strategic, sometimes a "organize my thoughts" chat. Here's how they coexist:
 
 - **All chats see the same artifacts.** Operating-mode, debug-handoff, handoff, slash-conventions all live in the repo. Any Claude session pulls them automatically.
 - **The artifacts ARE the coordination.** Two Claudes can work on different surfaces without stepping on each other because the conventions both should follow are encoded in the docs.
@@ -101,7 +101,7 @@ You'll have multiple Claude chats open at once — one for tactical shipping, th
 
 - **Trust silence from the routines.** Absence of new commits = healthy.
 
-- **Don't override bright lines.** When Claude says "I need to confirm before X" — that's the system working. Don't say "just do it" unless you've actually thought about it.
+- **Don't override bright lines.** When Claude says "I need to confirm before X" - that's the system working. Don't say "just do it" unless you've actually thought about it.
 
 - **Run the slash periodic reviews on a cadence.** Sunday `/architecture-review`, 1st-of-month `/commercial-review`. Even when there's nothing dramatic to report, the discipline matters.
 
@@ -144,4 +144,4 @@ You'll have multiple Claude chats open at once — one for tactical shipping, th
 
 ## The honest reminder
 
-This system makes Claude bigger than one engineer. It does NOT make Claude infallible, and it does NOT scale beyond your attention. At 50k users, the bottleneck won't be code — it'll be support, moderation, payment disputes, community. The puffer-fish buys you time and rigor, not a free pass. Plan for the moment when you need to spend money on the things the puffer-fish can't simulate (real lawyers, real security audits, real user research, real community management).
+This system makes Claude bigger than one engineer. It does NOT make Claude infallible, and it does NOT scale beyond your attention. At 50k users, the bottleneck won't be code - it'll be support, moderation, payment disputes, community. The puffer-fish buys you time and rigor, not a free pass. Plan for the moment when you need to spend money on the things the puffer-fish can't simulate (real lawyers, real security audits, real user research, real community management).

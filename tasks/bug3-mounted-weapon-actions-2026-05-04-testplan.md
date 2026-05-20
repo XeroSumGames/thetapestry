@@ -1,22 +1,22 @@
-# BUG-3 Fix Test Plan — Mounted-weapon attacks consume actions
+# BUG-3 Fix Test Plan - Mounted-weapon attacks consume actions
 
 ## What changed
 
-- `lib/initiative-actions.ts` (new) — shared helper
+- `lib/initiative-actions.ts` (new) - shared helper
   `decrementInitiativeAction()` that pure-DB-decrements
   actions_remaining on an initiative entry. Lives outside any
   page component so it's reachable from the popout vehicle page.
-- `app/vehicle/page.tsx` — `rollCheck()` now calls the helper
+- `app/vehicle/page.tsx` - `rollCheck()` now calls the helper
   after the roll_log insert when `check.kind === 'attack'`. If the
   decrement reaches 0, broadcasts `turn_advance_requested` on the
   table's `initiative_${campaignId}` channel.
-- `app/stories/[id]/table/page.tsx` — the initiative channel now
+- `app/stories/[id]/table/page.tsx` - the initiative channel now
   listens for `turn_advance_requested` and runs `nextTurn()` +
   `loadInitiative(id)` on receipt.
 
 ## What did NOT change (intentionally)
 
-- The table page's existing `consumeAction()` — left as-is. The new
+- The table page's existing `consumeAction()` - left as-is. The new
   helper is a strict subset (no in-flight lock, no aim-clear, no
   nextTurn cascade), and refactoring `consumeAction` to use it
   carries regression risk for working flows. If `consumeAction`
@@ -28,7 +28,7 @@
 
 ## Pre-fix repro (to confirm the bug exists in main)
 
-Skip if you trust the playtest dump — it already proved the bug.
+Skip if you trust the playtest dump - it already proved the bug.
 Otherwise: with combat active, fire Minnie's M60 from the vehicle
 popout. Observe `actions_remaining` on the active initiative entry
 in the GM table. Pre-fix: it does NOT decrement. Player can fire
@@ -45,7 +45,7 @@ Setup:
 4. Open the vehicle popout (`/vehicle?campaign=...`) AND the GM
    table side-by-side.
 
-Test 1 — single attack decrements actions:
+Test 1 - single attack decrements actions:
 1. From the popout, click the M60's **Attack** button.
 2. Pick any NPC target.
 3. Click **Roll**.
@@ -54,7 +54,7 @@ Test 1 — single attack decrements actions:
    PC's `actions_remaining` decrement from 2 → 1.
 6. ✓ It's still the same PC's turn.
 
-Test 2 — second attack triggers turn advance:
+Test 2 - second attack triggers turn advance:
 1. Without leaving the popout, click **Attack** on the same
    weapon again.
 2. Pick any target. Roll.
@@ -66,13 +66,13 @@ Test 2 — second attack triggers turn advance:
      `[nextTurn] called → activating: <name>`.
 5. ✓ The console feed (chat side) shows the new active combatant.
 
-Test 3 — driving check does NOT consume an action:
+Test 3 - driving check does NOT consume an action:
 1. From the popout, run a **Driving** check.
 2. ✓ Roll resolves and logs.
 3. ✓ PC's `actions_remaining` stays where it was. (Driving is
    a passive op; only attacks cost actions.)
 
-Test 4 — graceful degradation:
+Test 4 - graceful degradation:
 1. With combat NOT active, run an attack from the popout.
 2. ✓ Roll resolves and logs damage normally.
 3. ✓ No errors in the console. The decrement helper bails
@@ -80,7 +80,7 @@ Test 4 — graceful degradation:
    be doing combat attacks outside combat anyway, but this proves
    we don't crash.)
 
-Test 5 — table-page `consumeAction` flows still work:
+Test 5 - table-page `consumeAction` flows still work:
 Smoke the existing combat flow to make sure nothing regressed:
 1. Click Aim → ✓ actions decrements.
 2. Click Defend → ✓ actions decrements.
@@ -103,9 +103,9 @@ Smoke the existing combat flow to make sure nothing regressed:
 ## Rollback
 
 If anything's wrong:
-1. `git revert <sha>` — three-file commit, clean revert.
+1. `git revert <sha>` - three-file commit, clean revert.
 2. Or comment out the `if (check.kind === 'attack') { ... }` block
-   in `rollCheck` (lines around 514–532 of `app/vehicle/page.tsx`)
+   in `rollCheck` (lines around 514-532 of `app/vehicle/page.tsx`)
    to disable the new path while keeping everything else intact.
 
 ## Bug doc cross-link

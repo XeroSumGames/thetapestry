@@ -1,4 +1,4 @@
-# CampaignCommunity sweep — 2026-05-01 testplan
+# CampaignCommunity sweep - 2026-05-01 testplan
 
 ModalBackdrop adoption (4 sites) + Button adoption (5 prominent CTAs) inside `components/CampaignCommunity.tsx`. One PR. Ship to live.
 
@@ -10,7 +10,7 @@ ModalBackdrop adoption (4 sites) + Button adoption (5 prominent CTAs) inside `co
 
 | Modal | Old zIndex | New zIndex | Tone |
 |---|---|---|---|
-| Migration (Phase E) | 2100 (literal) | 2100 (literal — non-canonical, preserved) | Magic |
+| Migration (Phase E) | 2100 (literal) | 2100 (literal - non-canonical, preserved) | Magic |
 | Schism (Phase E Sprint 4d) | 2100 | 2100 | Magic |
 | Publish to Tapestry | 2000 | `Z_INDEX.modal` | Magic |
 | Assigned-role mission | 2000 | `Z_INDEX.modal` | Neutral |
@@ -27,9 +27,9 @@ The two `2100` migrations + schism modals stay at `2100` for visual stacking par
 | `🌐 Publish` / `Update Public Info` | `magic` | lg | `busy={publishing}` |
 | `Assign` (assignment-role footer) | `confirm` | lg |   |
 
-The matching Cancel buttons in each modal footer use a `transparent + #7ab3d4 border` ghost style — that pattern isn't in the current Button tone palette, so they stay inline. Adding a `ghost` tone to `<Button>` is a clear future PR.
+The matching Cancel buttons in each modal footer use a `transparent + #7ab3d4 border` ghost style - that pattern isn't in the current Button tone palette, so they stay inline. Adding a `ghost` tone to `<Button>` is a clear future PR.
 
-Around 15 other tone-matching buttons in this file (Trade Offer chips, role auto-assign confirms, stockpile add buttons, etc.) are left for a follow-up sweep — keeping this PR's blast radius focused on the modal footers + the headline Create CTA.
+Around 15 other tone-matching buttons in this file (Trade Offer chips, role auto-assign confirms, stockpile add buttons, etc.) are left for a follow-up sweep - keeping this PR's blast radius focused on the modal footers + the headline Create CTA.
 
 ## Test plan
 
@@ -51,4 +51,4 @@ Around 15 other tone-matching buttons in this file (Trade Offer chips, role auto
 
 ## Rollback
 
-`git revert <commit>` then redeploy. The helpers (`<ModalBackdrop>`, `<Button>`) stay in place — additive, harmless to leave even if the adoption rolls back.
+`git revert <commit>` then redeploy. The helpers (`<ModalBackdrop>`, `<Button>`) stay in place - additive, harmless to leave even if the adoption rolls back.

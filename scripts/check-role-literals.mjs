@@ -23,9 +23,9 @@
 //
 // Allow-list:
 //   - lib/auth/roles.ts itself (defines the constants + helpers).
-//   - app/logging/page.tsx — the Ghost/Survivor labels there are UI
+//   - app/logging/page.tsx - the Ghost/Survivor labels there are UI
 //     display strings inside Leaflet popup HTML, not DB comparisons.
-//   - lib/community-logic.ts — uses .role for community labor roles
+//   - lib/community-logic.ts - uses .role for community labor roles
 //     (gatherer / maintainer / safety / assigned / unassigned), not profile roles.
 //   - Any line that contains the token `role-literal-allow` (in any
 //     comment form, JSX or JS) is excused.
@@ -37,7 +37,7 @@ const ROOT = path.resolve(import.meta.dirname, '..')
 const SCAN_DIRS = ['app', 'components', 'lib', 'scripts']
 const SKIP_PATHS = new Set([
   path.join('lib', 'auth', 'roles.ts'),
-  // Leaflet popup HTML — Ghost/Survivor are UI labels, not DB comparisons.
+  // Leaflet popup HTML - Ghost/Survivor are UI labels, not DB comparisons.
   path.join('app', 'logging', 'page.tsx'),
   // Community labor roles (gatherer/maintainer/safety/assigned/unassigned).
   path.join('lib', 'community-logic.ts'),
@@ -50,12 +50,12 @@ const CAPITAL_ROLE = /['"](Thriver|Survivor|Ghost)['"]/g
 // on the same line) by ==, ===, != or !== and a quoted role string.
 const TOLOWER_CMP = /\.role\??\.toLowerCase\(\)\s*[!=]={1,2}\s*['"][^'"]*['"]/g
 
-// Pattern 2b: String(...).toLowerCase() comparison — catches the wrapped
+// Pattern 2b: String(...).toLowerCase() comparison - catches the wrapped
 // shape used when .role might be null/non-string. Same operator set.
 const STRING_TOLOWER_CMP = /String\([^)]*\)\.toLowerCase\(\)\s*[!=]={1,2}\s*['"](?:thriver|survivor|ghost)['"]/g
 
 // Pattern 3: .role === 'thriver' / .role !== 'survivor' / etc.
-// (direct bare comparison — only the three profile role strings).
+// (direct bare comparison - only the three profile role strings).
 // Requires ==, ===, !=, or !==.
 const BARE_ROLE_CMP = /\.role\s*[!=]={1,2}\s*['"](?:thriver|survivor|ghost)['"]/g
 
@@ -99,7 +99,7 @@ for (const d of SCAN_DIRS) {
 }
 
 if (offenders.length === 0) {
-  console.log(`OK — scanned ${scanned} files, no role literal or inline comparison found.`)
+  console.log(`OK - scanned ${scanned} files, no role literal or inline comparison found.`)
   process.exit(0)
 }
 

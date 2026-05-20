@@ -1,4 +1,4 @@
-# Module clone batch insert — 2026-05-01 testplan
+# Module clone batch insert - 2026-05-01 testplan
 
 `cloneModuleIntoCampaign` was the last surface still using the per-scene `for await` pattern that `campaign-snapshot.ts` already shipped fixes for. One PR. Ship to live.
 
@@ -32,8 +32,8 @@ Behavior change: a single bad scene now fails the whole batch instead of failing
 
 ### A. End-to-end clone (5 min)
 - [ ] Pick a published module that has multiple scenes (3+) with tokens. From `/campaigns/new`, choose that module and create a new campaign.
-- [ ] Open the new campaign's `/table` — every scene from the module should appear in the scene list with the correct grid dimensions, background, cell_px, etc.
-- [ ] Open each scene — tokens render at the right grid coordinates with the right portraits, colors, names. NPC-linked tokens point at NPCs that were cloned in step 1; PC-linked tokens are absent (correct — PCs don't travel).
+- [ ] Open the new campaign's `/table` - every scene from the module should appear in the scene list with the correct grid dimensions, background, cell_px, etc.
+- [ ] Open each scene - tokens render at the right grid coordinates with the right portraits, colors, names. NPC-linked tokens point at NPCs that were cloned in step 1; PC-linked tokens are absent (correct - PCs don't travel).
 - [ ] Confirm `counts.scenes` and `counts.tokens` in the return value match the input snapshot (no off-by-one).
 
 ### B. Network trace (1 min)

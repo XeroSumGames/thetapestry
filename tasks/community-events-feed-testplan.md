@@ -1,10 +1,10 @@
-# Phase 4D — Per-community Campfire feed testplan
+# Phase 4D - Per-community Campfire feed testplan
 
 Verifies the new `community_events` table + auto-post hooks (Morale finalize / Schism / Migration / Dissolution) + manual GM composer + UI surfaces (CampaignCommunity Feed section + /communities Following card chip row).
 
 ---
 
-## 0. Prerequisites — apply the migration
+## 0. Prerequisites - apply the migration
 
 **Before any UI test:** run `sql/community-events.sql` in Supabase SQL editor against prod.
 
@@ -12,11 +12,11 @@ The migration adds:
 - `community_events` table (id / community_id / event_type / payload jsonb / author_user_id / created_at)
 - Indexes on `(community_id, created_at DESC)` and `(event_type, created_at DESC)`
 - Five RLS policies:
-  - `ce_select_member` — campaign members read all events for communities in their campaign
-  - `ce_select_published` — any signed-in user reads events for communities whose `world_communities` mirror is `moderation_status='approved'` (drives the Following-card chip row)
-  - `ce_insert` — campaign members can post (auto-post hooks + manual composer)
-  - `ce_update_gm` — GM can amend
-  - `ce_delete_gm` — GM can remove (retract noisy auto-posts)
+  - `ce_select_member` - campaign members read all events for communities in their campaign
+  - `ce_select_published` - any signed-in user reads events for communities whose `world_communities` mirror is `moderation_status='approved'` (drives the Following-card chip row)
+  - `ce_insert` - campaign members can post (auto-post hooks + manual composer)
+  - `ce_update_gm` - GM can amend
+  - `ce_delete_gm` - GM can remove (retract noisy auto-posts)
 - `NOTIFY pgrst, 'reload schema'`
 
 Confirm in Supabase Studio → Tables that the table + indexes exist.
@@ -31,17 +31,17 @@ Confirm in Supabase Studio → Tables that the table + indexes exist.
 2. Click "Run Weekly Check". Fill in CMods if needed; finalize the modal.
 3. After finalize, the community accordion's new **🔥 Community Feed** section should show a `📊` event row at the top: `"Week N · <outcome> · X left"` (or no `· X left` if zero departures).
 4. Authoring: card subtitle reads `by <GM username> · <date>`.
-5. **Database sanity:** `SELECT event_type, payload, author_user_id FROM community_events ORDER BY created_at DESC LIMIT 1;` — should show `event_type='morale_outcome'`, payload with `week`, `outcome`, `fed_outcome`, `clothed_outcome`, `departures_count`, `modifiers_summary`, `total`, `leader_name`, and `author_user_id` matching your user id.
+5. **Database sanity:** `SELECT event_type, payload, author_user_id FROM community_events ORDER BY created_at DESC LIMIT 1;` - should show `event_type='morale_outcome'`, payload with `week`, `outcome`, `fed_outcome`, `clothed_outcome`, `departures_count`, `modifiers_summary`, `total`, `leader_name`, and `author_user_id` matching your user id.
 6. Repeat with a Failure outcome → confirm `departures_count` matches the number who left, and the row's accent is teal `#7ab3d4`.
 
 ## 2. Dissolution auto-post
 
 **Setup:** trigger a Morale Check that takes the community to 3 consecutive failures (or pre-seed `consecutive_failures=2` in `communities` for fast repro).
 
-1. Run Weekly Check, accept the failure, click the red "Finalize — Dissolve Community" button.
+1. Run Weekly Check, accept the failure, click the red "Finalize - Dissolve Community" button.
 2. After finalize, the Feed section should show TWO new rows: a `📊` morale_outcome card AND a `☠️` dissolution card with summary `"Dissolved week N · X scattered"`.
 3. The dissolution card's accent is red `#c0392b`.
-4. **DB sanity:** two new rows in `community_events` — one `morale_outcome` and one `dissolution`. Both share `author_user_id`.
+4. **DB sanity:** two new rows in `community_events` - one `morale_outcome` and one `dissolution`. Both share `author_user_id`.
 5. Confirm `members_lost` in the dissolution payload equals the `members_before` count from the morale check.
 
 ## 3. Schism auto-post
@@ -50,7 +50,7 @@ Confirm in Supabase Studio → Tables that the table + indexes exist.
 
 1. Open the schism modal from the Community ▾ menu.
 2. Pick at least 2 members for the breakaway, name the new community, save.
-3. Reload — the SOURCE community's Feed section should show a `⚡` event card: `"Schism — N left to form <New Name>"`. The new community's Feed section is empty (its events accumulate from THAT point forward).
+3. Reload - the SOURCE community's Feed section should show a `⚡` event card: `"Schism - N left to form <New Name>"`. The new community's Feed section is empty (its events accumulate from THAT point forward).
 4. **DB sanity:** one `event_type='schism'` row whose `payload.new_community_id` matches the newly-inserted communities row, and `members_left` = picked count.
 
 ## 4. Migration auto-post
@@ -77,7 +77,7 @@ Confirm in Supabase Studio → Tables that the table + indexes exist.
 1. Open the same community.
 2. Feed section RENDERS (player can read events) but the `📝 Post update` button is HIDDEN.
 3. The per-row `×` delete button on each event card is HIDDEN.
-4. **DB sanity:** RLS blocks the player from inserting via the API directly — confirm by attempting `INSERT INTO community_events ... author_user_id=<your id>` with their JWT (should fail unless they're a campaign member, which they are — so this actually succeeds; the UI gate is the policy here, not RLS).
+4. **DB sanity:** RLS blocks the player from inserting via the API directly - confirm by attempting `INSERT INTO community_events ... author_user_id=<your id>` with their JWT (should fail unless they're a campaign member, which they are - so this actually succeeds; the UI gate is the policy here, not RLS).
 
 ## 7. Delete affordance (GM only)
 
@@ -94,7 +94,7 @@ Confirm in Supabase Studio → Tables that the table + indexes exist.
 2. The "★ Following" section's card for the followed community should show a chip row of up to 3 most-recent events between the size-band tags and the "Updated X ago" line.
 3. Each chip = type icon (📊/⚡/🚶/☠️/📝) + summary line in the type's accent color.
 4. Hover any chip → tooltip shows the exact ISO timestamp.
-5. **RLS sanity:** the user is NOT a campaign member of the source campaign — the public-published RLS branch on `community_events` is what makes this work. Confirm by checking the user's profile against `campaign_members` for the source campaign id (should be empty) and confirming the chips still render.
+5. **RLS sanity:** the user is NOT a campaign member of the source campaign - the public-published RLS branch on `community_events` is what makes this work. Confirm by checking the user's profile against `campaign_members` for the source campaign id (should be empty) and confirming the chips still render.
 6. **Unpublished case:** unpublish the community via the GM's Tapestry strip. Refresh /communities → chips disappear from that card (the public-published RLS branch no longer applies; user is not a campaign member so they can't see events at all).
 
 ## 9. Feed reload after page refresh
@@ -134,7 +134,7 @@ Plan should hit `idx_community_events_community`.
 
 2. **Pagination beyond the most-recent 20.** The accordion view caps at 20 events; older ones aren't reachable. Add a "Load older" button that fetches the next 20 by `created_at < oldest`.
 
-3. **Manual post body — rich text + linkify.** Today the manual composer is plain `<textarea>`. Should probably reuse the existing `renderRichText` utility (used in `/messages` and `/campfire/lfg`) to auto-linkify URLs in the rendered card body.
+3. **Manual post body - rich text + linkify.** Today the manual composer is plain `<textarea>`. Should probably reuse the existing `renderRichText` utility (used in `/messages` and `/campfire/lfg`) to auto-linkify URLs in the rendered card body.
 
 4. **Schism: also post to the NEW community's feed.** Today only the source community gets the `⚡ Schism` auto-post. The new community's feed starts empty. Could fire a complementary "founded by schism from <Source>" entry on the new community to anchor its history.
 

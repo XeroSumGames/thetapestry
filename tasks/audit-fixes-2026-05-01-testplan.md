@@ -1,16 +1,16 @@
-# Audit fixes — 2026-05-01 testplan
+# Audit fixes - 2026-05-01 testplan
 
-Bundle of items 1–4 from the audit re-run. One PR. Ship to live.
+Bundle of items 1-4 from the audit re-run. One PR. Ship to live.
 
 ## What's in this PR
 
-1. **Font-size guardrail clean** — TradeNegotiationModal 11→13px (auto-fixed); CampaignCommunity stockpile × button moved off banned `13px + #3a3a3a` combo.
-2. **`parseInt` radix sweep** — every `parseInt(x)` → `parseInt(x, 10)` across components/lib/app.
+1. **Font-size guardrail clean** - TradeNegotiationModal 11→13px (auto-fixed); CampaignCommunity stockpile × button moved off banned `13px + #3a3a3a` combo.
+2. **`parseInt` radix sweep** - every `parseInt(x)` → `parseInt(x, 10)` across components/lib/app.
 3. **Bug fixes**
-   - InventoryPanel `confirmGive` — uses an inventory ref so a realtime mutation of the prop while the give modal is open can no longer be clobbered by a stale closure on click. Also captures `givingItem` to a local at function entry.
-   - CampaignObjects loot-give — checks the character `update` error before clearing the scene_token, and surfaces both errors via alert. Pre-fix: items could vanish if the character write failed but the token clear succeeded.
-   - ApprenticeCreationWizard — surfaces master-PC load failures (state + error message + dedicated banner) instead of silently leaving every skill cap untrainable.
-4. **MessagesBell + /messages N+1** — replaced the `Promise.all(convIds.map(... messages.select.limit(1)))` per-conversation lookup with one `rpc('get_latest_messages_for_conversations')` call. New SQL function uses `DISTINCT ON` and relies on existing RLS (no SECURITY DEFINER).
+   - InventoryPanel `confirmGive` - uses an inventory ref so a realtime mutation of the prop while the give modal is open can no longer be clobbered by a stale closure on click. Also captures `givingItem` to a local at function entry.
+   - CampaignObjects loot-give - checks the character `update` error before clearing the scene_token, and surfaces both errors via alert. Pre-fix: items could vanish if the character write failed but the token clear succeeded.
+   - ApprenticeCreationWizard - surfaces master-PC load failures (state + error message + dedicated banner) instead of silently leaving every skill cap untrainable.
+4. **MessagesBell + /messages N+1** - replaced the `Promise.all(convIds.map(... messages.select.limit(1)))` per-conversation lookup with one `rpc('get_latest_messages_for_conversations')` call. New SQL function uses `DISTINCT ON` and relies on existing RLS (no SECURITY DEFINER).
 
 ## ⚠️ Pre-deploy step (DB migration)
 
@@ -49,11 +49,11 @@ If you push first, the messages bell + /messages page will show empty rows until
 ### E. ApprenticeCreationWizard master-PC error banner (3 min)
 - [ ] Recruit an Apprentice via Moment-of-High-Insight, open the wizard.
 - [ ] Skills step should say "Loading master PC: ready" once loaded; every trainable skill shows a real cap.
-- [ ] Manually break the load (e.g. block the request in devtools, or supply a bogus masterCharacterId via session edit) → expect a red banner "Couldn't load the master PC's skill list…" and "failed — &lt;message&gt;" in the SRD-cap explainer.
+- [ ] Manually break the load (e.g. block the request in devtools, or supply a bogus masterCharacterId via session edit) → expect a red banner "Couldn't load the master PC's skill list…" and "failed - &lt;message&gt;" in the SRD-cap explainer.
 
-### F. MessagesBell + /messages RPC (5 min) — **after running sql/messages-latest-rpc.sql**
+### F. MessagesBell + /messages RPC (5 min) - **after running sql/messages-latest-rpc.sql**
 - [ ] Open the messages bell with at least 3 conversations, each with messages → all conversations show the correct latest body + correct unread/read state.
-- [ ] In the Network tab, the bell load should NOT fan out N requests to `/rest/v1/messages?conversation_id=eq…` — instead a single `/rest/v1/rpc/get_latest_messages_for_conversations` POST.
+- [ ] In the Network tab, the bell load should NOT fan out N requests to `/rest/v1/messages?conversation_id=eq…` - instead a single `/rest/v1/rpc/get_latest_messages_for_conversations` POST.
 - [ ] Send a new message from another tab → bell auto-refreshes and shows the new latest correctly.
 - [ ] /messages page list shows the same. Switching active conversation still loads its full message log.
 
@@ -64,4 +64,4 @@ If you push first, the messages bell + /messages page will show empty rows until
 ## Rollback plan
 
 - Code: `git revert &lt;commit&gt;` then `vercel --prod` redeploy.
-- DB: leaving the RPC in place is harmless — it's standalone and additive. No table changes.
+- DB: leaving the RPC in place is harmless - it's standalone and additive. No table changes.

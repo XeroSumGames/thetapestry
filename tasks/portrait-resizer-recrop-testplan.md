@@ -1,4 +1,4 @@
-# Portrait Resizer — Re-crop after Batch — Test Plan
+# Portrait Resizer - Re-crop after Batch - Test Plan
 
 Closes the third sub-item of the "Tools enhancements" row in [letsgototheend.md](letsgototheend.md): "Manual crop control on the resizer". Auth gating + batch already shipped (`b0f59ee`); this adds the missing fix-misses-after-batch path.
 
@@ -8,23 +8,23 @@ Closes the third sub-item of the "Tools enhancements" row in [letsgototheend.md]
 
 ## What changed
 
-1. **`BatchEntry` type** — tracks each successful batch upload's source File + storage paths + a thumbnail ObjectURL.
-2. **`handleBatch`** — pushes a `BatchEntry` after each successful upload (in addition to the existing `batchResults.ok++`).
-3. **Re-crop thumbnail grid** — renders inside the batch panel after upload completes. Each entry shows the auto-cropped 256 thumbnail, the assigned `NPC-MAN-NNN` / `NPC-WOMAN-NNN` label, and a `✎ Re-crop` button.
-4. **`startRecrop(entry)`** — loads the entry's source File into the existing single-image editor, sets `recropTarget`, scrolls to the editor.
-5. **Re-crop banner** — replaces the gender toggle + Download button block when `recropTarget` is set. Header reads `✎ Re-crop mode — overwriting NPC-MAN-005`. Action button is `💾 Save Crop (overwrite)`.
-6. **`handleSaveRecrop`** — renders 256/56/32 from the edited circle, uploads to the entry's existing storage paths with `upsert: true`. **No counter increment, no metadata insert** (the `portrait_bank` row already exists with the same URLs). Refreshes the entry's thumbnail.
-7. **ObjectURL cleanup** — entry's old preview URL is revoked when re-cropped; all entries' URLs revoked on component unmount.
+1. **`BatchEntry` type** - tracks each successful batch upload's source File + storage paths + a thumbnail ObjectURL.
+2. **`handleBatch`** - pushes a `BatchEntry` after each successful upload (in addition to the existing `batchResults.ok++`).
+3. **Re-crop thumbnail grid** - renders inside the batch panel after upload completes. Each entry shows the auto-cropped 256 thumbnail, the assigned `NPC-MAN-NNN` / `NPC-WOMAN-NNN` label, and a `✎ Re-crop` button.
+4. **`startRecrop(entry)`** - loads the entry's source File into the existing single-image editor, sets `recropTarget`, scrolls to the editor.
+5. **Re-crop banner** - replaces the gender toggle + Download button block when `recropTarget` is set. Header reads `✎ Re-crop mode - overwriting NPC-MAN-005`. Action button is `💾 Save Crop (overwrite)`.
+6. **`handleSaveRecrop`** - renders 256/56/32 from the edited circle, uploads to the entry's existing storage paths with `upsert: true`. **No counter increment, no metadata insert** (the `portrait_bank` row already exists with the same URLs). Refreshes the entry's thumbnail.
+7. **ObjectURL cleanup** - entry's old preview URL is revoked when re-cropped; all entries' URLs revoked on component unmount.
 
 ## Test plan
 
-### Happy path — single batch + spot-fix
+### Happy path - single batch + spot-fix
 - [ ] Open `/tools/portrait-resizer` as a Thriver. Confirm the page renders.
-- [ ] Pick the gender pill (Male). Pick 3 portrait images via the batch input. **Expected:** progress shows N/3, then results show `✓ 3 uploaded · ✗ 0 failed`. A new "Uploaded — click Re-crop to fix any that auto-center missed" section appears with 3 thumbnail cards, each labeled `NPC-MAN-NNN`.
-- [ ] Click `✎ Re-crop` on the second thumbnail. **Expected:** the page scrolls to the editor; the source image loads with a centered max-radius circle; a red banner appears at the bottom reading `✎ Re-crop mode — overwriting NPC-MAN-NNN`; the original Gender + Download block is hidden.
+- [ ] Pick the gender pill (Male). Pick 3 portrait images via the batch input. **Expected:** progress shows N/3, then results show `✓ 3 uploaded · ✗ 0 failed`. A new "Uploaded - click Re-crop to fix any that auto-center missed" section appears with 3 thumbnail cards, each labeled `NPC-MAN-NNN`.
+- [ ] Click `✎ Re-crop` on the second thumbnail. **Expected:** the page scrolls to the editor; the source image loads with a centered max-radius circle; a red banner appears at the bottom reading `✎ Re-crop mode - overwriting NPC-MAN-NNN`; the original Gender + Download block is hidden.
 - [ ] Drag the circle off-center, shrink the radius. Confirm the 256/56/32 previews update live.
 - [ ] Click `💾 Save Crop (overwrite)`. **Expected:** button shows `⏳ Saving…`, then `✓ Re-cropped` for ~2.5s. The editor closes (resets). The thumbnail in the grid for that entry now shows the re-cropped circle.
-- [ ] Hard-refresh the page. Open one of the public URLs from `portrait_bank` (Storage UI or DB query). Confirm the file was overwritten — no stale auto-center version.
+- [ ] Hard-refresh the page. Open one of the public URLs from `portrait_bank` (Storage UI or DB query). Confirm the file was overwritten - no stale auto-center version.
 
 ### Cancel re-crop
 - [ ] Re-crop a thumbnail. Click `Cancel` instead of Save. **Expected:** editor closes; thumbnail unchanged; no upload fired.
@@ -53,6 +53,6 @@ Closes the third sub-item of the "Tools enhancements" row in [letsgototheend.md]
 - [ ] Auth gating: log in as a non-Thriver. Confirm "Thriver access only" still renders.
 
 ## What this does NOT cover (out of scope)
-- Manual crop on the **single-image** flow — already works (drag + slider).
-- Bulk re-crop multiple entries at once — out of scope; one at a time keeps the UX simple.
-- Per-entry delete from the grid (e.g. "this one was a mistake, remove it from `portrait_bank`") — separate item if you want it.
+- Manual crop on the **single-image** flow - already works (drag + slider).
+- Bulk re-crop multiple entries at once - out of scope; one at a time keeps the UX simple.
+- Per-entry delete from the grid (e.g. "this one was a mistake, remove it from `portrait_bank`") - separate item if you want it.

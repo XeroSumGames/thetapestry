@@ -1,4 +1,4 @@
-# Pre-Playtest Smoke — 2026-05-25
+# Pre-Playtest Smoke - 2026-05-25
 
 Covers everything shipped **2026-05-19** (the day after last playtest).
 ~70 commits across narrative polish, schema migrations, new modals,
@@ -10,12 +10,12 @@ catch `console.warn` / `console.error`. **Sections marked [2-client]
 require two browsers / two profiles.**
 
 Two earlier testplans may still be open and should run alongside:
-- [tasks/preplay-testsmoke-2026-05-17.md](preplay-testsmoke-2026-05-17.md) — 2026-05-15 → 17 ships
-- [tasks/polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md) — 2026-05-14 batch
+- [tasks/preplay-testsmoke-2026-05-17.md](preplay-testsmoke-2026-05-17.md) - 2026-05-15 → 17 ships
+- [tasks/polish-pass-2026-05-14-testplan.md](polish-pass-2026-05-14-testplan.md) - 2026-05-14 batch
 
 ---
 
-## Priority 1 — Load-bearing, high detection-cost if broken
+## Priority 1 - Load-bearing, high detection-cost if broken
 
 ### A. Recruit Tier-2 full flow (Phases A+B+C, 6287480 / 1951d77 / 57cc125)
 
@@ -62,7 +62,7 @@ Most invasive feature shipped today. Schema migration applied to live
 6. **GM Fire Escape.**
    - With Frankie in the community as Escape Pending (from step 3), GM clicks **🏃 Fire Escape**.
    - Confirmation dialog fires; click OK.
-   - **PASS:** Frankie removed from the active member list. Chip disappears. Local state patch — list updates without a full refetch.
+   - **PASS:** Frankie removed from the active member list. Chip disappears. Local state patch - list updates without a full refetch.
 
 7. **All approaches locked edge case.**
    - Manually mark an NPC with `recruit_locked_approaches = ['cohort', 'conscript', 'convert']` via SQL or by triggering 3 separate Convert+Intimidation Failures on 3 different NPCs and consolidating. (Or just SQL: `UPDATE campaign_npcs SET recruit_locked_approaches = ARRAY['cohort','conscript','convert'] WHERE id = '<npc-id>';`).
@@ -108,14 +108,14 @@ N participant chain rows now fold into ONE bespoke Tier A banner. Individual par
 1. GM scrolls the tactical map to a specific area + zooms in.
 2. GM clicks **👁 Share View**. **PASS:** button flashes green `✓ Shared` for ~1.5s.
 3. **PASS:** player's tactical map smooth-scrolls to the same scroll position + matches the zoom + asset scale.
-4. Player can keep panning after — not locked into follow mode.
+4. Player can keep panning after - not locked into follow mode.
 5. **NEGATIVE TEST:** player does NOT have the Share View button (GM-only).
 
 ---
 
-## Priority 2 — Visible regressions, lower stakes
+## Priority 2 - Visible regressions, lower stakes
 
-### F. Narrative polish — 12 branches all updated
+### F. Narrative polish - 12 branches all updated
 
 Open `tasks/roll-feed-log-preview.html` in a browser (hard-refresh). Compare against live feed rows after triggering each check type. Quick scan, not deep.
 
@@ -180,7 +180,7 @@ Route planner on campaign map. Set travel mode to Minnie. Drop two pins; pick a 
 
 ---
 
-## Priority 3 — Backend / less critical
+## Priority 3 - Backend / less critical
 
 ### M. Pre-commit hook (1e6f540)
 
@@ -207,9 +207,9 @@ Total tests should now be 349 (was 313 yesterday). Run `npm test` locally; **PAS
 
 ## What's NOT in this testplan (intentionally)
 
-- The 2026-05-19 advantages feature (`054c04d` + `47a1f36` + `2b8ce4b`) — owned by a parallel chat track; their testplan covers it.
-- The 2026-05-19 vehicles fuel/brew-supplies expansion (`c31e564` + `f3b20fb`) — same.
-- The First Impression streamline Phase 1-3 (`f9ca0ab` / `ae7eafd` / `e1d1da0`) — same.
-- The DRIVE / BREW / NAVIGATE narrative supersede (`faa60ab` + `ba472f6`) — that's the parallel chat's version that REPLACED the narrative I shipped at `54c46a1`. Worth confirming the parallel-chat's narrative is what you want.
+- The 2026-05-19 advantages feature (`054c04d` + `47a1f36` + `2b8ce4b`) - owned by a parallel chat track; their testplan covers it.
+- The 2026-05-19 vehicles fuel/brew-supplies expansion (`c31e564` + `f3b20fb`) - same.
+- The First Impression streamline Phase 1-3 (`f9ca0ab` / `ae7eafd` / `e1d1da0`) - same.
+- The DRIVE / BREW / NAVIGATE narrative supersede (`faa60ab` + `ba472f6`) - that's the parallel chat's version that REPLACED the narrative I shipped at `54c46a1`. Worth confirming the parallel-chat's narrative is what you want.
 
 If those parallel tracks have their own preplay-testsmoke files, run those in parallel.

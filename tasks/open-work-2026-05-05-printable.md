@@ -1,4 +1,4 @@
-# The Tapestry — Open Work Checklist
+# The Tapestry - Open Work Checklist
 
 **Generated 2026-05-05** after the verification sweep against shipped code.
 Cross items off as you finish them. The full annotated audit lives in
@@ -6,7 +6,7 @@ Cross items off as you finish them. The full annotated audit lives in
 
 ---
 
-## TOP PRIORITY — From last night's playtest
+## TOP PRIORITY - From last night's playtest
 
 - [ ] Perception check: redundant first modal. Should go straight
       to roll modal (auto-pick active PC).
@@ -16,13 +16,13 @@ Cross items off as you finish them. The full annotated audit lives in
       *Needs design call: stickiness vs. explicit mount/disembark;
       what happens on incompatible terrain.*
 
-- [ ] Random character — Medic produces no First Aid skill.
-      *Likely a wording mix-up — XSE has no "First Aid" skill;
+- [ ] Random character - Medic produces no First Aid skill.
+      *Likely a wording mix-up - XSE has no "First Aid" skill;
       Medic seeds Medicine*. Confirm with player before chasing.*
 
 ---
 
-## BUGS — Need repro / decision before code
+## BUGS - Need repro / decision before code
 
 - [ ] Initiative lag. Needs solo repro on your machine first.
 
@@ -32,15 +32,15 @@ Cross items off as you finish them. The full annotated audit lives in
 - [ ] Failed skill checks still have two actions available. Code
       looks right; needs repro.
 
-- [ ] Tactical map mouse-pan via drag — broken. WASD works;
+- [ ] Tactical map mouse-pan via drag - broken. WASD works;
       click-and-drag on empty cell doesn't. Multiple ship+revert
       attempts; "no fix path identified".
 
-- [ ] HP render lag — previous-session follow-up.
+- [ ] HP render lag - previous-session follow-up.
 
 ---
 
-## PARTIALS — Finish what's started
+## PARTIALS - Finish what's started
 
 - [ ] Modal unification. Normalize Stabilize, Distract, Coordinate,
       Group Check, Gut Instinct, First Impression to <RollModal>.
@@ -60,10 +60,10 @@ Cross items off as you finish them. The full annotated audit lives in
       world-event timeline pins. (Timeline category + sort_order
       shipped.)
 
-- [ ] Play stats per module. Track actuals — session count + avg
+- [ ] Play stats per module. Track actuals - session count + avg
       player count. (Subscriber count shipped.)
 
-- [x] ~~Sequence guards on loadRolls / loadChat.~~ **DONE** —
+- [x] ~~Sequence guards on loadRolls / loadChat.~~ **DONE** -
       `refetchSeqRef` ports the loadEntries pattern to
       `useRollsFeed.refetch` and `useChatPanel.refetch`. Stale
       responses now drop instead of clobbering fresher state.
@@ -74,12 +74,12 @@ Cross items off as you finish them. The full annotated audit lives in
 - [ ] In-app SRD search. SRD copy is structurally complete;
       /rules/* just needs a search UI.
 
-- [~] Thriver godmode UI sweep — **4 of 5 surfaces done**. Table
+- [~] Thriver godmode UI sweep - **4 of 5 surfaces done**. Table
       page now passes `gmLike = isGM || isThriver` to NpcRoster,
       CampaignCommunity, CampaignObjects, VehicleCard, plus the
       shared NPC tab gate, the GM/Player Notes pane, and the
       `gm=` flag on the NPC sheet popout URL. Side-effect bug fix:
-      VehicleCard `canEdit={true}` was permissive to anyone — now
+      VehicleCard `canEdit={true}` was permissive to anyone - now
       `canEdit={gmLike}`, so players can no longer edit shared
       vehicles (revert to `true` if that was intentional).
       **Still open:** character-sheet edit affordance for
@@ -87,12 +87,12 @@ Cross items off as you finish them. The full annotated audit lives in
 
 ---
 
-## OLDER BUGS — Genuinely open
+## OLDER BUGS - Genuinely open
 
 - [ ] Gut Instinct results presentation needs rework.
       *Design discussion: narrative card vs. sheet overlay vs. GM DM.*
 
-- [ ] Inventory migration — auto-convert old string equipment to
+- [ ] Inventory migration - auto-convert old string equipment to
       structured items on load.
 
 - [ ] Allow characters in multiple campaigns.
@@ -110,9 +110,9 @@ Cross items off as you finish them. The full annotated audit lives in
       → Join Session → /table` is too many steps. Possible options:
       deep-link, auto-redirect, "Resume last session" tile.
 
-- [ ] King's Crossing Mall — tactical scenes (mall complex maps).
+- [ ] King's Crossing Mall - tactical scenes (mall complex maps).
 
-- [ ] King's Crossing Mall — handouts (broadcasts, journals,
+- [ ] King's Crossing Mall - handouts (broadcasts, journals,
       ham-radio transcripts).
 
 - [ ] CMod Stack reusable component. Extract from Recruit modal;
@@ -125,7 +125,7 @@ Cross items off as you finish them. The full annotated audit lives in
 
 - [ ] First Impression → straight to roll modal. Skip the picker.
 
-- [x] ~~GM Tools → Restore to Full Health is slow.~~ **DONE** — already
+- [x] ~~GM Tools → Restore to Full Health is slow.~~ **DONE** - already
       uses `Promise.all([...npcUpdates, ...pcUpdates, ...objUpdates])`
       with optimistic local patches (table page line 8881). Modal
       closes immediately; refetches run in background. The "FOREVER"
@@ -150,7 +150,7 @@ Cross items off as you finish them. The full annotated audit lives in
 - [ ] Domain verification spot-check on Resend. FROM swap is in
       code; confirm outbound mail still lands.
 
-- [ ] End-to-end smoke pass — signup → /firsttimers → /welcome →
+- [ ] End-to-end smoke pass - signup → /firsttimers → /welcome →
       /characters/new → /map → first whisper.
 
 - [ ] Quick Reference card on /welcome. Placeholder needs:
@@ -172,15 +172,15 @@ Cross items off as you finish them. The full annotated audit lives in
 
 ## TOOLS
 
-- [ ] Manual crop control — drag-to-select instead of auto
+- [ ] Manual crop control - drag-to-select instead of auto
       center-crop.
 
-- [ ] More tools — handout generator, token template maker,
+- [ ] More tools - handout generator, token template maker,
       roll table randomizer.
 
 ---
 
-## PHASE 4 (Campfire) — Tail
+## PHASE 4 (Campfire) - Tail
 
 - [ ] Full-text search across Forums / War Stories / LFG.
 
@@ -193,14 +193,14 @@ Cross items off as you finish them. The full annotated audit lives in
 
 - [ ] LFG filters by setting + schedule.
 
-- [ ] DZ community layer — approved player Rumors visible to all
+- [ ] DZ community layer - approved player Rumors visible to all
       DZ campaigns.
 
 ---
 
-## PHASE 5 — MODULE SYSTEM
+## PHASE 5 - MODULE SYSTEM
 
-### Phase D — Monetization
+### Phase D - Monetization
 
 - [ ] Free / Paid / Premium pricing.
 
@@ -208,44 +208,44 @@ Cross items off as you finish them. The full annotated audit lives in
 
 - [ ] Author payout flow, referral tracking.
 
-### Phase E — Extras
+### Phase E - Extras
 
-- [ ] GM Kit Export v2 — printable PDF + module zip.
+- [ ] GM Kit Export v2 - printable PDF + module zip.
 
 - [ ] Module + Community cross-publish.
 
-- [ ] In-session GM toolkit — scene switcher, roster, handouts
+- [ ] In-session GM toolkit - scene switcher, roster, handouts
       panel, roll tables linked to dice roller.
 
 - [ ] Third-party module import (Roll20 / Foundry → Tapestry).
 
-### Phase F — GM Adventure Authoring Toolkit
+### Phase F - GM Adventure Authoring Toolkit
 
-- [ ] Story Arc form — guided 4-question creation surface.
+- [ ] Story Arc form - guided 4-question creation surface.
 
 - [ ] NPC quick-build inline forms.
 
-- [ ] Map quick-build — drop new tactical scene from inside a
+- [ ] Map quick-build - drop new tactical scene from inside a
       beat.
 
 - [ ] Handout quick-build.
 
 - [ ] Encounter quick-build.
 
-- [ ] Route tables — leg-by-leg encounters with roll-target each.
+- [ ] Route tables - leg-by-leg encounters with roll-target each.
 
-- [ ] Adventure preview — "play test mode".
+- [ ] Adventure preview - "play test mode".
 
-- [ ] Publish Adventure — terminal step on Story Arc form.
+- [ ] Publish Adventure - terminal step on Story Arc form.
 
 ---
 
-## TACTICAL MAP — Long-term
+## TACTICAL MAP - Long-term
 
 - [ ] Line of sight Phase 3 (polygon vision mask). Audit scheduled
       2026-05-10.
 
-### Lv4 Skill Traits — Xero-blocked, ships together
+### Lv4 Skill Traits - Xero-blocked, ships together
 
 - [ ] Inspiration Lv4 "Beacon of Hope" auto +4 to Morale.
 
@@ -262,7 +262,7 @@ Cross items off as you finish them. The full annotated audit lives in
 ## CODE HEALTH
 
 - [ ] Split table page into subcomponents. Currently 10,542 lines
-      (was 5,365 when first deferred — it grew, didn't shrink).
+      (was 5,365 when first deferred - it grew, didn't shrink).
       High risk; needs a clean day.
 
 - [ ] Debounce realtime callbacks. Optimization-only.
@@ -279,7 +279,7 @@ Cross items off as you finish them. The full annotated audit lives in
 
 ---
 
-## TOP-LEVEL `/todo.md` (last updated 2026-04-11 — mostly stale)
+## TOP-LEVEL `/todo.md` (last updated 2026-04-11 - mostly stale)
 
 - [ ] VERIFY + APPLY `sql/initiative-order-rls-members-write.sql`
       (Nana attack-doesn't-advance bug).
@@ -288,46 +288,46 @@ Cross items off as you finish them. The full annotated audit lives in
 
 ---
 
-## LONG-TERM ROADMAP (Phases 6-11) — Aspirational, not "open work"
+## LONG-TERM ROADMAP (Phases 6-11) - Aspirational, not "open work"
 
 ### Phase 6
 - [ ] LFG matching by setting + playstyle.
-- [ ] Session scheduling — calendar view.
-- [ ] The Gazette — auto campaign newsletter.
+- [ ] Session scheduling - calendar view.
+- [ ] The Gazette - auto campaign newsletter.
 - [ ] Between-session experience.
-- [ ] Subscriber tiers — Free / Paid / Premium.
-- [ ] Graffiti — Distemper-branded reactions.
+- [ ] Subscriber tiers - Free / Paid / Premium.
+- [ ] Graffiti - Distemper-branded reactions.
 
-### Phase 7 — Ghost Mode Advanced
+### Phase 7 - Ghost Mode Advanced
 - [ ] Ghost-to-Survivor funnel analytics.
 - [ ] A/B test soft wall messaging.
 - [ ] QR-scanner onboarding flow.
 - [ ] Reactivate /firsttimers onboarding page.
 
-### Phase 8 — Physical Products
-- [ ] Chased QR codes — fold-out map deep-links.
+### Phase 8 - Physical Products
+- [ ] Chased QR codes - fold-out map deep-links.
 - [ ] Anonymous preview for QR scanners without accounts.
-- [ ] Chased module — pre-populated with Delaware content.
+- [ ] Chased module - pre-populated with Delaware content.
 - [ ] Mongrels sourcebook upload, seed pins/NPCs.
 - [ ] Physical product landing pages.
 
-### Phase 9 — Maturity
+### Phase 9 - Maturity
 - [ ] Contextual rules links from sheet + dice roller.
 - [ ] Mobile optimization pass.
 - [ ] Mobile dice roller.
 - [ ] Global search across characters / campaigns / pins / NPCs /
       Campfire.
 
-### Phase 10 — Future Platforms
-- [ ] Displaced — space setting on separate platform.
+### Phase 10 - Future Platforms
+- [ ] Displaced - space setting on separate platform.
 - [ ] Extract @xse/core monorepo.
 - [ ] Each setting gets own domain + branding.
 
-### Phase 11 — Cross-Platform Parity
-- [ ] Campaign Calendar — date-gated lore events.
-- [ ] Roll20 Export — sheet HTML/CSS/JS, ZIP exporter, ingest.
+### Phase 11 - Cross-Platform Parity
+- [ ] Campaign Calendar - date-gated lore events.
+- [ ] Roll20 Export - sheet HTML/CSS/JS, ZIP exporter, ingest.
 
-### Campaign Calendar Backburner — Revisit triggers
+### Campaign Calendar Backburner - Revisit triggers
 - [ ] Skip Week → community frozen 4+ sessions.
 - [ ] World events that should've ended still applying CMod.
 - [ ] "X days passed" → automatic ration / weather / community

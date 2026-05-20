@@ -1,4 +1,4 @@
-# Sentry-example drop — 2026-05-03 testplan
+# Sentry-example drop - 2026-05-03 testplan
 
 Whole-route delete of two demo files the Sentry setup wizard left
 behind. No callers, no value. One commit, ship to live.

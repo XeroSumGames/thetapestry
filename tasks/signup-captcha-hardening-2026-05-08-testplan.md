@@ -1,4 +1,4 @@
-# Signup CAPTCHA Hardening — Testplan
+# Signup CAPTCHA Hardening - Testplan
 
 **Date:** 2026-05-08
 **Files touched:** `app/signup/page.tsx`
@@ -31,16 +31,16 @@ using a normal-looking name with auto-fill skip evades both.
 
 Three layers, all in `handleSignup`:
 
-1. **Layer 1 (unchanged) — honeypot.** Bot fills hidden `name="website"` →
+1. **Layer 1 (unchanged) - honeypot.** Bot fills hidden `name="website"` →
    silent redirect to `/dashboard` (no error tip-off).
-2. **Layer 2 (unchanged) — `looksRandom(username)`.** 6+ consecutive
+2. **Layer 2 (unchanged) - `looksRandom(username)`.** 6+ consecutive
    consonants → block.
-3. **Layer 3 (NEW) — hard-fail Turnstile gate.** When
+3. **Layer 3 (NEW) - hard-fail Turnstile gate.** When
    `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is configured, a valid server-verified
    token is now **required**. No more silent fall-through.
-4. **Layer 4 (NEW) — `captchaToken` forwarded to `supabase.auth.signUp`.**
+4. **Layer 4 (NEW) - `captchaToken` forwarded to `supabase.auth.signUp`.**
    When Supabase Bot and Abuse Protection is enabled in the dashboard, the
-   auth call itself is rejected without a valid token — even by clients that
+   auth call itself is rejected without a valid token - even by clients that
    bypass the page entirely.
 
 ## Required Supabase dashboard config
@@ -59,7 +59,7 @@ dashboard. **This is a one-time config, outside the codebase.**
 
 **Side-effect:** once enabled, CAPTCHA is also required for `signInWithPassword`,
 `signInWithOtp`, and password recovery. `/login` uses `signInWithPassword`
-and currently does NOT pass a captchaToken — enabling Supabase CAPTCHA
+and currently does NOT pass a captchaToken - enabling Supabase CAPTCHA
 without first wiring Turnstile into `/login` will lock out all logins.
 
 **Recommended order of operations:**
@@ -72,20 +72,20 @@ without first wiring Turnstile into `/login` will lock out all logins.
    forward captchaToken so the auth calls themselves are gated. No
    bypass remains.
 
-## Verification — happy path
+## Verification - happy path
 
 - [ ] Open `/signup` in a normal browser (no ad blocker). Fill form
       legitimately. Sign up succeeds, lands on `/dashboard`.
 - [ ] Browser DevTools → Network: confirm `POST /api/auth/verify-turnstile`
       fires before the auth call and returns `200 {ok:true}`.
 
-## Verification — failure paths
+## Verification - failure paths
 
 - [ ] **Ad blocker.** Enable uBlock Origin / Privacy Badger that blocks
       `challenges.cloudflare.com`. Try to sign up. Expect:
       *"Bot check unavailable. Disable any ad blockers for this site and
       refresh."* No account created. Verify by checking auth.users in the
-      Supabase table editor — no new row.
+      Supabase table editor - no new row.
 - [ ] **No JS.** Use a tool like `curl` to POST to `/signup` (form action).
       Doesn't trigger the React form handler, but if anyone wired a direct
       POST to Supabase auth: would fail at Supabase once dashboard CAPTCHA
@@ -98,13 +98,13 @@ without first wiring Turnstile into `/login` will lock out all logins.
       {'Content-Type':'application/json'}, body: JSON.stringify({ token:
       'fake-token' }) }).then(r=>r.status)`. Expect `403`.
 
-## Verification — dev mode
+## Verification - dev mode
 
 - [ ] Run locally without `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set. Signup
-      should still work without any CAPTCHA prompt — the gate skips when
+      should still work without any CAPTCHA prompt - the gate skips when
       the env var is absent.
 
-## Verification — /login
+## Verification - /login
 
 - [ ] Open `/login` in a normal browser (no ad blocker). Sign in with a
       valid account. Lands on `/dashboard`. Network tab shows

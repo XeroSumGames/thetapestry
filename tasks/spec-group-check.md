@@ -1,6 +1,6 @@
-# Spec — Group Check
+# Spec - Group Check
 
-**Status:** canon locked 2026-05-13. Current implementation matches this spec — no code change required at lock time.
+**Status:** canon locked 2026-05-13. Current implementation matches this spec - no code change required at lock time.
 
 ## Concept
 
@@ -9,12 +9,12 @@ A group check fires when one player initiates a specific skill check (e.g. Scave
 ## Flow
 
 1. Player triggers a skill check.
-2. If multiple PCs are present and the GM/initiator decides it's a group situation, the check is escalated to a Group Check (via the existing Group Check modal — `setShowSpecialCheck('group')`).
+2. If multiple PCs are present and the GM/initiator decides it's a group situation, the check is escalated to a Group Check (via the existing Group Check modal - `setShowSpecialCheck('group')`).
 3. Initiator picks the participating PCs and the skill.
 4. System computes for each participant:
    - **AMod** = their value in the relevant attribute (e.g. ACU for Scavenging)
    - **SMod** = their level in the relevant skill (e.g. Scavenging)
-   - A zero value is fine — they just contribute 0 (no warm-body bonus, no auto-+1 for showing up).
+   - A zero value is fine - they just contribute 0 (no warm-body bonus, no auto-+1 for showing up).
 5. The participant with the highest **AMod + SMod** is the leader and rolls.
 6. Everyone else's **AMod** and **SMod** are summed and added to the leader's roll (alongside the leader's own AMod + SMod).
 7. The leader's outcome is the group's outcome.
@@ -44,7 +44,7 @@ Cree rolls 2d6 +2 AMod +1 SMod from her own, +2 AMod +2 SMod pooled from helpers
 
 ## What's NOT in this model
 
-- Individual helper rolls (was the proposed redesign — killed).
+- Individual helper rolls (was the proposed redesign - killed).
 - Per-helper Insight Die contributions (no helper rolls = nothing to spend an Insight Die on).
 - Per-helper HI/LI award from a group check (only the leader's roll can award).
-- A separate "modifier from helper outcome" ladder (Success +1, WS +2, etc.) — that's Coordinated Effort, see `tasks/spec-coordinated-effort.md`.
+- A separate "modifier from helper outcome" ladder (Success +1, WS +2, etc.) - that's Coordinated Effort, see `tasks/spec-coordinated-effort.md`.

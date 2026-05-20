@@ -1,12 +1,12 @@
-# Rules extract — Communities, Recruitment, Morale
+# Rules extract - Communities, Recruitment, Morale
 
-**Source**: `docs/Rules/XSE SRD v1.1.17 (Small).pdf` §08 Communities (pp. 21–24), cross-referenced with `Distemper CRB v0.9.2.pdf`. Precedence per `CLAUDE.md`: SRD > CRB > Quickstart > Chased > District Zero.
+**Source**: `docs/Rules/XSE SRD v1.1.17 (Small).pdf` §08 Communities (pp. 21-24), cross-referenced with `Distemper CRB v0.9.2.pdf`. Precedence per `CLAUDE.md`: SRD > CRB > Quickstart > Chased > District Zero.
 
-This is the canonical system rules for the Communities feature. When `tasks/spec-communities.md` disagrees with this file, **update the spec** — don't code the wrong thing.
+This is the canonical system rules for the Communities feature. When `tasks/spec-communities.md` disagrees with this file, **update the spec** - don't code the wrong thing.
 
 ---
 
-## 1. Scope — Group vs Community
+## 1. Scope - Group vs Community
 
 - A **Group** is a PC party. No community mechanics; no weekly checks required.
 - A **Group** becomes a **Community** when combined PCs + NPCs reach **13 or more members**.
@@ -18,7 +18,7 @@ This is the canonical system rules for the Communities feature. When `tasks/spec
 ### Roll mechanic
 - **2d6 + AMod + SMod + CMod** (standard outcome table; see §3 below).
 - Skill chosen to align with approach. Common picks: **Barter**, **Psychology\***, **Tactics\***, **Inspiration**.
-- **First Impression** CMod applies — per-PC, per-NPC, stored in `npc_relationships.relationship_cmod`.
+- **First Impression** CMod applies - per-PC, per-NPC, stored in `npc_relationships.relationship_cmod`.
 
 ### Approaches
 
@@ -27,7 +27,7 @@ Three recruitment approaches. The choice sets commitment duration and shifts fla
 | Approach | Basis | Commitment |
 |---|---|---|
 | **Cohort** | Shared interest or goal with the PC | Joins until next Morale Check, then re-evaluated |
-| **Conscript** | Coerced — requires a **credible threat** | Follows orders while the coercion holds |
+| **Conscript** | Coerced - requires a **credible threat** | Follows orders while the coercion holds |
 | **Convert** | Shared belief, ideology, or vision | Probationary through first Morale Check, then committed |
 
 ### Outcome tables per approach
@@ -35,36 +35,36 @@ Three recruitment approaches. The choice sets commitment duration and shifts fla
 **Cohort**
 | Roll | Effect |
 |---|---|
-| Success (9–13) | NPC joins until next Morale Check |
+| Success (9-13) | NPC joins until next Morale Check |
 | Wild Success (14+) | NPC becomes a Cohort immediately (no probation) |
 | Moment of High Insight (6+6) | Same as Wild Success + may take the NPC as **Apprentice** |
-| Failure (4–8) | Does not join. Retry only if circumstances materially change |
-| Dire Failure (0–3) | No interest in joining |
+| Failure (4-8) | Does not join. Retry only if circumstances materially change |
+| Dire Failure (0-3) | No interest in joining |
 | Moment of Low Insight (1+1) | NPC is alienated/offended. Possible escalation → violent rejection |
 
 **Conscript**
 | Roll | Effect |
 |---|---|
-| Success (9–13) | Complies under duress. Will follow orders until next Morale Check |
-| Wild Success (14+) | Joins willingly — fully committed, loyal follower |
+| Success (9-13) | Complies under duress. Will follow orders until next Morale Check |
+| Wild Success (14+) | Joins willingly - fully committed, loyal follower |
 | Moment of High Insight (6+6) | Wild Success + Apprentice option |
-| Failure (4–8) | Appears to comply but will attempt to escape at first opportunity |
-| Dire Failure (0–3) | Steadfastly refuses to join |
+| Failure (4-8) | Appears to comply but will attempt to escape at first opportunity |
+| Dire Failure (0-3) | Steadfastly refuses to join |
 | Moment of Low Insight (1+1) | Refuses + hostile / violent response possible |
 
 **Convert**
 | Roll | Effect |
 |---|---|
-| Success (9–13) | Joins as probationary Convert. Commits after first Morale Check passes |
+| Success (9-13) | Joins as probationary Convert. Commits after first Morale Check passes |
 | Wild Success (14+) | Committed believer and follower |
 | Moment of High Insight (6+6) | Wild Success + Apprentice option |
-| Failure (4–8) | No interest. Retry allowed if PCs Fill In The Gaps on a different approach |
-| Dire Failure (0–3) | Becomes wary and distances themselves from the PC |
+| Failure (4-8) | No interest. Retry allowed if PCs Fill In The Gaps on a different approach |
+| Dire Failure (0-3) | Becomes wary and distances themselves from the PC |
 | Moment of Low Insight (1+1) | So unwilling to join they may become hostile / violent |
 
 ### Apprentices
 
-Apprentice is an **option** triggered by a **Moment of High Insight** (double-6) on a Recruitment Check. A plain Wild Success (total ≥14 without matching faces) does NOT unlock Apprentice — the SRD's recruitment outcome table reads "Moment of High Insight (6+6): Same as Wild Success **+** may take the NPC as Apprentice", making the Apprentice option additive to High Insight only. A player may also seek out a specific NPC and make a deliberate recruitment attempt aimed at Apprenticeship (same roll, same threshold — still needs the double-6).
+Apprentice is an **option** triggered by a **Moment of High Insight** (double-6) on a Recruitment Check. A plain Wild Success (total ≥14 without matching faces) does NOT unlock Apprentice - the SRD's recruitment outcome table reads "Moment of High Insight (6+6): Same as Wild Success **+** may take the NPC as Apprentice", making the Apprentice option additive to High Insight only. A player may also seek out a specific NPC and make a deliberate recruitment attempt aimed at Apprenticeship (same roll, same threshold - still needs the double-6).
 
 **Rules** (SRD §08, p. 21):
 
@@ -103,24 +103,24 @@ Roll is **2d6 + leader AMod + leader SMod + 6 modifier slots**:
 |---|---|---|
 | Wild Success (14+) | Morale stays strong or improves | +1 |
 | Moment of High Insight (6+6) | Belief in leadership is high | +2 |
-| Success (9–13) | Morale remains steady | 0 |
-| Failure (4–8) | Morale slipping. **25%** of community leaves | −1 |
-| Dire Failure (0–3) | Morale collapses. **50%** of community leaves | −2 |
+| Success (9-13) | Morale remains steady | 0 |
+| Failure (4-8) | Morale slipping. **25%** of community leaves | −1 |
+| Dire Failure (0-3) | Morale collapses. **50%** of community leaves | −2 |
 | Moment of Low Insight (1+1) | Infighting, rioting, violence. **75%** leaves | −3 |
 
 ### Dissolution
 - **3 consecutive Morale Check failures → community dissolves irrecoverably.**
 - A fast-acting leader may attempt to retain fragments / specific members via an **immediate Morale Check** using the previous check's result as the Mood CMod.
 
-## 4. Community Structure — role minimums
+## 4. Community Structure - role minimums
 
 | Role | Minimum % | Responsibility | Weekly check |
 |---|---|---|---|
 | **Gatherers** | 33% (round down) | Hunt, forage, farm, fish, scavenge → **Rations** | **Fed Check** |
 | **Maintainers** | 20% (round down) | Collect **Supplies** (clothing, tools, batteries), repair and maintain buildings/equipment/vehicles | **Clothed Check** |
-| **Safety** | 5–10% | Policing, patrol, firefighting, emergency services. Community leadership drawn from here. | No weekly check — drives Morale modifiers only |
+| **Safety** | 5-10% | Policing, patrol, firefighting, emergency services. Community leadership drawn from here. | No weekly check - drives Morale modifiers only |
 
-Remaining ~37–42% are unassigned. Missing any group below minimum → −1 "Enough Hands" CMod per group, max −3.
+Remaining ~37-42% are unassigned. Missing any group below minimum → −1 "Enough Hands" CMod per group, max −3.
 
 ### Fed Check (Gatherers, weekly, before Morale)
 
@@ -128,9 +128,9 @@ Remaining ~37–42% are unassigned. Missing any group below minimum → −1 "En
 |---|---|---|
 | Wild Success (14+) | Rations surplus | **+1** (PDF OCR garbled this as −1; narrative clearly intends +1) |
 | Moment of High Insight (6+6) | Luxury items boost mood | +2 |
-| Success (9–13) | Baseline needs met | 0 |
-| Failure (4–8) | Shortfall — 1 meal/day | −1 |
-| Dire Failure (0–3) | Continuous hunger, days between rations | −2 |
+| Success (9-13) | Baseline needs met | 0 |
+| Failure (4-8) | Shortfall - 1 meal/day | −1 |
+| Dire Failure (0-3) | Continuous hunger, days between rations | −2 |
 | Moment of Low Insight (1+1) | Food contamination / famine onset | −3 |
 
 ### Clothed Check (Maintainers, weekly, before Morale)
@@ -139,34 +139,34 @@ Remaining ~37–42% are unassigned. Missing any group below minimum → −1 "En
 |---|---|---|
 | Wild Success (14+) | Buildings / equipment repaired + improved | +1 |
 | Moment of High Insight (6+6) | Perfect working order + project success | +2 |
-| Success (9–13) | Adequate maintenance | 0 |
-| Failure (4–8) | Minor breakdowns or Supplies deficit | −1 |
-| Dire Failure (0–3) | Continued breakdowns impacting community | −2 |
+| Success (9-13) | Adequate maintenance | 0 |
+| Failure (4-8) | Minor breakdowns or Supplies deficit | −1 |
+| Dire Failure (0-3) | Continued breakdowns impacting community | −2 |
 | Moment of Low Insight (1+1) | Critical infrastructure damaged | −3 |
 
 ### Player contribution to Fed / Clothed
 
 - Fed and Clothed are "assumed to be rolled by NPCs of reasonable proficiency" by default.
 - A PC **may choose to spend their time** contributing to these tasks and use their own AMods/SMods **if they can Fill In The Gaps on how they contributed**.
-- No separate mechanic — just substitute the PC roller for the NPC's.
+- No separate mechanic - just substitute the PC roller for the NPC's.
 
 ## 5. Distemper CRB additions (confirmed 2026-04-22 after CRB re-upload)
 
 Source: `docs/Rules/Distemper CRB v0.9.2.pdf`, Skills chapter.
 
-### Inspiration skill — every level gives +1 SMod to Recruitment
+### Inspiration skill - every level gives +1 SMod to Recruitment
 
 > "For each level in Inspiration, a PC gets a +1 SMod to any attempt to get NPCs behind an idea or to any NPC recruitment attempts."
 
 **Implementation**: When a PC rolls a Recruitment Check, their Inspiration level adds to SMod in addition to whatever core skill they're using (Barter / Psychology\* / Tactics\* / etc.). UI should show this as a distinct CMod line item in the Recruitment modal's review step.
 
-### Inspiration Lv4 "Beacon of Hope" — +4 to Morale + risk-everything narrative
+### Inspiration Lv4 "Beacon of Hope" - +4 to Morale + risk-everything narrative
 
-> "Level 4 'Beacon of Hope': At level 4, the character adds +4 to any Community Morale checks. Additionally, they can make rousing speeches that can convince any Community they are a part of to risk everything — including their own lives — for the good of the larger group."
+> "Level 4 'Beacon of Hope': At level 4, the character adds +4 to any Community Morale checks. Additionally, they can make rousing speeches that can convince any Community they are a part of to risk everything - including their own lives - for the good of the larger group."
 
 **Implementation**: +4 CMod to every Community Morale Check the PC participates in (auto-applied if the PC is a member). The "risk-everything" speech is a GM-narrative hook, not a mechanical trigger.
 
-### Psychology* Lv4 "Insightful Counselor" — +3 Morale if PC has tenure
+### Psychology* Lv4 "Insightful Counselor" - +3 Morale if PC has tenure
 
 > "Level 4: 'Insightful Counselor': At level 4, a character who has spent time as part of a community is able to understand them and help the community leaders see what they need, and may add a +3 CMod to the community's weekly Morale checks."
 
@@ -176,15 +176,15 @@ Source: `docs/Rules/Distemper CRB v0.9.2.pdf`, Skills chapter.
 
 > "Some players may recruit an Apprentice… and if they do, they get to choose a Paradigm for that apprentice."
 
-Matches SRD §08 creation rules. No new mechanics — just confirms the PC (not the GM) picks the Paradigm.
+Matches SRD §08 creation rules. No new mechanics - just confirms the PC (not the GM) picks the Paradigm.
 
 ### Activity Blocks (Phase D forward reference)
 
-CRB mentions a "Community Workbook" at DistemperVerse.com for managing Activity Blocks. Out of scope for Phase B — flagged here for the Phase D implementation to pull in.
+CRB mentions a "Community Workbook" at DistemperVerse.com for managing Activity Blocks. Out of scope for Phase B - flagged here for the Phase D implementation to pull in.
 
 ### CRB status note
 
-CRB v0.9.2 explicitly uses page-number placeholders ("see page xx") for Community rules — it defers to the SRD §08 as canonical. Nothing in the CRB contradicts the SRD on Community mechanics; it only adds the flavor above.
+CRB v0.9.2 explicitly uses page-number placeholders ("see page xx") for Community rules - it defers to the SRD §08 as canonical. Nothing in the CRB contradicts the SRD on Community mechanics; it only adds the flavor above.
 
 ## 6. Data model implications (cross-check with spec)
 
@@ -198,15 +198,15 @@ CRB v0.9.2 explicitly uses page-number placeholders ("see page xx") for Communit
 
 | Topic | Spec says | SRD says | Status |
 |---|---|---|---|
-| §4b Morale slot name | "Enough Space" (GM-narrative CMod) | **"Enough Hands"** — mechanical, −1 per role group short, max −3 | ❌ Spec wrong |
+| §4b Morale slot name | "Enough Space" (GM-narrative CMod) | **"Enough Hands"** - mechanical, −1 per role group short, max −3 | ❌ Spec wrong |
 | §4b Morale slot count | 6 slots with TWO GM-narrative slots (Mood + Space) | 6 slots, **one** GM-narrative (Mood) + Enough Hands is mechanical | ❌ Spec wrong |
 | §2 Apprentice creation | Mentioned but no CDP/skill detail | **3 CDP RAPID, 5 CDP skills, 1 Paradigm, train to PC-level−1 over 1 month** | ⚠️ Spec incomplete |
 | §3 Recruitment skills | "Barter, Psychology\*, Tactics\*, Inspiration, etc." | SRD confirms Barter / Psychology\* / Tactics\*; Inspiration is CRB-flavor | ✓ Matches |
 | §3 First Impression CMod | Flows from `npc_relationships.relationship_cmod` | Confirmed: SRD p. 21 "Recruitment Checks can be influenced by the First Impression a player made on them" | ✓ Matches |
 | §4 Morale cadence | "Weekly" | SRD: "usually weekly, but the exact cadence is up to the GM" | ⚠️ Spec should note cadence is GM-configurable |
-| §4 3-consecutive-failure dissolution | "Dissolves irrecoverably" | SRD adds: **immediate retention Morale Check is allowed**, using previous result as Mood CMod, for "fast-acting leaders" | ✅ Implemented 2026-04-23 in `CommunityMoraleModal` — inline on Result stage when willDissolve, Mood = failed Morale's cmod_for_next, success saves the community (cons_failures drops to 2), failure dissolves as planned |
+| §4 3-consecutive-failure dissolution | "Dissolves irrecoverably" | SRD adds: **immediate retention Morale Check is allowed**, using previous result as Mood CMod, for "fast-acting leaders" | ✅ Implemented 2026-04-23 in `CommunityMoraleModal` - inline on Result stage when willDissolve, Mood = failed Morale's cmod_for_next, success saves the community (cons_failures drops to 2), failure dissolves as planned |
 | §5 Leadership | Says leadership drawn from Safety | SRD confirms: "This group is also made up of Community leadership" | ✓ Matches |
-| §10 Who runs Morale | "GM always; leader PC if leader_user_id = auth.uid()" | SRD: acknowledged leader (PC or NPC); Group Check if co-equal leaders | ✓ Matches (spec is stricter — OK for MVP) |
+| §10 Who runs Morale | "GM always; leader PC if leader_user_id = auth.uid()" | SRD: acknowledged leader (PC or NPC); Group Check if co-equal leaders | ✓ Matches (spec is stricter - OK for MVP) |
 | Morale outcome 75% leave | Not in spec | SRD: Moment of Low Insight = **75% leave** (spec only has 25/50) | ❌ Spec missing 75% / Low Insight tier |
 
 **Spec updates to make before Phase B coding:**

@@ -1,4 +1,4 @@
-# Test Plan — Inventory #3: Vehicle Cargo Unification
+# Test Plan - Inventory #3: Vehicle Cargo Unification
 
 Shipped 2026-04-30. Vehicle cargo now uses the same `InventoryItem` shape as PCs and NPCs, with tolerant reads for legacy rows. Vehicle encumbrance now reflects current cargo total vs. the vehicle's capacity.
 
@@ -12,12 +12,12 @@ No SQL migration. The `campaigns.vehicles` jsonb already accepts arbitrary shape
 2. **Expected**: cargo renders without errors. Items with no `enc` show no `[N]` weight badge. The header shows `0 / <cap>` because nothing has weight.
 3. The VehicleCard summary in the right-side panel also shows `0 / <cap>` in the Enc stat.
 
-## Mongrels — Minnie auto-seeded enc
+## Mongrels - Minnie auto-seeded enc
 
 1. Create a fresh **Mongrels** campaign.
 2. Open the Vehicles popout for Minnie.
 3. **Expected**: Cargo header shows `98 / 100` (98 enc total, 2 slack from 100 cap). No OVERLOADED warning.
-4. Each item with `enc > 0` shows a `[total]` badge — e.g. Automatic Rifles ×4 shows `[8]` because 4 × 2 enc.
+4. Each item with `enc > 0` shows a `[total]` badge - e.g. Automatic Rifles ×4 shows `[8]` because 4 × 2 enc.
 5. VehicleCard summary in the right-panel reads the same.
 
 ## Add from catalog (auto-fill enc)
@@ -34,7 +34,7 @@ No SQL migration. The `campaigns.vehicles` jsonb already accepts arbitrary shape
 1. Open Add. Type `Mystery Box` (not in catalog). Set Qty=2, Enc=3.
 2. Submit.
 3. **Expected**: Item appears with `[6]` badge (2 × 3 enc). Cargo total updates accordingly.
-4. Reopen the popout — item persists.
+4. Reopen the popout - item persists.
 
 ## Stack-merging
 
@@ -60,15 +60,15 @@ No SQL migration. The `campaigns.vehicles` jsonb already accepts arbitrary shape
 
 1. Open the table view → Vehicles tab → expand a vehicle's card.
 2. **Expected**: the **Enc** stat shows current/cap (e.g. `98 / 100`) instead of the static `100` it used to show.
-3. Hover the stat — tooltip explains the calculation.
+3. Hover the stat - tooltip explains the calculation.
 
-## Regression — vehicle popout other features
+## Regression - vehicle popout other features
 
 1. Confirm WP / fuel / floorplan / driver / brewer / mounted weapons all still work as before.
 2. Operator notes still editable.
 3. Crew assignment still functional.
 
-## Backward compatibility — manual SQL edit (optional)
+## Backward compatibility - manual SQL edit (optional)
 
 If you want to clean a legacy vehicle's cargo data permanently:
 ```sql

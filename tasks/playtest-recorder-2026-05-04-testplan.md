@@ -1,4 +1,4 @@
-# Playtest Recorder — 2026-05-04
+# Playtest Recorder - 2026-05-04
 
 A "tivo" for the third playtest. Captures the last ~2000 UI events
 (clicks, route changes, errors, console.error/warn, manual marks) in an
@@ -6,12 +6,12 @@ in-memory ring buffer that you can dump to JSON when something goes weird.
 
 ## What got built
 
-- `lib/playtest-recorder.ts` — pure ring buffer + redaction + dump helpers.
-- `components/PlaytestRecorder.tsx` — client component that wires DOM
+- `lib/playtest-recorder.ts` - pure ring buffer + redaction + dump helpers.
+- `components/PlaytestRecorder.tsx` - client component that wires DOM
   listeners + hotkeys + the corner indicator.
-- `app/layout.tsx` — mounts `<PlaytestRecorder />` once, site-wide.
+- `app/layout.tsx` - mounts `<PlaytestRecorder />` once, site-wide.
 
-It's **always on for everyone** — no flag, no opt-in, no URL param. Cost
+It's **always on for everyone** - no flag, no opt-in, no URL param. Cost
 is one click listener and a 2000-entry array (~400KB worst case). Players
 don't have to do anything special; the GM (you) just tells them the hotkeys.
 
@@ -19,11 +19,11 @@ don't have to do anything special; the GM (you) just tells them the hotkeys.
 
 | Keys             | Does                                                      |
 |------------------|-----------------------------------------------------------|
-| `Ctrl+Shift+L`   | **Dump** — downloads `playtest-<you>-<timestamp>.json`    |
-| `Ctrl+Shift+M`   | **Mark** — prompts for a label, inserts a marker event    |
-| `Ctrl+Shift+P`   | **Peek** — prints last 20 events to the browser console   |
+| `Ctrl+Shift+L`   | **Dump** - downloads `playtest-<you>-<timestamp>.json`    |
+| `Ctrl+Shift+M`   | **Mark** - prompts for a label, inserts a marker event    |
+| `Ctrl+Shift+P`   | **Peek** - prints last 20 events to the browser console   |
 
-There is also a tiny dim red dot in the bottom-right corner of every page —
+There is also a tiny dim red dot in the bottom-right corner of every page -
 hover for a tooltip that lists the hotkeys. If you don't see it, the
 recorder didn't load.
 
@@ -36,14 +36,14 @@ recorder didn't load.
    should see `[playtest] last 20: [...]` with at least a `route` entry
    and your login click.
 5. **Confirm dump**: hit `Ctrl+Shift+L`. A JSON file should download.
-   Open it — verify:
+   Open it - verify:
    - `meta.user_email` is your email.
    - `meta.event_count` ≥ 5.
    - `events[]` has `kind: 'click'` entries with sensible `text` /
      `button_text` fields.
    - No password / token / cookie strings appear anywhere.
 6. **Confirm mark**: hit `Ctrl+Shift+M`, type "smoke test", OK.
-   Then `Ctrl+Shift+L` again. Open the new dump — last event should be
+   Then `Ctrl+Shift+L` again. Open the new dump - last event should be
    `{ kind: 'mark', data: { label: 'smoke test', ... } }`.
 7. **Confirm error capture**: in DevTools, run `throw new Error('test')`.
    Then `Ctrl+Shift+L`. Last events should include a `kind: 'error'`
@@ -53,7 +53,7 @@ recorder didn't load.
 
 If all 8 pass, you're ready.
 
-## During the session — for YOU (GM)
+## During the session - for YOU (GM)
 
 - **Run a screen recorder** on your machine (OBS, Loom, even Win+G
   Game Bar). The JSON timeline + the video timeline let you cross-
@@ -65,7 +65,7 @@ If all 8 pass, you're ready.
   warped to wrong cell". Takes 4 seconds, saves you 20 minutes
   later.
 - **Don't dump until end of session** unless something catastrophic
-  happens. The buffer holds 2000 events — that's enough for a
+  happens. The buffer holds 2000 events - that's enough for a
   ~3-hour session of moderate activity. (Also: the buffer auto-saves
   the last 500 to localStorage on every error and mark, so a refresh
   won't wipe interesting context.)
@@ -73,27 +73,27 @@ If all 8 pass, you're ready.
   `C:\TheTapestry\tasks\playtest-dumps\` (create the folder if you
   haven't).
 
-## During the session — for PLAYERS
+## During the session - for PLAYERS
 
 Send them this exact message before you start:
 
 > Tonight we're recording UI events to help me catch bugs. Two
 > things I need you to do:
 >
-> 1. **If anything looks weird** — token snaps to wrong cell, button
->    doesn't respond, layout breaks — press **Ctrl+Shift+M**, type a
+> 1. **If anything looks weird** - token snaps to wrong cell, button
+>    doesn't respond, layout breaks - press **Ctrl+Shift+M**, type a
 >    one-line description ("my HP didn't update after eating"), hit
 >    OK. Takes 3 seconds. Then keep playing.
 >
-> 2. **At the end of the session** — press **Ctrl+Shift+L**.
+> 2. **At the end of the session** - press **Ctrl+Shift+L**.
 >    A JSON file will download. Send it to me however (Discord DM,
 >    email, whatever).
 >
 > No screen recording on your end unless you want to. We're not
-> capturing input values, passwords, or anything you type — just
+> capturing input values, passwords, or anything you type - just
 > clicks, route changes, and errors.
 
-## After the session — debugging from a dump
+## After the session - debugging from a dump
 
 The dump structure:
 
@@ -125,10 +125,10 @@ Workflow:
 2. Convert that to ms-since-start using `meta.started_at`, then grep
    the `events` array for entries near that `ms` value (or just open
    in a JSON viewer and scroll).
-3. Look for the nearest `mark` events — those are the player's own
+3. Look for the nearest `mark` events - those are the player's own
    bookmarks.
 4. Look for `error` / `rejection` / `console-error` events in the
-   surrounding window — those are usually the smoking gun.
+   surrounding window - those are usually the smoking gun.
 5. Cross-reference your screen recording at the same wall-clock time
    to see what the UI looked like.
 
@@ -145,12 +145,12 @@ Workflow:
 - If the recorder breaks the site for some reason, comment out the
   `<PlaytestRecorder />` line in `app/layout.tsx` and redeploy.
   Everything else (LayoutShell, VisitLogger) is independent.
-- The console.error / console.warn wrappers are pass-through — they
+- The console.error / console.warn wrappers are pass-through - they
   always call the original after recording, so existing log behavior
   is preserved. (Already-existing head-script wrappers from the spam
   filter still run first; ours run on top of those.)
 - The `auth-cache` import resolves user identity in the background.
-  If it fails, the recorder still works — events just won't be
+  If it fails, the recorder still works - events just won't be
   tagged with user_id.
 
 ## Follow-ups for after tonight (don't do tonight)

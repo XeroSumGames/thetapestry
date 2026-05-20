@@ -1,4 +1,4 @@
-# Rules Extract — Armor & Special Weapons
+# Rules Extract - Armor & Special Weapons
 
 Source: Distemper Quickstart Table 7 (Armor) + Table 19 (Special
 Weapons). Image-extracted by Xero on 2026-05-09. Locked decisions
@@ -21,9 +21,9 @@ the data; user overrides documented inline.
 **Existing platform state** (`lib/weapons.ts`):
 
 - **Flame-Thrower** already in `HEAVY_WEAPONS` matching QS canon. No change needed.
-- **Molotov** in `EXPLOSIVE_WEAPONS` at `5+2d6` Rare 100% RP no Burning trait. Diverges from QS by a lot — flipping to canon: `1+1d3` Uncommon 50% RP + Tracking + Burning(1).
-- **Tranquilizer Gun** missing. Adding to `RANGED_WEAPONS` with the override stats — QS canon is `0` damage / 50% RP which renders as 0/0 every hit (useless). Override per Xero: `1d3` base × 400% RP = up to 12 RP per hit (avg 8), one-shot KO on most NPCs, Stun trait fires. Range Medium, Rare ammo, Clip 1.
-- **Other explosives** — Grenade / Mortar / Shiv-Grenade / Flash-Bang Grenade / Rocket Launcher — not in QS Table 19. Source for their canonical stats is in a different QS table not yet extracted. Existing values left as-is; flagged for follow-up audit.
+- **Molotov** in `EXPLOSIVE_WEAPONS` at `5+2d6` Rare 100% RP no Burning trait. Diverges from QS by a lot - flipping to canon: `1+1d3` Uncommon 50% RP + Tracking + Burning(1).
+- **Tranquilizer Gun** missing. Adding to `RANGED_WEAPONS` with the override stats - QS canon is `0` damage / 50% RP which renders as 0/0 every hit (useless). Override per Xero: `1d3` base × 400% RP = up to 12 RP per hit (avg 8), one-shot KO on most NPCs, Stun trait fires. Range Medium, Rare ammo, Clip 1.
+- **Other explosives** - Grenade / Mortar / Shiv-Grenade / Flash-Bang Grenade / Rocket Launcher - not in QS Table 19. Source for their canonical stats is in a different QS table not yet extracted. Existing values left as-is; flagged for follow-up audit.
 
 ---
 
@@ -32,15 +32,15 @@ the data; user overrides documented inline.
 | Name | Rarity | ENC | DM | Notes |
 |---|---|---|---|---|
 | Improvised (replaces Chainmail) | Uncommon | 2 | 3 | Requires PHY 1 to wear or -1 CMod to all actions. |
-| Leather | Common | 1 | 1 | — |
-| Makeshift Shield | Common | 1 | 1 | — |
-| Metal Helmet | Uncommon | 0 | 1 | — |
+| Leather | Common | 1 | 1 | - |
+| Makeshift Shield | Common | 1 | 1 | - |
+| Metal Helmet | Uncommon | 0 | 1 | - |
 | Plate Steel | Common | 3 | 4 | Requires PHY 1 to wear or -2 CMod to all actions. |
-| Riot Gear | Uncommon | 2 | 2 | — |
+| Riot Gear | Uncommon | 2 | 2 | - |
 | Riot Shield | Uncommon | 1 | 1 | **Reactive: DM applies vs melee/unarmed attacks only.** |
-| Tactical Armor | Uncommon | 1 | 2 | — |
+| Tactical Armor | Uncommon | 1 | 2 | - |
 
-Eight entries. Chainmail dropped (off-tone for post-apoc) and replaced with **Improvised** at the same stats — represents scrap-metal-lashed-together armor that fits the setting. Riot Shield knocked from -2 → -1 + a reactive flag so it doesn't double-stack with full Riot Gear in head-on engagements (only kicks in vs melee).
+Eight entries. Chainmail dropped (off-tone for post-apoc) and replaced with **Improvised** at the same stats - represents scrap-metal-lashed-together armor that fits the setting. Riot Shield knocked from -2 → -1 + a reactive flag so it doesn't double-stack with full Riot Gear in head-on engagements (only kicks in vs melee).
 
 ---
 

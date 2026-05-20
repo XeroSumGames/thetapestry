@@ -1,8 +1,8 @@
-# Quickstart Canon Promotion — Test Plan (2026-05-08)
+# Quickstart Canon Promotion - Test Plan (2026-05-08)
 
 Batch: Stabilise FIX, Dice Check action, Subsistence Damage canon,
 Rations rarity fix, new Rations rules page. Lasting Wounds Table 12 +
-Item Condition Table 10 already shipped — verified in audit.
+Item Condition Table 10 already shipped - verified in audit.
 
 Live URL: `https://thetapestry.distemperverse.com`
 
@@ -10,7 +10,7 @@ Live URL: `https://thetapestry.distemperverse.com`
 
 ## 1. Stabilise duration FIX
 
-**File:** `app/rules/combat/incapacitation/page.tsx:71` — copy now reads
+**File:** `app/rules/combat/incapacitation/page.tsx:71` - copy now reads
 `1d6 − PHY AMod rounds (minimum 1 round)`. Code at
 `app/stories/[id]/table/page.tsx:5076` and `:5091` already uses
 `Math.floor(Math.random() * 6) + 1 - phyAmod` (1d6 − PHY); only the
@@ -32,7 +32,7 @@ rules page copy was wrong.
 
 ## 2. Dice Check 18th combat action
 
-**File:** `app/rules/combat/combat-rounds/page.tsx` — new row inserted
+**File:** `app/rules/combat/combat-rounds/page.tsx` - new row inserted
 between `Defend` and `Distract`.
 
 **Smoke:**
@@ -46,7 +46,7 @@ between `Defend` and `Distract`.
 
 ## 3. Subsistence Damage canon update
 
-**File:** `app/rules/combat/damage/page.tsx` — `Starvation & Dehydration`
+**File:** `app/rules/combat/damage/page.tsx` - `Starvation & Dehydration`
 sub-section renamed to `Subsistence Damage`, anchor id changed from
 `starvation` → `subsistence`. Copy updated to QS canon:
 - Day 1: no impact.
@@ -60,27 +60,27 @@ sub-section renamed to `Subsistence Damage`, anchor id changed from
 1. Open `/rules/combat/damage`.
 2. Scroll to Environmental Damage. Confirm sub-section title is
    `Subsistence Damage` (not `Starvation & Dehydration`).
-3. Click the inline link to `Rations` — should land on
+3. Click the inline link to `Rations` - should land on
    `/rules/equipment/rations` without 404.
 
 **GM tool spot-check:**
 1. On the table page, click a PC's row to open their inline
    character sheet. (You can also click `🎲 Dice Check` in the
-   action bar during their turn — same sheet opens.)
+   action bar during their turn - same sheet opens.)
 2. Scroll to the bottom row labeled `GM Actions: Rest, Stress,
    Environmental Damage`. The three buttons are
    **Rest | Reduce Stress | Env. Damage**.
 3. Click **Env. Damage** → prompt asks 1=Falling / 2=Drowning /
    3=Subsistence. Confirm option 3 reads
    `Subsistence (1 WP + 1 RP/day, day 2+)`.
-4. Pick option 3 — confirm the PC loses **both** 1 WP and 1 RP
+4. Pick option 3 - confirm the PC loses **both** 1 WP and 1 RP
    (previously only RP was deducted).
 
 ---
 
 ## 4. Rations rules page (new)
 
-**File:** `app/rules/equipment/rations/page.tsx` — Table 16 reference;
+**File:** `app/rules/equipment/rations/page.tsx` - Table 16 reference;
 3 entries: Standard / Luxury / Military Grade. `lib/rules/sections.ts`
 gets a new `rations` anchor in the `equipment` section.
 
@@ -88,9 +88,9 @@ gets a new `rations` anchor in the `equipment` section.
 1. Open `/rules/equipment` → confirm sub-nav has a `Rations` pill at
    the end (after Item Condition, Item Traits, Upkeep).
 2. Click into `Rations`. Confirm 3 rows in the table:
-   - Standard Rations — Common — ENC 0.5
-   - Luxury Rations — Uncommon — ENC 0.5
-   - Military Grade Rations — Rare — ENC 0.25
+   - Standard Rations - Common - ENC 0.5
+   - Luxury Rations - Uncommon - ENC 0.5
+   - Military Grade Rations - Rare - ENC 0.25
 3. Confirm the closing paragraph notes `2 Rations` as the starting
    default.
 
@@ -98,7 +98,7 @@ gets a new `rations` anchor in the `equipment` section.
 
 ## 5. Wizard Rations rarity fix
 
-**File:** `components/wizard/StepEight.tsx` — Luxury Rations
+**File:** `components/wizard/StepEight.tsx` - Luxury Rations
 `Uncommon` → `Common`; copy tightened to `1 day food + water`.
 
 **Smoke:**
@@ -126,5 +126,5 @@ gets a new `rations` anchor in the `equipment` section.
   Flagged in `tasks/open-work-checklist-2026-05-06.md`. The new
   rules page documents the canonical default; the wizard still
   takes a single optional pick.
-- **Special / Explosive Weapons + Armor system** — both still parked
+- **Special / Explosive Weapons + Armor system** - both still parked
   on Xero design call (per the May-06 checklist).

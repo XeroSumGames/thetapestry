@@ -1,4 +1,4 @@
-# Phase 4C — Setting Hubs testplan
+# Phase 4C - Setting Hubs testplan
 
 Verifies the new `/settings/[setting]` dynamic route renders correctly for District Zero + Kings Crossroads, the sidebar links land, the canon-pin map deep-links work, and the "Run a Campaign in [Setting]" CTA pre-fills the new-story flow.
 
@@ -8,7 +8,7 @@ Verifies the new `/settings/[setting]` dynamic route renders correctly for Distr
 
 ## 1. Hub renders for both featured settings
 
-1. Sign in (any non-Thriver is fine — guests get bounced to /login).
+1. Sign in (any non-Thriver is fine - guests get bounced to /login).
 2. Visit `/settings/district_zero` directly. Confirm the page renders with:
    - Header: "The Distemperverse · Setting Hub" eyebrow, big "DISTRICT ZERO" title, italic tagline "East Tulsa, Oklahoma. The District holds.", blurb paragraph below.
    - Two CTA buttons: teal-bordered "Run a Campaign in District Zero" and a gray "🗺 Open on Map".
@@ -42,7 +42,7 @@ Verifies the new `/settings/[setting]` dynamic route renders correctly for Distr
 2. Each block lists up to 5 most-recent approved posts tagged with this setting. Each row shows title (truncated to one line) + author + date.
 3. Click "See all →" on the Forums block → routes to `/campfire?tab=forums&setting=district_zero`. Confirm the destination's setting context dropdown is pre-selected to District Zero AND the chip strip on the embedded forums surface follows.
 4. Repeat for War Stories and LFG → routes to `/campfire?tab=war-stories&setting=district_zero` and `/campfire?tab=lfg&setting=district_zero` respectively.
-5. Pending posts (yours or others') should NOT appear in the hub feed — only approved.
+5. Pending posts (yours or others') should NOT appear in the hub feed - only approved.
 6. Empty block state: "Nothing posted yet."
 
 ## 5. "Run a Campaign in [Setting]" CTA
@@ -77,10 +77,10 @@ Verifies the new `/settings/[setting]` dynamic route renders correctly for Distr
 ## 9. RLS sanity
 
 The hub queries are public-read on approved content only:
-- `world_communities` filter: `moderation_status='approved'` + `source_campaign_id IN (...)` — should return only approved rows.
+- `world_communities` filter: `moderation_status='approved'` + `source_campaign_id IN (...)` - should return only approved rows.
 - `forum_threads` / `war_stories` / `lfg_posts` filters: `moderation_status='approved'` + `setting=<slug>`. RLS already gates this, but the explicit `eq` is a belt-and-braces filter.
 
-Confirm by signing in as a non-author non-thriver user and visiting both hub pages — pending content from other authors must NOT leak through.
+Confirm by signing in as a non-author non-thriver user and visiting both hub pages - pending content from other authors must NOT leak through.
 
 ---
 
@@ -88,7 +88,7 @@ Confirm by signing in as a non-author non-thriver user and visiting both hub pag
 
 1. **World Event feed.** Phase 4D will surface auto-posts from per-community Morale outcomes / migrations / dissolutions on the hub. Today the Setting Feed only shows manual Forums/War Stories/LFG content.
 
-2. **Other settings get hubs.** DZ + Kings Crossroads only per the locked design. Mongrels / Chased / Custom / Arena are deferred — they fall through to a `notFound()` if you visit `/settings/<their_slug>` directly. Adding a hub for any of them is one entry in `SETTING_META` (lib/setting-meta.ts) plus their existing pin set in lib/setting-pins.ts.
+2. **Other settings get hubs.** DZ + Kings Crossroads only per the locked design. Mongrels / Chased / Custom / Arena are deferred - they fall through to a `notFound()` if you visit `/settings/<their_slug>` directly. Adding a hub for any of them is one entry in `SETTING_META` (lib/setting-meta.ts) plus their existing pin set in lib/setting-pins.ts.
 
 3. **Pagination / Filters / Sort.** The Setting Feed shows top-5 most-recent only. Phase 4E will add full pagination, FTS, reactions, etc. on the underlying surfaces.
 

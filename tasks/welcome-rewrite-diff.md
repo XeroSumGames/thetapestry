@@ -1,10 +1,10 @@
-# `/welcome` copy — what changed (original → current)
+# `/welcome` copy - what changed (original → current)
 
-The `/welcome` page started with my original copy in commit `61b8fa3` (2026-04-28 redesign as "A Guide to the Tapestry"). You then rewrote most of it across two passes (`d6fba54`, `1392483`, plus this session's edit). This is a side-by-side so nothing valuable is lost — pull lines back from the **Original** column whenever the rewrite drops something you wanted.
+The `/welcome` page started with my original copy in commit `61b8fa3` (2026-04-28 redesign as "A Guide to the Tapestry"). You then rewrote most of it across two passes (`d6fba54`, `1392483`, plus this session's edit). This is a side-by-side so nothing valuable is lost - pull lines back from the **Original** column whenever the rewrite drops something you wanted.
 
 If you want any of the originals restored, point at the section + I'll patch them in.
 
-## Hero — page title
+## Hero - page title
 
 | Slot | Original (`61b8fa3`) | Current |
 |---|---|---|
@@ -18,11 +18,11 @@ If you want any of the originals restored, point at the section + I'll patch the
 | | Value |
 |---|---|
 | Original | `THE TAPESTRY` (small red eyebrow above the 6-card grid) |
-| Current | (no heading — grid sits flush under the hero) |
+| Current | (no heading - grid sits flush under the hero) |
 
 **Lost:** the "THE TAPESTRY" eyebrow as a section anchor. You removed it intentionally; flag for the record.
 
-## Destination cards (6 — original / 5 + Rumors below Campfire — current)
+## Destination cards (6 - original / 5 + Rumors below Campfire - current)
 
 ### The World
 
@@ -38,7 +38,7 @@ If you want any of the originals restored, point at the section + I'll patch the
 |---|---|
 | **Your roster of characters. Build new ones via Backstory Generation, the Quick Character Generator, or the Random Character path. Sheets, gear, and history all live here.** | Your roster of characters. Here you can create new ones via the Backstory Generation process that guides you through every step of your characters life before the pandemic, the Quick Character Generator for those that know the system and have a concept in mind, or pick a completely Random Character. |
 
-**Lost:** "Sheets, gear, and history all live here." — a nice closer that pointed at what's INSIDE this destination beyond just creation.
+**Lost:** "Sheets, gear, and history all live here." - a nice closer that pointed at what's INSIDE this destination beyond just creation.
 
 ### My Stories
 
@@ -46,13 +46,13 @@ If you want any of the originals restored, point at the section + I'll patch the
 |---|---|
 | Campaigns and one-shots you're part of, as a player or GM. **The story table, scenes, and session history all hang off of a Story.** | Whether it is as a player or GM, here is where you can find the various campaigns and one-shots you're part of. This is where you launch The Table, where stories are told. |
 
-**Lost:** "The story table, scenes, and session history all hang off of a Story" — that sentence taught readers the data model in a way the new copy doesn't.
+**Lost:** "The story table, scenes, and session history all hang off of a Story" - that sentence taught readers the data model in a way the new copy doesn't.
 
 ### My Communities
 
 | Original | Current |
 |---|---|
-| Communities are persistent groups of survivors who share a base, resources, and Morale. **Recruit, lose, and grow them across sessions — XSE §08 Community drives the rules.** | Communities are persistent groups of survivors who share a base and resources. Recruit NPCs to your side as cohorts, conscripts, or converts as you grow across sessions, leaving an indelible mark on this persistent world. |
+| Communities are persistent groups of survivors who share a base, resources, and Morale. **Recruit, lose, and grow them across sessions - XSE §08 Community drives the rules.** | Communities are persistent groups of survivors who share a base and resources. Recruit NPCs to your side as cohorts, conscripts, or converts as you grow across sessions, leaving an indelible mark on this persistent world. |
 
 **Lost:** "share a base, resources, and **Morale**" (Morale dropped). The "XSE §08 Community drives the rules" rule citation was removed (consistent with the SRD-wording sweep direction). Tradeoff: the new copy adds the cohort/conscript/convert vocabulary which is good.
 
@@ -64,24 +64,24 @@ If you want any of the originals restored, point at the section + I'll patch the
 
 **Lost (and dangling):** the card title is now **"Rumors"** but the body still describes Modules and the button still says "Browse Modules". Pick a direction:
 - (A) Keep title "Rumors" + retune body to use rumor framing ("Hear what other GMs are running…") + button "Hear Rumors"
-- (B) Revert title to "Modules" — the body and button already match
+- (B) Revert title to "Modules" - the body and button already match
 - (C) Keep both (current state) and accept the framing inconsistency
 
 ### The Campfire
 
 | Original | Current |
 |---|---|
-| The **town notice board** for the Tapestry — Looking-for-Group posts, Rumors from the world map, War Stories, and world events. *(In progress.)* | The heart of the Tapestry, here players can find groups and GMs can find players. Built-in Looking-for-Group tools, Messaging, Forums, player-reported War Stories, and both rumors and confirmed world events. *(In progress.)* |
+| The **town notice board** for the Tapestry - Looking-for-Group posts, Rumors from the world map, War Stories, and world events. *(In progress.)* | The heart of the Tapestry, here players can find groups and GMs can find players. Built-in Looking-for-Group tools, Messaging, Forums, player-reported War Stories, and both rumors and confirmed world events. *(In progress.)* |
 
 **Lost:** "town notice board" was a strong setting-fit metaphor. New copy is more prosaic but more functional.
 
-## Building a Survivor — card copy
+## Building a Survivor - card copy
 
 ### Backstory Generation
 
 | Original | Current |
 |---|---|
-| **Spend CDP across the chapters of your survivor's life — the rich path. Best for first survivors.** | Recommended for first time survivors, the Background Generation process allows you to spend Character Development Points during the different stages of your survivor's life to craft a character that directly matches your vision. |
+| **Spend CDP across the chapters of your survivor's life - the rich path. Best for first survivors.** | Recommended for first time survivors, the Background Generation process allows you to spend Character Development Points during the different stages of your survivor's life to craft a character that directly matches your vision. |
 
 **Lost:** "the rich path" (a nice qualitative pitch). New version expands "CDP" → "Character Development Points" (clearer for newcomers).
 
@@ -91,7 +91,7 @@ If you want any of the originals restored, point at the section + I'll patch the
 |---|---|
 | **Skip the chapters. Spend a flat 20 CDP and customize directly. For experienced players.** | Recommended for experienced users, this option lets you spend 20 CDP on attributes and skills and directly customize your character. |
 
-**Lost:** "Skip the chapters." — a punchy lead that signaled the contrast with Backstory Generation. The new copy doesn't connect to the Backstory framing.
+**Lost:** "Skip the chapters." - a punchy lead that signaled the contrast with Backstory Generation. The new copy doesn't connect to the Backstory framing.
 
 ### Random Character
 
@@ -99,15 +99,15 @@ If you want any of the originals restored, point at the section + I'll patch the
 
 ### Creating a Survivor
 
-(Unchanged: "The full guide — how Character Development Points (CDP), chapters, and trait acquisition work.")
+(Unchanged: "The full guide - how Character Development Points (CDP), chapters, and trait acquisition work.")
 
 ## Quick Reference card
 
 | Original | Current |
 |---|---|
-| Cheat sheets and rules excerpts will live here — common terms (CDP, WP, RP, Stress, Inspiration), house rules, and links into **the SRD & Distemper CRB**. Tell me what you want surfaced first and I'll wire it in. | Cheat sheets and rules excerpts will live here — common terms (CDP, WP, RP, Stress, Inspiration), house rules, and links into **the Distemper Core Rulebook and the Xero Sum Engine SRD**. Tell me what you want surfaced first and I'll wire it in. |
+| Cheat sheets and rules excerpts will live here - common terms (CDP, WP, RP, Stress, Inspiration), house rules, and links into **the SRD & Distemper CRB**. Tell me what you want surfaced first and I'll wire it in. | Cheat sheets and rules excerpts will live here - common terms (CDP, WP, RP, Stress, Inspiration), house rules, and links into **the Distemper Core Rulebook and the Xero Sum Engine SRD**. Tell me what you want surfaced first and I'll wire it in. |
 
-**Lost:** the brevity of "SRD & Distemper CRB" — the new "Distemper Core Rulebook and the Xero Sum Engine SRD" is more discoverable but verbose. (You may want this to match the SRD-wording-sweep TODO that wants "the rules" in user-visible copy.)
+**Lost:** the brevity of "SRD & Distemper CRB" - the new "Distemper Core Rulebook and the Xero Sum Engine SRD" is more discoverable but verbose. (You may want this to match the SRD-wording-sweep TODO that wants "the rules" in user-visible copy.)
 
 ## Layout / structural changes (this session)
 

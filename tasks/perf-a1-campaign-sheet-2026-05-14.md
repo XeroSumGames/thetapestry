@@ -1,4 +1,4 @@
-# Perf A1 — Column-Pick + Debounce · 2026-05-14
+# Perf A1 - Column-Pick + Debounce · 2026-05-14
 
 ## Fix 1: Column-pick results
 
@@ -10,16 +10,16 @@ Reasoning: `id` is used throughout for updates/callbacks; `user_id` checked at l
 ### `character_states` table (character-sheet/page.tsx line 52)
 `select('id,wp_current,wp_max,rp_current,rp_max,stress,insight_dice,morality,cdp,death_countdown,incap_rounds')`
 
-Reasoning: exact match of every field destructured into `LiveState` at lines 55–61, plus `id` for `setStateId`. The realtime UPDATE handler at line 83 receives `payload.new` from postgres (all columns) — that path is unaffected by this select change.
+Reasoning: exact match of every field destructured into `LiveState` at lines 55-61, plus `id` for `setStateId`. The realtime UPDATE handler at line 83 receives `payload.new` from postgres (all columns) - that path is unaffected by this select change.
 
-### `campaign-sheet/page.tsx` — no change needed
+### `campaign-sheet/page.tsx` - no change needed
 `loadVehicles` already does `select('vehicles')` and the initial load already uses `select('name, gm_user_id, clock, start_canon_day')`. The task description referenced a third select('*') but it had already been column-picked.
 
 ---
 
 ## Fix 2: Debounce implementation
 
-**File:** `app/campaign-sheet/page.tsx` — lines 80–155 (post-edit)
+**File:** `app/campaign-sheet/page.tsx` - lines 80-155 (post-edit)
 
 `refetchTimerRef` (useRef) holds the pending timer ID. `scheduleRefetch` (useCallback, deps `[loadParty, loadPending]`) clears any existing timer and sets a 200ms one that calls both loaders. All three realtime handlers that previously called `loadParty()` or `loadPending()` directly now call `scheduleRefetch()` instead:
 - `broadcastCh` `clock_advanced` handler (was `await Promise.all([loadParty(), loadPending()])`)
@@ -36,14 +36,14 @@ Reasoning: exact match of every field destructured into `LiveState` at lines 55�
 
 ## Intentionally not changed
 
-- `loadVehicles` left as a plain async function — not on the debounced path, called for a distinct data type (vehicle array diff), no burst scenario.
-- Pre-existing TS2322 prop-type mismatches at lines 345/356/369 in campaign-sheet JSX — out of scope, pre-date this change.
+- `loadVehicles` left as a plain async function - not on the debounced path, called for a distinct data type (vehicle array diff), no burst scenario.
+- Pre-existing TS2322 prop-type mismatches at lines 345/356/369 in campaign-sheet JSX - out of scope, pre-date this change.
 - No changes to CharacterCard, ProgressionLog, or any other component.
 
 ---
 
 ## Smoke-test plan
 
-1. **Party data still loads:** Open the campaign sheet (`/campaign-sheet?c=<id>`). Confirm Party Status shows all PCs with correct WP/RP/Stress, Pending Effects lists any active heals, and Vehicles panel is populated. Open a character sheet (`/character-sheet?c=<id>&char=<id>`) — name, stats bar, session notes, and progression log must all render.
+1. **Party data still loads:** Open the campaign sheet (`/campaign-sheet?c=<id>`). Confirm Party Status shows all PCs with correct WP/RP/Stress, Pending Effects lists any active heals, and Vehicles panel is populated. Open a character sheet (`/character-sheet?c=<id>&char=<id>`) - name, stats bar, session notes, and progression log must all render.
 
 2. **Realtime still propagates (debounced):** As GM, advance the clock by 1h. Party Status and Pending Effects should update within ~400ms (200ms debounce + network). In the browser network tab, confirm only one pair of XHR/fetch calls fires per advance rather than N calls for N simultaneous DB events.

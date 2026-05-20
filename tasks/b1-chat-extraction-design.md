@@ -1,33 +1,33 @@
-# B1 — Chat panel extraction design
+# B1 - Chat panel extraction design
 
 Plan for extracting the chat-related code out of `app/stories/[id]/table/page.tsx`. Before any code changes.
 
 ## What's currently in the table page
 
 ### State (4 things)
-- `chatMessages` (line 737) — array of message rows
-- `chatInput` (line 738) — composer textarea content
-- `chatChannelRef` (line 739) — the realtime channel handle
-- `whisperTarget` (line 740) — currently selected whisper recipient. **Shared with the rolls tab UI** (clicking "whisper this player" on a roll sets it).
+- `chatMessages` (line 737) - array of message rows
+- `chatInput` (line 738) - composer textarea content
+- `chatChannelRef` (line 739) - the realtime channel handle
+- `whisperTarget` (line 740) - currently selected whisper recipient. **Shared with the rolls tab UI** (clicking "whisper this player" on a roll sets it).
 
 ### Functions (2)
-- `loadChat(campaignId)` (lines 867-894) — fetches last 100, filters whispers client-side, auto-switches to chat tab on incoming whisper
-- `sendChat()` (lines 896-1000) — handles `/d` dice rolls, `/w` whisper command parsing, then inserts into `chat_messages`
+- `loadChat(campaignId)` (lines 867-894) - fetches last 100, filters whispers client-side, auto-switches to chat tab on incoming whisper
+- `sendChat()` (lines 896-1000) - handles `/d` dice rolls, `/w` whisper command parsing, then inserts into `chat_messages`
 
 ### Effects / channels
 - Line 1157: `loadChat(id)` fired in initial Promise.all
 - Lines 1236-1237: subscribes to `postgres_changes` on `chat_messages` filtered by campaign_id, calls `loadChat(id)` on event
-- Lines 1261-1266: `logs_cleared` broadcast handler — `setChatMessages([])` + `loadChat(id)`. **This handler is on the INITIATIVE channel, not the chat channel.**
+- Lines 1261-1266: `logs_cleared` broadcast handler - `setChatMessages([])` + `loadChat(id)`. **This handler is on the INITIATIVE channel, not the chat channel.**
 - Line 1392: cleanup `removeChannel(chatChannelRef.current)`
 
 ### Render (3 places)
-- **Lines 5856-5859**: Tab switcher buttons (`'rolls' | 'chat' | 'both'`) — drives both rolls and chat. NOT chat-only.
+- **Lines 5856-5859**: Tab switcher buttons (`'rolls' | 'chat' | 'both'`) - drives both rolls and chat. NOT chat-only.
 - **Lines 6195-6215**: Chat-tab render block (chat-only message list)
-- **Lines 6217-6244**: Both-tab merged render — interleaves rolls + chat sorted by created_at. Re-renders the chat message visual using duplicated JSX.
+- **Lines 6217-6244**: Both-tab merged render - interleaves rolls + chat sorted by created_at. Re-renders the chat message visual using duplicated JSX.
 - **Lines 6422-6443**: Bottom input composer (textarea + Send button + whisper indicator). Visible when `feedTab === 'chat' || 'both'`.
 
 ### Cross-cutting touch points
-- `setChatMessages([])` is called from `startSession` (line 2588) and `endSession` (line 2635) — these clear local state synchronously before the broadcast goes out.
+- `setChatMessages([])` is called from `startSession` (line 2588) and `endSession` (line 2635) - these clear local state synchronously before the broadcast goes out.
 - `chat_messages` table is also DELETEd from supabase in `startSession` (line 2609) and `endSession` (line 2661). That DELETE belongs with session lifecycle, not chat.
 - Whisper flow at line 7417: clicking "whisper this player" sets `whisperTarget` and switches `feedTab` to `'chat'`. Lives in the rolls render.
 
@@ -37,7 +37,7 @@ Plan for extracting the chat-related code out of `app/stories/[id]/table/page.ts
 2. **The Both tab merges chat + rolls.** A pure `<TableChat>` component can't render that view alone. Either:
    - Parent keeps the merged render (chat exposes its messages via prop or hook)
    - Chat component takes `interleavedRolls` as a prop and handles all 3 modes itself
-3. **`whisperTarget` is also shared** — the rolls tab UI sets it (line 7417). Either move it into a context, or keep it in the parent and pass down.
+3. **`whisperTarget` is also shared** - the rolls tab UI sets it (line 7417). Either move it into a context, or keep it in the parent and pass down.
 4. **Code duplication** between Chat-tab render (6199-6213) and Both-tab chat render (6230-6240). Extraction is a good time to dedupe.
 
 ## Proposed component shape
@@ -71,7 +71,7 @@ interface TableChatProps {
 
 Each stage is a separate commit + safepoint tag. Tested locally before moving to next stage.
 
-### Stage 1 — Custom hook (no render change)
+### Stage 1 - Custom hook (no render change)
 Create `hooks/useChatPanel.ts`:
 - Owns `chatMessages`, `chatInput`, `chatChannelRef`
 - Exports `{ messages, input, setInput, send, clear, refetch }` plus internal channel subscription via useEffect
@@ -82,7 +82,7 @@ Create `hooks/useChatPanel.ts`:
 
 **Tag:** `safepoint/b1-stage1-hook`
 
-### Stage 2 — Extract chat-only render
+### Stage 2 - Extract chat-only render
 Create `components/TableChat.tsx`. Initial responsibility: chat-only tab + composer. Both-tab merged render STAYS in parent (reads `chat.messages` via the hook's exposed array).
 
 Parent renders `{feedTab === 'chat' && <TableChat ... />}` and the composer block conditionally.
@@ -91,7 +91,7 @@ Parent renders `{feedTab === 'chat' && <TableChat ... />}` and the composer bloc
 
 **Tag:** `safepoint/b1-stage2-render`
 
-### Stage 3 — Pull Both-tab render into the component
+### Stage 3 - Pull Both-tab render into the component
 TableChat now takes `rollsForBothTab?: RollEntry[]` and handles all 3 tab modes internally. Composer moves inside the component too.
 
 Parent renders `<TableChat feedTab={feedTab} rollsForBothTab={feedTab === 'both' ? rolls : undefined} />`.
@@ -100,7 +100,7 @@ Parent renders `<TableChat feedTab={feedTab} rollsForBothTab={feedTab === 'both'
 
 **Tag:** `safepoint/b1-stage3-bothtab`
 
-### Stage 4 — Lazy-load
+### Stage 4 - Lazy-load
 `const TableChat = dynamic(() => import('../components/TableChat'), { ssr: false, loading: () => null })`.
 
 **Risk:** very low. Mechanical dynamic() wrap.
@@ -109,7 +109,7 @@ Parent renders `<TableChat feedTab={feedTab} rollsForBothTab={feedTab === 'both'
 
 ## Things I'm explicitly NOT doing
 
-- Not extracting the `feedTab` tab switcher (it's shared with rolls — that goes with B2).
+- Not extracting the `feedTab` tab switcher (it's shared with rolls - that goes with B2).
 - Not extracting `whisperTarget` state (shared with rolls render).
 - Not changing the realtime subscription behavior or RLS filtering.
 - Not changing the slash-command parsing or dice-roll output.
@@ -118,14 +118,14 @@ Parent renders `<TableChat feedTab={feedTab} rollsForBothTab={feedTab === 'both'
 ## Test plan per stage
 
 Each stage gets a tasks/ test plan. Generic checks:
-1. Send a normal chat message — appears for self and other clients in real time.
-2. Send `/d 3d6+2` — formatted dice result appears as a chat message.
-3. Send `/w gm hi` — whisper to GM, only visible to sender + GM.
-4. Send `/w PercyBent hello` — whisper to a specific PC by name.
+1. Send a normal chat message - appears for self and other clients in real time.
+2. Send `/d 3d6+2` - formatted dice result appears as a chat message.
+3. Send `/w gm hi` - whisper to GM, only visible to sender + GM.
+4. Send `/w PercyBent hello` - whisper to a specific PC by name.
 5. Click "whisper this player" on a roll → `whisperTarget` set, `feedTab` switches to chat. Type a message → goes to that player.
-6. Open chat tab vs both tab — both render correctly.
-7. Start a new session as GM — chat clears (local + DB).
-8. End a session — chat clears.
+6. Open chat tab vs both tab - both render correctly.
+7. Start a new session as GM - chat clears (local + DB).
+8. End a session - chat clears.
 
 If any stage breaks any of these, roll back the safepoint tag for that stage and we figure out why.
 
@@ -146,4 +146,4 @@ That triggers Vercel deploy and the lazy-loaded chat is live.
 **Confirm before I start coding:**
 - Does the staged plan make sense to you, or do you want me to bundle stages?
 - Any concerns about the prop shape?
-- The hook approach (Stage 1) is gentler than going straight to a component — sound right?
+- The hook approach (Stage 1) is gentler than going straight to a component - sound right?

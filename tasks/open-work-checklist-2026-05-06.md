@@ -1,4 +1,4 @@
-# The Tapestry — Open Work Checklist
+# The Tapestry - Open Work Checklist
 
 **Generated 2026-05-06** after the marathon-session prune.
 Cross items off as you finish them. Each line is one bug / issue /
@@ -8,10 +8,10 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 
 ---
 
-## TOP PRIORITY — Playtest carry-over
+## TOP PRIORITY - Playtest carry-over
 
-- [x] **Random character — Medic produces no First Aid skill.** RESOLVED
-      2026-05-11 — verified `app/characters/random/page.tsx:146-167`
+- [x] **Random character - Medic produces no First Aid skill.** RESOLVED
+      2026-05-11 - verified `app/characters/random/page.tsx:146-167`
       profession-skill floor: every Medic random character gets 10 CDP
       across the 5 profession skills (each min 1, max 3) merged with
       paradigm via max(). Medicine\* always lands at level 1+. Player
@@ -21,7 +21,7 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
       aid, diagnosis, treatment, emergency stabilization, and advanced
       medical care".
 
-- [ ] **Vehicle passenger sync — terrain rejection.** Passenger
+- [ ] **Vehicle passenger sync - terrain rejection.** Passenger
       auto-move (`7f71bce`) follows the vehicle without checking
       whether the destination cell is walkable for a passenger
       (e.g. wall, water, off-road). Currently passengers track even
@@ -30,7 +30,7 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 
 ---
 
-## BUGS — Need repro / decision before code
+## BUGS - Need repro / decision before code
 
 - [ ] **Initiative lag.** Perceived delay between End-Turn and the
       next combatant going active. Needs solo repro on your machine.
@@ -42,18 +42,18 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
       clean; `consumeAction` should fire on every roll-completion
       path. Need char + skill + `[consumeAction]` console log.
 
-- [ ] **Tactical map mouse-pan via drag — broken.** WASD works;
+- [ ] **Tactical map mouse-pan via drag - broken.** WASD works;
       click-drag on empty cell doesn't scroll. Multiple ship+revert
       attempts; deferred 2026-04-27 as "no fix path identified."
 
-- [ ] **HP render lag** — previous-session follow-up.
+- [ ] **HP render lag** - previous-session follow-up.
       Possibly already fixed by the optimistic-local-patch sweep
       (Restore-to-Full-Health 2026-05-05, damage paths). Needs
       runtime re-verification.
 
 ---
 
-## PARTIALS — Finish what's started
+## PARTIALS - Finish what's started
 
 - [ ] **Modal unification.** Normalize Stabilize, Distract,
       Coordinate, Group Check, Gut Instinct, First Impression to
@@ -66,7 +66,7 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 - [ ] **Featured items.** Thriver promote-to-featured for forum
       threads + war stories. (Module featured shipped.)
 
-- [ ] **DZ canon layer.** District Zero–specific canon scope/UX.
+- [ ] **DZ canon layer.** District Zero-specific canon scope/UX.
       (Generic `is_canon` badge shipped.)
 
 - [ ] **DZ timeline visualization.** Chronological page surfacing
@@ -82,14 +82,14 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 - [ ] **In-app SRD search.** SRD content is structurally complete;
       `/rules/*` just needs a search UI on top of it.
 
-- [x] **Thriver godmode UI sweep — surface 5 of 5.** Character-sheet
+- [x] **Thriver godmode UI sweep - surface 5 of 5.** Character-sheet
       edit affordance for non-owned PCs. Shipped `ae0933a` 2026-05-08:
       character-sheet canEdit, /characters/[id]/edit ownership bypass,
       table-page CharacterSheet canEdit widened to gmLike.
 
 ---
 
-## CANON PROMOTIONS — Quickstart v1.0.03 audit (queued)
+## CANON PROMOTIONS - Quickstart v1.0.03 audit (queued)
 
 Tracked from the Distemper Quickstart v1.0.03 audit. Canon > SRD >
 Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
@@ -97,16 +97,16 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ### Ready to ship (no blockers)
 
-- [x] **Stabilise duration FIX.** SHIPPED 2026-05-08D — rules page
+- [x] **Stabilise duration FIX.** SHIPPED 2026-05-08D - rules page
       copy in `app/rules/combat/incapacitation/page.tsx:71` updated
       from `16 − PHY AMod` to `1d6 − PHY AMod`. The engine was
       already correct (`app/stories/[id]/table/page.tsx:5076`).
 
 - [x] **Add "Dice Check" combat action (18th entry).** SHIPPED
-      2026-05-08D — inserted alphabetically between Defend and
+      2026-05-08D - inserted alphabetically between Defend and
       Distract in `app/rules/combat/combat-rounds/page.tsx`.
 
-- [x] **Subsistence Damage** — SHIPPED 2026-05-08D — Starvation &
+- [x] **Subsistence Damage** - SHIPPED 2026-05-08D - Starvation &
       Dehydration sub-section in `app/rules/combat/damage/page.tsx`
       renamed to **Subsistence Damage** (anchor `subsistence`); copy
       now Day 1 free / Day 2+ 1 WP + 1 RP per day; RP=0 → Incapacitated,
@@ -114,27 +114,27 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
       Env. Damage prompt + alert text in `components/CharacterCard.tsx`
       bumped to deduct WP+RP (was RP-only).
 
-- [x] **Rations promote** — PARTIAL SHIPPED 2026-05-08D — new
+- [x] **Rations promote** - PARTIAL SHIPPED 2026-05-08D - new
       `/rules/equipment/rations` page (Standard / Luxury / Military
       Grade with corrected rarities + ENC); equipment sub-nav anchor
       added. Wizard StepEight rarity fix: Luxury Uncommon → Common.
-      **Still open:** `2 starting Rations` data-model change — current
+      **Still open:** `2 starting Rations` data-model change - current
       `XSECharacter.rations` is a single string; promoting to
       `{ type, count }` requires wizard + persistence + edit-page +
       DB migration on existing characters. Tracked separately below.
 
 ### Needs design call from Xero (parked)
 
-- [x] **Special / Explosive Weapons** — SHIPPED 2026-05-09. Tranq
+- [x] **Special / Explosive Weapons** - SHIPPED 2026-05-09. Tranq
       Gun added to RANGED with Xero override stats (1d3 base × 400%
       RP via Stun-aware path). Molotov rebalanced to QS Table 19
       canon (1+1d3 Uncommon 50% RP + Tracking + Burning(1)).
       Flame-Thrower already matched. Other explosives (Grenade /
       Mortar / Shiv-Grenade / Flash-Bang / Rocket Launcher) left
-      unchanged — flagged for follow-up audit when a QS table for
+      unchanged - flagged for follow-up audit when a QS table for
       those entries is available.
 
-- [x] **Armor system** — SHIPPED 2026-05-09 (Phase 1). 8 entries
+- [x] **Armor system** - SHIPPED 2026-05-09 (Phase 1). 8 entries
       in `lib/xse-schema.ts:ARMOR` per QS Table 7 + Xero overrides
       (Chainmail → Improvised; Riot Shield knocked DM 2 → DM 1 +
       reactive_melee_only). Inventory-driven via `worn?: boolean`
@@ -147,18 +147,18 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
       button per worn armor, and auto-Upkeep on Moment of Low
       Insight in combat.
 
-### Verify first (may already exist — investigation only)
+### Verify first (may already exist - investigation only)
 
-- [x] **Lasting Wounds Table 12.** VERIFIED 2026-05-08D — fully
+- [x] **Lasting Wounds Table 12.** VERIFIED 2026-05-08D - fully
       shipped. Data lives at `lib/xse-schema.ts:572` (LASTING_WOUNDS,
       11 rolls 2-12) and is rendered on
       `/rules/combat/incapacitation` under §06.
 
-- [x] **Item Condition Table 10.** VERIFIED 2026-05-08D — fully
+- [x] **Item Condition Table 10.** VERIFIED 2026-05-08D - fully
       shipped. Data: `lib/xse-schema.ts:13` (5-state union) +
       `lib/weapons.ts:24` (CMod table). Rules pages:
       `/rules/equipment/item-condition` (5-state CMod table) and
-      `/rules/equipment/upkeep` (Upkeep Check transitions table —
+      `/rules/equipment/upkeep` (Upkeep Check transitions table -
       success stay, failure drop, Wild Success / High Insight up to
       Used, Dire Failure / Low Insight → Broken). Upkeep button
       already on `CharacterCard.tsx:751`.
@@ -176,18 +176,18 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ---
 
-## RULES COVERAGE — Verify / Build
+## RULES COVERAGE - Verify / Build
 
-- [x] **Infection rules coverage audit.** SHIPPED 2026-05-09 —
+- [x] **Infection rules coverage audit.** SHIPPED 2026-05-09 -
       CRB v0.9.2 p.114-115 extracted to `tasks/rules-extract-infection.md`,
       design decisions locked, rules page live at
       `/rules/combat/infection`, schema applied via
       `sql/infection-2026-05-09.sql`, GM "Infection" button +
       Treat Infection dropdown wired. Canon pinned in
       `memory/project_infection_canon.md`. **-2 CMod on physical
-      checks while sick** wired in `executeRoll` 2026-05-10 — the
+      checks while sick** wired in `executeRoll` 2026-05-10 - the
       sick CMod note lands in the roll-feed traitNotes
-      (`🤒 Sick (...) — -2 CMod on physical check.`) so the
+      (`🤒 Sick (...) - -2 CMod on physical check.`) so the
       player sees the deduction every time it fires.
 
 - [ ] **Armor system.** Build armor into the platform - likely affects
@@ -202,11 +202,11 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
       inventory item type, daily Subsistence Damage tick in GM Tools
       Time (alongside the existing encumbrance tick). Flagged 2026-05-08.
 
-- [ ] **Recruitment / Inspiration / Apprentice — disambiguate the four
+- [ ] **Recruitment / Inspiration / Apprentice - disambiguate the four
       mechanics in-game.** Flagged 2026-05-09. Current platform conflates
       or under-models the distinctions; needs separate in-game treatment
       so the player can tell which lever is being pulled:
-      - **Recruitment**: outcome tiers — **Cohort** vs. **Conscript** vs.
+      - **Recruitment**: outcome tiers - **Cohort** vs. **Conscript** vs.
         **Convert** (different commitment levels / community impact).
         Verify whether the existing Recruit modal surfaces these.
       - **First Impression**: applies as a **CMod** (one-shot social
@@ -216,7 +216,7 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
         the target on whatever they're rolling, not a CMod. Verify the
         SMod handoff path.
       - **Apprentice**: the picker / unlock surface fires **only on a
-        Moment of High Insight (6+6)** during a Recruit roll — not on
+        Moment of High Insight (6+6)** during a Recruit roll - not on
         Wild Success or any other outcome. Verify the gate is wired
         correctly; spec out the rules-page entry if it's missing.
       Likely needs a `tasks/rules-extract-recruitment-inspiration.md`
@@ -225,12 +225,12 @@ Quickstart, so these are platform schema changes (`lib/xse-schema.ts`
 
 ---
 
-## SECURITY HARDENING — Linter follow-ups
+## SECURITY HARDENING - Linter follow-ups
 
 Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 (~120 of ~130 linter warnings closed). Tier 3 remaining:
 
-- [x] **HaveIBeenPwned password-leak protection.** DONE 2026-05-08D —
+- [x] **HaveIBeenPwned password-leak protection.** DONE 2026-05-08D -
       flipped ON in Supabase dashboard (Authentication → Sign In /
       Providers → Email → "Prevent use of leaked passwords"). Closes
       the `auth_leaked_password_protection` linter row.
@@ -239,14 +239,14 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       (account-avatars, campaign-npcs, character-portraits,
       module-covers, object-tokens, portrait-bank, session-attachments,
       tactical-maps, war-stories) allow listing all files. URL access
-      still works without listing — listing exposes file inventory.
+      still works without listing - listing exposes file inventory.
       Per-bucket UX decision: do you need authors to see all their
       published assets? If yes, scope to author. If no, drop SELECT
       policy. Each bucket needs its own call.
 
 ---
 
-## OLDER BUGS — Genuinely open
+## OLDER BUGS - Genuinely open
 
 - [ ] **Gut Instinct results presentation needs rework.**
       *Design discussion: narrative card vs. sheet overlay vs. GM DM.*
@@ -270,9 +270,9 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       (`66f75e5`); deep-link / "Resume last session" tile still
       open as alternatives.
 
-- [ ] **King's Crossing Mall — tactical scenes** (mall complex maps).
+- [ ] **King's Crossing Mall - tactical scenes** (mall complex maps).
 
-- [ ] **King's Crossing Mall — handouts** (broadcasts, journals,
+- [ ] **King's Crossing Mall - handouts** (broadcasts, journals,
       ham-radio transcripts).
 
 - [ ] **CMod Stack reusable component.** Extract from Recruit modal;
@@ -294,18 +294,18 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 - [ ] **Cost-containment alarm.** Supabase 75% quota + Vercel
       bandwidth alert. ~30 min vendor-portal config.
 
-- [ ] **Demo / sample campaign** for first-time GMs. ~2–3 hours.
+- [ ] **Demo / sample campaign** for first-time GMs. ~2-3 hours.
 
-- [x] ~~Domain verification spot-check on Resend.~~ **DONE 2026-05-08C** —
+- [x] ~~Domain verification spot-check on Resend.~~ **DONE 2026-05-08C** -
       domain verified, MX/SPF/DKIM all green via Cloudflare DNS.
 
-- [x] ~~Wire Resend as Supabase Auth SMTP provider.~~ **DONE 2026-05-08C** —
+- [x] ~~Wire Resend as Supabase Auth SMTP provider.~~ **DONE 2026-05-08C** -
       Cloudflare DNS migration replaced Wix; Resend domain verified;
       Supabase Custom SMTP configured (smtp.resend.com:465, sender
       `noreply@distemperverse.com`). Email-confirmation gate is now
       live and delivering.
 
-- [ ] **End-to-end smoke pass** — signup → /firsttimers → /welcome
+- [ ] **End-to-end smoke pass** - signup → /firsttimers → /welcome
       → /characters/new → /map → first whisper.
 
 - [ ] **Quick Reference card on /welcome.** Placeholder needs CDP /
@@ -325,15 +325,15 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 
 ## TOOLS
 
-- [ ] **Manual crop control** — drag-to-select instead of auto
+- [ ] **Manual crop control** - drag-to-select instead of auto
       center-crop.
 
-- [ ] **More tools** — handout generator, token template maker,
+- [ ] **More tools** - handout generator, token template maker,
       roll table randomizer.
 
 ---
 
-## PHASE 4 (Campfire) — Tail
+## PHASE 4 (Campfire) - Tail
 
 - [ ] **Full-text search** across Forums / War Stories / LFG.
 
@@ -346,43 +346,43 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 
 - [ ] **LFG filters by setting + schedule.**
 
-- [ ] **DZ community layer** — approved player Rumors visible to
+- [ ] **DZ community layer** - approved player Rumors visible to
       all DZ campaigns.
 
 ---
 
-## PHASE 5 — MODULE SYSTEM (Phases D / E / F)
+## PHASE 5 - MODULE SYSTEM (Phases D / E / F)
 
-### Phase D — Monetization
+### Phase D - Monetization
 
 - [ ] **Free / Paid / Premium pricing.**
 - [ ] **Licensed GM permission unlocks paid modules.**
 - [ ] **Author payout flow, referral tracking.**
 
-### Phase E — Extras
+### Phase E - Extras
 
-- [ ] **GM Kit Export v2** — printable PDF + module zip.
+- [ ] **GM Kit Export v2** - printable PDF + module zip.
 - [ ] **Module + Community cross-publish.**
-- [ ] **In-session GM toolkit** — scene switcher, roster, handouts
+- [ ] **In-session GM toolkit** - scene switcher, roster, handouts
       panel, roll tables linked to dice roller.
 - [ ] **Third-party module import** (Roll20 / Foundry → Tapestry).
 
-### Phase F — GM Adventure Authoring Toolkit
+### Phase F - GM Adventure Authoring Toolkit
 
-- [ ] **Story Arc form** — guided 4-question creation surface.
+- [ ] **Story Arc form** - guided 4-question creation surface.
 - [ ] **NPC quick-build** inline forms.
-- [ ] **Map quick-build** — drop new tactical scene from inside a beat.
+- [ ] **Map quick-build** - drop new tactical scene from inside a beat.
 - [ ] **Handout quick-build.**
 - [ ] **Encounter quick-build.**
-- [ ] **Route tables** — leg-by-leg encounters with roll-target each.
-- [ ] **Adventure preview** — "play test mode."
-- [ ] **Publish Adventure** — terminal step on Story Arc form.
+- [ ] **Route tables** - leg-by-leg encounters with roll-target each.
+- [ ] **Adventure preview** - "play test mode."
+- [ ] **Publish Adventure** - terminal step on Story Arc form.
 
 ---
 
-## TACTICAL MAP — Long-term
+## TACTICAL MAP - Long-term
 
-- [x] **Line of sight — token visibility gating.** SHIPPED via
+- [x] **Line of sight - token visibility gating.** SHIPPED via
       the existing `29e7f25 fix(tactical): auto-fog outside PC LoS
       + PC-only vision lift` work. `components/TacticalMap.tsx`
       auto-fogs every cell outside any PC's vision when walls are
@@ -394,7 +394,7 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       Multi-cell straddling test deferred to 2026-05-12 playtest.
       Stale "LoS-aware hiding is Phase 3" comment in `TacticalMap.tsx`
       replaced 2026-05-10 (`4657cff`). Multi-cell anchor-only gap
-      closed 2026-05-10 (`8ac4ae2`) — filter now scans the full
+      closed 2026-05-10 (`8ac4ae2`) - filter now scans the full
       grid_w × grid_h footprint and returns visible iff ANY cell is
       unfogged. Caveats remaining as separate polish:
       - **Polygon vision mask** (cleaner rendering than per-cell
@@ -402,16 +402,16 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
         gameplay rule. Per-cell fog works correctly today; a
         polygon would just look smoother at the wall edges.
 
-- [x] **FOG wall/door/window drawing — SHIFT to snap.** SHIPPED
+- [x] **FOG wall/door/window drawing - SHIFT to snap.** SHIPPED
       2026-05-09. `getSegmentEndpoint` at
-      `components/TacticalMap.tsx:507` honors `e.shiftKey` —
+      `components/TacticalMap.tsx:507` honors `e.shiftKey` -
       free-form by default, SHIFT rounds the endpoint to the
       nearest grid intersection. Both click commits and hover
       preview flow through the same function so the modifier
       works end-to-end. Walls, doors, and windows behave the
       same. Doors + windows still post-snap to nearest wall on
       top of any grid snap. (Original assumption that drawing was
-      grid-only by default was wrong — code was already free-form;
+      grid-only by default was wrong - code was already free-form;
       this just adds the missing snap-to-grid path.)
 
 - [ ] **Token / character spawn returns to top-left now that the
@@ -424,14 +424,14 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       spawn coordinates should work as designed. Verify on the
       next playtest that newly-added PCs / NPCs / objects appear
       at (1,1) and aren't covered by any other UI overlay.
-      Likely no code change — investigation + visual confirmation.
+      Likely no code change - investigation + visual confirmation.
       If something else moved the spawn point, restore to (1,1)
       per the locked memory entry.
 
-### Lv4 Skill Traits — Xero-blocked, ships together
+### Lv4 Skill Traits - Xero-blocked, ships together
 
-- [ ] **Inspiration Lv4 "Beacon of Hope"** — auto +4 to Morale.
-- [ ] **Psychology\* Lv4 "Insightful Counselor"** — auto +3 to Morale.
+- [ ] **Inspiration Lv4 "Beacon of Hope"** - auto +4 to Morale.
+- [ ] **Psychology\* Lv4 "Insightful Counselor"** - auto +3 to Morale.
 - [ ] **Generic Lv4 Trait surface** on the character sheet.
 - [ ] **Auto-application hooks** for any other Lv4 Trait.
 - [ ] **Barter Lv4 cheat-doubling.**
@@ -445,7 +445,7 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
       when `modules.source_campaign_id = current_campaign_id`,
       so an author who loads their own published module into a
       fresh campaign and edits there can't "push back" to v1.0.x+1
-      from that campaign — they have to dig up the original
+      from that campaign - they have to dig up the original
       source campaign and apply the changes there. Hit
       2026-05-10 when Xero loaded Empty v1.0.0 into a playtest
       campaign and tried to publish updates from it. Workarounds
@@ -459,7 +459,7 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 ## CODE HEALTH
 
 - [ ] **Split table page into subcomponents.** Currently 10,542
-      lines (was 5,365 when first deferred — it grew, didn't shrink).
+      lines (was 5,365 when first deferred - it grew, didn't shrink).
       High risk; needs a clean day.
 
 - [ ] **Debounce realtime callbacks.** Optimization-only.
@@ -485,46 +485,46 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 
 ---
 
-## LONG-TERM ROADMAP (Phases 6–11) — Aspirational
+## LONG-TERM ROADMAP (Phases 6-11) - Aspirational
 
 ### Phase 6
 - [ ] LFG matching by setting + playstyle.
-- [ ] Session scheduling — calendar view.
-- [ ] The Gazette — auto campaign newsletter.
+- [ ] Session scheduling - calendar view.
+- [ ] The Gazette - auto campaign newsletter.
 - [ ] Between-session experience.
-- [ ] Subscriber tiers — Free / Paid / Premium.
-- [ ] Graffiti — Distemper-branded reactions.
+- [ ] Subscriber tiers - Free / Paid / Premium.
+- [ ] Graffiti - Distemper-branded reactions.
 
-### Phase 7 — Ghost Mode Advanced
+### Phase 7 - Ghost Mode Advanced
 - [ ] Ghost-to-Survivor funnel analytics.
 - [ ] A/B test soft wall messaging.
 - [ ] QR-scanner onboarding flow.
 - [ ] Reactivate /firsttimers onboarding page.
 
-### Phase 8 — Physical Products
-- [ ] Chased QR codes — fold-out map deep-links.
+### Phase 8 - Physical Products
+- [ ] Chased QR codes - fold-out map deep-links.
 - [ ] Anonymous preview for QR scanners without accounts.
-- [ ] Chased module — pre-populated with Delaware content.
+- [ ] Chased module - pre-populated with Delaware content.
 - [ ] Mongrels sourcebook upload, seed pins/NPCs.
 - [ ] Physical product landing pages.
 
-### Phase 9 — Maturity
+### Phase 9 - Maturity
 - [ ] Contextual rules links from sheet + dice roller.
 - [ ] Mobile optimization pass.
 - [ ] Mobile dice roller.
 - [ ] Global search across characters / campaigns / pins / NPCs /
       Campfire.
 
-### Phase 10 — Future Platforms
-- [ ] Displaced — space setting on separate platform.
+### Phase 10 - Future Platforms
+- [ ] Displaced - space setting on separate platform.
 - [ ] Extract `@xse/core` monorepo.
 - [ ] Each setting gets own domain + branding.
 
-### Phase 11 — Cross-Platform Parity
-- [ ] Campaign Calendar — date-gated lore events.
-- [ ] Roll20 Export — sheet HTML/CSS/JS, ZIP exporter, ingest.
+### Phase 11 - Cross-Platform Parity
+- [ ] Campaign Calendar - date-gated lore events.
+- [ ] Roll20 Export - sheet HTML/CSS/JS, ZIP exporter, ingest.
 
-### Campaign Calendar Backburner — Revisit triggers
+### Campaign Calendar Backburner - Revisit triggers
 - [ ] Skip Week → community frozen 4+ sessions.
 - [ ] World events that should've ended still applying CMod.
 - [ ] "X days passed" → automatic ration / weather / community drift.
@@ -541,16 +541,16 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 - ✅ Perception/Gut Instinct auto-pick active PC during combat (`c8bfd0f`)
 - ✅ Perception/Gut: skip picker when only 1 eligible PC (`22fd795`)
 - ✅ First Impression auto-fires on NPC pick when PC clear (`7880fdc`)
-- ✅ GM Notes popout — read-only (`3de55d8`)
-- ✅ GM Notes popout — every field editable (`c4610ad`)
+- ✅ GM Notes popout - read-only (`3de55d8`)
+- ✅ GM Notes popout - every field editable (`c4610ad`)
 - ✅ GM Notes popout description font bump 14 → 17px (`6200fb2`)
 - ✅ Story page button order (`3de55d8`)
 - ✅ GM Notes button in /table GM Tools dropdown (`3de55d8`)
-- ✅ GM Tools → Restore to Full Health speedup — already done (`Promise.all` + optimistic patches, `2026-05-05`)
+- ✅ GM Tools → Restore to Full Health speedup - already done (`Promise.all` + optimistic patches, `2026-05-05`)
 - ✅ Sequence guards on `useRollsFeed.refetch` + `useChatPanel.refetch` (`d4a97e1`)
 - ✅ Thriver godmode UI sweep, 4 of 5 surfaces (`92f9243`)
-- ✅ PCs riding Minnie — passenger auto-move sync on tactical map drag (`7f71bce`, 2026-05-05; remaining: terrain rejection — see Top Priority)
-- ✅ Beginners' guide /welcome links — `/welcome/guide` TOC + `/welcome/guide/[chapter]` renderer + 12 chapters (`d4c75b7`, 2026-05-05)
+- ✅ PCs riding Minnie - passenger auto-move sync on tactical map drag (`7f71bce`, 2026-05-05; remaining: terrain rejection - see Top Priority)
+- ✅ Beginners' guide /welcome links - `/welcome/guide` TOC + `/welcome/guide/[chapter]` renderer + 12 chapters (`d4c75b7`, 2026-05-05)
 
 ---
 
@@ -563,14 +563,14 @@ Tier 1+2 cleared 2026-05-08C via `sql/security-hardening-2026-05-08.sql`
 - **UX / polish:** 7
 - **Pre-tester polish:** 5
 - **Pin / map / tools:** 4
-- **Phase 4 tail / Module Phases D–F:** 21
+- **Phase 4 tail / Module Phases D-F:** 21
 - **Tactical map long-term + Lv4 (Xero-blocked):** 6
 - **Code health:** 2
 - **Discussion:** 2
 - **Stale top-level repo:** 2
-- **Long-term roadmap (Phases 6–11):** ~25
+- **Long-term roadmap (Phases 6-11):** ~25
 
 **Realistic short-term:** ~29 items not blocked on Lv4 / repro / roadmap.
-**This-week sprint:** the 5 pre-tester polish + 3-4 partials = 8–9 item sprint.
+**This-week sprint:** the 5 pre-tester polish + 3-4 partials = 8-9 item sprint.
 
 *end of checklist*

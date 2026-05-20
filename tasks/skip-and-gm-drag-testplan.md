@@ -1,10 +1,10 @@
-# Testplan — Skip-this-round button + GM-drag-burns-action fix
+# Testplan - Skip-this-round button + GM-drag-burns-action fix
 
 **Commits on main:**
-- `230402d` — feat(initiative-bar): GM `⊘` Skip-this-round button
-- `e7f611d` — fix(combat): GM drag of active combatant burns an action
+- `230402d` - feat(initiative-bar): GM `⊘` Skip-this-round button
+- `e7f611d` - fix(combat): GM drag of active combatant burns an action
 
-## Part 1 — Skip-this-round (`⊘`) button
+## Part 1 - Skip-this-round (`⊘`) button
 
 ### What it does
 GM-only amber `⊘` button on every combatant in the initiative bar with `actions_remaining > 0`. Click → zeroes their actions for the round (without removing them from `initiative_order`). They re-appear next round at full action budget.
@@ -28,13 +28,13 @@ GM-only amber `⊘` button on every combatant in the initiative bar with `action
 7. **Player view.** As a non-GM player, the `⊘` button should NOT appear next to any combatant.
 8. **No `⊘` when actions = 0.** After someone's already acted (actions_remaining=0), `⊘` should not show on their row.
 
-## Part 2 — GM-drag-burns-action
+## Part 2 - GM-drag-burns-action
 
 ### The bug being fixed
 GM drags of an active NPC's token bypassed `consumeAction` entirely (the gate at [TacticalMap.tsx:1393](components/TacticalMap.tsx:1393) was `!isGM`). Frankie could be dragged across the whole map by the GM without his `actions_remaining` ever decrementing → round never advanced.
 
 ### The fix
-GM drag of the token belonging to the *currently active* combatant now consumes 1 action via the new `onGMDragMove` callback. GM drag of an *off-turn* token is still free — that's intentional (cleanup / repositioning).
+GM drag of the token belonging to the *currently active* combatant now consumes 1 action via the new `onGMDragMove` callback. GM drag of an *off-turn* token is still free - that's intentional (cleanup / repositioning).
 
 ### Test steps
 9. Start combat with Frankie (NPC) as a combatant.
@@ -48,7 +48,7 @@ GM drag of the token belonging to the *currently active* combatant now consumes 
     - No action consumed on the *currently active* combatant either.
     - Position updates and broadcasts as before.
 13. **Player drag (regression):** a player drags their own PC token on their own turn. Should still consume 1 action exactly as before (`onPlayerDragMove` path unchanged).
-14. **Player drag of someone else's token:** still blocked by the existing distance gate / RLS — no behavior change.
+14. **Player drag of someone else's token:** still blocked by the existing distance gate / RLS - no behavior change.
 
 ## Pass criteria
 - `⊘` shows for GMs only, only on combatants with actions left.

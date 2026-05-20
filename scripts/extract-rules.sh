@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# extract-rules.sh — reproducible PDF → text extraction for rulebooks
+# extract-rules.sh - reproducible PDF → text extraction for rulebooks
 #
 # Wraps pdftotext so every extraction uses the same flags + output
 # conventions. Use this anytime you want to pull a chapter out of a

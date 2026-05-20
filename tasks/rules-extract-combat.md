@@ -1,10 +1,10 @@
-# Rules extract — Combat (TEMPLATE / IN PROGRESS)
+# Rules extract - Combat (TEMPLATE / IN PROGRESS)
 
-**Source**: `docs/Rules/XSE SRD v1.1.17 (Small).pdf` §06 Combat (pp. 14–17) + §07 Weapons & Equipment (pp. 18–20). Precedence per `CLAUDE.md`: SRD > CRB > Quickstart > Chased > District Zero.
+**Source**: `docs/Rules/XSE SRD v1.1.17 (Small).pdf` §06 Combat (pp. 14-17) + §07 Weapons & Equipment (pp. 18-20). Precedence per `CLAUDE.md`: SRD > CRB > Quickstart > Chased > District Zero.
 
 > **Status**: Skeleton. Fill in each section by running `scripts/extract-rules.sh "docs/Rules/XSE SRD v1.1.17 (Small).pdf" /tmp/combat.txt 14 17` and transcribing what lands. The combat chapter has two-column layout; try the default `flow` mode first, then `layout` mode if tables look broken.
 >
-> This template demonstrates the shape. Once filled in, it becomes the canonical combat-rules reference — much faster to grep than the PDF.
+> This template demonstrates the shape. Once filled in, it becomes the canonical combat-rules reference - much faster to grep than the PDF.
 
 ---
 
@@ -12,10 +12,10 @@
 
 *Extract: Round structure, turn economy (2 actions), initiative order, action types.*
 
-- TBD — how long a round is (in-fiction seconds)
-- TBD — action types (1-action / 2-action / free)
-- TBD — initiative: 2d6 + ACU + DEX, descending
-- TBD — deferring / holding actions
+- TBD - how long a round is (in-fiction seconds)
+- TBD - action types (1-action / 2-action / free)
+- TBD - initiative: 2d6 + ACU + DEX, descending
+- TBD - deferring / holding actions
 
 ## 2. Range
 
@@ -24,7 +24,7 @@
 is our tactical-grid translation in feet, locked 2026-04-27. Used
 by `lib/range-profiles.ts`, the throw-mode highlight, the move
 highlight, the blast-radius scaling, and every range circle drawn
-on the canvas. **Do not change without flagging — these are
+on the canvas. **Do not change without flagging - these are
 canonical and the user has corrected the assistant on them.***
 
 | Band | Feet | Notes |
@@ -67,30 +67,30 @@ CRB rules on weapon-band penalties:
 
 *Extract: How to roll weapon damage, defensive modifier, RP vs WP split.*
 
-- TBD — damage roll structure (base + dice + PHY bonus?)
-- TBD — Defensive Modifier (target PHY for melee, DEX for ranged)
-- TBD — WP vs RP split rules (rpPercent per weapon)
-- TBD — Blast Radius scaling (Engaged/Close/further)
+- TBD - damage roll structure (base + dice + PHY bonus?)
+- TBD - Defensive Modifier (target PHY for melee, DEX for ranged)
+- TBD - WP vs RP split rules (rpPercent per weapon)
+- TBD - Blast Radius scaling (Engaged/Close/further)
 
 ## 5. Incapacitation
 
 *Extract: WP=0 → mortally wounded, RP=0 → incapacitated.*
 
-- TBD — Mortally Wounded: death countdown formula
-- TBD — Stabilize check (Medicine) — restores 1 WP, opens Insight Die Save
-- TBD — Insight Die Save: trade all Insight Dice for 1 WP / 1 RP
-- TBD — Incapacitation (RP=0): unconscious for 4 − PHY rounds
+- TBD - Mortally Wounded: death countdown formula
+- TBD - Stabilize check (Medicine) - restores 1 WP, opens Insight Die Save
+- TBD - Insight Die Save: trade all Insight Dice for 1 WP / 1 RP
+- TBD - Incapacitation (RP=0): unconscious for 4 − PHY rounds
 
 ## 6. Stress & Breaking Point
 
 *Extract: Stress Modifier, when it ticks, Breaking Point table 13.*
 
-- TBD — Stress meter (0–5)
-- TBD — Stress Modifier computation
-- TBD — Stress Check trigger conditions
-- TBD — Breaking Point: roll Table 13 when Stress 5
+- TBD - Stress meter (0-5)
+- TBD - Stress Modifier computation
+- TBD - Stress Check trigger conditions
+- TBD - Breaking Point: roll Table 13 when Stress 5
 
-## 7. Weapons & Equipment (§07, pp. 18–20)
+## 7. Weapons & Equipment (§07, pp. 18-20)
 
 *Extract: Weapon data shape, traits list with effects, condition CMod table.*
 

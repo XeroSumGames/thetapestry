@@ -1,12 +1,12 @@
-# XSE SRD Web Reference — Sketch
+# XSE SRD Web Reference - Sketch
 
 **Source of truth**: `docs/Rules/XSE SRD v1.1.17 (Small).pdf` (gitignored, local-only). Pre-digested extracts live in `tasks/rules-extract-*.md` and supersede direct PDF re-reads when present.
 
 **Style chosen**: One long page per major section, with anchored H2/H3 subsections (Blades-in-the-Dark style). Many-short-pages remains an option if Google SEO turns out to matter more than ⌘-F across a whole subsystem.
 
 **Two homes**:
-- **Tapestry** — `thetapestry.distemperverse.com/rules` (public, sidebar `Rules` link)
-- **xerosumgames.com** — Wix site, **Strategy B**: a build script (`scripts/build-rules-html.mjs`) emits standalone HTML per page; user pastes into Wix HTML-embed blocks. Manual paste on each update — acceptable for a doc that ships infrequently.
+- **Tapestry** - `thetapestry.distemperverse.com/rules` (public, sidebar `Rules` link)
+- **xerosumgames.com** - Wix site, **Strategy B**: a build script (`scripts/build-rules-html.mjs`) emits standalone HTML per page; user pastes into Wix HTML-embed blocks. Manual paste on each update - acceptable for a doc that ships infrequently.
 
 **Live cross-links**: YES. Rule anchors deep-link to the live Tapestry tool that implements them. On Wix, the same anchors become external links to `thetapestry.distemperverse.com/...`.
 
@@ -16,7 +16,7 @@
 
 | Route | Source section | Approx length | Status |
 |---|---|---|---|
-| `/rules` | Landing — section index + intro | short | v1 |
+| `/rules` | Landing - section index + intro | short | v1 |
 | `/rules/overview` | §01 Overview | short | v1 stub |
 | `/rules/core-mechanics` | §02 Core Mechanics | medium | v1 stub |
 | `/rules/character-overview` | §03 Character Overview | medium | v1 stub |
@@ -24,7 +24,7 @@
 | `/rules/skills` | §05 Skills | medium | v1 stub |
 | `/rules/combat` | §06 Combat | long | v1 stub |
 | `/rules/equipment` | §07 Weapons & Equipment | medium | v1 stub |
-| **`/rules/communities`** | **§08 Communities** | **long** | **TEST PAGE — full content** |
+| **`/rules/communities`** | **§08 Communities** | **long** | **TEST PAGE - full content** |
 | `/rules/appendix-tables` | Appendix A | reference | v1 stub |
 | `/rules/appendix-skills` | Appendix B | reference | v1 stub |
 | `/rules/appendix-equipment` | Appendix C | reference | v1 stub |
@@ -34,9 +34,9 @@ V1 stubs exist as routes with their TOC but with `(content forthcoming)` placeho
 
 ---
 
-## 2. /rules/communities — anchor map
+## 2. /rules/communities - anchor map
 
-Drawn from `tasks/rules-extract-communities.md` §1–§5 (which is itself canonical relative to the SRD PDF, with errata applied).
+Drawn from `tasks/rules-extract-communities.md` §1-§5 (which is itself canonical relative to the SRD PDF, with errata applied).
 
 ```
 #overview                  Group vs Community (13+ threshold)
@@ -50,8 +50,8 @@ Drawn from `tasks/rules-extract-communities.md` §1–§5 (which is itself canon
 #morale-outcomes             6 outcome rows + next-week Mood CMod
 #dissolution                 3-strike dissolution + retention check
 #structure                 Community Structure (role minimums)
-#structure-gatherers         Gatherers — Fed Check
-#structure-maintainers       Maintainers — Clothed Check
+#structure-gatherers         Gatherers - Fed Check
+#structure-maintainers       Maintainers - Clothed Check
 #structure-safety            Safety
 #structure-pc-help           PC contribution to Fed/Clothed
 #crb-additions             Distemper CRB additions (Inspiration Lv4, Psychology* Lv4)
@@ -70,7 +70,7 @@ Drawn from `tasks/rules-extract-communities.md` §1–§5 (which is itself canon
 | `#structure` | `/communities/[id]` → Members tab | See role assignments |
 | `#crb-additions` | `/rules/skills#inspiration` and `/rules/skills#psychology` | Internal SRD cross-refs |
 
-On Wix, the same anchors are absolutized to `https://thetapestry.distemperverse.com/communities` etc. — outbound links from the marketing site to the live tool.
+On Wix, the same anchors are absolutized to `https://thetapestry.distemperverse.com/communities` etc. - outbound links from the marketing site to the live tool.
 
 ---
 
@@ -135,10 +135,10 @@ No new color tokens. No new fonts. Min inline fontSize stays at 13px.
 
 ---
 
-## 8. Wix export — Strategy B
+## 8. Wix export - Strategy B
 
 `scripts/build-rules-html.mjs`:
-1. Spawns Next in production-build-once mode (or imports the section data directly — simpler).
+1. Spawns Next in production-build-once mode (or imports the section data directly - simpler).
 2. For each `/rules/*` route, renders the page body to standalone HTML.
 3. Inlines a small CSS block with the typography rules above.
 4. Absolutizes all `/communities`, `/characters` etc. links to `https://thetapestry.distemperverse.com/...`.

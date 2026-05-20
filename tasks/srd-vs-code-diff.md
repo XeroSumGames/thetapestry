@@ -1,4 +1,4 @@
-# SRD vs Code — divergence audit
+# SRD vs Code - divergence audit
 
 **Goal**: list every place where the live Tapestry code does something *different* from what `XSE SRD v1.1.17 (Small).pdf` prints. Per the user's directive on 2026-05-01: **the platform supersedes the SRD**, so this list becomes the changelog for the next SRD revision. The Tapestry SRD pages at `/rules/*` will then be re-authored from the updated PDF.
 
@@ -10,10 +10,10 @@ Sources cross-referenced:
 - `tasks/rules-extract-{communities,combat,cdp}.md` (canonical extracts already curated)
 
 Severity tags:
-- 🔴 **WIRED** — code formula or data; SRD update is mechanical (copy code into prose).
-- 🟡 **EXTENDED** — code adds something the SRD doesn't have (new state, new outcome, new mechanic). Decide: bless into SRD, or make it a Distemper/Tapestry-only addition.
-- 🟢 **CLARIFIED** — code's wording is more specific than the SRD's vague text. Tighten the SRD to match.
-- ⚪ **DOC ONLY** — my `/rules/*` pages have a typo, wrong number, or out-of-date statement. Fix the page, no SRD change.
+- 🔴 **WIRED** - code formula or data; SRD update is mechanical (copy code into prose).
+- 🟡 **EXTENDED** - code adds something the SRD doesn't have (new state, new outcome, new mechanic). Decide: bless into SRD, or make it a Distemper/Tapestry-only addition.
+- 🟢 **CLARIFIED** - code's wording is more specific than the SRD's vague text. Tighten the SRD to match.
+- ⚪ **DOC ONLY** - my `/rules/*` pages have a typo, wrong number, or out-of-date statement. Fix the page, no SRD change.
 
 ---
 
@@ -22,9 +22,9 @@ Severity tags:
 ### Outcome ladder
 | | Code | SRD | |
 |---|---|---|---|
-| Dire Failure | ≤ 3 | 0–3 | ✅ match |
-| Failure | 4–8 | 4–8 | ✅ match |
-| Success | 9–13 | 9–13 | ✅ match |
+| Dire Failure | ≤ 3 | 0-3 | ✅ match |
+| Failure | 4-8 | 4-8 | ✅ match |
+| Success | 9-13 | 9-13 | ✅ match |
 | Wild Success | ≥ 14 | 14+ | ✅ match |
 | Low Insight | 1+1 | 1+1 | ✅ match |
 | High Insight | 6+6 | 6+6 | ✅ match |
@@ -40,9 +40,9 @@ Source: `lib/roll-helpers.ts:20-33`. No drift.
 Source: `lib/xse-schema.ts:32-54`. ✅ no drift.
 
 ### CMod (difficulty) scale
-- 🔴 **WIRED**: code does **not** carry a canonical CMod-difficulty label set (no `CMOD_LABELS`). My `/rules/core-mechanics/modifiers#cmod` page reconstructs Doomed To Fail / Insurmountable / Hard / Difficult / Challenging / Average / Simple / Slight Favor / Easy / Trivial / Divinely Inspired from the OCR'd PDF — **none of these names are referenced in code**, so any rename is a free SRD-side decision.
+- 🔴 **WIRED**: code does **not** carry a canonical CMod-difficulty label set (no `CMOD_LABELS`). My `/rules/core-mechanics/modifiers#cmod` page reconstructs Doomed To Fail / Insurmountable / Hard / Difficult / Challenging / Average / Simple / Slight Favor / Easy / Trivial / Divinely Inspired from the OCR'd PDF - **none of these names are referenced in code**, so any rename is a free SRD-side decision.
 
-### Insight Dice — usage menu
+### Insight Dice - usage menu
 SRD §02 lists 5 ways to spend an Insight Die:
 1. Roll an extra d6 (3d6 total)
 2. Add +3 CMod before rolling
@@ -50,21 +50,21 @@ SRD §02 lists 5 ways to spend an Insight Die:
 4. "Anything they can Make The Case for" (flashback, retcon, etc.)
 5. Spend ALL ID for 1 WP + 1 RP/die to save from death
 
-🟡 **EXTENDED — code implementation lives in the table page roll modal.** Recommend a specific check on each:
-- Bonus die at +3 d6 — present (3d6 mode)
-- +3 CMod pre-roll — present (insightCmod path)
-- Replace dropped dice — present (drop-and-replace UI)
-- Save from death — present (`insightSavePrompt` state in `app/stories/[id]/table/page.tsx`); SRD says "spend all" — code may differ on whether all dice get burned vs partial. **Recommend audit on this specific path.**
+🟡 **EXTENDED - code implementation lives in the table page roll modal.** Recommend a specific check on each:
+- Bonus die at +3 d6 - present (3d6 mode)
+- +3 CMod pre-roll - present (insightCmod path)
+- Replace dropped dice - present (drop-and-replace UI)
+- Save from death - present (`insightSavePrompt` state in `app/stories/[id]/table/page.tsx`); SRD says "spend all" - code may differ on whether all dice get burned vs partial. **Recommend audit on this specific path.**
 
 🟡 The save-from-death formula in code is **+1 WP + 1 RP per Insight Die spent**, all dice consumed. SRD reads the same. Match. ✅
 
 ### Outcomes that grant an Insight Die
 SRD only mentions Moments of Insight (1+1, 6+6) granting +1 ID.
 
-🟡 **EXTENDED**: code includes an `Insight Die` award path on `First Impression` (1+1 / 6+6) — that's actually still SRD-canonical (any roll that hits 1+1 or 6+6). No drift. ✅
+🟡 **EXTENDED**: code includes an `Insight Die` award path on `First Impression` (1+1 / 6+6) - that's actually still SRD-canonical (any roll that hits 1+1 or 6+6). No drift. ✅
 
 ### Filling In The Gaps / Making The Case
-No mechanical implementation in code — both are GM-narrative tools used at the table. ✅ No drift.
+No mechanical implementation in code - both are GM-narrative tools used at the table. ✅ No drift.
 
 ### Check types
 - `Group Check`: SRD says all participants use the same attr/skill, highest does the roll, others' AMods/SMods stack. Code surfaces this in the Morale Check modal as a "Group Check" branch (`components/CommunityMoraleModal.tsx`). ✅ Match.
@@ -108,12 +108,12 @@ Code (`lib/xse-schema.ts:707-721`):
 SRD §03 prose (decoded from OCR):
 - WP = 10 + PHY + DEX ✅
 - RP = 6 + PHY AM ✅
-- MDM = "A's P AM" — **OCR-ambiguous**. Code reads it as defender's PHY. SRD prose should be tightened to **"defender's PHY AMod"** explicitly.
+- MDM = "A's P AM" - **OCR-ambiguous**. Code reads it as defender's PHY. SRD prose should be tightened to **"defender's PHY AMod"** explicitly.
 - RDM = same ambiguity → code reads defender's DEX. ✅
 - INIT = "A + D AM" → ACU + DEX ✅
 - ENC = 6 + PHY ✅
 - PER = "R + A AM" → RSN + ACU ✅
-- Stress = same formula as PER (RSN + ACU) — code matches.
+- Stress = same formula as PER (RSN + ACU) - code matches.
 - Breaking Point = "C M 3" → constant 3 ✅
 
 🟢 **CLARIFIED**: Defense Mods (MDM/RDM) need explicit "defender's" qualifier in the SRD prose.
@@ -123,7 +123,7 @@ SRD §03 prose (decoded from OCR):
 🟡 **EXTENDED**: NPCs can have a custom `breakingPoint` (e.g. `lib/setting-npcs.ts:730 = 7`, `:748 = 5`). SRD locks BP at 5. Code lets the GM tune it per NPC. Consider blessing this as a Distemper/Tapestry rule: "GM may set NPC Breaking Point higher or lower than 5 to reflect resilience or fragility."
 
 ### Three Words
-No code-side mechanical implementation — purely narrative. ✅ no drift.
+No code-side mechanical implementation - purely narrative. ✅ no drift.
 
 ### Complications & Motivations (Tables 6 & 7)
 Code (`lib/xse-schema.ts:116-146`) ↔ SRD:
@@ -145,7 +145,7 @@ Code (`lib/xse-schema.ts:116-146`) ↔ SRD:
 
 ---
 
-## §04 Character Creation — **MAJOR DIVERGENCE**
+## §04 Character Creation - **MAJOR DIVERGENCE**
 
 ### 🔴 Step ordering REVERSED between code and SRD
 
@@ -178,29 +178,29 @@ SRD §04 (per the PDF prose):
 
 **Differences**:
 1. **Comp/Mot vs Profession order is swapped.** Code asks for profession in Step 4 (with the big skill spend), then Comp/Mot in Step 6 (last). SRD asks for Comp/Mot in Step 4 (early, no spend), then profession in Step 5.
-2. **Code has 7 spend steps; SRD has 9 stages** (X + 8 + N). Code merges/elides Steps 7 (Secondary Stats — auto-computed), 8 (gear — handled in a separate UI flow), and N (final review).
+2. **Code has 7 spend steps; SRD has 9 stages** (X + 8 + N). Code merges/elides Steps 7 (Secondary Stats - auto-computed), 8 (gear - handled in a separate UI flow), and N (final review).
 3. **Step titles slightly different**: Code's Step 5 is "What Makes Them Them"; SRD's is "What Makes Them Tick?".
 
 🔴 **Decision needed**: SRD should match the live wizard's order. Recommend updating SRD to:
 - **Step Four: How They Make Money** (profession + 2 attr + 4 skill spend)
-- **Step Five: What Makes Them Them** (3 skill spend, no attrs — final polish)
-- **Step Six: What Drives Them?** (Comp + Mot pick — narrative anchor at the end)
+- **Step Five: What Makes Them Them** (3 skill spend, no attrs - final polish)
+- **Step Six: What Drives Them?** (Comp + Mot pick - narrative anchor at the end)
 
 The code's ordering puts CDP-spend stages first, then narrative anchors at the close, which actually reads better.
 
-### CDP costs — perfect match
+### CDP costs - perfect match
 Code (`lib/cdp-costs.ts`):
 - Skill: 1 CDP to learn (any negative baseline → +1). Raise: current + (current+1) = 2N+1 CDP. So +1→+2 = 3, +2→+3 = 5, +3→+4 = 7. ✅ matches SRD.
 - RAPID: 3 × (current+1) CDP. So +1→+2 = 6, +2→+3 = 9, +3→+4 = 12. ✅ matches SRD.
 
-🟢 **CLARIFIED — 0 → +1 attribute**: SRD §04 only specifies post-creation costs starting from +1. Code computes 0→+1 = 3 CDP (the formula 3 × (0+1)). The SRD should explicitly state "raising a RAPID Range attribute from 0 (Average) to +1 (Good) costs **3 CDP**" so post-creation purchases of a baseline-zero attribute have a price.
+🟢 **CLARIFIED - 0 → +1 attribute**: SRD §04 only specifies post-creation costs starting from +1. Code computes 0→+1 = 3 CDP (the formula 3 × (0+1)). The SRD should explicitly state "raising a RAPID Range attribute from 0 (Average) to +1 (Good) costs **3 CDP**" so post-creation purchases of a baseline-zero attribute have a price.
 
-### Lv 4 narrative gate — Distemper-only?
+### Lv 4 narrative gate - Distemper-only?
 🟡 **EXTENDED**: `lib/cdp-costs.ts:46-48` `isLv4Step()` flags raising to Human Peak / Life's Work as narrative-gated (per CRB Ch.6). The XSE SRD §04 doesn't mention this. Either:
 - Bless into SRD §04: "Raising an attribute to +4 (Human Peak) or a skill to +4 (Life's Work) requires GM approval and a narrative justification (Fill In The Gaps)."
 - Mark as Distemper-only in `/rules/skills/` Distemper additions.
 
-### Paradigm vs Pregen vs Backstory — three methods
+### Paradigm vs Pregen vs Backstory - three methods
 SRD §04: Backstory Generation, Paradigm, Pregen. Code: matches all three. Quick Character flow ↔ Paradigm method, Random Character ↔ Paradigm with auto-roll Comp/Mot/Words. ✅
 
 ### Apprentice creation
@@ -225,11 +225,11 @@ SRD §08 Apprentices says "3 CDP RAPID, 5 CDP skills, 1 Paradigm". 🔴 **The SR
 ## §05 Skills + Appendix B
 
 ### Skill list
-🔴 **WIRED** in `lib/xse-schema.ts:80-110` — 29 skills with attribute, vocational flag, and one-line description. SRD Appendix B prose matches the skill list and pairings. ✅
+🔴 **WIRED** in `lib/xse-schema.ts:80-110` - 29 skills with attribute, vocational flag, and one-line description. SRD Appendix B prose matches the skill list and pairings. ✅
 
 🟢 **CLARIFIED**: SRD §05 skill descriptions (Appendix B) are written in mid-sentence prose. Code one-liners are crisper:
 - Code "Hunt, forage, farm, fish, scavenge → Rations" vs SRD "Knowing how to grow crops or raise livestock at scale to sustain large groups of people" (Farming)
-- All 29 descriptions are slight rewrites. Recommend SRD adopt the code prose verbatim — they're tighter and battle-tested through onboarding.
+- All 29 descriptions are slight rewrites. Recommend SRD adopt the code prose verbatim - they're tighter and battle-tested through onboarding.
 
 ### Vocational asterisks
 - Code marks 9 skills vocational: Demolitions*, Heavy Weapons*, Lock-Picking*, Mechanic*, Medicine*, Psychology*, Tactics*, Weaponsmith*. **8 starred + 1 implicit (Lock-Picking* in some files)**.
@@ -259,10 +259,10 @@ SRD §08 Apprentices says "3 CDP RAPID, 5 CDP skills, 1 Paradigm". 🔴 **The SR
 | +3 | **Professional** |
 | +4 | **Life's Work** |
 
-🟢 **CLARIFIED**: Code uses `Professional` and `Life's Work`. The SRD's OCR mangling rendered "L' W" — easily mis-decoded as "Lifer's Wisdom" or similar. Update SRD to **Life's Work** explicitly.
+🟢 **CLARIFIED**: Code uses `Professional` and `Life's Work`. The SRD's OCR mangling rendered "L' W" - easily mis-decoded as "Lifer's Wisdom" or similar. Update SRD to **Life's Work** explicitly.
 
-### Inspiration Lv4 + Psychology* Lv4 — Distemper CRB additions
-🟡 **EXTENDED — needs CRB confirmation**: `/rules/skills/inspiration` and `/rules/skills/psychology` ship the CRB additions:
+### Inspiration Lv4 + Psychology* Lv4 - Distemper CRB additions
+🟡 **EXTENDED - needs CRB confirmation**: `/rules/skills/inspiration` and `/rules/skills/psychology` ship the CRB additions:
 - Inspiration: +1 SMod per level on Recruitment; Lv4 Beacon of Hope = +4 to all Morale Checks.
 - Psychology* Lv4 Insightful Counselor = +3 to Morale (tenure-gated).
 
@@ -272,9 +272,9 @@ These are **CRB-only additions** layered on the SRD baseline. Currently auto-app
 
 ---
 
-## §06 Combat — **MULTIPLE DIVERGENCES**
+## §06 Combat - **MULTIPLE DIVERGENCES**
 
-### 🔴 Range bands — feet thresholds locked, weapon profiles much richer than SRD
+### 🔴 Range bands - feet thresholds locked, weapon profiles much richer than SRD
 
 #### Band thresholds (`lib/range-profiles.ts:7-13`)
 | Band | Feet (≤) |
@@ -285,9 +285,9 @@ These are **CRB-only additions** layered on the SRD baseline. Currently auto-app
 | Long | 300 |
 | Distant | ∞ (1000 in /rules pages) |
 
-**The SRD has no specific feet thresholds for the bands** — it describes them narratively ("close enough to wrestle", "see the whites of their eyes"). The Tapestry codebase locks them at the values above. Update SRD §06 Range to include the explicit feet table.
+**The SRD has no specific feet thresholds for the bands** - it describes them narratively ("close enough to wrestle", "see the whites of their eyes"). The Tapestry codebase locks them at the values above. Update SRD §06 Range to include the explicit feet table.
 
-#### Per-weapon range CMods — code ships a full profile system, SRD has only band-level guidance
+#### Per-weapon range CMods - code ships a full profile system, SRD has only band-level guidance
 
 `lib/range-profiles.ts:32-51` ships **17 distinct weapon profiles** with band-by-band CMods. The SRD currently only describes:
 - Engaged: +1 melee CMod, −1 ranged
@@ -296,17 +296,17 @@ These are **CRB-only additions** layered on the SRD baseline. Currently auto-app
 - Long: −5 pistol, +1 rifle
 - Distant: only sniper rifle / hunting rifle with scope
 
-🔴 The code is **far more granular** — for example Sniper's Rifle gets +1 at Long AND Distant; Carbine works Engaged through Distant with band-specific CMods; Bow has Tracking trait. Update SRD to publish the full per-weapon profile table, OR adopt a "weapon-band profile" concept and reference it in §06 Range.
+🔴 The code is **far more granular** - for example Sniper's Rifle gets +1 at Long AND Distant; Carbine works Engaged through Distant with band-specific CMods; Bow has Tracking trait. Update SRD to publish the full per-weapon profile table, OR adopt a "weapon-band profile" concept and reference it in §06 Range.
 
 #### Move action distance
-- Code (`components/TacticalMap.tsx:1450`): `maxMoveCells = ceil(10 / cellFt)` — **1 Move action = 10 ft**.
+- Code (`components/TacticalMap.tsx:1450`): `maxMoveCells = ceil(10 / cellFt)` - **1 Move action = 10 ft**.
 - SRD §06 prose says "Moving between bands takes the same number of combat rounds as the sum of the bands being covered. 3 rounds Engaged→Close (= 30ft / 6 actions = 5 ft/action)."
 
 🔴 **CONFLICT**: Code says 10 ft per Move; SRD math implies 5 ft per Move. Either:
-- Update SRD to explicitly state "1 Move action = 10 ft (2 cells at 5 ft / cell)" — matching code.
+- Update SRD to explicitly state "1 Move action = 10 ft (2 cells at 5 ft / cell)" - matching code.
 - Or fix code to match the SRD's slower 5 ft/action math.
 
-The current Tapestry behaviour is the user-visible truth — recommend SRD update.
+The current Tapestry behaviour is the user-visible truth - recommend SRD update.
 
 #### Sprint
 - Code: Sprint = 2 actions = 30 ft (per gm-screen). Athletics check or become Winded.
@@ -322,8 +322,8 @@ The current Tapestry behaviour is the user-visible truth — recommend SRD updat
 SRD lists these (Table 10 in Appendix A): Aim, Attack, Charge, Coordinate, Cover Fire, Defend, Distract, Fire from Cover, Grapple, Inspire, Move, Rapid Fire, Ready Weapon, Reposition, Sprint, Subdue, Take Cover, Stabilize.
 
 Code in `app/stories/[id]/table/page.tsx` implements all of these PLUS:
-- 🟡 **EXTENDED** state tracking: `aim_active`, `aim_bonus`, `defense_bonus`, `has_cover`, `winded`, `inspired_this_round`, `coordinate_target`, `coordinate_bonus`. SRD doesn't describe how long an Aim bonus persists ("must attack next or lost"). Code: aim cleared after one attack OR end of turn — matches SRD.
-- 🟡 **EXTENDED**: `Stabilize` is in the SRD as a Medicine* check on a Mortally Wounded character. Code adds a generic STABILIZE roll modal — same mechanic.
+- 🟡 **EXTENDED** state tracking: `aim_active`, `aim_bonus`, `defense_bonus`, `has_cover`, `winded`, `inspired_this_round`, `coordinate_target`, `coordinate_bonus`. SRD doesn't describe how long an Aim bonus persists ("must attack next or lost"). Code: aim cleared after one attack OR end of turn - matches SRD.
+- 🟡 **EXTENDED**: `Stabilize` is in the SRD as a Medicine* check on a Mortally Wounded character. Code adds a generic STABILIZE roll modal - same mechanic.
 
 ### Aim wording
 - Code: "+2 CMod on the next Attack this round; lost if anything but Attack is taken next."
@@ -358,15 +358,15 @@ Code in `app/stories/[id]/table/page.tsx` implements all of these PLUS:
 - After Stabilize: Incapacitated 16 − PHY AMod rounds (min 1). ✅
 - Insight Die save: spend ALL ID, +1 WP + 1 RP per die. ✅
 
-🟡 **EXTENDED**: code also supports an automatic Stress pip on entering WP=0 OR RP=0 (per memory: stress on mortal/incap, +1 pip cap 5). SRD doesn't mention this. **Recommend SRD adopt** — incapacitation/mortal-wound IS extreme stress by definition.
+🟡 **EXTENDED**: code also supports an automatic Stress pip on entering WP=0 OR RP=0 (per memory: stress on mortal/incap, +1 pip cap 5). SRD doesn't mention this. **Recommend SRD adopt** - incapacitation/mortal-wound IS extreme stress by definition.
 
 ### Lasting Wounds (Table 12) and Breaking Point (Table 13)
-- Code: tables stored in `lib/xse-schema.ts:580-602` (Breaking Point) — matches SRD per /rules/combat/incapacitation and /rules/combat/stress pages.
+- Code: tables stored in `lib/xse-schema.ts:580-602` (Breaking Point) - matches SRD per /rules/combat/incapacitation and /rules/combat/stress pages.
 - 🟢 **CLARIFIED**: SRD calls Table 12 "Lasting Wounds" and Table 13 "Breaking Point". Code's `LASTING_WOUNDS` table label "Self-Destructive Urges" (entry 11) is in the BREAKING POINT table; whereas the LASTING WOUND entry 11 is `Compound Injury`. Confirm both tables are in code.
 
 ### Stress modifier and Breaking Point
 - Stress Modifier: code `RSN + ACU` (`lib/xse-schema.ts:718`). SRD ✅.
-- Breaking Point: code default 3 (`xse-schema:719: morality: 3`). 🔴 **NAME COLLISION**: code calls this `morality` not `breakingPoint` — but it functions as the BP threshold. SRD calls it Breaking Point with default 5, NOT 3. **CHECK**: which is canonical? Code has BP=3 but the page I authored says "Breaking Point of 5". Investigate before pushing the SRD update.
+- Breaking Point: code default 3 (`xse-schema:719: morality: 3`). 🔴 **NAME COLLISION**: code calls this `morality` not `breakingPoint` - but it functions as the BP threshold. SRD calls it Breaking Point with default 5, NOT 3. **CHECK**: which is canonical? Code has BP=3 but the page I authored says "Breaking Point of 5". Investigate before pushing the SRD update.
 
   Likely root cause: `morality: 3` in the schema is unrelated and unused (placeholder), and the actual stress=5→BP gate is elsewhere. The number 3 vs 5 needs reconciliation.
 
@@ -407,12 +407,12 @@ SRD lists these 8. ✅ match.
 ### Upkeep
 SRD says: Upkeep check uses Mechanic*, Tinkerer, Ranged Combat, Melee Combat, Heavy Weapons*, Demolitions*, or Weaponsmith*.
 
-🔴 **NOT WIRED**: I don't see explicit Upkeep code — items get their condition manipulated by the GM via the inventory edit modal. No automatic Upkeep rolls. Either:
+🔴 **NOT WIRED**: I don't see explicit Upkeep code - items get their condition manipulated by the GM via the inventory edit modal. No automatic Upkeep rolls. Either:
 - Add an Upkeep roll modal that uses one of the SRD-listed skills.
 - Or document the SRD's behaviour as "GM-driven" in the SRD prose.
 
 ### Weapon catalog
-**Massive divergence — code's catalog is more comprehensive than the SRD's.**
+**Massive divergence - code's catalog is more comprehensive than the SRD's.**
 
 Code:
 - `MELEE_WEAPONS` (lib/xse-schema.ts:197-215): 17 weapons
@@ -420,9 +420,9 @@ Code:
 - `EXPLOSIVE_WEAPONS` (lib/weapons.ts): 6 explosives
 - `HEAVY_WEAPONS` (lib/weapons.ts): 3 heavy/specialist
 
-SRD Tables 16–19 reference fewer entries (the OCR makes exact counts hard, but the in-code catalog is broader).
+SRD Tables 16-19 reference fewer entries (the OCR makes exact counts hard, but the in-code catalog is broader).
 
-🟡 **EXTENDED — recommend SRD adopt the code catalog wholesale**. Specifically:
+🟡 **EXTENDED - recommend SRD adopt the code catalog wholesale**. Specifically:
 - Cattle Prod (melee, Stun, RP 400%)
 - Bullwhip (Athletics, Close, Unwieldy 2)
 - Tactical Baton (melee, Engaged)
@@ -451,10 +451,10 @@ Code `lib/xse-schema.ts:263-298` ships 32 equipment items. Includes:
 
 ---
 
-## §08 Communities — extensions to flag
+## §08 Communities - extensions to flag
 
 ### Recruitment Check
-- 🟡 **EXTENDED — RecruitmentType has 6 values, SRD has 4**:
+- 🟡 **EXTENDED - RecruitmentType has 6 values, SRD has 4**:
   - Code: `member`, `founder`, `cohort`, `conscript`, `convert`, `apprentice`
   - SRD: only `cohort`, `conscript`, `convert`, `apprentice`
   - **Decision**: bless `founder` (the original community creator) and `member` (generic non-recruited NPCs added directly) into the SRD, or strip them to extension-only behaviour.
@@ -463,13 +463,13 @@ Code `lib/xse-schema.ts:263-298` ships 32 equipment items. Includes:
 
 - ✅ Apprentice unlock is gated on **Moment of High Insight (6+6)** only, matching SRD.
 
-### Morale Check — modifier slot computation
+### Morale Check - modifier slot computation
 The Morale roll is `2d6 + leader's AMod + leader's SMod + 6 modifier slots`. Each slot's source:
 
 | Slot | Code formula | SRD prose |
 |---|---|---|
 | Mood Around The Campfire | Prior Morale's `cmod_for_next` (= outcomeToMoraleCmod) | "Carried in from previous Morale Check" ✅ |
-| Fed | `outcomeToMoraleCmod(fedOutcome)` | Same — derived from weekly Fed Check ✅ |
+| Fed | `outcomeToMoraleCmod(fedOutcome)` | Same - derived from weekly Fed Check ✅ |
 | Clothed | `outcomeToMoraleCmod(clothedOutcome)` | Same ✅ |
 | Enough Hands | `+1 if all 3 minimums met, else −1 per group short, max −3` | Match per `tasks/rules-extract-communities.md` |
 | A Clear Voice | `0 if leader, −1 if leaderless` | ✅ |
@@ -478,9 +478,9 @@ The Morale roll is `2d6 + leader's AMod + leader's SMod + 6 modifier slots`. Eac
 
 Source: `lib/community-logic.ts:75-111`.
 
-🟡 **EXTENDED — World Events**: code adds a 7th slot path. `components/CommunityMoraleModal.tsx:201-207, 250-255` pulls active Distemper Timeline pins (`map_pins.cmod_active=true`) within their `cmod_radius_km` of the community's Homestead, applies their `cmod_impact` as Morale CMods, GM can opt-out per-event. 🔴 **Add to SRD §08**: "World Events that intersect a community's location apply CMod impacts to the next Morale Check; the GM may rule individual events as not affecting their community."
+🟡 **EXTENDED - World Events**: code adds a 7th slot path. `components/CommunityMoraleModal.tsx:201-207, 250-255` pulls active Distemper Timeline pins (`map_pins.cmod_active=true`) within their `cmod_radius_km` of the community's Homestead, applies their `cmod_impact` as Morale CMods, GM can opt-out per-event. 🔴 **Add to SRD §08**: "World Events that intersect a community's location apply CMod impacts to the next Morale Check; the GM may rule individual events as not affecting their community."
 
-🟡 **EXTENDED — Inspiration Lv4 (+4 Morale CMod)** and **Psychology* Lv4 (+3 Morale CMod, tenure-gated)** are CRB additions auto-applied. Already documented as CRB additions on the SRD pages.
+🟡 **EXTENDED - Inspiration Lv4 (+4 Morale CMod)** and **Psychology* Lv4 (+3 Morale CMod, tenure-gated)** are CRB additions auto-applied. Already documented as CRB additions on the SRD pages.
 
 ### Morale outcomes → next-Mood CMod
 | Outcome | Next-week Mood |
@@ -503,41 +503,41 @@ Source: `lib/community-logic.ts:75-111`.
 
 ✅ Match (`outcomeToDeparturePct`).
 
-### Departure pick — weighted priority
+### Departure pick - weighted priority
 🟡 **EXTENDED**: `pickDeparturesWeighted` (`lib/community-logic.ts:128-160`) chooses WHICH NPCs leave on a Morale failure. Priority (lowest = leaves first):
 - 0: unassigned
 - 1: cohort
 - 2: convert (or generic member)
 - 3: conscript
 - 4: founder
-- 5: apprentice (most loyal — leaves last)
+- 5: apprentice (most loyal - leaves last)
 
 PCs are never auto-removed.
 
-🔴 **Add to SRD §08**: "On a Morale Check failure, members leave in priority order: Unassigned first, then Cohort, Convert, Conscript, Founder; Apprentices leave last. Player Characters never auto-leave — they choose to stay or go narratively."
+🔴 **Add to SRD §08**: "On a Morale Check failure, members leave in priority order: Unassigned first, then Cohort, Convert, Conscript, Founder; Apprentices leave last. Player Characters never auto-leave - they choose to stay or go narratively."
 
 ### Dissolution + Retention
 - 3 consecutive Morale failures → community dissolves. ✅ SRD match.
 - Retention Check: an immediate Morale Check using the failed roll's `cmod_for_next` as the Mood slot. ✅ SRD match.
 
-🟡 **EXTENDED**: code lets the leader pick a different skill for the Retention Check (`retentionSkillName`). SRD just says "make an immediate Morale Check". The picker is a UX nicety. 🔴 **Add to SRD**: "On a Retention Check, the leader may use any social skill the GM agrees applies — the desperate rally is its own beat, not necessarily the same skill that drove the failed Morale roll."
+🟡 **EXTENDED**: code lets the leader pick a different skill for the Retention Check (`retentionSkillName`). SRD just says "make an immediate Morale Check". The picker is a UX nicety. 🔴 **Add to SRD**: "On a Retention Check, the leader may use any social skill the GM agrees applies - the desperate rally is its own beat, not necessarily the same skill that drove the failed Morale roll."
 
-### Community Structure — role minimums
+### Community Structure - role minimums
 | Role | Code | SRD |
 |---|---|---|
 | Gatherers | `ceil(N × 0.33)` | "33% (round down)" |
 | Maintainers | `ceil(N × 0.20)` | "20% (round down)" |
-| Safety | `max(1, ceil(N × 0.05))` | "5–10%" |
+| Safety | `max(1, ceil(N × 0.05))` | "5-10%" |
 
-🔴 **CONFLICT — rounding direction**:
+🔴 **CONFLICT - rounding direction**:
 - SRD: "round **down**" (33% of 13 = 4 floor)
 - Code: `ceil` (33% of 13 = 5 ceil)
 
 For Gatherers and Maintainers, code uses ceil; SRD says floor. **Verify which is intended.** Code's stricter ceil means small communities need slightly more staffing to clear the threshold.
 
-For Safety: code adds a `max(1, …)` floor — at least 1 person on Safety even in tiny communities. SRD doesn't specify a floor. Bless code's behaviour ("at least one Safety in any community") into the SRD.
+For Safety: code adds a `max(1, …)` floor - at least 1 person on Safety even in tiny communities. SRD doesn't specify a floor. Bless code's behaviour ("at least one Safety in any community") into the SRD.
 
-### Apprentice — 1 per PC
+### Apprentice - 1 per PC
 ✅ Code enforces 1 Apprentice per PC at any time. SRD match.
 
 ### Apprentice Paradigm-vs-Profession
@@ -545,27 +545,27 @@ For Safety: code adds a `max(1, …)` floor — at least 1 person on Safety even
 
 ---
 
-## Appendix D — Paradigms
+## Appendix D - Paradigms
 
 Code (`lib/xse-schema.ts:325+`) ships 12 Distemper Paradigms with full RAPID, skill, weapon, and equipment loadouts.
 
-🔴 **WIRED**: each Paradigm's stats are canonical in code. SRD Appendix D should publish the code's 12 Paradigm tables verbatim. The starter loadout (Primary, Secondary, 2 Equipment items) is a Tapestry-specific addition — the SRD only says "pick weapons and equipment". 🟡 **EXTENDED — bless the loadout into SRD**: it's a strong onboarding aid.
+🔴 **WIRED**: each Paradigm's stats are canonical in code. SRD Appendix D should publish the code's 12 Paradigm tables verbatim. The starter loadout (Primary, Secondary, 2 Equipment items) is a Tapestry-specific addition - the SRD only says "pick weapons and equipment". 🟡 **EXTENDED - bless the loadout into SRD**: it's a strong onboarding aid.
 
-🟢 **CLARIFIED — Vibe Shifts**: SRD Appendix D mentions "Paradigms & Vibe Shifts" (Table 8). Code currently doesn't have a Vibe Shifts surface. **Action**: either add a Vibe Shifts column/section to code (tracking the per-Paradigm thematic shift) or remove the "& Vibe Shifts" reference from the SRD title.
+🟢 **CLARIFIED - Vibe Shifts**: SRD Appendix D mentions "Paradigms & Vibe Shifts" (Table 8). Code currently doesn't have a Vibe Shifts surface. **Action**: either add a Vibe Shifts column/section to code (tracking the per-Paradigm thematic shift) or remove the "& Vibe Shifts" reference from the SRD title.
 
 ---
 
 ## Cross-cutting nits
 
-1. **Code uses `morality: 3` on SecondaryStats** (`lib/xse-schema.ts:719`) — purpose unclear. Either it's the placeholder Breaking Point default and should be renamed, or it's an unused field that should be removed.
+1. **Code uses `morality: 3` on SecondaryStats** (`lib/xse-schema.ts:719`) - purpose unclear. Either it's the placeholder Breaking Point default and should be renamed, or it's an unused field that should be removed.
 
 2. **Distemper CRB layered features** (Inspiration Lv4, Psychology* Lv4, Apprentice Paradigm pick rewrite, Profession seeds): currently inline on the SRD `/rules/*` pages with "Distemper CRB additions" sections. Decide: keep inline (current) or split into a separate `/rules/crb/` namespace if XSE goes multi-setting.
 
 3. **Sniper's Rifle weapon-band penalty**: the rules-extract-combat.md notes "Sniper's Rifle (and similar) carry weapon-specific extra penalties". Code's `range-profiles.ts:42` ships a custom profile (engaged −4, close −2, medium 0, long +1, distant +1). 🔴 **Update SRD §06 Range** to reference per-weapon profiles by name.
 
-4. **Vehicles**: code has a vehicle system (`lib/setting-vehicles.ts`, `components/VehicleCard.tsx`, etc.) — SRD doesn't cover vehicles at all. 🟡 **EXTENDED — Tapestry-only feature**. Either add §09 Vehicles to the SRD, or document as a Distemper-platform extension.
+4. **Vehicles**: code has a vehicle system (`lib/setting-vehicles.ts`, `components/VehicleCard.tsx`, etc.) - SRD doesn't cover vehicles at all. 🟡 **EXTENDED - Tapestry-only feature**. Either add §09 Vehicles to the SRD, or document as a Distemper-platform extension.
 
-5. **Inventory + Encumbrance time-tick**: the GM Tools "Time" feature applies hourly RP loss to overencumbered PCs/NPCs. SRD has Encumbrance as a stat but no time-tick rule. 🟡 **House rule per Xero, 2026-04-30** — bless into SRD §07.
+5. **Inventory + Encumbrance time-tick**: the GM Tools "Time" feature applies hourly RP loss to overencumbered PCs/NPCs. SRD has Encumbrance as a stat but no time-tick rule. 🟡 **House rule per Xero, 2026-04-30** - bless into SRD §07.
 
 6. **Stockpiles, trade, world events, communities subscriptions, multi-campaign mechanics**: all Tapestry/Distemperverse extensions, none in SRD. Document scope decisions before publishing the next SRD revision.
 
@@ -573,14 +573,14 @@ Code (`lib/xse-schema.ts:325+`) ships 12 Distemper Paradigms with full RAPID, sk
 
 ## Recommended next steps
 
-1. **Reconcile §04 step ordering** — single biggest user-facing divergence. Update SRD to match code's order.
+1. **Reconcile §04 step ordering** - single biggest user-facing divergence. Update SRD to match code's order.
 2. **Reconcile Apprentice Paradigm → Profession** in §08.
 3. **Publish the per-weapon range-profile table** in §06 (or §07 Equipment).
-4. **Adopt code's weapon catalog** as canonical for Tables 16–19 + Equipment Table 20.
+4. **Adopt code's weapon catalog** as canonical for Tables 16-19 + Equipment Table 20.
 5. **Document `morality: 3` field**, decide rename or remove.
 6. **Add World Events slot to §08 Morale**.
 7. **Document Apprentice/Founder departure-priority and the at-least-1-Safety floor** in §08.
-8. **Decide CRB additions placement** — keep inline on SRD pages, or split.
+8. **Decide CRB additions placement** - keep inline on SRD pages, or split.
 9. **After SRD update**: re-author the `/rules/*` pages to match the new canonical text. Most pages are mechanical; the structure pages (§04 ordering, §08 Recruitment types) need careful prose revision.
 
 Once you have a new SRD PDF, drop it at `docs/Rules/`, ping me, and I'll regenerate every `/rules/*` page from it.

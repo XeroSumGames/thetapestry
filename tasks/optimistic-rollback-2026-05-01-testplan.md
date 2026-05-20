@@ -1,12 +1,12 @@
-# Optimistic-update rollback fixes — 2026-05-01 testplan
+# Optimistic-update rollback fixes - 2026-05-01 testplan
 
-Two real low-severity bugs from the audit. Two "high severity" findings audit flagged were already guarded upstream — false positives, no fix needed (`split('Stabilize ')[1]` at table:4829 is gated by `.includes('Stabilize ')` at :4828; `order[0]` at :1681 is gated by `if (order.length === 0) return` at :1674). One PR. Ship to live.
+Two real low-severity bugs from the audit. Two "high severity" findings audit flagged were already guarded upstream - false positives, no fix needed (`split('Stabilize ')[1]` at table:4829 is gated by `.includes('Stabilize ')` at :4828; `order[0]` at :1681 is gated by `if (order.length === 0) return` at :1674). One PR. Ship to live.
 
 ## What's fixed
 
 ### 1. Character delete leaves UI inconsistent on RLS denial
 
-[app/characters/page.tsx:43](app/characters/page.tsx:43). Pre-fix the optimistic filter ran regardless of the Supabase delete's outcome — RLS denial or network blip left the row gone from the UI but still present on the server until reload. Now: await the delete, check `error`, only flip local state on success; surface a user-facing alert on failure.
+[app/characters/page.tsx:43](app/characters/page.tsx:43). Pre-fix the optimistic filter ran regardless of the Supabase delete's outcome - RLS denial or network blip left the row gone from the UI but still present on the server until reload. Now: await the delete, check `error`, only flip local state on success; surface a user-facing alert on failure.
 
 ### 2. `handleStatUpdate` ignored Supabase errors
 
@@ -19,7 +19,7 @@ No DB migration. No functional behavior change on the happy path.
 ### A. Character delete (3 min)
 - [ ] Sign in as a character owner. From `/characters`, delete a character. Expect: confirm dialog → row disappears → no error.
 - [ ] To force the failure path: in DevTools Network, throttle to offline, then delete. Expect: alert "Delete failed: …" and the row STAYS in the UI (pre-fix it would have disappeared).
-- [ ] Restore network, refresh the page — row state matches the server.
+- [ ] Restore network, refresh the page - row state matches the server.
 
 ### B. Stat update rollback (5 min)
 - [ ] Open `/stories/<id>/table` as the GM during an active session. Adjust a PC's WP/RP/Sanity stat from the table. Expect: stat snaps to the new value instantly; no error.

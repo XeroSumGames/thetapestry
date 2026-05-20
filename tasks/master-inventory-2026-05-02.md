@@ -1,4 +1,4 @@
-# Master Inventory — The Tapestry (2026-05-02)
+# Master Inventory - The Tapestry (2026-05-02)
 
 Complete historical work consolidation. Spine: letsgototheend.md. Cross-verified against backlog-2026-05-01, outstanding-work, handoff evening, git log.
 
@@ -26,7 +26,7 @@ Complete historical work consolidation. Spine: letsgototheend.md. Cross-verified
 
 ---
 
-## OPEN — actionable now (13 items)
+## OPEN - actionable now (13 items)
 
 ### Small bounded items
 - Parent/child pin structure (schema + UI nesting)
@@ -46,12 +46,12 @@ Complete historical work consolidation. Spine: letsgototheend.md. Cross-verified
 
 ## DEFERRED (6 items with reasons)
 
-- Modal unification pass 3 (Attack) — declined by Xero; 480 lines bespoke, no shared-shell win
-- CMod Stack component — multi-session refactor, not pre-launch
-- Lag on initiative — needs Xero solo repro; no action without symptom data
-- Code audit deferrals — table split/debounce/guards; high-risk pre-launch
-- GM Kit v1 repoint — paused 2026-04-19; Phase 5 Modules supersedes; don't touch
-- Communities Phase B NPC-proxy — Activity Blocks Phase D shipped 2026-04-23, un-blocked; needs scoping + small UI
+- Modal unification pass 3 (Attack) - declined by Xero; 480 lines bespoke, no shared-shell win
+- CMod Stack component - multi-session refactor, not pre-launch
+- Lag on initiative - needs Xero solo repro; no action without symptom data
+- Code audit deferrals - table split/debounce/guards; high-risk pre-launch
+- GM Kit v1 repoint - paused 2026-04-19; Phase 5 Modules supersedes; don't touch
+- Communities Phase B NPC-proxy - Activity Blocks Phase D shipped 2026-04-23, un-blocked; needs scoping + small UI
 
 ---
 
@@ -82,7 +82,7 @@ Don't build:
 - Phase E: Ecosystem (GM Kit Export v2, Module+Community cross-publish, in-session toolkit, Roll20/Foundry import)
 - Phase F: GM Adventure Authoring (Story Arc form, NPC/Map/Handout/Encounter quick-builds, route tables, preview, publish)
 
-### BLOCKED on Xero — Lv4 Skill Traits (ship-together-or-not-at-all)
+### BLOCKED on Xero - Lv4 Skill Traits (ship-together-or-not-at-all)
 Full list not yet written. Both Morale bonuses reverted 2026-04-23 per Xero direction.
 - Inspiration Lv4 "Beacon of Hope" auto +4 Morale
 - Psychology Lv4 "Insightful Counselor" auto +3 Morale
@@ -95,29 +95,29 @@ Full list not yet written. Both Morale bonuses reverted 2026-04-23 per Xero dire
 - Doors with is_open + movement/vision blocking
 - Line of sight polygon vision masks
 
-### Phase 6—11 roadmap
+### Phase 6-11 roadmap
 Phase 6 (Community & Retention: LFG matching, scheduling, Gazette, between-session, subscriber tiers, Graffiti) · Phase 7 (Ghost Mode Advanced) · Phase 8 (Physical Products) · Phase 9 (Maturity) · Phase 10 (Future Platforms) · Phase 11 (Cross-Platform Parity).
 
 ---
 
 ## DISCARDED (2 items, closed)
 
-- Embed Distemper videos — Xero discarded (no clear target page)
-- /firsttimers retention question — replaced by WelcomeModal (6bc5ff6), fully closed
+- Embed Distemper videos - Xero discarded (no clear target page)
+- /firsttimers retention question - replaced by WelcomeModal (6bc5ff6), fully closed
 
 ---
 
 ## UNCLEAR / NEEDS INVESTIGATION (1 item)
 
-- Tactical map mouse-pan via drag — click-and-drag empty doesn't pan when canvas overflows. Hypothesized causes (no actual overflow, contain:layout interaction, canvas styling) but unverified. Workaround: WASD/arrows work. **Pre-action:** dev tools investigation to confirm root cause, OR Xero says "ship without it."
+- Tactical map mouse-pan via drag - click-and-drag empty doesn't pan when canvas overflows. Hypothesized causes (no actual overflow, contain:layout interaction, canvas styling) but unverified. Workaround: WASD/arrows work. **Pre-action:** dev tools investigation to confirm root cause, OR Xero says "ship without it."
 
 ---
 
 ## CROSS-DOC ALIASES (3, unified)
 
 - "Pin-image migration" (backlog) = "Character photo base64 → Storage" (this list). Pins use Storage; characters store base64. Framing corrected.
-- "Embed videos" — backlog §7 AND letsgototheend.md ❌ DISCARDED. Closed.
-- /firsttimers — backlog "do not touch" AND letsgototheend.md ❌ DISCARDED via WelcomeModal. Closed.
+- "Embed videos" - backlog §7 AND letsgototheend.md ❌ DISCARDED. Closed.
+- /firsttimers - backlog "do not touch" AND letsgototheend.md ❌ DISCARDED via WelcomeModal. Closed.
 
 ---
 
@@ -135,7 +135,7 @@ All verified live in code + git history.
 | Bucket | Count |
 |---|---|
 | ✅ Shipped (2026-05-01 to 05-02) | ~60 commits |
-| 🟡 Open — actionable now | 3 small + 1 design + 1 verify + 1 content |
+| 🟡 Open - actionable now | 3 small + 1 design + 1 verify + 1 content |
 | ⏸ Deferred (with reasons) | 6 |
 | 🔄 Backburner (trigger-gated) | 3 |
 | ⏹ Phase 4 non-goals | 4 |
@@ -151,15 +151,15 @@ All verified live in code + git history.
 
 ## KEY FINDINGS
 
-1. **Lv4 Skill Traits fully blocked** — Ship-together-or-not-at-all enforced. Both Morale bonuses reverted 2026-04-23. No exceptions until full list lands outside repo.
+1. **Lv4 Skill Traits fully blocked** - Ship-together-or-not-at-all enforced. Both Morale bonuses reverted 2026-04-23. No exceptions until full list lands outside repo.
 
-2. **Modal unification declined** — Attack modal's 480 lines have no shared-shell payoff. Deliberate de-scope by Xero.
+2. **Modal unification declined** - Attack modal's 480 lines have no shared-shell payoff. Deliberate de-scope by Xero.
 
-3. **Code audit deferrals intentional** — Table page split (5,365 lines), debounce, sequence guards all post-launch work. High-risk pre-launch.
+3. **Code audit deferrals intentional** - Table page split (5,365 lines), debounce, sequence guards all post-launch work. High-risk pre-launch.
 
-4. **Phase 4 Campfire 85%+ complete** — Phases 4A–4C shipped. Remaining 4D (per-community feed) + 4E (pagination/FTS/reactions) all nice-to-have.
+4. **Phase 4 Campfire 85%+ complete** - Phases 4A-4C shipped. Remaining 4D (per-community feed) + 4E (pagination/FTS/reactions) all nice-to-have.
 
-5. **Communities ~98% shipped** — Phases A–D fully done. Phase E ~95% shipped. Only per-community Campfire feed + Lv4 bonuses remain, both gated on dependencies.
+5. **Communities ~98% shipped** - Phases A-D fully done. Phase E ~95% shipped. Only per-community Campfire feed + Lv4 bonuses remain, both gated on dependencies.
 
 ---
 

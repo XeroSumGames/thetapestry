@@ -1,11 +1,11 @@
-# Testplan — Character-sheet Unequip button
+# Testplan - Character-sheet Unequip button
 
 **Commit:** `3e2beab` (on main)
 
 ## What changed
-Added a one-click `UNEQUIP` button on the character sheet's PRIMARY/SECONDARY weapon blocks, sitting beside `UPKEEP CHECK`. Equivalent to selecting "— None —" from the weapon dropdown, but one click. Same orange outline styling as the Ready Weapon modal's Unequip button. Inline sheet (table page) and popout (`/character-sheet`) both use the same `CharacterCard` component, so both got the button in one edit.
+Added a one-click `UNEQUIP` button on the character sheet's PRIMARY/SECONDARY weapon blocks, sitting beside `UPKEEP CHECK`. Equivalent to selecting "- None -" from the weapon dropdown, but one click. Same orange outline styling as the Ready Weapon modal's Unequip button. Inline sheet (table page) and popout (`/character-sheet`) both use the same `CharacterCard` component, so both got the button in one edit.
 
-**Behavior:** Clears the weapon slot (sets `weaponName: ''`). Does NOT push to inventory. (Sheet equipping isn't inventory-backed — the dropdown lists the full catalog. The combat-time Ready Weapon modal still does inventory-aware unequip; that path is unchanged.)
+**Behavior:** Clears the weapon slot (sets `weaponName: ''`). Does NOT push to inventory. (Sheet equipping isn't inventory-backed - the dropdown lists the full catalog. The combat-time Ready Weapon modal still does inventory-aware unequip; that path is unchanged.)
 
 ## Test steps
 
@@ -13,7 +13,7 @@ Added a one-click `UNEQUIP` button on the character sheet's PRIMARY/SECONDARY we
 1. Hard-refresh `/stories/<id>/table`.
 2. Open your PC sheet.
 3. **Both slots filled:** Confirm UNEQUIP button appears beside UPKEEP CHECK on PRIMARY and SECONDARY blocks.
-4. Click UNEQUIP on PRIMARY → weapon name clears, dropdown shows "— None —", weapon detail block (Skill / WP Damage / Range / Condition / Attack) disappears, encumbrance number drops accordingly.
+4. Click UNEQUIP on PRIMARY → weapon name clears, dropdown shows "- None -", weapon detail block (Skill / WP Damage / Range / Condition / Attack) disappears, encumbrance number drops accordingly.
 5. Re-equip PRIMARY by picking from the dropdown → weapon and detail block return.
 6. **Pristine condition:** Set PRIMARY's condition to Pristine. UPKEEP CHECK should disappear (existing behavior); UNEQUIP should still show.
 7. **Empty slot:** With PRIMARY empty (just dropdown, no weapon detail block), confirm UNEQUIP does **not** appear. (It only renders inside the `w &&` block.)
@@ -21,7 +21,7 @@ Added a one-click `UNEQUIP` button on the character sheet's PRIMARY/SECONDARY we
 
 ### Popout sheet
 9. Open `/character-sheet` (popout window) for one of your PCs.
-10. Repeat steps 3–8 in the popout. Behavior should be identical.
+10. Repeat steps 3-8 in the popout. Behavior should be identical.
 
 ### Combat-bar regression check (no change expected)
 11. During combat, open the Ready Weapon modal on a PC turn. The original Unequip button (small, top-right of each slot panel) should still work and still push the weapon back to inventory. No double-Unequip / no UI change here.

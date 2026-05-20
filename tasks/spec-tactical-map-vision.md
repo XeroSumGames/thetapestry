@@ -1,6 +1,6 @@
-# Spec — Tactical Map Vision System
+# Spec - Tactical Map Vision System
 
-**Goal:** Bring the tactical map up to "atmospheric exploration" UX — GMs control what players see, doors block movement, and (eventually, after play feedback) full LoS with walls.
+**Goal:** Bring the tactical map up to "atmospheric exploration" UX - GMs control what players see, doors block movement, and (eventually, after play feedback) full LoS with walls.
 
 **Status:** Phase 1 in progress.
 
@@ -12,26 +12,26 @@ The current tactical map is "all visible, all the time." There's no way to model
 
 ---
 
-## Three phases — staged, real-play-gated
+## Three phases - staged, real-play-gated
 
-### Phase 1 — GM-painted fog (1-2 days) ← shipping now
+### Phase 1 - GM-painted fog (1-2 days) ← shipping now
 - New `tactical_scenes.fog_state` jsonb. Sparse map keyed by `"x,y"` for fogged cells.
-- GM toolbar: "Edit Fog" toggle. Two sub-tools — Paint (drag to add fog) + Erase (drag to clear).
+- GM toolbar: "Edit Fog" toggle. Two sub-tools - Paint (drag to add fog) + Erase (drag to clear).
 - Render: fogged cells are dark over the background; tokens inside fog are hidden from players entirely.
 - GM sees fogged cells dimmed but still inspectable (so they know what's hidden).
 - Bulk: "Fog all" + "Clear all" buttons.
 - No per-token sight, no walls, no LoS math. Pure atmosphere control.
-- This unlocks: "the dungeon is dark; I clear cells as you explore" — the dominant TTRPG workflow.
+- This unlocks: "the dungeon is dark; I clear cells as you explore" - the dominant TTRPG workflow.
 
-### Phase 2 — Doors as object tokens (1-2 days)
+### Phase 2 - Doors as object tokens (1-2 days)
 - New object token kind: `door`. Same scene_tokens row but with `object_type='door'` and `is_open: boolean` on its properties.
 - Visual: closed door = solid line across two adjacent cells, 🚪 chip; open door = dashed line, no chip.
 - Click a door token → toggle is_open.
 - Closed doors block movement (Chebyshev pathfinding treats them as wall-edges).
-- No automatic LoS impact in v2 — doors are visible-but-blocking. Pairs naturally with painted fog (closed doors stay visible at the edge of cleared regions, telegraphing "there's something past this").
+- No automatic LoS impact in v2 - doors are visible-but-blocking. Pairs naturally with painted fog (closed doors stay visible at the edge of cleared regions, telegraphing "there's something past this").
 - `locked` flag deferred to v3+.
 
-### Phase 3 — Walls + dynamic LoS + per-token sight (1-2 weeks)
+### Phase 3 - Walls + dynamic LoS + per-token sight (1-2 weeks)
 **Punted.** Will only commit to this after Phase 1+2 see real play and a real workflow gap surfaces. Real signals to revisit:
 - Players asking "why does fog reveal automatically as I walk?" (sight radius)
 - GMs hand-painting around walls every session (build walls + auto-LoS)
@@ -41,7 +41,7 @@ When/if we revisit, the design lives in the appendix below for reference.
 
 ---
 
-## Phase 1 details — what's actually getting built now
+## Phase 1 details - what's actually getting built now
 
 ### Schema
 
@@ -50,7 +50,7 @@ ALTER TABLE tactical_scenes
   ADD COLUMN IF NOT EXISTS fog_state jsonb DEFAULT '{}'::jsonb;
 ```
 
-`fog_state` is `{ "x,y": true }` — sparse, only fogged cells stored. Empty = no fog (default).
+`fog_state` is `{ "x,y": true }` - sparse, only fogged cells stored. Empty = no fog (default).
 
 ### UI
 
@@ -72,7 +72,7 @@ ALTER TABLE tactical_scenes
 - Combat initiative entries belonging to hidden tokens stay in the initiative tracker (the GM can still address them by name) but the token visual is suppressed on the map.
 
 **GM view:**
-- Fogged cells render dimmed (`rgba(0,0,0,0.35)`) — visible enough to inspect; clearly marked as "hidden from players."
+- Fogged cells render dimmed (`rgba(0,0,0,0.35)`) - visible enough to inspect; clearly marked as "hidden from players."
 - Tokens inside fog still render at full opacity for the GM with a small `🌫️` marker.
 
 ### Persistence
@@ -86,13 +86,13 @@ ALTER TABLE tactical_scenes
 
 - Per-cell partial-opacity (just on/off).
 - Multiple fog layers (just one).
-- Fog "memory" (once cleared, stays cleared until GM repaints — there's no auto-refog).
+- Fog "memory" (once cleared, stays cleared until GM repaints - there's no auto-refog).
 - Sight radius / LoS computation.
 - Walls.
 
 ---
 
-## Appendix — Phase 3 design (deferred reference only)
+## Appendix - Phase 3 design (deferred reference only)
 
 (Original full LoS spec preserved here so we don't have to redesign it from scratch when/if we revisit.)
 

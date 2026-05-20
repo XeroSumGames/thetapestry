@@ -22,7 +22,7 @@ map even when the canvas overflows the container.
 
 **Likely causes to investigate next:**
 - The canvas may not actually overflow the container at typical
-  zoom levels — `containerRef.current.scrollLeft` writes have no
+  zoom levels - `containerRef.current.scrollLeft` writes have no
   effect when there's nothing to scroll. Verify with devtools.
 - `contain: layout paint` interaction with `overflow: auto` may
   need re-evaluation.
