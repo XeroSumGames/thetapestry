@@ -79,6 +79,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 **Phase 3-5** (the four committed structural workstreams from chat - sequenced AFTER Phase 0-2)
 - [ ] **Decompose `app/stories/[id]/table/page.tsx`** (12,429 lines) - extract by concern into hooks + sub-components. Realtime subscription audit folds into this.
 - *(Modal unification + CMod Stack dedup-removed 2026-05-19. Canonical entries live in "Ready to build (medium)" below - search for "Modal unification (5 of 6 remaining)" and "CMod Stack reusable component".)*
+- [ ] **Stabilize migration to dedicated `<RollModal>` (Phase 1)** - spec at [tasks/spec-stabilize-migration.md](spec-stabilize-migration.md). 3-5 hours. Pulls Stabilize off the brittle pendingRoll label-substring dispatch into its own dedicated modal mirroring Stress Check / Breaking Point / Recruit. Phase 2 (Distract) + Phase 3 (First Impression) + Phase 4 (retire pendingRoll for special actions) chained behind it.
 
 ### Untested live
 
