@@ -106,18 +106,30 @@ export interface CommunityWeeklyCheck {
   departures?: { id: string; reason: string }[]  // morale + retention
 }
 
-/** Character Development Point spend (rapid attribute, skill, or
- *  trait). Written when the CharacterEvolution modal commits. */
+/** Character Development Point spend (rapid attribute or skill - 'trait'
+ *  is reserved for a future spend kind). Written when the
+ *  CharacterEvolution modal commits.
+ *
+ *  Field naming note (audit 2026-05-20): the live write site at
+ *  components/CharacterEvolution.tsx:343 uses snake_case for
+ *  multi-word fields and stores the spend classification inside the
+ *  payload as `spendKind`. The spec at section 2 of
+ *  spec-damage-json-payload.md prescribed camelCase + a different
+ *  discriminator name; this interface follows REALITY so Phase D3
+ *  doesn't break the reader (no readers consume these fields yet,
+ *  but session-export's JSON shape must stay stable when readers
+ *  arrive). Updating the spec is a puffer-fish-lane follow-up. */
 export interface CharacterEvolutionSpend {
   kind: 'evolution'
-  spendKind: 'rapid' | 'skill' | 'trait'
+  spendKind: 'rapid' | 'skill' | 'trait'  // distinct from the top-level discriminator
   key: string                 // attribute name OR skill name OR trait name
-  fromLevel: number
-  toLevel: number
+  from_level: number
+  to_level: number
   cost: number                // CDP cost
   target: 'self' | 'apprentice'
-  apprenticeNpcId?: string
-  narrative?: string          // optional GM-supplied narrative
+  apprentice_npc_id: string | null  // null when target === 'self'
+  narrative: string | null    // null when modal's narrative input was empty
+  new_cdp_balance: number     // post-spend remaining CDP, for the renderer
 }
 
 /** Vehicle check (driving / brew / navigate). Attack rolls on

@@ -33,6 +33,7 @@ import { ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../lib/cdp-costs'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { OUTCOME } from '../lib/roll-outcomes'
+import { makeCharacterEvolutionSpend } from '../lib/damage-payload'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 
@@ -340,9 +341,14 @@ export default function CharacterEvolution({
             character_name: targetLabel,
             label: `${targetLabel} - ${headline.replace(/^📈\s*/, '')}`,
             outcome: OUTCOME.evolution,
-            damage_json: {
-              kind: pending.kind,           // 'rapid' | 'skill'
-              key: pending.key,             // attr name or skill name
+            // Phase D3 migration (2026-05-20, tasks/spec-damage-json-payload.md).
+            // Was an inline literal; now stamped via makeCharacterEvolutionSpend
+            // so the 'evolution' discriminator is locked in and future readers
+            // can switch on damage_json.kind. Field names + nullable shape match
+            // the previous inline literal exactly - readers don't notice.
+            damage_json: makeCharacterEvolutionSpend({
+              spendKind: pending.kind,
+              key: pending.key,
               from_level: pending.fromLevel,
               to_level: pending.toLevel,
               cost: pending.cost,
@@ -350,7 +356,7 @@ export default function CharacterEvolution({
               apprentice_npc_id: target === 'apprentice' ? apprentice?.npcId ?? null : null,
               narrative: pending.needsNarrative ? pending.narrative.trim() : null,
               new_cdp_balance: newCdp,
-            },
+            }),
           })
           void logEvent('character_evolved', {
             character_id: characterId,

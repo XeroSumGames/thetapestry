@@ -171,29 +171,35 @@ describe('DamagePayload - CommunityWeeklyCheck', () => {
 })
 
 describe('DamagePayload - CharacterEvolutionSpend', () => {
-  it('compiles with rapid-attribute spend', () => {
+  it('compiles with rapid-attribute spend (snake_case field names match live write site)', () => {
     const p: CharacterEvolutionSpend = {
       kind: 'evolution',
       spendKind: 'rapid',
       key: 'PHY',
-      fromLevel: 0, toLevel: 1,
+      from_level: 0, to_level: 1,
       cost: 5,
       target: 'self',
+      apprentice_npc_id: null,
+      narrative: null,
+      new_cdp_balance: 15,
     }
     expect(p.spendKind).toBe('rapid')
+    expect(p.from_level).toBe(0)
   })
   it('compiles with apprentice-skill spend', () => {
     const p: CharacterEvolutionSpend = {
       kind: 'evolution',
       spendKind: 'skill',
       key: 'Medicine',
-      fromLevel: 1, toLevel: 2,
+      from_level: 1, to_level: 2,
       cost: 3,
       target: 'apprentice',
-      apprenticeNpcId: 'npc1',
+      apprentice_npc_id: 'npc1',
       narrative: 'taught by his master over 3 weeks',
+      new_cdp_balance: 12,
     }
     expect(p.target).toBe('apprentice')
+    expect(p.apprentice_npc_id).toBe('npc1')
   })
 })
 
@@ -459,23 +465,28 @@ describe('makeCommunityWeeklyCheck', () => {
 })
 
 describe('makeCharacterEvolutionSpend', () => {
-  it('stamps kind = "evolution" on self spend', () => {
+  it('stamps kind = "evolution" on self spend (snake_case fields)', () => {
     const r = makeCharacterEvolutionSpend({
       spendKind: 'rapid', key: 'PHY',
-      fromLevel: 0, toLevel: 1, cost: 5,
+      from_level: 0, to_level: 1, cost: 5,
       target: 'self',
+      apprentice_npc_id: null, narrative: null,
+      new_cdp_balance: 15,
     })
     expect(r.kind).toBe('evolution')
     expect(r.target).toBe('self')
+    expect(r.from_level).toBe(0)
   })
   it('stamps kind = "evolution" on apprentice spend', () => {
     const r = makeCharacterEvolutionSpend({
       spendKind: 'skill', key: 'Medicine',
-      fromLevel: 1, toLevel: 2, cost: 3,
-      target: 'apprentice', apprenticeNpcId: 'npc1',
+      from_level: 1, to_level: 2, cost: 3,
+      target: 'apprentice', apprentice_npc_id: 'npc1',
+      narrative: null,
+      new_cdp_balance: 12,
     })
     expect(r.target).toBe('apprentice')
-    expect(r.apprenticeNpcId).toBe('npc1')
+    expect(r.apprentice_npc_id).toBe('npc1')
   })
 })
 
@@ -561,8 +572,9 @@ describe('All 11 make* helpers - cross-check via DamagePayloadKind', () => {
         weekNumber: 1, rollOutcome: 'Success',
       }),
       makeCharacterEvolutionSpend({
-        spendKind: 'rapid', key: 'PHY', fromLevel: 0, toLevel: 1, cost: 5,
-        target: 'self',
+        spendKind: 'rapid', key: 'PHY', from_level: 0, to_level: 1, cost: 5,
+        target: 'self', apprentice_npc_id: null, narrative: null,
+        new_cdp_balance: 15,
       }),
       makeVehicleCheck({
         vehicleId: 'v1', vehicleName: 'Minnie', checkKind: 'drive',
