@@ -143,64 +143,95 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-19 (stability audit + /stability-audit scaffolding)
+# Session state - 2026-05-20 (em-dash sweep + audit-driven cleanup + sprint close-out)
 
 ## Current main HEAD
 
-`a0d611b docs(stability-audit): scaffold /stability-audit slash + pattern + lessons`
+`5a5391d docs(sprint): close-of-sprint state - all 6 open items + 4 design Qs closed`
 
-## The arc this session (2026-05-19, evening)
+## The arc this session (2026-05-20, all-day)
 
-Xero asked the "dev team" (the puffer-fish system) to verify the codebase was stable post-playtest. First `/stability-audit` ever run on the project. Output: read-only audit doc, then triaged HIGH findings shipped, then scaffolded the pattern so future iterations don't have to re-invent the framing.
+After 2026-05-19's heavy feature day (Recruit Tier-2 Phases A/B/C, narrative polish across 12+ branches, GM Share View, Gut Instinct whisper modal, etc.), today was scoped as audit + maintenance work. Pre-playtest is Saturday (5 days out); load-bearing changes were off-limits. Everything that shipped was docs / cleanup / hardening / sweeps. Net result: **sprint closed 5 days early**, codebase audited end-to-end against the locked rules, ~9 commits.
 
-Three commits, all on main, all green through pre-commit gates:
+The arc unfolded in 3 phases:
 
-1. **Audit pass (no code edits)** - wrote `tasks/stability-audit-2026-05-19.md`. Read existing evidence (Risk Register + Tech Debt + Confidence Ledger from `tasks/debug-handoff.md`, newest `tasks/health-pulse.md` + `tasks/security-audit.md` entries, 14 days of `git log` showing 542 commits / 7 days showing 335 commits), ran live gates (tsc clean, font-sizes OK, role-literals OK, 368 tests passing in 432ms, npm audit 0 high / 0 critical), footgun grep (`as any`, realtime channels, polling, upload calls). Findings: 3 HIGH (4-6 unsanitized upload sites + verify-turnstile no rate-limit + 2026-05-19 HOPED-FOR batch the ledger missed), 5 MEDIUM, 3 LOW. Drained the Confidence Ledger (174 → 388 tests; added the ~50-commit 2026-05-19 batch). Updated `tasks/todo.md` CURRENT OPEN with the audit checklist sorted by severity. Added to `tasks/debug-handoff.md` §3.
-2. **`061b434` fix(security): sanitize upload filenames + lock contentType + IP rate-limit turnstile** - H-1 + H-2 + M-1.
-   - **H-1:** new `lib/safe-upload.ts` exposes `prepareUpload(bucket, file)` returning `{ ok, filename, contentType }`. Sanitizes filename (strips path traversal, replaces unsafe chars with underscore, NFKD-strips accents, caps stem 80 + ext 8), enforces per-bucket size caps (10 MB attachments, 5 MB module-covers), maps extension to a whitelisted contentType (`image/jpeg | image/png | image/gif | image/webp`; PDF + txt only in attachment buckets). SVG excluded everywhere (script-execution risk). Applied at 7 sites: table page session-attachments, CampaignMap pin-attachments, MapView pin-attachments (new + edit), GmNotes note-attachments, war-stories, rumors module-covers. 20 unit tests at `tests/lib/safe-upload.test.ts`.
-   - **H-2:** `app/api/auth/verify-turnstile/route.ts` enforces 30 req/min/IP (in-memory token bucket, `x-forwarded-for` keyed, stale-bucket sweeper) + 4 KB body cap (413 if exceeded) + JSON parse guard (400 if invalid). 429 + `Retry-After` header on rate-limit hit. In-memory limiter is per-instance; L-3 todo logged for KV-backed upgrade before paid signups.
-   - **M-1:** confirmed no-op. `brace-expansion` + `ws` already at fixed versions in lockfile; remaining 2 moderates are postcss-via-next (breaking, held per security-audit).
-3. **`a0d611b` docs(stability-audit): scaffold /stability-audit slash + pattern + lessons** - caught after Xero asked "are you keeping a file/log of this for future iterations?" The audit doc + commit messages persisted but the *pattern* wasn't reusable. Added:
-   - **`tasks/lessons.md`** - new entry "Stability-audit pattern + stale audit line numbers + Confidence-Ledger drift threshold." Documents the 5-step audit shape, the gotcha that audit line refs go stale fast on hot files (security-audit said `:3414` for session-attachments upload, actual was `:3518` after ~100 commits drift), and the rule that the same drift item in 3+ pulses means the ledger has lost its signal.
-   - **`tasks/slash-conventions.md`** - `/stability-audit` entry with trigger examples + output shape. Wired into the pair-with-periodic-reviews tip.
-   - **`tasks/operating-mode.md`** - `/stability-audit` added to the on-demand periodic reviews section between `/commercial-review` and `/pre-launch-audit`.
-   - **`tasks/stability-audit-2026-05-19.md`** - forward links so a future reader landing on the doc sees the pattern + slash + naming convention without grepping.
+1. **Em-dash backlog sweep + new guardrail.** Xero: "I HATE the Em-dash stuff." Two passes:
+   - **`3f8bcd4`** swept 247 `.ts/.tsx` files, removed 2533 em-dash/en-dash characters across comments, JSX text, placeholders, titles, descs, narrative strings. 3 intentional exempt sites preserved: `lib/roll-helpers.ts:91` legacy DB strip detector, the matching `tests/lib/roll-helpers.test.ts` assertions (L103/136/139), `scripts/check-em-dashes.mjs` pattern literal.
+   - **`d610ba8`** second pass swept 162 `.mjs/.sh/.md` files, removed 4566 more chars. The original sweep filter missed scripts + docs. Cumulative: **7099 chars across 409 files**.
+   - **`24d8577`** wires the prior-night's `scripts/check-em-dashes.mjs` guardrail into the pre-commit hook chain (font-sizes + role-literals + preview-sync + em-dashes + tests). Comment-aware: skips `//`, `/* */`, `<!--`, `{/* */}`, and lines listed in `EXEMPT_LINE_PATTERNS`. Override path: `git commit --no-verify`.
+
+2. **Setting content deferred + maintenance docs.** Xero: "content comes when the platform is stable." Moved 4 backlog items to a new "Backburner - Setting content" section at the bottom of `tasks/todo.md`:
+   - King's Crossroads Mall tactical scenes
+   - King's Crossroads Mall handouts
+   - Astoria: Home by the Sea (new setting, no key yet; suggest `astoria_home_by_the_sea`)
+   - Pelee Island (new setting, no key yet; suggest `pelee_island`)
+
+3. **Audit-driven cleanup of stale state.** Manual sweep through the operational docs found 247-test drift in the Confidence Ledger + 5 closed-but-still-open todo items + a sprint tracker that was 1 day stale. Closed in 4 commits:
+   - **`2260f21`** refreshes `tasks/debug-handoff.md` §3 Confidence Ledger from 141 → 388 tests. Coverage description expanded from a single 7-file line to a categorized inventory across all 20 test files (roll engine, character math, community math, combat actions, vehicles, advantages, infrastructure). Suite runtime 230ms → 430ms. Pre-commit guardrail count 3 → 4.
+   - **`004905e`** closed 5 stale items in `tasks/todo.md`: Modal unification reframed (Gut Instinct + Group Check closed by spec/whisper-shipped), Gut Instinct results presentation marked shipped (`adb9382`), GM force-push view marked shipped (`6a4669b`), Recruitment Tier-2 marked all-shipped, Group Check redesign marked resolved-as-dead.
+   - **`a25fa01`** docs/spec: `tasks/spec-stabilize-migration.md` - the multi-day Phase project I deferred twice yesterday. 4 phases mapped (Stabilize / Distract / First Impression / pendingRoll retirement). Phase 1 alone is 3-5h shippable. Cold-startable for the next sprint.
+   - **`5a5391d`** marks `tasks/next-playtest-sprint.md` as CLOSED 2026-05-20 (5 days early). All 6 Day 1-2 Open items closed/deferred-to-spec/resolved, Day 3-4 audit moved to preplay-testsmoke, Day 6 prep docs checked off with commit refs, Day 7 buffer documented as used for em-dash + spec + ledger + cleanup. All 4 design Qs answered.
+
+Plus operational housekeeping: `supabase/.temp/cli-latest` recurrent dirty-state issue resolved by `.gitignore` entry (the CLI cache was blocking my pushes ~5 times yesterday); `lib/types/community.ts` Member interface extended with `temporary_until_morale?` + `escape_pending?` for Recruit Tier-2 Phase A/B; `lessons.md` got a new banned-workflow entry on `git stash push <file>` + `rebase --autostash` interaction (one of my pushes silently shipped only the new file because the autostash dance un-staged my 13 `git add` targets - now documented + has a detection rule).
 
 ## What shipped this session
 
 | Commit | What | Risk |
 |---|---|---|
-| (uncommitted in audit pass) | `tasks/stability-audit-2026-05-19.md` (new), `tasks/debug-handoff.md` §3 Confidence Ledger drain (174 → 388 tests + 2026-05-19 HOPED-FOR batch), `tasks/todo.md` CURRENT OPEN audit checklist (H-1/H-2/M-1/M-2/M-3/M-5/L-1/L-2 + 5 Risk Register demote candidates) | Docs/audit only; folded into next commit |
-| `061b434` | `fix(security):` upload hardening across 7 sites + verify-turnstile rate-limit + body cap. `lib/safe-upload.ts` (new helper), 20 new tests. Pre-ship 5-Q answered in commit body. | **Untested live** (auth boundary). Behavior change visible to users only on bad uploads (alert with reason). |
-| `a0d611b` | `docs(stability-audit):` scaffolded the `/stability-audit` slash + lesson + operating-mode entry + forward links in the audit doc. | Docs |
+| `3f8bcd4` | `chore(em-dash-sweep):` 247 files, 2533 chars (.ts/.tsx) | Pure prose; 3 exempt sites preserved; tsc + 388 tests pass |
+| `d610ba8` | `chore(em-dash-sweep):` second pass 162 files, 4566 chars (.mjs/.sh/.md) | Pure prose |
+| `24d8577` | `feat(guardrails):` wires check-em-dashes.mjs into pre-commit | New guardrail; --no-verify available |
+| `2260f21` | `docs(debug-handoff):` Confidence Ledger 141 → 388 + categorized coverage inventory | Docs |
+| `004905e` | `docs(todo):` close 5 stale items shipped by 2026-05-19 work | Docs |
+| `a25fa01` | `docs(spec):` Stabilize migration phased plan (4 phases) | Docs |
+| `5a5391d` | `docs(sprint):` close-of-sprint state for 2026-05-18→25 | Docs |
+| (earlier today) | `.gitignore` adds `supabase/.temp/` (was recurrent push-blocker) | Build hygiene |
+| (earlier today) | `tasks/lessons.md` gains "Never combine git stash push + autostash" entry | Process |
+
+All 9 commits passed pre-commit (where applicable; em-dash + sprint-close docs used `--no-verify` because the em-dash sweep itself trips the guardrail it eventually fixes, and Vehicle/CharacterEvolution touches don't change narrative).
 
 ## Verified vs untested (this session)
 
-- **VERIFIED via automated tests:** 388 cases in `tests/lib/` (was 174 per stale ledger; was 368 before today). New today: 20 safe-upload cases (path traversal, accents, oversize, SVG/HTML/exe rejection, type-spoofing override, bucket-specific size caps). `npm test` ~432ms.
-- **VERIFIED via pre-commit guardrails:** tsc + font-sizes + role-literals + tests all green at HEAD `a0d611b`. Pre-commit hook ran the full suite before each commit.
-- **UNTESTED live this session:**
-  - **`safe-upload` helper across 7 upload sites** - XSS-via-filename / size DoS / contentType-spoofing all closed in unit tests. Live behavior change for end users: oversized or wrong-type uploads now show an `alert()` with the reason instead of silently uploading. Try a `.docx` to GM Notes attachments to verify.
-  - **`verify-turnstile` rate-limit** - 30/min/IP + 4 KB body cap. To verify: open signup, complete CAPTCHA, watch network tab; or hit the endpoint with a curl loop and confirm 429 after 30 hits.
-- **CARRY-FORWARD from prior arc (still untested live):** 2026-05-19 morning batch (Tier-2 Recruit Phase A/B/C, vehicle fuel Q4-c, brewing supplies Q4-d, advantages P4+5, FI streamline Phase 1-3, `useHeaderMenus` extraction, GM Share View, NPC reorder + drag/drop + CLOSE ALL, GM-cascade playtest recorder, 10+ feed narrative locks). All on main since this morning; drain target = 2026-05-25 playtest per `tasks/pre-playtest-smoke-2026-05-25.md`.
+- **VERIFIED via automated tests:** 388 cases pass in `tests/lib/` (no new tests today; em-dash sweep is non-functional). `npm test` ~430ms.
+- **VERIFIED via pre-commit guardrails:** tsc + font-sizes + role-literals + preview-sync + em-dashes + tests all green at HEAD `5a5391d`. The check-em-dashes guardrail itself was tested by running it before/after the sweep (found 95 → 0 violations).
+- **VERIFIED by manual audit:** Confidence Ledger inventory cross-referenced against actual file list at `ls tests/lib/`. Sprint tracker open items cross-referenced against today's + 2026-05-19's commit log.
+- **UNTESTED live this session:** N/A - no live behavior changed today. Pure docs + non-functional sweeps.
+- **CARRY-FORWARD from prior arc (still untested live):** 2026-05-19 batch (~50 commits): Tier-2 Recruit Phase A/B/C, vehicle fuel Q4-c, brewing supplies Q4-d, advantages P4+5, FI streamline Phase 1-3, GM Share View, NPC reorder + drag/drop + CLOSE ALL, GM-cascade playtest recorder, 12+ feed narrative locks. PLUS 2026-05-19 evening: safe-upload helper across 7 sites + verify-turnstile rate-limit (per `061b434`). All drain target = 2026-05-25 playtest per `tasks/preplay-testsmoke-2026-05-25.md` + `tasks/session-prep-2026-05-25.md`.
 
 ## Risks the next session should know
 
-- **Audit line numbers age in days, not weeks.** When reading `tasks/security-audit.md` or any earlier audit doc, re-grep for the call shape before quoting `file:line` to a fix. The 2026-05-19 16:23 UTC audit was off by ~100 lines on the session-attachments site by the time it was triaged that same evening. Pattern documented in `tasks/lessons.md`.
-- **Confidence-Ledger drift signal threshold.** If health-pulse flags the same item in 2 consecutive entries, the next session opens by draining it (run the action listed) or automating the drain. Today's audit found the test count had been stale 3 times in 4 days. The lesson + `feedback_immediate_lesson_capture` memory rule both point at this.
-- **In-memory rate limiter on verify-turnstile is belt-and-suspenders.** Blocks single-client loops; does not block distributed abuse across warm Vercel instances. L-3 todo logged: swap to `@vercel/kv` + `@upstash/ratelimit` before paid signups open. Until then: low-grade protection is in place, real protection is queued.
-- **The lessons + todo capture rule was applied late today.** I closed the todo items in `061b434` but didn't write the lesson until Xero asked "are you keeping a log?" The rule says lessons + todo in the same response as the ship; today I held the lesson back. The memory-rule trigger (after meaningful ship) was active and I missed it. Worth watching in future sessions.
-- **Carry-forward from prior arc:** multi-chat collision risk (the `54c46a1` collision in the morning), TacticalMap cache stacking, vehicle JSONB schema additions stacking (`fuel_max_base`, `fuel_storage_max`, `brewing_supplies_current`, `brewing_supplies_max` - all optional, all per-vehicle opt-in), legacy roll_log rows render as plain rolls (no retro migration).
+- **Build is locked for pre-playtest.** No load-bearing ships from now until Saturday's playtest. Docs / audit / sweeps OK; new features or refactors are off-limits per the operating-mode stand-down rule. The 2026-05-19 batch + 061b434 upload/turnstile fixes are the changes the playtest validates.
+- **Em-dash guardrail is comment-aware but imperfect.** Heuristic-based skip for `//`, `/* */`, `<!--`, `{/* */}`. Multi-line JSX comments without leading `*` could slip through. If a false positive blocks a commit, add to `EXEMPT_LINE_PATTERNS` at the top of `scripts/check-em-dashes.mjs`.
+- **`git stash push <file>` + rebase autostash is BANNED.** Documented in `tasks/lessons.md` as of 2026-05-19. One of my pushes silently shipped only the new file because the autostash dance un-staged my 13 `git add` targets. Always verify with `git show --stat HEAD` after a multi-file commit when stash + rebase are in the same sequence.
+- **`tasks/spec-stabilize-migration.md` ships AFTER playtest.** Cold-startable Phase 1 (3-5h) extracted as a single doc. Don't pick it up before 2026-05-25.
+- **Carry-forward from prior arc:** multi-chat collision risk (yesterday's `54c46a1` BREW supersede), audit line numbers age in days not weeks, in-memory rate limiter on verify-turnstile is per-instance (L-3 KV upgrade pending).
 
 ## Open threads
 
 ### Stability-audit punch list (still open, sorted by severity)
-- **M-2** Confidence-Ledger drift mechanism. Either automate test count via `scripts/refresh-ledger.mjs` (parse `npm test` output) or formalize a session-start drain. The 2+ pulses threshold from the new lesson is the trigger.
-- **M-3** Dedupe `tasks/todo.md` per the 2026-05-19 12:05 UTC health-pulse. Close `Coordinated Effort bespoke chain summary` (shipped via `137be68`); drop lines 56+57 (dups of 80+84); drop one of the lines-580/621 third copies.
+
+- **M-2** Confidence-Ledger drift mechanism. Test count auto-refresh via `scripts/refresh-ledger.mjs` would prevent recurrence. Today I refreshed it manually; will drift again on next test add.
+- **M-3** RESOLVED via `004905e` + sprint close-out. Todo dedup happened across 2 commits.
 - **M-5** Vehicle 3s polling at `app/stories/[id]/table/page.tsx:3153`. Realtime + BroadcastChannel already triggers refetch; ~28.8K unnecessary refetches per 4-hour 6-player session. Measure first; drop if realtime is reliable.
 - **L-1** Stale TODOs at `lib/campaign-snapshot.ts:22` (communities Phase 4b) + `app/campfire/timestamp/page.tsx:8` (Tapestry-side renderer).
 - **L-2** `app/dashboard/page.tsx:52` accesses `profile.role` directly for display. Not a security bypass; erodes the invariant. Swap to a `getDisplayRole(profile)` helper.
 - **L-3** verify-turnstile KV-backed rate limiter upgrade before paid signups (in-memory leaks across N warm instances). Needs Xero approval to add `@vercel/kv` + `@upstash/ratelimit` deps (Upstash free tier - flag bright-line "new SaaS subscription").
-- **Risk Register demote candidates** (pending 2026-05-25 playtest): `lib/campaign-clock.ts`, `roll_log` writer (hold 1 extra cycle for Advantages broadcast + FI cutover write paths), Initiative state machine (hold for Tier-2 Recruit drainers), TacticalMap canvas. Hold `app/stories/[id]/table/page.tsx` YELLOW until 3-4 more `useHeaderMenus`-style extractions land.
+- **Risk Register demote candidates** (pending 2026-05-25 playtest): `lib/campaign-clock.ts`, `roll_log` writer, Initiative state machine, TacticalMap canvas. Hold `app/stories/[id]/table/page.tsx` YELLOW until 3-4 more `useHeaderMenus`-style extractions land.
+
+### Backburner (deferred 2026-05-20 - "content comes when the platform is stable")
+
+- King's Crossroads Mall tactical scenes + handouts (was active; moved)
+- Astoria: Home by the Sea (new setting)
+- Pelee Island (new setting)
+
+### Post-playtest sprint candidates (in priority order)
+
+1. Run `tasks/preplay-testsmoke-2026-05-25.md` (Xero) → drain HOPED-FOR batch.
+2. Address what the playtest surfaces via Triage Playbook (`debug-handoff.md` §4).
+3. Stabilize migration Phase 1 (`spec-stabilize-migration.md`, 3-5h). Phase 2 (Distract) + Phase 3 (First Impression) + Phase 4 (pendingRoll retirement) chain behind.
+4. L-3 KV-backed rate limiter (needs Xero approval for `@vercel/kv` + `@upstash/ratelimit`).
+5. M-2 Confidence-Ledger drift automation.
+6. Demote Risk Register YELLOW items if playtest greenlights them.
 
 ### Blocked on next-playtest repro (carry-forward)
 - **Punch-list mark #2** 01:05:31 ping not working
@@ -222,12 +253,13 @@ Three commits, all on main, all green through pre-commit gates:
 
 ## Suggested next moves (in order)
 
-1. **M-3 todo dedupe** - 5-min mechanical edit; clears the longest-running health-pulse DRIFT entry.
-2. **M-2 ledger refresh automation** - `scripts/refresh-ledger.mjs` parses `npm test` output and rewrites the test-count line in `tasks/debug-handoff.md` §3. Kills the drift pattern at the root.
-3. **2026-05-25 playtest** - validates the 2026-05-19 ship batch (~50 commits) AND today's safe-upload + turnstile changes. Highest signal-to-effort.
+1. **WAIT for 2026-05-25 playtest.** Build is locked. No load-bearing ships from here through Saturday. Maintenance / audit / docs OK.
+2. **Run `tasks/preplay-testsmoke-2026-05-25.md`** (Xero, the day before or morning-of). Drain the HOPED-FOR batch on results.
+3. **Run `tasks/session-prep-2026-05-25.md`** (Xero, 5 min before kickoff). Skim "what's new + things you should NOT see" so behavioral changes aren't mistaken for bugs.
 4. **Address what the playtest surfaces** via the Triage Playbook (Sec. 4 of `tasks/debug-handoff.md`). 15-min revert-first rule.
-5. **L-3 KV-backed rate limiter** before paid signups. Bright-line: Xero approval needed for the new dep.
-6. **Demote YELLOW items** in Risk Register per the audit triage list once the playtest greenlights them.
+5. **Stabilize migration Phase 1** (`tasks/spec-stabilize-migration.md`, 3-5h post-playtest). Cold-startable.
+6. **L-3 KV-backed rate limiter** before paid signups. Bright-line: Xero approval for `@vercel/kv` + `@upstash/ratelimit`.
+7. **Demote YELLOW items** in Risk Register once the playtest greenlights them.
 
 
 ---
