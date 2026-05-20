@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
 
@@ -756,8 +757,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
     if (data && attachments.length > 0) {
       for (const file of attachments) {
-        const path = `${campaignId}/${data.id}/${file.name}`
-        await supabase.storage.from('pin-attachments').upload(path, file)
+        const check = prepareUpload('pin-attachments', file)
+        if (!check.ok) { alert(check.reason); continue }
+        const path = `${campaignId}/${data.id}/${check.filename}`
+        await supabase.storage.from('pin-attachments').upload(path, file, { contentType: check.contentType })
       }
     }
 

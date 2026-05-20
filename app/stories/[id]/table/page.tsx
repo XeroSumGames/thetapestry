@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
+import { prepareUpload } from '../../../../lib/safe-upload'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
@@ -3514,15 +3515,17 @@ export default function TablePage() {
 
           if (filesToUpload.length > 0 && userId) {
             for (const file of filesToUpload) {
-              const path = `${sessionRow.id}/${file.name}`
-              const { error: upErr } = await supabase.storage.from('session-attachments').upload(path, file)
+              const check = prepareUpload('session-attachments', file)
+              if (!check.ok) { console.warn('[EndSession] upload rejected:', check.reason); continue }
+              const path = `${sessionRow.id}/${check.filename}`
+              const { error: upErr } = await supabase.storage.from('session-attachments').upload(path, file, { contentType: check.contentType })
               if (!upErr) {
                 const { data: urlData } = supabase.storage.from('session-attachments').getPublicUrl(path)
                 await supabase.from('session_attachments').insert({
                   session_id: sessionRow.id,
                   file_url: urlData.publicUrl,
-                  file_name: file.name,
-                  file_type: file.type,
+                  file_name: check.filename,
+                  file_type: check.contentType,
                   uploaded_by: userId,
                 })
               }

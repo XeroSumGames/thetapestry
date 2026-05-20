@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { prepareUpload } from '../lib/safe-upload'
 import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
 import { openPopout } from '../lib/popout'
 import { renderRichText } from '../lib/rich-text'
@@ -152,15 +153,21 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
     const uploaded: Attachment[] = []
     const errors: string[] = []
     for (const file of files) {
-      const path = `${campaignId}/${noteId}/${Date.now()}-${file.name}`
-      const { error: upErr } = await supabase.storage.from('note-attachments').upload(path, file, { contentType: file.type })
+      const check = prepareUpload('note-attachments', file)
+      if (!check.ok) {
+        console.warn('[GmNotes] upload rejected:', check.reason)
+        errors.push(check.reason)
+        continue
+      }
+      const path = `${campaignId}/${noteId}/${Date.now()}-${check.filename}`
+      const { error: upErr } = await supabase.storage.from('note-attachments').upload(path, file, { contentType: check.contentType })
       if (upErr) {
         console.error('[GmNotes] upload error:', upErr.message)
-        errors.push(`${file.name}: ${upErr.message}`)
+        errors.push(`${check.filename}: ${upErr.message}`)
         continue
       }
       const { data: urlData } = supabase.storage.from('note-attachments').getPublicUrl(path)
-      uploaded.push({ name: file.name, url: urlData.publicUrl, size: file.size, type: file.type, path })
+      uploaded.push({ name: check.filename, url: urlData.publicUrl, size: file.size, type: check.contentType, path })
     }
     if (errors.length > 0) {
       alert(

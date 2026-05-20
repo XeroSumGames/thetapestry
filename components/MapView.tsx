@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase-browser'
+import { prepareUpload } from '../lib/safe-upload'
 import { getCachedAuth } from '../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { logFirstEvent, logEvent } from '../lib/events'
@@ -974,8 +975,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (attachments.length > 0 && data) {
       setUploading(true)
       for (const file of attachments) {
-        const path = `${userId}/${data.id}/${file.name}`
-        await supabase.storage.from('pin-attachments').upload(path, file)
+        const check = prepareUpload('pin-attachments', file)
+        if (!check.ok) { alert(check.reason); continue }
+        const path = `${userId}/${data.id}/${check.filename}`
+        await supabase.storage.from('pin-attachments').upload(path, file, { contentType: check.contentType })
       }
       setUploading(false)
     }
@@ -1053,7 +1056,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
   // Upload new attachments
   for (const file of editAttachments) {
-    await supabase.storage.from('pin-attachments').upload(`${editingPin.user_id}/${editingPin.id}/${file.name}`, file, { upsert: true })
+    const check = prepareUpload('pin-attachments', file)
+    if (!check.ok) { alert(check.reason); continue }
+    await supabase.storage.from('pin-attachments').upload(`${editingPin.user_id}/${editingPin.id}/${check.filename}`, file, { contentType: check.contentType, upsert: true })
   }
   setEditUploading(false)
   setEditingPin(null)

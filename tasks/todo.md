@@ -6,6 +6,31 @@
 
 ## 🎯 CURRENT OPEN — 2026-05-15
 
+### Stability audit (2026-05-19, post-playtest)
+Full punch list: [tasks/stability-audit-2026-05-19.md](stability-audit-2026-05-19.md). Read-only audit; items below are the action checklist sorted by severity.
+
+**HIGH**
+- [x] ~~**H-1 Upload pipelines — `safeUploadKey()` helper + apply at 7 sites.**~~ SHIPPED 2026-05-19. `lib/safe-upload.ts` defines `prepareUpload(bucket, file)` returning `{ ok, filename, contentType }`. Sanitizes filename (strips path traversal, replaces unsafe chars with underscore, NFKD-strips accents, caps stem to 80 + ext to 8), enforces per-bucket size caps (10 MB attachments, 5 MB module-covers), maps extension to a whitelisted contentType (image/jpeg, image/png, image/gif, image/webp; pdf + txt only in attachment buckets). SVG excluded everywhere (script-execution risk). Applied at: table page session-attachments, CampaignMap pin-attachments, MapView pin-attachments (new + edit), GmNotes note-attachments, war-stories, rumors module-covers. 20 unit tests in `tests/lib/safe-upload.test.ts`.
+- [x] ~~**H-2 verify-turnstile rate limit + body cap.**~~ SHIPPED 2026-05-19. `app/api/auth/verify-turnstile/route.ts` now enforces 30 req/min/IP via in-memory token bucket (x-forwarded-for keyed, stale-bucket sweeper) + 4 KB body cap (returns 413 if exceeded) + JSON parse guard (returns 400 if invalid). Rate-limit response returns 429 + `Retry-After` header. **Upgrade path:** when paid-signups open, swap in `@vercel/kv` + `@upstash/ratelimit` for distributed enforcement; in-memory bucket leaks ~N × LIMIT across N warm instances (see L-3 below).
+
+**MEDIUM**
+- [x] ~~**M-1 `npm audit fix` scoped to brace-expansion + ws.**~~ NO-OP 2026-05-19. Both already at fixed versions in package-lock.json (brace-expansion 5.0.6, ws ^8.18.2). The 2 remaining moderate vulns are postcss-via-next and only fix via `npm audit fix --force` which downgrades next to 9.3.3 (breaking) — held per security-audit.
+- [ ] **M-2 Confidence Ledger drift mechanism.** Test count has been stale 3 times in 4 days (160 → 168 → 174 → 368). Either add `scripts/refresh-ledger.mjs` that parses `npm test` output, or formalize a session-start manual drain. Current silent-drift-between-drains pattern is what's wrong.
+- [ ] **M-3 Dedupe todo.md per 2026-05-19 12:05 UTC health-pulse.** Close `Coordinated Effort bespoke chain summary` (shipped via `137be68`); drop lines 56+57 (dups of 80+84); drop one of the lines-580/621 third copies.
+- [ ] **M-5 Vehicle 3s polling at `app/stories/[id]/table/page.tsx:3153`.** Realtime + BroadcastChannel + storage + focus already trigger refetch; the 3s setInterval is redundant. Measure first; drop if realtime is reliable. ~28.8K unnecessary refetches per 4-hour 6-player session.
+
+**LOW**
+- [ ] **L-1 Stale TODOs.** `lib/campaign-snapshot.ts:22` (communities Phase 4b — TODO once tables in use); `app/campfire/timestamp/page.tsx:8` (Tapestry-side renderer TODO). Close as won't-do or convert to todo items.
+- [ ] **L-2 `app/dashboard/page.tsx:52` accesses `profile.role` directly.** Lowercased manually for display. Not a security bypass (permission branches use `roleIsThriver`) but erodes the invariant. Swap to `getDisplayRole(profile)`.
+- [ ] **L-3 verify-turnstile: upgrade to KV-backed rate-limiter before paid signups.** Current in-memory bucket leaks ~N × LIMIT across N warm Vercel instances. Add `@vercel/kv` + `@upstash/ratelimit` (Upstash has a free tier; flag for Xero before installing). Pre-paid-signups blocker.
+
+**Risk Register triage (decide after 2026-05-25 playtest)**
+- [ ] **Demote `lib/campaign-clock.ts` YELLOW → GREEN** if drainers behave again.
+- [ ] **Demote `roll_log` writer YELLOW → GREEN** but hold one extra cycle (Advantages broadcast + FI cutover added write paths).
+- [ ] **Demote Initiative state machine YELLOW → GREEN** if no stuck-turn reports (Tier-2 Recruit drainers touch adjacency).
+- [ ] **Demote TacticalMap canvas YELLOW → GREEN** if no fog/range/drag regressions.
+- [ ] **Hold table page YELLOW** until 3-4 `useHeaderMenus`-style extractions land.
+
 ### Pre-launch audit (2026-05-17, structural)
 Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md). Items below are the operational checklist.
 

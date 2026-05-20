@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
+import { prepareUpload } from '../../../../lib/safe-upload'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 
@@ -187,16 +188,23 @@ export default function ModuleEditPage() {
           }
         }
       }
-      // Path: <moduleId>/<timestamp>-<sanitized-name>. The timestamp
-      // prevents browser caching of stale covers under the same URL
-      // when re-uploaded; the moduleId folder keeps each module's
-      // assets isolated for cleanup.
-      const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]+/g, '')
-      const safeExt = ext || 'png'
-      const path = `${mod.id}/${Date.now()}.${safeExt}`
+      // Path: <moduleId>/<timestamp>.<ext>. The timestamp prevents browser
+      // caching of stale covers under the same URL when re-uploaded; the
+      // moduleId folder keeps each module's assets isolated for cleanup.
+      // prepareUpload enforces 5 MB cap (module-covers bucket) + image-only
+      // whitelist + extension-mapped contentType (never trusts user-supplied
+      // file.type).
+      const check = prepareUpload('module-covers', file)
+      if (!check.ok) {
+        setStatus(`Upload failed: ${check.reason}`)
+        setUploading(false)
+        return
+      }
+      const ext = check.filename.split('.').pop() || 'png'
+      const path = `${mod.id}/${Date.now()}.${ext}`
       const { error: upErr } = await supabase.storage
         .from(COVERS_BUCKET)
-        .upload(path, file, { cacheControl: '3600', contentType: file.type, upsert: false })
+        .upload(path, file, { cacheControl: '3600', contentType: check.contentType, upsert: false })
       if (upErr) {
         setStatus(`Upload failed: ${upErr.message}`)
         setUploading(false)
