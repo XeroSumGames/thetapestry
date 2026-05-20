@@ -6,6 +6,11 @@
 
 ## 🎯 CURRENT OPEN - 2026-05-15
 
+### SHIPPED 2026-05-20: Beginners' Guide v2
+14 chapters as per-chapter txt files in `docs/`, voice-tightened per `feedback_user_guide_voice` (no em-dash, no step counts, no URL patterns, no Survivor/Thriver outside first-mention). Two NEW chapters vs v1: The Rules (Ch 5), Vehicles (Ch 11). One MERGE: Tactical Map + Fog of War (Ch 8). Chapter 13 (Campfire) has a placeholder paragraph where Forums would go - both Forums and Forums B are flagged for redesign before documentation. Chapter 14 (Rumors) is a full rewrite for the layered umbrella (modules + maps + pins). v1 monolith `docs/beginners-guide.{txt,docx}` left in place as archive. Build script at `scripts/build-beginners-docx.js` will regenerate the v2 docx once chapter content is approved.
+
+**Next on this track:** rewrite the three older internal guides at `docs/user-guide.txt`, `docs/communities-guide.txt`, `docs/module-system-guide.txt` under the same voice rules (pre-voice-lock, heavier rewrite than the beginners' set).
+
 ### Puffer-fish platform plan (active 2026-05-20)
 Full plan: [tasks/puffer-fish-platform-plan.md](puffer-fish-platform-plan.md). Xero redirected 2026-05-20: ignore the date-anchored launch plan; the mandate is making the platform as stable and optimized as possible. Multi-chat, no calendar pressure. 8 phases (P0-P8) sequenced by dependency; 6 measurable axes (bug-investigation cost / multi-client reliability / performance / recovery posture / security posture / test coverage); per-phase gate is playtest verification + substrate updates. Resume pointer at the bottom of the plan moves with every commit. **Launch plan (`tasks/launch-plan-2026-06-15.md`) is SUPERSEDED.**
 

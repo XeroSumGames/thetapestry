@@ -1,0 +1,40 @@
+====================================================================
+ 5. THE RULES
+====================================================================
+
+Click "The Rules" in the sidebar. The complete Xero Sum Engine SRD lives in-app at /rules.
+
+This is the canonical source for every rule in the game. When this guide and The Rules disagree, The Rules win.
+
+
+EIGHT SECTIONS
+--------------
+  Overview               Introduction, key features, in-world time, naming conventions.
+  Core Mechanics         The dice check, modifiers, attribute checks, Fill In The Gaps, First Impressions, Coordinated Effort, Insight Dice, Making the Case, Negotiations.
+  Character Overview     RAPID, skills, secondary stats, fleshing out.
+  Character Creation     Backstory generation, Paradigms, character evolution.
+  Skills                 Full skill list, plus deep dives on Inspiration and Psychology.
+  Equipment              Item condition, item traits, armor, rations, upkeep.
+  Combat                 Combat rounds, damage, healing, range, incapacitation, infection, stress, weapon repair, bestiary.
+  Communities            Structure, recruitment, morale, apprentices, CRB additions.
+
+
+FOUR APPENDICES
+---------------
+  Skills          Quick-reference table.
+  Equipment       Quick-reference table.
+  Paradigms       All twelve archetypes with full loadouts.
+  Tables          The canonical lookup tables (Motivation, Complication, Lasting Damage, etc.).
+
+
+HOW TO USE IT
+-------------
+The Rules is structured like a hyperlinked reference manual, not a tutorial. Look up what you need:
+
+  - Stuck on a combat action? /rules/combat
+  - Need a Motivation roll? /rules/appendix-tables
+  - Wondering how an item trait works? /rules/equipment/item-traits
+
+Cross-references between sections are linked. Forthcoming sections show a "forthcoming" tag - the content is being written.
+
+When in doubt, this is where to look first.

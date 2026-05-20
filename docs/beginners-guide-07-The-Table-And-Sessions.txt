@@ -1,0 +1,119 @@
+====================================================================
+ 7. THE TABLE AND SESSIONS
+====================================================================
+
+The TABLE is where actual play happens. Click "Launch" on your Story page to get there. The Table fills the whole screen.
+
+
+THE HEADER BAR
+--------------
+Across the top, left to right:
+
+  Story name and setting badge
+  Start Session / End Session    (GM)
+  Session number badge           (when active)
+  Tactical Map / Campaign Map    (toggle)
+  Share Map                      (GM - pushes the tactical map to players)
+  Start Combat / End Combat      (GM, during active session)
+  Checks dropdown                (Perception, Gut Instinct, First Impression, Group, Opposed, Recruit, Stress)
+  Community dropdown             (Chapter 12)
+  Vehicle dropdown               (Chapter 11)
+  Dashboard link
+  Share                          (copy invite link)
+  Restore                        (GM - heal everyone)
+  Sessions                       (history)
+  Back / Exit
+
+
+LEFT PANEL: LOGS AND CHAT
+-------------------------
+Three views, toggled at the top of the panel:
+
+  LOGS  Every dice roll, action, and combat event in chronological order. Color-coded.
+  CHAT  In-character messaging.
+  BOTH  Combined.
+
+Type a message and press Enter to send.
+
+The log feed shows narrative banners for actions like First Impression, Stress, Heal, Stabilize, Drive, Brew, Navigate, Recruit. Each banner has six outcome variants for High Insight, Wild Success, Success, Failure, Dire Failure, and Low Insight.
+
+
+CENTER: THE MAP
+---------------
+The Campaign Map (Chapter 3) or the Tactical Map (Chapter 8). Toggle with the header button. Players see whatever the GM has shared.
+
+Click a character or NPC token (or their entry in the left panel) to open their character sheet. Inline mode renders the sheet in the center; Overlay mode floats it on top.
+
+[screenshot: Table view with header, logs panel, map, GM tabs]
+
+
+RIGHT PANEL: TABS
+-----------------
+The GM sees:
+  NPCs          full NPC roster (Chapter 10).
+  Pins          campaign pins, drag to reorder, GM-shared folders.
+  GM Notes      private notes, auto-saved.
+  Player Notes  submissions from players.
+  Advantages    grant / award advantages to PCs (see below).
+
+Players see:
+  NPCs          only revealed NPCs.
+  Pins          only revealed pins.
+  Notes         your own session notes.
+  Advantages    your active advantages.
+
+
+STARTING A SESSION (GM)
+-----------------------
+Click "Start Session." The session counter increments and every player in the Story is notified. Until a session is active you can't roll dice or start combat.
+
+
+DICE ROLLING
+------------
+With a session active, click ANY attribute, skill, or weapon on a character sheet or NPC card to open the roll modal. The formula is:
+
+    2d6 + Attribute Modifier + Skill Modifier + Conditional Modifier
+
+Pick a CMod modifier (0 by default; the modal lists relevant ones for your situation). Optionally spend an Insight Die. Click Roll.
+
+OUTCOMES (the standard XSE ladder):
+    1+1    Low Insight       Critical failure. +1 Insight Die.
+    0-3    Dire Failure      Very bad result.
+    4-8    Failure           Standard miss.
+    9-13   Success           Standard hit.
+    14+    Wild Success      Exceptional success.
+    6+6    High Insight      Critical success. +1 Insight Die.
+
+Both Low Insight (1+1) and High Insight (6+6) grant an Insight Die in addition to the outcome.
+
+
+FIRST IMPRESSION
+----------------
+A single-modal flow. When you meet an NPC for the first time, click "First Impression" from the Checks dropdown or the NPC card. The modal walks pick-skill, roll, and result in one screen. The result sets a permanent CMod on your relationship with that NPC.
+
+You can spend an Insight Die mid-flow to upgrade the roll.
+
+
+STRESS CHECK
+------------
+A manual "Stress Check" button lives on the Checks dropdown. Hit it any time you want to fire the mid-play Stress cascade for a PC at 5 Stress pips - or for any other narrative reason.
+
+Stress also auto-fires when a PC hits WP=0 or RP=0.
+
+
+ADVANTAGES
+----------
+The GM can grant an Advantage to a player at any time. An Advantage is a one-shot bonus the player can hold and spend later: a +2 on a roll, a re-roll, a skill substitution, a narrative favor.
+
+GMs grant via the Advantages tab on the right panel, or by clicking "Award" on a notable roll in the feed. Players see their Advantages in their own tab and click "Use" to spend one. Used Advantages broadcast to the feed.
+
+
+ENDING A SESSION (GM)
+---------------------
+Click "End Session." A modal opens:
+
+  Session Summary       what happened this session.
+  Next Session Notes    what's queued for next time.
+  Cliffhanger           the one-line tease.
+
+These get stored in your Story's Sessions history. You can also export the full session log as styled HTML for archiving.

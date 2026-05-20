@@ -1,0 +1,100 @@
+====================================================================
+ 8. THE TACTICAL MAP AND FOG OF WAR
+====================================================================
+
+The Tactical Map is a grid-based canvas for combat positioning. Fog of War is the layer of darkness that hides it until your players walk into the light.
+
+A full standalone reference lives at docs/tactical-map-guide.txt. This chapter is the overview.
+
+
+OPENING IT
+----------
+From the Table, click "Tactical Map" in the header to swap from the Campaign Map.
+
+If your Story has no scenes yet, the Create Scene modal opens automatically. If scenes exist, the most recent one activates.
+
+
+CREATING A SCENE
+----------------
+Click "Map Setup" in the header to open the scene controls in a separate window. New scenes start there.
+
+  - Name (required).
+  - Grid dimensions - 20 columns x 15 rows by default.
+  - Cell size in feet - 3 ft per cell. This drives all range calculations.
+
+A new scene auto-activates and broadcasts to anyone watching the Table.
+
+
+THE GRID
+--------
+Cells use Chebyshev distance - the greater of the X and Y deltas. A diagonal step counts as 1, not 1.4.
+
+Scene controls (in the Map Setup popout):
+  Scene dropdown   switch scenes or create a new one.
+  Background       upload a JPG or PNG. Scale with the corner handles.
+  Cols / Rows      grid dimensions.
+  Cell (ft) / (px) feet per cell, pixel size on screen.
+  Grid color, opacity, ON/OFF.
+  Lock / Unlock    locks the background image.
+  Fit to Map       zooms to fit the full scene.
+  Edit Fog         enters fog paint mode (see below).
+
+
+TOKENS
+------
+Three kinds:
+
+  PC TOKENS      Round, blue border. Owning player drags their own; GM can drag any.
+  NPC TOKENS     Round, red border. GM-only drag. Hidden from players by default until combat starts.
+  OBJECT TOKENS  Square, orange border. Multi-cell footprint for crates, vehicles, world objects.
+
+Three special object types shape the battlefield:
+
+  WALLS    Block movement and vision.
+  DOORS    Block movement when closed. Block vision when closed; pass vision when open. Players click to toggle.
+  WINDOWS  Block movement but pass vision. PCs see through glass.
+
+
+RANGE AND MOVEMENT
+------------------
+Selecting a token brings up three range circles:
+
+  ENGAGED (5 ft)   Green. Melee radius.
+  MOVE (9 ft)      Blue. Move-action distance.
+  WEAPON RANGE     Red. Weapon's reach.
+
+The GM sees these around every selected token. Players see them only around their own PC.
+
+Movement during combat costs 1 action and is bounded by the Move circle. Outside combat it's free.
+
+
+PINGING
+-------
+Hold ALT and left-click any cell to drop a ping. GM pings orange; player pings green. Visible to everyone, fades in about a second.
+
+
+FOG OF WAR
+----------
+A layer of darkness the GM paints over the tactical map. Players see fogged cells as solid black: no terrain, no tokens, no labels.
+
+Each PC token clears 6 cells of fog around itself in every direction - a circle of light that travels with the player. The circle respects walls (block), closed doors (block), open doors (pass), and windows (pass).
+
+ENTERING EDIT MODE
+Click "Edit Fog" in the scene controls. Three tools and two bulk actions:
+
+  PAINT      click and drag to fog cells one at a time.
+  RECTANGLE  click and drag to fog every cell inside a rectangle.
+  ERASE      click and drag to clear fog off cells.
+  Fog All    fogs the entire scene.
+  Clear All  clears all fog.
+
+Click "Done" to exit edit mode.
+
+Fog stays painted across reloads, reconnects, and session boundaries. It clears only when you erase it.
+
+
+SHARING
+-------
+Players see the tactical map only when the GM has shared it. Combat auto-shares. Outside combat, click "Share Map" in the Table header.
+
+Switching scenes auto-broadcasts the switch - players follow you through.

@@ -1,0 +1,67 @@
+====================================================================
+ 11. VEHICLES
+====================================================================
+
+A vehicle is a multi-seat token that the party drives between campaign-map pins, garages in tactical scenes, brews in, and fights from. Vehicles have fuel, cargo, slots for passengers, and a sheet of their own.
+
+
+WHERE THEY LIVE
+---------------
+Open the Vehicle dropdown in the Table header to see the campaign's vehicles, or click the vehicle bubble that floats on the campaign map at the party's position.
+
+The vehicle sheet opens in a popout window so you can keep it docked while you play.
+
+
+SEAT ASSIGNMENT
+---------------
+A vehicle has named slots:
+
+  DRIVER     Required to move. Rolls Drive checks for travel and combat.
+  NAVIGATOR  The shotgun seat. Optional. Rolls NAVIGATE checks for routing, hazard-spotting, brewing.
+  BREWER     Optional crafting station - see Brewing below.
+  PASSENGERS One per remaining seat.
+
+Click any empty slot in the popout to assign a player. A Close-range gate applies - the player has to be within 30 ft of the vehicle to climb in. Click MOVE HERE to walk a player into a slot in one action; the assignment confirms automatically when they arrive.
+
+Click Disembark on any occupied slot to drop the player out. Their token lands next to the vehicle.
+
+Passengers in motion vanish from the tactical map - they're inside the vehicle. A small count badge on the vehicle token shows how many people are aboard.
+
+
+FUEL
+----
+Every vehicle has a fuel tank. Driving burns fuel; running out strands you.
+
+Fuel storage works via INSTALLABLE 55-GALLON DRUMS. Each drum installed in a vehicle adds a fuel reserve. Drums are visible in the vehicle's cargo and can be transferred between vehicles, refilled at fuel pins on the world map, or scavenged.
+
+The vehicle sheet shows current fuel as a bar with explicit gallons remaining.
+
+
+BREWING
+-------
+Some vehicles support BREWING - a way to convert raw materials into alcohol, biodiesel, or other consumables while you drive. Requires a Brewer in the brewer slot and a Brewing Supplies stockpile.
+
+GATHER MATERIALS is the in-vehicle action that converts cargo into brewing-supply units. The Brewer rolls a check; outcome determines yield.
+
+Brewing fires its own narrative banner in the roll feed (BREW prefix) with six outcome variants.
+
+
+CARGO
+-----
+Each vehicle has cargo capacity, expressed in slots or weight depending on vehicle type. Cargo is shared - any campaign member can edit a vehicle's inventory. Items can be moved between PC inventory and vehicle cargo freely while the PC is at the vehicle.
+
+
+THE TACTICAL MAP
+----------------
+A vehicle in a tactical scene shows as a multi-cell object token. Driver + Navigator + Passenger positions are slot-anchored to the token. Open the vehicle popout from the token to see and reassign seats.
+
+MOVE HERE on a tactical seat assignment auto-snaps the player's token to the seat cell.
+
+Vehicles can take damage. A vehicle's WP and RP track like a character's - they have their own Lasting Wounds chip when seriously damaged.
+
+
+COMBAT
+------
+The Driver can declare Vehicle Attack actions: ramming, swerving, drive-bys. Each fires its own narrative banner (DRIVE prefix). Navigators can declare NAVIGATE actions to spot hazards or set up the Driver's roll.
+
+Passengers can take normal actions out the windows - shooting, throwing, etc. - within their weapon range from the vehicle.

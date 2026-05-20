@@ -7,7 +7,7 @@ PINS
 ----
 A pin is a labeled point on a map. Pins exist in two places.
 
-WORLD-MAP PINS are placed on the global world map (Chapter 3) and become visible to everyone once approved — see "Moderation" below.
+WORLD-MAP PINS are placed on the global world map (Chapter 3) and become visible to everyone once approved. See "Moderation" below.
 
 CAMPAIGN-MAP PINS are placed inside a Story by the GM and only visible to that Story's players, and only when the GM has shown the pin. Pins are hidden by default.
 
@@ -17,25 +17,27 @@ Every pin has:
   - A latitude / longitude
   - Optional uploaded images
 
-Pin categories — and their map icons:
+Pin categories - sixteen in an 8x2 grid:
 
-    Rumor (❓)         Location           Residence
-    Business           Church             Government
-    Transport          Hospital           Military
-    Person             Danger             Resource
-    Medical            Group              Animals
-    Community          Distemper Timeline Settlement
+  Row 1:  Rumor (❓)      Location (📍)    Encounter (⚡)   Person (👤)
+          Group (👥)      Community (🏘️)  Residence (🏠)   Camp (🏕️)
 
-The "Rumor" category is the special one — see "Moderation" below and Chapter 12.
+  Row 2:  Danger (☠️)     Commercial (🏪)  Church (⛪)      Government (🏛️)
+          Resource (📦)    Medical (🩸)     Animals (🐾)     A Timeline of the Dog Flu (🌍)
+
+The "Rumor" category is the special one. See "Moderation" below and Chapter 14.
 
 [screenshot: world map with various pin icons]
+
+FOLDERS
+Both world and campaign pins can be filed into folders. Your own folders are private. The GM of a Story can also share folders with the rest of the party, so the whole table sees a curated grouping (Encounters, Resources, NPCs of interest).
 
 
 MODERATION (WORLD-MAP PINS ONLY)
 --------------------------------
 When a Survivor places a pin on the world map, it goes into a moderation queue and shows on the map as a Rumor (❓) until a moderator reviews it. After review, they either approve it and it goes live with whatever category the submitter chose, or reject it and it goes back to the author.
 
-Admin-placed pins skip moderation and go live immediately. Campaign-map pins skip moderation entirely — they're private to the Story.
+Admin-placed pins skip moderation and go live immediately. Campaign-map pins skip moderation entirely - they're private to the Story.
 
 
 NOTIFICATIONS
@@ -46,19 +48,21 @@ You'll get a notification for things like:
   - New Player joined your Story
   - Player Left your Story
   - Session Opened (your GM started a session)
-  - Module Updated (a Rumor you've subscribed to has a new version — see Chapter 12)
+  - Module Updated (a Rumor you've subscribed to has a new version - see Chapter 14)
   - Pin Approved or Rejected (your world-map pin was reviewed)
+  - Bug Report Replied (a moderator answered your bug report)
+  - Lasting Wound, Infection (combat consequences - see Chapter 9)
   - New Survivor signed up (Admins only)
   - Pin Submitted, awaiting moderation (Admins only)
 
 Click any notification to jump to it. Use "Mark all read" to clear the red dot, or "Delete all" to wipe the list.
 
 
-ROLES — INSIDE A STORY
+ROLES - INSIDE A STORY
 ----------------------
 Every Story has exactly one GAME MASTER (GM) and any number of PLAYERS:
 
-  GAME MASTER (GM) — the person who created the Story. The GM:
+  GAME MASTER (GM) - the person who created the Story. The GM:
     - Creates and edits all NPCs, pins, tactical scenes, and handouts.
     - Starts and ends sessions.
     - Starts and ends combat.
@@ -66,11 +70,11 @@ Every Story has exactly one GAME MASTER (GM) and any number of PLAYERS:
     - Has full edit access to everything in the Story.
     - Can launch the world map for other players.
 
-  PLAYER — anyone who has joined the Story. A player:
+  PLAYER - anyone who has joined the Story. A player:
     - Brings ONE of their characters to the table.
     - Rolls dice for that character.
     - Sees only revealed NPCs and pins.
     - Can place tokens for their own character on the tactical map (but not anyone else's).
     - Can submit notes to the GM.
 
-A player can be a GM in another Story at the same time — your role is per-Story, not per-account.
+A player can be a GM in another Story at the same time - your role is per-Story, not per-account.

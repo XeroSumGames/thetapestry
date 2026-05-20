@@ -1,0 +1,59 @@
+====================================================================
+ 3. THE WORLD MAP
+====================================================================
+
+Two maps exist in The Tapestry: the global WORLD MAP, and each Story's CAMPAIGN MAP. They use the same engine and most of the same controls.
+
+
+THE WORLD MAP
+-------------
+Click "The World" in the sidebar. You'll see an interactive map centered on North America - that's the world of Distemper.
+
+CONTROLS
+  - Pan: click and drag.
+  - Zoom: scroll wheel, or the +/- buttons.
+  - Search: top-right - type a place or address, click a suggestion to fly there.
+  - Map style: top-right - Satellite, Topo, Street, Voyager, Humanitarian, Positron, or Dark.
+
+[screenshot: map with style toggle highlighted]
+
+PINS PANEL (right side, toggle with "Pins")
+  PUBLIC tab   Every approved world pin, organized into folders by category. Click a folder to expand. Click a pin to fly to it and see its notes and images.
+  MY PINS tab  Pins you placed. Edit, delete, or toggle public/private.
+  CAMPAIGN tab Pins from any Story you're in that the GM has revealed.
+
+The eye icon next to each category folder hides or shows that whole category on the map. The search box at the top of the panel filters pins by name.
+
+
+PLACING A PIN
+-------------
+Click anywhere on the empty map. A form opens. Fill in the title, notes, and one or more categories. Optionally upload images. Save.
+
+As a Survivor, your pin goes to the moderation queue and shows as a Rumor (?) until reviewed. As an Admin, it goes live immediately.
+
+
+THE CAMPAIGN MAP
+----------------
+Each Story has its own map, accessible from the Table (Chapter 7). The campaign map has the same controls as the world map, but with extra GM tools:
+
+  - Click the empty map to place a campaign pin (instant, no moderation).
+  - Drag pins to reposition.
+  - Show / Hide a pin to control whether players see it.
+  - Link a pin to a tactical scene - players can then double-click the pin to open that scene (Chapter 8).
+  - Promote a pin to the world map (sends it to moderation for global visibility).
+
+Players see only revealed pins. Click any pin to read its notes and view its images.
+
+
+ROUTE PLANNER (GM ONLY)
+-----------------------
+Click "Plan Route" in the campaign map controls. Pick a start pin and an end pin, and the planner draws a road-following route between them using OpenStreetMap data. The route shows distance and approximate driving time.
+
+Alt-click on a pin while in Route mode to snap it directly into the route as a waypoint. The route updates live.
+
+Useful for "the party drives from X to Y" narration without making your players guess.
+
+
+VEHICLE BUBBLE
+--------------
+When a vehicle is in play (Chapter 11), a small bubble floats on the campaign map at the party's current position. It shows the vehicle name and clicks through to the vehicle's sheet.

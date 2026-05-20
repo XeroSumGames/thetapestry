@@ -1,0 +1,105 @@
+====================================================================
+ 9. COMBAT
+====================================================================
+
+Combat is a structured mode you enter from the Table during an active session. The GM starts and ends it.
+
+
+STARTING COMBAT (GM)
+--------------------
+1. Click "Start Combat" in the Table header.
+2. Pick which NPCs are in this fight.
+3. Optionally choose a "Drop" character - they act first, alone, before the rest of the round.
+4. Every combatant rolls initiative: 2d6 + Acumen + Dexterity.
+5. The initiative bar appears below the header, sorted highest to lowest.
+6. The tactical map auto-shares to players.
+
+[screenshot: initiative bar with portraits + numbers]
+
+
+THE INITIATIVE BAR
+------------------
+Shows everyone in turn order: portrait, name, initiative roll, and an active highlight on whoever's turn it is. The round counter sits next to the bar.
+
+The GM can click X on any combatant to remove them or skip their turn.
+
+
+TURNS AND ROUNDS
+----------------
+Every combatant gets 2 ACTIONS per turn. The active combatant's action bar appears below the initiative order. When both actions are spent (or the GM clicks Next Turn), play moves to the next combatant.
+
+When everyone has acted, a new round begins. Initiative re-rolls and everyone gets 2 fresh actions.
+
+
+COMBAT ACTIONS
+--------------
+Most actions cost 1; exceptions noted.
+
+  AIM                 +2 CMod on your next attack. Lost if you don't attack next.
+  ATTACK              Roll your equipped weapon. Pick a target from the dropdown. Damage applies on a hit.
+  CHARGE (2)          Move up to 20 ft, then make a melee or unarmed attack.
+  COORDINATE          Roll Tactics. Allies within Close range get +2 CMod against a chosen target.
+  DEFEND              +2 defensive bonus against the next attack.
+  GRAPPLE             Opposed check on an Engaged target. Win = target Grappled (1 RP). Tie = nothing.
+  MOVE                Highlight cells within 9 ft. Click to move.
+  RAPID FIRE (2)      Two shots: -1 CMod, then -3 CMod.
+  READY WEAPON        Switch, Reload, or Unjam / Repair via a sub-modal.
+  REPOSITION          Free end-of-round positioning.
+  SPRINT (2)          Move 30 ft (3x normal). Requires Athletics check.
+  SUBDUE              Non-lethal: full RP damage, 50% WP damage.
+  TAKE COVER          +2 defense for ALL attacks this round. Once per round.
+  UNARMED             Physicality + Unarmed Combat, 1d3 damage. Always available.
+  STABILIZE           Roll Medicine to stop a mortally wounded ally's death countdown. Must be within 5 ft.
+
+
+BLAST RADIUS
+------------
+Grenades, RPGs, and Molotovs apply damage automatically:
+
+  Engaged (5 ft)   full damage
+  Close (30 ft)    50% damage
+  Far (100 ft)     25% damage
+
+The attacker is excluded from splash.
+
+
+MORTAL WOUNDS
+-------------
+When a character's WP hits 0:
+  - A death countdown starts (4 + Physicality rounds).
+  - If the character has any Insight Dice, a modal asks whether to trade ALL of them to survive with 1 WP and 1 RP. Only the player who owns the character can make that choice.
+  - If nobody stabilizes them before the countdown expires, the character dies.
+
+Whenever a PC enters WP=0 or RP=0, even if they're saved, they gain 1 Stress.
+
+
+LASTING WOUNDS
+--------------
+A PC who survives a serious injury can pick up a Lasting Wound - a permanent mark of damage that follows the character. Lasting Wounds appear as red chips on the character card.
+
+The GM rolls for a Lasting Wound on the relevant Table 12 lookup. The wound names what it is (Broken Rib, Mangled Hand, Concussion, etc.) and what mechanical penalty it carries.
+
+Lasting Wounds heal slowly through Rest and Medicine, and faster through Evolution. The character card "Show / Hide" toggles whether players see each other's lasting wounds.
+
+
+INFECTION
+---------
+Distemper-era wounds get infected. After combat, the system auto-rolls a Wound Infection check for every wounded combatant. The result either clears or escalates the wound.
+
+A wound-infection-warning banner appears on the first wound of each combat as a reminder.
+
+Heal rolls that come up Low Insight auto-fire a Wound Infection check on the patient. Healing badly can make things worse.
+
+Sickness from environmental sources (bad water, exposure, contagion) follows the same ladder. A Dire Failure can escalate Sickness to Mortally Wounded.
+
+
+WEAPON MALFUNCTION
+------------------
+An attack roll that comes up Low Insight (1+1) drops a weapon-malfunction log row. The weapon's condition drops a level (Pristine to Used, Used to Worn, etc.). Down at Damaged or Broken, it needs Unjam / Repair before it can be used again.
+
+
+ENDING COMBAT (GM)
+------------------
+Click "End Combat" in the header. Initiative clears. Grapple states release. Mortally wounded PCs gain +1 Stress.
+
+End Combat fires the post-combat Wound Infection roll modal for every wounded combatant.

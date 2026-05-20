@@ -1,0 +1,60 @@
+====================================================================
+ 6. CREATING A STORY
+====================================================================
+
+A STORY is your campaign - the whole ongoing thing. Inside one Story you can run encounters (single fights or scenes), adventures (multi-session arcs), or full campaigns (long-running storylines). The Story is the only formal container; you organize the content inside it however you like.
+
+
+CREATING ONE (GM)
+-----------------
+Click "My Stories" in the sidebar, then "+ New Story." Fill in:
+
+  - Name (required).
+  - Description (optional).
+  - Setting - pick one:
+      Custom         start blank.
+      District Zero  pre-loaded with the District Zero sourcebook NPCs, locations, and pins.
+      Chased         the Delaware setting from the Chased magazine.
+      Mongrels       the canonical demo campaign.
+      The Arena      the gladiator sandbox.
+      Empty          truly blank, no seed content.
+  - Map style and starting location (the campaign map's default view).
+  - OR - start from a Rumor (a published module). See Chapter 14.
+
+You become this Story's GM automatically.
+
+When created, the Story gets an INVITE CODE / LINK. Share it with your players. See "Joining" below.
+
+
+THE STORY PAGE
+--------------
+Lists everything about your Story:
+
+  Launch        opens the Table (Chapter 7).
+  Edit          inline form on the page itself - name, description, map style, map center.
+  Clone         copy the entire Story as a new one.
+  Share         copies the invite link to your clipboard.
+  Pregens       drop-in pre-built characters seeded from the chosen setting.
+  Sessions      full session history.
+  Snapshots     saved states of the campaign you can roll back to.
+  Publish       publish this Story's content as a Rumor module (Chapter 14).
+  Delete        permanent, asks first.
+
+The GM Tools area is inline on the page now - no separate edit page to chase.
+
+[screenshot: story landing page with action buttons]
+
+
+JOINING A STORY (PLAYER)
+------------------------
+The GM gives you an invite code or link. Two ways to use it:
+
+  - Click the link. The "Join" page opens. Pick which of your characters to bring. Confirm.
+  - Or go to "Join a Story" and paste the code.
+
+You appear on the GM's player roster immediately and a notification fires for the GM.
+
+
+LEAVING
+-------
+On your "My Stories" page, click "Leave" on any Story you're a player in. (GMs can't leave their own Story; they delete it instead.)

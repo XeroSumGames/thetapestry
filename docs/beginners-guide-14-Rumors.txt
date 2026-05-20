@@ -1,0 +1,130 @@
+====================================================================
+ 14. RUMORS
+====================================================================
+
+RUMORS is the user-facing brand for The Tapestry's layered content system. It includes three connected surfaces: Modules (published adventure packs), Maps (campaign and world), and Pins (locations on those maps).
+
+Click "Rumors" in the sidebar to land on the marketplace.
+
+
+THE THREE LAYERS
+----------------
+  MODULES
+    Reusable bundles of adventure content - NPCs, pins, tactical scenes, handouts - that one GM has authored and made available for others. The Rumors marketplace surfaces them. Each module is versioned; subscribers get update prompts when authors publish new versions.
+
+  MAPS
+    The campaign map and the world map are where rumors live spatially. A published module ships pins onto the campaign map when cloned. The world map is where Survivor-submitted rumors surface to the community.
+
+  PINS
+    Locations on the maps. The special "Rumor" pin category (the question-mark icon) is Survivor-submitted and moderator-reviewed. A Rumor pin is the seed of an adventure: something heard about a place that might be worth investigating.
+
+The thematic frame: survivors share rumors of places, dangers, and opportunities. Those rumors become the seeds of adventures. The platform makes all three surfaces - distributed content packs, world locations, individual map pins - part of one connected system.
+
+
+THE MARKETPLACE
+---------------
+At /rumors. Browse every Module visible to you:
+
+  - Your own Modules (any visibility).
+  - Anyone's LISTED + approved Modules.
+  - UNLISTED Modules you've been given a direct link to.
+
+Each card shows the Module name, version, tagline, cover image (if uploaded), star rating, subscriber count, and a Featured ribbon if curated.
+
+SORT OPTIONS
+  Featured       curated picks first.
+  Newest         most recent publishes.
+  Most subscribed
+  Highest rated
+  A-Z / Z-A
+
+Search by name. Filter by setting.
+
+Click any card to open the Module's detail page: full description, version history, reviews from other GMs, and a Subscribe button.
+
+
+[screenshot: Rumors marketplace with module cards]
+
+
+WHAT'S IN A MODULE
+------------------
+Each Module packages:
+  - NPCs (stats, portraits, skills, equipment).
+  - Map pins (campaign-map locations with notes).
+  - Tactical scenes (battle maps with grid and object tokens).
+  - Handouts (campaign notes with attachments).
+
+It does NOT package:
+  - Player characters.
+  - Per-session state (HP, combat round).
+  - Session logs.
+
+Each publish creates an immutable VERSION (v1.0.0, v1.1.0). Subscribers clone a version into their own Story; the clone is theirs to edit. When you publish a new version later, subscribed Stories see an "Update available" prompt.
+
+
+USING A MODULE (GM)
+-------------------
+When creating a Story (Chapter 6), the form has a section "OR START FROM A RUMOR" below the Setting picker. It lists every Module visible to you.
+
+Click a Module to select it. Picking one clears any Setting you had - they're mutually exclusive.
+
+Fill in the rest of the form and create the Story. The Tapestry clones the Module's snapshot - every NPC, pin, scene, and handout - into your new Story with fresh IDs. The clone is yours: edit it freely.
+
+
+PUBLISHING A RUMOR (GM)
+-----------------------
+Build out a Story like normal - add NPCs, drop pins, build tactical scenes, write handouts. Whatever exists in the Story when you click Publish is what travels.
+
+(Tip: name your authoring Story something like "Mongrels - Source" so you know it's the authoring copy, not a play copy.)
+
+On the Story page, click "Publish." Fill in the modal:
+
+  - Module Name (prefilled from your Story name, editable).
+  - Tagline (optional one-liner).
+  - Description (optional paragraph).
+  - Visibility:
+      PRIVATE   only you can pick it. Skips moderation.
+      UNLISTED  anyone with the link can pick it. Skips moderation.
+      LISTED    public marketplace listing. Moderator approval required.
+  - Content checkboxes (Pins, NPCs, Tactical Scenes, Handouts) with live counts.
+
+Hit "Publish v1.0.0." A few seconds later the button re-labels to "Module v1.0.0." Your Rumor is live.
+
+
+PUBLISHING A NEW VERSION
+------------------------
+After v1.0, the Publish button reads "Module v1.0.0." Click it to ship a new version.
+
+Pick a semver bump:
+  PATCH   silent fixes, typos, stat tweaks.
+  MINOR   new content, backwards-compatible (default).
+  MAJOR   breaking - renamed scenes, removed NPCs.
+
+Write a CHANGELOG. Subscribers see this verbatim. Examples:
+  "Added 3 NPCs to the south wing, rewrote the Costco handout, rebalanced Gus's skill levels."
+
+Hit Publish. Every subscribed Story gets a bell notification.
+
+
+REVIEWS AND RATINGS
+-------------------
+Subscribers can leave a star rating (1-5) and a short review on a Module's detail page. Average rating and review count surface on the marketplace cards. Featured Modules are curated separately and don't depend on rating.
+
+
+RECEIVING AN UPDATE (SUBSCRIBER GM)
+-----------------------------------
+Two ways you'll know a Rumor has updated:
+
+  - The notification bell fires.
+  - On your Story page, a purple "v1.1.0 available" button appears in the GM action row.
+
+Click through to the version history page. Each version card shows version number, published timestamp, changelog, and a diff summary vs the prior version ("+2 NPCs, -1 pin, 3 handouts updated").
+
+Your currently-cloned version gets a "Your clone" chip. From here you can review the diff and choose what to merge into your campaign.
+
+
+WORLD MAP RUMOR PINS
+--------------------
+Distinct from published Modules, the "Rumor" pin category (Chapter 2) is the world-map layer of the Rumors system. Survivors place pins as Rumors when they hear of a location worth exploring. The pin shows as a question mark until a moderator reviews it, then resolves to whatever category the submitter chose.
+
+A world map full of question marks is a feature, not a bug - it's the community telling you where to dig.

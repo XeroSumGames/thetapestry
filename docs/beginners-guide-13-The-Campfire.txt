@@ -1,0 +1,89 @@
+====================================================================
+ 13. THE CAMPFIRE
+====================================================================
+
+The Campfire is the cross-Story community hub. Click "The Campfire" in the sidebar to land on it.
+
+The Campfire is a PORTAL: cards on the landing page, drill-down via tabs. Click a card to open that tab; the URL updates so you can deep-link back.
+
+
+THE PORTAL
+----------
+Three sections render on the landing page:
+
+  SETTING HUBS
+    District Zero and Kings Crossroads each have their own hub. A hub is a setting-specific feed: canon timeline pins, published communities tied to that setting, and recent posts from Forums, War Stories, and LFG filtered to the setting.
+
+  FEATURED MODULE
+    A single hero card highlighting a featured Rumor from the marketplace. Links into /rumors. See Chapter 14.
+
+  EXPLORE
+    Cards for the platform-wide surfaces: Messages, Looking for Group, War Stories, Timestamps, Homebrew (coming soon).
+
+A setting filter at the top lets you scope the drill-down surfaces by setting. Your choice carries through.
+
+
+MESSAGES
+--------
+Direct conversations with players, GMs, and visitors. Each thread shows a conversation history with timestamps. Click "+ New Message" to start a thread. Search bar filters by participant.
+
+Your account avatar shows next to your username on every Campfire surface.
+
+
+LOOKING FOR GROUP
+-----------------
+A bulletin board for finding GMs or players.
+
+Post as either:
+  - GM seeking players, or
+  - Player seeking game.
+
+Each post has a title, body, optional setting tag, and an optional schedule note. Other people click "I'm Interested" to express interest. As the post author, you see a roster of who's interested. You can DM them directly or, if you're a GM, send them a Story invite. You can also kick interested users from your post.
+
+Share button pushes a post to Reddit, Twitter, Facebook, or copies a direct link.
+
+
+FORUMS
+------
+Forums are being redesigned and not documented in this version. A revised Forums chapter will land when the redesign ships.
+
+
+WAR STORIES
+-----------
+A cross-Story feed for session highlights, the time the party blew up the wrong building, the time someone rolled double-6 on a Recruitment Check.
+
+  - Title and body.
+  - Optional campaign tag.
+  - Attach images and PDFs.
+  - Edit and delete your own posts.
+
+Survivor-authored posts enter a moderation queue. Admin-authored posts go live immediately.
+
+
+TIMESTAMPS
+----------
+A utility tool. Pick a date, time, and timezone, get a Discord-compatible timestamp token (looks like `<t:1234567890:F>`). Paste it into Discord and it renders as the local time for every viewer.
+
+Six format options plus raw Unix seconds. Useful for scheduling sessions across timezones.
+
+
+HOMEBREW (COMING SOON)
+----------------------
+Placeholder for custom rules, house variants, fan content. Visible card but not yet open for posting.
+
+
+SETTING HUBS - WHAT'S INSIDE
+----------------------------
+Click a hub card from the portal. The hub renders four sections:
+
+  HEADER     Setting name, tagline, blurb, "Run a campaign in this setting" CTA.
+  CANON      A timeline of canon pins for this setting, each with category icon and a "View on map" deep-link.
+  COMMUNITIES  Published world communities sourced from any campaign tagged with this setting. Only approved ones render.
+  FEED       Recent posts from Forums, War Stories, and LFG filtered to this setting.
+
+The feed shows the setting carrying through from the portal's setting filter. Clicking through to a full surface preserves your setting choice.
+
+
+COMMUNITY FEEDS
+---------------
+Each Community (Chapter 12) has its own activity feed surfaced through the Campfire layer. Open a community from My Communities, then click "Feed" to see community-scoped posts and post directly.
