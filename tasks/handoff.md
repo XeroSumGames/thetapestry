@@ -37,7 +37,7 @@ These exist because I broke them and Xero corrected me. Do not violate.
 - **Push to live, test on live.** No staging. Every change ships straight to main.
 - **Long-term fix over quick fix.** Root-cause path always wins. Surface latent bugs even when off-request.
 - **Verify shipped state before quoting scope.** Grep + git log first. Don't trust master inventories or specs.
-- **Pre-feature-start origin check.** Before starting any non-trivial feature work, run `git fetch && git log --oneline origin/main -10` and grep the touched modules. Multi-chat tracks routinely ship competing or overlapping work mid-session — the most recent explicit Xero approval wins, but discovering the collision at push-time costs 20+ minutes of rebase/supersede work. (Logged 2026-05-19 after the DRIVE/BREW vs `54c46a1` collision.)
+- **Pre-feature-start origin check.** Before starting any non-trivial feature work, run `git fetch && git log --oneline origin/main -10` and grep the touched modules. Multi-chat tracks routinely ship competing or overlapping work mid-session - the most recent explicit Xero approval wins, but discovering the collision at push-time costs 20+ minutes of rebase/supersede work. (Logged 2026-05-19 after the DRIVE/BREW vs `54c46a1` collision.)
 - **Cold-audit findings are hypotheses, not facts.** When running a 4-agent audit or following up on `file:line` claims from any subagent report, verify the cited line before changing code. Audits have ~30% noise rate on specifics - findings get hallucinated, get pre-fixed by other work, or are misframed. When dispatching audit agents, require the prompt to quote 2 surrounding lines per finding so the cite can be spot-verified.
 - **Remote agents default to feature branches.** When dispatching via `RemoteTrigger`, expect the spawned agent to create `claude/<name>` or named feature branches despite explicit "push directly to main" instructions - the safety prior wins. Easier to accept and merge than fight. Always specify a fallback branch name (e.g. `perf/<topic>-canvas`) in the prompt so you can find the branch by name afterward.
 - **Capture lessons + todo immediately.** After every meaningful ship, edit `tasks/lessons.md` + `tasks/todo.md` in the same response. Never offer "want me to add this?"
@@ -86,7 +86,8 @@ If a fix balloons beyond one commit, STOP and re-plan. Don't keep digging.
 - `tasks/handoff.md` - this file (scaffold for the chat block; Claude maintains it)
 - `tasks/operating-mode.md` - **AUTO-LOADED via CLAUDE.md @-ref.** Relational scaffold: 8 standing roles (architect/eng/qa/security/ops/product/business/ux), slash conventions, 17 always-confirm-first bright lines, standing behaviors (pre-ship 5-question check, cross-role tradeoff surfacing, decision audit trail, test-per-fix, stop-and-replan).
 - `tasks/debug-handoff.md` - **diagnostic companion.** Risk register, tech debt ledger with interest rates, confidence ledger (TESTED / playtested / HOPED-FOR), triage playbook (Sec. 4, includes 15-min revert-first rule), pre-ship 5-question checklist (Sec. 5).
-- `tasks/slash-conventions.md` - quick reference for `/architect /security /qa /product /ops /business /ux` with when-to-reach-for + 4 example triggers + what-you-get per slash.
+- `tasks/slash-conventions.md` - quick reference for `/architect /security /qa /product /ops /business /ux` with when-to-reach-for + 4 example triggers + what-you-get per slash. Also documents `/stability-audit` (on-demand periodic review; output: dated audit doc at `tasks/stability-audit-YYYY-MM-DD.md`).
+- `tasks/stability-audit-YYYY-MM-DD.md` - dated stability audits. Read the most recent before quoting "current risk." Pattern + gotchas in `tasks/lessons.md` "Stability-audit pattern" entry. First was 2026-05-19.
 - `tasks/workflow-guide.md` - how Xero uses the puffer-fish day to day. Daily flow, multi-chat coordination, habits, what to ignore, when to update the system.
 - `tasks/health-pulse.md` - **auto-maintained.** Health-pulse routine (trig_012SuKNa7cQZDLjAkLTBQdVA) prepends entries every 3 hours when RED or DRIFT.
 - `tasks/security-audit.md` - **auto-maintained.** Security audit routine (trig_01QsNg4GfAEcT31hSER4w9Pm) prepends entries weekly Tue 16:23 UTC when findings.
@@ -102,7 +103,7 @@ If a fix balloons beyond one commit, STOP and re-plan. Don't keep digging.
 - `lib/campaign-clock.ts` - `advance()` + drainers (streaming heals, rations, subsistence). Phase 3 backbone.
 - `lib/roll-outcomes.ts` - `OUTCOME` const + `RollOutcome` / `RollResult` union types for the `roll_log.outcome` column. Use `OUTCOME.X` at every insert site for typo safety.
 - `lib/playtest-recorder.ts` + `components/PlaytestRecorder.tsx` - telemetry only. `Ctrl+Shift+M` marks are per-browser localStorage with no central collection; silently drop when gate is off.
-- `tests/lib/*.test.ts` - 141 Vitest unit tests covering high-value pure helpers. `npm test` runs in ~230ms.
+- `tests/lib/*.test.ts` - 388 Vitest unit tests across 20 files covering pure helpers (roll-helpers, community-logic, roll-outcomes, fuel-storage, brewing-supplies, first-impression-resolver, xse-engine, cdp-costs, damage, npc-drag-drop, sentry-filters, encumbrance, supabase-errors, rolls-feed-collapse, sentry-realtime, image-utils, signed, advantages, safe-upload, playtest-recorder). `npm test` runs in ~430ms. **Confidence Ledger drift rule:** if this number is stale by 2+ consecutive health-pulse entries, automate or drain at session-start (see `tasks/lessons.md` "Confidence-Ledger drift threshold").
 - `vitest.config.ts` + `scripts/install-hooks.sh` - test runner config + reinstall script for the pre-commit hook.
 - `.github/workflows/test.yml` - CI runs guardrails + tsc + tests on every push to main.
 - `.git/hooks/pre-commit` - local hook (not in git, install via `sh scripts/install-hooks.sh`), runs `check-font-sizes.mjs` + `check-role-literals.mjs` + `npm test --silent`. Bad commits refuse before push.
@@ -142,159 +143,92 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-19 (post-playtest punch-list closeout)
+# Session state - 2026-05-19 (stability audit + /stability-audit scaffolding)
 
 ## Current main HEAD
 
-`653ff86 feat(playtest-recorder): GM-cascade start/stop + localStorage resume`
+`a0d611b docs(stability-audit): scaffold /stability-audit slash + pattern + lessons`
 
-## The arc this session (2026-05-19)
+## The arc this session (2026-05-19, evening)
 
-Continuation chat that picked up from a context-compacted session mid-way through the advantages-feature Phase 4 build (broken JSX). Fix-and-finish on that, then drained the rest of the post-2026-05-18 playtest punch list. Every Xero-blocked item from that list now ships.
+Xero asked the "dev team" (the puffer-fish system) to verify the codebase was stable post-playtest. First `/stability-audit` ever run on the project. Output: read-only audit doc, then triaged HIGH findings shipped, then scaffolded the pattern so future iterations don't have to re-invent the framing.
+
+Three commits, all on main, all green through pre-commit gates:
+
+1. **Audit pass (no code edits)** - wrote `tasks/stability-audit-2026-05-19.md`. Read existing evidence (Risk Register + Tech Debt + Confidence Ledger from `tasks/debug-handoff.md`, newest `tasks/health-pulse.md` + `tasks/security-audit.md` entries, 14 days of `git log` showing 542 commits / 7 days showing 335 commits), ran live gates (tsc clean, font-sizes OK, role-literals OK, 368 tests passing in 432ms, npm audit 0 high / 0 critical), footgun grep (`as any`, realtime channels, polling, upload calls). Findings: 3 HIGH (4-6 unsanitized upload sites + verify-turnstile no rate-limit + 2026-05-19 HOPED-FOR batch the ledger missed), 5 MEDIUM, 3 LOW. Drained the Confidence Ledger (174 → 388 tests; added the ~50-commit 2026-05-19 batch). Updated `tasks/todo.md` CURRENT OPEN with the audit checklist sorted by severity. Added to `tasks/debug-handoff.md` §3.
+2. **`061b434` fix(security): sanitize upload filenames + lock contentType + IP rate-limit turnstile** - H-1 + H-2 + M-1.
+   - **H-1:** new `lib/safe-upload.ts` exposes `prepareUpload(bucket, file)` returning `{ ok, filename, contentType }`. Sanitizes filename (strips path traversal, replaces unsafe chars with underscore, NFKD-strips accents, caps stem 80 + ext 8), enforces per-bucket size caps (10 MB attachments, 5 MB module-covers), maps extension to a whitelisted contentType (`image/jpeg | image/png | image/gif | image/webp`; PDF + txt only in attachment buckets). SVG excluded everywhere (script-execution risk). Applied at 7 sites: table page session-attachments, CampaignMap pin-attachments, MapView pin-attachments (new + edit), GmNotes note-attachments, war-stories, rumors module-covers. 20 unit tests at `tests/lib/safe-upload.test.ts`.
+   - **H-2:** `app/api/auth/verify-turnstile/route.ts` enforces 30 req/min/IP (in-memory token bucket, `x-forwarded-for` keyed, stale-bucket sweeper) + 4 KB body cap (413 if exceeded) + JSON parse guard (400 if invalid). 429 + `Retry-After` header on rate-limit hit. In-memory limiter is per-instance; L-3 todo logged for KV-backed upgrade before paid signups.
+   - **M-1:** confirmed no-op. `brace-expansion` + `ws` already at fixed versions in lockfile; remaining 2 moderates are postcss-via-next (breaking, held per security-audit).
+3. **`a0d611b` docs(stability-audit): scaffold /stability-audit slash + pattern + lessons** - caught after Xero asked "are you keeping a file/log of this for future iterations?" The audit doc + commit messages persisted but the *pattern* wasn't reusable. Added:
+   - **`tasks/lessons.md`** - new entry "Stability-audit pattern + stale audit line numbers + Confidence-Ledger drift threshold." Documents the 5-step audit shape, the gotcha that audit line refs go stale fast on hot files (security-audit said `:3414` for session-attachments upload, actual was `:3518` after ~100 commits drift), and the rule that the same drift item in 3+ pulses means the ledger has lost its signal.
+   - **`tasks/slash-conventions.md`** - `/stability-audit` entry with trigger examples + output shape. Wired into the pair-with-periodic-reviews tip.
+   - **`tasks/operating-mode.md`** - `/stability-audit` added to the on-demand periodic reviews section between `/commercial-review` and `/pre-launch-audit`.
+   - **`tasks/stability-audit-2026-05-19.md`** - forward links so a future reader landing on the doc sees the pattern + slash + naming convention without grepping.
 
 ## What shipped this session
 
 | Commit | What | Risk |
 |---|---|---|
-| `011c55e` | `feat(advantages):` Award button on roll feed + C3 consumed broadcast (P3 Q4-b phases 4+5). Fixes the leftover JSX syntax error at L8102 (extra `)` in merged-feed IIFE) that blocked the prior session. GM-only star button overlays dice-result rows; Use button now inserts `outcome='advantage_used'` roll_log entry for whole-party narrative. | Untested live |
-| `18989f3` | `feat(npcs):` player-side folder reorder (Q2 Phase B). Players drag folder headers to reorder their NPC tab (saved per-user-per-campaign in localStorage under `npc_folder_order_player_<id>`). Combat + Community buckets stay non-draggable. Phase A NPC drops still work; drop handler branches on dragId type. Microtask-deferred sync keeps saved order current with new/renamed folders. | Untested live |
-| `faa60ab` | `feat(feed):` DRIVE / BREW / NAVIGATE prefix-CAPS narratives + fuel state baked in (Q1, supersedes `54c46a1`). Multi-chat collision — another chat shipped competing Driving/Brew narratives mid-session. My design (prefix CAPS + fuel state in line + NAVIGATE added + new label format `<name> - Drive - <vehicle>` etc.) had Xero approval in chat. Surgically replaced their Drive + Brew, kept their Vehicle Attack, added NAVIGATE new. Label rewrite in `app/vehicle/page.tsx`; 21 new tests; preview HTML rewritten. | Untested live |
-| `85809b0` | `lessons:` verify shipped state before assuming uncontested scope. The lesson from the `faa60ab` collision — codified the pre-feature-start origin check. | Docs |
-| `ba472f6` | `docs(preview):` 7th-pass changelog entry in `roll-feed-log-preview.html` documenting the DRIVE/BREW/NAVIGATE supersession. | Docs |
-| `c31e564` | `feat(vehicles):` per-vehicle fuel storage via installable 55-Gallon Drums (Q4-c). New `lib/fuel-storage.ts` with pure helpers; new optional `fuel_max_base` + `fuel_storage_max` cols on Vehicle (Minnie base=4, cap=6). New "Fuel Storage" panel on vehicle popout with Install/Uninstall buttons. Drum is a new EQUIPMENT item (Common, enc 2). Brew "already full" detection Just Works at the new expanded cap (keys off fuel_max which install bumps directly). SQL backfill applied live to existing Minnie rows. 21 new tests. | Untested live |
-| `f3b20fb` | `feat(vehicles):` brewing-supplies stockpile + Gather Materials (Q4-d). New `lib/brewing-supplies.ts` pure helpers; new optional `brewing_supplies_current` + `brewing_supplies_max` cols on Vehicle (Minnie current=0, max=2). New "Brewing Supplies" panel under Fuel Storage with [+ Gather Materials] button. Gather = passive no-dice action that bumps current by 1 and inserts a `gather_materials` feed event. Brew check is blocked when supplies=0; every brew attempt consumes 1 supply (success or fail) batched with the fuel update. SQL backfill applied live. 19 new tests. | Untested live |
-| `653ff86` | `feat(playtest-recorder):` GM-cascade start/stop + localStorage resume. Record button is now GM-only. GM click broadcasts `recorder_start` / `recorder_stop` on `initChannelRef` (wrapped via `wrapBroadcast`); every connected player tab flips its capture flag in lockstep and writes `tapestry_recorder_enabled_<campaignId>` to localStorage. Table-page mount reads that flag and resumes capture without user action (survives refresh / back-nav / late mount). `beforeunload` listener does a one-shot flush so close-tab loses ≤1 event instead of up to 60s. Players keep Ctrl+Shift+L for ad-hoc dumps. Closes the "Alex hit Stop without ever hitting Start and dumped an empty recording" failure mode from 2026-05-18 session 3. 6 new tests. | Untested live |
+| (uncommitted in audit pass) | `tasks/stability-audit-2026-05-19.md` (new), `tasks/debug-handoff.md` §3 Confidence Ledger drain (174 → 388 tests + 2026-05-19 HOPED-FOR batch), `tasks/todo.md` CURRENT OPEN audit checklist (H-1/H-2/M-1/M-2/M-3/M-5/L-1/L-2 + 5 Risk Register demote candidates) | Docs/audit only; folded into next commit |
+| `061b434` | `fix(security):` upload hardening across 7 sites + verify-turnstile rate-limit + body cap. `lib/safe-upload.ts` (new helper), 20 new tests. Pre-ship 5-Q answered in commit body. | **Untested live** (auth boundary). Behavior change visible to users only on bad uploads (alert with reason). |
+| `a0d611b` | `docs(stability-audit):` scaffolded the `/stability-audit` slash + lesson + operating-mode entry + forward links in the audit doc. | Docs |
 
-## Playtest punch list (2026-05-18) — final status
+## Verified vs untested (this session)
 
-| # | Mark | Status |
-|---|---|---|
-| 1 | (n/a, in-flight task tracker) | — |
-| 2 | 01:05:31 ping not working | **Pending** — needs next-playtest repro |
-| 3 | 01:13:55 + 02:37:59 dead-click bursts on map | **Pending** — needs repro |
-| 4 | 01:14:04 work around map pins | **Pending** (partially shipped) — needs repro |
-| 5 | 01:18:54 FI modal missing CMod | Shipped earlier this session arc |
-| 6 | 01:32:51 player drag/drop NPCs (Phase A) | Shipped `4b9ce21` (prior session) |
-| 7 | 02:07:35 "drives Minnie" breakdown | Shipped `faa60ab` |
-| 8 | 02:12:29 Minnie inventory player-editable | Shipped `1f79e08` (prior) |
-| 9 | 02:21:57 fuel storage fungible | Shipped `c31e564` |
-| 10 | 02:25:36 brewing supplies storage | Shipped `f3b20fb` |
-| 11 | 02:28:30 advantage tab (5 phases) | Shipped `054c04d` + `47a1f36` + `011c55e` |
-| 12 | 02:37:45 CLOSE ALL multi-NPC | Shipped `fcd8a9d` |
-| 13 | 01:29:32 Pin SHOW broadcast | Shipped `236167c` |
-| 14 | 01:44:00 FI wording with NPC target | Shipped `89ad835` |
-| 15 | 02:03:06 time-advance log | Shipped `89ad835` |
-| 16 | 02:13:19 routes vanish on Esc | Shipped `d17b1c1` |
-| 17 | 02:15:12 brew check +-3 display | Shipped `a6376c9` |
-| 18 | Q2 Phase B player folder reorder | Shipped `18989f3` |
-
-Every Xero-blocked mark from 2026-05-18 is now shipped. The 3 pending marks (2, 3, 4) need fresh repro data from your next live session — can't move on them without that.
-
-## The arc since 2026-05-15 (carry-forward context)
-
-Two parallel tracks converged this stretch:
-
-1. **Infrastructure track (this chat)** built the puffer-fish system: operating-mode + debug-handoff + slash-conventions + workflow-guide artifacts, Vitest test suite with 141 unit tests + pre-commit gate + GitHub Actions CI, and two autonomous scheduled routines (health-pulse 7x/day + security-audit weekly).
-2. **Tactical track (parallel chat)** shipped: vehicle popout / Minnie passenger system, Lasting Wounds chips on Character/NpcCard, Heal-LI cross-client Wound Infection cascade, Coordinated Effort per-participant Withdraw with retcon, HIDE ALL panic button, route planner on campaign map, multi-cell token drag-end fix.
-
-Both tracks see the same artifacts via the repo and are gated by the same pre-commit hook + CI. Coordination via shared substrate.
-
-## What shipped 2026-05-15 -> 2026-05-17
-
-### Infrastructure (this chat)
-
-| Commit | What | Risk |
-|---|---|---|
-| `e83514b` | `perf(tactical-map):` cache `effective` fog map (A4 follow-up #1). Drops O(grid_cols * grid_rows) auto-fog iteration to zero on cache hit. Same shape as fogVisibleCacheRef. | **Untested live** |
-| `baa704f` | `fix(character-sheet):` remove Insight Dice cap on `+` button. Pip render stays at 10; counts above 10 visually clamp, value increments freely. | **Untested live** |
-| `bc86d5e` | `fix(role-checks):` 5 inline role gates -> `roleIsThriver()` (logging, vehicle, moderate/users/activity + characters, tools/rescale). **Guardrail tightened** to catch `!=`/`!==` + `String(...).toLowerCase()` shapes. Dead `invalidateAuthCache` deleted. | **Untested live** |
-| `dabf888` | `refactor(wizard):` 3 inline `ALL_WEAPONS.find` sites -> `getWeaponByName` (PrintSheet, StepEight). | Low |
-| `e119598` | `refactor(equipment):` extract `findEquipmentByName` helper for fuzzy catalog lookup; 4 sites migrated (CampaignCommunity, app/vehicle). | Low |
-| `5c6d2d8` | `chore(lib):` dead-export sweep. 2 deleted (createCharacterWeapon, CONDITION_LABELS in weapons.ts), 4 demoted to file-private (haversineKm, BACKPACK_BONUS, dumpBuffer, getWeaponRangeProfile). | Low |
-| `8afb610` | `chore(stale-cleanup):` removed unused+wrong `INSIGHT_DICE_DESCRIPTION` (claimed cap of 10, contradicted the just-shipped removal) + audit-corrected stale loot-found-nothing todo (already shipped in `6abb46b` on 2026-05-14). | Docs/cleanup |
-| `87f3063` + `4bbd7eb` + `42d5cd3` | `feat/refactor(roll-outcomes):` 3-commit RollOutcome union type migration across 51 insert sites. Created `lib/roll-outcomes.ts` with `OUTCOME` const + `RollOutcome` + `RollResult` types. Narrowed `getOutcome()` return type. **Bonus:** TS narrowing surfaced a real dead-code path in the sprint handler (`outcome === 'Failure'` comparison in else-branch where outcome was already narrowed away from Failure). Copy-paste leftover, replaced with literal true/false. | **Untested live, large surface** |
-| `f6c04df` | `docs(debug-handoff):` created `tasks/debug-handoff.md`. Risk register + tech debt ledger + confidence ledger + triage playbook + pre-ship 5-question checklist. | Docs |
-| `ba96bf9` + `ee15d14` + `16777d6` | `test:` install Vitest + first batch (74 tests across roll-helpers/cdp-costs/community-logic/encumbrance) + second batch (+67 = 141 total across damage/xse-engine/roll-outcomes). Pre-commit hook wired via `scripts/install-hooks.sh`. | Net positive (safety net) |
-| `c120c0d` | `ci:` GitHub Actions workflow at `.github/workflows/test.yml` runs guardrails + tsc + tests on push to main. | None |
-| `fd93bcb` | `docs(debug-handoff):` mark test-infra paid down in Tech Debt Ledger; populate TESTED row in Confidence Ledger. | Docs |
-| **ROUTINE** | Created scheduled remote agent `trig_012SuKNa7cQZDLjAkLTBQdVA` (health-pulse, every 3h at 00/06/09/12/15/18/21 UTC). Silent on green; commits `health-pulse: ...` to `tasks/health-pulse.md` when RED or DRIFT. | Live; emitting drift notes |
-| `233a18a` | `chore(deps):` bump `next` 16.2.1 -> ^16.2.6. Patches SSRF CVSS 8.6, middleware bypass family, DoS Server Components. **Surfaced by 3 consecutive health-pulse runs.** | Net positive |
-| `a28f4c6` | `chore(deps):` bump `fast-uri` 3.1.1 -> 3.1.2 via `npm audit fix`. Resolves host confusion via percent-encoded authority delimiters. | Low |
-| `a5a7543` | `docs(operating-mode):` created `tasks/operating-mode.md`. 8 standing roles, slash conventions, 17 bright lines, standing behaviors. Wired into CLAUDE.md via @-ref. | Docs |
-| `02d3c64` | `docs(operating-mode):` add UX role, slash example table, user-content bright line, weekly security routine reference. | Docs |
-| **ROUTINE** | Created scheduled remote agent `trig_01QsNg4GfAEcT31hSER4w9Pm` (security audit, weekly Tue 16:23 UTC). Deeper than health-pulse: full audit incl. moderate, RLS gap scan, file-upload audit, secret grep, SQL/XSS patterns, dep drift, rate-limit surface, permission boundaries. | Live; first fire 2026-05-19 |
-| `50c0904` | `docs(slash-conventions):` exported full slash quick-reference to `tasks/slash-conventions.md`. All 9 additional bright lines added to operating-mode (17 total). | Docs |
-| `8706bf6` | `docs(workflow-guide):` created `tasks/workflow-guide.md`. Daily flow, multi-chat coordination, habits, what to ignore, when to update the system. | Docs |
-
-### Tactical (parallel chat — see git log for full per-commit detail)
-
-- `0efa08c` Lasting Wounds chip on CharacterCard + Show/Hide flips RLS gate
-- `6342556` Lasting Wounds chip on NpcCard + cross-folder panic-hide button
-- `1e642de` BUG-2 (PCs ride vehicles) resolved per Xero confirmation
-- `b78d5fa` Lesson logged: canvas redraw deps - the half-day vehicle-sync bug
-- `16e33d6` `fix(tactical-map):` redraw canvas when vehicles prop changes
-- `64eb3db` `feat(coord):` per-participant Withdraw with full retcon (Option B)
-- `026d65a` `chore(icon):` swap bug-report emoji 🐛 -> 🐞 (ladybug)
-- `e1163fc` `feat(healing):` heal-LI auto-fires patient's Wound Infection check
-- `d2ba6b6` `fix(tactical-map):` drag-end honors grab offset for multi-cell tokens (HEAD)
-
-Plus the vehicle popout / Minnie passenger system arc, route planner on campaign map (OSRM), QuickAddModal pin picker unification, GM Notes localStorage draft persistence, Tools menu reorder. Full detail in the parallel-chat's own summary or via `git log`.
-
-## Verified vs untested
-
-- **VERIFIED via automated tests:** 368 cases in `tests/lib/` (up from 141 over the punch-list batch). New coverage this session: 21 fuel-storage helpers, 19 brewing-supplies helpers, 21 DRIVE/BREW/NAVIGATE narrative parsers. Plus the inherited 12 npc-drag-drop helpers, 14 advantages helpers, 18 FI resolver, etc. `npm test` runs in ~400ms.
-- **VERIFIED via pre-commit guardrails:** font-sizes + role-literals + tsc + tests all green on current main (`f3b20fb`).
-- **UNTESTED live (this session — load-bearing, awaiting next playtest):**
-  - **Advantages Phase 4 + 5** (`011c55e`): ⭐ Award button on roll feed + `advantage_used` consumed broadcast.
-  - **Player folder reorder Phase B** (`18989f3`): drag folder headers in the player NPC tab.
-  - **DRIVE / BREW / NAVIGATE narratives** (`faa60ab`): new label format from `app/vehicle/page.tsx`; old `🚗/⚗️` rows render as plain rolls (no retro migration).
-  - **Fuel storage drums** (`c31e564`): Install/Uninstall buttons on vehicle popout; Minnie expands 4 → 6 days via 2 scavengeable 55-Gallon Drums.
-  - **Brewing supplies stockpile** (`f3b20fb`): Gather Materials button; brew check blocked at 0; every brew burns 1 supply.
-- **UNTESTED carry-forward:** 2026-05-13/14/15/16/17 batches plus the parallel-chat tactical track (vehicle popout / Lasting Wounds chips / Heal-LI cascade / Coord Effort Withdraw / route planner / multi-cell drag-end). Health-pulse DRIFT note may persist on these.
+- **VERIFIED via automated tests:** 388 cases in `tests/lib/` (was 174 per stale ledger; was 368 before today). New today: 20 safe-upload cases (path traversal, accents, oversize, SVG/HTML/exe rejection, type-spoofing override, bucket-specific size caps). `npm test` ~432ms.
+- **VERIFIED via pre-commit guardrails:** tsc + font-sizes + role-literals + tests all green at HEAD `a0d611b`. Pre-commit hook ran the full suite before each commit.
+- **UNTESTED live this session:**
+  - **`safe-upload` helper across 7 upload sites** - XSS-via-filename / size DoS / contentType-spoofing all closed in unit tests. Live behavior change for end users: oversized or wrong-type uploads now show an `alert()` with the reason instead of silently uploading. Try a `.docx` to GM Notes attachments to verify.
+  - **`verify-turnstile` rate-limit** - 30/min/IP + 4 KB body cap. To verify: open signup, complete CAPTCHA, watch network tab; or hit the endpoint with a curl loop and confirm 429 after 30 hits.
+- **CARRY-FORWARD from prior arc (still untested live):** 2026-05-19 morning batch (Tier-2 Recruit Phase A/B/C, vehicle fuel Q4-c, brewing supplies Q4-d, advantages P4+5, FI streamline Phase 1-3, `useHeaderMenus` extraction, GM Share View, NPC reorder + drag/drop + CLOSE ALL, GM-cascade playtest recorder, 10+ feed narrative locks). All on main since this morning; drain target = 2026-05-25 playtest per `tasks/pre-playtest-smoke-2026-05-25.md`.
 
 ## Risks the next session should know
 
-- **Multi-chat collision is real.** Mid-session `54c46a1` shipped competing Vehicle Attack / Driving / Brew narratives from another chat. Caught at push-time; cost ~20 min to rebase + supersede. The new evergreen rule (pre-feature-start origin check) is the prevention; the lesson is logged at `tasks/lessons.md` top. **Always `git fetch && git log --oneline origin/main -10` before starting non-trivial feature work.**
-- **Vehicle JSONB schema additions are stacking.** This session added `fuel_max_base`, `fuel_storage_max`, `brewing_supplies_current`, `brewing_supplies_max` — all optional. Read-site fallbacks handle missing fields. Per-vehicle opt-in. Backfills applied live for Minnie; other vehicle types stay opt-in until rules are spec'd post-campaign per Xero. If you see "feature disabled" on a vehicle that should have it, check whether the relevant cap field is present in the JSONB.
-- **Backward-compat for old roll_log rows.** Old `🚗 Driving check · ...` / `⚗️ Brew check · ...` labels no longer match the new parsers — they render as plain rolls. Acceptable per Xero (no retro migration). If you see a "blank narrative" complaint on a row from before 2026-05-19, that's why.
-- **Carry-forward from prior sessions:** TacticalMap cache stacking (`moveZoneCacheRef` + 4 siblings), vehicle canvas-redraw deps lesson, persistent health-pulse DRIFT entry, RollOutcome migration surface (51 insert sites), `out_since_day` Phase 3c, Skip Week semantics, Recruit LI MOI tag retroactive.
+- **Audit line numbers age in days, not weeks.** When reading `tasks/security-audit.md` or any earlier audit doc, re-grep for the call shape before quoting `file:line` to a fix. The 2026-05-19 16:23 UTC audit was off by ~100 lines on the session-attachments site by the time it was triaged that same evening. Pattern documented in `tasks/lessons.md`.
+- **Confidence-Ledger drift signal threshold.** If health-pulse flags the same item in 2 consecutive entries, the next session opens by draining it (run the action listed) or automating the drain. Today's audit found the test count had been stale 3 times in 4 days. The lesson + `feedback_immediate_lesson_capture` memory rule both point at this.
+- **In-memory rate limiter on verify-turnstile is belt-and-suspenders.** Blocks single-client loops; does not block distributed abuse across warm Vercel instances. L-3 todo logged: swap to `@vercel/kv` + `@upstash/ratelimit` before paid signups open. Until then: low-grade protection is in place, real protection is queued.
+- **The lessons + todo capture rule was applied late today.** I closed the todo items in `061b434` but didn't write the lesson until Xero asked "are you keeping a log?" The rule says lessons + todo in the same response as the ship; today I held the lesson back. The memory-rule trigger (after meaningful ship) was active and I missed it. Worth watching in future sessions.
+- **Carry-forward from prior arc:** multi-chat collision risk (the `54c46a1` collision in the morning), TacticalMap cache stacking, vehicle JSONB schema additions stacking (`fuel_max_base`, `fuel_storage_max`, `brewing_supplies_current`, `brewing_supplies_max` - all optional, all per-vehicle opt-in), legacy roll_log rows render as plain rolls (no retro migration).
 
 ## Open threads
 
-### Blocked on next-playtest repro (the only pending punch-list items)
-- **#2** mark 01:05:31 — ping not working
-- **#3** marks 01:13:55 + 02:37:59 — map non-responsive (dead-click bursts)
-- **#4** mark 01:14:04 — work around map pins (partially shipped)
+### Stability-audit punch list (still open, sorted by severity)
+- **M-2** Confidence-Ledger drift mechanism. Either automate test count via `scripts/refresh-ledger.mjs` (parse `npm test` output) or formalize a session-start drain. The 2+ pulses threshold from the new lesson is the trigger.
+- **M-3** Dedupe `tasks/todo.md` per the 2026-05-19 12:05 UTC health-pulse. Close `Coordinated Effort bespoke chain summary` (shipped via `137be68`); drop lines 56+57 (dups of 80+84); drop one of the lines-580/621 third copies.
+- **M-5** Vehicle 3s polling at `app/stories/[id]/table/page.tsx:3153`. Realtime + BroadcastChannel already triggers refetch; ~28.8K unnecessary refetches per 4-hour 6-player session. Measure first; drop if realtime is reliable.
+- **L-1** Stale TODOs at `lib/campaign-snapshot.ts:22` (communities Phase 4b) + `app/campfire/timestamp/page.tsx:8` (Tapestry-side renderer).
+- **L-2** `app/dashboard/page.tsx:52` accesses `profile.role` directly for display. Not a security bypass; erodes the invariant. Swap to a `getDisplayRole(profile)` helper.
+- **L-3** verify-turnstile KV-backed rate limiter upgrade before paid signups (in-memory leaks across N warm instances). Needs Xero approval to add `@vercel/kv` + `@upstash/ratelimit` deps (Upstash free tier - flag bright-line "new SaaS subscription").
+- **Risk Register demote candidates** (pending 2026-05-25 playtest): `lib/campaign-clock.ts`, `roll_log` writer (hold 1 extra cycle for Advantages broadcast + FI cutover write paths), Initiative state machine (hold for Tier-2 Recruit drainers), TacticalMap canvas. Hold `app/stories/[id]/table/page.tsx` YELLOW until 3-4 more `useHeaderMenus`-style extractions land.
+
+### Blocked on next-playtest repro (carry-forward)
+- **Punch-list mark #2** 01:05:31 ping not working
+- **Punch-list mark #3** 01:13:55 + 02:37:59 dead-click bursts on map
+- **Punch-list mark #4** 01:14:04 work around map pins (partially shipped)
 
 ### Blocked on Xero design calls (carry-forward, unchanged)
-- **Playtest-marks system** (4 Qs)
-- **Healing on GM time-tick** (5 Qs) — partial answer via Heal-LI cascade ship (`e1163fc`); deeper coordination still open
-- **Group Check redesign** (4 Qs) — sprint tracker says resolved as dead per spec (`15c9139`); confirm with Xero
-- **GM Notes / Assets merge** (3 options)
-- **Lv4 Skill Traits full list** (blocks all Lv4 auto-bonuses)
+- Playtest-marks system (4 Qs)
+- Healing on GM time-tick (5 Qs, partial answer via Heal-LI cascade)
+- Group Check redesign (4 Qs; sprint tracker says resolved as dead per spec via `15c9139`; confirm)
+- GM Notes / Assets merge (3 options)
+- Lv4 Skill Traits full list (blocks all Lv4 auto-bonuses)
 
-### Audit / cleanup residue (low priority)
-- Mounted-weapon attack narrative still uses the legacy `🎯 ... · ... · ...` label format (Vehicle Attack parser from `54c46a1` kept; not yet upgraded to prefix-CAPS). Deferred — damage_json + bursts tangle on that path.
-- A4 perf follow-ups: `getWeaponByName` memo at `TacticalMap.tsx:1177/1184`, `ResizeObserver` rAF redirect at `:956`. Sub-ms payoff; pick up if a perf complaint surfaces.
-- Two local `outcomeColor` duplicates at `app/stories/[id]/community/page.tsx:42` and `components/RollModal.tsx:120`. Consolidate when convenient.
+### Audit / cleanup residue (low priority, carry-forward)
+- Mounted-weapon attack narrative still uses legacy `🎯 ... · ... · ...` label format.
+- A4 perf follow-ups: `getWeaponByName` memo at `TacticalMap.tsx:1177/1184`, `ResizeObserver` rAF redirect at `:956`.
+- Two local `outcomeColor` duplicates at `app/stories/[id]/community/page.tsx:42` and `components/RollModal.tsx:120`.
 - `tasks/decisions.md` stub not yet seeded.
-
-### From parallel chat tracks
-- Recruit Tier-2 work landed mid-session (`f131736`, `6287480`, `1951d77`): Inspiration SMod relabel + approach-specific S/F flags + morale-tick drainer + GM Escape Pending surface. Untested live.
-- GM Share View for tactical map (`6a4669b` + `9f02479`). Untested live.
-- ~53 open items in `tasks/todo.md`. Active: Modal Unification (5 of 6 remaining), Character Evolution route, King's Crossroads Mall content, CRB rewrite workstreams.
-
-### Multi-day builds (carried)
-- VehicleSheet refactor (~half day)
-- CRB Tier 1 canon promotions (9 items)
 
 ## Suggested next moves (in order)
 
-1. **Next playtest** — clears the entire 2026-05-18 punch list (the 3 pending items need fresh repro) AND validates the 5 ships from this session (advantages P4/5, folder reorder B, DRIVE/BREW/NAVIGATE, fuel drums, brewing supplies). Highest signal-to-effort by far.
-2. **Address what the playtest surfaces.** Triage via `tasks/debug-handoff.md` Sec. 4. 15-min revert-first rule for anything not obvious. Unit test per bug fixed.
-3. **Pick a blocked-on-design call** (Group Check confirm-resolved / GM Notes-Assets merge / Lv4 Traits). Unlocks the largest remaining build queue.
-4. **Mounted-weapon attack narrative upgrade** to prefix-CAPS (the one piece of vehicle narrative still legacy). Low priority unless a player complains.
-5. **Audit residue cleanup** (outcomeColor duplicates, A4 perf follow-ups). Drain-the-queue work for slow days.
+1. **M-3 todo dedupe** - 5-min mechanical edit; clears the longest-running health-pulse DRIFT entry.
+2. **M-2 ledger refresh automation** - `scripts/refresh-ledger.mjs` parses `npm test` output and rewrites the test-count line in `tasks/debug-handoff.md` §3. Kills the drift pattern at the root.
+3. **2026-05-25 playtest** - validates the 2026-05-19 ship batch (~50 commits) AND today's safe-upload + turnstile changes. Highest signal-to-effort.
+4. **Address what the playtest surfaces** via the Triage Playbook (Sec. 4 of `tasks/debug-handoff.md`). 15-min revert-first rule.
+5. **L-3 KV-backed rate limiter** before paid signups. Bright-line: Xero approval needed for the new dep.
+6. **Demote YELLOW items** in Risk Register per the audit triage list once the playtest greenlights them.
+
 
 ---
 
