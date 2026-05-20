@@ -815,16 +815,16 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (deltaMatch && hit) {
       const after = deltaMatch[1], max = deltaMatch[2]
       switch (r.outcome) {
-        case 'Wild Success':  return `BREW ${name} brews a flawless batch of fuel for ${veh} — ${after}/${max} days`
-        case 'High Insight':  return `BREW ${name} brews a tank of fuel for ${veh} — ${after}/${max} days, and has a Moment of Insight as to why it went so well`
-        case 'Success':       return `BREW ${name} brews a tank of fuel for ${veh} — ${after}/${max} days`
+        case 'Wild Success':  return `BREW ${name} brews a flawless batch of fuel for ${veh} - ${after}/${max} days`
+        case 'High Insight':  return `BREW ${name} brews a tank of fuel for ${veh} - ${after}/${max} days, and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `BREW ${name} brews a tank of fuel for ${veh} - ${after}/${max} days`
       }
     }
     // Failure paths - no fuel produced regardless of tail.
     switch (r.outcome) {
-      case 'Failure':       return `BREW ${name}'s brew runs dry — no fuel produced`
-      case 'Dire Failure':  return `BREW ${name} ruins the batch — no fuel produced`
-      case 'Low Insight':   return `BREW ${name}'s brew runs dry — no fuel produced, but has a Moment of Insight as to why it went so badly`
+      case 'Failure':       return `BREW ${name}'s brew runs dry - no fuel produced`
+      case 'Dire Failure':  return `BREW ${name} ruins the batch - no fuel produced`
+      case 'Low Insight':   return `BREW ${name}'s brew runs dry - no fuel produced, but has a Moment of Insight as to why it went so badly`
     }
     return `BREW ${name} ${hit ? 'brews fuel for' : 'fails to brew fuel for'} ${veh}`
   }

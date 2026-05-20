@@ -91,7 +91,7 @@ interface ExploreCard {
 const EXPLORE: ExploreCard[] = [
   { href: '/campfire?tab=messages',    glyph: '✉️',  label: 'Messages',          accent: '#8b5cf6', description: 'Direct conversations with players, GMs, and visitors.' },
   { href: '/campfire?tab=lfg',         glyph: '🎲',  label: 'Looking for Group', accent: '#c0392b', description: 'Find a campaign to join, or recruit players for one of yours.' },
-  { href: '/campfire?tab=forums',      glyph: '💬',  label: 'Forums',            accent: '#7fc458', description: 'Discussions across the Tapestry — strategy, rules, world theory.' },
+  { href: '/campfire?tab=forums',      glyph: '💬',  label: 'Forums',            accent: '#7fc458', description: 'Discussions across the Tapestry - strategy, rules, world theory.' },
   { href: '/campfire?tab=forums2',     glyph: '📰',  label: 'Forums B',          accent: '#7ab3d4', description: 'A short-page take on Forums for A/B comparison.', badge: 'preview' },
   { href: '/campfire?tab=war-stories', glyph: '⚔️',  label: 'War Stories',       accent: '#b87333', description: 'Session writeups, memorable moments, and post-mortems.' },
   { href: '/campfire?tab=timestamps',  glyph: '⏰',  label: 'Timestamps',        accent: '#7ab3d4', description: 'Discord-style time tokens for cross-timezone play scheduling.' },

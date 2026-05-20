@@ -1681,7 +1681,7 @@ export default function VehiclePage() {
                             campaign_id: campaignId,
                             user_id: myUserId,
                             character_name: null,
-                            label: `${vehicle.name} stockpile updated — gathered 1 day of brewing materials (now ${newCur}/${effectiveBrewingMax(vehicle)})`,
+                            label: `${vehicle.name} stockpile updated - gathered 1 day of brewing materials (now ${newCur}/${effectiveBrewingMax(vehicle)})`,
                             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
                             outcome: 'gather_materials',
                           })

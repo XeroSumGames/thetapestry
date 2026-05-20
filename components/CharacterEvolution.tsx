@@ -338,7 +338,7 @@ export default function CharacterEvolution({
             campaign_id: campaignId,
             user_id: user.id,
             character_name: targetLabel,
-            label: `${targetLabel} — ${headline.replace(/^📈\s*/, '')}`,
+            label: `${targetLabel} - ${headline.replace(/^📈\s*/, '')}`,
             outcome: OUTCOME.evolution,
             damage_json: {
               kind: pending.kind,           // 'rapid' | 'skill'

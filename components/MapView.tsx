@@ -1909,7 +1909,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           </div>
           <div style={{ flex: 1 }}>
             <label style={lbl}>CMod Label</label>
-            <input style={inp} value={editForm.cmod_label} onChange={e => setEditForm(p => ({ ...p, cmod_label: e.target.value }))} placeholder="e.g. Plague — Midwest" title="Short label shown in the Morale modal. Falls back to the pin title if blank." />
+            <input style={inp} value={editForm.cmod_label} onChange={e => setEditForm(p => ({ ...p, cmod_label: e.target.value }))} placeholder="e.g. Plague - Midwest" title="Short label shown in the Morale modal. Falls back to the pin title if blank." />
           </div>
         </div>
         <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>

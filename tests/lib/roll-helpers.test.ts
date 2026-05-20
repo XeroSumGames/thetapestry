@@ -581,27 +581,27 @@ describe('compactRollSummary', () => {
   // the narrative paths.
   it('brew Wild Success: produces fuel, after/max in line', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'Wild Success' }))
-      .toBe('BREW Enya brews a flawless batch of fuel for Minnie — 3/5 days')
+      .toBe('BREW Enya brews a flawless batch of fuel for Minnie - 3/5 days')
   })
   it('brew High Insight: produces fuel, HI tail after the count', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('BREW Enya brews a tank of fuel for Minnie — 3/5 days, and has a Moment of Insight as to why it went so well')
+      .toBe('BREW Enya brews a tank of fuel for Minnie - 3/5 days, and has a Moment of Insight as to why it went so well')
   })
   it('brew Success: produces fuel, simple line', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'Success' }))
-      .toBe('BREW Enya brews a tank of fuel for Minnie — 3/5 days')
+      .toBe('BREW Enya brews a tank of fuel for Minnie - 3/5 days')
   })
   it('brew Failure: dry, no fuel', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('BREW Enya\'s brew runs dry — no fuel produced')
+      .toBe('BREW Enya\'s brew runs dry - no fuel produced')
   })
   it('brew Dire Failure: ruined batch', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Dire Failure' }))
-      .toBe('BREW Enya ruins the batch — no fuel produced')
+      .toBe('BREW Enya ruins the batch - no fuel produced')
   })
   it('brew Low Insight: dry + LI tail', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('BREW Enya\'s brew runs dry — no fuel produced, but has a Moment of Insight as to why it went so badly')
+      .toBe('BREW Enya\'s brew runs dry - no fuel produced, but has a Moment of Insight as to why it went so badly')
   })
   // Brew edge case - tank already full going in; success branch swaps
   // to the "reserves are already full" variant.

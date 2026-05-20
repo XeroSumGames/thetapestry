@@ -86,11 +86,34 @@ for (const file of staged) {
     const line = lines[i]
     if (!line.includes(EM_DASH) && !line.includes(EN_DASH)) continue
 
-    // Skip comment-only lines (single-line `//` or block-comment `*`)
+    // Skip comment-only lines and lines whose em-dash is INSIDE a
+    // comment (JSX `{/* ... */}`, JS `//`, block `*`, HTML `<!-- -->`).
+    // Heuristic: find the em-dash position, walk back, check if any
+    // open-comment marker appears between line start and em-dash with
+    // no matching close marker. Imperfect but handles 95% of cases
+    // without false positives.
     const trimmed = line.trim()
     if (trimmed.startsWith('//')) continue
     if (trimmed.startsWith('*')) continue
     if (trimmed.startsWith('<!--')) continue
+    if (trimmed.startsWith('{/*')) continue          // JSX comment open
+    // Multi-line JSX comments: lines that contain neither `{/*` nor
+    // `*/}` but are inside a comment block. We don't track block state
+    // (too complex for a single-pass scan); rely on the leading-`*`
+    // convention many of these use.
+    // Same-line JSX comment containing em-dash: `{/* ... — ... */}`
+    if (trimmed.includes('{/*') && trimmed.includes('*/}')) {
+      const cs = trimmed.indexOf('{/*')
+      const ce = trimmed.lastIndexOf('*/}')
+      const em = Math.max(trimmed.indexOf(EM_DASH), trimmed.indexOf(EN_DASH))
+      if (em > cs && em < ce + 2) continue
+    }
+    // Trailing-line-comment containing em-dash: `code; // ... — ...`
+    const lcIdx = line.indexOf('//')
+    if (lcIdx >= 0) {
+      const em = Math.max(line.indexOf(EM_DASH), line.indexOf(EN_DASH))
+      if (em > lcIdx) continue
+    }
 
     // Skip exempt line patterns.
     if (EXEMPT_LINE_PATTERNS.some(p => p.test(line))) continue

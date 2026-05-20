@@ -298,7 +298,7 @@ export default function GMNotesPopoutPage() {
                     <EditableSelect
                       value={n.disposition ?? ''}
                       options={[
-                        { value: '', label: '—' },
+                        { value: '', label: '(none)' },
                         { value: 'friendly', label: 'Friendly' },
                         { value: 'neutral', label: 'Neutral' },
                         { value: 'hostile', label: 'Hostile' },

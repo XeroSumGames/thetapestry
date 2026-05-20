@@ -15,6 +15,7 @@
 #   - check-font-sizes.mjs (no inline fontSize < 13px, no banned color combo)
 #   - check-role-literals.mjs (no inline role-string comparisons)
 #   - check-preview-sync.mjs (preview file kept in sync with narrative source)
+#   - check-em-dashes.mjs (no em-dash / en-dash in code, per project rule)
 #   - npm test (Vitest unit suite under tests/**/*.test.ts)
 #
 # To bypass for a single commit (not recommended): git commit --no-verify
@@ -36,6 +37,7 @@ set -e
 node scripts/check-font-sizes.mjs
 node scripts/check-role-literals.mjs
 node scripts/check-preview-sync.mjs
+node scripts/check-em-dashes.mjs
 npm test --silent
 EOF
 

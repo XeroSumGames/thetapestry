@@ -50,3 +50,9 @@ docs/Rules/
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Supabase CLI cache. The CLI writes supabase/.temp/cli-latest every
+# time it runs (version-check artifact). It's not source - it gets
+# regenerated whenever the CLI starts. Was blocking pushes multiple
+# times per day before this entry. Ignore the whole .temp directory.
+supabase/.temp/

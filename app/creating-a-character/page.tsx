@@ -155,10 +155,10 @@ export default function CreatingACharacterPage() {
             {[
               { range: '0–3', label: 'Dire Failure', desc: 'Failed with an additional setback or consequence.', color: '#7a1f16' },
               { range: '4–8', label: 'Failure', desc: 'The action simply fails.', color: '#3a3a3a' },
-              { range: '9–13', label: 'Success', desc: 'The action succeeds.', color: '#2d5a1b' },
+              { range: '9-13', label: 'Success', desc: 'The action succeeds.', color: '#2d5a1b' },
               { range: '14+', label: 'Wild Success', desc: 'Succeeds with an additional positive result.', color: '#1a3a5c' },
-              { range: '1+1', label: 'Moment of Low Insight', desc: 'Dire Failure — but earn an Insight Die.', color: '#3a2800' },
-              { range: '6+6', label: 'Moment of High Insight', desc: 'Wild Success — and earn an Insight Die.', color: '#3a2800' },
+              { range: '1+1', label: 'Moment of Low Insight', desc: 'Dire Failure - but earn an Insight Die.', color: '#3a2800' },
+              { range: '6+6', label: 'Moment of High Insight', desc: 'Wild Success - and earn an Insight Die.', color: '#3a2800' },
             ].map(({ range, label, desc, color }) => (
               <div key={range} style={{ background: '#1a1a1a', border: `1px solid ${color}`, borderRadius: '3px', padding: '10px 12px' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '4px' }}>

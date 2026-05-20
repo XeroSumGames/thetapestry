@@ -220,7 +220,7 @@ export default function LfgPage() {
   }
 
   function shareText(p: PostWithAuthor) {
-    return `${KIND_LABEL[p.kind]} on The Tapestry — ${p.title}`
+    return `${KIND_LABEL[p.kind]} on The Tapestry - ${p.title}`
   }
 
   async function copyLink(p: PostWithAuthor) {

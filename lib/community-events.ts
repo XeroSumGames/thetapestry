@@ -175,7 +175,7 @@ export function eventSummaryLine(row: CommunityEventRow): string {
     case 'schism': {
       const name = p?.new_community_name ?? '(new community)'
       const n = p?.members_left ?? 0
-      return `Schism — ${n} left to form ${name}`
+      return `Schism - ${n} left to form ${name}`
     }
     case 'migration': {
       const target = p?.target_community_name ?? '(target)'

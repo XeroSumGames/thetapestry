@@ -58,5 +58,5 @@ export function isMissingSchema(err: SupabaseLikeError | null | undefined): bool
  *  pages to render a helpful banner pointing the GM/Thriver at the
  *  exact migration to run. */
 export function missingSchemaMessage(featureName: string, migrationFile: string): string {
-  return `${featureName} isn't enabled on this database yet — a Thriver needs to apply ${migrationFile} in Supabase. Once that's done, refresh and you're good.`
+  return `${featureName} isn't enabled on this database yet - a Thriver needs to apply ${migrationFile} in Supabase. Once that's done, refresh and you're good.`
 }
