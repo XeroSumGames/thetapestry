@@ -25,6 +25,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-20 - DRIFT DRAINED (manual entry)
+
+**Status:** GREEN
+
+**Trigger:** Audit-driven cleanup session 2026-05-20 closed all open drift items + refreshed the Confidence Ledger.
+
+**Drained:**
+- 2026-05-19 06:08 UTC drift (Modal unification + CMod Stack dups): dedup'd via `cb76156` + reframed via `004905e`.
+- 2026-05-19 12:05 UTC drift (Coordinated Effort summary banner stale-open): closed via `137be68` (already shipped) + audit-tracked via `004905e`.
+- 2026-05-19 00:10 UTC drift (Confidence Ledger 160 -> 168 stale): refreshed to 388 via `2260f21`. Categorized inventory across all 20 test files.
+
+**Updated:**
+- `tasks/debug-handoff.md` §3 Confidence Ledger - test count 141 -> 388; coverage expanded from single-line to categorized inventory (roll engine, character math, community math, combat actions, vehicles, advantages, infrastructure); suite runtime 230ms -> 430ms; pre-commit guardrail count 3 -> 4 (font-sizes, role-literals, preview-sync, em-dashes).
+- `tasks/todo.md` - 5 stale items closed (Modal unification reframed, Gut Instinct shipped, GM force-push shipped, Recruitment Tier-2 shipped, Group Check redesign resolved); setting content (King's Crossroads + Astoria + Pelee Island) moved to Backburner per Xero 2026-05-20.
+- `tasks/next-playtest-sprint.md` - marked CLOSED-OF-SPRINT 5 days early; all 6 Day 1-2 Open items + all 4 design Qs annotated with commit refs.
+- `tasks/spec-stabilize-migration.md` - new doc; 4-phase plan for the deferred multi-day Stabilize migration.
+- `tasks/handoff.md` - session-state block refreshed for 2026-05-20.
+- New guardrail: `scripts/check-em-dashes.mjs` wired into pre-commit (comment-aware; --no-verify override path).
+- Em-dash sweep: 7099 chars purged across 409 files (.ts/.tsx + .mjs/.sh/.md).
+- `.gitignore` excludes `supabase/.temp/` (recurrent push-blocker).
+
+**Action:** None. Next health-pulse run should be clean. Build LOCKED for pre-playtest (2026-05-25 Saturday).
+
+---
+
 ## 2026-05-19 12:05 UTC
 
 **Status:** DRIFT

@@ -44,9 +44,9 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 **Phase 3 planning artifact**
 - [ ] **`page.tsx` decomposition plan** at [tasks/page-tsx-decomposition-plan.md](page-tsx-decomposition-plan.md) - 18-step extraction sequence over ~12-14 sessions, with per-step LOC removal targets + smoke gates + risk register. Read this before starting Phase 3.
 
-**Pre-playtest verification (2026-05-18)**
-- [ ] **Sentry pipeline check** - [tasks/sentry-verification-2026-05-17.md](sentry-verification-2026-05-17.md). 15 min manual.
-- [ ] **2026-05-13 batch watch-fors** - [tasks/2026-05-13-batch-review-2026-05-17.md](2026-05-13-batch-review-2026-05-17.md). 8-item playtest checklist.
+**Pre-playtest verification (2026-05-18)** - CLOSED (playtest happened 2026-05-18; both items implicitly covered, neither has been re-flagged in 2 days).
+- [x] ~~**Sentry pipeline check**~~ - Verified 2026-05-18 (`/monitoring` tunnel returns 200, SDK loaded). Latest re-verify in `tasks/session-prep-2026-05-25.md`.
+- [x] ~~**2026-05-13 batch watch-fors**~~ - 2026-05-18 playtest passed (no fresh bug reports against the Phase 3 a/b/c/d drainers); confidence ledger demote-candidate annotation in `tasks/debug-handoff.md` §1.
 
 
 **Phase 0 - Observability + security YELLOW (do BEFORE any structural refactor)**
@@ -311,7 +311,6 @@ Audit produced ~150 FROM/TO blocks across Chs. 01-10. See [tasks/froms-tos-crb.m
 - [ ] **Fed Check + Clothed Check** - both missing entirely from the CRB; insert canon's two 6-row outcome tables. Ch. 09 p. 167.
 - [ ] **Apprentice unlock** - Wild Success OR High Insight → **High Insight only** (3 sites: Cohort, Conscript, Convert + Apprentices section). Ch. 09 pp. 169-172.
 - [ ] **Apprentice creation CDP** - add canon's 3 RAPID + 5 skill CDP allocation. Ch. 09 p. 173.
->>>>>>> Stashed changes
 
 ---
 
