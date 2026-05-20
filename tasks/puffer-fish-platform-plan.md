@@ -232,7 +232,7 @@ When all six axes hit threshold, the platform is "stable enough." Re-evaluate ag
 
 **LAST UPDATED:** 2026-05-20 (this commit).
 **LAST CHAT:** puffer-fish (writing the plan + seeding decisions.md).
-**NEXT ACTION (puffer-fish lane):** Phase P3 is now spec-complete from this lane (A4.4 + A4.5 + A4.3 shipped; A4.1 + A4.2 are Xero-decision/drill-gated). Move into Phase P4 (security hardening). Start with `tasks/audit-csp-sri-third-party-scripts.md` (P4/A5.1) - read-only audit of Turnstile + Sentry script tags' CSP coverage + SRI integrity hashes. Currently unverified; baseline pass surfaces gaps for hunt-and-peck to fix.
+**NEXT ACTION (puffer-fish lane):** Hunt-and-peck priority queue handoff shipped as the puffer-fish run's capstone ([tasks/hunt-and-peck-priority-queue-2026-05-20.md](hunt-and-peck-priority-queue-2026-05-20.md)). Maps 9 specs/audits shipped today into a priority-ordered execution queue with coupling notes (the executeRoll-touching specs run as a single arc, not three parallel tracks). After hunt-and-peck has shipped ~5 items, puffer-fish lane resumes at P4/A5.1 (CSP+SRI audit of third-party scripts) - first item still untouched.
 
 **NEXT ACTION (hunt-and-peck lane):** start Phase P1 step 1 of the decomposition plan - move types + module constants out of `app/stories/[id]/table/page.tsx` into `app/stories/[id]/table/types.ts`. -200 LOC. Trivial leaf. Hunt-and-peck owns; puffer-fish updates Risk Register + this plan after each phase ships.
 
