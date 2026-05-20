@@ -26,7 +26,6 @@ interface Pin {
 
 export default function DashboardPage() {
   const [username, setUsername] = useState('')
-  const [userRole, setUserRole] = useState<'survivor' | 'thriver'>('survivor')
   const [loading, setLoading] = useState(true)
   const [pendingPins, setPendingPins] = useState<Pin[]>([])
   const [acting, setActing] = useState<string | null>(null)
@@ -49,7 +48,6 @@ export default function DashboardPage() {
         // available as a re-readable reference page.
         if (!profile.onboarded) setShowWelcome(true)
         setUsername(profile.username)
-        setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
         if (roleIsThriver(profile)) {
           const { data: rawRumors } = await supabase
             .from('map_pins')
