@@ -171,7 +171,7 @@ Gated on Xero approving Supabase Pro + PITR. Until then, work the audit-log alte
 - [ ] A4.1 Pro + PITR upgrade (Xero approval)
 - [ ] A4.2 Backup drill execution (depends on P3.1)
 - [ ] A4.3 Audit log of destructive ops (higher priority if A4.1 stays deferred)
-- [ ] A4.4 Incident response runbook
+- [x] **A4.4 Incident response runbook.** SHIPPED 2026-05-20: [tasks/ops-incident-response-2026-05-20.md](ops-incident-response-2026-05-20.md). 13 sections: when to open, pre-incident state inventory, P0-P3 severity classification, 4 P0/P1 playbooks (site down Vercel-side, DB unreachable, secret leaked, realtime desync + data corruption), env-var inventory table, pre-written comm templates, post-incident review pattern, what's NOT covered, maintenance.
 - [ ] A4.5 Secret rotation playbook
 
 ### Phase P4: Security hardening
@@ -232,15 +232,7 @@ When all six axes hit threshold, the platform is "stable enough." Re-evaluate ag
 
 **LAST UPDATED:** 2026-05-20 (this commit).
 **LAST CHAT:** puffer-fish (writing the plan + seeding decisions.md).
-**NEXT ACTION (puffer-fish lane):** Phase P2 (tech debt cleanup) is now fully spec'd from this lane. **Natural checkpoint here.** All 5 P2 items have shipped specs/audits + the immediate hunt-and-peck follow-ups are queued in `tasks/todo.md`:
-  - A1.1: decomposition plan refresh (shipped)
-  - A1.2: DamagePayload migration spec (shipped)
-  - A1.3: outcome column kind-discrimination spec (shipped)
-  - A1.4: compactRollSummary regex deprecation spec (shipped)
-  - A2.4: re-entry guard audit (shipped) + 5 recommended actions
-  - A2.2: stale-closure landmine sweep (shipped) + 1 fix queued (pc_mortal_wound)
-
-  Next puffer-fish moves into Phase P3 (recovery posture - audit-log spec, incident response runbook, secret rotation playbook) OR Phase P4 (security hardening - CSP/SRI audit, storage bucket policy audit). Either is a clean session-start point. Recommend STARTING WITH P3/A4.4 incident response runbook since it has the highest ops-leverage and zero gate dependencies. **Resume here in a fresh chat or after a break.**
+**NEXT ACTION (puffer-fish lane):** write `tasks/ops-secret-rotation.md` (P3/A4.5). The incident response runbook's Section 6 references this doc but it doesn't exist yet. Pairs naturally - the incident runbook says "rotate the secret" + names the per-service procedure; the secret-rotation doc captures THE FULL ROTATION STEPS for each secret type at a level of detail not appropriate for the incident-response runbook. Both docs cross-reference each other. Pure ops doc; no code touched.
 
 **NEXT ACTION (hunt-and-peck lane):** start Phase P1 step 1 of the decomposition plan - move types + module constants out of `app/stories/[id]/table/page.tsx` into `app/stories/[id]/table/types.ts`. -200 LOC. Trivial leaf. Hunt-and-peck owns; puffer-fish updates Risk Register + this plan after each phase ships.
 
