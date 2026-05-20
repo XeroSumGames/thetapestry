@@ -213,7 +213,7 @@ If you want reviewers publishing on 6/15, they need the press kit + advance acce
 
 1. **Will you pay for the Supabase Pro upgrade + lawyer review?** ~$125/mo + $500-2000 one-time. Without these, my recommendation is **delay the launch.** Public release without backups or legal review is asymmetric downside.
 2. **Invite-code gate yes or no?** If yes, who builds it (hunt-and-peck) and by when (recommend 6/1).
-3. **What day of week is 6/15?** It's a Sunday. Reviewers tend to publish Tuesday-Thursday for traffic. Consider 6/16 or 6/17 instead.
+3. **What day of week is 6/15?** It's a **Monday** (verified 2026-05-20 via `date -d`). Earlier draft said Sunday - that was wrong. Monday is OK but not great; reviewers tend to publish Tuesday-Thursday for traffic. Consider 6/16 (Tuesday) or 6/17 (Wednesday) instead.
 4. **Press kit content - DIY or outsource?** Logo + screenshots you have; founder bio + key messaging you write. Decide.
 5. **Demo walkthrough video - record yourself or outsource?** ~2-3 min content; outsourcing is the speed play, DIY is the auth play (creator-tier audiences respond to founder-on-camera).
 6. **What's "limited"?** First 50 invites? First 100? Open?
@@ -235,3 +235,58 @@ After 6/15: archive this file as `tasks/launch-plan-2026-06-15-postmortem.md` wi
 ## Status log
 
 - 2026-05-20: Plan composed. None of MUST-DO items shipped yet. Xero decisions pending on the 6 open questions.
+- 2026-05-20 (later): Xero answered 5 of 6 open questions:
+  - **Supabase Pro + PITR:** DELAYING as long as possible. Risk accepted (no PITR = no recovery during launch if data corrupts). Revisit closer to launch; if Y12 drill timing forces it, drop the delay.
+  - **Upstash KV:** APPROVED. Hunt-and-peck can ship L-3 KV-backed rate-limiter.
+  - **Lawyer review:** APPROVED in principle. Xero has a lawyer on retainer; asking them for a TOS/Privacy specialist recommendation. Action item: get the recommendation + brief them on the work this week.
+  - **Launch day:** 2026-06-15 verified as a **Monday** (was incorrectly stated as Sunday in original plan; corrected today). Monday is OK but not optimal; Tue 6/16 or Wed 6/17 get more press traffic. Final-day-of-week decision still open.
+  - **Press kit + demo video:** DIY confirmed. Outsourcing fallback open if DIY stalls (see "Outsourcing options" section below).
+  - **Invite-code gate:** PENDING - awaiting explanation (provided in "Invite-code gate" section below; Xero to decide after reading).
+- 2026-05-20 (latest): Dummies shipped for #5 (Landing page) + #6 (Press kit) - placeholder copy at `/publiclanding` and `/press`. Real copy + assets needed before reviewer outreach (target 5/28-6/1).
+
+---
+
+## Invite-code gate explained
+
+**What it is:** a simple "you need an invite code to sign up" mechanism. A new column on a `signup_invites` table holds `{ code text unique, used_by uuid, used_at timestamptz, issued_to text, issued_at timestamptz }`. The signup form gets a required "invite code" field. The verify-turnstile route (or a sibling) checks the code, marks it used, and only THEN allows account creation. Codes that have been used become inert.
+
+**Why you might want it for the launch:**
+1. **Soft-cap launch velocity.** If a YouTuber's video goes harder than expected and 5,000 people try to sign up Saturday morning, the gate is the difference between "everyone gets in and the realtime channels saturate" and "first 50 get in cleanly, others see a waitlist message." Without the gate, the only velocity-cap mechanism is Vercel + Supabase rate-limits, which fail loudly (500 errors), not gracefully.
+2. **Outreach attribution.** Give each reviewer a unique code prefix (`TAPESTRY-IGN-001`, `TAPESTRY-POLY-001`, etc.). When a player redeems it, you know which outlet drove them. Free analytics.
+3. **Bad-actor filter.** If someone's scraping signups for bots, the invite code is a friction layer they have to obtain rather than just having a working email.
+
+**Why you might NOT want it:**
+1. Adds friction for cold visitors who hear about it from a friend ("you have to ask for a code first").
+2. More code to maintain + an admin UI to issue codes (or a Thriver-only "mint code" button).
+3. If a code leaks publicly (someone tweets theirs), the gate fails open until you revoke it.
+
+**Estimated effort if you want it:** 1-2 hunt-and-peck sessions. Schema migration + signup-form field + verify-turnstile (or new) endpoint + a `/moderate` page section for issuing codes. Total ~6-10 hours.
+
+**Recommendation:** ship the gate IF you expect press coverage to be sizable OR you want attribution data. Skip if the launch is small-scale and you'd rather see organic signups.
+
+---
+
+## Outsourcing options (DIY confirmed; fallback list)
+
+Where to look IF DIY stalls and you need a contractor:
+
+### Logo / press kit visual design
+- **Fiverr:** $50-300 for a single logo. Higher tiers ($200-500) get you full kit + source files. Search "logo for tabletop RPG / video game brand."
+- **99designs:** $400-800 for a competition where designers compete. Better range of options, higher floor on quality. Slower (1-2 weeks).
+- **Dribbble:** message individual designers directly. $300-1500 typical. Highest quality, highest variance.
+- **Local freelancer:** if you know a graphic designer through gaming friends, often best ROI.
+
+### Demo video (2-3 min walkthrough)
+- **Cheap-and-fast:** Loom or OBS yourself, voiceover during a real session, edit in iMovie / DaVinci Resolve. $0, ~6 hours of your time. Authenticity > polish for an indie launch.
+- **Fiverr video editor:** $50-200 to clean up your raw screenrecording + add intro/outro/music. Keeps your voice + framing, polishes the edges.
+- **Upwork video producer:** $500-1500 for a full edit pass with motion graphics, multiple cuts, b-roll. Overkill for a beta launch.
+- **TTRPG YouTuber for hire:** some review-channel hosts will produce sponsored walkthrough content. $200-1000. Authenticity boost (their voice + their audience trust) but pre-publish to a single audience only.
+
+### Screenshots
+- **Free path:** in-app, hide the dev tools, screenshot at 1920x1080. Crop in any image editor. Time: ~30 min for 5 shots.
+- **Polished path:** Fiverr screenshot mockup service ($30-80) takes raw shots + drops them into device frames + adds annotations.
+
+### TOS / Privacy
+- Already covered by your lawyer recommendation path. Budget $500-2000 once you get the specialist recommendation.
+
+**Recommendation given the DIY decision:** lock in 4-6 hours over Memorial Day weekend (5/24-5/25) to draft press-kit copy + screenshots yourself + record the demo walkthrough. If you stall on the design polish, drop $80-150 on a Fiverr cleanup pass week of 5/26.

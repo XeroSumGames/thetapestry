@@ -1,5 +1,19 @@
 # Lessons Learned
 
+## Day-of-week claims need `date -d` verification, not memory (2026-05-20)
+
+**Rule:** Before asserting that a specific calendar date is a specific weekday, run `date -d "YYYY-MM-DD" "+%A"` and quote the output. Never claim "X is a Sunday" / "X is a Tuesday" from memory or mental calendar.
+
+**Trigger:** Stated in the launch plan that 2026-06-15 was a Sunday. Xero pushed back ("are you SURE?"). Verified via `date -d "2026-06-15" "+%A"` - it's a **Monday**. Updated the launch plan in place.
+
+**Why this matters specifically:** day-of-week affects launch-day decisions (press traffic patterns differ by weekday), embargo timing, and whether the dev is going to be home or at their kid's soccer game. Getting it wrong cascades into wrong logistics decisions.
+
+**This is the same rule as `feedback_no_fabricated_dates` memory entry**, which says "never invent day-of-week, dates, or commit counts when summarizing; compute from source or omit." I violated my own rule. The fix is mechanical: add the bash check as a reflex before any day-of-week claim.
+
+**How to apply:** When any date appears in a launch plan, ops doc, schedule, or chat reply with day-of-week semantics, run the bash check first. `date -d "<the date>" "+%A, %Y-%m-%d"` returns both pieces; quote both.
+
+---
+
 ## Long-horizon launch planning is the puffer-fish lane's job, not the chat's memory (2026-05-20)
 
 **Rule:** When a date-anchored launch is in scope (public release, paid signups open, press window), write the launch-plan as a dated file at `tasks/launch-plan-YYYY-MM-DD.md` in the same response. It captures: audience reframe, per-role gap analysis, ranked punch list (MUST / SHOULD / COULD), week-by-week timeline back-solved from the date, **Xero-bright-line budget asks with decision deadlines**, puffer-fish risks (legal, bandwidth, embargo timing), and open questions.
