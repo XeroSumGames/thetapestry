@@ -111,6 +111,16 @@ If a fix balloons beyond one commit, STOP and re-plan. Don't keep digging.
 
 ## Session-start state check
 
+Canonical: run the wrapper script. It does the fetch + diff + collision warning in one go:
+
+```
+sh scripts/start-session.sh
+```
+
+Prints: HEAD-vs-remote sync state, incoming commits, files touched by incoming, working-tree summary, collision warning if your edits overlap incoming, last 5 commits on main, gate-tool pointers, suggested next step. ~2 seconds; informational only (no writes).
+
+Manual equivalent if the script is missing:
+
 ```
 git -C /c/TheTapestry fetch origin main
 git -C /c/TheTapestry log -1 --oneline      # latest main commit

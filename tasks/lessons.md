@@ -1,5 +1,17 @@
 # Lessons Learned
 
+## Multi-chat collision visibility lives at session-start, not push-time (2026-05-20)
+
+**Rule:** Run `sh scripts/start-session.sh` at the start of every non-trivial session. The script fetches origin/main, lists incoming commits + touched files, and warns if your working-tree changes overlap incoming. Cheap (~2s, no writes); makes the collision visible BEFORE you start editing instead of at push time.
+
+**Trigger:** 2026-05-20 session had three rebase conflicts (em-dash sweep, Y12 backup playbook, gitignore) between this chat and the hunt-and-peck lane. Each resolved in 5-10 min, but the compounding cost grows linearly with ship rate. The protective rule existed in lessons ("Verify shipped state before assuming uncontested scope") but relied on the chat remembering to do it manually.
+
+**Fix-forward:** `scripts/start-session.sh` automates the check. Wired into `tasks/handoff.md` "Session-start state check" as the canonical first action. Future chats opening a session run it before editing anything. Multi-chat lane split (per `tasks/operating-mode.md` "Multi-chat lanes") means both lanes routinely produce parallel commits; this is the substrate-side mitigation.
+
+**How to apply:** Run at session start. Re-run between major work units. The "collision check" section is the load-bearing output - if it warns, expect a rebase conflict at push time and decide whether to integrate first or push-then-resolve.
+
+---
+
 ## Specs go stale on their OWN STATUS, not just on file paths (2026-05-20)
 
 **Rule:** Before "executing Phase N" of a multi-phase migration spec, verify that Phase N actually still needs doing. The legacy code it claims to migrate may already be gone, shipped via a different track between spec write-time and now.
