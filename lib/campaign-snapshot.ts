@@ -19,7 +19,14 @@
 //   roll_log               - cleared (optional; we clear to avoid stale refs)
 //   chat_messages          - cleared
 //   scene_tokens anim      - transient
-//   communities (Phase 4b) - TODO once the tables are in use
+//
+// Deliberately out of snapshot scope (tracked in tasks/todo.md "Bigger builds"):
+//   communities + community_members + community_stockpile + community_events +
+//   community_subscriptions + npc_relationships. These are now heavily in use
+//   (88 .from() sites across 19 files at 2026-05-19 audit) and would need their
+//   own multi-table capture + restore pipeline + RLS-respecting wipe. Snapshot
+//   the campaign and you currently lose its community state on restore. Live
+//   with it for now; revisit when a GM hits the loss.
 //
 // On restore we DELETE current rows then INSERT from the snapshot. All within
 // a single Promise.all per table; failures are reported but the wipe has
