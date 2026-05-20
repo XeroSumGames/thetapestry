@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-20 15:03 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [388 passed]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- `tasks/todo.md` line 314: `>>>>>>> Stashed changes` git stash artifact present in committed file (git log `ce17b1a` already banned autostash - recurred)
+- todo lines 48-49: "Sentry pipeline check" + "2026-05-13 batch watch-fors" still `[ ]`; these were pre-playtest verification items for 2026-05-18 playtest (2 days past)
+- HOPED-FOR: 2026-05-19 batch is 1 day old (threshold 3 days) - watching, not flagging yet
+
+**Action:** Remove `>>>>>>> Stashed changes` from tasks/todo.md:314; verify/close lines 48-49 if 2026-05-18 playtest covered them
+
+---
+
 ## 2026-05-19 12:05 UTC
 
 **Status:** DRIFT
