@@ -6,7 +6,7 @@
 <!--
   Roll Feed - Complete Log Preview
   =================================
-  Last updated: 2026-05-20
+  Last updated: 2026-05-20 (audit-fill pass)
   Current state after the 2026-05-19 log-trimming pass + 2026-05-20
   outcomeColor dedup (canonical lib/roll-helpers.ts now accepts both
   display-form 'Wild Success' and snake_case 'wild_success' inputs;
@@ -21,6 +21,21 @@
   roll-feed-log-preview.html when amending log messages (2026-05-19)".
 
   Recent updates:
+  - 2026-05-20 (audit-fill pass): coverage gaps from
+                tasks/skill-combat-narrative-audit-2026-05-20.md filled.
+                Added pass-through outcome rows for
+                wound_infection_warning, weapon_malfunction,
+                advantage_used (system-row style) under
+                System/out-of-combat. Added unified-coordinate
+                emoji-strip example (🎯 ... Successfully coordinated
+                an attack against ...) and the Coordinate (vs target)
+                legacy single-row path under Coordinated Effort.
+                Filled tail-variant coverage for Perception, Gut
+                Instinct, Lasting Damage Check, Infection Check
+                (Wound + Sickness subsections), Recruit-by-type HI
+                tails (Conscript/Convert/Apprentice), Heal-by-hand
+                WS+HI, Attack-deflected WS+HI. No code changes,
+                preview HTML only.
   - 2026-05-19 (8th pass): Group Check banner polished (option c):
                 past tense 'were' / 'failed' shifted to present 'are'
                 / 'fail' for parity with the rest of today's
@@ -328,6 +343,9 @@
     <li><a href="#brew">Brew</a></li>
     <li><a href="#navigate">Navigate</a></li>
     <li><strong>System / out-of-combat</strong></li>
+    <li><a href="#wound-infection-warning">Wound Infection warning</a></li>
+    <li><a href="#weapon-malfunction">Weapon malfunction</a></li>
+    <li><a href="#advantage-used">Advantage used</a></li>
     <li><a href="#loot">Loot</a></li>
     <li><a href="#barter">Barter</a></li>
     <li><a href="#cdp">CDP award</a></li>
@@ -651,6 +669,9 @@
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:12 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully Attacked Avery Xavier using a Pistol</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Unsuccessfully Attacked Avery Xavier using a Pistol but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Ivan Hayes</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Ivan Hayes' Hatchet attack was deflected by Cree Hask</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Ivan Hayes</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Ivan Hayes' Hatchet attack was deflected by Cree Hask and was wildly successful</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Ivan Hayes</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Ivan Hayes' Hatchet attack was deflected by Cree Hask and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <p class="note">Fires on any to-hit success (S/WS/HI) where the target's mitigation eats the entire damage pool (finalWP===0 &amp;&amp; finalRP===0). Reads as "deflected" so the table can tell Defend / armor / cover actually did something. Misses skip this branch and read "Unsuccessfully Attacked".</p>
 
   <h3 id="charge">Charge</h3>
   <div class="row blue"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully made a Pistol attack after Charge at Avery Xavier</div></div>
@@ -696,24 +717,44 @@
   <div class="progression"><span class="tag">[relationship]</span>Met Avery Xavier - rough start (CMod -1).</div>
 
   <h3 id="gut">Gut Instinct</h3>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct lets them know something is amiss and was wildly successful</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct lets them know something is amiss and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:46 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct lets them know something is amiss</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:48 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct is quiet</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:48 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct is quiet and failed miserably</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:48 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask's Gut Instinct is quiet but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h3 id="perception">Perception</h3>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:50 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask successfully Perceives something useful and was wildly successful</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:50 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask successfully Perceives something useful and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:50 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask successfully Perceives something useful</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:52 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask does not Perceive anything useful</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:52 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask does not Perceive anything useful and failed miserably</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:52 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask does not Perceive anything useful but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h2>Combat events</h2>
   <h3 id="infection-check">Infection Check (post-combat Wound / environmental Sickness)</h3>
+  <p class="note">Two kinds, three severities each (shrug / fail / dire). The global outcome tag composes onto every line: WS ("and was wildly successful"), HI ("and has a Moment of Insight as to why it went so well"), DF ("and failed miserably"), LI ("but has a Moment of Insight as to why it went so badly"). Examples below cover the base text per kind/severity plus one HI tail per shrug and one LI tail per dire so the composition pattern is visible; WS / plain HI / DF / LI variants on the other severities follow the same construction.</p>
+  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 12px 0 6px;">Wound infection</h4>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask shrugged off the wound infection</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask shrugged off the wound infection and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask has a wound that has become infected. Cree is sick for 2 days. Lasting damage is possible if untreated.</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask has a wound that has become severely infected. Cree is sick for 5 days. This will likely leave a lasting wound.</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask has a wound that has become severely infected. Cree is sick for 5 days. This will likely leave a lasting wound. but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 12px 0 6px;">Sickness (environmental)</h4>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask shrugged off the sickness</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask shrugged off the sickness and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask has fallen sick. Cree is ill for 3 days. Lasting damage is possible if untreated.</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask has fallen gravely sick. Cree is ill for 4 days. Will progress to Mortally Wounded on Day 0.</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask has fallen gravely sick. Cree is ill for 4 days. Will progress to Mortally Wounded on Day 0. but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h3 id="lasting-damage-check">Lasting Damage Check (Day 0)</h3>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask shrugged off the Lasting Damage and was wildly successful</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask shrugged off the Lasting Damage and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask shrugged off the Lasting Damage</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask suffered a Lasting Wound: Skittish (-1 Initiative Modifier) [2d6=7]</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask suffered a Lasting Wound: Skittish (-1 Initiative Modifier) [2d6=7] and failed miserably</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask suffered a Lasting Wound: Skittish (-1 Initiative Modifier) [2d6=7] but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask has picked up a Lasting Wound and is now Skittish (-1 CMod on initiative rolls)</div></div>
   <div class="row blue"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">3:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">🦠 Infection tick (1d): Cree Hask Day 0 - Lasting Wound: Scarring [2d6=8] (-1 Influence)</div></div>
 
@@ -761,6 +802,16 @@
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but it goes badly for the team</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and the plan falls apart but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
+  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">Unified-coordinate emoji-strip (executeRoll path, 🎯 prefix)</h4>
+  <p class="note">When the active combatant rolls Tactics* against a target via the in-table Coordinate modal AND the chain has allies-within-Close-range to share the bonus with, executeRoll writes a row with label <code>🎯 &lt;name&gt; Successfully coordinated an attack against &lt;target&gt; with &lt;allies&gt;</code>. <code>compactRollSummary</code> strips the leading emoji so the narrative reads naturally; the dice + outcome are visible in the ▸ expand. The global outcome tag composes (WS / HI / LI as below). Live emit site: <code>app/stories/[id]/table/page.tsx:6658</code>.</p>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:31 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully coordinated an attack against Avery Xavier with Marv, Wilson</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:31 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Successfully coordinated an attack against Avery Xavier with Marv, Wilson and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">Coordinate (vs target) - single-row legacy path</h4>
+  <p class="note">Older Coordinate-modal path still wired live at <code>app/stories/[id]/table/page.tsx:8115</code> via <code>handleRollRequest('&lt;name&gt; - Coordinate (vs &lt;target&gt;)', ...)</code>. Fires the Tactics* roll; <code>compactRollSummary</code> narrativizes hit vs. miss with the global outcome tag composing on. Distinct from the Coordinated Effort chain (no participant collation).</p>
+  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:32 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask coordinates allies against Avery Xavier</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:32 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask fails to coordinate allies against Avery Xavier</div></div>
+
   <h2>Recovery / status</h2>
   <h3 id="stress-check">Stress Check (mid-play CHECK button + at-max auto-fire, locked 2026-05-19)</h3>
 
@@ -799,8 +850,11 @@
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask recruits Avery Xavier as a Cohort to The Farm</div></div>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask recruits Avery Xavier as a Cohort to The Farm and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask forces Avery Xavier into service as a Conscript to The Farm</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask forces Avery Xavier into service as a Conscript to The Farm and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Converts Avery Xavier as a recruit to The Farm</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask Converts Avery Xavier as a recruit to The Farm and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask takes Avery Xavier as their Apprentice</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask takes Avery Xavier as their Apprentice and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:57 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tries to recruit Avery Xavier and doesn't quite land it</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:58 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tries to recruit Avery Xavier and the attempt goes badly</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:58 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask tries to recruit Avery Xavier and fails but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
@@ -820,6 +874,8 @@
   <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie expertly treats Marv with a Doctor's Bag with exceptional care</div></div>
   <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie treats Marv with a First Aid Kit</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie expertly treats Marv by hand with exceptional care</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie expertly treats Marv by hand and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <div class="row blue"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie treats Marv by hand</div></div>
   <div class="row amber"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie fails to make progress treating Marv</div></div>
   <div class="row red"><div class="row-head"><span class="name">Junie</span><div class="right"><span class="time">3:30 PM</span><span class="toggle">▸</span></div></div><div class="narrative">HEAL Junie botches the treatment, making Marv worse</div></div>
@@ -918,6 +974,20 @@
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">12:00 PM</span></div></div><div class="narrative">Minnie stockpile updated - gathered 1 day of brewing materials (now 2/2)</div></div>
 
   <h2>System / out-of-combat</h2>
+
+  <h3 id="wound-infection-warning">Wound Infection warning (pass-through, in-combat)</h3>
+  <p class="note">Fires on the first shot/stab/cut wound a character takes during combat. <code>maybeLogWoundInfection</code> in the table page inserts a system row with <code>outcome='wound_infection_warning'</code> and label rendered verbatim by <code>compactRollSummary</code>. Queues an Infection Check (Wound) for the end of combat (see <code>endCombatInfectionSweep</code>). One row per character per combat (dedup via in-memory ref + feed cross-check). Emit site: <code>app/stories/[id]/table/page.tsx:4839-4843</code>.</p>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:18 PM</span></div></div><div class="narrative">Cree Hask is wounded and may have to deal with infection</div></div>
+
+  <h3 id="weapon-malfunction">Weapon malfunction (pass-through, Low Insight on non-Unarmed)</h3>
+  <p class="note">When a non-Unarmed weapon attack rolls Low Insight, executeRoll inserts a system row (after the main attack row) flagging the malfunction. <code>outcome='weapon_malfunction'</code>; label rendered verbatim. The attacker must Ready Weapon again before firing/swinging again. Emit site: <code>app/stories/[id]/table/page.tsx:6799-6803</code>.</p>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:22 PM</span></div></div><div class="narrative">Cree Hask's weapon malfunctions and they must ready it for use again!</div></div>
+
+  <h3 id="advantage-used">Advantage used (pass-through, C3 share)</h3>
+  <p class="note">When a character consumes a stored Advantage (+N CMod on a named skill, from Connections / Counsel / Custom share = C3), a feed row broadcasts the redemption to the whole party. <code>outcome='advantage_used'</code>; label format <code>&lt;name&gt; used their +N &lt;skill&gt; advantage (&lt;description&gt;)</code>. Rendered verbatim by <code>compactRollSummary</code>. Emit site: <code>app/stories/[id]/table/page.tsx:9662-9664</code>.</p>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:28 PM</span></div></div><div class="narrative">Cree Hask used their +2 Athletics advantage (Cree's older brother taught them to rock climb)</div></div>
+  <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">Marv</span><div class="right"><span class="time">2:28 PM</span></div></div><div class="narrative">Marv used their +1 Tactics advantage (Marv's stint with the militia paid off)</div></div>
+
   <h3 id="loot">Loot (NPC corpse vs object container)</h3>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:33 PM</span></div></div><div class="narrative">Cree Hask searched the corpse of Avery Xavier and found something</div></div>
   <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:33 PM</span></div></div><div class="narrative">Cree Hask searched the corpse of Avery Xavier and found nothing</div></div>
