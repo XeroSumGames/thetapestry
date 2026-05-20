@@ -53,7 +53,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [ ] **Dead client-side moderation_status logic** at `app/campfire/forums/page.tsx:270` and ~5 sibling sites (war-stories, lfg, modules). Trigger from Y3 (sql/moderation-enforce-trigger-2026-05-17.sql) now overrides for non-thrivers. Safe to leave; clean up when forums/war-stories/lfg gets its next refactor pass.
 
 **Phase 3 planning artifact**
-- [ ] **`page.tsx` decomposition plan** at [tasks/page-tsx-decomposition-plan.md](page-tsx-decomposition-plan.md) - 18-step extraction sequence over ~12-14 sessions, with per-step LOC removal targets + smoke gates + risk register. Read this before starting Phase 3.
+- [ ] **`page.tsx` decomposition plan** at [tasks/page-tsx-decomposition-plan.md](page-tsx-decomposition-plan.md) - 18-step extraction sequence over ~12-14 sessions, with per-step LOC removal targets + smoke gates + risk register. Read this before starting Phase 3. **2026-05-20 updates:** step 2 (useHeaderMenus) shipped via 2426e5b. File grew to 13,192 lines from 12,429 over Stabilize Phase 1 + Distract Phase 2 modal migrations. **Pre-launch carve-out defined (Phases 3.0 + 3.1, 8 steps, ~2980 LOC removed):** steps 1/3/4 (types/recorder/broadcasts) → step 5 (GmTools+GmModalStack) → steps 6/7/8 (specials/recruit/trade). Targets 5/20-6/7. Hard rule: no Phase 3.4 (roll pipeline) or 3.5 (realtime) within 14 days of launch.
 
 **Pre-playtest verification (2026-05-18)** - CLOSED (playtest happened 2026-05-18; both items implicitly covered, neither has been re-flagged in 2 days).
 - [x] ~~**Sentry pipeline check**~~ - Verified 2026-05-18 (`/monitoring` tunnel returns 200, SDK loaded). Latest re-verify in `tasks/session-prep-2026-05-25.md`.

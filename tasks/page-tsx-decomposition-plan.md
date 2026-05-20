@@ -2,9 +2,76 @@
 
 > Planning artifact for Phase 3 of the pre-launch audit (see [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md)). Produced 2026-05-17 by a Plan-subagent code-read of the 12,429-line file. This is the spec future sessions execute against. No code lands today.
 
-**Target:** `app/stories/[id]/table/page.tsx` (12,429 lines, single React component)
+**Target:** `app/stories/[id]/table/page.tsx` (now **13,192 lines** as of 2026-05-20, was 12,429 at plan-authoring; +763 over 3 days from Stabilize Phase 1 modal + Distract Phase 2 modal + other ships)
 **End state of Phase 3:** thin orchestrator under 500 lines composing hooks + sub-components.
-**Branch baseline:** d2ba6b6. Pre-commit gates: tsc, 141+ Vitest tests, guardrails.
+**Branch baseline:** d2ba6b6 at authoring; current HEAD floats with the lane work. Pre-commit gates: tsc, **419 Vitest tests** (was 141 at authoring), guardrails.
+
+---
+
+## Status update (2026-05-20)
+
+**What's shipped from this plan:**
+- Phase 3.0 step 2: `useHeaderMenus` extracted via `2426e5b` (2026-05-19) - the first real decomposition step.
+
+**What the file grew by despite that:**
+- Stabilize Phase 1 dedicated `<RollModal>` migration (2255ced, ~200 LOC added).
+- Distract Phase 2 dedicated `<RollModal>` migration (54dec35, ~200 LOC added).
+- Gut Instinct migration in flight (other chat, ~200 LOC pending).
+
+**Net direction:** the file is growing faster than it's being decomposed. The modal-unification arc the hunt-and-peck chat is finishing (Group Check + Gut Instinct remaining) will land another ~400 LOC on top, taking the file to ~13,600 before any decomposition pressure relieves.
+
+This is normal: modal migrations are themselves prep work for the eventual decomposition (each migrated modal is more cleanly extractable than the legacy `pendingRoll` dispatch). The decomposition pays off when the leaf extractions hit; until then, file size growth is expected.
+
+---
+
+## Launch-window carve-out (2026-05-20, gated to 2026-06-15)
+
+Per `tasks/launch-plan-2026-06-15.md`, the public launch is ~26 days out. Full decomposition is 10.5 baseline sessions + 30% buffer = 12-14 sessions, which is more time than we have before launch given competing launch-must-do work (Supabase Pro, KV rate-limiter, lawyer review, landing page, mobile responsive, accessibility, press kit, demo video, modal-unification finish).
+
+**Realistic budget for decomposition pre-launch: 2-4 sessions.** The rest defers to post-launch.
+
+**Pre-launch carve-out (Phases 3.0 + 3.1 only):**
+
+| Step | Phase | LOC removed | Risk |
+|---|---|---|---|
+| 1 | 3.0 Move types + module constants to `types.ts` | ~200 | Trivial |
+| 2 | 3.0 Extract `useHeaderMenus` | ~90 | **SHIPPED (`2426e5b`)** |
+| 3 | 3.0 Extract `useRecorderToggle` | ~30 | Trivial leaf |
+| 4 | 3.0 Centralize broadcast emissions via `lib/table-broadcasts.ts` | 0 net (mechanical) | Low; unlocks future |
+| 5 | 3.1 Extract `useGmTools` + `<GmModalStack>` | ~1500 | Leaf, big win |
+| 6 | 3.1 Extract `<SpecialCheckModal>` + `useSpecialChecks` | ~600 | Couples to roll dispatch |
+| 7 | 3.1 Extract `<RecruitWizard>` + `useRecruitFlow` | ~400 | Leaf |
+| 8 | 3.1 Extract `useTradeTarget` + push trade/apprentice modals into grid | ~150 | Leaf |
+
+**Cumulative pre-launch shrink: ~2980 LOC removed = table page 13,192 -> ~10,200.** Still YELLOW in the Risk Register but moving the right direction.
+
+**Post-launch (after 2026-06-15 launch settles, no earlier than 2026-06-22):**
+- Phase 3.2 (TableHeader, FeedColumn, GmSidebar - ~2400 LOC)
+- Phase 3.3 (TacticalSync, Initiative - ~2000 LOC)
+- Phase 3.4 (Roll pipeline, the riskiest extraction - ~2700 LOC)
+- Phase 3.5 (Auth, CampaignState, TableRealtime - ~600 LOC)
+- Phase 3.6 (Compose + polish)
+
+**Hard rule:** **No Phase 3.4 (roll pipeline) extraction within 14 days of a planned launch.** This is the highest-risk single extraction (`executeRoll` is 1850 LOC, 12-dimensional branching, stale-closure landmines documented in R1). A regression here breaks every roll in every session.
+
+**Hard rule:** **No Phase 3.5 (realtime) extraction within 14 days of a planned launch.** `useTableRealtime` is the second-highest-risk extraction (R2). Channel resubscription bugs cause silent multi-client desync.
+
+These two rules mean Phases 3.4 + 3.5 cannot ship before 6/29 even if 6/15 launches cleanly. Tactical-content extractions (Phase 3.3) are arguably possible 6/22-6/28 if launch goes calmly; if the launch surfaces any combat-related bugs, push 3.3 too.
+
+**Recommended sequencing for the hunt-and-peck lane:**
+
+| Window | Decomposition target | Realistic session count |
+|---|---|---|
+| 5/20-5/24 | Steps 1, 3, 4 (types, recorder, broadcasts helper) | 1 session, leaf-only |
+| 5/26-5/31 | Step 5 (`useGmTools` + `<GmModalStack>`) | 1 session, leaf |
+| 6/1-6/7 | Steps 6, 7, 8 (specials, recruit, trade) | 1-2 sessions, leaf |
+| 6/8-6/14 | **FREEZE** - no decomposition; bug fixes + launch prep only | 0 sessions |
+| 6/15 | Launch | 0 sessions |
+| 6/16-6/21 | Bug-fix triage + Y11/Y12 follow-up + watch metrics | 0 sessions |
+| 6/22 onward | Phase 3.2 starts (Header/Feed/GmSidebar) | 2 sessions |
+| 7/1 onward | Phase 3.3 + later phases | 6-8 sessions over the month |
+
+This carves the 13k-line file down by ~3000 LOC before launch (to ~10,200) without putting the riskiest extractions inside the launch window.
 
 ---
 

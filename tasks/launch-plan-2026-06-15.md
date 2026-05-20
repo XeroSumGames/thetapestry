@@ -102,7 +102,7 @@ Composed in the puffer-fish lane; tactical follow-through belongs to the hunt-an
 
 | # | Item | Why deferred |
 |---|---|---|
-| 17 | Table-page decomposition | Won't ship in 4 weeks; accept YELLOW |
+| 17 | Table-page decomposition (FULL plan, 12-14 sessions) | Won't ship before 6/15; full decomp deferred. **PARTIAL carve-out available:** Phases 3.0 + 3.1 (8 steps, ~2980 LOC removed, leaf-only) can ship pre-launch over 5/20-6/7. Brings table page 13,192 -> ~10,200. Detailed sequencing in [tasks/page-tsx-decomposition-plan.md](page-tsx-decomposition-plan.md) "Launch-window carve-out" section. **Hard rule: NO Phase 3.4 (roll pipeline) or 3.5 (realtime) extractions within 14 days of launch** - riskiest single extractions per R1/R2 in the plan. |
 | 18 | supabase/migrations adoption (R10 full) | Deferred per R10 doc |
 | 19 | 15 orphan tables canonical DDL | Deferred |
 | 20 | Full E2E test coverage | Too big for window |
