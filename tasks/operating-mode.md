@@ -139,6 +139,7 @@ The health-pulse routine handles short-term drift (vulns, broken builds, stale H
 
 - **`/architecture-review`** (weekly suggested) — what tech debt accumulated this week, what scale concerns surfaced, smallest move to lower future risk. ~30 min Claude time.
 - **`/commercial-review`** (monthly suggested) — payment integration status, GDPR posture, uptime metrics, incident summary, blocking items between us and opening paid signups. ~45 min Claude time.
+- **`/stability-audit`** (after notable ship batches, post-playtest, or when "is it stable?" feels fuzzy) — read existing evidence (Risk Register + Tech Debt + Confidence Ledger + newest health-pulse + newest security-audit + last 14 days of git log + todo CURRENT OPEN), run live gates, footgun grep, Confidence-Ledger triage. Output: `tasks/stability-audit-YYYY-MM-DD.md` (dated; do not overwrite) with findings sorted BLOCKER / HIGH / MEDIUM / LOW, Risk Register color updates, new todos with severity prefix. No code edits in the audit pass. Wider than the health-pulse, narrower than `/pre-launch-audit`. ~30-60 min Claude time. Full pattern + lessons in [tasks/lessons.md](lessons.md) under "Stability-audit pattern".
 - **`/pre-launch-audit`** (one-time, before paid signups open) — Claude does a top-down review of data model, auth/payment flows, scalability concerns, error budgets, observability gaps. Outputs a punch list. ~2 hours Claude time.
 
 ---

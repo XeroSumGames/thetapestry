@@ -1,5 +1,11 @@
 # Stability Audit — 2026-05-19
 
+**First audit of this kind on this project.** Pattern + slash convention documented for future iterations:
+- Slash: `/stability-audit` ([tasks/slash-conventions.md](slash-conventions.md))
+- Pattern + gotchas: [tasks/lessons.md](lessons.md) "Stability-audit pattern + stale audit line numbers + Confidence-Ledger drift threshold"
+- Periodic-review entry: [tasks/operating-mode.md](operating-mode.md) Sec. "Periodic reviews"
+- Naming: future audits land at `tasks/stability-audit-YYYY-MM-DD.md`; dated; do not overwrite. After 5+ files, consider moving to `tasks/stability-audits/`.
+
 Post-playtest structural read. Goal: surface load-bearing risk that is currently unattended. Not "no bugs" - "nothing important is being ignored."
 
 Engagement type: read-only audit. No code edits in this pass. Fixes go through normal review with pre-ship 5-question checks.

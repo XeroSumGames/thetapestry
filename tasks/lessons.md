@@ -1,5 +1,25 @@
 # Lessons Learned
 
+## Stability-audit pattern + stale audit line numbers + Confidence-Ledger drift threshold (2026-05-19)
+
+**Rule (audit shape):** A stability audit is "is anything load-bearing currently unattended?" not "are there zero bugs?". The repeatable shape that worked on 2026-05-19:
+1. **Read existing evidence** — `tasks/debug-handoff.md` (Risk Register + Tech Debt Ledger + Confidence Ledger), newest `tasks/health-pulse.md` entry, newest `tasks/security-audit.md` entry, last 14 days of `git log`, `tasks/todo.md` CURRENT OPEN.
+2. **Run live gates** — `npx tsc --noEmit`, `node scripts/check-font-sizes.mjs`, `node scripts/check-role-literals.mjs`, `npm test`, `npm audit`.
+3. **Footgun grep** — `as any`, `@ts-ignore`, `TODO/FIXME/HACK`, `useEffect` realtime channels, `supabase.from`/`rpc` counts, `setInterval` (polling waste), `.storage.from(...).upload`.
+4. **Confidence-Ledger triage** — for each HOPED-FOR item 4+ days stale, promote/demote/explain.
+5. **Output** — one doc at `tasks/stability-audit-YYYY-MM-DD.md` with findings sorted BLOCKER / HIGH / MEDIUM / LOW. Update Risk Register colors where evidence changed them. Add new todos. No code edits in the audit pass; fixes go through normal review with pre-ship 5-Q each.
+
+**Rule (stale line numbers):** Line numbers in `tasks/security-audit.md` (or any audit doc) referencing a hot file go stale fast. The 2026-05-19 16:23 UTC audit said the session-attachments upload was at `app/stories/[id]/table/page.tsx:3414`; the actual call site was at `:3518` after ~100 commits drift. **Before quoting any audit line number, re-grep for the call shape (`supabase.storage.from('session-attachments').upload`) to locate the current line.** Same applies to the Risk Register's "first-place-to-look" line refs.
+
+**Rule (Confidence-Ledger drift):** When the same drift item appears in 3+ consecutive health-pulse entries without an action commit, the ledger has lost its signal. The 2026-05-19 audit found the test count (174 in ledger, 388 actual — flagged 3 times in 4 days). Pattern: tests get added without updating the ledger; the drift gets logged but no one drains it. **Threshold to enforce:** if the same drift item lands in 2 consecutive pulses, the next session opens by draining it. Either automate the test-count line via `scripts/refresh-ledger.mjs` (parse `npm test` output) or formalize a session-start drain ritual. Silent drift between drains is what's broken.
+
+**Why both rules matter:** an audit doc is only as useful as the line refs in it are accurate, and a ledger is only as useful as the drift signal it surfaces. If the audit's refs are stale and the ledger's signal is ignored, future Claudes can't triage from them and have to redo the work.
+
+**How to apply:**
+- Future stability audits: name the doc `tasks/stability-audit-YYYY-MM-DD.md` (dated, do not overwrite). Reference this lesson + `[[slash_stability_audit]]` if a slash convention exists.
+- When reading any audit doc more than 24 hours old, re-locate the call sites before quoting line numbers in proposed fixes.
+- When closing health-pulse drift items, decide between "drain now" (run the action listed) and "automate the drain" (one-time script work). Do not let the same item land 3+ times.
+
 ## Tab-local default-OFF UX fails when ONE user forgets to flip it (2026-05-19)
 
 **Rule:** When a feature requires N independent user actions to "all work" (every player hits Record), redesign so the N actions collapse to 1 (GM hits Record, broadcast cascades to N). Default-off + per-user opt-in is the wrong shape for any coordination problem where one missing user breaks the whole.

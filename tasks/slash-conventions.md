@@ -104,13 +104,29 @@ Defined in [tasks/operating-mode.md](operating-mode.md) Sec. "Explicit role invo
 
 ---
 
+## `/stability-audit` — is anything load-bearing currently unattended?
+
+**When to reach for it:** post-playtest, post-big-batch-of-ships, before a planned playtest, or whenever the answer to "is the codebase stable?" feels fuzzy. Periodic on-demand companion to the autonomous 3-hour health-pulse + weekly security audit. The output is a single audit doc + new todos + Risk Register triage; no code edits in the audit pass itself.
+
+**Example triggers:**
+- *"Just had a great playtest, want the dev team to do what you do and make sure the code base is stable."* (the trigger that produced [tasks/stability-audit-2026-05-19.md](stability-audit-2026-05-19.md))
+- *"We've shipped ~50 commits since the last playtest. What's currently HOPED-FOR and what's at risk?"*
+- *"Before I open paid signups, do a stability sweep."*
+- *"The health-pulse has been DRIFT for 5 days running. What's not being drained?"*
+
+**What you get:** the doc shape laid out in [tasks/lessons.md](lessons.md) under "Stability-audit pattern" — read existing evidence (debug-handoff Risk Register + Tech Debt + Confidence Ledger, newest health-pulse, newest security-audit, last 14 days of git log, todo CURRENT OPEN) → run live gates (tsc, font-sizes, role-literals, vitest, npm audit) → footgun grep (`as any`, `@ts-ignore`, TODO/FIXME, realtime channels, polling, upload calls) → Confidence-Ledger triage → output sorted BLOCKER / HIGH / MEDIUM / LOW at `tasks/stability-audit-YYYY-MM-DD.md` (dated; do not overwrite). Risk Register colors updated where evidence changed them. New todos added with severity prefix (H-1, M-3, L-2 etc.) so the audit checklist is actionable.
+
+**Wider than the health-pulse, narrower than `/pre-launch-audit`.** The 3-hour health-pulse catches short-term drift; the weekly security audit catches deeper security findings; `/pre-launch-audit` is the one-time top-down before paid signups open. `/stability-audit` sits between — invoke after notable batches of work to verify the verification rate is keeping up with the ship rate.
+
+---
+
 ## Pattern + tips
 
 - **Start the message with the slash.** `/architect <question>`. Don't bury it mid-message.
 - **One slash per message.** If you want two perspectives, ask twice or use default mode.
 - **Default mode (no slash)** gets all-perspectives weighted to whatever you're asking about. Use slashes when you want focused, low-noise output.
 - **You can ask for a critique of your own thinking:** `/architect critique this idea: <your idea>`.
-- **Pair with the periodic reviews:** `/architecture-review`, `/commercial-review`, `/pre-launch-audit` (defined in [operating-mode.md](operating-mode.md) Sec. "Periodic reviews").
+- **Pair with the periodic reviews:** `/architecture-review`, `/commercial-review`, `/pre-launch-audit`, `/stability-audit` (defined in [operating-mode.md](operating-mode.md) Sec. "Periodic reviews").
 
 ---
 
