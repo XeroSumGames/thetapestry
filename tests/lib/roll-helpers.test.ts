@@ -74,6 +74,24 @@ describe('outcomeColor', () => {
     expect(outcomeColor('something_else')).toBe('#d4cfc9')
     expect(outcomeColor('')).toBe('#d4cfc9')
   })
+
+  // Snake-case input contract for DB-stored outcomes (community_events,
+  // morale_check, resource_check). Added 2026-05-19 when the duplicated
+  // outcomeColor in app/stories/[id]/community/page.tsx was deleted in
+  // favor of the canonical here.
+  it('accepts snake_case input (DB form)', () => {
+    expect(outcomeColor('wild_success')).toBe('#7fc458')
+    expect(outcomeColor('high_insight')).toBe('#7fc458')
+    expect(outcomeColor('success')).toBe('#7ab3d4')
+    expect(outcomeColor('failure')).toBe('#EF9F27')
+    expect(outcomeColor('dire_failure')).toBe('#c0392b')
+    expect(outcomeColor('low_insight')).toBe('#c0392b')
+  })
+
+  it('null/undefined-tolerant', () => {
+    expect(outcomeColor(null as any)).toBe('#d4cfc9')
+    expect(outcomeColor(undefined as any)).toBe('#d4cfc9')
+  })
 })
 
 describe('compactRollSummary', () => {

@@ -33,15 +33,28 @@ export function getOutcome(total: number, die1: number, die2: number, skipInsigh
   return OUTCOME.WildSuccess
 }
 
+// Outcome -> color. Accepts BOTH input shapes:
+//   - Display-form: 'Wild Success', 'Dire Failure', etc. (what RollResult uses)
+//   - Snake-case:   'wild_success', 'dire_failure', etc. (what some DB rows store
+//                   for community_events / morale_check / resource_check)
+// Returns the canonical Tapestry feed palette. Note: components/RollModal.tsx
+// uses a deliberately different palette (Success=green, Failure=light-red) for
+// in-modal celebration/softening; see modalOutcomeColor there.
 export function outcomeColor(outcome: string): string {
-  switch (outcome) {
-    case OUTCOME.WildSuccess: return '#7fc458'
-    case OUTCOME.HighInsight: return '#7fc458'
-    case OUTCOME.Success: return '#7ab3d4'
-    case OUTCOME.Failure: return '#EF9F27'
-    case OUTCOME.DireFailure: return '#c0392b'
-    case OUTCOME.LowInsight: return '#c0392b'
-    default: return '#d4cfc9'
+  const k = (outcome ?? '').toLowerCase().replace(/_/g, ' ')
+  switch (k) {
+    case 'wild success':
+    case 'high insight':
+      return '#7fc458'
+    case 'success':
+      return '#7ab3d4'
+    case 'failure':
+      return '#EF9F27'
+    case 'dire failure':
+    case 'low insight':
+      return '#c0392b'
+    default:
+      return '#d4cfc9'
   }
 }
 

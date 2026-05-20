@@ -108,7 +108,16 @@ export interface RollModalProps {
   onPostRollClose?: () => void
 }
 
-const OUTCOME_COLOR: Record<string, string> = {
+// Modal-only palette. Deliberately diverges from lib/roll-helpers.ts
+// outcomeColor (the canonical feed palette) on two outcomes:
+//   - Success: canonical = #7ab3d4 (blue); modal = #7fc458 (green) - the
+//     modal "celebrates" success more strongly than the neutral feed row.
+//   - Failure: canonical = #EF9F27 (amber); modal = #f5a89a (light red) -
+//     softer in-modal failure framing vs the feed's sharper amber.
+// Wild Success / Dire Failure / High Insight / Low Insight match canonical.
+// Renamed from `outcomeColor` 2026-05-19 to make the divergence explicit
+// instead of looking like a silent duplicate.
+const MODAL_OUTCOME_COLOR: Record<string, string> = {
   'Wild Success': '#7fc458',
   'High Insight': '#7fc458',
   'Success': '#7fc458',
@@ -117,8 +126,8 @@ const OUTCOME_COLOR: Record<string, string> = {
   'Low Insight': '#c0392b',
 }
 
-function outcomeColor(o: string): string {
-  return OUTCOME_COLOR[o] ?? '#cce0f5'
+function modalOutcomeColor(o: string): string {
+  return MODAL_OUTCOME_COLOR[o] ?? '#cce0f5'
 }
 
 export default function RollModal(props: RollModalProps) {
@@ -261,7 +270,7 @@ export default function RollModal(props: RollModalProps) {
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em' }}>
                   {result.die1} + {result.die2} {result.amod !== 0 ? ` + ${result.amod} (AMod)` : ''}{result.smod !== 0 ? ` + ${result.smod} (SMod)` : ''}{result.cmod !== 0 ? ` ${result.cmod >= 0 ? '+' : ''}${result.cmod} (CMod)` : ''} = <span style={{ color: '#f5f2ee', fontWeight: 700, fontSize: '16px' }}>{result.total}</span>
                 </div>
-                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: outcomeColor(result.outcome), marginTop: '6px' }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: modalOutcomeColor(result.outcome), marginTop: '6px' }}>
                   {result.outcome}
                 </div>
                 {result.insightAwarded && (

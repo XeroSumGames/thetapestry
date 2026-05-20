@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import { outcomeColor } from '../../../../lib/roll-helpers'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import StoryActionBar from '../../../../components/StoryActionBar'
 import type { Community, Member } from '../../../../lib/types/community'
@@ -38,15 +39,10 @@ interface RecruitRow {
   damage_json: any
 }
 
-// Outcome → border/text color. Matches the Weekly Check modal palette.
-function outcomeColor(o: string): string {
-  const s = (o ?? '').toLowerCase().replace(/ /g, '_')
-  if (s === 'wild_success' || s === 'high_insight') return '#7fc458'
-  if (s === 'success') return '#7ab3d4'
-  if (s === 'failure') return '#EF9F27'
-  if (s === 'dire_failure' || s === 'low_insight') return '#c0392b'
-  return '#d4cfc9'
-}
+// outcomeColor used to live here as a local duplicate of lib/roll-helpers.ts
+// with snake_case input support. The canonical now accepts both display-form
+// and snake_case inputs, so this site imports it directly. Removed 2026-05-19.
+
 function prettyOutcome(o: string): string {
   return (o ?? '').split('_').map(w => w[0]?.toUpperCase() + w.slice(1)).join(' ')
 }
