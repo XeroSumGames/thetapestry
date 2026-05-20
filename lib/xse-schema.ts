@@ -732,7 +732,7 @@ export const LASTING_WOUNDS: Record<number, { name: string; effect: string }> = 
 // stat caps stay terse: "-1 max RP / WP"). Swap any of these out
 // when Xero locks alternative wording per wound.
 export const LASTING_WOUND_NARRATIVE: Partial<Record<number, string>> = {
-  2:  '-1 CMod on Dexterity checks',                            // Lost Eye
+  2:  '-1 on Dexterity checks',                                 // Lost Eye (Xero canon-locked 2026-05-20: lasting modifier, mirrors canon "-1 on checks using Dexterity")
   3:  '-2 RSN attribute',                                       // Brain Injury
   4:  '-1 DEX attribute',                                       // Diminished
   5:  '-1 max RP',                                              // Shaken
@@ -741,7 +741,7 @@ export const LASTING_WOUND_NARRATIVE: Partial<Record<number, string>> = {
   8:  '-1 INF attribute',                                       // Scarring
   9:  '-1 PHY attribute',                                       // Fragile
   10: '-1 ACU attribute',                                       // Hearing Loss
-  11: '-1 ACU attribute and -1 CMod on Perception checks',      // Crippled
+  11: '-1 Perception and -1 ACU',                               // Crippled (Xero canon-locked 2026-05-20: two lasting reductions, mirrors canon "-1 Perception & -1 Acumen")
   12: '-2 DEX attribute',                                       // Shell Shock
 };
 
