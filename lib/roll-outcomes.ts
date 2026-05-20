@@ -105,3 +105,92 @@ export type RollResult =
   | typeof OUTCOME.DireFailure
   | typeof OUTCOME.HighInsight
   | typeof OUTCOME.LowInsight
+
+// Grapple-result subset - bespoke ladder written by executeGrapple.
+// Distinct from RollResult because grapple has its own outcome shape
+// (Grappled vs Failed - 1 RP vs No clear victor), unrelated to the
+// 6-tier Success/Failure ladder.
+export type GrappleResult =
+  | typeof OUTCOME.Grappled
+  | typeof OUTCOME.GrappleFailed
+  | typeof OUTCOME.GrappleNoVictor
+
+// Event-tag subset - the 30 snake_case row-category values used for
+// event-only rows that have no dice roll (combat_start, death, loot,
+// morale_check, wound_infection_warning, etc.).
+export type EventTag =
+  | typeof OUTCOME.action
+  | typeof OUTCOME.barter
+  | typeof OUTCOME.cdp
+  | typeof OUTCOME.clothed_check
+  | typeof OUTCOME.combat_end
+  | typeof OUTCOME.combat_start
+  | typeof OUTCOME.coordinate
+  | typeof OUTCOME.death
+  | typeof OUTCOME.defer
+  | typeof OUTCOME.drop
+  | typeof OUTCOME.encumbrance
+  | typeof OUTCOME.evolution
+  | typeof OUTCOME.fed_check
+  | typeof OUTCOME.incap
+  | typeof OUTCOME.initiative
+  | typeof OUTCOME.loot
+  | typeof OUTCOME.morale_check
+  | typeof OUTCOME.pending_heal
+  | typeof OUTCOME.rations
+  | typeof OUTCOME.recruit
+  | typeof OUTCOME.retention_check
+  | typeof OUTCOME.revive
+  | typeof OUTCOME.sprint
+  | typeof OUTCOME.stress
+  | typeof OUTCOME.subsistence
+  | typeof OUTCOME.wound_infection_warning
+  | typeof OUTCOME.weapon_malfunction
+  | typeof OUTCOME.lasting_wound_acquired
+  | typeof OUTCOME.advantage_used
+  | typeof OUTCOME.gather_materials
+
+// Discriminator for the three kinds the `outcome` column can carry.
+// Used by readers that want to branch on kind first, then narrow on
+// the specific value within that kind (e.g. compactRollSummary
+// switches on kind, then on the narrowed sub-union).
+export type OutcomeKind = 'roll' | 'grapple' | 'event'
+
+// Type guard: is this outcome one of the 6 dice-result labels?
+// Narrows the input from RollOutcome to RollResult so downstream
+// switch cases get exhaustive checking on the 6 values.
+export function isRollResult(o: RollOutcome): o is RollResult {
+  return o === OUTCOME.Success
+      || o === OUTCOME.Failure
+      || o === OUTCOME.WildSuccess
+      || o === OUTCOME.DireFailure
+      || o === OUTCOME.HighInsight
+      || o === OUTCOME.LowInsight
+}
+
+// Type guard: is this outcome one of the 3 grapple-result labels?
+export function isGrappleResult(o: RollOutcome): o is GrappleResult {
+  return o === OUTCOME.Grappled
+      || o === OUTCOME.GrappleFailed
+      || o === OUTCOME.GrappleNoVictor
+}
+
+// Type guard: is this outcome an event tag (everything that isn't a
+// roll result or a grapple result)? Implemented as
+// "not roll, not grapple" rather than enumerating the 30 tags so
+// adding a new tag to OUTCOME automatically gets picked up here. The
+// EventTag union itself must be extended manually - the exhaustiveness
+// test in tests/lib/roll-outcomes.test.ts catches the omission.
+export function isEventTag(o: RollOutcome): o is EventTag {
+  return !isRollResult(o) && !isGrappleResult(o)
+}
+
+// Deterministic kind discriminator. Reads use this when they need to
+// branch on kind first (e.g. "is this a row I can color via
+// outcomeColor, or one of the bespoke renderers?"), then narrow on
+// the specific value via the corresponding type guard.
+export function outcomeKind(o: RollOutcome): OutcomeKind {
+  if (isRollResult(o)) return 'roll'
+  if (isGrappleResult(o)) return 'grapple'
+  return 'event'
+}
