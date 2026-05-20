@@ -177,7 +177,7 @@ Gated on Xero approving Supabase Pro + PITR. Until then, work the audit-log alte
 ### Phase P4: Security hardening
 
 - [ ] A5.4 KV rate-limiter (Xero approved; hunt-and-peck)
-- [ ] A5.1 CSP + SRI audit + headers config
+- [x] **A5.1 CSP + SRI audit.** SHIPPED 2026-05-20: [tasks/audit-csp-sri-third-party-scripts-2026-05-20.md](audit-csp-sri-third-party-scripts-2026-05-20.md). Findings: ZERO security headers configured today (no CSP, no HSTS, no X-Frame-Options, no Permissions-Policy). Two third-party scripts: Turnstile (cannot SRI per Cloudflare docs - rotating script) + Sentry (tunneled through /monitoring same-origin). Recommended baseline CSP + 5 companion headers documented in spec section 4. 5 risks logged (unsafe-inline weakens CSP, Turnstile widget breakage, Sentry tunnel, Supabase wss requirement, Vercel preview URLs). 4-phase migration CSP1-CSP4 (report-only -> tighten -> enforce -> deferred nonce-based) hunt-and-peck owns.
 - [ ] A5.2 Storage bucket policy audit
 - [ ] A5.3 RLS gap sweep
 - [ ] A5.5 Rate-limit coverage audit (next API routes added)
@@ -232,7 +232,7 @@ When all six axes hit threshold, the platform is "stable enough." Re-evaluate ag
 
 **LAST UPDATED:** 2026-05-20 (this commit).
 **LAST CHAT:** puffer-fish (writing the plan + seeding decisions.md).
-**NEXT ACTION (puffer-fish lane):** Hunt-and-peck priority queue handoff shipped as the puffer-fish run's capstone ([tasks/hunt-and-peck-priority-queue-2026-05-20.md](hunt-and-peck-priority-queue-2026-05-20.md)). Maps 9 specs/audits shipped today into a priority-ordered execution queue with coupling notes (the executeRoll-touching specs run as a single arc, not three parallel tracks). After hunt-and-peck has shipped ~5 items, puffer-fish lane resumes at P4/A5.1 (CSP+SRI audit of third-party scripts) - first item still untouched.
+**NEXT ACTION (puffer-fish lane):** write `tasks/audit-storage-bucket-policies.md` (P4/A5.2). Five Supabase storage buckets in use (session-attachments, note-attachments, pin-attachments, war-stories, module-covers). The `lib/safe-upload.ts` helper enforces sanitization + size + MIME at the application layer. The dashboard-level bucket policies (public-read scope, size limits, MIME whitelist enforced by Supabase Storage RLS) are UNVERIFIED. Audit them via dashboard inspection + write the spec to align with the safe-upload whitelist.
 
 **NEXT ACTION (hunt-and-peck lane):** start Phase P1 step 1 of the decomposition plan - move types + module constants out of `app/stories/[id]/table/page.tsx` into `app/stories/[id]/table/types.ts`. -200 LOC. Trivial leaf. Hunt-and-peck owns; puffer-fish updates Risk Register + this plan after each phase ships.
 
