@@ -1,5 +1,29 @@
 # Lessons Learned
 
+## Never combine `git stash push <file>` with rebase --autostash (2026-05-19)
+
+**Banned workflow.** Cost ~30 min today + a silent missing-fixes ship (`d5fd410`).
+
+Sequence I ran:
+```sh
+git add <13 files>
+git stash push supabase/.temp/cli-latest         # stash one specific file
+git fetch + git -c rebase.autoStash=true rebase  # autostash kicks in
+git commit -m "..."                              # commits stale state
+```
+
+What happened: the autostash flag tried to stash any UNSTAGED working-tree changes for the rebase. My specific-file stash plus the autostash dance silently UNSTAGED my 13 `git add` targets. The subsequent `git commit` ran with only the originally-untracked file (`scripts/check-em-dashes.mjs`) staged. The commit message claimed it shipped the 13-file sweep; the actual commit was just the 128-line script.
+
+The push "succeeded" without warning. Live code kept the em-dashes the commit claimed to fix.
+
+**Correct workflows:**
+
+1. **One-shot ignore:** add the offending file to `.gitignore` first, untrack it (`git rm --cached`), then proceed without stashing.
+2. **Full stash:** `git stash --include-untracked` (catches everything), do the rebase, `git stash pop`. Avoid the "stash this one file" pattern with autostash.
+3. **Explicit verification after commit:** `git show --stat HEAD` after every commit to confirm the file list matches intent. The git tool reports success even when content is wrong.
+
+**Detection rule going forward:** when a commit message implies many files changed, scan the `1 file changed, N insertions(+)` summary git emits. If it disagrees with the message, STOP and re-stage. Don't push.
+
 ## Stability-audit pattern + stale audit line numbers + Confidence-Ledger drift threshold (2026-05-19)
 
 **Rule (audit shape):** A stability audit is "is anything load-bearing currently unattended?" not "are there zero bugs?". The repeatable shape that worked on 2026-05-19:
