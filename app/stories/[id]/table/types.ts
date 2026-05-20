@@ -1,6 +1,6 @@
 // Types + module constants extracted from page.tsx as Phase 3.0 step 1
 // of the page.tsx decomposition (tasks/page-tsx-decomposition-plan.md).
-// Pure mechanical move — no runtime behavior change. These were all
+// Pure mechanical move - no runtime behavior change. These were all
 // declared at module scope (top of page.tsx, L62-L214) and are imported
 // back by page.tsx via `from './types'`.
 

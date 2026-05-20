@@ -1,5 +1,5 @@
 'use client'
-// /terms — beta-period terms of service. Plain-language, narrow-scope.
+// /terms - beta-period terms of service. Plain-language, narrow-scope.
 // Will get a proper legal pass before public launch.
 
 import Link from 'next/link'
@@ -37,7 +37,7 @@ export default function TermsPage() {
         <div style={card}>
           <div style={cardTitle}>What this is</div>
           <div style={body}>
-            <p>The Tapestry is a companion app for the Distemper / XSE TTRPG, in active beta. It&apos;s provided as-is. We&apos;re building in the open with real users; expect bugs, expect breakage, expect features to change. Use the 🐞 icon in the sidebar to report anything that goes wrong — we read every report.</p>
+            <p>The Tapestry is a companion app for the Distemper / XSE TTRPG, in active beta. It&apos;s provided as-is. We&apos;re building in the open with real users; expect bugs, expect breakage, expect features to change. Use the 🐞 icon in the sidebar to report anything that goes wrong - we read every report.</p>
           </div>
         </div>
 
@@ -57,16 +57,16 @@ export default function TermsPage() {
         <div style={card}>
           <div style={cardTitle}>Your content</div>
           <div style={body}>
-            <p>Stuff you create — characters, campaigns, NPCs, pins, scenes, forum posts — stays yours. By posting it on the platform, you give us a license to host and display it as part of running the platform. Nothing more. We don&apos;t claim ownership of your creative work.</p>
+            <p>Stuff you create - characters, campaigns, NPCs, pins, scenes, forum posts - stays yours. By posting it on the platform, you give us a license to host and display it as part of running the platform. Nothing more. We don&apos;t claim ownership of your creative work.</p>
             <p>Modules you publish to the marketplace are subject to your chosen visibility (Private / Unlisted / Listed). Listed modules go through moderation review before they appear publicly.</p>
-            <p>Don&apos;t post content that infringes someone else&apos;s copyright, that&apos;s defamatory, or that depicts illegal activity. Distemper is a horror game — dark themes are fine; specific real-world abuse / hate / harassment isn&apos;t.</p>
+            <p>Don&apos;t post content that infringes someone else&apos;s copyright, that&apos;s defamatory, or that depicts illegal activity. Distemper is a horror game - dark themes are fine; specific real-world abuse / hate / harassment isn&apos;t.</p>
           </div>
         </div>
 
         <div style={card}>
           <div style={cardTitle}>Distemper IP</div>
           <div style={body}>
-            <p>The Distemper setting, the XSE rule system, and the DistemperVerse brand are owned by Xero Sum Games. Using The Tapestry doesn&apos;t grant you a license to publish those outside the platform. Inside the platform, fair use applies — write your character&apos;s backstory, run your campaign, share war stories.</p>
+            <p>The Distemper setting, the XSE rule system, and the DistemperVerse brand are owned by Xero Sum Games. Using The Tapestry doesn&apos;t grant you a license to publish those outside the platform. Inside the platform, fair use applies - write your character&apos;s backstory, run your campaign, share war stories.</p>
           </div>
         </div>
 

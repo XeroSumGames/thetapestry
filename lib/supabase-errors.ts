@@ -13,7 +13,7 @@ export interface SupabaseLikeError {
 }
 
 /** Log a Supabase error to console AND Sentry. Supabase errors come back
- *  as response objects, NOT thrown exceptions — so they slip past
+ *  as response objects, NOT thrown exceptions - so they slip past
  *  Sentry.captureException entirely unless something explicitly reports
  *  them. The 2026-05-18 playtest surfaced this when a player hit a 42501
  *  RLS rejection on First Impression: visible in their browser console,
@@ -43,7 +43,7 @@ export function reportSupabaseError(err: SupabaseLikeError | null | undefined, c
 }
 
 /** True when the error is PostgREST's "table or column not found in
- *  schema cache" — i.e. the migration hasn't been applied on this
+ *  schema cache" - i.e. the migration hasn't been applied on this
  *  database yet. The PostgREST code for this is PGRST205, but match
  *  the message text too as a defensive belt for older clients. */
 export function isMissingSchema(err: SupabaseLikeError | null | undefined): boolean {

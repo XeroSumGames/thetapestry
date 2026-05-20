@@ -1,13 +1,13 @@
-// CDP cost helpers — pure functions for the Character Evolution
+// CDP cost helpers - pure functions for the Character Evolution
 // surface. SRD-canonical (per CLAUDE.md precedence: SRD wins on the
-// SRD/CRB discrepancy around RAPID raise costs — see
+// SRD/CRB discrepancy around RAPID raise costs - see
 // tasks/rules-extract-cdp.md §3b for the diff).
 //
 // Skills (both SRD + CRB agree):
 //   Learn (any baseline → Lv 1 Beginner)   = 1 CDP
 //   Raise N → N+1                          = N + (N+1) CDP   (= 2N+1)
 //
-// RAPID Range Attributes (SRD §07 — 3× new level):
+// RAPID Range Attributes (SRD §07 - 3× new level):
 //   Raise N → N+1                          = 3 × (N+1) CDP
 //
 // Vocational skills baseline at -3 (Inept) but the "Learn" jump still
@@ -41,7 +41,7 @@ export function rapidRaiseCost(current: number): number | null {
 }
 
 /** Whether raising the given level next requires Fill-In-The-Gaps
- *  narrative justification. Per CRB Ch.6 — Lv 4 (Human Peak / Life's
+ *  narrative justification. Per CRB Ch.6 - Lv 4 (Human Peak / Life's
  *  Work) is GM-approved + narrative-gated. */
 export function isLv4Step(current: number): boolean {
   return current === 3

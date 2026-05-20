@@ -12,15 +12,15 @@ const ATTR_FULL: Record<string, string> = {
 // Per-derived-stat help copy. Plain prose so tooltips can paint
 // quickly without crossing libraries.
 const DERIVED_DESCRIPTIONS: Record<string, string> = {
-  'Wound Points': 'Wound Points (WP) — physical hit points. PCs go Mortally Wounded at 0 and roll a death countdown. Max = 6 + PHY AMod.',
-  'Resilience Points': 'Resilience Points (RP) — short-term toughness, used to soak grit + adrenaline checks. Max = 6 + PHY AMod.',
-  'Initiative': 'Initiative — turn order in combat. Roll 2d6 + DEX AMod + ACU AMod. Higher rolls go first.',
-  'Perception': 'Perception modifier — added to spotting / awareness checks. Equals RSN AMod + ACU AMod.',
+  'Wound Points': 'Wound Points (WP) - physical hit points. PCs go Mortally Wounded at 0 and roll a death countdown. Max = 6 + PHY AMod.',
+  'Resilience Points': 'Resilience Points (RP) - short-term toughness, used to soak grit + adrenaline checks. Max = 6 + PHY AMod.',
+  'Initiative': 'Initiative - turn order in combat. Roll 2d6 + DEX AMod + ACU AMod. Higher rolls go first.',
+  'Perception': 'Perception modifier - added to spotting / awareness checks. Equals RSN AMod + ACU AMod.',
   'Encumbrance': ENCUMBRANCE_DESCRIPTION,
-  'Stress Modifier': 'Stress Modifier — added to Stress Checks (the gate roll when stress hits 5). Equals RSN AMod + ACU AMod.',
-  'Melee Defence': 'Melee Defence Modifier (DMM) — subtracted from incoming melee damage. Equals PHY AMod.',
-  'Ranged Defence': 'Ranged Defence Modifier (DMR) — subtracted from incoming ranged damage. Equals DEX AMod.',
-  'Morality': 'Morality — moral compass tracker, 0–7. GM-driven; affects how NPCs read your PC. Starts at 3 (neutral).',
+  'Stress Modifier': 'Stress Modifier - added to Stress Checks (the gate roll when stress hits 5). Equals RSN AMod + ACU AMod.',
+  'Melee Defence': 'Melee Defence Modifier (DMM) - subtracted from incoming melee damage. Equals PHY AMod.',
+  'Ranged Defence': 'Ranged Defence Modifier (DMR) - subtracted from incoming ranged damage. Equals DEX AMod.',
+  'Morality': 'Morality - moral compass tracker, 0-7. GM-driven; affects how NPCs read your PC. Starts at 3 (neutral).',
 }
 
 interface Props {
@@ -60,7 +60,7 @@ export default function StepSeven({ state }: Props) {
             }}>
               <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                 {k}
-                <HelpTooltip title={`${k} — ${ATTR_FULL[k]}`} text={ATTRIBUTE_DESCRIPTIONS[k]} iconStyle={{ width: '13px', height: '13px', fontSize: '13px' }} />
+                <HelpTooltip title={`${k} - ${ATTR_FULL[k]}`} text={ATTRIBUTE_DESCRIPTIONS[k]} iconStyle={{ width: '13px', height: '13px', fontSize: '13px' }} />
               </div>
               <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
               <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '4px 0' }}>

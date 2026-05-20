@@ -9,11 +9,11 @@ import NotificationBell from './NotificationBell'
 import MessagesBell from './MessagesBell'
 import BugReportButton from './BugReportButton'
 
-// Left sidebar — restructured 2026-04-22 per user spec:
+// Left sidebar - restructured 2026-04-22 per user spec:
 //
 //   [Logo / Tapestry v0.5]
 //   [Username + Role Badge + Bell]
-//   ——— divider ———
+//   --- divider ---
 //   The Tapestry (header)
 //     Welcome to the Tapestry
 //     The World
@@ -23,14 +23,14 @@ import BugReportButton from './BugReportButton'
 //     The Campfire
 //     Rumors
 //     The Rules
-//   ——— divider ———
+//   --- divider ---
 //   Survivors (header)
 //     Creating a Survivor
 //     Backstory Generation
 //     Quick Character
 //     Random Character
-//     Paradigms — soon
-//   ——— divider ———
+//     Paradigms - soon
+//   --- divider ---
 //   Tools (header, Thriver-only)
 //     Moderation Queue
 //     Logs
@@ -77,7 +77,7 @@ export default function Sidebar() {
       }
       setLoaded(true)
 
-      // Global presence — track who's online across the platform.
+      // Global presence - track who's online across the platform.
       // For Thrivers, also resolve the present user_ids → usernames so
       // the hover popup can show the roster. Survivors only need the
       // count, so we skip the username lookup for them.
@@ -144,7 +144,7 @@ export default function Sidebar() {
             Survivors present: {onlineCount}
             {/* Thriver-only roster popup. Anchored under the count line,
                 left-aligned with the sidebar so it doesn't clip. Survivors
-                see only the count — keeps presence-style anonymity for
+                see only the count - keeps presence-style anonymity for
                 non-Thriver viewers. */}
             {presenceHover && roleIsThriver(userRole) && presentUsernames.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '4px', minWidth: '180px', maxWidth: '240px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)', zIndex: 1000, textAlign: 'left' }}>
@@ -167,7 +167,7 @@ export default function Sidebar() {
         ) : (
           <>
             {/* Line 1: Username, with the role badge ONLY for Thrivers.
-                Survivor is the default — surfacing the badge for every
+                Survivor is the default - surfacing the badge for every
                 logged-in user adds visual noise without adding info. */}
             <div style={{ fontSize: '14px', letterSpacing: '.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '7px', textAlign: 'center' }}>
               <span style={{ color: '#f5f2ee' }}>{username}</span>
@@ -175,7 +175,7 @@ export default function Sidebar() {
                 <span style={{ color: '#c0392b', marginLeft: '5px' }}>(Thriver)</span>
               )}
             </div>
-            {/* Line 2: icons — equal-width slots so visual midpoints
+            {/* Line 2: icons - equal-width slots so visual midpoints
                 line up regardless of each component's internal padding.
                 space-evenly + space-around both gave uneven gaps because
                 the three children have different intrinsic widths
@@ -185,16 +185,16 @@ export default function Sidebar() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><MessagesBell /></div>
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><NotificationBell /></div>
-              {/* Campfire shortcut — emoji glyphs ignore CSS color, so
+              {/* Campfire shortcut - emoji glyphs ignore CSS color, so
                   use opacity + grayscale to actually grey the icon out
                   while it's a placeholder ('coming soon' from the
                   user-header surface; the full /campfire page is still
                   reachable from the main nav below). Matches the
                   MessagesBell dim-when-idle treatment. */}
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                <span title="The Campfire — coming soon" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.45, filter: 'grayscale(1)' }}>🔥</span>
+                <span title="The Campfire - coming soon" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.45, filter: 'grayscale(1)' }}>🔥</span>
               </div>
-              {/* Bug report — opens a modal where the user describes
+              {/* Bug report - opens a modal where the user describes
                   what broke. Insert into bug_reports fires the
                   notify_bug_report trigger which emails Xero via the
                   existing call_notify_thriver path. */}
@@ -204,7 +204,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* The Tapestry — top-level destinations. Section header suppressed
+      {/* The Tapestry - top-level destinations. Section header suppressed
           per user spec: "Welcome to the Tapestry" is the first link so a
           "THE TAPESTRY" heading right above it reads as redundant. The
           user-header above already provides its own borderBottom, so no
@@ -226,13 +226,13 @@ export default function Sidebar() {
         The DistemperVerse ↗
       </a>
 
-      {/* Phase 4C — setting hubs (DZ + Kings Crossroads) moved into
+      {/* Phase 4C - setting hubs (DZ + Kings Crossroads) moved into
           /campfire 2026-05-01 per user spec; sidebar only shows the
           top-level Tapestry destinations. */}
 
       {divider}
 
-      {/* Survivors — character creation paths */}
+      {/* Survivors - character creation paths */}
       <div style={sectionHeading}>Survivors</div>
       <Link href="/creating-a-character" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</Link>
       <Link href="/characters/new"       style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</Link>
@@ -242,7 +242,7 @@ export default function Sidebar() {
 
       {divider}
 
-      {/* Tools — Thriver-only. Keeps elevated destinations behind the role gate
+      {/* Tools - Thriver-only. Keeps elevated destinations behind the role gate
           so Survivors don't see admin surfaces. */}
       {roleIsThriver(userRole) && (
         <>
@@ -273,8 +273,8 @@ export default function Sidebar() {
         </>
       )}
 
-      {/* (Removed 2026-05-01: Equipment "— soon" placeholder + the
-          Forums + Looking for Group duplicates — those are still
+      {/* (Removed 2026-05-01: Equipment "- soon" placeholder + the
+          Forums + Looking for Group duplicates - those are still
           reachable via /campfire's tab strip. The Rules promoted up
           beside Rumors 2026-05-01.) */}
 
@@ -293,7 +293,7 @@ export default function Sidebar() {
           </>
         ) : (
           <>
-            {/* Account row — avatar + username, click to open
+            {/* Account row - avatar + username, click to open
                 /account. Compact so the bottom of the sidebar
                 stays uncluttered. Avatar circle falls back to a
                 colored circle with the user's initial when no

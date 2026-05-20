@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Fleshing A Character Out — XSE SRD §03' }
+export const metadata = { title: 'Fleshing A Character Out - XSE SRD §03' }
 
 const COMP_MOT: Array<[number, string, string]> = [
   [2, 'Addiction', 'Accumulate'],

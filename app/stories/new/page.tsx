@@ -31,7 +31,7 @@ interface PublishedCommunity {
 }
 
 export default function NewCampaignPage() {
-  // Phase 4C — accept ?setting=<slug> from the setting hub's "Run a
+  // Phase 4C - accept ?setting=<slug> from the setting hub's "Run a
   // Campaign in [Setting]" CTA. Pre-seeds the setting picker so the
   // user lands on Custom Setting / DZ / Kings Crossroads already
   // selected. Unknown slugs fall back to '' (no preselection) rather
@@ -57,11 +57,11 @@ export default function NewCampaignPage() {
   const [startMonth, setStartMonth] = useState<string>('')
   const [startDay, setStartDay] = useState<string>('')
   const [startYear, setStartYear] = useState<string>('')
-  // Phase 5 Sprint 1 — Module picker; see /campaigns/new for notes.
+  // Phase 5 Sprint 1 - Module picker; see /campaigns/new for notes.
   const [modules, setModules] = useState<ModuleListing[]>([])
   const [pickedModuleVersionId, setPickedModuleVersionId] = useState<string>('')
   const [pickedModuleId, setPickedModuleId] = useState<string>('')
-  // Phase E #C — published-community picker. Lets a new GM start
+  // Phase E #C - published-community picker. Lets a new GM start
   // their campaign adjacent to a community that already exists in
   // the persistent world. Mutually exclusive with setting + module
   // pickers. On create, seeds a Homestead pin at the community's
@@ -79,7 +79,7 @@ export default function NewCampaignPage() {
 
   // Load every approved world_communities row with valid coords.
   // The picker filters out the user's OWN communities (no point
-  // starting a campaign near yourself) — done client-side after
+  // starting a campaign near yourself) - done client-side after
   // resolving GM ids via campaigns.gm_user_id.
   useEffect(() => {
     (async () => {
@@ -180,7 +180,7 @@ export default function NewCampaignPage() {
       name: name.trim(),
       description: description.trim(),
       // Module-subscribed and community-anchored stories both store
-      // 'custom' in the setting slot — neither uses the SETTING_PINS
+      // 'custom' in the setting slot - neither uses the SETTING_PINS
       // pipeline.
       setting: (pickedModuleVersionId || pickedCommunity) ? 'custom' : (setting || 'custom'),
       map_style: mapStyle,
@@ -198,7 +198,7 @@ export default function NewCampaignPage() {
       user_id: user.id,
     })
 
-    // Phase 5 Sprint 1 — module clone takes precedence over the
+    // Phase 5 Sprint 1 - module clone takes precedence over the
     // setting-seed pipeline.
     if (pickedModuleVersionId) {
       try {
@@ -213,12 +213,12 @@ export default function NewCampaignPage() {
       }
     }
 
-    // Phase E #C — community-anchored start. Skip the SETTING_PINS
+    // Phase E #C - community-anchored start. Skip the SETTING_PINS
     // pipeline; instead spawn a single Homestead pin at the picked
     // community's coords and fire an encounter handshake to its
     // source GM (the trigger on community_encounters handles the
     // notification fan-out). We deliberately don't auto-create a
-    // local community for the new campaign — that's a decision for
+    // local community for the new campaign - that's a decision for
     // the new GM to make once they're in their story.
     if (pickedCommunity) {
       const homesteadInsert = await supabase
@@ -228,7 +228,7 @@ export default function NewCampaignPage() {
           name: `Near ${pickedCommunity.name}`,
           lat: pickedCommunity.lat,
           lng: pickedCommunity.lng,
-          notes: `Starting area for this campaign — adjacent to the published community "${pickedCommunity.name}". Reach out to that community's GM via the encounter notification they just received.`,
+          notes: `Starting area for this campaign - adjacent to the published community "${pickedCommunity.name}". Reach out to that community's GM via the encounter notification they just received.`,
           category: 'community',
           revealed: false,
           sort_order: 1,
@@ -239,7 +239,7 @@ export default function NewCampaignPage() {
         return
       }
       // Encounter handshake. Trigger fires the notification to the
-      // source GM. Insert failure is non-fatal — the new GM can
+      // source GM. Insert failure is non-fatal - the new GM can
       // re-fire the handshake from the world map later.
       await supabase.from('community_encounters').insert({
         world_community_id: pickedCommunity.id,
@@ -273,7 +273,7 @@ export default function NewCampaignPage() {
     // ── Seed NPCs: DB first, fallback to TS ──
     const { data: dbNpcs } = await supabase.from('setting_seed_npcs').select('*').eq('setting', setting).order('sort_order')
     if (dbNpcs && dbNpcs.length > 0) {
-      // DB seeds — already in the right format, just map to campaign_npcs
+      // DB seeds - already in the right format, just map to campaign_npcs
       const npcRows = dbNpcs.map((n: any, i: number) => ({
         campaign_id: data.id,
         campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
@@ -354,7 +354,7 @@ export default function NewCampaignPage() {
     }
     logEvent('campaign_created', { id: data.id, name })
     if (seedErrors.length > 0) {
-      // Don't redirect — keep the user here so they can see what failed.
+      // Don't redirect - keep the user here so they can see what failed.
       setError(`Story created but seeding had errors:\n${seedErrors.join('\n')}\n\nThis usually means a database migration hasn't been run. Check sql/ for pending scripts.`)
       setSaving(false)
       return
@@ -491,7 +491,7 @@ export default function NewCampaignPage() {
           </div>
         )}
 
-        {/* Phase 5 Sprint 1 — Module picker. Mutually exclusive with the
+        {/* Phase 5 Sprint 1 - Module picker. Mutually exclusive with the
             setting buttons. Sits below Starting Location so Custom-setting
             users land on the location field first. */}
         {modules.length > 0 && (
@@ -524,7 +524,7 @@ export default function NewCampaignPage() {
           </div>
         )}
 
-        {/* Phase E #C — anchor a new campaign next to a community
+        {/* Phase E #C - anchor a new campaign next to a community
             already living on the Tapestry. Picking one stamps the
             campaign's map center on that community's coords, drops a
             single Homestead pin nearby, and fires an encounter handshake

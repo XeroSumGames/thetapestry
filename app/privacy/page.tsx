@@ -1,5 +1,5 @@
 'use client'
-// /privacy — beta-period privacy policy. Plain-language, narrow-scope.
+// /privacy - beta-period privacy policy. Plain-language, narrow-scope.
 // Replaces the placeholder; will get a proper legal pass before public
 // launch. The point during beta is just to disclose what's actually
 // being collected so testers know what they're agreeing to.
@@ -47,12 +47,12 @@ export default function PrivacyPage() {
             </ul>
             <p>When you use the platform:</p>
             <ul style={{ paddingLeft: '18px', margin: '6px 0 12px' }}>
-              <li>Content you author — characters, NPCs, pins, scenes, forum posts, war stories, LFG posts</li>
+              <li>Content you author - characters, NPCs, pins, scenes, forum posts, war stories, LFG posts</li>
               <li>Your account avatar and (optionally) character portraits, stored in the platform&apos;s storage layer</li>
-              <li>A small set of funnel events (pin reveals, character creation, recruit attempts, etc.) for product analytics — never sold, never shared</li>
+              <li>A small set of funnel events (pin reveals, character creation, recruit attempts, etc.) for product analytics - never sold, never shared</li>
               <li>Bug reports you submit (page URL + browser info + your description)</li>
             </ul>
-            <p>What we do NOT collect: tracking pixels, third-party advertising data, payment info (none yet — paid features will route through Stripe when they exist).</p>
+            <p>What we do NOT collect: tracking pixels, third-party advertising data, payment info (none yet - paid features will route through Stripe when they exist).</p>
           </div>
         </div>
 
@@ -60,10 +60,10 @@ export default function PrivacyPage() {
           <div style={cardTitle}>Who sees your data</div>
           <div style={body}>
             <ul style={{ paddingLeft: '18px', margin: '6px 0 0' }}>
-              <li><strong>You</strong> — always, full access</li>
-              <li><strong>Other players in your campaign</strong> — characters, pins, NPCs, scenes you&apos;ve revealed (per the GM&apos;s settings)</li>
-              <li><strong>Thrivers (platform moderators)</strong> — for moderation only: flagged content, public Rumor pins awaiting approval, public Communities, etc.</li>
-              <li><strong>Anyone</strong> — content you&apos;ve explicitly published as public (forum posts, listed Modules, world Communities)</li>
+              <li><strong>You</strong> - always, full access</li>
+              <li><strong>Other players in your campaign</strong> - characters, pins, NPCs, scenes you&apos;ve revealed (per the GM&apos;s settings)</li>
+              <li><strong>Thrivers (platform moderators)</strong> - for moderation only: flagged content, public Rumor pins awaiting approval, public Communities, etc.</li>
+              <li><strong>Anyone</strong> - content you&apos;ve explicitly published as public (forum posts, listed Modules, world Communities)</li>
               <li><strong>No one else.</strong> We do not sell, rent, or share your data with third parties.</li>
             </ul>
           </div>

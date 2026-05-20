@@ -1,9 +1,9 @@
 /**
  * Append an entry to a character's `data.progression_log` jsonb array.
  *
- * Read-modify-write — concurrent appends are rare (events are user-driven)
+ * Read-modify-write - concurrent appends are rare (events are user-driven)
  * and the worst outcome is one missed entry. Errors swallow + console.warn;
- * never throws — call sites can `void` this without try/catch.
+ * never throws - call sites can `void` this without try/catch.
  *
  * The Progression Log is a permanent journey journal. Only durable life
  * events belong here (memory rule: feedback_progression_log_curation.md).

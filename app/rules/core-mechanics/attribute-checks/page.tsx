@@ -2,7 +2,7 @@ import { RuleHero, RuleSection, P, Term } from '../../../../components/rules/Rul
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Attribute, Group & Opposed Checks — XSE SRD §02' }
+export const metadata = { title: 'Attribute, Group & Opposed Checks - XSE SRD §02' }
 
 export default function Page() {
   return (
@@ -17,7 +17,7 @@ export default function Page() {
       <RuleSection id="attribute-check" title="Attribute Check">
         <P>
           Players can use a character's RAPID Range attributes for checks
-          that do not require a specific skill — e.g. Reason for a riddle
+          that do not require a specific skill - e.g. Reason for a riddle
           or Physicality for a feat of strength. Only the relevant{' '}
           <Term>AMod</Term> applies.
         </P>
@@ -43,7 +43,7 @@ export default function Page() {
       <RuleSection id="opposed-check" title="Opposed Check">
         <P>
           Characters competing directly against one another make Opposed
-          Checks — both attempting to gain the upper hand until there is a
+          Checks - both attempting to gain the upper hand until there is a
           clear winner and loser (e.g. an arm-wrestling contest).
         </P>
         <P>

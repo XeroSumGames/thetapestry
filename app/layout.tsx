@@ -9,8 +9,8 @@ import PlaytestRecorder from "../components/PlaytestRecorder";
 // `metadataBase` lets us write image paths like '/DistemperLogoRedv5.png'
 // and have Next resolve them to absolute URLs that scrapers (Discord,
 // Reddit, Facebook, X) can fetch.
-const SITE_TITLE = 'The Tapestry — Distemper'
-const SITE_DESCRIPTION = 'The DistemperVerse community platform — campaigns, characters, communities, and shared world-state across every story.'
+const SITE_TITLE = 'The Tapestry - Distemper'
+const SITE_DESCRIPTION = 'The DistemperVerse community platform - campaigns, characters, communities, and shared world-state across every story.'
 const SITE_URL = 'https://thetapestry.distemperverse.com'
 const SITE_OG_IMAGE = '/DistemperLogoRedv5.png'
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
-    template: '%s — The Tapestry',
+    template: '%s - The Tapestry',
   },
   description: SITE_DESCRIPTION,
   openGraph: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    images: [{ url: SITE_OG_IMAGE, alt: 'The Tapestry — Distemper' }],
+    images: [{ url: SITE_OG_IMAGE, alt: 'The Tapestry - Distemper' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -49,14 +49,14 @@ export default function RootLayout({
             is logging window-rect objects of the exact shape
             {x, y, w, h} hundreds of times, drowning out our diagnostic
             logs. This wraps console.log to drop messages whose ONLY
-            argument is an object with EXACTLY those four keys — too
+            argument is an object with EXACTLY those four keys - too
             specific to ever swallow a legitimate app log. Inline in
             <head> so it runs before any other script. */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             try {
               // 1. Drop browser-extension log spam of the exact shape
-              //    {x, y, w, h} — too specific to ever swallow an app log.
+              //    {x, y, w, h} - too specific to ever swallow an app log.
               var origLog = console.log;
               console.log = function() {
                 if (arguments.length === 1) {
@@ -91,7 +91,7 @@ export default function RootLayout({
               };
               // 2. Drop the Supabase Realtime deprecation warning that
               //    fires whenever channel.send() is called before the
-              //    subscription completes — purely informational; we'll
+              //    subscription completes - purely informational; we'll
               //    refactor the .send() callsites later, no need to drown
               //    the console with it in the meantime.
               var origWarn = console.warn;
@@ -108,7 +108,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
-        {/* Distemper.ttf preload removed 2026-04-28 — the font is only
+        {/* Distemper.ttf preload removed 2026-04-28 - the font is only
             used in the sidebar's "The Tapestry v0.5" branding, which
             renders AFTER LayoutShell's auth check resolves. On cold
             loads with slow auth (or after the welcome-page lock issue

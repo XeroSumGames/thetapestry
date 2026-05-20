@@ -1,7 +1,7 @@
 // Canonical row shapes for the `communities` and `community_members`
 // tables. Pre-extraction these were redefined verbatim (with subtly
 // different field subsets) in CampaignCommunity, CommunityMoraleModal,
-// and the Community Dashboard page — drift hazard since each migration
+// and the Community Dashboard page - drift hazard since each migration
 // to the SQL had to chase three TS interfaces.
 //
 // Source of truth: sql/communities-phase-a.sql plus the migrations under
@@ -41,7 +41,7 @@ export type LeftReason =
 
 export type WorldVisibility = 'private' | 'published'
 
-// communities table — full DB shape (Phase A + Phase E columns).
+// communities table - full DB shape (Phase A + Phase E columns).
 export interface Community {
   id: string
   campaign_id: string
@@ -61,7 +61,7 @@ export interface Community {
   world_community_id: string | null
 }
 
-// community_members table — full DB shape (Phase A + accumulated migrations).
+// community_members table - full DB shape (Phase A + accumulated migrations).
 export interface Member {
   id: string
   community_id: string
@@ -79,9 +79,9 @@ export interface Member {
   current_task: string | null
   assignment_pc_id: string | null
   // Recruit Tier-2 Phase A flags (sql/recruit-tier2-flags-2026-05-19.sql).
-  // temporary_until_morale: NPC joined via plain Success — morale-tick
+  // temporary_until_morale: NPC joined via plain Success - morale-tick
   // drainer removes them at next Morale Check.
-  // escape_pending: NPC joined via Conscript Failure — GM fires the
+  // escape_pending: NPC joined via Conscript Failure - GM fires the
   // escape from CampaignCommunity's GM-only "Fire Escape" button at a
   // story-appropriate juncture.
   temporary_until_morale?: boolean

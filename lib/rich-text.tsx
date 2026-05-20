@@ -1,6 +1,6 @@
 // Renders Discord-style HammerTime timestamp tokens (<t:UNIX> and
 // <t:UNIX:FORMAT>) in user-typed message bodies. Outside Discord these
-// tokens render literally as text — this turns them into formatted dates.
+// tokens render literally as text - this turns them into formatted dates.
 //
 // Format chars (matching Discord/HammerTime):
 //   t  short time         9:01 PM

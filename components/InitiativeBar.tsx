@@ -1,4 +1,4 @@
-// Initiative Bar — extracted from app/stories/[id]/table/page.tsx during the
+// Initiative Bar - extracted from app/stories/[id]/table/page.tsx during the
 // C2 refactor pass. Renders the combat initiative tracker that's shown
 // across the top of the table page when combat is active.
 //
@@ -25,7 +25,7 @@ import { createPortal } from 'react-dom'
 // Imported as local interfaces so the component file is self-contained
 // without a circular dep through page.tsx.
 
-// Permissive shapes — bar reads a subset of the parent's full
+// Permissive shapes - bar reads a subset of the parent's full
 // InitiativeEntry / TableEntry / CampaignNpc types. The index signatures
 // let extra parent fields (winded, last_attack_target, stateId, etc.)
 // flow through without forcing the bar to type every column it ignores.
@@ -85,9 +85,9 @@ export interface InitiativeBarProps {
   // "(Scene name)" badges on the bar so a multistory split party
   // doesn't make initiative confusing. Empty / missing = same scene.
   entrySceneTags?: Record<string, string>
-  // Callbacks — parent owns DB writes / broadcasts. Entry params are
+  // Callbacks - parent owns DB writes / broadcasts. Entry params are
   // typed as `any` because TypeScript function parameter types are
-  // contravariant — the parent's full InitiativeEntry shape (with
+  // contravariant - the parent's full InitiativeEntry shape (with
   // winded / last_attack_target / inspired_this_round / etc.) isn't
   // assignable to the child's narrower local type, even though the
   // narrow type is a structural subset. Using `any` on the param
@@ -100,7 +100,7 @@ export interface InitiativeBarProps {
   onAddNPC: (name: string) => void | Promise<void>
   onGrantAction: (entry: any) => void | Promise<void>
   onSkipTurn: (entry: any) => void | Promise<void>
-  /** Current combat round number — appended to the "INITIATIVE"
+  /** Current combat round number - appended to the "INITIATIVE"
    *  label as "INITIATIVE · ROUND N" so round + initiative read
    *  as one cohesive header instead of two stacked rows. */
   combatRound?: number
@@ -122,7 +122,7 @@ function InitiativeBarImpl({
   onGrantAction,
   onSkipTurn,
 }: InitiativeBarProps) {
-  // Toolbar UI state — fully owned by the bar.
+  // Toolbar UI state - fully owned by the bar.
   const [showAddPC, setShowAddPC] = useState(false)
   const [showAddNPC, setShowAddNPC] = useState(false)
   const [npcName, setNpcName] = useState('')
@@ -130,7 +130,7 @@ function InitiativeBarImpl({
   // document.body so it escapes BOTH the bar's overflow-x:auto clip AND
   // any ancestor stacking contexts (transform / filter / contain on a
   // parent traps position:fixed inside, which was still happening even
-  // after the position:fixed switch — this is the bulletproof escape).
+  // after the position:fixed switch - this is the bulletproof escape).
   const addPCBtnRef = useRef<HTMLButtonElement | null>(null)
   const [addPCAnchor, setAddPCAnchor] = useState<{ top: number; left: number } | null>(null)
   function openAddPCMenu() {
@@ -139,7 +139,7 @@ function InitiativeBarImpl({
     setShowAddPC(true)
   }
   // Re-position the dropdown if the user scrolls or the window resizes
-  // while it's open — keeps it pinned to the button instead of drifting.
+  // while it's open - keeps it pinned to the button instead of drifting.
   useEffect(() => {
     if (!showAddPC) return
     const reposition = () => {
@@ -161,7 +161,7 @@ function InitiativeBarImpl({
   }
 
   // Active-combatant detection for the sticky pill (top-left of bar).
-  // Click to advance — fastest escape hatch from a "stuck on a dead
+  // Click to advance - fastest escape hatch from a "stuck on a dead
   // combatant" state. Players see a non-clickable pill.
   const active = initiativeOrder.find(e => e.is_active) ?? null
 
@@ -205,7 +205,7 @@ function InitiativeBarImpl({
     return true
   })
 
-  // PCs not currently in initiative — used by the "+ PC" picker.
+  // PCs not currently in initiative - used by the "+ PC" picker.
   const inInitCharIds = new Set(initiativeOrder.filter(e => e.character_id).map(e => e.character_id))
   const addablePCs = entries.filter(e => !inInitCharIds.has(e.character.id))
 
@@ -215,7 +215,7 @@ function InitiativeBarImpl({
   // same shared chrome.
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexWrap: 'wrap', rowGap: '6px' }}>
-        {/* Sticky left pane — "⚔️ Initiative" label + active pill */}
+        {/* Sticky left pane - "⚔️ Initiative" label + active pill */}
         <div style={{ position: 'sticky', left: 0, zIndex: 10, background: '#0d0d0d', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #2e2e2e', marginRight: '4px', flexShrink: 0 }}>
           <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
             ⚔️ Initiative{combatRound ? ` · Round ${combatRound}` : ''}
@@ -225,7 +225,7 @@ function InitiativeBarImpl({
               onClick={isGM ? () => onNextTurn() : undefined}
               title={
                 isGM
-                  ? (pillStuck ? `${active.character_name} can't act — click to advance past them` : `Click to advance past ${active.character_name}`)
+                  ? (pillStuck ? `${active.character_name} can't act - click to advance past them` : `Click to advance past ${active.character_name}`)
                   : `Current turn: ${active.character_name}`
               }
               style={{
@@ -253,7 +253,7 @@ function InitiativeBarImpl({
           const borderColor = entry.is_active ? '#7fc458' : hasActed ? '#c0392b' : '#EF9F27'
           const bgColor = entry.is_active ? '#1a2e10' : hasActed ? '#1a1010' : '#1a1a1a'
 
-          // Status icon resolution — same logic for PC/NPC variants.
+          // Status icon resolution - same logic for PC/NPC variants.
           // GM-only for NPC rows (playtest #20: don't expose NPC conditions).
           let statusIcons: React.ReactNode = null
           if (entry.is_npc && entry.npc_id) {
@@ -329,7 +329,7 @@ function InitiativeBarImpl({
               {entry.is_npc && !entry.npc_type && (
                 <span style={{ fontSize: '13px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif' }}>NPC</span>
               )}
-              {/* Cross-scene chip — shown when the combatant's token
+              {/* Cross-scene chip - shown when the combatant's token
                   sits on a different tactical scene than the active
                   one. Stops "wait, why isn't this NPC on the map?"
                   confusion during multistory splits. */}
@@ -347,29 +347,29 @@ function InitiativeBarImpl({
                   return <span key={i} style={{ color: hasActions ? '#7fc458' : '#3a3a3a' }}>●</span>
                 })}
               </span>
-              {/* Aim/social bonus badge — hidden for NPCs from non-GM viewers */}
+              {/* Aim/social bonus badge - hidden for NPCs from non-GM viewers */}
               {(entry.aim_bonus ?? 0) !== 0 && (isGM || !entry.is_npc) && (
                 <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
                   {entry.aim_bonus > 0 ? '+' : ''}{entry.aim_bonus}
                 </span>
               )}
               {statusIcons}
-              {/* Defer — GM can defer anyone, players can defer their own */}
+              {/* Defer - GM can defer anyone, players can defer their own */}
               {(isGM || entry.user_id === userId) && idx < initiativeOrder.length - 1 && (
                 <button onClick={() => onDefer(entry.id)}
                   style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Defer">↓</button>
               )}
-              {/* Grant +1 action — GM only, capped at 2 */}
+              {/* Grant +1 action - GM only, capped at 2 */}
               {isGM && (entry.actions_remaining ?? 0) < 2 && (
                 <button onClick={() => onGrantAction(entry)}
                   style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Grant +1 action">+</button>
               )}
-              {/* Skip ⊘ — GM only, zeroes actions for the round */}
+              {/* Skip ⊘ - GM only, zeroes actions for the round */}
               {isGM && (entry.actions_remaining ?? 0) > 0 && (
                 <button onClick={() => onSkipTurn(entry)}
                   style={{ background: 'none', border: 'none', color: '#EF9F27', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Skip this round (burn remaining actions)">⊘</button>
               )}
-              {/* × — GM removes; player ends own active turn */}
+              {/* × - GM removes; player ends own active turn */}
               {(isGM || (entry.user_id === userId && entry.is_active)) && (
                 <button onClick={() => onRemove(entry)}
                   title={isGM ? 'Remove from combat' : 'End turn'}
@@ -379,7 +379,7 @@ function InitiativeBarImpl({
           )
         })}
 
-        {/* GM toolbar — Add PC / Add NPC / Next */}
+        {/* GM toolbar - Add PC / Add NPC / Next */}
         {isGM && (
           <div style={{ display: 'flex', gap: '4px', flexShrink: 0, position: 'relative' }}>
             {addablePCs.length > 0 && (

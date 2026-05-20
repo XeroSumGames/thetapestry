@@ -35,7 +35,7 @@ const SETTING_META: Record<string, SettingMeta> = {
   kings_crossroads_mall: {
     tagline: 'Sussex County, Delaware. A mall complex on the edge of nowhere.',
     blurb:
-      'Kings Crossroads is the persistent setting in the Chased magazine — a reclaimed strip-mall and motel cluster off the Delaware highway. Best Nite Motel, Belvedere’s, the Costco, the gas station. Eight known locations, a working community, and trouble that arrives by car.',
+      'Kings Crossroads is the persistent setting in the Chased magazine - a reclaimed strip-mall and motel cluster off the Delaware highway. Best Nite Motel, Belvedere’s, the Costco, the gas station. Eight known locations, a working community, and trouble that arrives by car.',
     accent: '#EF9F27',
     mapZoom: 16,
     mapCenter: { lat: 38.6958, lng: -75.5135 },
@@ -57,5 +57,5 @@ export function settingDisplayName(slug: string): string {
   return SETTINGS[slug] ?? slug
 }
 
-/** All featured slugs — drives the sidebar + "all hubs" lists. */
+/** All featured slugs - drives the sidebar + "all hubs" lists. */
 export const FEATURED_HUB_SLUGS: readonly string[] = Object.keys(SETTING_META)

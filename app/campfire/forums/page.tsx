@@ -14,7 +14,7 @@ import {
   useUrlSettingFilter,
 } from '../../../lib/campfire-settings'
 
-// /campfire/forums — Discourse-style index. Avatar bubble + category pill
+// /campfire/forums - Discourse-style index. Avatar bubble + category pill
 // + title + first-line excerpt on the left; reply count + latest activity
 // on the right. Pinned threads float to the top; rest sort by latest_reply_at.
 
@@ -73,7 +73,7 @@ type Filter = 'all' | Category
 
 // Compose-time scope. Mirrors War Stories: campaign-private (default
 // when the user has any campaigns), setting-tagged, or fully global.
-// Phase 4B will use this to gate moderation — campaign scope skips
+// Phase 4B will use this to gate moderation - campaign scope skips
 // review, setting/global queues for thriver approval.
 type Scope = 'campaign' | 'setting' | 'global'
 
@@ -96,16 +96,16 @@ export default function ForumsIndexPage() {
   })
   const [saving, setSaving] = useState(false)
   // Campaigns the user belongs to (GM or player). Used by the Campaign
-  // scope pill on the composer. Same query as War Stories — pulled via
+  // scope pill on the composer. Same query as War Stories - pulled via
   // campaign_members so it includes player roles, not just GM.
   const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string }[]>([])
-  // Phase 4E — pagination. Initial fetch grabs PAGE_SIZE rows; "Load
+  // Phase 4E - pagination. Initial fetch grabs PAGE_SIZE rows; "Load
   // older" appends the next page. hasMore stays true until a fetch
   // returns fewer rows than the page size.
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [loadingMore, setLoadingMore] = useState<boolean>(false)
   const PAGE_SIZE = 50
-  // Phase 4E (final) — FTS state. Same shape as War Stories.
+  // Phase 4E (final) - FTS state. Same shape as War Stories.
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [searchActive, setSearchActive] = useState<boolean>(false)
   const [searching, setSearching] = useState<boolean>(false)
@@ -166,7 +166,7 @@ export default function ForumsIndexPage() {
     setLoading(false)
   }
 
-  // Phase 4E (final) — FTS. Replaces the visible thread list with up
+  // Phase 4E (final) - FTS. Replaces the visible thread list with up
   // to 50 hits matching the query against title+body via search_tsv.
   async function runSearch() {
     const q = searchQuery.trim()
@@ -207,7 +207,7 @@ export default function ForumsIndexPage() {
     setSearching(false)
   }
 
-  // Phase 4E — fetch the next page beyond the loaded threads. Uses
+  // Phase 4E - fetch the next page beyond the loaded threads. Uses
   // offset-based pagination; new posts arriving above the cursor are
   // tolerable since pinned threads always sort first and the rest
   // sort by latest_reply_at (a sequence number proxy that mostly
@@ -265,7 +265,7 @@ export default function ForumsIndexPage() {
     // review (instant approve), setting/global queue for thriver.
     const isCampaignScope = draft.scope === 'campaign' && !!draft.campaign_id
     // Auto-approve when (a) campaign-internal scope, OR (b) author is a
-    // Thriver — Thrivers ARE the moderation layer; making them queue
+    // Thriver - Thrivers ARE the moderation layer; making them queue
     // their own posts behind themselves is needless friction.
     const autoApprove = isCampaignScope || isThriver
     const moderation_status = autoApprove ? 'approved' : 'pending'
@@ -315,7 +315,7 @@ export default function ForumsIndexPage() {
     return threads.filter(t => t.setting === settingFilter)
   }, [threads, settingFilter])
   const visible = filter === 'all' ? settingFiltered : settingFiltered.filter(t => t.category === filter)
-  // Author banner — counts the user's own pending + rejected threads so
+  // Author banner - counts the user's own pending + rejected threads so
   // we can surface a "your N posts are awaiting review" alert at the top
   // of the feed. RLS already lets the author see their own pending/
   // rejected rows alongside everyone's approved ones.
@@ -371,7 +371,7 @@ export default function ForumsIndexPage() {
         )}
       </div>
 
-      {/* Author moderation banner — surfaces own pending/rejected counts
+      {/* Author moderation banner - surfaces own pending/rejected counts
           so the user knows their setting/global posts are queued.
           Campaign-scoped posts skip review entirely so they never
           contribute to this count. */}
@@ -440,7 +440,7 @@ export default function ForumsIndexPage() {
             )}
             {draft.scope === 'global' && (
               <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 2px' }}>
-                Cross-setting — no setting or campaign tag. Visible everywhere.
+                Cross-setting - no setting or campaign tag. Visible everywhere.
               </div>
             )}
           </div>
@@ -465,7 +465,7 @@ export default function ForumsIndexPage() {
         </div>
       )}
 
-      {/* Phase 4E (final) — full-text search. */}
+      {/* Phase 4E (final) - full-text search. */}
       <form onSubmit={e => { e.preventDefault(); runSearch() }}
         style={{ display: 'flex', gap: '6px', marginBottom: '0.75rem', alignItems: 'center' }}>
         <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -483,7 +483,7 @@ export default function ForumsIndexPage() {
         )}
       </form>
 
-      {/* Setting filter chip strip — featured settings + Global. Click "All"
+      {/* Setting filter chip strip - featured settings + Global. Click "All"
           to clear; chips combine with the category chips below. */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
         {SETTING_FILTER_CHIPS.map(opt => {
@@ -524,7 +524,7 @@ export default function ForumsIndexPage() {
         ))}
       </div>
 
-      {/* Thread list — Discourse-style row: avatar + (pill, title, excerpt) + meta-stack */}
+      {/* Thread list - Discourse-style row: avatar + (pill, title, excerpt) + meta-stack */}
       {loading ? (
         <div style={{ fontSize: '13px', color: '#cce0f5', textAlign: 'center', padding: '2rem' }}>Loading...</div>
       ) : visible.length === 0 ? (
@@ -554,7 +554,7 @@ export default function ForumsIndexPage() {
                 onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.background = '#1c1c1c'}
                 onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.background = '#141414'}
               >
-                {/* Avatar bubble — author initial in a tinted circle */}
+                {/* Avatar bubble - author initial in a tinted circle */}
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '50%',
                   background: `linear-gradient(135deg, ${tint}, ${tint}aa)`,
@@ -600,7 +600,7 @@ export default function ForumsIndexPage() {
                         👥 {t.campaign_name}
                       </span>
                     )}
-                    {/* Moderation status — only rendered for non-approved
+                    {/* Moderation status - only rendered for non-approved
                         rows (approved is the default visual). RLS ensures
                         only the author or a thriver sees pending/rejected
                         rows in the first place. */}
@@ -637,7 +637,7 @@ export default function ForumsIndexPage() {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                   }}>
-                    {excerpt || '—'}
+                    {excerpt || '-'}
                   </div>
                 </div>
 
@@ -672,7 +672,7 @@ export default function ForumsIndexPage() {
         </div>
       )}
 
-      {/* Phase 4E — Load older. Visible whenever the most recent fetch
+      {/* Phase 4E - Load older. Visible whenever the most recent fetch
           returned a full page (more rows likely exist). Cursor is the
           number of currently-loaded threads. */}
       {!loading && hasMore && threads.length > 0 && (

@@ -11,7 +11,7 @@ import {
 } from '../../lib/help-text'
 import { RARITY_COLOR as RARITY_ACCENT_CANONICAL } from '../../lib/rarity-colors'
 
-// What They Have — character-creation step 8. Redesigned 2026-05-01:
+// What They Have - character-creation step 8. Redesigned 2026-05-01:
 //
 //   - Weapon picker now covers ALL 4 categories (Melee / Ranged /
 //     Heavy / Explosive) via lib/weapons.ts.
@@ -56,7 +56,7 @@ const CATEGORY_ACCENT: Record<WeaponCategory, { bg: string; fg: string; border: 
 // Locked 2026-05-09: Common = #7fc458 (was #cce0f5 here pre-2026-05-09).
 const RARITY_ACCENT: Record<string, string> = RARITY_ACCENT_CANONICAL
 
-// Incidentals — sentimental keepsakes / pre-Distemper anchors. Pure
+// Incidentals - sentimental keepsakes / pre-Distemper anchors. Pure
 // flavor; ENC 0 effective; not stored in EQUIPMENT (the original 10
 // were filtered out of EQUIPMENT for display, but new entries don't
 // need EQUIPMENT rows since they have no mechanical stats).
@@ -75,7 +75,7 @@ const INCIDENTAL_ITEMS: string[] = [
   'Pocket Knife',
   'Walkman',
   'Zippo Lighter',
-  // 10 new — sentimental keepsakes that anchor a PC to who they
+  // 10 new - sentimental keepsakes that anchor a PC to who they
   // were before the world ended.
   'Pocket Watch',
   'Hip Flask',
@@ -89,7 +89,7 @@ const INCIDENTAL_ITEMS: string[] = [
   'Wedding Band',
 ]
 
-// Names of incidentals that ALSO live in EQUIPMENT — these get
+// Names of incidentals that ALSO live in EQUIPMENT - these get
 // filtered out of the Equipment picker so they only render in the
 // Incidental section. New 2026-05-01 entries don't have EQUIPMENT
 // rows, so the filter is the original 10 only.
@@ -214,7 +214,7 @@ function WeaponSection({
                 <div style={{ fontSize: '13px', color: '#cce0f5', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                     {w.range}
-                    <HelpTooltip title={`Range — ${w.range}`} text={RANGE_BAND_DESCRIPTIONS[w.range] ?? ''} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
+                    <HelpTooltip title={`Range - ${w.range}`} text={RANGE_BAND_DESCRIPTIONS[w.range] ?? ''} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
                   </span>
                   <span>·</span>
                   <span>{w.damage}</span>
@@ -412,7 +412,7 @@ export default function StepEight({ state, onChange }: Props) {
       />
 
       {/* Equipment */}
-      <div style={sh}>Equipment — choose one</div>
+      <div style={sh}>Equipment - choose one</div>
       <EquipmentList
         selected={state.equipment}
         tab={equipTab}
@@ -422,9 +422,9 @@ export default function StepEight({ state, onChange }: Props) {
         onChange={onChange}
       />
 
-      {/* Incidental item — 20 entries; 4 columns to keep the row tidy
+      {/* Incidental item - 20 entries; 4 columns to keep the row tidy
           even on narrower viewports. */}
-      <div style={sh}>Incidental item — choose one</div>
+      <div style={sh}>Incidental item - choose one</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px', marginBottom: '8px' }}>
         {INCIDENTAL_ITEMS.map(name => {
           const sel = state.incidentalItem === name
@@ -452,12 +452,12 @@ export default function StepEight({ state, onChange }: Props) {
           placeholder="e.g. a worn photograph, a lucky coin..." />
       </div>
 
-      {/* Rations — canon source: lib/xse-schema.ts:RATIONS. Locked
+      {/* Rations - canon source: lib/xse-schema.ts:RATIONS. Locked
           canon: characters begin play with 2 Rations. The picker
           chooses the TYPE; the count of 2 lands at character build
           time (lib/xse-engine.ts buildXSECharacter). Unless the GM
           says otherwise, Standard is the default. */}
-      <div style={sh}>Rations — pick a type (you start with 2)</div>
+      <div style={sh}>Rations - pick a type (you start with 2)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '1rem' }}>
         {RATIONS.map(item => {
           const sel = state.rations === item.name
@@ -478,7 +478,7 @@ export default function StepEight({ state, onChange }: Props) {
                 {item.rarity}
               </div>
               <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} — {item.notes}</div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} - {item.notes}</div>
             </div>
           )
         })}

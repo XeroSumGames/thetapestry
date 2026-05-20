@@ -11,7 +11,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Combat Rounds — XSE SRD §06' }
+export const metadata = { title: 'Combat Rounds - XSE SRD §06' }
 
 const COMBAT_ACTIONS: Array<[string, string, string]> = [
   ['Aim', '1', '+2 CMod on the next Attack this round; lost if anything but Attack is taken next.'],
@@ -30,7 +30,7 @@ const COMBAT_ACTIONS: Array<[string, string, string]> = [
   ['Ready Weapon', '1', 'Switch, reload, or unjam a weapon.'],
   ['Reposition', '1', "End-of-round positioning move that doesn't trigger combat-action consumption checks."],
   ['Sprint', '2', 'Move 2 bands. Athletics check on completion or become Winded (1 action next round).'],
-  ['Subdue', '1', 'Non-lethal attack — full RP damage but only 50% WP damage.'],
+  ['Subdue', '1', 'Non-lethal attack - full RP damage but only 50% WP damage.'],
   ['Take Cover', '1', '+2 Defensive Modifier against all attacks until the character takes an active combat action.'],
 ]
 
@@ -44,7 +44,7 @@ export default function Page() {
         intro={
           <>
             Combat is divided into rounds that last approximately{' '}
-            <Term>3–6 seconds</Term>. Each round has three phases:{' '}
+            <Term>3-6 seconds</Term>. Each round has three phases:{' '}
             <Term>Initiative</Term>, <Term>Action</Term>,{' '}
             <Term>Recovery</Term>.
           </>

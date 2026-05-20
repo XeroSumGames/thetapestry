@@ -9,7 +9,7 @@ import {
   type ReseedPlan,
 } from '../../../lib/setting-reseed'
 
-// /tools/reseed-campaign — Thriver-only. Pulls in setting content
+// /tools/reseed-campaign - Thriver-only. Pulls in setting content
 // (pins / NPCs / scenes / handouts) that has been added to the seed
 // configs since a campaign was created. Idempotent: matches existing
 // rows by name/title and only inserts what's missing. Preview-then-
@@ -51,7 +51,7 @@ export default function ReseedCampaignPage() {
         // Thriver bypass on campaigns RLS lets us list every campaign,
         // not just the GM's own. Order by name for scannability. Also
         // resolve GM usernames so the picker reads
-        // "Campaign Name · setting (gmUsername)" — matches the format
+        // "Campaign Name · setting (gmUsername)" - matches the format
         // Xero asked for so a Thriver can disambiguate same-named
         // campaigns by who owns them.
         const { data } = await supabase
@@ -116,7 +116,7 @@ export default function ReseedCampaignPage() {
         <div style={{ ...subLabel, marginBottom: '8px' }}>Campaign</div>
         <select value={campaignId} onChange={e => { setCampaignId(e.target.value); setPlan(null); setResult(null); setPlanError(null) }}
           style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '12px' }}>
-          <option value="">— pick a campaign —</option>
+          <option value="">- pick a campaign -</option>
           {campaigns.map(c => (
             <option key={c.id} value={c.id}>
               {c.name}{c.setting ? ` · ${c.setting}` : ''} ({c.gm_username})
@@ -139,7 +139,7 @@ export default function ReseedCampaignPage() {
           <div style={{ ...subLabel, marginBottom: '6px' }}>Setting: <span style={{ color: '#f5f2ee' }}>{plan.setting}</span></div>
           {totalToAdd === 0 ? (
             <div style={{ fontSize: '14px', color: '#7fc458', marginBottom: '12px' }}>
-              ✓ Nothing to add — this campaign is already in sync with the {plan.setting} seed config.
+              ✓ Nothing to add - this campaign is already in sync with the {plan.setting} seed config.
             </div>
           ) : (
             <>
@@ -157,7 +157,7 @@ export default function ReseedCampaignPage() {
                 ⚠ If a GM has renamed a seeded item, that item appears here as a duplicate. Verify before applying.
               </div>
               <button onClick={handleApply} disabled={applying} style={{ ...btnPrimary, opacity: applying ? 0.6 : 1 }}>
-                {applying ? 'Applying…' : `Confirm — Add ${totalToAdd} Items`}
+                {applying ? 'Applying…' : `Confirm - Add ${totalToAdd} Items`}
               </button>
             </>
           )}

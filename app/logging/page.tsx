@@ -94,7 +94,7 @@ export default function LoggingPage() {
         setPendingPins(pp ?? 0)
         setPendingNpcs(pn ?? 0)
 
-        // Top pages — resolve campaign UUIDs to names
+        // Top pages - resolve campaign UUIDs to names
         const { data: visitRows } = await supabase.from('visitor_logs').select('page').gte('created_at', d7)
         const pageCounts: Record<string, number> = {}
         for (const row of visitRows ?? []) pageCounts[row.page] = (pageCounts[row.page] ?? 0) + 1
@@ -140,7 +140,7 @@ export default function LoggingPage() {
           setEvents(rawEvents.map((e: any) => ({ ...e, username: nameMap[e.user_id] ?? 'Unknown' })))
         }
         setEventCount(eCount ?? 0)
-        // Fetch visitor map data — grouped by ip_hash
+        // Fetch visitor map data - grouped by ip_hash
         const { data: mapRows } = await supabase.rpc('get_visitor_map_data')
         if (mapRows) {
           setVisitorMapData(mapRows)
@@ -364,7 +364,7 @@ export default function LoggingPage() {
                   <div style={{ flex: 1, fontSize: '13px', color: v.username ? '#7fc458' : '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {v.username ?? (v.is_ghost ? 'Ghost' : 'User')}
                   </div>
-                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[v.city, v.region, v.country_code].filter(Boolean).join(', ') || v.ip_address || '—'}</div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[v.city, v.region, v.country_code].filter(Boolean).join(', ') || v.ip_address || '-'}</div>
                   <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{new Date(v.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</div>
                   <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5' }}>{timeAgo(v.created_at)}</div>
                 </div>
@@ -433,7 +433,7 @@ export default function LoggingPage() {
                   </div>
                   <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5' }}>{timeAgo(e.created_at)}</div>
                   <div style={{ flex: 2, fontSize: '13px', color: '#cce0f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {e.metadata ? JSON.stringify(e.metadata) : '—'}
+                    {e.metadata ? JSON.stringify(e.metadata) : '-'}
                   </div>
                 </div>
               ))}

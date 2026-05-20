@@ -1,14 +1,14 @@
 'use client'
-// BugReportButton — 🐞 icon in the sidebar's user-header icon row.
+// BugReportButton - 🐞 icon in the sidebar's user-header icon row.
 // Click opens a modal with a textarea; submit inserts a bug_reports
 // row, the DB trigger fires call_notify_thriver to email Xero.
 //
 // Captures alongside the user-typed description:
-//   • page_url     — window.location.href at submit time
-//   • user_agent   — navigator.userAgent
-//   • reporter_id  — auth.uid() (or null for ghost guests, which the
+//   • page_url     - window.location.href at submit time
+//   • user_agent   - navigator.userAgent
+//   • reporter_id  - auth.uid() (or null for ghost guests, which the
 //                    RLS policy explicitly allows)
-//   • reporter_name + reporter_email — denormalized so the report
+//   • reporter_name + reporter_email - denormalized so the report
 //                    survives even if the user later deletes their
 //                    profile.
 //
@@ -119,7 +119,7 @@ export default function BugReportButton() {
                   letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600,
                   cursor: !draft.trim() || submitting ? 'not-allowed' : 'pointer',
                 }}>
-                {submitting ? 'Submitting…' : submitted ? '✓ Sent — thanks' : '🐞 Submit'}
+                {submitting ? 'Submitting…' : submitted ? '✓ Sent - thanks' : '🐞 Submit'}
               </button>
               <button onClick={() => { if (!submitting) setOpen(false) }}
                 disabled={submitting}

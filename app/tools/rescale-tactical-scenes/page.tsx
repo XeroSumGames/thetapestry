@@ -135,11 +135,11 @@ export default function RescaleTacticalScenesPage() {
                 <div style={{ fontWeight: 600 }}>{r.name}</div>
                 <div style={{ fontSize: '13px', color: '#5a5550' }}>{r.campaign_id.slice(0, 8)}…</div>
               </td>
-              <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{r.natural_w ?? '—'}</td>
+              <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{r.natural_w ?? '-'}</td>
               <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{r.img_scale.toFixed(3)}</td>
-              <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', color: '#7fc458' }}>{r.new_scale != null ? r.new_scale.toFixed(3) : '—'}</td>
+              <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', color: '#7fc458' }}>{r.new_scale != null ? r.new_scale.toFixed(3) : '-'}</td>
               <td style={{ padding: '6px 8px', color: r.status === 'done' ? '#7fc458' : r.status === 'error' ? '#c0392b' : r.status === 'ready' ? '#EF9F27' : '#5a5550' }}>
-                {r.status}{r.error ? ` — ${r.error}` : ''}
+                {r.status}{r.error ? ` - ${r.error}` : ''}
               </td>
               <td style={{ padding: '6px 8px' }}>
                 {r.status === 'ready' && (

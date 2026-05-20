@@ -54,7 +54,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   // Auth check runs ONCE on mount, then again only on real auth events
   // (SIGNED_IN / SIGNED_OUT). Previously the dep array was [pathname], which
-  // fired a getUser() + profiles select on every navigation — a network
+  // fired a getUser() + profiles select on every navigation - a network
   // round-trip in front of every link click. Pathname changes don't change
   // who's logged in, so this was wasted work that made soft-nav feel slow.
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         //   1. getUser() takes the auth Web Lock and round-trips to
         //      /auth/v1/user. If a backgrounded tab is mid-mount and
         //      holding the lock, the login-tab's check queues 5s, then
-        //      steals — and to the user the login click "does nothing"
+        //      steals - and to the user the login click "does nothing"
         //      because the original promise aborts. getCachedAuth()
         //      uses getSession() which is a localStorage read; the lock
         //      contention drops to near-zero.
@@ -102,7 +102,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         //      (SIGNED_IN/OUT/TOKEN_REFRESHED) invalidate the cache so
         //      we never serve stale identity.
         // Tradeoff: getSession is local-only, doesn't server-validate.
-        // For LayoutShell's "is anyone logged in" check that's fine —
+        // For LayoutShell's "is anyone logged in" check that's fine -
         // false positives (stale session that's actually expired) get
         // caught by the next RLS-protected query returning empty/401.
         const { user } = await getCachedAuth()
@@ -114,12 +114,12 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         }
         setIsAuthenticated(true)
         setDebugContext({ userId: user.id })
-        // DON'T await loadProfile — it's a non-critical "is this user
+        // DON'T await loadProfile - it's a non-critical "is this user
         // suspended" check. Awaiting it gates the entire UI shell on a
         // single Supabase query; if the pool is saturated (5-browser
         // playtest) or the network is slow, the user sees a permanent
         // "Loading" screen. The suspended flag is for showing a banner
-        // — it can hydrate after the shell renders. The shell itself
+        // - it can hydrate after the shell renders. The shell itself
         // only needs to know: is anyone authenticated?
         setChecked(true)
         loadProfile(user.id).catch(() => {/* swallowed; non-critical */})
@@ -132,7 +132,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
     checkSession()
 
-    // React to real auth state changes — sign-in (e.g. after the
+    // React to real auth state changes - sign-in (e.g. after the
     // /login flow), sign-out (sign-out button or token failure
     // elsewhere). TOKEN_REFRESHED fires on background refresh and
     // doesn't change identity, so we ignore it.
@@ -158,7 +158,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   // Redirect unauthenticated users to login for protected pages.
   // Preserve the current path (with any query string) as a `?redirect=` param
-  // so deep links — especially invite URLs like /join/<code> — survive the
+  // so deep links - especially invite URLs like /join/<code> - survive the
   // login round-trip. Previously this pushed to a bare /login and silently
   // dropped the destination, so invited users ended up at /dashboard.
   const isPublicPage =

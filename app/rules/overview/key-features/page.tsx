@@ -2,7 +2,7 @@ import { RuleHero, RuleSection, P, Term } from '../../../../components/rules/Rul
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Key Features — XSE SRD §01' }
+export const metadata = { title: 'Key Features - XSE SRD §01' }
 
 export default function Page() {
   return (
@@ -27,7 +27,7 @@ export default function Page() {
           Combat in the Xero Sum Engine is brutal, unforgiving, and can
           have lasting consequences for characters. Players should never
           enter combat lightly and should actively seek alternatives.
-          Combat is not the only threat — starvation, sickness, dying of
+          Combat is not the only threat - starvation, sickness, dying of
           exposure, and falling from a window can all be lethal.
         </P>
         <P>
@@ -52,7 +52,7 @@ export default function Page() {
           These tools include <Term>Insight Dice</Term>,{' '}
           <Term>Filling In The Gaps</Term>, <Term>Making The Case</Term>,{' '}
           <Term>First Impressions</Term>, and <Term>Gut Instincts</Term>{' '}
-          — as well as rules for <Term>Recruitment</Term> and{' '}
+          - as well as rules for <Term>Recruitment</Term> and{' '}
           <Term>Communities</Term>.
         </P>
       </RuleSection>

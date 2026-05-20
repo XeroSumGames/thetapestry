@@ -1,12 +1,12 @@
 import Link from 'next/link'
 
-// /welcome/guide — table of contents for the Beginners' Guide.
+// /welcome/guide - table of contents for the Beginners' Guide.
 // Lists all 12 chapters with their titles + a brief description.
 // Each chapter is its own page (/welcome/guide/[chapter]) that
 // reads the matching docs/beginners-guide-NN.txt at request time.
 //
 // Source-of-truth for chapter titles is the .txt files themselves
-// (line 2 of each file). The list below mirrors them — keep in
+// (line 2 of each file). The list below mirrors them - keep in
 // sync if a chapter is renamed or reordered.
 
 const CHAPTERS: { num: string; title: string; blurb: string }[] = [
@@ -14,20 +14,20 @@ const CHAPTERS: { num: string; title: string; blurb: string }[] = [
   { num: '02', title: 'Pins, Notifications, and Roles', blurb: 'How the GM/Player split works and what the bell + pins mean.' },
   { num: '03', title: 'The World Map',                  blurb: 'Pinning places, drawing tags, the Distemper world view.' },
   { num: '04', title: 'Creating a Character',           blurb: 'The wizard, Quick Character, Random Character, Paradigms.' },
-  { num: '05', title: 'Creating a Story',               blurb: 'New campaign flow — Custom, Setting, Module, Community.' },
+  { num: '05', title: 'Creating a Story',               blurb: 'New campaign flow - Custom, Setting, Module, Community.' },
   { num: '06', title: 'The Table and Sessions',         blurb: 'How a session runs. Joining, the table view, leaving.' },
   { num: '07', title: 'The Tactical Map',               blurb: 'Scenes, tokens, walls/doors, fog, day/night.' },
   { num: '08', title: 'Combat',                          blurb: 'Initiative, actions, attacks, damage, special moves.' },
   { num: '09', title: 'Creating a Community',           blurb: 'Founding, recruiting, roles, weekly Morale.' },
   { num: '10', title: 'NPCs and Recruitment',           blurb: 'Hidden NPCs, First Impressions, Recruit checks.' },
   { num: '11', title: 'The Campfire',                   blurb: 'Forums, War Stories, LFG, between-session activity.' },
-  { num: '12', title: 'Rumors',                         blurb: 'Modules, Adventures — running someone else\'s content.' },
+  { num: '12', title: 'Rumors',                         blurb: 'Modules, Adventures - running someone else\'s content.' },
 ]
 
-export const metadata = { title: 'Beginners\' Guide — The Tapestry' }
+export const metadata = { title: 'Beginners\' Guide - The Tapestry' }
 
 export default function BeginnersGuideTOC() {
-  // Inline styles to match /welcome's existing visual language —
+  // Inline styles to match /welcome's existing visual language -
   // tomato-red headings, dark-grey card surfaces, Carlito for chrome.
   // Avoiding a dedicated CSS module since /welcome uses inline too.
   const sectionHeading: React.CSSProperties = {
@@ -58,7 +58,7 @@ export default function BeginnersGuideTOC() {
           Beginners' Guide
         </h1>
         <p style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem' }}>
-          A walkthrough for new survivors and storytellers. Twelve chapters, each ~5–10 minutes. Read straight through, or jump to whatever you're stuck on.
+          A walkthrough for new survivors and storytellers. Twelve chapters, each ~5-10 minutes. Read straight through, or jump to whatever you're stuck on.
         </p>
 
         <div style={sectionHeading}>Chapters</div>

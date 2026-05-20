@@ -5,7 +5,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 
-// /tools/campaign-explorer — Thriver-only oversight surface.
+// /tools/campaign-explorer - Thriver-only oversight surface.
 // Lists every campaign on the platform with the GM's username + counts
 // for pins, NPCs, tactical scenes, handouts, and members. Sortable +
 // filterable so the Thriver can audit who's building what without
@@ -43,7 +43,7 @@ const cell: React.CSSProperties = { fontSize: '13px', fontFamily: 'Carlito, sans
 type SortKey = 'name' | 'gm' | 'setting' | 'members' | 'pins' | 'npcs' | 'scenes' | 'handouts' | 'created' | 'last'
 
 function fmtRelative(iso: string | null): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const ms = Date.now() - new Date(iso).getTime()
   if (ms < 0) return 'just now'
   const m = Math.floor(ms / 60000)
@@ -97,7 +97,7 @@ export default function CampaignExplorerPage() {
     const usernameById: Record<string, string> = {}
     for (const p of (profs ?? []) as any[]) usernameById[p.id] = p.username
 
-    // Aggregate counts in parallel — five queries, one per related
+    // Aggregate counts in parallel - five queries, one per related
     // table. Server-side count('*') with no head:true gives us the
     // count column per row group when paired with the .select pattern.
     const ids = (camps as any[]).map(c => c.id)
@@ -240,7 +240,7 @@ export default function CampaignExplorerPage() {
                   </Link>
                 </td>
                 <td style={{ ...cell, color: '#cce0f5' }}>{r.gm_username}</td>
-                <td style={{ ...cell, color: '#cce0f5' }}>{r.setting ?? '—'}</td>
+                <td style={{ ...cell, color: '#cce0f5' }}>{r.setting ?? '-'}</td>
                 <td style={{ ...cell, textAlign: 'right' }}>{r.members}</td>
                 <td style={{ ...cell, textAlign: 'right' }}>{r.pins}</td>
                 <td style={{ ...cell, textAlign: 'right' }}>{r.npcs}</td>

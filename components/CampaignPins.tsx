@@ -25,7 +25,7 @@ interface CampaignPin {
   // reader's pages, sorted natural-numerically.
   reader_mode: string | null
   // GM-shared folder name. NULL or '' = Uncategorized. Mirrors the
-  // campaign_npcs.folder pattern — added 2026-05-15 via
+  // campaign_npcs.folder pattern - added 2026-05-15 via
   // sql/pin-folder-column-2026-05-15.sql.
   folder: string | null
 }
@@ -41,7 +41,7 @@ interface Props {
   isThriver?: boolean
   // When true, the per-pin "🌍 add to world map" button flips to a
   // "🗺️ add to tactical map" button and calls onPlaceOnTacticalMap
-  // instead — promoting to the world map isn't useful when the GM is
+  // instead - promoting to the world map isn't useful when the GM is
   // staring at a tactical canvas.
   showTacticalMap?: boolean
   onPinFocus?: (pin: { id: string; lat: number; lng: number }) => void
@@ -75,7 +75,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   const [editSceneId, setEditSceneId] = useState<string | null>(null)
   const [editSortOrder, setEditSortOrder] = useState('')
   const [editFolder, setEditFolder] = useState('')
-  // Pin filter — matches against pin name (case-insensitive substring).
+  // Pin filter - matches against pin name (case-insensitive substring).
   // Empty string = show all. Persists only for the session.
   const [pinFilter, setPinFilter] = useState('')
   // ── GM-shared folder state (mirrors NpcRoster) ────────────────────
@@ -144,7 +144,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     broadcastPinsChanged()
   }
 
-  // Realtime sync — pins channel. Every CampaignPins instance for the
+  // Realtime sync - pins channel. Every CampaignPins instance for the
   // same campaign (GM screen + each player's screen) subscribes to
   // `campaign_pins_<campaignId>`. Mutations (reveal toggle, folder
   // bulk reveal/hide, edit save, delete, reorder) broadcast a
@@ -167,7 +167,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     }
   }, [campaignId])
 
-  // ── Folder helpers — mirror NpcRoster ──────────────────────────────
+  // ── Folder helpers - mirror NpcRoster ──────────────────────────────
   function toggleFolder(folderName: string) {
     setExpandedFolders(prev => {
       const next = new Set(prev)
@@ -177,7 +177,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     })
   }
 
-  // Bulk reveal / hide every pin in a folder. GM/Thriver only — the
+  // Bulk reveal / hide every pin in a folder. GM/Thriver only - the
   // button is hidden for players. Single UPDATE…IN keeps the round-
   // trip count at one regardless of folder size. Reload happens
   // optimistically locally; if the write fails the alert surfaces it.
@@ -272,7 +272,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       folder: editFolder.trim() || null,
     }
     // Capture .select() so we can verify the DB returned the new state.
-    // Pre-fix bug: this UPDATE was fire-and-forget — when PostgREST's
+    // Pre-fix bug: this UPDATE was fire-and-forget - when PostgREST's
     // schema cache hadn't picked up sort_order yet, the column was
     // silently dropped from the payload and the row stayed unchanged,
     // but the optimistic setPins below made the UI lie. After a refresh
@@ -290,8 +290,8 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       return
     }
     if (!updatedRow) {
-      console.error('[CampaignPins.saveEdit] update returned no row — RLS likely blocked the UPDATE for this user.')
-      alert("Save didn't go through — your account may not have permission to edit this pin.")
+      console.error('[CampaignPins.saveEdit] update returned no row - RLS likely blocked the UPDATE for this user.')
+      alert("Save didn't go through - your account may not have permission to edit this pin.")
       return
     }
     setPins(prev => {
@@ -358,7 +358,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
 
   return (
     <>
-      {/* Header — Reveal/Hide All (GM only) + search box (everyone).
+      {/* Header - Reveal/Hide All (GM only) + search box (everyone).
           The search input lives next to the toggle so players who
           can't manage reveal state still get a way to filter long
           pin lists. Filter matches case-insensitive substring against
@@ -382,7 +382,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
         </div>
       )}
 
-      {/* Pin list — grouped into GM-shared folders. Mirrors the
+      {/* Pin list - grouped into GM-shared folders. Mirrors the
           NpcRoster pattern: each pin row carries a `folder` text
           column; NULL/empty bucket under "Uncategorized." Order is
           per-viewer in localStorage (`pin_folder_order_<campaignId>`)
@@ -431,7 +431,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
           const finalOrder = ordered.filter(f => f !== 'Uncategorized')
           if (ordered.includes('Uncategorized')) finalOrder.push('Uncategorized')
           // Sync localStorage if the folder list shifted (don't store
-          // 'Uncategorized' — it's an implicit last bucket).
+          // 'Uncategorized' - it's an implicit last bucket).
           const persistable = finalOrder.filter(f => f !== 'Uncategorized')
           if (persistable.length !== folderOrder.length || persistable.some((f, i) => f !== folderOrder[i])) {
             setFolderOrder(persistable)
@@ -476,12 +476,12 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
                   <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notes..." rows={2}
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
-                  {/* Category picker — same icon set the world map uses
+                  {/* Category picker - same icon set the world map uses
                       (lib/pin-categories.ts). Click an icon to set the
                       category; the selected one outlines red. */}
                   <div style={{ marginBottom: '4px' }}>
                     <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>
-                      Category — {getCategoryLabel(editCategory)}
+                      Category - {getCategoryLabel(editCategory)}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '2px' }}>
                       {PIN_CATEGORIES.map(c => {
@@ -508,7 +508,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       })}
                     </div>
                   </div>
-                  {/* Reader mode — when set, the pin gets a 📖 Read
+                  {/* Reader mode - when set, the pin gets a 📖 Read
                       button that opens the comic-reader popout
                       backed by this pin's image attachments. */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', padding: '4px 6px', background: editReaderMode === 'comic' ? '#0f1a2e' : 'transparent', border: `1px solid ${editReaderMode === 'comic' ? '#1a3a5c' : '#2e2e2e'}`, borderRadius: '3px', cursor: 'pointer' }}>
@@ -516,7 +516,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       checked={editReaderMode === 'comic'}
                       onChange={e => setEditReaderMode(e.target.checked ? 'comic' : null)} />
                     <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em' }}>
-                      📖 Comic reader — pages = sorted image attachments
+                      📖 Comic reader - pages = sorted image attachments
                     </span>
                   </label>
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
@@ -531,7 +531,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                   </div>
-                  {/* Address search — lookup via Nominatim, click a
+                  {/* Address search - lookup via Nominatim, click a
                       result to fill lat/lng. Helpful when relocating
                       a pin that was dropped in the wrong spot. */}
                   <AddressSearchRow
@@ -543,12 +543,12 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Tactical Map</div>
                       <select value={editSceneId ?? ''} onChange={e => setEditSceneId(e.target.value || null)}
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
-                        <option value="">— None —</option>
+                        <option value="">- None -</option>
                         {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                     </div>
                   )}
-                  {/* Folder — free-form text. Datalist offers any
+                  {/* Folder - free-form text. Datalist offers any
                       existing folder name in this campaign for quick
                       auto-complete. Empty = Uncategorized. */}
                   <div style={{ marginBottom: '4px' }}>
@@ -563,7 +563,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       ))}
                     </datalist>
                   </div>
-                  {/* Sort order — explicit number that decides list position */}
+                  {/* Sort order - explicit number that decides list position */}
                   <div style={{ marginBottom: '4px', width: '90px' }}>
                     <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Order</div>
                     <input value={editSortOrder} onChange={e => setEditSortOrder(e.target.value)} type="number" min="1" placeholder="#"

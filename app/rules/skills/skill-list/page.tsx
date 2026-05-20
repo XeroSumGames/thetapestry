@@ -10,7 +10,7 @@ import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 import { SKILLS } from '../../../../lib/xse-schema'
 
-export const metadata = { title: 'Skill List — XSE SRD §05' }
+export const metadata = { title: 'Skill List - XSE SRD §05' }
 
 export default function Page() {
   return (
@@ -22,7 +22,7 @@ export default function Page() {
         intro={
           <>
             All 29 skills, paired with their governing RAPID attribute.
-            Vocational skills are marked with <Term>*</Term> — they start
+            Vocational skills are marked with <Term>*</Term> - they start
             at <Term>−3 (Inept)</Term> instead of 0 (Untrained) and the
             first level taken jumps the skill straight to{' '}
             <Term>+1 (Beginner)</Term>.

@@ -1,9 +1,9 @@
 'use client'
 import Link from 'next/link'
 
-// "A Guide to the Tapestry" — the reference hub for returning users.
+// "A Guide to the Tapestry" - the reference hub for returning users.
 // First-time users land at /firsttimers instead. The standard left sidebar
-// is provided by LayoutShell (see NO_SIDEBAR_PAGES — /welcome is NOT in it).
+// is provided by LayoutShell (see NO_SIDEBAR_PAGES - /welcome is NOT in it).
 export default function WelcomePage() {
 
   // ---- Shared styles ----
@@ -117,14 +117,14 @@ export default function WelcomePage() {
 
         </div>
 
-        {/* Survivor creation paths — Creating a Survivor sits alone on
+        {/* Survivor creation paths - Creating a Survivor sits alone on
             its own row as the top-of-funnel guide; the three creation
             paths (Backstory, Quick, Random) share the row below. */}
         <div style={sectionHeading}>Building a Survivor</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginBottom: '14px' }}>
           <div style={card}>
             <div style={cardTitle}>Creating a Survivor</div>
-            <div style={cardBody}>The full guide — how Character Development Points (CDP), chapters, and trait acquisition work.</div>
+            <div style={cardBody}>The full guide - how Character Development Points (CDP), chapters, and trait acquisition work.</div>
             <Link href="/creating-a-character" style={cardLink}>Read Guide</Link>
           </div>
         </div>
@@ -146,12 +146,12 @@ export default function WelcomePage() {
           </div>
           <div style={card}>
             <div style={cardTitle}>Paradigms</div>
-            <div style={cardBody}>Pick from the 12 setting-specific Distemper templates. Pre-built RAPID, skills, and loadout — add a name + Motivation + Complication and you&apos;re playing.</div>
+            <div style={cardBody}>Pick from the 12 setting-specific Distemper templates. Pre-built RAPID, skills, and loadout - add a name + Motivation + Complication and you&apos;re playing.</div>
             <Link href="/characters/paradigms" style={cardLink}>Pick One</Link>
           </div>
         </div>
 
-        {/* Beginners' Guide — twelve chapters covering navigation,
+        {/* Beginners' Guide - twelve chapters covering navigation,
             character creation, sessions, combat, communities, etc.
             Source-of-truth lives in docs/beginners-guide-NN.txt; the
             /welcome/guide route reads them at request time. */}
@@ -195,8 +195,8 @@ export default function WelcomePage() {
                 • <strong>Pre-roll 3d6</strong>, keep all 3<br />
                 • Add <strong>+3 CMod</strong> before rolling<br />
                 • <strong>Re-roll</strong> dice after seeing the result<br />
-                • <strong>Save from Death</strong> — spend all dice for 1 WP + 1 RP total<br />
-                • <strong>Stave off starvation</strong> — 1 die buys 1 extra day before Subsistence Damage
+                • <strong>Save from Death</strong> - spend all dice for 1 WP + 1 RP total<br />
+                • <strong>Stave off starvation</strong> - 1 die buys 1 extra day before Subsistence Damage
               </div>
             </div>
           </div>
@@ -241,16 +241,16 @@ export default function WelcomePage() {
             <div style={{ ...cardBody, padding: '14px 16px' }}>
               <div style={{ fontSize: '15px', color: '#EF9F27', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '8px' }}>Full Rules</div>
               <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.6 }}>
-                <a href="/rules" style={cardLink}>/rules</a> — full XSE / Distemper canon, organized by section.<br />
-                <a href="/rules/core-mechanics" style={cardLink}>Core Mechanics</a> — Insight Dice, Group Check, Coordinated Effort, Negotiations.<br />
-                <a href="/rules/combat" style={cardLink}>Combat</a> — Rounds, Range, Damage, Healing, Stress.<br />
-                <a href="/rules/communities" style={cardLink}>Communities</a> — Recruitment, Morale, Apprentices.
+                <a href="/rules" style={cardLink}>/rules</a> - full XSE / Distemper canon, organized by section.<br />
+                <a href="/rules/core-mechanics" style={cardLink}>Core Mechanics</a> - Insight Dice, Group Check, Coordinated Effort, Negotiations.<br />
+                <a href="/rules/combat" style={cardLink}>Combat</a> - Rounds, Range, Damage, Healing, Stress.<br />
+                <a href="/rules/communities" style={cardLink}>Communities</a> - Recruitment, Morale, Apprentices.
               </div>
             </div>
           </div>
         </div>
 
-        {/* External links — three equal-width tiles, each centred:
+        {/* External links - three equal-width tiles, each centred:
             logo on top, name+link below. Order: XeroSumGames →
             DistemperVerse → XeroSumStudio. */}
         <div style={{ ...sectionHeading, textAlign: 'center' }}>Off-Platform</div>

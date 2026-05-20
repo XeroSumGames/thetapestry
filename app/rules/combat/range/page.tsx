@@ -9,7 +9,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Range — XSE SRD §06' }
+export const metadata = { title: 'Range - XSE SRD §06' }
 
 const BANDS: Array<[number, string, string, string]> = [
   [1, 'Engaged', '≤ 5 ft', "Close enough to wrestle. +1 CMod on Melee, −1 CMod on Ranged. All Unarmed combat happens at Engaged range."],
@@ -29,7 +29,7 @@ export default function Page() {
         intro={
           <>
             XSE uses five abstract <Term>Range Bands</Term> rather than
-            measured distance. Each character's position is relative —
+            measured distance. Each character's position is relative -
             "you're at Close range to the bandit, Medium range to the
             sniper."
           </>

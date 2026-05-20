@@ -10,7 +10,7 @@ import {
 } from '../../../components/rules/RuleSection'
 import { PARADIGMS } from '../../../lib/xse-schema'
 
-export const metadata = { title: 'Appendix D — Paradigms — XSE SRD' }
+export const metadata = { title: 'Appendix D - Paradigms - XSE SRD' }
 
 export default function Page() {
   return (

@@ -7,12 +7,12 @@
 // in the public-listed set).
 //
 // Source data: SETTING_NPCS / SETTING_PINS / SETTING_SCENES dicts in
-// lib/. Synthetic UUIDs are used for snapshot row ids — cloneSnapshot
+// lib/. Synthetic UUIDs are used for snapshot row ids - cloneSnapshot
 // rewrites them on subscribe-clone so the values don't matter, only
 // uniqueness within the snapshot.
 //
 // SCOPE: ships NPCs + pins + scenes only. Vehicles (Mongrels' Minnie)
-// and handouts aren't in the cloneSnapshotIntoCampaign path yet —
+// and handouts aren't in the cloneSnapshotIntoCampaign path yet -
 // extending that is Phase 2 of this migration. Each module's
 // description flags the gap.
 
@@ -79,7 +79,7 @@ const SETTINGS_TO_MIGRATE: SettingDef[] = [
     name: 'The Arena',
     parentSetting: null,
     tagline: "The Duke of Denver's private playground, the Ball Arena is now a deadly gladiatorial where many people enter but only one ever leaves.",
-    description: "The Duke of Denver's private playground, the Ball Arena is now a deadly gladiatorial where many people enter but only one ever leaves.\n\nMinimal v1.0.0 content — meant as a publishing seed for GMs to build their own arena variant on top. Expand the NPC roster, scenes, and pins to fit your bracket.",
+    description: "The Duke of Denver's private playground, the Ball Arena is now a deadly gladiatorial where many people enter but only one ever leaves.\n\nMinimal v1.0.0 content - meant as a publishing seed for GMs to build their own arena variant on top. Expand the NPC roster, scenes, and pins to fit your bracket.",
     contentTags: ['sandbox', 'combat-heavy', 'standalone'],
     sessionEstimate: 6,
     playerCountRecommended: 4,
@@ -89,7 +89,7 @@ const SETTINGS_TO_MIGRATE: SettingDef[] = [
     name: 'The Basement',
     parentSetting: null,
     tagline: 'A fight club where players can practice combat and test out various weapons as they face off against NPCs in a bloodstained basement.',
-    description: 'A fight club where players can practice combat and test out various weapons as they face off against NPCs in a bloodstained basement.\n\nA training-room module — designed for new tables to learn the combat system, or established tables to test loadouts before a session. Minimal v1.0.0 content; bring your own NPCs and weapons.',
+    description: 'A fight club where players can practice combat and test out various weapons as they face off against NPCs in a bloodstained basement.\n\nA training-room module - designed for new tables to learn the combat system, or established tables to test loadouts before a session. Minimal v1.0.0 content; bring your own NPCs and weapons.',
     contentTags: ['training', 'combat-heavy', 'standalone'],
     sessionEstimate: 1,
     playerCountRecommended: 4,
@@ -128,7 +128,7 @@ export default function MigrateSettingsPage() {
   }
 
   function buildSnapshot(setting: string): ModuleSnapshot {
-    // Build a `ModuleSnapshot` (per lib/modules.ts) — the shape
+    // Build a `ModuleSnapshot` (per lib/modules.ts) - the shape
     // `cloneModuleIntoCampaign` reads when a subscriber clones a
     // module version into a fresh campaign. The crucial column-name
     // contract: pins use `name` (matches campaign_pins.name) and
@@ -166,7 +166,7 @@ export default function MigrateSettingsPage() {
     const pins = pinSeeds.map((p: any, idx) => ({
       _external_id: newId(),
       // SettingPin.title (in-code seed shape) → ModuleSnapshotPin.name
-      // (DB column name). This rename is the whole point of the fix —
+      // (DB column name). This rename is the whole point of the fix -
       // the prior version stored `title` here and crashed clone
       // INSERTs against campaign_pins.name NOT NULL.
       name: p.title,
@@ -189,7 +189,7 @@ export default function MigrateSettingsPage() {
       cell_feet: s.cell_feet ?? 3,
       has_grid: s.has_grid ?? true,
       img_scale: s.img_scale ?? 1,
-      // No tokens — seed scenes ship empty maps. The clone path skips
+      // No tokens - seed scenes ship empty maps. The clone path skips
       // empty token arrays cleanly.
       tokens: [],
     }))
@@ -213,7 +213,7 @@ export default function MigrateSettingsPage() {
       // current seed data + current ModuleSnapshot shape. Re-running
       // the tool is the correct path to ship snapshot-shape fixes
       // (previously it skipped the snapshot, which left broken
-      // snapshots stranded — the very bug that motivated the
+      // snapshots stranded - the very bug that motivated the
       // 2026-04-29 lenient-reader pass on cloneModuleIntoCampaign).
       const { data: existing } = await supabase
         .from('modules')
@@ -258,7 +258,7 @@ export default function MigrateSettingsPage() {
           ok: true,
           moduleId: existingMod.id,
           versionId: existingMod.latest_version_id ?? undefined,
-          skipped: `Refreshed existing module "${def.name}" — ${refreshNote}.`,
+          skipped: `Refreshed existing module "${def.name}" - ${refreshNote}.`,
           counts: { npcs: snapshot.npcs?.length ?? 0, pins: snapshot.pins?.length ?? 0, scenes: snapshot.scenes?.length ?? 0 },
         }
         setResults(prev => ({ ...prev, [def.key]: result }))
@@ -273,7 +273,7 @@ export default function MigrateSettingsPage() {
       }
 
       // 1. Insert the module row. Listed + approved so it appears in
-      //    /modules immediately. Source campaign null — these modules
+      //    /modules immediately. Source campaign null - these modules
       //    are synthetic from setting seeds, no source campaign.
       const { data: modRow, error: modErr } = await supabase
         .from('modules')
@@ -309,7 +309,7 @@ export default function MigrateSettingsPage() {
           version_minor: 0,
           version_patch: 0,
           published_by: user.id,
-          changelog: 'Initial publish — migrated from the deprecated /stories/new setting seed.',
+          changelog: 'Initial publish - migrated from the deprecated /stories/new setting seed.',
           snapshot,
         })
         .select('id')
@@ -373,7 +373,7 @@ export default function MigrateSettingsPage() {
       <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: 1.5 }}>
         Publishes the five deprecated /stories/new settings (Chased, Mongrels, Empty, The Rock, The Arena) as Module-marketplace entries.
         Each migration creates one module + one v1.0.0 version, marks visibility=listed and moderation=approved so it appears immediately
-        on /modules. Idempotent — clicking Migrate on an already-published setting reports "skipped".
+        on /modules. Idempotent - clicking Migrate on an already-published setting reports "skipped".
       </p>
       <p style={{ marginTop: '4px', fontSize: '13px', color: '#cce0f5' }}>
         Scope: NPCs + pins + scenes ship in v1.0.0. Vehicles and handouts (Mongrels&apos; Minnie, Chased&apos;s broadcasts) need a v1.1.0 publish
@@ -408,7 +408,7 @@ export default function MigrateSettingsPage() {
               {r && (
                 <div style={{ marginTop: '8px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: r.ok ? '#7fc458' : '#f5a89a' }}>
                   {r.skipped && <>↩ {r.skipped}</>}
-                  {r.ok && !r.skipped && r.counts && <>✓ Published — {r.counts.npcs} NPCs, {r.counts.pins} pins, {r.counts.scenes} scenes (module {r.moduleId?.slice(0, 8)}…)</>}
+                  {r.ok && !r.skipped && r.counts && <>✓ Published - {r.counts.npcs} NPCs, {r.counts.pins} pins, {r.counts.scenes} scenes (module {r.moduleId?.slice(0, 8)}…)</>}
                   {!r.ok && <>✗ {r.error}</>}
                 </div>
               )}

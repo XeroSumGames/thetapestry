@@ -64,7 +64,7 @@ export function skillStepUp(current: SkillValue, vocational: boolean): SkillValu
 export function skillStepDown(current: SkillValue, base: SkillValue, vocational: boolean = false): SkillValue {
   // Mirror the vocational-skill jump from skillStepUp: untrained
   // vocational skills (-3) skip 0 and land at 1 on the FIRST CDP
-  // spend. The reverse — clicking − to undo that spend — must skip
+  // spend. The reverse - clicking − to undo that spend - must skip
   // 0 too and return all the way to -3, otherwise the toggle is
   // asymmetric and the player loses the -3 floor on un-pick.
   if (vocational && current === 1 && base === -3) return -3
@@ -175,7 +175,7 @@ export function rollThreeWords(): [string, string, string] {
   return [pick(), pick(), pick()]
 }
 
-// Apprentice age — 18-59, mirroring the random-character generator.
+// Apprentice age - 18-59, mirroring the random-character generator.
 // Stored in apprentice_meta.age at recruit time; the wizard surfaces
 // it editable on Identity step.
 export function rollApprenticeAge(): number {

@@ -1,5 +1,5 @@
 'use client'
-// Story → Snapshots — own page, host for the CampaignSnapshots component.
+// Story → Snapshots - own page, host for the CampaignSnapshots component.
 // Was embedded inside /stories/[id]/edit; pulled out so the Edit page is
 // just metadata fields + map style, and snapshot management has the
 // dedicated breathing room it deserves (save / restore / download /
@@ -50,7 +50,7 @@ export default function StorySnapshotsPage() {
       if (cancelled) return
       if (error || !data) { router.push('/stories'); return }
       const c = data as CampaignRow
-      // GM-or-Thriver gate — players don't manage snapshots. Bounce
+      // GM-or-Thriver gate - players don't manage snapshots. Bounce
       // them back to the story page so they see something useful.
       // Thrivers (platform-admin role) get godmode access on every
       // campaign via the same RLS policies the GM uses.
@@ -91,12 +91,12 @@ export default function StorySnapshotsPage() {
   return (
     <div style={{ maxWidth: '780px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
       <StoryActionBar campaignId={id} />
-      {/* Sub-page label — small, below the canonical campaign name. */}
+      {/* Sub-page label - small, below the canonical campaign name. */}
       <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '1.25rem' }}>
         Snapshots
       </div>
 
-      {/* isGM={true} is correct here — the upstream gate above only lets
+      {/* isGM={true} is correct here - the upstream gate above only lets
           GM-or-Thriver render past it, so anyone who reaches this point
           is authorized to act as the GM for snapshot management. */}
       <CampaignSnapshots campaignId={campaign.id} isGM={true} />

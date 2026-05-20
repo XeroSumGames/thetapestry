@@ -1,11 +1,11 @@
 'use client'
-// ProfessionPicker — reusable Profession card grid for the Apprentice
+// ProfessionPicker - reusable Profession card grid for the Apprentice
 // creation wizard. Mirrors ParadigmPicker's presentation but reads from
 // the canonical PROFESSIONS array (12 entries × 5 skills each) from
 // SRD §08 Table 8.
 //
 // Per spec-communities §2a, an Apprentice picks a Profession (not a
-// Paradigm). Each profession skill seeds at +1 CDP — a step up from the
+// Paradigm). Each profession skill seeds at +1 CDP - a step up from the
 // default value (-3 → -1 for vocational, 0 → 1 for non-vocational). The
 // player then spends 5 CDP further on top.
 //
@@ -69,7 +69,7 @@ export default function ProfessionPicker({ value, onChange }: Props) {
               </button>
             </div>
 
-            {/* Skill list — each skill chip shows the post-seed value
+            {/* Skill list - each skill chip shows the post-seed value
                 (one CDP applied to the default). Vocational asterisks
                 preserved so players see what's a vocational skill. */}
             <div style={{ marginTop: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>

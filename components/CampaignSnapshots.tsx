@@ -79,13 +79,13 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
     setRestoring(row.id)
     setStatus(null)
     const res = await restoreCampaignSnapshot(supabase, campaignId, row.snapshot)
-    setStatus(res.ok ? `✓ Restored "${row.name}" — launching table…` : `Partial restore — errors:\n${res.errors.join('\n')}`)
+    setStatus(res.ok ? `✓ Restored "${row.name}" - launching table…` : `Partial restore - errors:\n${res.errors.join('\n')}`)
     setRestoring(null)
     if (res.ok) {
       // Auto-launch the table view so the GM lands in the freshly-
       // restored campaign instead of stranded on the edit page.
       // Hard-load (not router.push) so every state slice rehydrates
-      // from the restored DB — same approach the GM Tools → Reload
+      // from the restored DB - same approach the GM Tools → Reload
       // shortcut uses on the table page itself. Tiny delay lets the
       // ✓ status message render before navigation.
       setTimeout(() => { window.location.href = `/stories/${campaignId}/table` }, 600)
@@ -100,7 +100,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
   }
 
   // Download a snapshot as a JSON file. Used to share a campaign's content
-  // state with another user — they import it into their own new campaign
+  // state with another user - they import it into their own new campaign
   // via the Import button below.
   function handleDownload(row: SnapshotRow) {
     const blob = new Blob([JSON.stringify(row.snapshot, null, 2)], { type: 'application/json' })
@@ -114,7 +114,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
     URL.revokeObjectURL(url)
   }
 
-  // Import a snapshot file INTO this campaign (which should be empty —
+  // Import a snapshot file INTO this campaign (which should be empty -
   // typically a freshly-created blank campaign the player made in their
   // own account). Validates shape, then calls cloneSnapshotIntoCampaign
   // to populate npcs/pins/scenes/tokens/notes under the current campaign_id.
@@ -135,7 +135,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
         return
       }
       const res = await cloneSnapshotIntoCampaign(supabase, campaignId, parsed)
-      setStatus(res.ok ? `✓ Imported (${parsed.npcs.length} NPCs, ${parsed.pins.length} pins, ${parsed.scenes.length} scenes, ${parsed.notes.length} notes)` : `Partial import — errors:\n${res.errors.join('\n')}`)
+      setStatus(res.ok ? `✓ Imported (${parsed.npcs.length} NPCs, ${parsed.pins.length} pins, ${parsed.scenes.length} scenes, ${parsed.notes.length} notes)` : `Partial import - errors:\n${res.errors.join('\n')}`)
     } catch (err: any) {
       setStatus(`Error: ${err?.message ?? 'unknown'}`)
     }
@@ -152,7 +152,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
     <div>
       <div style={{ fontSize: '18px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Snapshots</div>
       <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '12px', lineHeight: 1.4 }}>
-        Save the current state of this campaign — NPCs, pins, scenes, tactical tokens, handouts — to a named snapshot.
+        Save the current state of this campaign - NPCs, pins, scenes, tactical tokens, handouts - to a named snapshot.
         Restore any snapshot later to rewind in place. Same campaign, same invite code, same players.
       </div>
 
@@ -172,13 +172,13 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
         </button>
       </div>
 
-      {/* Import snapshot file — populate this campaign from a JSON snapshot
+      {/* Import snapshot file - populate this campaign from a JSON snapshot
           shared by another GM. Intended for "my GM sent me their campaign,
           let me run it" workflow: make an empty campaign, come here, import. */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '12px', marginBottom: '12px' }}>
         <div style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Import Snapshot</div>
         <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', lineHeight: 1.4 }}>
-          Load a <code>.tapestry-snapshot.json</code> file into this campaign. Use this to receive a shared campaign from another GM — NPCs, pins, scenes, tactical tokens, and handouts will populate here. Best run in a brand-new empty campaign.
+          Load a <code>.tapestry-snapshot.json</code> file into this campaign. Use this to receive a shared campaign from another GM - NPCs, pins, scenes, tactical tokens, and handouts will populate here. Best run in a brand-new empty campaign.
         </div>
         <input type="file" accept="application/json,.json" ref={fileInputRef} style={{ display: 'none' }}
           onChange={e => {

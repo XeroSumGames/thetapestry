@@ -1,5 +1,5 @@
 'use client'
-// Shared roll modal shell — the canonical Attack Roll shape extracted
+// Shared roll modal shell - the canonical Attack Roll shape extracted
 // for reuse. Drives the four outlier modals (Stress Check, Breaking
 // Point, Lasting Wound, Recruit) that previously had their own
 // bespoke layouts. The universal `pendingRoll` modal in
@@ -14,7 +14,7 @@
 //     slot for table-lookup outcomes like Breaking Point) + optional
 //     damage block + post-roll Insight Die reroll buttons + Close.
 //
-// Insight Dice integration is optional via `userInsightDice` —
+// Insight Dice integration is optional via `userInsightDice` -
 // when > 0, the pre-roll buttons render. Reroll handlers are
 // individually optional so callers can opt out (e.g. Lasting Wound
 // is permanent, no rerolls).
@@ -31,7 +31,7 @@ export interface RollResult {
   smod: number
   cmod: number
   total: number
-  /** Free-form text — 'Success', 'Failure', 'High Insight', or table label. */
+  /** Free-form text - 'Success', 'Failure', 'High Insight', or table label. */
   outcome: string
   insightAwarded?: boolean
   insightUsed?: 'pre' | 'die1' | 'die2' | 'both' | null
@@ -51,7 +51,7 @@ export interface RollModalProps {
   title: string
   /** e.g. "2d6 + RSN + ACU + CMod" or "Roll Recruitment". */
   rollFormula: string
-  /** Subtitle line — typically the character or target context. */
+  /** Subtitle line - typically the character or target context. */
   subtitle?: string
 
   // ── Modifiers ─────────────────────────────────────────────────
@@ -62,7 +62,7 @@ export interface RollModalProps {
   /** Set when CMod input is editable (most rolls). Pass undefined for
    *  read-only (e.g. system-driven rolls without manual override). */
   setCmod?: (n: number) => void
-  /** Optional itemized CMod stack — list of `{ label, value }` rows
+  /** Optional itemized CMod stack - list of `{ label, value }` rows
    *  rendered above the CMod input as a breakdown of how it was
    *  computed. Empty/absent = hidden. */
   cmodBreakdown?: { label: string; value: number }[]
@@ -75,7 +75,7 @@ export interface RollModalProps {
   // ── Optional warnings rendered above Roll button ──────────────
   warnings?: React.ReactNode
   /** Optional content rendered between subtitle and the modifier
-   *  breakdown — used for context like target dropdown, weapon damage
+   *  breakdown - used for context like target dropdown, weapon damage
    *  preview, etc. */
   preRollExtras?: React.ReactNode
 
@@ -229,7 +229,7 @@ export default function RollModal(props: RollModalProps) {
           <div style={{ marginBottom: '10px' }}>{warnings}</div>
         )}
 
-        {/* Roll button — only when the caller wired up onRoll. */}
+        {/* Roll button - only when the caller wired up onRoll. */}
         {!result && onRoll && (
           <div style={{ display: 'flex', gap: '6px' }}>
             <button onClick={() => onRoll()} disabled={rolling || rollDisabled}
@@ -255,7 +255,7 @@ export default function RollModal(props: RollModalProps) {
               ))}
             </div>
 
-            {/* Outcome — custom renderer or default banner */}
+            {/* Outcome - custom renderer or default banner */}
             {renderOutcome ? renderOutcome(result) : (
               <div style={{ textAlign: 'center', marginBottom: '12px' }}>
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em' }}>

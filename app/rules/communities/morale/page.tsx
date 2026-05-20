@@ -28,7 +28,7 @@ const moodRow = (
   </tr>
 )
 
-export const metadata = { title: 'Morale Check — XSE SRD §08' }
+export const metadata = { title: 'Morale Check - XSE SRD §08' }
 
 export default function MoralePage() {
   return (
@@ -100,9 +100,9 @@ export default function MoralePage() {
           <tbody>
             {moodRow('Moment of High Insight (6+6)', 'Belief in leadership and the community is high.', '+2', true)}
             {moodRow('Wild Success (14+)', 'Morale stays strong or improves.', '+1', true)}
-            {moodRow('Success (9–13)', 'Morale remains steady.', '0')}
-            {moodRow('Failure (4–8)', 'Morale slipping. 25% of the community will leave unless stopped.', '−1')}
-            {moodRow('Dire Failure (0–3)', 'Morale collapses. 50% of the community leaves.', '−2')}
+            {moodRow('Success (9-13)', 'Morale remains steady.', '0')}
+            {moodRow('Failure (4-8)', 'Morale slipping. 25% of the community will leave unless stopped.', '−1')}
+            {moodRow('Dire Failure (0-3)', 'Morale collapses. 50% of the community leaves.', '−2')}
             {moodRow('Moment of Low Insight (1+1)', 'Infighting and violence. 75% of the community leaves.', '−3')}
           </tbody>
         </RuleTable>
@@ -123,7 +123,7 @@ export default function MoralePage() {
       </RuleSection>
 
       <TryIt href="/communities">
-        Run a weekly Morale Check on one of your Communities — every CMod is
+        Run a weekly Morale Check on one of your Communities - every CMod is
         computed and shown for review before the roll.
       </TryIt>
     </>

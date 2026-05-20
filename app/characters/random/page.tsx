@@ -136,7 +136,7 @@ export default function RandomCharacterPage() {
       // Distribute 10 points across the profession's 5 canonical
       // skills with min 1 each and max 3 each (so 5 baseline + 5
       // random extra, no skill exceeding 3). Then merge with the
-      // paradigm's existing levels via max() — paradigm flavor wins
+      // paradigm's existing levels via max() - paradigm flavor wins
       // when it specified higher levels, profession floor wins when
       // the paradigm under-allocated. Pre-fix a Medic paradigm could
       // ship a random character with Medicine* untouched if the
@@ -146,7 +146,7 @@ export default function RandomCharacterPage() {
       const profession = PROFESSIONS.find(p => p.name === paradigm.profession)
       if (profession) {
         const profSkills = profession.skills
-        // Start each at level 1 — guarantees min coverage.
+        // Start each at level 1 - guarantees min coverage.
         const profDist: Record<string, number> = {}
         for (const s of profSkills) profDist[s] = 1
         // 5 baseline points spent; 5 random points remaining. Each
@@ -176,7 +176,7 @@ export default function RandomCharacterPage() {
         motivation: rollMotivation(),
       }
 
-      // Weapons + equipment — prefer the Paradigm's curated loadout
+      // Weapons + equipment - prefer the Paradigm's curated loadout
       // (defined in lib/xse-schema.ts on each Paradigm). Fall back to
       // a random non-Rare pick for any field a future Paradigm
       // doesn't define, so the generator stays defensive.

@@ -1,4 +1,4 @@
-// Encumbrance — shared formula used by InventoryPanel + CharacterCard
+// Encumbrance - shared formula used by InventoryPanel + CharacterCard
 // (and any future inventory surface). Single source of truth: change
 // the rules here, every UI updates.
 //

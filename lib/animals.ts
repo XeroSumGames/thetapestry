@@ -1,4 +1,4 @@
-// Bestiary — canonical animal stats from Distemper CRB v0.9.2
+// Bestiary - canonical animal stats from Distemper CRB v0.9.2
 // p.194-195 (validated against the CRB on 2026-05-09).
 //
 // Six base animals + two H724-infected canine variants. Distemper
@@ -10,10 +10,10 @@
 // CRB note (paraphrased): only canines carry H724 post-mutation;
 // it's no longer terminal in all infected animals but invariably
 // makes them hyper-aggressive. Smaller domesticated dogs didn't
-// survive — what's left is the larger / wilder breed roaming
+// survive - what's left is the larger / wilder breed roaming
 // nocturnal in 1d6 packs.
 //
-// Init / Enc — note that these are NOT derived (Init isn't ACU+DEX
+// Init / Enc - note that these are NOT derived (Init isn't ACU+DEX
 // for animals; the CRB hand-tunes them). Stored as-given so the
 // canonical numbers are what surface on the bestiary page and on
 // any campaign_npc spawned from these templates.
@@ -35,15 +35,15 @@ export interface AnimalSkill {
 export interface AnimalSeed {
   name: string
   rapid: AnimalRapid
-  /** Encoded RAPID string from the CRB (e.g. "01711" for Bear) —
+  /** Encoded RAPID string from the CRB (e.g. "01711" for Bear) -
    *  display helper, identical to expanding `rapid` digit-by-digit. */
   rapidCode: string
   wp_max: number
   rp_max: number
-  /** Melee Defensive Modifier (MDM) — applied to attacker chance +
+  /** Melee Defensive Modifier (MDM) - applied to attacker chance +
    *  damage on melee/unarmed attacks against this animal. */
   mdm: number
-  /** Ranged Defensive Modifier (RDM) — same, for ranged attacks. */
+  /** Ranged Defensive Modifier (RDM) - same, for ranged attacks. */
   rdm: number
   init: number
   enc: number
@@ -100,7 +100,7 @@ export const ANIMALS: AnimalSeed[] = [
       { name: 'Athletics', level: 3, specialized: false },
       { name: 'Navigation', level: 2, specialized: false },
     ],
-    description: 'Domesticated mount or feral. Surprisingly fast and dangerous when cornered or roused — can stomp, kick, bite.',
+    description: 'Domesticated mount or feral. Surprisingly fast and dangerous when cornered or roused - can stomp, kick, bite.',
   },
   {
     name: 'Mountain Lion',
@@ -111,7 +111,7 @@ export const ANIMALS: AnimalSeed[] = [
       { name: 'Athletics', level: 3, specialized: false },
       { name: 'Unarmed Combat', level: 3, specialized: false },
     ],
-    description: 'Apex predator. Prefers ambush from elevation. Once it commits to a charge it does not stop — fast, focused, and lethal.',
+    description: 'Apex predator. Prefers ambush from elevation. Once it commits to a charge it does not stop - fast, focused, and lethal.',
   },
   {
     name: 'Wolf',
@@ -124,7 +124,7 @@ export const ANIMALS: AnimalSeed[] = [
     ],
     description: 'Pack hunter. Coordinates with its kin to harry prey from multiple angles before closing.',
   },
-  // Distemper-infected variants — same RAPID + secondary stats as the
+  // Distemper-infected variants - same RAPID + secondary stats as the
   // base, plus extra skill levels reflecting heightened aggression.
   {
     name: 'Dog with Distemper',
@@ -137,7 +137,7 @@ export const ANIMALS: AnimalSeed[] = [
       { name: 'Survival', level: 1, specialized: false },
       { name: 'Unarmed Combat', level: 4, specialized: false },
     ],
-    description: 'Larger / wilder canine that survived H724 infection. Brain partly eroded by the virus, hyper-aggressive, often nocturnal in packs of 1d6. Bites carry the virus — see Infection rules.',
+    description: 'Larger / wilder canine that survived H724 infection. Brain partly eroded by the virus, hyper-aggressive, often nocturnal in packs of 1d6. Bites carry the virus - see Infection rules.',
     distemperInfected: true,
     baseAnimal: 'Dog',
   },
@@ -151,7 +151,7 @@ export const ANIMALS: AnimalSeed[] = [
       { name: 'Survival', level: 3, specialized: false },
       { name: 'Unarmed Combat', level: 4, specialized: false },
     ],
-    description: 'A pack hunter with the dog flu — survival drive intact, fear circuits scrambled. Will press an attack past the point any healthy wolf would break off. Bites carry the virus.',
+    description: 'A pack hunter with the dog flu - survival drive intact, fear circuits scrambled. Will press an attack past the point any healthy wolf would break off. Bites carry the virus.',
     distemperInfected: true,
     baseAnimal: 'Wolf',
   },

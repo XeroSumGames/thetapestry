@@ -22,7 +22,7 @@ import {
   formatEventDate,
 } from '../lib/community-events'
 
-// Phase A — Communities foundation. Lists communities for a campaign, lets
+// Phase A - Communities foundation. Lists communities for a campaign, lets
 // the GM create one, drill into the member roster, add/remove members from
 // the campaign's NPC pool or PC entries, and assign roles.
 // Recruitment Checks (Phase B) + Morale (Phase C) come later; this is
@@ -49,7 +49,7 @@ interface PinOption { id: string; name: string; lat?: number | null; lng?: numbe
 //   Demolitions                      → Safety
 // WorkRole = the three SRD labor roles only. Explicitly excludes
 // both 'unassigned' (the idle-labor pool) and 'assigned' (PC-
-// directed, not part of the labor pool) — those aren't part of
+// directed, not part of the labor pool) - those aren't part of
 // ROLE_SKILLS / quota math.
 type WorkRole = Exclude<Role, 'unassigned' | 'assigned'>
 const ROLE_SKILLS: Record<WorkRole, string[]> = {
@@ -119,7 +119,7 @@ function rebalanceNpcRoles(
   }
 
   // Pass 2: gaps still exist (not enough qualified candidates). Fill
-  // from anyone remaining, regardless of skill — community still needs
+  // from anyone remaining, regardless of skill - community still needs
   // warm bodies. Same priority order: safety → maintainer → gatherer.
   for (const role of ['safety', 'maintainer', 'gatherer'] as WorkRole[]) {
     while (counts[role] < targets[role] && remaining.size > 0) {
@@ -132,7 +132,7 @@ function rebalanceNpcRoles(
 
   // Pass 3: extras. Assign any still-remaining NPCs to the role
   // they score highest in (if any skill matches). Pushes counts over
-  // targets — that's fine per SRD; minimums are floors, not caps.
+  // targets - that's fine per SRD; minimums are floors, not caps.
   // NPCs with no matching skill at all stay unassigned (0-score rows).
   for (const s of scores) {
     if (!remaining.has(s.member.id)) continue
@@ -199,15 +199,15 @@ interface Props {
   // wants CampaignCommunity to honor `initialMode` again (React
   // only re-runs the effect when deps change; without a token,
   // closing and reopening the modal wouldn't re-trigger the
-  // auto-expand). Any value works — we just watch for a change.
+  // auto-expand). Any value works - we just watch for a change.
   initialModeToken?: number
   // Auto-expand a specific community by ID once the list loads.
-  // Used by /communities/[id] — the user clicked a single community
+  // Used by /communities/[id] - the user clicked a single community
   // from My Communities, so dropping them on a collapsed accordion
   // is just one extra click for nothing. Wins over `initialMode`
   // when both are set.
   initialOpenId?: string
-  // Trade trigger — when supplied, the stockpile section gets a
+  // Trade trigger - when supplied, the stockpile section gets a
   // "Trade with Stockpile" button. Parent owns the
   // TradeNegotiationModal so multiple surfaces share one instance.
   onOpenTradeWithCommunity?: (communityId: string) => void
@@ -231,7 +231,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [addStockNotes, setAddStockNotes] = useState('')
   const [addStockingForCommunity, setAddStockingForCommunity] = useState<string | null>(null)
   const [members, setMembers] = useState<Record<string, Member[]>>({})   // key = community_id, status='active'
-  // Phase 4D — per-community Campfire feed. Stored as a map so each
+  // Phase 4D - per-community Campfire feed. Stored as a map so each
   // accordion can render its own Feed section without re-fetching.
   // eventDrafts holds the manual-composer textarea per community
   // (only one open at a time but state is keyed by id for safety).
@@ -239,7 +239,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [eventComposerOpenFor, setEventComposerOpenFor] = useState<string | null>(null)
   const [eventDraftBody, setEventDraftBody] = useState<string>('')
   const [eventSubmitting, setEventSubmitting] = useState(false)
-  // Username lookup hydrated from event author_user_ids — small map so
+  // Username lookup hydrated from event author_user_ids - small map so
   // the feed can render "by <username>" without round-tripping the
   // profiles table per-card.
   const [eventAuthors, setEventAuthors] = useState<Record<string, string>>({})
@@ -257,7 +257,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [dashboardRecruits, setDashboardRecruits] = useState<Record<string, RecruitRow[]>>({})
   const [dashboardLoading, setDashboardLoading] = useState<Set<string>>(new Set())
   const [myUserId, setMyUserId] = useState<string | null>(null)
-  // PC this user plays in the current campaign — drives the "leave
+  // PC this user plays in the current campaign - drives the "leave
   // this community" affordance on their own member row. Null when the
   // viewer is the GM (or a player who hasn't assigned a character yet).
   const [myCharacterId, setMyCharacterId] = useState<string | null>(null)
@@ -284,10 +284,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [addRole, setAddRole] = useState<Role>('unassigned')
   const [addType, setAddType] = useState<RecruitmentType>('member')
 
-  // Phase C — Weekly Morale / Fed / Clothed check modal target.
+  // Phase C - Weekly Morale / Fed / Clothed check modal target.
   // Null = closed; uuid = run the modal for that community.
   const [moraleCommunityId, setMoraleCommunityId] = useState<string | null>(null)
-  // Phase B (NPC-proxy) — off-screen recruitment modal target. Same
+  // Phase B (NPC-proxy) - off-screen recruitment modal target. Same
   // shape as moraleCommunityId; the leader NPC handles the roll.
   const [proxyRecruitCommunityId, setProxyRecruitCommunityId] = useState<string | null>(null)
 
@@ -298,20 +298,20 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [stepDownCommunityId, setStepDownCommunityId] = useState<string | null>(null)
   const [successorChoice, setSuccessorChoice] = useState<string>('auto')
 
-  // Phase D — Apprentice task delegation. Null = no row in edit mode.
+  // Phase D - Apprentice task delegation. Null = no row in edit mode.
   // memberId = that apprentice row shows an inline input. Draft holds
   // the in-progress text; save writes to community_members.current_task.
   const [editingTaskMemberId, setEditingTaskMemberId] = useState<string | null>(null)
   const [taskDraft, setTaskDraft] = useState<string>('')
 
-  // "Assigned" role mission linkage — modal that opens when a member's
+  // "Assigned" role mission linkage - modal that opens when a member's
   // role flips to 'assigned'. Captures directing PC + task text, writes
   // both plus the role in a single update. Null = modal closed.
   const [assigningMember, setAssigningMember] = useState<Member | null>(null)
   const [assignmentPcDraft, setAssignmentPcDraft] = useState<string>('')
   const [assignmentTaskDraft, setAssignmentTaskDraft] = useState<string>('')
 
-  // Phase E Sprint 4e — Migration on dissolution. After a community
+  // Phase E Sprint 4e - Migration on dissolution. After a community
   // dissolves (3-failure), the GM can offer surviving NPCs to nearby
   // published communities. Receiver GMs accept or decline. MVP scope:
   // offer + narrative + notification; auto NPC copy on acceptance is
@@ -330,7 +330,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     id: string; name: string; size_band: string; faction_label: string | null
   }[]>([])
 
-  // Phase E Sprint 4d — Schism. A large community splits in two: the
+  // Phase E Sprint 4d - Schism. A large community splits in two: the
   // original keeps its roster minus the breakaway, the breakaway is
   // a brand-new community (same campaign) with the picked members
   // and an optional new Homestead pin. Lineage preserved by
@@ -344,7 +344,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [schismPickedIds, setSchismPickedIds] = useState<Set<string>>(new Set())
   const [schismSubmitting, setSchismSubmitting] = useState<boolean>(false)
 
-  // Phase E — Publish to Tapestry modal. When set, the publish
+  // Phase E - Publish to Tapestry modal. When set, the publish
   // confirmation UI renders for that community. Faction label is GM
   // freeform; captured pre-commit so the GM sees what goes public
   // before the row is actually inserted.
@@ -373,13 +373,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // CRITICAL: do NOT include `communities` in the deps. The effect
   // re-firing every time communities changes means right after a
   // successful create (which appends to communities), this would
-  // snap showCreate back to true on top of the new community —
+  // snap showCreate back to true on top of the new community -
   // playtest caught it as 'create modal lingering above the new
   // group'. We rely on initialModeToken to retrigger if the caller
   // wants the create form re-opened.
   useEffect(() => {
     if (loading) return
-    // initialOpenId wins — the page-level detail view passes a
+    // initialOpenId wins - the page-level detail view passes a
     // specific community ID, not just "expand the first".
     if (initialOpenId && communities.some(c => c.id === initialOpenId) && !openId) {
       setOpenId(initialOpenId)
@@ -395,7 +395,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, initialMode, initialModeToken, initialOpenId])
 
-  // Phase 4F (inventory followup, 2026-05-01) — realtime sub on
+  // Phase 4F (inventory followup, 2026-05-01) - realtime sub on
   // community_stockpile_items. When player A deposits an item via
   // the InventoryPanel give modal, player B's open community panel
   // sees the row appear without a manual reload. Filter by
@@ -478,17 +478,17 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
   }
 
-  // Phase 4F (inventory followup, 2026-05-01) — withdraw a stockpile
+  // Phase 4F (inventory followup, 2026-05-01) - withdraw a stockpile
   // item TO the viewing PC's inventory. Two-step: read characters.data,
   // stack-merge the item by (name, custom), write back; then call the
   // existing removeStockpileItem to decrement the stockpile row by 1.
-  // GM-only is overkill — anyone with stockpile read access (campaign
+  // GM-only is overkill - anyone with stockpile read access (campaign
   // member) can withdraw, mirroring how the deposit flow doesn't gate
   // on role. The ledger lives in roll_log via the existing log
   // pipeline; future polish can add an explicit withdrawal log row.
   async function withdrawStockpileItemToPc(rowId: string, communityId: string) {
     if (!myCharacterId) {
-      alert('No PC selected — assign a character to this campaign before withdrawing from the stockpile.')
+      alert('No PC selected - assign a character to this campaign before withdrawing from the stockpile.')
       return
     }
     const row = (stockpileByCommunity[communityId] ?? []).find(r => r.id === rowId)
@@ -543,7 +543,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
   }
 
-  // Phase D dashboard loader — fetches full Morale history (with
+  // Phase D dashboard loader - fetches full Morale history (with
   // role_snapshot) + recruit attempts from roll_log for one community.
   // Lazy: runs only when the GM expands the Dashboard panel for that
   // community, so we don't pay the round-trip up front for everyone.
@@ -576,9 +576,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       if (dj.communityId !== communityId) continue
       // Pull NPC name from the label since damage_json doesn't carry
       // it directly. Label shape: '🤝 X recruited Y to Z' (success) or
-      // '🤝 X tried to recruit Y — outcome' (fail). Y is what we want.
+      // '🤝 X tried to recruit Y - outcome' (fail). Y is what we want.
       const succ = String(row.label).match(/🤝\s+.+?\s+recruited\s+(.+?)(?:\s+as\s+|\s+to\s+)/)
-      const fail = String(row.label).match(/🤝\s+.+?\s+tried to recruit\s+(.+?)\s+—/)
+      const fail = String(row.label).match(/🤝\s+.+?\s+tried to recruit\s+(.+?)\s+-/)
       const npcName = succ?.[1] ?? fail?.[1] ?? '?'
       recruits.push({
         rollerName: row.character_name ?? '?',
@@ -623,7 +623,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     ])
     // Surface any partial failures so silent RLS denials / network
     // blips don't read as "the campaign has no communities/NPCs/PCs/pins"
-    // — gracefully degrade to empty arrays for whichever path failed,
+    // - gracefully degrade to empty arrays for whichever path failed,
     // but make the failure visible in the console.
     if (comsRes.error) console.error('[CampaignCommunity] communities fetch:', comsRes.error.message)
     if (npcsRes.error) console.error('[CampaignCommunity] npcs fetch:', npcsRes.error.message)
@@ -650,7 +650,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         .select('*')
         .in('community_id', coms.map(c => c.id))
         .is('left_at', null)
-      // Parallel — recent Morale outcomes for each community. Small
+      // Parallel - recent Morale outcomes for each community. Small
       // window (6 rows per community) for the trend chip strip; we
       // DESC order them by week and slice to 5 on the client so we
       // have room to filter/adjust display later.
@@ -666,7 +666,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         if (moraleByCom[cid].length < 5) moraleByCom[cid].push({ week_number: row.week_number, outcome: row.outcome })
       }
       setRecentMorale(moraleByCom)
-      // Phase E — world-facing mirror rows. One-per-source so we can
+      // Phase E - world-facing mirror rows. One-per-source so we can
       // index by community_id. Read policies let campaign members see
       // their own pending rows, so this works for GMs mid-moderation
       // too.
@@ -686,7 +686,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         }
       }
       setWorldRows(worldByCom)
-      // Phase 4D — per-community feed. Pull the most-recent 20 events
+      // Phase 4D - per-community feed. Pull the most-recent 20 events
       // per community in one batch (RLS scopes by campaign membership).
       // Hydrate author usernames in the same pass so the feed cards
       // can render "by <username>" without a per-card lookup.
@@ -717,7 +717,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       } else {
         setEventAuthors({})
       }
-      // Phase E Sprint 4e — survivors per dissolved community for
+      // Phase E Sprint 4e - survivors per dissolved community for
       // the Migration modal. Soft-removed rows with left_reason
       // 'dissolved' are the eligible offer pool.
       const dissolvedComIds = coms.filter(c => c.status === 'dissolved').map(c => c.id)
@@ -735,7 +735,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       } else {
         setDissolvedSurvivors({})
       }
-      // Migration target picker — every approved world_community is
+      // Migration target picker - every approved world_community is
       // a potential destination. RLS already exposes approved rows
       // publicly so this query is unauthenticated-friendly.
       const { data: targets } = await supabase
@@ -761,7 +761,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       // ALL NPC members (not just unassigned) so min quotas are hit.
       // A community where 10/12 NPCs are all in Gatherers + 0 in the
       // other buckets needs re-sorting, not just new-member top-up.
-      // Manual GM/Thriver overrides get stomped here by design — the
+      // Manual GM/Thriver overrides get stomped here by design - the
       // explicit "Re-balance Roles" button always re-runs this logic,
       // and load-time runs it when the current state obviously fails.
       const npcById = new Map<string, NpcOption>()
@@ -785,7 +785,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const minOk = currentCounts.gatherer >= Math.ceil(n * 0.33)
           && currentCounts.maintainer >= Math.ceil(n * 0.20)
           && currentCounts.safety >= Math.max(1, Math.ceil(n * 0.05))
-        // Don't rebalance if mins are met AND nothing is unassigned —
+        // Don't rebalance if mins are met AND nothing is unassigned -
         // the current assignment is the GM's deliberate choice.
         if (minOk && currentUnassigned === 0) continue
         const newAssignment = rebalanceNpcRoles(laborMembers, npcById)
@@ -830,16 +830,16 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     setLoading(false)
   }
 
-  // Manual rebalance trigger — wipes existing NPC roles and re-runs
+  // Manual rebalance trigger - wipes existing NPC roles and re-runs
   // the quota-aware allocator. Useful when the GM has made enough
   // changes that the auto-load version stops firing but the
   // distribution is still off.
   async function handleRebalance(communityId: string) {
     const mems = members[communityId] ?? []
-    // Rebalance only the labor pool — assigned NPCs stay put.
+    // Rebalance only the labor pool - assigned NPCs stay put.
     const laborMembers = mems.filter(m => !!m.npc_id && m.role !== 'assigned')
     if (laborMembers.length === 0) {
-      alert('Nothing to re-balance — no NPC labor-pool members in this community yet.')
+      alert('Nothing to re-balance - no NPC labor-pool members in this community yet.')
       return
     }
     const npcById = new Map<string, NpcOption>()
@@ -851,7 +851,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       if (next !== m.role) updates.push({ id: m.id, role: next })
     }
     if (updates.length === 0) {
-      alert('Roles are already at their minimums — nothing to re-balance.')
+      alert('Roles are already at their minimums - nothing to re-balance.')
       return
     }
     const results = await Promise.all(updates.map(u =>
@@ -860,7 +860,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const errors = results.map((r, i) => r.error ? `${updates[i].id}: ${r.error.message}` : null).filter(Boolean)
     if (errors.length > 0) {
       console.error('[rebalance] updates failed:', errors)
-      alert(`Re-balance partial — ${updates.length - errors.length} of ${updates.length} role updates saved. Errors:\n${errors.join('\n')}`)
+      alert(`Re-balance partial - ${updates.length - errors.length} of ${updates.length} role updates saved. Errors:\n${errors.join('\n')}`)
     }
     setMembers(prev => ({
       ...prev,
@@ -871,7 +871,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }))
   }
 
-  // ── Phase 4D — manual community-event composer ──────────────────
+  // ── Phase 4D - manual community-event composer ──────────────────
   // Drives the "📝 Post community update" affordance inside the Feed
   // section. GM-only. Reuses the same lib/community-events.ts pipeline
   // as the auto-posts so the rendered card shapes are uniform.
@@ -905,7 +905,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     await load()
   }
 
-  // ── Phase E Sprint 4e — Migration handlers ──────────────────────
+  // ── Phase E Sprint 4e - Migration handlers ──────────────────────
   function openMigrationModal(c: Community) {
     setMigrationCommunityId(c.id)
     setMigrationTargetId('')
@@ -955,7 +955,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const { error } = await supabase.from('community_migrations').insert(rows)
     setMigrationSubmitting(false)
     if (error) { alert(`Migration offer failed: ${error.message}`); return }
-    // Phase 4D — auto-post the migration to the source community's feed.
+    // Phase 4D - auto-post the migration to the source community's feed.
     // The target community is a world_communities row; we resolve its
     // public name from the dropdown options that backed the modal.
     if (user?.id) {
@@ -979,7 +979,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     alert(`Sent ${rows.length} migration offer${rows.length === 1 ? '' : 's'}. The receiving GM will see them in their notifications.`)
   }
 
-  // ── Phase E Sprint 4d — Schism handlers ──────────────────────────
+  // ── Phase E Sprint 4d - Schism handlers ──────────────────────────
   function openSchismModal(c: Community) {
     setSchismCommunityId(c.id)
     setSchismName(`${c.name} Breakaway`)
@@ -1055,7 +1055,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
     // 3) Insert fresh member rows in the new community. Explicit
     // `status: 'active'` because the DB default isn't uniform across
-    // environments (some old schemas default to 'pending') — which
+    // environments (some old schemas default to 'pending') - which
     // would silently send breakaway members into the pending-
     // requests bucket, making the new community look empty to every
     // down-stream UI including the "Re-balance Roles" button.
@@ -1075,7 +1075,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       alert(`Schism partial: new community created + members removed but the new roster insert failed: ${insErr.message}. You may need to add the breakaway members manually.`)
       return
     }
-    // Phase 4D — auto-post the schism to the original community's feed.
+    // Phase 4D - auto-post the schism to the original community's feed.
     // (The new community gets its own implicit "founded by schism" entry
     // via the manual composer if the GM wants to record it.)
     const { user: schismUser } = await getCachedAuth()
@@ -1101,7 +1101,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     await load()
   }
 
-  // ── Phase E — Publish to Tapestry ─────────────────────────
+  // ── Phase E - Publish to Tapestry ─────────────────────────
   // Size band derived from actual roster count. SRD §08 threshold: 13
   // members = true Community. Below 13 is "Group" (pre-Community).
   // Taxonomy tuned 2026-04-24 to match the canonical size tiers.
@@ -1172,7 +1172,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const now = new Date().toISOString()
     const existing = worldRows[c.id]
     if (existing) {
-      // Republish — patch the public-facing fields. Moderation state
+      // Republish - patch the public-facing fields. Moderation state
       // is preserved (a GM updating their community's public card
       // doesn't re-trigger Thriver moderation for now; major changes
       // could eventually flip it back to pending but we don't want
@@ -1231,7 +1231,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     setPublishFactionLabel('')
   }
 
-  // Unpublish — deletes the world row (CASCADE relies on the source
+  // Unpublish - deletes the world row (CASCADE relies on the source
   // community unique constraint so this is idempotent). Reverts the
   // source community's world_visibility to 'private' and clears the
   // back-link. Existing moderation is discarded; next publish goes
@@ -1255,9 +1255,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     })
   }
 
-  // Phase D — "Skip Week" pure clock bump. Advances week_number
+  // Phase D - "Skip Week" pure clock bump. Advances week_number
   // without running a Weekly Check. Leaves consecutive_failures and
-  // members untouched — nothing rolled, nothing consequenced. When
+  // members untouched - nothing rolled, nothing consequenced. When
   // the GM runs the Weekly Check next, Mood carries from the prior
   // check's cmod_for_next (not the skipped weeks). Use for off-screen
   // time where the fiction doesn't demand mechanical resolution.
@@ -1288,14 +1288,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // 1) Other founders first.
     const founders = mems.filter(m => m.recruitment_type === 'founder')
     if (founders.length > 0) {
-      // Founders ordered by joined_at ASC — earliest founder wins.
+      // Founders ordered by joined_at ASC - earliest founder wins.
       return [...founders].sort((a, b) => (a.joined_at ?? '').localeCompare(b.joined_at ?? ''))[0]
     }
     // 2) Longest-tenured remaining member (smallest joined_at).
     return [...mems].sort((a, b) => (a.joined_at ?? '').localeCompare(b.joined_at ?? ''))[0]
   }
 
-  // Step-down — current leader (or GM) abdicates. Successor can be
+  // Step-down - current leader (or GM) abdicates. Successor can be
   // 'auto' (pickAutoSuccessor), '' (leave leaderless), or a member id.
   // Writes a null + optional re-set on communities.leader_* and
   // refreshes local state. Reuses handleSetLeader for the new-leader
@@ -1307,7 +1307,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     let targetMember: Member | null = null
     if (successor === 'auto') {
       // Exclude the current PC leader's member row if there is one
-      // (founder match) — we don't want auto-pick to re-nominate them.
+      // (founder match) - we don't want auto-pick to re-nominate them.
       const currentLeaderMember = (members[communityId] ?? []).find(m =>
         (c.leader_npc_id && m.npc_id === c.leader_npc_id)
         || (c.leader_user_id && m.invited_by_user_id === c.leader_user_id)
@@ -1360,7 +1360,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const { error } = await supabase.from('communities').update(update).eq('id', communityId)
     if (error) { alert(`Leader change failed: ${error.message}`); return }
     setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, ...update } : c))
-    // Progression log on a new PC leader (NPC leaders skipped — no log).
+    // Progression log on a new PC leader (NPC leaders skipped - no log).
     if (choice.kind === 'pc' && member.character_id) {
       const comm = communities.find(c => c.id === communityId)
       void appendProgressionEntry(supabase, member.character_id, 'community', `🏛️ Became leader of ${comm?.name ?? 'a community'}.`)
@@ -1370,7 +1370,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // ── Homestead pin setter ────────────────────────────────────────
   // The Homestead is the pin a published community shows up at on the
   // world map. Settable at create time (the New Community form), at
-  // schism time (the breakaway's form), and here — inline on any
+  // schism time (the breakaway's form), and here - inline on any
   // existing community body, GM-only. A null value removes the link
   // (community falls back to "unlocated" on publish).
   async function handleSetHomestead(communityId: string, pinId: string | null) {
@@ -1410,7 +1410,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         .maybeSingle()
       const myCharacterId = (myCm as any)?.character_id as string | undefined
       if (myCharacterId) {
-        // status omitted — DB default 'active' covers new schema,
+        // status omitted - DB default 'active' covers new schema,
         // missing-column old schema ignores the unsent field.
         const { data: founderRow, error: enrollErr } = await supabase.from('community_members').insert({
           community_id: newComm.id,
@@ -1555,7 +1555,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
   }
 
-  // Phase D — Apprentice task delegation handlers. GM-only for MVP;
+  // Phase D - Apprentice task delegation handlers. GM-only for MVP;
   // master-PC-edit is a natural extension (gate on member.apprentice_of
   // matching the viewer's PC). Saving null (empty trimmed draft) clears
   // the task back to idle.
@@ -1592,7 +1592,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       setAssignmentTaskDraft(m.current_task ?? '')
       return
     }
-    // Flipping OUT of 'assigned' into any other role — clear the
+    // Flipping OUT of 'assigned' into any other role - clear the
     // linkage so the previous director / task don't linger as stale
     // ghosts on a Gatherer/Maintainer/Safety/Unassigned row.
     const update: Partial<Member> = { role }
@@ -1610,7 +1610,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
 
   // Save handler for the "Assigned" role modal. Writes role='assigned'
   // + assignment_pc_id + current_task in one round-trip. Cancelling
-  // closes the modal without changing anything — the role dropdown
+  // closes the modal without changing anything - the role dropdown
   // never flipped (handleChangeRole stopped short of the update).
   async function handleSaveAssignment() {
     if (!assigningMember) return
@@ -1661,7 +1661,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     return g
   }, [openMembers])
 
-  // Subjects eligible to be added — exclude anyone already in this community
+  // Subjects eligible to be added - exclude anyone already in this community
   const availableNpcs = useMemo(() => {
     if (!openCommunity) return []
     const taken = new Set((members[openCommunity.id] ?? []).map(m => m.npc_id).filter(Boolean))
@@ -1711,7 +1711,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           <div>
             <div style={{ ...LABEL_STYLE_LG, marginBottom: '2px' }}>Homestead pin (optional)</div>
             <select value={newHomestead} onChange={e => setNewHomestead(e.target.value)} style={{ ...inp, appearance: 'none' }}>
-              <option value="">— None —</option>
+              <option value="">- None -</option>
               {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
@@ -1755,12 +1755,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const founderName = founderMember ? memberLabel(founderMember) : null
         // Leader resolution. Precedence:
         //   1. Explicit NPC leader (leader_npc_id on the community)
-        //   2. Explicit PC leader (leader_user_id) — matched back to
+        //   2. Explicit PC leader (leader_user_id) - matched back to
         //      a member via invited_by_user_id (best-effort; may miss
         //      for pre-migration founders)
         //   3. Fallback: the founder (first recruitment_type='founder')
         //      unless they've explicitly stepped down. "Stepped down"
-        //      mechanism is queued in tasks/todo.md — for now, any
+        //      mechanism is queued in tasks/todo.md - for now, any
         //      non-null leader_* column counts as "set".
         const leaderMember = (() => {
           if (c.leader_npc_id) return mems.find(m => m.npc_id === c.leader_npc_id) ?? null
@@ -1786,7 +1786,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <span style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : isCommunity ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : isCommunity ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     {c.status === 'dissolved' ? 'Dissolved' : isCommunity ? 'Community' : 'Group'}
                   </span>
-                  {/* Phase E — public visibility chip. Reads from the
+                  {/* Phase E - public visibility chip. Reads from the
                       loaded worldRows map; visible to everyone when
                       the community is approved (world_communities RLS
                       grants public read on approved rows) and to the
@@ -1805,7 +1805,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       : w.moderation_status === 'rejected' ? '#2a1210'
                       : '#2a2010'
                     const title = w.moderation_status === 'approved'
-                      ? 'Published to the Distemperverse — visible on the world map to every GM and player.'
+                      ? 'Published to the Distemperverse - visible on the world map to every GM and player.'
                       : w.moderation_status === 'pending'
                       ? 'Submitted for Thriver moderation. Visible on the world map once approved.'
                       : 'Rejected by a Thriver. Edit public info and re-submit via the 🌐 strip below.'
@@ -1833,7 +1833,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                 )}
 
-                {/* At-a-Glance — player-facing read-only summary.
+                {/* At-a-Glance - player-facing read-only summary.
                     Morale trend chip row (last 5 checks, newest first)
                     and, if the viewer is a member of this community,
                     a "Your role · Apprentice · Recruits" line that
@@ -1882,14 +1882,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           <span style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Recent Morale</span>
                           <div style={{ display: 'flex', gap: '4px' }}>
                             {[...recent].reverse().map((m, i) => (
-                              <span key={i} title={`Week ${m.week_number} — ${m.outcome.replace(/_/g, ' ')}`}
+                              <span key={i} title={`Week ${m.week_number} - ${m.outcome.replace(/_/g, ' ')}`}
                                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Carlito, sans-serif', fontWeight: 700, fontSize: '15px' }}>
                                 {outcomeChipLetter(m.outcome)}
                               </span>
                             ))}
                           </div>
                           <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>oldest → newest</span>
-                          {/* Phase D dashboard toggle — GM-only. Lazy-loads
+                          {/* Phase D dashboard toggle - GM-only. Lazy-loads
                               full morale history + recruit attempts on
                               first open. */}
                           {isGM && (
@@ -1900,7 +1900,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           )}
                         </div>
                       )}
-                      {/* Phase D Dashboard panel — full timeline, role
+                      {/* Phase D Dashboard panel - full timeline, role
                           coverage chart, recruit success rate. GM-only. */}
                       {isGM && dashboardOpen.has(c.id) && (() => {
                         const moraleHist = dashboardMorale[c.id]
@@ -1921,7 +1921,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                                 {moraleHist.map((m, i) => {
                                   const delta = m.members_after - m.members_before
                                   return (
-                                    <span key={i} title={`Week ${m.week_number} — ${m.outcome.replace(/_/g, ' ')} · members ${m.members_before} → ${m.members_after}${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`}
+                                    <span key={i} title={`Week ${m.week_number} - ${m.outcome.replace(/_/g, ' ')} · members ${m.members_before} → ${m.members_after}${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`}
                                       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Carlito, sans-serif', fontWeight: 700, fontSize: '14px' }}>
                                       {outcomeChipLetter(m.outcome)}
                                     </span>
@@ -1982,7 +1982,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           </div>
                         )
                         // Module 2: recruit success rate. Aggregate by
-                        // PC roller and overall — count attempts, count
+                        // PC roller and overall - count attempts, count
                         // successes (Success / Wild Success / High Insight).
                         const isSuccessOutcome = (o: string) => o === 'Success' || o === 'Wild Success' || o === 'High Insight'
                         const totalAttempts = recruits.length
@@ -2050,7 +2050,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Homestead — inline dropdown. GM-only; all other
+                {/* Homestead - inline dropdown. GM-only; all other
                     viewers see a read-only line. The Homestead pin
                     drives publish coordinates (world map marker) and
                     travels into migration / schism flows, so changing
@@ -2075,7 +2075,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         value={c.homestead_pin_id ?? ''}
                         onChange={e => handleSetHomestead(c.id, e.target.value || null)}
                         style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
-                        <option value="">— unlocated —</option>
+                        <option value="">- unlocated -</option>
                         {pins.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
@@ -2091,7 +2091,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Leader — call-out + dropdown. The current leader
+                {/* Leader - call-out + dropdown. The current leader
                     is shown bold; selecting a new member from the
                     dropdown calls handleSetLeader which writes the
                     correct leader_user_id / leader_npc_id on the
@@ -2119,7 +2119,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             handleSetLeader(c.id, { kind: mem.npc_id ? 'npc' : 'pc', memberId: mem.id })
                           }}
                           style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
-                          <option value="">— pick a leader —</option>
+                          <option value="">- pick a leader -</option>
                           {mems.map(m => (
                             <option key={m.id} value={m.id}>{memberLabel(m)}{m.npc_id ? ' (NPC)' : ' (PC)'}</option>
                           ))}
@@ -2139,8 +2139,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           </div>
                           <select value={successorChoice} onChange={e => setSuccessorChoice(e.target.value)}
                             style={{ padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
-                            <option value="auto">Auto-pick{autoSuccessorMember ? ` — ${memberLabel(autoSuccessorMember)}${autoSuccessorMember.npc_id ? ' (NPC)' : ' (PC)'}` : ' — none available'}</option>
-                            <option value="">— Leave leaderless (−1 Clear Voice on next Morale) —</option>
+                            <option value="auto">Auto-pick{autoSuccessorMember ? ` - ${memberLabel(autoSuccessorMember)}${autoSuccessorMember.npc_id ? ' (NPC)' : ' (PC)'}` : ' - none available'}</option>
+                            <option value="">- Leave leaderless (−1 Clear Voice on next Morale) -</option>
                             {mems.filter(m => m.id !== leaderMember?.id).map(m => (
                               <option key={m.id} value={m.id}>{memberLabel(m)}{m.npc_id ? ' (NPC)' : ' (PC)'}</option>
                             ))}
@@ -2161,12 +2161,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Phase C — Weekly Check button. Shows when the
+                {/* Phase C - Weekly Check button. Shows when the
                     Group has crossed the 13-member threshold AND
                     isn't dissolved AND the viewer is either the GM
                     OR the community's PC leader (leader_user_id
                     matches their auth.uid). Communities are
-                    player-driven per SRD §08 — the Leader should
+                    player-driven per SRD §08 - the Leader should
                     be able to run a Weekly Check without the GM
                     driving. DB RLS on community_morale_checks /
                     community_resource_checks already permits any
@@ -2188,18 +2188,18 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       </div>
                     </div>
                     <button onClick={() => handleSkipWeek(c)}
-                      title="Advance the community's week counter without rolling. Use for off-screen time — Morale / resource consequences only apply on an actual Weekly Check."
+                      title="Advance the community's week counter without rolling. Use for off-screen time - Morale / resource consequences only apply on an actual Weekly Check."
                       style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Skip Week
                     </button>
-                    {/* NPC-proxy recruitment — disabled when there's
+                    {/* NPC-proxy recruitment - disabled when there's
                         no Leader NPC set (proxy rolls are by-the-leader
                         by definition). Hover tooltip explains why. */}
                     <button onClick={() => setProxyRecruitCommunityId(c.id)}
                       disabled={!c.leader_npc_id}
                       title={c.leader_npc_id
-                        ? 'Have the Leader NPC recruit a target NPC into this community — off-screen growth between sessions.'
-                        : 'Set a Leader NPC first — proxy recruitment uses the leader as the roller.'}
+                        ? 'Have the Leader NPC recruit a target NPC into this community - off-screen growth between sessions.'
+                        : 'Set a Leader NPC first - proxy recruitment uses the leader as the roller.'}
                       style={{ padding: '8px 14px', background: c.leader_npc_id ? 'transparent' : '#111', border: `1px solid ${c.leader_npc_id ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: c.leader_npc_id ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: c.leader_npc_id ? 'pointer' : 'not-allowed' }}>
                       🤝 Recruit (Proxy)
                     </button>
@@ -2210,7 +2210,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </div>
                 )}
 
-                {/* Phase 4D — per-community Campfire feed. Renders the
+                {/* Phase 4D - per-community Campfire feed. Renders the
                     most recent N events with type-keyed icons + accents.
                     GM gets a "📝 Post community update" affordance for
                     free-form notes. Auto-posts (Morale outcome / schism
@@ -2244,7 +2244,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       {composerOpen && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                           <textarea value={eventDraftBody} onChange={e => setEventDraftBody(e.target.value)}
-                            placeholder="Note for the community feed — narrative, council news, downtime events, etc."
+                            placeholder="Note for the community feed - narrative, council news, downtime events, etc."
                             style={{ width: '100%', minHeight: '70px', resize: 'vertical', padding: '8px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', lineHeight: 1.5 }} />
                           <div style={{ display: 'flex', gap: '6px' }}>
                             <button onClick={handleManualPost} disabled={eventSubmitting || !eventDraftBody.trim()}
@@ -2305,14 +2305,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Phase E — Publish to Tapestry strip. Shows
+                {/* Phase E - Publish to Tapestry strip. Shows
                     the world-facing status chip + actions. Community
                     must be at 13+ members and not dissolved for first
                     publish. Republish (Update) and Unpublish stay
                     available after moderation.
                     Visibility: GM of the source campaign, OR the
                     community's leader (a PC leader publishes their
-                    own community without needing the GM to do it —
+                    own community without needing the GM to do it -
                     Communities are player-driven per SRD §08). RLS
                     mirrors this via world-communities-leader-
                     permissions.sql. */}
@@ -2359,7 +2359,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Pending-requests — only visible to the leader (or
+                {/* Pending-requests - only visible to the leader (or
                     GMs, which the wider RLS already permits). Approve
                     flips status to 'active' + sets joined_at; Reject
                     deletes the row. */}
@@ -2396,7 +2396,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Role bars — percentages are over NPC workforce only.
+                {/* Role bars - percentages are over NPC workforce only.
                     PCs don't pull down role coverage since they aren't
                     assigned labor. The "Re-balance" button triggers
                     the quota-aware allocator manually. */}
@@ -2432,7 +2432,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   })}
                 </div>
 
-                {/* Stockpile — shared community resource pool. Maintainers
+                {/* Stockpile - shared community resource pool. Maintainers
                     gather Supplies (Clothed Check) and PCs can deposit
                     items into the stockpile from their own InventoryPanel.
                     Members + GM can curate via the inline form below.
@@ -2478,12 +2478,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               )}
                               {item.notes && <span style={{ color: '#5a5550', fontSize: '13px' }}>{item.notes}</span>}
                               <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                                {/* Take — withdraw 1 to viewing PC's inventory.
+                                {/* Take - withdraw 1 to viewing PC's inventory.
                                     Hidden when no PC is bound to the viewer
                                     (GM-only / unassigned campaign member). */}
                                 {myCharacterId && (
                                   <button onClick={() => withdrawStockpileItemToPc(item.id, c.id)}
-                                    title="Take 1 — moves to your inventory"
+                                    title="Take 1 - moves to your inventory"
                                     style={{ background: 'transparent', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', padding: '0 6px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                                     Take
                                   </button>
@@ -2547,7 +2547,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     can see who's apprenticed to whom at a glance. */}
                 {(() => {
                   const renderRow = (m: Member, accent: string) => {
-                    // Name is always the dominant visual — bigger font,
+                    // Name is always the dominant visual - bigger font,
                     // takes all remaining flex space. Two flavors pin
                     // a PC to the NPC row:
                     //   - Apprentice → master = apprentice_of_character_id
@@ -2567,7 +2567,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     const editingTask = editingTaskMemberId === m.id
                     const taskText = m.current_task?.trim() || ''
                     // Is this member row the viewing player's own PC? Gates
-                    // the self-leave affordance — shown alongside the GM's
+                    // the self-leave affordance - shown alongside the GM's
                     // remove button so a player can opt out without pinging
                     // the GM.
                     const isMyPc = !!myCharacterId && m.character_id === myCharacterId
@@ -2672,7 +2672,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
 
                   return (
                     <>
-                      {/* PC block — between the role bars and NPC roster */}
+                      {/* PC block - between the role bars and NPC roster */}
                       {pcMems.length > 0 && (
                         <div>
                           <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Player Characters ({pcMems.length})</div>
@@ -2717,7 +2717,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       </select>
                       <select value={addSubjectId} onChange={e => setAddSubjectId(e.target.value)}
                         style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                        <option value="">— choose —</option>
+                        <option value="">- choose -</option>
                         {(addKind === 'npc' ? availableNpcs : availableChars).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                       </select>
                     </div>
@@ -2738,7 +2738,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </div>
                 )}
 
-                {/* Phase E Sprint 4e — Migration on dissolution.
+                {/* Phase E Sprint 4e - Migration on dissolution.
                     Shows on dissolved communities only: lists the
                     survivors (left_reason='dissolved') and offers
                     them to nearby published communities. GM-only;
@@ -2771,7 +2771,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Phase E Sprint 4d — Schism. Splits this community
+                {/* Phase E Sprint 4d - Schism. Splits this community
                     into two: original keeps its remaining roster,
                     breakaway is a brand-new community with the picked
                     members. GM-only; gated on roster ≥ 14 so at
@@ -2780,7 +2780,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     grows). */}
                 {isGM && c.status !== 'dissolved' && total >= 14 && (
                   <button onClick={() => openSchismModal(c)}
-                    title="Split this community into two — pick which members leave with the breakaway."
+                    title="Split this community into two - pick which members leave with the breakaway."
                     style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #d48bd4', borderRadius: '2px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
                     ⛓ Schism
                   </button>
@@ -2797,7 +2797,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         )
       })}
 
-      {/* Phase E Sprint 4e — Migration modal. Lists the dissolved
+      {/* Phase E Sprint 4e - Migration modal. Lists the dissolved
           community's surviving NPCs + an approved-world-community
           target picker + an optional narrative. Submit inserts one
           community_migrations row per picked survivor; trigger fires
@@ -2814,7 +2814,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                    📤 Offer Survivors — {original.name}
+                    📤 Offer Survivors - {original.name}
                   </div>
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     Send the dispossessed to a new home
@@ -2831,7 +2831,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Target community</div>
                   <select value={migrationTargetId} onChange={e => setMigrationTargetId(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                    <option value="">— pick a community —</option>
+                    <option value="">- pick a community -</option>
                     {migrationTargets.map(t => (
                       <option key={t.id} value={t.id}>{t.name} ({t.size_band}){t.faction_label ? ` · ${t.faction_label}` : ''}</option>
                     ))}
@@ -2857,7 +2857,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Narrative (optional)</div>
                   <textarea value={migrationNarrative}
-                    placeholder="e.g. They survived the raid that broke us. They carry our last stockpile of antibiotics — please honor what's left of us."
+                    placeholder="e.g. They survived the raid that broke us. They carry our last stockpile of antibiotics - please honor what's left of us."
                     onChange={e => setMigrationNarrative(e.target.value)}
                     rows={3}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
@@ -2876,7 +2876,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         )
       })()}
 
-      {/* Phase E Sprint 4d — Schism modal. Pick a name for the new
+      {/* Phase E Sprint 4d - Schism modal. Pick a name for the new
           breakaway community + optional homestead pin + which members
           go with it. Submit creates the new community, soft-removes
           the picked members from the original (left_reason='schism'),
@@ -2896,7 +2896,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                    ⛓ Schism — {original.name}
+                    ⛓ Schism - {original.name}
                   </div>
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     Split into two communities
@@ -2927,7 +2927,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Breakaway Homestead pin (optional)</div>
                   <select value={schismHomesteadPinId} onChange={e => setSchismHomesteadPinId(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                    <option value="">— None (set later) —</option>
+                    <option value="">- None (set later) -</option>
                     {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
@@ -2969,7 +2969,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         )
       })()}
 
-      {/* Phase E — Publish to Tapestry modal. GM confirms what
+      {/* Phase E - Publish to Tapestry modal. GM confirms what
           will go public (name, description, homestead coords if set,
           size band computed from roster, public status from community
           state) plus a freeform faction_label. INSERT → status=pending
@@ -2990,7 +2990,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                    🌐 {world ? 'Update' : 'Publish'} — {c.name}
+                    🌐 {world ? 'Update' : 'Publish'} - {c.name}
                   </div>
                   <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     {world ? 'Refresh the Tapestry-facing card' : 'Share this community across the Tapestry'}
@@ -3013,7 +3013,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <div style={{ display: 'flex', gap: '14px', fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Size:</span> <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{sizeBand}</span> <span style={{ color: '#5a5550' }}>({total} members)</span></span>
                     <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Status:</span> <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{publicStatus}</span></span>
-                    <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Homestead:</span> <span style={{ color: homesteadPin ? '#7fc458' : '#EF9F27', fontWeight: 700 }}>{homesteadPin ? homesteadPin.name : 'none set — will publish unlocated'}</span></span>
+                    <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Homestead:</span> <span style={{ color: homesteadPin ? '#7fc458' : '#EF9F27', fontWeight: 700 }}>{homesteadPin ? homesteadPin.name : 'none set - will publish unlocated'}</span></span>
                   </div>
                 </div>
 
@@ -3051,7 +3051,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const communityMems = members[m.community_id] ?? []
         // PCs eligible to direct: any PC in this campaign. We prefer
         // listing PCs who are community members first, since the GM
-        // usually assigns to someone present — but include all
+        // usually assigns to someone present - but include all
         // chars so absent PCs can still direct (narrative freedom).
         const memberPcIds = new Set(communityMems.filter(x => x.character_id).map(x => x.character_id))
         const orderedChars = [...chars].sort((a, b) => {
@@ -3079,7 +3079,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <select value={assignmentPcDraft}
                     onChange={e => setAssignmentPcDraft(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                    <option value="">— pick a PC —</option>
+                    <option value="">- pick a PC -</option>
                     {orderedChars.map(c => {
                       const isMember = memberPcIds.has(c.id)
                       return <option key={c.id} value={c.id}>{c.name}{isMember ? '' : ' (not in this community)'}</option>
@@ -3109,7 +3109,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         )
       })()}
 
-      {/* Phase C — Weekly Check modal. Rendered once at top level;
+      {/* Phase C - Weekly Check modal. Rendered once at top level;
           the individual community cards just set moraleCommunityId
           to open it. Success → reload the whole panel so the updated
           week_number / consecutive_failures / member roster all
@@ -3134,7 +3134,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         )
       })()}
 
-      {/* Phase B (NPC-proxy) — off-screen recruitment modal. Same
+      {/* Phase B (NPC-proxy) - off-screen recruitment modal. Same
           pattern as the Morale modal: rendered once at top level,
           opened by setProxyRecruitCommunityId(c.id) from the card. On
           a successful recruit we reload to pick up the new member. */}

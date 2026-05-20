@@ -17,7 +17,7 @@ import ReactionButtons, { aggregateReactions, type ReactionAggregate } from '../
 import InlineRepliesPanel from '../../../components/InlineRepliesPanel'
 import AuthorBadge from '../../../components/AuthorBadge'
 
-// /campfire/lfg — bulletin board for finding GMs and players. Cross-campaign
+// /campfire/lfg - bulletin board for finding GMs and players. Cross-campaign
 // by design: this is the meta layer, not tied to any single story. Anyone
 // signed in can browse; only the post's author can edit or delete it.
 
@@ -33,7 +33,7 @@ interface LfgPost {
   schedule: string | null
   moderation_status: 'pending' | 'approved' | 'rejected'
   moderator_notes: string | null
-  // Phase 4E final — count maintained by lfg_post_replies trigger.
+  // Phase 4E final - count maintained by lfg_post_replies trigger.
   reply_count: number | null
   created_at: string
   updated_at: string
@@ -48,7 +48,7 @@ type Filter = 'all' | 'gm_seeking_players' | 'player_seeking_game'
 
 // Compose-time scope. LFG has no campaign_id concept (LFG is by nature
 // looking-for-cross-campaign), so the choices are setting-tagged or
-// global only — no campaign scope.
+// global only - no campaign scope.
 type Scope = 'setting' | 'global'
 
 const KIND_LABEL: Record<Kind, string> = {
@@ -74,20 +74,20 @@ export default function LfgPage() {
   // Seeded from the ?setting= URL param so picking a setting on the
   // /campfire hub propagates here.
   const [settingFilter, setSettingFilter] = useUrlSettingFilter()
-  // Phase 4E — schedule freetext filter. Schedule is a free-text column
+  // Phase 4E - schedule freetext filter. Schedule is a free-text column
   // (e.g. "Sundays 7pm EST", "Bi-weekly Tuesdays") so we substring-match
   // case-insensitively rather than try to parse natural-language times.
   const [scheduleQuery, setScheduleQuery] = useState<string>('')
-  // Phase 4E — pagination. Same shape as Forums + War Stories.
+  // Phase 4E - pagination. Same shape as Forums + War Stories.
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [loadingMore, setLoadingMore] = useState<boolean>(false)
   const PAGE_SIZE = 50
-  // Phase 4E (final) — reaction aggregates per LFG post.
+  // Phase 4E (final) - reaction aggregates per LFG post.
   const [reactions, setReactions] = useState<Record<string, ReactionAggregate>>({})
-  // Phase 4E (final) — inline reply expand. Single open id at a time.
+  // Phase 4E (final) - inline reply expand. Single open id at a time.
   const [openRepliesFor, setOpenRepliesFor] = useState<string | null>(null)
   const [replyCountOverride, setReplyCountOverride] = useState<Record<string, number>>({})
-  // Phase 4E (final) — FTS state.
+  // Phase 4E (final) - FTS state.
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [searchActive, setSearchActive] = useState<boolean>(false)
   const [searching, setSearching] = useState<boolean>(false)
@@ -107,7 +107,7 @@ export default function LfgPage() {
   const [myInterests, setMyInterests] = useState<Set<string>>(new Set())
   const [interestsByPost, setInterestsByPost] = useState<Record<string, { user_id: string; username: string }[]>>({})
   const [interestPending, setInterestPending] = useState<Set<string>>(new Set())
-  // Campaigns I GM — used by the 🎟 Invite picker on my own LFG posts so I
+  // Campaigns I GM - used by the 🎟 Invite picker on my own LFG posts so I
   // can DM an interested player a one-click join link without leaving this
   // page. Empty array = button is hidden (nothing to invite to).
   const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string; invite_code: string }[]>([])
@@ -166,7 +166,7 @@ export default function LfgPage() {
   }, [shareOpenId])
 
   // Close the Invite picker on outside click. Identical pattern to the
-  // Share popover — separate effect so each closes independently when the
+  // Share popover - separate effect so each closes independently when the
   // other opens.
   useEffect(() => {
     if (!invitingFor) return
@@ -180,7 +180,7 @@ export default function LfgPage() {
 
   async function sendInvite(otherUserId: string, postId: string, campaign: { id: string; name: string; invite_code: string }) {
     if (!myId) return
-    // Phase 4E (final) — replaces the old DM-with-link flow with a
+    // Phase 4E (final) - replaces the old DM-with-link flow with a
     // structured campaign_invitations row. The trigger creates a
     // notification on the recipient with type='campaign_invitation'
     // carrying invitation_id in metadata; NotificationBell renders
@@ -196,7 +196,7 @@ export default function LfgPage() {
     if (error) {
       // Unique constraint on (campaign_id, recipient_user_id, status='pending')
       // means a duplicate pending invite already exists. Treat that as
-      // success — the user already has the prior invite waiting.
+      // success - the user already has the prior invite waiting.
       if (error.code === '23505') {
         alert('You already have a pending invite to this player on this campaign.')
       } else {
@@ -263,7 +263,7 @@ export default function LfgPage() {
     }
     const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
     // Pre-launch audit R7. Previously this fetched every lfg_interests
-    // row visible via RLS in one unbounded query — at scale (10k posts +
+    // row visible via RLS in one unbounded query - at scale (10k posts +
     // power authors with hundreds of interest replies each) that fails.
     // Split into two bounded queries, each cheap:
     //   1. my own interests (naturally bounded by user's own activity)
@@ -297,7 +297,7 @@ export default function LfgPage() {
     const byPost: Record<string, { user_id: string; username: string }[]> = {}
     intRows.forEach(r => {
       if (r.interested_user_id === myCurrentId) myInts.add(r.post_id)
-      // Only build the roster for posts I authored — the rest of the
+      // Only build the roster for posts I authored - the rest of the
       // intRows visible via RLS are my own interests on others' posts.
       const post = list.find(p => p.id === r.post_id)
       if (post && post.author_user_id === myCurrentId) {
@@ -323,7 +323,7 @@ export default function LfgPage() {
     setLoading(false)
   }
 
-  // Phase 4E (final) — FTS. Replaces the visible post list with up to
+  // Phase 4E (final) - FTS. Replaces the visible post list with up to
   // 50 hits. Doesn't fetch interests for hits (they're roster-only on
   // author-owned posts; if your search hits your own posts you'll
   // already have those interests cached from the initial load).
@@ -365,7 +365,7 @@ export default function LfgPage() {
     setSearching(false)
   }
 
-  // Phase 4E — append the next page. Cursor = current posts.length.
+  // Phase 4E - append the next page. Cursor = current posts.length.
   // We don't refetch interests here; they were already pulled in full
   // via the RLS-scoped select on the initial load (it's small enough
   // to hydrate everything visible in one round-trip). New posts coming
@@ -473,13 +473,13 @@ export default function LfgPage() {
       title: draft.title.trim(),
       body: draft.body.trim(),
       // Setting scope writes the slug; Global scope writes null. The
-      // freetext input was deprecated in Phase 4A — old rows survive but
+      // freetext input was deprecated in Phase 4A - old rows survive but
       // editing one snaps it to the slug picker (or Global if unknown).
       setting: draft.scope === 'setting' ? draft.setting : null,
       schedule: draft.schedule.trim() || null,
       // Phase 4B: LFG has no campaign scope (it's cross-campaign by
       // definition), so every post queues for thriver review. Edits
-      // re-queue too — content changed, prior approval no longer holds.
+      // re-queue too - content changed, prior approval no longer holds.
       // Thriver-authored content auto-approves (locked 2026-05-09):
       // Thrivers ARE the moderation layer; making them queue their own
       // posts behind themselves is needless friction.
@@ -531,10 +531,10 @@ export default function LfgPage() {
     ? kindFiltered
     : kindFiltered.filter(p => (p.schedule ?? '').toLowerCase().includes(scheduleQ))
   // Author banner counts. LFG has no campaign scope, so every post
-  // queues — non-zero counts here are normal, not exceptional.
+  // queues - non-zero counts here are normal, not exceptional.
   const myPendingCount = posts.filter(p => p.author_user_id === myId && p.moderation_status === 'pending').length
   const myRejectedCount = posts.filter(p => p.author_user_id === myId && p.moderation_status === 'rejected').length
-  // Per-chip counts for the setting strip — respects the active kind filter
+  // Per-chip counts for the setting strip - respects the active kind filter
   // so the badge numbers match what'll actually show.
   const settingCounts = useMemo(() => {
     const base = filter === 'all' ? posts : posts.filter(p => p.kind === filter)
@@ -619,12 +619,12 @@ export default function LfgPage() {
           <div style={{ marginBottom: '10px' }}>
             <label style={lbl}>Title</label>
             <input style={inp} value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))}
-              placeholder={draft.kind === 'gm_seeking_players' ? 'e.g. Distemper — Chased setting, weekly' : 'e.g. Veteran player looking for a long-term game'} />
+              placeholder={draft.kind === 'gm_seeking_players' ? 'e.g. Distemper - Chased setting, weekly' : 'e.g. Veteran player looking for a long-term game'} />
           </div>
           <div style={{ marginBottom: '10px' }}>
             <label style={lbl}>Pitch</label>
             <textarea style={{ ...inp, minHeight: '110px', resize: 'vertical', fontFamily: 'Carlito, sans-serif' }} value={draft.body} onChange={e => setDraft(d => ({ ...d, body: e.target.value }))}
-              placeholder={draft.kind === 'gm_seeking_players' ? 'Describe the campaign — tone, themes, what kind of players you want.' : 'Describe what you are looking for — playstyle, character ideas, schedule.'} />
+              placeholder={draft.kind === 'gm_seeking_players' ? 'Describe the campaign - tone, themes, what kind of players you want.' : 'Describe what you are looking for - playstyle, character ideas, schedule.'} />
           </div>
           <div style={{ marginBottom: '12px' }}>
             <label style={lbl}>Where to post?</label>
@@ -649,7 +649,7 @@ export default function LfgPage() {
               </select>
             ) : (
               <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 2px' }}>
-                Open to any setting — visible everywhere.
+                Open to any setting - visible everywhere.
               </div>
             )}
           </div>
@@ -671,7 +671,7 @@ export default function LfgPage() {
         </div>
       )}
 
-      {/* Phase 4E (final) — full-text search. */}
+      {/* Phase 4E (final) - full-text search. */}
       <form onSubmit={e => { e.preventDefault(); runSearch() }}
         style={{ display: 'flex', gap: '6px', marginBottom: '0.75rem', alignItems: 'center' }}>
         <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -689,7 +689,7 @@ export default function LfgPage() {
         )}
       </form>
 
-      {/* Setting filter chip strip — featured settings + Global. Click "All"
+      {/* Setting filter chip strip - featured settings + Global. Click "All"
           to clear; combines with the kind chips below. */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
         {SETTING_FILTER_CHIPS.map(opt => {
@@ -791,7 +791,7 @@ export default function LfgPage() {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {/* Phase 4E — reaction row. Available for everyone
+                  {/* Phase 4E - reaction row. Available for everyone
                       including the author (votes signal "this looks
                       worth pursuing" rather than self-promotion). */}
                   <ReactionButtons
@@ -842,7 +842,7 @@ export default function LfgPage() {
                         <button onClick={() => copyLink(p)} style={shareItemStyle}>
                           📋 {copiedFlash === p.id ? 'Copied!' : 'Copy Link'}
                         </button>
-                        <button onClick={() => { copyLink(p); }} title="Discord has no share-intent URL — paste this link into your channel; Discord will auto-render a preview." style={shareItemStyle}>
+                        <button onClick={() => { copyLink(p); }} title="Discord has no share-intent URL - paste this link into your channel; Discord will auto-render a preview." style={shareItemStyle}>
                           💬 Discord (Copy)
                         </button>
                         <button onClick={() => shareTo('reddit', p)} style={shareItemStyle}>
@@ -857,7 +857,7 @@ export default function LfgPage() {
                       </div>
                     )}
                   </div>
-                  {/* Phase 4E — replies toggle for everyone. */}
+                  {/* Phase 4E - replies toggle for everyone. */}
                   {(() => {
                     const liveCount = replyCountOverride[p.id] ?? p.reply_count ?? 0
                     const open = openRepliesFor === p.id
@@ -881,7 +881,7 @@ export default function LfgPage() {
                     }))}
                   />
                 )}
-                {/* Interested-user roster — author-only. RLS scopes the rows
+                {/* Interested-user roster - author-only. RLS scopes the rows
                     in interestsByPost so this list is empty for everyone
                     except the post's author. The 💬 Message button here is
                     where DMs originate from now (the asymmetric flow). */}
@@ -960,7 +960,7 @@ export default function LfgPage() {
         </div>
       )}
 
-      {/* Phase 4E — Load older LFG posts. */}
+      {/* Phase 4E - Load older LFG posts. */}
       {!loading && hasMore && posts.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
           <button onClick={loadMorePosts} disabled={loadingMore}

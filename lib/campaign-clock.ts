@@ -1,7 +1,7 @@
-// Campaign clock — the only writer of `campaigns.clock`.
+// Campaign clock - the only writer of `campaigns.clock`.
 //
 // Phase 1: just bumps the clock and broadcasts the new state. No event
-// draining yet — that comes in Phase 2 (healing) and Phase 3 (rations,
+// draining yet - that comes in Phase 2 (healing) and Phase 3 (rations,
 // subsistence, ammo, fuel).
 //
 // Design contract: advance() is GM-only at the UI layer. Server-side
@@ -50,7 +50,7 @@ function hoursBetween(a: ClockState, b: ClockState): number {
 // new clock and whose type the drainer knows how to apply. Phase 2
 // handles `streaming_heal`; Phase 3+ will add more types.
 //
-// NOT idempotent — calling advance(8) twice = +16 hours. The UI should
+// NOT idempotent - calling advance(8) twice = +16 hours. The UI should
 // disable the button during the await to prevent double-clicks.
 export async function advance(campaignId: string, hours: number): Promise<ClockState | null> {
   if (hours <= 0) return readClock(campaignId)
@@ -100,7 +100,7 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
   }
   // System entry in the roll feed so players can see time pass. Pre-
   // 2026-05-18 the table page's Advance Time modal wrote a roll_log
-  // entry only when someone was over-encumbered — every other path
+  // entry only when someone was over-encumbered - every other path
   // (campaign-sheet +1h / +8h buttons, drainer-only ticks) was silent.
   // Players had no in-band signal that the clock had advanced.
   //
@@ -128,7 +128,7 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     // Best-effort: a failed log insert never blocks the clock tick.
     console.warn('[campaign-clock] roll_log insert failed:', e)
   }
-  // Realtime broadcast — every viewer's campaign sheet gets the new
+  // Realtime broadcast - every viewer's campaign sheet gets the new
   // clock state immediately, without waiting for postgres_changes to
   // propagate (faster + works around postgres_changes' UPDATE event
   // dropping when the row stays in RLS scope).
@@ -624,7 +624,7 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
 // pending_heal events represent a single discrete WP application at a
 // specific (canon_day, hour). Used by the Medicine*-check healing flow
 // per tasks/spec-healing.md: a successful check queues TWO pending_heal
-// events on the target — one at +12h with floor(total/2) WP and one at
+// events on the target - one at +12h with floor(total/2) WP and one at
 // +24h with the remainder. Each event is applied once when the clock
 // crosses its scheduled time.
 //

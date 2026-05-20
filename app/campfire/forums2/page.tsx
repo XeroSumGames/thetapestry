@@ -5,9 +5,9 @@ import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { aggregateReactions, type ReactionAggregate } from '../../../components/ReactionButtons'
 
-// /campfire/forums2 — Reddit/Lemmy-style mockup of the same forum data, for
+// /campfire/forums2 - Reddit/Lemmy-style mockup of the same forum data, for
 // player feedback. Votes now PERSIST via forum_thread_reactions (Phase 4E
-// final bundle) — the bespoke vertical-rail UI is preserved; only the
+// final bundle) - the bespoke vertical-rail UI is preserved; only the
 // state mechanics changed. The existing forum_threads / forum_replies
 // tables drive the content; clicking a thread routes to the existing
 // /campfire/forums/[id] reader so the reading experience is consistent.
@@ -196,7 +196,7 @@ export default function Forums2Page() {
           </span>
         </div>
         <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
-          Reddit-style preview. Votes persist across refreshes — let us know what you think.
+          Reddit-style preview. Votes persist across refreshes - let us know what you think.
         </div>
       </div>
 

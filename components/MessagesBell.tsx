@@ -5,7 +5,7 @@ import { useBellDropdown } from '../lib/hooks/useBellDropdown'
 
 interface ConvItem {
   conversation_id: string
-  // The latest message's sender. May be me — when it is, the headline
+  // The latest message's sender. May be me - when it is, the headline
   // flips to "You sent <other> a message at ...".
   latest_sender_user_id: string
   latest_sender_username: string
@@ -17,7 +17,7 @@ interface ConvItem {
   is_unread: boolean
 }
 
-// Headline format requested by the user — "08.43pm on 4/28/2026":
+// Headline format requested by the user - "08.43pm on 4/28/2026":
 // - lowercase am/pm
 // - period (not colon) between hours and minutes
 // - zero-padded hours
@@ -112,7 +112,7 @@ export default function MessagesBell() {
   // Auth + realtime + outside-click + open state via the shared
   // bell-dropdown scaffolding. Realtime watches new messages (any conv
   // the user participates in) AND last_read_at updates on the user's
-  // own participant row — so reading a thread elsewhere (e.g. in the
+  // own participant row - so reading a thread elsewhere (e.g. in the
   // /messages page) clears the bell's bold state too.
   const { userId, open, setOpen, containerRef } = useBellDropdown({
     channelKey: 'msgs_bell',
@@ -136,7 +136,7 @@ export default function MessagesBell() {
     // Per-row OPEN deep-links to /messages?conv=<id>; the messages page
     // accepts that param and selects the conv on load. Header "View all"
     // passes null and lands on the conversation list. Both open in a new
-    // tab — preserves the prior MessagesBell behavior.
+    // tab - preserves the prior MessagesBell behavior.
     const url = convId ? `/messages?conv=${encodeURIComponent(convId)}` : '/messages'
     window.open(url, '_blank', 'noopener,noreferrer')
     setOpen(false)
@@ -168,7 +168,7 @@ export default function MessagesBell() {
     <div ref={containerRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
       <button
         onClick={() => setOpen(prev => !prev)}
-        title={dim ? 'Messages — no unread' : `Messages — ${unreadCount} unread`}
+        title={dim ? 'Messages - no unread' : `Messages - ${unreadCount} unread`}
         style={{
           position: 'relative',
           background: 'none',
@@ -230,7 +230,7 @@ export default function MessagesBell() {
           // Reset inherited typographic styles. The /table page wraps
           // this bell in a header div with `textTransform: uppercase`
           // and `letterSpacing: .1em`, which cascaded into the message
-          // headlines and rendered them ALL CAPS — fine for the chip
+          // headlines and rendered them ALL CAPS - fine for the chip
           // labels (which set their own uppercase), wrong for the
           // sentence-case body. Resetting here lets children opt in
           // explicitly. /dashboard never had this issue because its

@@ -4,7 +4,7 @@
 //
 //   Per 10 NPCs: 1 Antagonist + 2 Foes + 3 Goons + 4 Bystanders.
 //
-// For counts under 10, no Antagonist is included — work up from
+// For counts under 10, no Antagonist is included - work up from
 // Bystanders → Goons → Foes. So a small group of 5 is 4 Bystanders
 // + 1 Goon; only sizable groups (10+) include an Antagonist.
 //

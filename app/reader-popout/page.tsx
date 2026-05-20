@@ -1,5 +1,5 @@
 'use client'
-// Reader popout — page-flip UI for a campaign_pin's image attachments.
+// Reader popout - page-flip UI for a campaign_pin's image attachments.
 // Opened from the 📖 Read button on pins where reader_mode='comic'.
 //
 // Storage path: pin-attachments/{campaign_id}/{pin_id}/{filename}.
@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 
-// Force dynamic rendering. Same reasoning as /gm-screen — the page
+// Force dynamic rendering. Same reasoning as /gm-screen - the page
 // reaches into Supabase on mount, which can't run in a static
 // prerender without env vars bound.
 export const dynamic = 'force-dynamic'
@@ -174,7 +174,7 @@ export default function ReaderPopoutPage() {
         </span>
         <span style={{ fontSize: 13, color: '#cce0f5', letterSpacing: '.06em' }}>
           {layoutMode === 'spread' && displayingFrom !== displayingTo
-            ? `${displayingFrom}–${displayingTo} / ${totalPages}`
+            ? `${displayingFrom}-${displayingTo} / ${totalPages}`
             : `${displayingFrom} / ${totalPages}`}
         </span>
         <button onClick={() => setFitMode(m => m === 'height' ? 'width' : 'height')}
@@ -191,7 +191,7 @@ export default function ReaderPopoutPage() {
         <button onClick={() => window.close()} style={{ ...btnStyle, color: '#f5a89a', borderColor: '#7a1f16' }} title="Close (Esc)">✕</button>
       </div>
 
-      {/* Page canvas — click left half = prev, right half = next */}
+      {/* Page canvas - click left half = prev, right half = next */}
       <div onClick={onCanvasClick}
         style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -204,7 +204,7 @@ export default function ReaderPopoutPage() {
         ))}
       </div>
 
-      {/* Bottom chrome — page jump + nav */}
+      {/* Bottom chrome - page jump + nav */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
         padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center',

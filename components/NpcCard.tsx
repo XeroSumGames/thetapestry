@@ -1,5 +1,5 @@
 'use client'
-// no React hooks needed — HP is derived from props
+// no React hooks needed - HP is derived from props
 import { useState } from 'react'
 import { CampaignNpc, getNpcRingColor } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
@@ -44,7 +44,7 @@ interface Props {
   // callback to mount the trigger button. Parent owns the wizard modal
   // state so multiple open NpcCards share one instance.
   onSetupApprentice?: () => void
-  // Trade trigger — when supplied, a "Trade" button shows on the
+  // Trade trigger - when supplied, a "Trade" button shows on the
   // card. Parent owns the TradeNegotiationModal so multiple NpcCards
   // share one instance. Handler fires with this NPC as the target.
   onOpenTrade?: () => void
@@ -62,12 +62,12 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
 
   const wpMax = npc.wp_max ?? (10 + npc.physicality + npc.dexterity)
   const rpMax = npc.rp_max ?? (6 + npc.physicality)
-  // Read HP directly from prop — no local state, so optimistic patches from
+  // Read HP directly from prop - no local state, so optimistic patches from
   // the parent always reflect immediately without sync issues.
   const wpCurrent = npc.wp_current ?? wpMax
   const rpCurrent = npc.rp_current ?? rpMax
 
-  // Derive display status from HP — don't rely on the DB status field which
+  // Derive display status from HP - don't rely on the DB status field which
   // only updates at round-end when death countdown expires.
   const isDead = wpCurrent === 0 && npc.death_countdown != null && npc.death_countdown <= 0
   const isMortal = wpCurrent === 0 && !isDead
@@ -138,7 +138,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
   return (
     <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '6px 8px', marginBottom: '6px' }}>
 
-      {/* Header — name, badges, buttons all on one row */}
+      {/* Header - name, badges, buttons all on one row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
         {(() => {
           const ring = getNpcRingColor(npc)
@@ -160,7 +160,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         {npc.npc_type && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
         <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{displayStatus}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '3px', flexShrink: 0 }}>
-          {/* Apprentice creation wizard trigger — only rendered when
+          {/* Apprentice creation wizard trigger - only rendered when
               the parent decides this NPC is an Apprentice whose wizard
               hasn't run yet AND the viewer is the master PC or GM.
               Lavender styling matches the existing Apprentice cues
@@ -168,7 +168,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
               same palette). */}
           {onSetupApprentice && (
             <button onClick={onSetupApprentice}
-              title="This Apprentice is ready to be set up — pick a Paradigm and spend the 3 CDP RAPID + 5 CDP skill budget."
+              title="This Apprentice is ready to be set up - pick a Paradigm and spend the 3 CDP RAPID + 5 CDP skill budget."
               style={{ padding: '2px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
               ⭐ Set Up Apprentice
             </button>
@@ -200,7 +200,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
               title="Open Barter Negotiation modal"
               style={{ padding: '2px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>⚖ Trade</button>
           )}
-          {/* Inventory — GM-side editor and the loot-from-NPC entry
+          {/* Inventory - GM-side editor and the loot-from-NPC entry
               point. Color flips amber when the NPC has anything in their
               pack (visual nudge that there's something to grab) and to
               red while the NPC is dead (the canonical "loot me" cue). */}
@@ -216,7 +216,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
                 : '🎒 Pack'}
           </button>
           {/* NpcCard is the GM-only view (PlayerNpcCard is the player one),
-              so the popout URL hard-codes gm=1 — the popout uses that hint
+              so the popout URL hard-codes gm=1 - the popout uses that hint
               to skip an extra auth.getUser() + campaigns query on mount. */}
           {campaignId && (
             <button onClick={() => openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}&gm=1`, `npc-${npc.id}`, { w: 571, h: 400 })}
@@ -232,7 +232,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
 
       {/* RAPID + WP/RP on same row */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '4px', alignItems: 'flex-start' }}>
-        {/* RAPID — clickable */}
+        {/* RAPID - clickable */}
         <div style={{ display: 'flex', gap: '2px' }}>
           {(['RSN', 'ACU', 'PHY', 'INF', 'DEX'] as const).map(k => {
             const v = rapid[k] ?? 0
@@ -296,7 +296,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         </div>
       )}
 
-      {/* Skills — clickable */}
+      {/* Skills - clickable */}
       {(skillEntries.length > 0 || onRoll) && (
         <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', marginBottom: '4px' }}>
           {skillEntries.filter(s => s.name).map((s, i) => (
@@ -322,12 +322,12 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         </div>
       )}
 
-      {/* GM Notes — truncated */}
+      {/* GM Notes - truncated */}
       {npc.notes && (
         <div style={{ fontSize: '13px', color: '#cce0f5', fontStyle: 'italic', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.notes}</div>
       )}
 
-      {/* Weapon info — always visible */}
+      {/* Weapon info - always visible */}
       {(w || (npc.skills?.weapon2 && getWeaponByName(npc.skills.weapon2.weaponName))) && (
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
           {w && (
@@ -425,7 +425,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
               ? targetInv.map(i => i === existing ? { ...i, qty: (i.qty ?? 1) + qty } : i)
               : [...targetInv, { ...item, qty }]
             await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
-            // Cross-user notification — RPC bypasses notifications RLS
+            // Cross-user notification - RPC bypasses notifications RLS
             // via SECURITY DEFINER. Loot from an NPC reads as "from
             // <NPC name>" so the player sees who they pulled it off.
             await supabase.rpc('notify_inventory_received', {

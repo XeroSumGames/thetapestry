@@ -29,7 +29,7 @@ const STEPS = [
 ]
 
 const STEP_FLAVOR = [
-  'Define your character concept — name, age, gender, height, weight, and three words that anchor who they are. Write a sentence or two that sums them up.',
+  'Define your character concept - name, age, gender, height, weight, and three words that anchor who they are. Write a sentence or two that sums them up.',
   'This step covers the first 10-15 years of their life. Write a sentence or two about where they grew up, who was present, and what their life was like.',
   'This is the educational stage of life. Write a sentence or two about where they studied, what they learned, who they learned it from, and what lessons they took from it.',
   'This covers their hobbies and spare time. Write a sentence or two about their passions, how they spent their free time, and what knowledge they picked up along the way.',
@@ -46,7 +46,7 @@ const STEP_INSTRUCTIONS: (string | null)[] = [
   'You have 1 Attribute CDP. Raise one RAPID attribute from 0 (Average) to +1 (Good).|You have 2 Skill CDP. Raise one skill to +2 (Journeyman), or two skills to +1 (Beginner).|Vocational skills marked with * start at -3 (Inept) and cost 1 CDP to reach +1 (Beginner).',
   'You have 1 Attribute CDP. Raise one RAPID attribute up to +2 (Strong).|You have 3 Skill CDP. No skill can be raised above +2 (Journeyman) in this step.',
   'You have 1 Attribute CDP. Raise one RAPID attribute up to +2 (Strong).|You have 3 Skill CDP. No skill can be raised above +2 (Journeyman) in this step.',
-  'Choose a Profession — its vocational skills are highlighted.|You have 2 Attribute CDP. Attributes cannot be raised beyond +3 (Exceptional).|You have 4 Skill CDP. Skills cannot be raised beyond +3 (Professional).',
+  'Choose a Profession - its vocational skills are highlighted.|You have 2 Attribute CDP. Attributes cannot be raised beyond +3 (Exceptional).|You have 4 Skill CDP. Skills cannot be raised beyond +3 (Professional).',
   'You have 3 Skill CDP. Skills can be raised up to +3 (Professional) during this stage.',
   null,
   null,
@@ -209,7 +209,7 @@ export default function NewCharacterPage() {
                 if (requireAuth()) return
                 // Unspent-CDP guard: each StepAttr step grants a skill
                 // budget. Players who advance without spending all of
-                // it lose those CDP — there's no carry-forward. Map
+                // it lose those CDP - there's no carry-forward. Map
                 // step → (stepIndex, budget) and warn if there's a gap.
                 const budgets: Record<number, { idx: number; budget: number; label: string }> = {
                   1: { idx: 0, budget: 2, label: 'Step 1' },
@@ -224,7 +224,7 @@ export default function NewCharacterPage() {
                     const remaining = b.budget - spent
                     const ok = window.confirm(
                       `${b.label} has ${remaining} unspent skill CDP. ` +
-                      `Once you advance, those CDP are gone — there's no carry-forward.\n\n` +
+                      `Once you advance, those CDP are gone - there's no carry-forward.\n\n` +
                       `Advance anyway?`,
                     )
                     if (!ok) return
@@ -242,7 +242,7 @@ export default function NewCharacterPage() {
         </div>
       </div>
 
-      {/* Print sheet — hidden on screen via @media screen rule, made
+      {/* Print sheet - hidden on screen via @media screen rule, made
           visible on @media print by the print-sheet-active class.
           Without the active class the global print rule
           `.print-sheet-container:not(.print-sheet-active)` hides it

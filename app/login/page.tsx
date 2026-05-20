@@ -121,7 +121,7 @@ export default function LoginPage() {
       )
       if (loginError) {
         console.error('[Login] auth error:', loginError.message)
-        // Reset the token — Turnstile tokens are single-use, so a failed
+        // Reset the token - Turnstile tokens are single-use, so a failed
         // login (wrong password) used the token. Force a fresh challenge
         // for the next attempt.
         cachedTokenRef.current = null
@@ -227,7 +227,7 @@ export default function LoginPage() {
 
       </div>
     </main>
-    {/* Invisible Turnstile widget — rendered off-screen, executed on submit */}
+    {/* Invisible Turnstile widget - rendered off-screen, executed on submit */}
     <div id="turnstile-container-login" style={{ position: 'absolute', left: '-9999px' }} />
     </>
   )

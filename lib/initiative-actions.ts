@@ -72,7 +72,7 @@ export async function decrementInitiativeAction(
 
   const newRemaining = remaining - cost
 
-  // Optional action-feed log entry. Best-effort — failure here doesn't roll
+  // Optional action-feed log entry. Best-effort - failure here doesn't roll
   // back the decrement; we'd rather have a missing log line than a stuck turn.
   if (args.actionLabel) {
     try {

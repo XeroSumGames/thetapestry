@@ -1,5 +1,5 @@
 'use client'
-// Inventory #5 — Trade Negotiation modal. Single-roll opposed Barter
+// Inventory #5 - Trade Negotiation modal. Single-roll opposed Barter
 // check between the PC viewer and a target (NPC or community
 // stockpile). Per CRB: "Barter is used as part of an Opposed Check
 // where the character who wins convinces the other side to agree to
@@ -7,8 +7,8 @@
 //
 // Flow:
 //   1. PC picks items they offer + items they want from the target.
-//   2. Visual fairness chip — sum of rarity weights per side.
-//   3. Roll Barter — PC's 2d6 + ACU AMod + Barter SMod vs. target's
+//   2. Visual fairness chip - sum of rarity weights per side.
+//   3. Roll Barter - PC's 2d6 + ACU AMod + Barter SMod vs. target's
 //      Barter SMod (NPC's level on their skills row, or community
 //      leader's level if Community target).
 //   4. Outcome resolved via classifyRoll; on success the Apply Deal
@@ -38,7 +38,7 @@ export interface TradeTarget {
   // Effective Barter SMod for the opposed check. NPC: their skill
   // level. Community: leader's Barter, or 0 if no leader.
   barterSmod: number
-  // Optional flavor — shown as subtext under the name.
+  // Optional flavor - shown as subtext under the name.
   subtext?: string
 }
 
@@ -65,7 +65,7 @@ interface Props {
   pcBarterSmod: number           // PC's Barter level
   target: TradeTarget
   onClose: () => void
-  // Apply the deal — parent handles the actual DB writes for both
+  // Apply the deal - parent handles the actual DB writes for both
   // sides. Modal closes after the callback resolves.
   onApply: (deal: {
     pcGives: SelectedItem[]
@@ -76,7 +76,7 @@ interface Props {
   // Fired once when the PC rolls Dire Failure or Low Insight on an
   // NPC barter (insulted / refused outcomes). Parent decrements the
   // (PC, NPC) relationship_cmod by 1 with -3 floor. Not fired for
-  // community targets — communities have no per-character CMod.
+  // community targets - communities have no per-character CMod.
   onRelationshipDamage?: () => Promise<void>
 }
 
@@ -204,7 +204,7 @@ export default function TradeNegotiationModal({
     setApplying(true)
     setError(null)
     try {
-      const rollSummary = `${pcName} (${pcDie1ToStr(outcome)}) vs. ${target.name} (${npcDieToStr(outcome)}) — ${outcome.pcOutcome}`
+      const rollSummary = `${pcName} (${pcDie1ToStr(outcome)}) vs. ${target.name} (${npcDieToStr(outcome)}) - ${outcome.pcOutcome}`
       await onApply({ pcGives, pcGets, rollSummary, outcome })
     } catch (err: any) {
       setError(err?.message ?? 'Apply failed')
@@ -316,8 +316,8 @@ export default function TradeNegotiationModal({
                 : fairness === 'pc-underpays' ? '#7ab3d4'
                 : '#5a5550' }}>
               {fairness === 'fair' && `Even-handed (${offeredWeight} ↔ ${requestedWeight})`}
-              {fairness === 'pc-overpays' && `You're overpaying (${offeredWeight} → ${requestedWeight}) — easier roll`}
-              {fairness === 'pc-underpays' && `You're underpaying (${offeredWeight} → ${requestedWeight}) — harder roll`}
+              {fairness === 'pc-overpays' && `You're overpaying (${offeredWeight} → ${requestedWeight}) - easier roll`}
+              {fairness === 'pc-underpays' && `You're underpaying (${offeredWeight} → ${requestedWeight}) - harder roll`}
               {fairness === 'empty' && `Pick something on each side to deal`}
             </div>
             <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }} title="Rarity weights: Common 1, Uncommon 2, Rare 4">
@@ -368,7 +368,7 @@ export default function TradeNegotiationModal({
               {rolling ? 'Rolling…' : outcome ? '↻ Re-roll Barter' : '🎲 Roll Barter'}
             </button>
             <button onClick={handleApply} disabled={!isAcceptable(outcome) || applying}
-              title={!outcome ? 'Roll first' : !isAcceptable(outcome) ? 'Negotiation failed — no deal to apply' : 'Apply the deal — items move both ways'}
+              title={!outcome ? 'Roll first' : !isAcceptable(outcome) ? 'Negotiation failed - no deal to apply' : 'Apply the deal - items move both ways'}
               style={{ padding: '8px 18px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, cursor: isAcceptable(outcome) && !applying ? 'pointer' : 'not-allowed', opacity: isAcceptable(outcome) && !applying ? 1 : 0.5 }}>
               {applying ? 'Applying…' : '✓ Apply Deal'}
             </button>

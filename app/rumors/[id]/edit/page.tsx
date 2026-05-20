@@ -1,10 +1,10 @@
 'use client'
-// Module edit — author or Thriver can update tagline / description /
+// Module edit - author or Thriver can update tagline / description /
 // content_tags / session_count_estimate / player_count_recommended,
 // and upload a cover image to the `module-covers` storage bucket.
 //
 // RLS on `modules` already gates UPDATE to author-or-Thriver
-// (sql/modules-phase-a.sql:208), so the UI here just mirrors that —
+// (sql/modules-phase-a.sql:208), so the UI here just mirrors that -
 // non-author non-Thrivers see an "access denied" message instead of
 // the form.
 //
@@ -169,14 +169,14 @@ export default function ModuleEditPage() {
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      setStatus('Cover image too large — max 5 MB.')
+      setStatus('Cover image too large - max 5 MB.')
       return
     }
     setUploading(true)
     setStatus(null)
     try {
       // Best-effort cleanup of the prior cover so the bucket doesn't
-      // accumulate orphans. Failure here is non-fatal — RLS may have
+      // accumulate orphans. Failure here is non-fatal - RLS may have
       // changed since upload, or the file may already be gone.
       if (coverUrl) {
         const prefix = `/${COVERS_BUCKET}/`
@@ -345,7 +345,7 @@ export default function ModuleEditPage() {
         </div>
       )}
 
-      {/* Cover upload — top of the form because it's the most visible
+      {/* Cover upload - top of the form because it's the most visible
           marketplace asset and the slowest action (file → bucket). */}
       <div style={{ marginBottom: '24px', padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
         <div style={lbl}>Cover Image</div>

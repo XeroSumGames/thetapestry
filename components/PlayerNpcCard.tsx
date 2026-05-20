@@ -13,21 +13,21 @@ interface LootItem {
   notes?: string
 }
 
-// Player-facing NPC card — strictly read-only. GM-only data (RAPID stats,
+// Player-facing NPC card - strictly read-only. GM-only data (RAPID stats,
 // skills, weapon breakdowns, equipment, HP pip dots, edit/publish/restore
 // actions) stays hidden. Players see portrait, name, category badge, and a
 // derived status (healthy / unconscious / mortally wounded / dead) so they
 // can read the tactical situation without seeing the GM's bookkeeping.
 //
 // First Impression: when `viewingCharacterId` is provided, the card shows
-// this PC's relationship_cmod with the NPC — the lingering effect of any
+// this PC's relationship_cmod with the NPC - the lingering effect of any
 // prior First Impression roll. Positive = NPC likes them, negative =
 // wary/hostile, 0 = never met or neutral.
 //
 // Recruit: when `onRecruit` is provided, a Recruit button appears next
 // to the status badge. Clicking it opens the Recruit modal pre-populated
 // with this NPC as the target. Hidden when the NPC is dead/mortally
-// wounded — you can't recruit a corpse.
+// wounded - you can't recruit a corpse.
 //
 // Recruit state badge: on mount we fetch the NPC's latest community
 // membership + latest recruitment roll_log entry and render one of:
@@ -66,7 +66,7 @@ interface Props {
   onSetupApprentice?: () => void
   // Phase: First Impression skip-the-picker (2026-05-01). When the
   // parent provides this callback, a "First Impression" button shows
-  // on the card header — clicking it fires the roll directly via
+  // on the card header - clicking it fires the roll directly via
   // triggerFirstImpression with the viewing PC + this NPC pre-set.
   // Hidden when there's already a recorded First Impression
   // (cmod != null && cmod !== 0) since a second roll on the same pair
@@ -87,7 +87,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const [recruitState, setRecruitState] = useState<RecruitState>(null)
   // Player-private NPC notes. Scoped to (character_id, npc_id) so a
   // user with multiple PCs in one campaign keeps separate threads
-  // per PC. The GM doesn't see these — they have campaign_npcs.notes
+  // per PC. The GM doesn't see these - they have campaign_npcs.notes
   // for their own bookkeeping.
   const [notes, setNotes] = useState<string>('')
   const [notesLoaded, setNotesLoaded] = useState(false)
@@ -95,7 +95,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const [notesSaving, setNotesSaving] = useState(false)
 
   // ── Search Remains (player-side loot) ──
-  // Lazily-loaded NPC inventory — only fetched when the looter opens the
+  // Lazily-loaded NPC inventory - only fetched when the looter opens the
   // panel. Modifies via the loot_npc_item SECURITY DEFINER RPC so the
   // player doesn't need write access to campaign_npcs / other PCs'
   // characters rows. Each Take click fires one RPC; loot is logged
@@ -139,7 +139,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   // Load the viewing PC's existing note (if any) for this NPC. Reset
   // dirty state on each (character, npc) switch so the textarea starts
   // clean. We use maybeSingle since most (character, npc) pairs won't
-  // have a row yet — the unique constraint guarantees at most one.
+  // have a row yet - the unique constraint guarantees at most one.
   useEffect(() => {
     if (!viewingCharacterId) { setNotes(''); setNotesLoaded(false); return }
     let cancelled = false
@@ -185,7 +185,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
     let cancelled = false
     ;(async () => {
       // 1. Latest community_members row for this NPC (active takes
-      //    precedence over left). Only an NPC-backed row counts —
+      //    precedence over left). Only an NPC-backed row counts -
       //    PC rows don't belong on a "recruit" surface.
       const { data: memRows } = await supabase
         .from('community_members')
@@ -203,13 +203,13 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           setRecruitState({ kind: 'active', role: String(mem.recruitment_type ?? 'member'), communityName })
           return
         }
-        // They were a member but left. Fall through — we still want
+        // They were a member but left. Fall through - we still want
         // to show the "left" chip alongside the Recruit button.
         setRecruitState({ kind: 'left', leftReason: mem.left_reason ?? null, communityName })
         return
       }
 
-      // 2. No membership ever — check for the latest recruitment
+      // 2. No membership ever - check for the latest recruitment
       //    attempt (failures don't create community_members rows
       //    but do log a 🤝-label row with damage_json.npcId set).
       const { data: rollRows } = await supabase
@@ -251,7 +251,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
 
   // Loot is allowed when the NPC is dead / mortally wounded /
   // unconscious. Active NPCs keep their stuff. (RPC enforces this
-  // server-side too — the UI gate is just to hide the button when
+  // server-side too - the UI gate is just to hide the button when
   // it'd error.)
   const canLoot = displayStatus !== 'active' && !!viewingCharacterId
 
@@ -338,7 +338,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
               <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
             )}
             <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{displayStatus}</span>
-            {/* Recruit state — right of the status badge. Branches
+            {/* Recruit state - right of the status badge. Branches
                 between chip (active member) / chip + button (left or
                 failed) / button (no history). Dead/mortal NPCs get
                 nothing since you can't recruit a corpse. */}
@@ -360,7 +360,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                     </span>
                     <button onClick={onRecruit}
                       style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
-                      title="Re-recruit — the NPC left their prior community and can be recruited again.">
+                      title="Re-recruit - the NPC left their prior community and can be recruited again.">
                       🤝 Recruit
                     </button>
                   </>
@@ -374,7 +374,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                     </span>
                     <button onClick={onRecruit}
                       style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
-                      title="Try again — a failed recruit doesn't lock the NPC out.">
+                      title="Try again - a failed recruit doesn't lock the NPC out.">
                       🤝 Retry
                     </button>
                   </>
@@ -388,18 +388,18 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 )}
               </>
             )}
-            {/* Apprentice creation wizard trigger — only rendered when
+            {/* Apprentice creation wizard trigger - only rendered when
                 this NPC is the viewing PC's Apprentice and the wizard
                 hasn't run yet. Lavender styling matches the Apprentice
                 cues elsewhere. Parent decides visibility. */}
             {onSetupApprentice && (
               <button onClick={onSetupApprentice}
-                title="This Apprentice is ready to be set up — pick a Paradigm and spend the 3 CDP RAPID + 5 CDP skill budget."
+                title="This Apprentice is ready to be set up - pick a Paradigm and spend the 3 CDP RAPID + 5 CDP skill budget."
                 style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#2a102a', border: '1px solid #8b2e8b', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
                 ⭐ Set Up Apprentice
               </button>
             )}
-            {/* Search Remains — lootable only when the NPC is
+            {/* Search Remains - lootable only when the NPC is
                 dead / mortally wounded / unconscious. Hidden when
                 the looter doesn't have a character ID set (e.g.
                 ghost / out-of-campaign viewer). */}
@@ -410,7 +410,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 🎒 Search Remains
               </button>
             )}
-            {/* First Impression CMod — shown when the viewing PC has
+            {/* First Impression CMod - shown when the viewing PC has
                 a recorded relationship with this NPC. +N green,
                 −N red, 0 = not yet met (suppressed). */}
             {cmod != null && cmod !== 0 && (
@@ -424,13 +424,13 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 1st {cmod > 0 ? `+${cmod}` : cmod}
               </span>
             )}
-            {/* First Impression — quick-fire button that skips the
+            {/* First Impression - quick-fire button that skips the
                 special-check picker. Always available when wired:
                 CRB allows a fresh First Impression check "after a
                 number of interactions" once the player Fills In The
                 Gaps about how their approach has changed. Re-rolls
                 STACK (atomic delta via bump_npc_relationship_cmod,
-                clamped +/-3) — they don't overwrite. So a Failure on
+                clamped +/-3) - they don't overwrite. So a Failure on
                 top of a +2 drops to +1, a Success on top of a +2
                 stays at +2 (clamp ceiling). Tooltip surfaces the
                 current value when one exists so the player knows
@@ -451,7 +451,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
         <button onClick={onClose} style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', flexShrink: 0 }}>Close</button>
       </div>
 
-      {/* Public description — GM-authored player-visible blurb on
+      {/* Public description - GM-authored player-visible blurb on
           campaign_npcs.public_description. Renders when the GM has
           written one; absent until then so unset NPCs stay clean. */}
       {(npc as any).public_description && (
@@ -460,7 +460,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
         </div>
       )}
 
-      {/* Player NPC notes — private to the viewing PC. Saves on blur
+      {/* Player NPC notes - private to the viewing PC. Saves on blur
           via upsert keyed on (character_id, npc_id). The GM doesn't
           see these; they have campaign_npcs.notes for their own
           bookkeeping. Hidden until the load completes so the textarea
@@ -496,7 +496,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
         </div>
       )}
 
-      {/* Loot panel overlay — opens on Search Remains click. Calls
+      {/* Loot panel overlay - opens on Search Remains click. Calls
           the loot_npc_item SECURITY DEFINER RPC for each Take, which
           atomically decrements the NPC's inventory + appends to the
           looter's PC inventory + writes a roll_log audit row. */}

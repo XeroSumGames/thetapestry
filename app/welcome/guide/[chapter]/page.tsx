@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { notFound } from 'next/navigation'
 
-// /welcome/guide/[chapter] — renders one Beginners' Guide chapter.
+// /welcome/guide/[chapter] - renders one Beginners' Guide chapter.
 // Server component: reads docs/beginners-guide-NN.txt at request
 // time, renders the body inside a <pre>-styled column. The .txt
 // files use === underline rules + section headers; rendering
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: PageProps) {
   const { chapter } = await params
   const title = CHAPTER_TITLES[chapter]
   return {
-    title: title ? `${chapter} · ${title} — Beginners' Guide` : 'Beginners\' Guide',
+    title: title ? `${chapter} · ${title} - Beginners' Guide` : 'Beginners\' Guide',
   }
 }
 
@@ -85,7 +85,7 @@ export default async function ChapterPage({ params }: PageProps) {
           {CHAPTER_TITLES[chapter]}
         </h1>
 
-        {/* Chapter body — plain text rendered with line breaks
+        {/* Chapter body - plain text rendered with line breaks
             preserved. The source files lay out their own ASCII
             structure (=== rules, ---- separators, indentation),
             so we just present them as a monospaced column. */}

@@ -22,7 +22,7 @@ import {
 } from '../../lib/brewing-supplies'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
-// Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
+// Eligible driver / brewer - a campaign PC or campaign NPC. Stats are
 // pulled at load time so the Driving / Brew check modal can prefill
 // AMOD + SMOD without a second round trip.
 interface CrewMember {
@@ -46,7 +46,7 @@ interface CrewMember {
 type CheckKind = 'driving' | 'brew' | 'attack' | 'navigate'
 type BrewSkill = 'mechanic' | 'tinkerer'
 
-// Mirrors the table in components/TacticalMap.tsx — a weapon's primary
+// Mirrors the table in components/TacticalMap.tsx - a weapon's primary
 // range band in feet. Used for the firing-arc target gate so an out-of-
 // range NPC chips ⛔ in the dropdown even if they're inside the cone.
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -126,7 +126,7 @@ export default function VehiclePage() {
   const [addQty, setAddQty] = useState('1')
   const [addEnc, setAddEnc] = useState('0')
   const [addNotes, setAddNotes] = useState('')
-  // Driver/Brewer crew pool — populated alongside the vehicle.
+  // Driver/Brewer crew pool - populated alongside the vehicle.
   const [crew, setCrew] = useState<CrewMember[]>([])
   const [check, setCheck] = useState<CheckState | null>(null)
   const [myUserId, setMyUserId] = useState<string | null>(null)
@@ -267,7 +267,7 @@ export default function VehiclePage() {
     }
     load()
 
-    // Realtime sync — refresh when campaign.vehicles changes
+    // Realtime sync - refresh when campaign.vehicles changes
     if (!campaignId) return
     const channel = supabase.channel(`vehicle_${campaignId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${campaignId}` }, (payload: any) => {
@@ -422,7 +422,7 @@ export default function VehiclePage() {
   // just wrote into so we don't immediately wipe it.
   //
   // Empty crewId (slot being cleared, not filled) skips the vacate
-  // pass entirely — there's no character to deduplicate.
+  // pass entirely - there's no character to deduplicate.
   function vacateCrewExcept(
     v: Vehicle,
     crewId: string | null,
@@ -539,12 +539,12 @@ export default function VehiclePage() {
   // cell adjacent to the vehicle's bounding box. Used by the
   // dismount path in confirmPending when a seat is cleared. Routes
   // through the snap_token_to_seat RPC (SECURITY DEFINER) so any
-  // campaign member can disembark anyone — the popout already lets
+  // campaign member can disembark anyone - the popout already lets
   // them clear seats, this just keeps the map state consistent.
   //
   // Search pattern: expanding ring around the vehicle's footprint.
   // First-found wins; we don't try to put them on a specific side.
-  // If every nearby cell is occupied (rare), we silently bail —
+  // If every nearby cell is occupied (rare), we silently bail -
   // their token stays wherever it was last (usually the boarding
   // spot). GM can drag them in by hand.
   async function dismountToAdjacent(assigneeId: string) {
@@ -675,7 +675,7 @@ export default function VehiclePage() {
       // The "no longer aboard ANY seat" check matters because
       // setCrewAssignment uses vacateCrewExcept, which may have
       // already cleared them from this slot as part of a reassign
-      // elsewhere on the bus — in that case the dismount placement
+      // elsewhere on the bus - in that case the dismount placement
       // would visually eject them mid-ride. The vehicle state mutates
       // synchronously through updateVehicle's setVehicle, so by the
       // time we check, isCurrentlyOnVehicle reflects the post-write
@@ -796,7 +796,7 @@ export default function VehiclePage() {
         rolling: false, result: null,
       })
     } else {
-      // attack — Ranged Combat (DEX) check against the weapon. Pull
+      // attack - Ranged Combat (DEX) check against the weapon. Pull
       // the NPCs currently on the active tactical scene as the target
       // dropdown so the GM can fire at someone who's actually there.
       // Also fetch token coords for both the SHOOTER (this vehicle)
@@ -814,7 +814,7 @@ export default function VehiclePage() {
           .eq('is_active', true)
           .maybeSingle()
         if (activeScene?.id) {
-          // One fetch for every visible token on the scene — cheaper
+          // One fetch for every visible token on the scene - cheaper
           // than two filtered fetches and gives us the shooter row
           // (matched by name) + all NPC targets (matched by npc_id).
           const { data: tokenRows } = await supabase
@@ -854,13 +854,13 @@ export default function VehiclePage() {
                 const dx = tx - sx
                 const dy = ty - sy
                 const distCells = Math.hypot(dx, dy)
-                // Range gate — weapon's primary range band in feet
+                // Range gate - weapon's primary range band in feet
                 // → cells. Falls back to 33 cells (~100ft) when the
                 // weapon isn't in the catalog.
                 const rangeFeet = wDef ? (RANGE_BAND_FEET[wDef.range] ?? 100) : 100
                 const rangeCells = rangeFeet / cellFt
                 outOfRange = distCells > rangeCells
-                // Angle gate — facing = token rotation + mount angle.
+                // Angle gate - facing = token rotation + mount angle.
                 // Both expressed clockwise from "up". Canvas math
                 // already used 0° = right (+X) by subtracting 90°;
                 // here we measure relative angle in token-space and
@@ -878,7 +878,7 @@ export default function VehiclePage() {
                 // shooter) vector via dot product / magnitudes.
                 const mag = Math.hypot(dx, dy)
                 if (mag < 1e-6) {
-                  inArc = true // target on top of shooter — degenerate; allow
+                  inArc = true // target on top of shooter - degenerate; allow
                 } else {
                   const cosAng = (fx * dx + fy * dy) / mag
                   const angle = Math.acos(Math.max(-1, Math.min(1, cosAng)))
@@ -890,7 +890,7 @@ export default function VehiclePage() {
           }
           built.sort((a, b) => a.name.localeCompare(b.name))
           // De-dup if a name was on two tokens (two of the same NPC)
-          // — keep the first.
+          // - keep the first.
           const seen = new Set<string>()
           targets = built.filter(t => seen.has(t.id) ? false : (seen.add(t.id), true))
         }
@@ -913,7 +913,7 @@ export default function VehiclePage() {
     }
   }
 
-  // Switch brew skill within the modal — also rewires AMOD/SMOD to the
+  // Switch brew skill within the modal - also rewires AMOD/SMOD to the
   // chosen attribute/skill so the GM doesn't have to re-enter them.
   function switchBrewSkill(next: BrewSkill) {
     if (!check || check.kind !== 'brew') return
@@ -949,19 +949,19 @@ export default function VehiclePage() {
   // Roll 2d6 + amod + smod + cmod, classify, log to roll_log, and apply
   // any rules-mandated mechanical effect. For brew: Wild Success / Success
   // produces a full tank (+1 fuel_current, capped at fuel_max). Failure
-  // and Dire Failure produce no fuel — already a no-op on the vehicle's
+  // and Dire Failure produce no fuel - already a no-op on the vehicle's
   // state. Driving outcomes are GM-narrative only (no auto-WP, no auto-
   // time-cost).
   async function rollCheck() {
     if (!check || !vehicle || !campaignId || !myUserId) return
     // Brew check guard (Q4-d, 2026-05-19): block when no brewing
     // supplies on hand. UI disables the button via canBrew(), but
-    // a stale client could still fire this — defense in depth. The
+    // a stale client could still fire this - defense in depth. The
     // feature is opt-in per vehicle; vehicles without
     // brewing_supplies_max skip the guard entirely (no still / no
     // stockpile, no constraint).
     if (check.kind === 'brew' && effectiveBrewingMax(vehicle) > 0 && !canBrew(vehicle)) {
-      setBrewingSuppliesError('No brewing materials on hand — click Gather Materials first.')
+      setBrewingSuppliesError('No brewing materials on hand - click Gather Materials first.')
       return
     }
     setBrewingSuppliesError(null)
@@ -998,19 +998,19 @@ export default function VehiclePage() {
     const fuelDelta = check.kind === 'brew' && (outcome === 'Wild Success' || outcome === 'Success' || outcome === 'High Insight') ? 1 : 0
     const newFuel = Math.min(vehicle.fuel_max, vehicle.fuel_current + fuelDelta)
     const fuelNote = fuelDelta > 0 && newFuel > vehicle.fuel_current
-      ? ` — produced 1 day of fuel (${newFuel}/${vehicle.fuel_max})`
+      ? ` - produced 1 day of fuel (${newFuel}/${vehicle.fuel_max})`
       : fuelDelta > 0
-        ? ' — full tank but reserves are already full'
+        ? ' - full tank but reserves are already full'
         : ''
     // 2026-05-19 narrative-polish: switch driving/brew/navigate to the
     // "<name> - <Verb> - <vehicle>" shape the prefix-CAPS parsers in
-    // lib/roll-helpers.ts expect (DRIVE / BREW / NAVIGATE — mirrors
+    // lib/roll-helpers.ts expect (DRIVE / BREW / NAVIGATE - mirrors
     // HEAL / UNJAM / REPAIR / STABILIZE). Old "🚗 Driving check · ..."
     // flat-string format bypassed every narrative path we'd built.
     // Mounted-weapon attacks still use the legacy "🎯 ... · ... · ..."
     // shape because the existing attack-narrative parser (commit
     // 54c46a1) already handles it well.
-    const driverName = member?.name ?? '—'
+    const driverName = member?.name ?? '-'
     // Skill name only (no "(DEX)" / "(RSN)" attribute parens) for
     // the new label format - the parser uses `(<skill>)` as a
     // delimiter and double parens would break it. AMOD on the
@@ -1043,7 +1043,7 @@ export default function VehiclePage() {
     }
 
     // ── Damage resolution for mounted-weapon attacks ──
-    // Pre-fix this block didn't exist — the vehicle popup logged the
+    // Pre-fix this block didn't exist - the vehicle popup logged the
     // attack roll but never rolled damage or applied it to the target.
     // Symptom: "no damage to <target>" with the rolls feed showing an
     // empty "= raw → WP / RP" line. Now mirrors the /table single-
@@ -1060,7 +1060,7 @@ export default function VehiclePage() {
       (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')
     ) {
       const traits = weaponDef.traits ?? []
-      // Automatic Burst (N) — find the trait, parse N, default 1 roll.
+      // Automatic Burst (N) - find the trait, parse N, default 1 roll.
       const burstTrait = traits.find(t => /^Automatic Burst/i.test(t))
       const burstMatch = burstTrait?.match(/Automatic Burst\s*\((\d+)\)/i)
       const rolls = burstMatch ? parseInt(burstMatch[1], 10) : 1
@@ -1082,7 +1082,7 @@ export default function VehiclePage() {
         .maybeSingle()
       const targetDex = (tgtNpc as any)?.dexterity ?? 0
       const { finalWP, finalRP, mitigated } = calculateDamage(totalWP, weaponDef.rpPercent, targetDex)
-      // Apply the damage. Clamp at 0 — going negative would let a
+      // Apply the damage. Clamp at 0 - going negative would let a
       // future heal "uncritically" push the NPC back into combat at
       // weird WP. Don't write wp_max/rp_max; this only mutates
       // current pools.
@@ -1150,7 +1150,7 @@ export default function VehiclePage() {
     }
 
     // Consume an action on the active initiative entry. Only attacks cost
-    // an action — driving and brew checks are passive vehicle operations
+    // an action - driving and brew checks are passive vehicle operations
     // outside the combat-action economy. (BUG-3 from 2026-05-04 playtest:
     // Enya fired Minnie's M60 mounted weapon and her actions_remaining
     // never decremented because the table page's consumeAction() lives
@@ -1159,7 +1159,7 @@ export default function VehiclePage() {
     // Done after the roll_log insert so the player sees the attack land
     // even if the decrement fails (e.g. RLS on initiative_order). If
     // newRemaining hits 0, broadcast turn_advance_requested on the
-    // table's initiative channel — the table page listens and runs
+    // table's initiative channel - the table page listens and runs
     // its full nextTurn() flow, which is too stateful to extract.
     if (check.kind === 'attack') {
       const dec = await decrementInitiativeAction(supabase, {
@@ -1173,7 +1173,7 @@ export default function VehiclePage() {
           await ch.subscribe()
           await ch.send({ type: 'broadcast', event: 'turn_advance_requested', payload: { entryId: dec.entry?.id } })
           await supabase.removeChannel(ch)
-        } catch { /* swallow — the GM can advance manually */ }
+        } catch { /* swallow - the GM can advance manually */ }
       }
     }
 
@@ -1188,7 +1188,7 @@ export default function VehiclePage() {
   // disabled attribute, so the player can see WHY they can't pick
   // someone instead of the option just vanishing. Currently-onboard
   // characters are always selectable (already in the vehicle; reassigns
-  // between seats don't care about distance — handled by
+  // between seats don't care about distance - handled by
   // isOutOfRangeForVehicle's currently-aboard short-circuit).
   function renderCrewOption(c: CrewMember, statsSuffix: string) {
     const outOfRange = isOutOfRangeForVehicle(c.id)
@@ -1218,7 +1218,7 @@ export default function VehiclePage() {
     const savedId = getSavedSlotValue(slot)
     const clearing = hasPending && !pending
     const boarding = hasPending && !!pending
-    // "Instant disembark" — no pending stage, but the seat already
+    // "Instant disembark" - no pending stage, but the seat already
     // has someone in it. Treat the button as a one-click eject.
     const instantDisembark = !hasPending && !!savedId
     const noOp = !hasPending && !savedId
@@ -1239,7 +1239,7 @@ export default function VehiclePage() {
             return
           }
           if (instantDisembark) {
-            // One-click eject — bypass the pendingSlot stage and pass
+            // One-click eject - bypass the pendingSlot stage and pass
             // the empty value directly. Same dismount-to-adjacent
             // code path as a normally-staged disembark.
             await confirmPending(slot, '')
@@ -1268,7 +1268,7 @@ export default function VehiclePage() {
   return (
     <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', fontFamily: 'Carlito, sans-serif', padding: '16px' }}>
 
-      {/* Header — Vehicle Inspection Record style */}
+      {/* Header - Vehicle Inspection Record style */}
       <div style={{ borderBottom: '2px solid #c0392b', paddingBottom: '12px', marginBottom: '16px' }}>
         <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Vehicle Inspection Record</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap' }}>
@@ -1279,7 +1279,7 @@ export default function VehiclePage() {
         {vehicle.three_words && <div style={{ fontSize: '14px', color: '#d4cfc9', fontStyle: 'italic', marginTop: '4px' }}>"{vehicle.three_words}"</div>}
       </div>
 
-      {/* Crew & Checks — Driver + Navigator side by side; Brewer
+      {/* Crew & Checks - Driver + Navigator side by side; Brewer
           below (only if has_still). Each row: dropdown -> MOVE HERE
           -> check button. Confirm chip drops below the row when a
           pending change exists. Navigator now lives here (promoted
@@ -1297,7 +1297,7 @@ export default function VehiclePage() {
                 onChange={e => stagePending('driver', e.target.value)}
                 disabled={!canEdit}
                 style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-                <option value="">— Select driver —</option>
+                <option value="">- Select driver -</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
                     {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (DEX +${c.dex} · Driving +${c.drivingLevel})`))}
@@ -1318,7 +1318,7 @@ export default function VehiclePage() {
             </div>
           </div>
 
-          {/* Navigator (promoted from Passenger Seats — has its own
+          {/* Navigator (promoted from Passenger Seats - has its own
               NAVIGATE check button with a swappable skill picker). */}
           <div>
             <div style={lbl}>Navigator</div>
@@ -1327,7 +1327,7 @@ export default function VehiclePage() {
                 onChange={e => stagePending('navigator', e.target.value)}
                 disabled={!canEdit}
                 style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-                <option value="">— Empty —</option>
+                <option value="">- Empty -</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
                     {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (ACU +${c.attributes['ACU'] ?? 0} · Nav +${c.skillByName['Navigation'] ?? 0})`))}
@@ -1350,7 +1350,7 @@ export default function VehiclePage() {
           </div>
         </div>
 
-        {/* Brewer — full row below Driver/Navigator, only if has_still */}
+        {/* Brewer - full row below Driver/Navigator, only if has_still */}
         {vehicle.has_still && (
           <div>
             <div style={lbl}>Brewer</div>
@@ -1359,7 +1359,7 @@ export default function VehiclePage() {
                 onChange={e => stagePending('brewer', e.target.value)}
                 disabled={!canEdit}
                 style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-                <option value="">— Select brewer —</option>
+                <option value="">- Select brewer -</option>
                 {crew.filter(c => c.kind === 'pc').length > 0 && (
                   <optgroup label="Player Characters">
                     {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (M* ${signed(c.mechanicLevel)} · Tink ${signed(c.tinkererLevel)})`))}
@@ -1382,7 +1382,7 @@ export default function VehiclePage() {
         )}
       </div>
 
-      {/* Passenger Seats — 6 numbered slots, 2-col grid. Navigator
+      {/* Passenger Seats - 6 numbered slots, 2-col grid. Navigator
           lives in Crew & Checks now (promoted up). When the vehicle
           token moves, everyone here moves with it (TacticalMap drag
           path + popout MOVE button path both call
@@ -1401,7 +1401,7 @@ export default function VehiclePage() {
                     onChange={e => stagePending(slotKey, e.target.value)}
                     disabled={!canEdit}
                     style={{ flex: 1, minWidth: 0, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-                    <option value="">— Empty —</option>
+                    <option value="">- Empty -</option>
                     {crew.filter(c => c.kind === 'pc').length > 0 && (
                       <optgroup label="Player Characters">
                         {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ''))}
@@ -1447,7 +1447,7 @@ export default function VehiclePage() {
                       onChange={e => stagePending(`shooter:${i}` as SlotKey, e.target.value)}
                       disabled={!canEdit}
                       style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
-                      <option value="">— Select shooter —</option>
+                      <option value="">- Select shooter -</option>
                       {crew.filter(c => c.kind === 'pc').length > 0 && (
                         <optgroup label="Player Characters">
                           {crew.filter(c => c.kind === 'pc').map(c => renderCrewOption(c, ` (DEX +${c.dex} · RC +${c.rangedCombatLevel})`))}
@@ -1467,7 +1467,7 @@ export default function VehiclePage() {
                     </button>
                     {/* Cross-window arc toggle. Broadcasts to the
                         tactical map's tactical_${campaignId} channel
-                        — it listens for firing_arc_toggle and flips
+                        - it listens for firing_arc_toggle and flips
                         the cone overlay for every token whose name
                         matches this vehicle. Disabled when the
                         weapon has no arc data set (older seeds). */}
@@ -1482,7 +1482,7 @@ export default function VehiclePage() {
                               event: 'firing_arc_toggle',
                               payload: { vehicleName: vehicle.name, weaponIdx: i },
                             })
-                            // Tear down right after — this popout
+                            // Tear down right after - this popout
                             // doesn't otherwise listen on this channel.
                             await supabase.removeChannel(ch)
                           })
@@ -1563,7 +1563,7 @@ export default function VehiclePage() {
             </div>
           </div>
 
-          {/* Fuel — pips render at half-day granularity (fuel_max * 2
+          {/* Fuel - pips render at half-day granularity (fuel_max * 2
               pips, each = 0.5 days). Manual buttons step by ±0.5; the
               brew flow continues to grant +1 day per success. */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
@@ -1649,7 +1649,7 @@ export default function VehiclePage() {
               Per canon: 1 day of gathering materials + 1 day of distilling
               produces 2 days of fuel. The stockpile lets the party gather
               ahead so they can brew on consecutive days. Brew check is
-              blocked when current = 0 (per Q4-d spec — see rollCheck).
+              blocked when current = 0 (per Q4-d spec - see rollCheck).
               [Gather] is a passive 1-day action, no dice (per Q4-d 2a):
               clicking just bumps current by 1 and logs a feed event. */}
           {effectiveBrewingMax(vehicle) > 0 && (
@@ -1729,7 +1729,7 @@ export default function VehiclePage() {
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
               <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', flex: 1 }}>Cargo & Equipment</div>
               <div style={{ fontSize: '13px', color: overloaded ? '#c0392b' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', marginRight: '8px' }}
-                title={overloaded ? `OVERLOADED — cargo ${cargoTotalEnc} exceeds vehicle capacity ${vehicle.encumbrance}` : 'Cargo enc total / vehicle capacity'}>
+                title={overloaded ? `OVERLOADED - cargo ${cargoTotalEnc} exceeds vehicle capacity ${vehicle.encumbrance}` : 'Cargo enc total / vehicle capacity'}>
                 {cargoTotalEnc} / {vehicle.encumbrance}{overloaded && <span style={{ marginLeft: '6px', color: '#c0392b', fontWeight: 700 }}>OVERLOADED</span>}
               </div>
               {canEdit && (
@@ -1754,7 +1754,7 @@ export default function VehiclePage() {
                   {item.notes && <span style={{ color: '#5a5550', fontSize: '14px' }}>{item.notes}</span>}
                   {canEdit && (
                     <button onClick={() => {
-                      // Use the underlying raw cargo array for writes —
+                      // Use the underlying raw cargo array for writes -
                       // splice the matching index, decrement qty if > 1,
                       // else drop.
                       const raw = vehicle.cargo ?? []
@@ -1784,10 +1784,10 @@ export default function VehiclePage() {
                   <input value={addQty} onChange={e => setAddQty(e.target.value)} type="number" min="1" placeholder="Qty"
                     style={{ width: '50px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                   <input value={addEnc} onChange={e => setAddEnc(e.target.value)} type="number" min="0" placeholder="Enc"
-                    title="Encumbrance per item — counts toward the vehicle's capacity"
+                    title="Encumbrance per item - counts toward the vehicle's capacity"
                     style={{ width: '52px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                 </div>
-                {/* Live catalog autocomplete — filters EQUIPMENT by
+                {/* Live catalog autocomplete - filters EQUIPMENT by
                     case-insensitive name OR notes substring as the user
                     types. Clicking a row fills name + enc + sensible
                     default notes so the GM doesn't have to know exact
@@ -1802,7 +1802,7 @@ export default function VehiclePage() {
                     .slice(0, 8)
                   if (matches.length === 0) return null
                   // Don't show the dropdown when the typed text is an
-                  // exact match — the autofill above already handled it
+                  // exact match - the autofill above already handled it
                   // and the dropdown becomes noise.
                   if (matches.length === 1 && matches[0].name.toLowerCase() === q) return null
                   return (
@@ -1837,7 +1837,7 @@ export default function VehiclePage() {
                   const trimmedName = addName.trim()
                   const qty = Math.max(1, parseInt(addQty, 10) || 1)
                   const enc = Math.max(0, parseInt(addEnc, 10) || 0)
-                  // Match the new shape — include enc/rarity/custom so
+                  // Match the new shape - include enc/rarity/custom so
                   // future writes stay consistent. Catalog hit sets
                   // custom=false; otherwise treated as a custom item.
                   const catalogHit = findEquipmentByName(trimmedName)
@@ -1893,7 +1893,7 @@ export default function VehiclePage() {
         </div>
       </div>
 
-      {/* Check modal — Driving or Brew. Inputs prefilled from the assigned
+      {/* Check modal - Driving or Brew. Inputs prefilled from the assigned
           crew member's stats; result writes a row to roll_log and (for
           brew Success / Wild Success) bumps fuel_current. */}
       {check && vehicle && (() => {
@@ -1930,10 +1930,10 @@ export default function VehiclePage() {
                 <button onClick={() => setCheck(null)} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '18px', cursor: 'pointer' }}>✕</button>
               </div>
               <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-                {member?.name ?? '—'} · {vehicle.name}
+                {member?.name ?? '-'} · {vehicle.name}
               </div>
 
-              {/* Target picker — NPCs currently on the active scene
+              {/* Target picker - NPCs currently on the active scene
                   (live tokens). Pre-selected to the first option;
                   empty if no NPCs are on the map. */}
               {check.kind === 'attack' && (
@@ -1961,7 +1961,7 @@ export default function VehiclePage() {
                           : ''
                         return (
                           <option key={t.id} value={t.id} disabled={blocked}>
-                            {t.name}{tag ? ` — ${tag}` : ''}
+                            {t.name}{tag ? ` - ${tag}` : ''}
                           </option>
                         )
                       })}
@@ -1990,7 +1990,7 @@ export default function VehiclePage() {
                 </div>
               )}
 
-              {/* Navigate skill picker — default Navigation (ACU),
+              {/* Navigate skill picker - default Navigation (ACU),
                   swappable to any skill the player has argued for.
                   AMod/SMod auto-recompute on change via
                   switchNavigateSkill. SKILLS is the canonical list
@@ -2021,7 +2021,7 @@ export default function VehiclePage() {
                 )
               })()}
 
-              {/* Brew skill picker — Mechanic* (RSN) vs Tinkerer (DEX) */}
+              {/* Brew skill picker - Mechanic* (RSN) vs Tinkerer (DEX) */}
               {check.kind === 'brew' && (
                 <div style={{ marginBottom: '12px' }}>
                   <div style={lbl}>Skill</div>
@@ -2081,7 +2081,7 @@ export default function VehiclePage() {
                   )}
                   {/* Attack damage info on a hit. The GM rolls damage
                       separately and applies via the standard combat
-                      flow — this is just a reminder of the weapon's
+                      flow - this is just a reminder of the weapon's
                       stats so they don't have to look them up. */}
                   {check.kind === 'attack' && modalWeaponDef && (check.result.outcome === 'Success' || check.result.outcome === 'Wild Success' || check.result.outcome === 'High Insight') && (() => {
                     const targetName = check.targets?.find(t => t.id === check.targetNpcId)?.name
@@ -2123,7 +2123,7 @@ export default function VehiclePage() {
         )
       })()}
 
-      {/* Floorplan lightbox — click image to enlarge, click backdrop
+      {/* Floorplan lightbox - click image to enlarge, click backdrop
           to close. Mirrors the NpcCard portrait enlarge pattern. */}
       {floorplanEnlarged && (vehicle as any).floorplan_url && (
         <div onClick={() => setFloorplanEnlarged(false)}

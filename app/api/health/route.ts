@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 // Health-check endpoint for uptime monitors (Pingdom, StatusCake, etc).
 // Pre-launch audit R5. Returns 200 when the app + Supabase DB are both
-// reachable, 503 if the DB ping fails. No auth required — uptime monitors
+// reachable, 503 if the DB ping fails. No auth required - uptime monitors
 // don't authenticate.
 //
 // The DB ping is a HEAD count against `profiles` with the anon key.

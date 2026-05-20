@@ -1,4 +1,4 @@
-// Phase 5 Sprint 3 — snapshot-vs-snapshot diff helper.
+// Phase 5 Sprint 3 - snapshot-vs-snapshot diff helper.
 //
 // Takes two ModuleSnapshots (typically consecutive versions) and
 // returns a per-content-type breakdown of which items were added,
@@ -43,7 +43,7 @@ export interface SnapshotDiff {
 }
 
 // Stable stringify so two objects with the same keys in different
-// orders compare equal. Recursive — preserves arrays, sorts object
+// orders compare equal. Recursive - preserves arrays, sorts object
 // keys. Used only to detect change; not shown to the user.
 function stableStringify(v: unknown): string {
   if (v === null || typeof v !== 'object') return JSON.stringify(v)
@@ -54,7 +54,7 @@ function stableStringify(v: unknown): string {
   ).join(',') + '}'
 }
 
-// Strip bookkeeping fields that shouldn't count as "changed" —
+// Strip bookkeeping fields that shouldn't count as "changed" -
 // _external_id, sort_order, and fields that clone resets anyway.
 function stripBookkeeping<T extends Record<string, any>>(item: T): T {
   const { _external_id, _pin_external_id, _npc_external_id, sort_order, ...rest } = item
@@ -92,7 +92,7 @@ function diffSection<T extends Record<string, any>>(
   return { added, removed, changed }
 }
 
-// Identity helpers — prefer _external_id; fall back to name/title.
+// Identity helpers - prefer _external_id; fall back to name/title.
 function npcKey(n: ModuleSnapshotNpc): string {
   return n._external_id ?? `name:${(n.name ?? '').toLowerCase()}`
 }

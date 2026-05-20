@@ -28,10 +28,10 @@ export interface RangeProfile {
   distant: number | null
 }
 
-// Weapon profile categories — each weapon in weapons.ts maps to one of these
+// Weapon profile categories - each weapon in weapons.ts maps to one of these
 const PROFILES: Record<string, RangeProfile> = {
   melee:          { engaged: 0,  close: null, medium: null, long: null, distant: null },
-  melee_reach:    { engaged: 0,  close: 0,    medium: null, long: null, distant: null }, // Spear, Staff, Axes — reach weapons
+  melee_reach:    { engaged: 0,  close: 0,    medium: null, long: null, distant: null }, // Spear, Staff, Axes - reach weapons
   unarmed:        { engaged: 0,  close: null, medium: null, long: null, distant: null },
   shotgun_close:  { engaged: +1, close: 0,    medium: -4,   long: null, distant: null }, // Sawed-off
   shotgun:        { engaged: +1, close: 0,    medium: -2,   long: -4,   distant: null }, // Pump-action
@@ -54,7 +54,7 @@ const PROFILES: Record<string, RangeProfile> = {
 const WEAPON_PROFILE_MAP: Record<string, string> = {
   // Unarmed (pseudo-weapon)
   'Unarmed': 'unarmed',
-  // Melee — Engaged-only
+  // Melee - Engaged-only
   'Baseball Bat': 'melee',
   'Brass Knuckles': 'unarmed',
   'Club': 'melee',
@@ -68,7 +68,7 @@ const WEAPON_PROFILE_MAP: Record<string, string> = {
   'Tactical Baton': 'melee',
   'Cattle Prod': 'melee',
   'Taser': 'taser_dart', // projectile darts, ~15-25 ft
-  // Melee — reach (Close range)
+  // Melee - reach (Close range)
   'Bullwhip': 'melee_reach',
   'Fire Axe': 'melee_reach',
   'Spear': 'melee_reach',

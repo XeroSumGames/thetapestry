@@ -4,15 +4,15 @@ import RulesNav from '../../components/rules/RulesNav'
 //
 // Scroll model: the OUTER flex container uses height: 100% + overflow:
 // hidden so the rules layout fills its slot in LayoutShell exactly. The
-// <main> column is the only scrolling region — that keeps RulesNav
+// <main> column is the only scrolling region - that keeps RulesNav
 // statically pinned in its own column. Position: sticky was unreliable
 // here because LayoutShell's children-wrapper already provides the
 // scrolling context; nesting another sticky inside that landed the
 // "stick at top" behaviour intermittently.
 
 export const metadata = {
-  title: 'Rules — XSE SRD',
-  description: 'The Xero Sum Engine SRD v1.1 — full system reference for Distemper.',
+  title: 'Rules - XSE SRD',
+  description: 'The Xero Sum Engine SRD v1.1 - full system reference for Distemper.',
 }
 
 export default function RulesLayout({ children }: { children: React.ReactNode }) {

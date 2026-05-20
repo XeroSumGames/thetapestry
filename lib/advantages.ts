@@ -1,4 +1,4 @@
-// Advantage feature — tracked contextual CMod bonuses.
+// Advantage feature - tracked contextual CMod bonuses.
 //
 // See sql/advantages-2026-05-19.sql for the schema. Use case: GM gives
 // a PC a "+1 CMod on next <skill>" credit after a roll outcome that

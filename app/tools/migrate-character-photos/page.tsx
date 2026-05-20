@@ -4,7 +4,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 
-// /tools/migrate-character-photos — Thriver-only one-shot migration.
+// /tools/migrate-character-photos - Thriver-only one-shot migration.
 // characters.data.photoDataUrl currently holds base64-encoded JPEGs
 // inline. That bloats every characters SELECT (a single 256x256 JPEG
 // can be 20-40KB; rendering 30 character cards pulls the lot down
@@ -12,7 +12,7 @@ import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 // character-portraits Storage bucket and replaces the value with the
 // public URL.
 //
-// Idempotent — only processes rows whose photoDataUrl starts with
+// Idempotent - only processes rows whose photoDataUrl starts with
 // 'data:'. Re-running after a successful pass is a no-op.
 
 interface CharacterRow {
@@ -157,7 +157,7 @@ export default function MigrateCharacterPhotosPage() {
         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '12px' }}>
           Moves character portraits from inline base64 (in <code>characters.data.photoDataUrl</code>) to the
           <code> character-portraits</code> Storage bucket, replacing the value with the public URL. Reduces
-          per-character row weight by 20–40 KB. Idempotent — re-runs are no-ops.
+          per-character row weight by 20-40 KB. Idempotent - re-runs are no-ops.
         </div>
         <div style={{ fontSize: '14px', color: '#cce0f5', marginBottom: '12px' }}>
           {loading ? 'Counting candidates…' : `${rows.length} character${rows.length === 1 ? '' : 's'} with inline base64 photos.`}

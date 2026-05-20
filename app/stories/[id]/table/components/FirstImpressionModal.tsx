@@ -1,6 +1,6 @@
 'use client'
 
-// FirstImpressionModal — single-modal First Impression flow.
+// FirstImpressionModal - single-modal First Impression flow.
 //
 // Replaces the legacy two-modal sequence (special-check picker +
 // RollModal) with a self-contained modal that owns the entire FI
@@ -11,11 +11,11 @@
 // and result rendering.
 //
 // Shipped in three phases:
-//   Phase 1 (2026-05-19) — pure helpers (cmodDelta / vibe / message)
+//   Phase 1 (2026-05-19) - pure helpers (cmodDelta / vibe / message)
 //     extracted to lib/first-impression-resolver.ts.
-//   Phase 2 (2026-05-19) — new modal + resolveFirstImpression side-
+//   Phase 2 (2026-05-19) - new modal + resolveFirstImpression side-
 //     effectful function; replaced the picker modal.
-//   Phase 3 (2026-05-19) — Insight Die pre-roll spend + HI/LI auto-
+//   Phase 3 (2026-05-19) - Insight Die pre-roll spend + HI/LI auto-
 //     award accounting; deleted the legacy triggerFirstImpression +
 //     executeRoll FI branch + firstImpressionTargetRef.
 //
@@ -205,7 +205,7 @@ export default function FirstImpressionModal({
     const total = die1 + die2 + amod + smod + effectiveCmod
     // Outcome computed from the raw d1 + d2 pair the renderer will
     // show. For 3d6, die2 already holds d2+d3 so the snake-eyes /
-    // boxcars triggers depend on the raw d1 + (d2+d3) values — matches
+    // boxcars triggers depend on the raw d1 + (d2+d3) values - matches
     // the existing saveRollToLog convention.
     const outcome = getOutcome(total, die1, die2)
     // Insight Die accounting.
@@ -294,7 +294,7 @@ export default function FirstImpressionModal({
 
         {phase === 'pick' && (
           <>
-            {/* Skill picker — chip bar */}
+            {/* Skill picker - chip bar */}
             <div style={{ marginBottom: '12px' }}>
               <div style={sectionLabelStyle}>Skill</div>
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -317,7 +317,7 @@ export default function FirstImpressionModal({
               </div>
             </div>
 
-            {/* PC selector — GM-only when multiple visible PCs */}
+            {/* PC selector - GM-only when multiple visible PCs */}
             {isGm && eligiblePcs.length > 1 && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={sectionLabelStyle}>Rolling PC</div>
@@ -347,7 +347,7 @@ export default function FirstImpressionModal({
               )}
             </div>
 
-            {/* CMod stepper — the new affordance from playtest mark 01:18:54 */}
+            {/* CMod stepper - the new affordance from playtest mark 01:18:54 */}
             <div style={{ marginBottom: '14px' }}>
               <div style={sectionLabelStyle}>CMod</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

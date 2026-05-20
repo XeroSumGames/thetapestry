@@ -30,7 +30,7 @@ export default function FirstTimersPage() {
   }, [])
 
   async function handleGetStarted() {
-    // Idempotent — flips onboarded=true if it isn't already, then
+    // Idempotent - flips onboarded=true if it isn't already, then
     // sends the user back to the dashboard. Same end state as the
     // modal's CTA so re-readers don't get stuck on the intro.
     setMarking(true)

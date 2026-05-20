@@ -1,12 +1,12 @@
 'use client'
-// /gm-notes-popout — comprehensive GM-side overview of a campaign.
+// /gm-notes-popout - comprehensive GM-side overview of a campaign.
 // Opens as a popout window from two surfaces: the GM Notes button
 // on /stories/[id] and the GM Tools dropdown on /table.
 //
 // Every field a GM might tweak mid-session is click-to-edit. Edits
-// persist via .update().select() against the backing tables —
+// persist via .update().select() against the backing tables -
 // campaigns / campaign_notes / tactical_scenes / campaign_npcs /
-// campaign_pins — same RLS as /table. Optimistic UI: change shows
+// campaign_pins - same RLS as /table. Optimistic UI: change shows
 // instantly, reverts + alerts if the write rejects.
 
 import { useEffect, useState } from 'react'
@@ -80,7 +80,7 @@ export default function GMNotesPopoutPage() {
     ;(async () => {
       const { user } = await getCachedAuth()
       if (!user) { if (!cancelled) { setAuthError('Sign in required.'); setLoading(false) } ; return }
-      // GM gate — only the campaign's GM (or a Thriver via godmode RLS)
+      // GM gate - only the campaign's GM (or a Thriver via godmode RLS)
       // can see this popout. Non-GM members shouldn't read plot beats
       // since those usually contain spoilers.
       const { data: camp } = await supabase
@@ -103,7 +103,7 @@ export default function GMNotesPopoutPage() {
       if (cancelled) return
       setCampaign(camp as Campaign)
 
-      // Parallel fetch — scenes, NPCs, pins, notes. Each table has its
+      // Parallel fetch - scenes, NPCs, pins, notes. Each table has its
       // own RLS that the GM passes; no point serializing.
       const [scenesR, npcsR, pinsR, notesR] = await Promise.all([
         supabase.from('tactical_scenes').select('id, name, is_active, grid_cols, grid_rows, lighting_mode').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
@@ -207,7 +207,7 @@ export default function GMNotesPopoutPage() {
     <div style={shellStyle}>
       {/* Header */}
       <div style={{ borderBottom: '2px solid #c0392b', paddingBottom: '12px', marginBottom: '20px' }}>
-        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>GM Notes — Story Overview</div>
+        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>GM Notes - Story Overview</div>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{campaign.name}</div>
         <EditableText
           value={campaign.description ?? ''}
@@ -219,7 +219,7 @@ export default function GMNotesPopoutPage() {
       </div>
 
       {/* Plot beats / running notes (campaign_notes) */}
-      <Section title="Plot Beats &amp; Notes" count={notes.length} emptyText="No notes yet — open the GM Notes panel on /table to add some.">
+      <Section title="Plot Beats &amp; Notes" count={notes.length} emptyText="No notes yet - open the GM Notes panel on /table to add some.">
         {notes.map(n => (
           <Card key={n.id}>
             <EditableText
@@ -234,7 +234,7 @@ export default function GMNotesPopoutPage() {
               multiline
               emptyPlaceholder="Add note content…"
               displayContent={renderRichText(n.content)}
-              // 16px to match the /handout popout — this is a
+              // 16px to match the /handout popout - this is a
               // dedicated reading surface where plot-beat bodies
               // often hold the entire Session-Zero text. 13px was
               // readable at panel density but tight for long-form
@@ -247,7 +247,7 @@ export default function GMNotesPopoutPage() {
       </Section>
 
       {/* Scenes */}
-      <Section title="Tactical Scenes" count={scenes.length} emptyText="No scenes yet — set one up on /table → Map Setup.">
+      <Section title="Tactical Scenes" count={scenes.length} emptyText="No scenes yet - set one up on /table → Map Setup.">
         {scenes.map(s => (
           <Card key={s.id}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
@@ -343,7 +343,7 @@ export default function GMNotesPopoutPage() {
       </Section>
 
       {/* Pins */}
-      <Section title="Pins" count={pins.length} emptyText="No pins yet — drop them on the campaign map.">
+      <Section title="Pins" count={pins.length} emptyText="No pins yet - drop them on the campaign map.">
         {pins.map(p => (
           <Card key={p.id}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
@@ -382,7 +382,7 @@ export default function GMNotesPopoutPage() {
       </Section>
 
       <div style={{ fontSize: '13px', color: '#5a5550', textAlign: 'center', marginTop: '24px', fontStyle: 'italic' }}>
-        Click any field to edit — changes save automatically. Adding new beats / NPCs / pins still happens on the main /table page.
+        Click any field to edit - changes save automatically. Adding new beats / NPCs / pins still happens on the main /table page.
       </div>
     </div>
   )
@@ -511,7 +511,7 @@ function EditableSelect({
 }) {
   const [editing, setEditing] = useState(false)
   const current = options.find(o => o.value === value)
-  const label = current?.label ?? '—'
+  const label = current?.label ?? '-'
 
   if (editing) {
     return (

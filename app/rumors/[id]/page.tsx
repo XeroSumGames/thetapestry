@@ -1,7 +1,7 @@
 'use client'
-// /modules/[id] — public-facing module detail.
+// /modules/[id] - public-facing module detail.
 //
-// Sister page to /modules — a card on that grid links here. Shows the
+// Sister page to /modules - a card on that grid links here. Shows the
 // full description, version history (latest first), and a "Create
 // campaign with this module" CTA that pre-selects the module on the
 // new-campaign flow via ?module=<id>.
@@ -46,7 +46,7 @@ interface ModuleDetail {
   // moderation_status only present once the Phase B+ migration ran;
   // missing on older rows.
   moderation_status?: string | null
-  // Aggregate review fields — populated by trigger from
+  // Aggregate review fields - populated by trigger from
   // sql/modules-phase-c-reviews.sql. May be 0/null on older rows.
   avg_rating?: number | null
   rating_count?: number | null
@@ -74,7 +74,7 @@ export default function ModuleDetailPage() {
   const [authorName, setAuthorName] = useState<string | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState<string>('')
-  // Reviews — public list + the current user's existing review (if any)
+  // Reviews - public list + the current user's existing review (if any)
   // so we can show "Edit Yours" instead of "Write a Review" when they
   // already have one. canReview is gated on having an active
   // subscription to this module (the RLS policy enforces it server-side
@@ -102,7 +102,7 @@ export default function ModuleDetailPage() {
         if (!data) { setNotFound(true); return }
         setMod(data as ModuleDetail)
 
-        // Versions — newest first by major/minor/patch then by published_at.
+        // Versions - newest first by major/minor/patch then by published_at.
         const { data: vRows } = await supabase
           .from('module_versions')
           .select('id, version, version_major, version_minor, version_patch, published_at, changelog, subscriber_count')
@@ -336,7 +336,7 @@ export default function ModuleDetailPage() {
         </div>
       )}
 
-      {/* Reviews — public list + write-your-own form for active
+      {/* Reviews - public list + write-your-own form for active
           subscribers. Hidden when nobody's reviewed AND the current
           user can't review yet, so we don't show an empty card on
           fresh modules a non-subscriber lands on. */}
@@ -351,7 +351,7 @@ export default function ModuleDetailPage() {
             </div>
 
             {/* Write / edit your own. Only renders when canReview === true
-                (active subscription) — RLS would 403 the upsert otherwise. */}
+                (active subscription) - RLS would 403 the upsert otherwise. */}
             {canReview && (
               <div style={{ marginBottom: '16px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px' }}>
                 <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '8px' }}>
@@ -400,7 +400,7 @@ export default function ModuleDetailPage() {
               <div style={{ fontSize: '13px', color: '#5a5550' }}>Loading…</div>
             ) : reviews.length === 0 ? (
               <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
-                No reviews yet. {canReview ? 'Be the first.' : 'Subscribers can leave reviews — pick a campaign with this module to write one.'}
+                No reviews yet. {canReview ? 'Be the first.' : 'Subscribers can leave reviews - pick a campaign with this module to write one.'}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

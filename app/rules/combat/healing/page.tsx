@@ -2,7 +2,7 @@ import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSecti
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Healing — XSE SRD §06' }
+export const metadata = { title: 'Healing - XSE SRD §06' }
 
 export default function Page() {
   return (
@@ -47,7 +47,7 @@ export default function Page() {
       </P>
       <P>
         <strong>Banking.</strong> When the heal queues, the total WP is
-        split 50/50 across two checkpoints — the first at +12 hours of
+        split 50/50 across two checkpoints - the first at +12 hours of
         in-world time, the second at +24 hours. Odd totals split with
         the larger half at +24h (a heal of 5 → +2 WP at +12h, +3 WP at
         +24h). Any GM-driven time advance that crosses a checkpoint
@@ -61,7 +61,7 @@ export default function Page() {
       </P>
       <P>
         <strong>Stacking.</strong> Multiple successful heals on the same
-        target stack — each pending heal is its own queue entry with its
+        target stack - each pending heal is its own queue entry with its
         own +12h / +24h schedule from its check time. Heals queued at
         different in-world hours apply at different actual tick moments.
       </P>

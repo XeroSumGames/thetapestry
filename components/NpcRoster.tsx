@@ -36,16 +36,16 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }>
   antagonist: { bg: '#2a102a', border: '#8b2e8b', color: '#d48bd4' },
 }
 
-// Ring color of the NPC portrait circle — driven by DISPOSITION
+// Ring color of the NPC portrait circle - driven by DISPOSITION
 // (friendly / neutral / hostile), not npc_type. Disposition is
 // how the NPC feels toward the PCs; type is their role/threat
 // level. A Goon can be a friendly ally, a Bystander can be hostile
-// — the two concerns are independent. Exported so NpcCard,
+// - the two concerns are independent. Exported so NpcCard,
 // PlayerNpcCard, and the edit form all render the same palette.
 // Null/unset disposition falls back to neutral gray.
 const DISPOSITION_COLORS: Record<string, { border: string; bg: string; color: string }> = {
   friendly: { border: '#2d5a1b', bg: '#1a2e10', color: '#7fc458' },
-  // Was dark grey (#3a3a3a / #2e2e2e) — too indistinct against the dark
+  // Was dark grey (#3a3a3a / #2e2e2e) - too indistinct against the dark
   // roster background and on the tactical map. Switched to dim goldenrod
   // border + dark amber bg + warm-yellow tag color so neutral reads as
   // an actual signal instead of vanishing into UI chrome. Mirrors the
@@ -60,7 +60,7 @@ const DISPOSITION_COLORS: Record<string, { border: string; bg: string; color: st
 // setting-imported NPCs that never had an explicit disposition still
 // show the right threat signal. Both surfaces use this helper so a
 // friendly NPC can never look green on the map and red on the roster
-// (or vice versa) — they're always rendered from the same palette.
+// (or vice versa) - they're always rendered from the same palette.
 export function getNpcRingColor(npc: { disposition?: string | null; npc_type?: string | null } | string | null | undefined): { border: string; bg: string; color: string } {
   // Back-compat: callers used to pass just the disposition string.
   const obj = (typeof npc === 'object' && npc !== null) ? npc : { disposition: (npc ?? null) as string | null, npc_type: null }
@@ -77,7 +77,7 @@ export function getNpcRingColor(npc: { disposition?: string | null; npc_type?: s
 
 // Token rings on the tactical map render at small size against busy
 // background art (terrain, buildings, etc.) and need to read at a
-// glance — use brighter variants of the disposition palette than the
+// glance - use brighter variants of the disposition palette than the
 // roster cards. Friendly = vivid green, Hostile = vivid red, Neutral =
 // medium gray. Roster cards keep the dimmer base palette since they
 // sit on a flat dark UI background where the muted tones work fine.
@@ -85,12 +85,12 @@ const TOKEN_BORDER_OVERRIDES: Record<string, string> = {
   '#2d5a1b': '#4ade80', // friendly: forest green → vivid green
   '#c0392b': '#ef4444', // hostile: brand red → vivid red
   '#a17a14': '#facc15', // neutral: dim goldenrod → vivid yellow
-  // Legacy fallbacks — tokens placed before the yellow swap stored
+  // Legacy fallbacks - tokens placed before the yellow swap stored
   // either '#3a3a3a' (the dim picker color, via cell-throw / quick-add
   // paths) or '#9ca3af' (the OLD vivid medium gray, via placeTokenOnMap
   // which writes the *vivid* color straight into scene_tokens.color).
   // Map both through to the new vivid yellow so old maps don't render
-  // as gray rings — no DB migration needed.
+  // as gray rings - no DB migration needed.
   '#3a3a3a': '#facc15',
   '#9ca3af': '#facc15',
 }
@@ -102,7 +102,7 @@ export function getNpcTokenBorderColor(npc: { disposition?: string | null; npc_t
 
 // Brightens a stored token color (from scene_tokens.color) to its vivid
 // map variant. Lets the canvas render legacy tokens placed before the
-// vivid-palette switch without a DB migration — anything that doesn't
+// vivid-palette switch without a DB migration - anything that doesn't
 // match a known muted hex passes through unchanged (custom colors etc.)
 export function vividTokenBorder(color: string | null | undefined): string {
   if (!color) return '#ef4444'
@@ -112,7 +112,7 @@ export function vividTokenBorder(color: string | null | undefined): string {
 // Placeholder silhouette portraits by type. Clicking one sets
 // portrait_url to that colored SVG. Used when the GM wants a
 // typed-looking stand-in without uploading art. The ring color of
-// the outer circle is driven by npc_type separately — these are
+// the outer circle is driven by npc_type separately - these are
 // just the INSIDE image.
 const PORTRAIT_BANK = [
   { label: 'Bystander', bg: '#1a2e10', color: '#7fc458' },
@@ -178,7 +178,7 @@ export interface CampaignNpc {
   dexterity: number
   skills: any
   notes: string | null
-  // Player-visible blurb — shown in PlayerNpcCard. Distinct from
+  // Player-visible blurb - shown in PlayerNpcCard. Distinct from
   // notes (GM-private bookkeeping). Authored in the NpcRoster edit
   // form under 'Player-visible description'.
   public_description: string | null
@@ -244,7 +244,7 @@ interface Props {
   viewingNpcIds?: Set<string>
   editNpcId?: string | null
   onEditStarted?: () => void
-  externalNpcs?: CampaignNpc[]    // Parent's optimistic NPC state — syncs HP/status without waiting for realtime
+  externalNpcs?: CampaignNpc[]    // Parent's optimistic NPC state - syncs HP/status without waiting for realtime
   onPlaceOnMap?: (npc: CampaignNpc) => void
   onRemoveFromMap?: (npc: CampaignNpc) => void
   // Bulk-placement for the per-folder "Map" button: places every NPC in
@@ -278,7 +278,7 @@ const emptyForm = {
   weapon: null as any,
   weapon2: null as any,
   folder: '' as string,
-  // GM-authored inventory — items the player will see when looting
+  // GM-authored inventory - items the player will see when looting
   // this NPC via 🎒 Search Remains. Distinct from `equipment` (the
   // weapon/armor block), and separate from skills.
   inventoryEntries: [] as InventoryItem[],
@@ -384,7 +384,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   }
 
   useEffect(() => {
-    // Initial load — if the parent already populated externalNpcs (Wave
+    // Initial load - if the parent already populated externalNpcs (Wave
     // 2 on the table page), reuse that instead of firing our own
     // campaign_npcs query. Saves one round-trip per mount, which adds
     // up under multi-browser playtest pressure. Community memberships
@@ -402,7 +402,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       loadCommunityMap(sorted)
       // CRITICAL: flip loading=false here. The else-branch's loadNpcs()
       // does this at the end of its work, but the externalNpcs fast-path
-      // had no equivalent — so when the parent /table page fed in a
+      // had no equivalent - so when the parent /table page fed in a
       // populated campaignNpcs prop, the panel rendered "Loading..."
       // forever even though `npcs` state was already filled. The GM's
       // NPC roster looked broken because the loading gate hid the data.
@@ -411,7 +411,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       loadNpcs()
     }
 
-    // Realtime subscription — refresh when any campaign_npcs row changes
+    // Realtime subscription - refresh when any campaign_npcs row changes
     // (e.g. damage applied from table page updates WP/RP in DB).
     const channel = supabase.channel(`npc_roster_${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => {
@@ -472,7 +472,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       influence: npc.influence,
       dexterity: npc.dexterity,
       skillEntries: Array.isArray(npc.skills?.entries) ? npc.skills.entries : (typeof npc.skills?.text === 'string' ? parseSkillText(npc.skills.text) : []),
-      // Inventory — tolerant: falsy / non-array → []. Missing fields
+      // Inventory - tolerant: falsy / non-array → []. Missing fields
       // (enc/rarity/notes/custom) get defaults so the form renders
       // without explosions on legacy rows.
       inventoryEntries: Array.isArray(npc.inventory)
@@ -543,7 +543,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       complication: form.complication || null,
       three_words: form.threeWords.filter(w => w),
       folder: form.folder.trim() || null,
-      // Strip empty rows the GM may have left while editing — name
+      // Strip empty rows the GM may have left while editing - name
       // is the only required field; an item with no name isn't real.
       inventory: form.inventoryEntries.filter(it => it.name.trim()),
       wp_max: 10 + form.physicality + form.dexterity,
@@ -552,7 +552,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     }
     if (editingId) {
       await supabase.from('campaign_npcs').update(row).eq('id', editingId)
-      // Same token-color sync as quickSetDisposition — the full Edit
+      // Same token-color sync as quickSetDisposition - the full Edit
       // modal can change disposition or npc_type, and either flip
       // changes the ring color callsite (placeFolderOnMap /
       // placeTokenOnMap) computes for new placements. Without this,
@@ -584,7 +584,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     if (initRes.error) console.warn('[handleDelete] initiative_order delete error:', initRes.error.message)
     await supabase.from('campaign_npcs').delete().eq('id', id)
     await loadNpcs()
-    // Tell the parent to refresh + broadcast — Supabase Realtime DELETE
+    // Tell the parent to refresh + broadcast - Supabase Realtime DELETE
     // events over postgres_changes sometimes drop when REPLICA IDENTITY
     // isn't FULL, leaving the initiative bar stale until a manual reload.
     onNpcDeleted?.(id)
@@ -602,7 +602,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   async function renameFolder(oldName: string, newName: string) {
     if (!newName.trim() || newName.trim() === oldName) { setRenamingFolder(null); return }
     const trimmed = newName.trim()
-    // Single UPDATE…IN — every NPC in the old folder gets the same
+    // Single UPDATE…IN - every NPC in the old folder gets the same
     // new value, so collapse the per-row Promise.all into one query.
     const ids = npcs
       .filter(n => (n.folder ?? 'Uncategorized') === oldName)
@@ -649,7 +649,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     const existing = npcs.filter(n => n.name === baseName || n.name.startsWith(baseName + ' #'))
     const num = existing.length + 1
     const cloneName = `${baseName} #${num}`
-    // Insert right after the source NPC — bump everything below down
+    // Insert right after the source NPC - bump everything below down
     const srcSort = npc.sort_order ?? 0
     const below = npcs.filter(n => (n.sort_order ?? 0) > srcSort)
     if (below.length > 0) {
@@ -671,7 +671,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   const [showCombatPicker, setShowCombatPicker] = useState(false)
   const [combatPickerIds, setCombatPickerIds] = useState<Set<string>>(new Set())
   // Multi-select mode for cross-folder bulk Hide/Reveal. Folder-level
-  // and global Show-All shipped earlier — this is "I want to hide
+  // and global Show-All shipped earlier - this is "I want to hide
   // these 7 NPCs scattered across 3 folders in one click." Clicking
   // a card while selectMode=true toggles selectedIds; the floating
   // action bar at the bottom of the roster shows what to do next.
@@ -748,7 +748,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   async function applyGenerated(typeOverride: string) {
     const npc = generateRandomNpc(typeOverride)
-    // Pick a random UNUSED portrait — "used" = previously auto-assigned in THIS campaign.
+    // Pick a random UNUSED portrait - "used" = previously auto-assigned in THIS campaign.
     // Manual Library picks on the NPC edit form don't count. Recycles once exhausted.
     let portraitUrl: string | null = null
     try {
@@ -761,7 +761,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
         const usedSet = new Set((usedRes.data ?? []).map((r: any) => r.portrait_url))
         let unused = all.filter(p => !usedSet.has(p.url_256))
         if (unused.length === 0) {
-          // Cycle exhausted — reset the log for this gender so we start fresh
+          // Cycle exhausted - reset the log for this gender so we start fresh
           await supabase.from('campaign_portrait_usage').delete().eq('campaign_id', campaignId).eq('gender', npc.gender)
           unused = all
         }
@@ -769,7 +769,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
         // Log the assignment so we don't pick it again this cycle
         await supabase.from('campaign_portrait_usage').insert({ campaign_id: campaignId, portrait_url: portraitUrl, gender: npc.gender })
       }
-    } catch { /* bank unavailable — skip portrait */ }
+    } catch { /* bank unavailable - skip portrait */ }
     setForm(f => ({
       ...f,
       name: npc.name,
@@ -787,7 +787,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       weapon: npc.weapon ?? null,
       portrait_url: portraitUrl ?? f.portrait_url,
     } as any))
-    setGeneratedSummary(`Generated as ${npc.profession} — ${npc.motivation} / ${npc.complication}`)
+    setGeneratedSummary(`Generated as ${npc.profession} - ${npc.motivation} / ${npc.complication}`)
     setShowGenerateTypePicker(false)
   }
 
@@ -797,7 +797,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   useEffect(() => {
     async function loadRevealed() {
       if (!isGM || !pcEntries || pcEntries.length === 0) return
-      // Filter to this campaign's NPCs — earlier code scanned the full
+      // Filter to this campaign's NPCs - earlier code scanned the full
       // npc_relationships table on every mount. For GMs with multiple
       // campaigns this fanned out across all of them.
       const npcIds = npcs.map((n: any) => n.id)
@@ -891,12 +891,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   // Inline disposition update for the roster card. Wraps the supabase
   // write + local state update so the picker on each card can fire
-  // without opening the full Edit modal — fastest way to fix a
+  // without opening the full Edit modal - fastest way to fix a
   // mis-set disposition in bulk.
   async function quickSetDisposition(npcId: string, value: 'friendly' | 'neutral' | 'hostile' | null) {
     const { error } = await supabase.from('campaign_npcs').update({ disposition: value }).eq('id', npcId)
     if (error) { alert('Error: ' + error.message); return }
-    // Keep any existing tactical-map tokens in sync — without this, a
+    // Keep any existing tactical-map tokens in sync - without this, a
     // token placed when the NPC was Foe (red) keeps the red ring even
     // after the GM flips disposition to Neutral. Computes the new ring
     // color from the new disposition + existing npc_type fallback,
@@ -911,7 +911,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     e.stopPropagation()
     if (!pcEntries || pcEntries.length === 0) return
     const isRevealed = revealedNpcIds.has(npcId)
-    // Hard visibility gate — keeps the new hidden_from_players flag in
+    // Hard visibility gate - keeps the new hidden_from_players flag in
     // sync with the per-PC npc_relationships reveal rows. Without this
     // the RLS would still hide the NPC from players even after they're
     // "revealed" via npc_relationships.
@@ -944,7 +944,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   const [showLibrary, setShowLibrary] = useState(false)
   const [libraryNpcs, setLibraryNpcs] = useState<any[]>([])
   const [libraryLoading, setLibraryLoading] = useState(false)
-  // Animal bestiary picker — drops a campaign_npcs row with the
+  // Animal bestiary picker - drops a campaign_npcs row with the
   // canonical CRB stats from `lib/animals.ts:ANIMALS`.
   const [showAnimalPicker, setShowAnimalPicker] = useState(false)
   const [animalSpawning, setAnimalSpawning] = useState<string | null>(null)
@@ -1014,7 +1014,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   // Drop a canonical animal into this campaign. Stats come straight
   // from lib/animals.ts:ANIMALS (validated against CRB v0.9.2 p.194).
   // Default npc_type='foe' since the bestiary is most useful when
-  // the GM wants a threat — a tame Dog or Horse can be flipped to
+  // the GM wants a threat - a tame Dog or Horse can be flipped to
   // 'bystander' on the NPC sheet after spawning.
   async function spawnAnimal(animal: AnimalSeed) {
     setAnimalSpawning(animal.name)
@@ -1134,7 +1134,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
           Library
         </button>
       </div>}
-      {/* Search & filter — GM only */}
+      {/* Search & filter - GM only */}
       {isGM && npcs.length > 3 && (
         <div style={{ padding: '4px 10px 6px' }}>
           <input value={npcSearch} onChange={e => setNpcSearch(e.target.value)} placeholder="Search NPCs..."
@@ -1261,7 +1261,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {/* Left column: select checkbox (only in select mode)
                       then drag handle + delete + clone + edit. The
-                      checkbox is visual-only — the whole card is
+                      checkbox is visual-only - the whole card is
                       already clickable in select mode. */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                     {selectMode && (
@@ -1298,7 +1298,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1.2 }}>{npc.name}</div>
                     <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px', alignItems: 'center' }}>
                       <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
-                      {/* Inline disposition picker — three dots
+                      {/* Inline disposition picker - three dots
                           (friendly / neutral / hostile). Click cycles
                           to that value; clicking the already-picked
                           dot clears it back to null (which falls back
@@ -1320,14 +1320,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                               style={{ width: '14px', height: '14px', borderRadius: '50%', border: `2px solid ${border}`, background: bg, cursor: 'pointer', padding: 0, outline: picked ? '2px solid #f5f2ee' : 'none', outlineOffset: '1px' }} />
                           )
                         })}
-                        {/* Diagnostic — shows the actual disposition value
+                        {/* Diagnostic - shows the actual disposition value
                             stored in the roster's local state. If this
-                            says "—" but you've set the disposition in a
+                            says "-" but you've set the disposition in a
                             popout, the realtime sub on campaign_npcs
-                            isn't firing — run
+                            isn't firing - run
                             sql/campaign-npcs-realtime-publication.sql. */}
                         <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : npc.disposition === 'neutral' ? '#fcd34d' : '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
-                          {npc.disposition ?? '—'}
+                          {npc.disposition ?? '-'}
                         </span>
                       </span>
                       <button onClick={e => quickReveal(npc.id, e)}
@@ -1357,7 +1357,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                     </div>
                   </div>
-                  {/* Right: portrait — ring color comes from disposition
+                  {/* Right: portrait - ring color comes from disposition
                       first, npc_type as a fallback (so a Foe-typed NPC
                       with no explicit disposition still rings red, a
                       Bystander rings green, etc.). Same helper drives
@@ -1386,7 +1386,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               )
               }
 
-              // Folder tree renders in both combat and non-combat modes — GMs
+              // Folder tree renders in both combat and non-combat modes - GMs
               // with lots of NPCs want groupings visible so they can scan by
               // faction / encounter batch while combat is live.
 
@@ -1409,7 +1409,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 if (!folderMap[f]) folderMap[f] = []
                 folderMap[f].push(npc)
               }
-              // Build ordered folder list — saved order first, then any new folders
+              // Build ordered folder list - saved order first, then any new folders
               const allFolderNames = Object.keys(folderMap)
               const ordered = [...folderOrder.filter(f => allFolderNames.includes(f)), ...allFolderNames.filter(f => !folderOrder.includes(f))]
               // Sync folderOrder if new folders appeared
@@ -1423,7 +1423,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 const key = `__community__${cname}`
                 const isOpen = expandedFolders.has(key)
                 // Same SHOW/HIDE toggle as regular folders. Community
-                // groups are just NPC collections — the underlying
+                // groups are just NPC collections - the underlying
                 // place/reveal operations work the same way.
                 const cIds = cnpcs.map(n => n.id)
                 const cAllRevealed = cIds.length > 0 && cIds.every(id => revealedNpcIds.has(id))
@@ -1439,7 +1439,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
-                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community — {cname}</span>
+                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community - {cname}</span>
                       {cnpcs.length > 0 && onPlaceFolderOnMap && (() => {
                         // MAP/UNMAP: bulk place tokens on the GM's
                         // tactical map (or archive them off) WITHOUT
@@ -1532,8 +1532,8 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                           set revealed=true + is_visible=true. Result:
                           tokens visible on every map (GM + players) AND
                           listed in the player NPC sidebar. HIDE: archive
-                          all tokens (so they vanish from every map —
-                          GM included — but the row keeps grid_x / grid_y
+                          all tokens (so they vanish from every map -
+                          GM included - but the row keeps grid_x / grid_y
                           / scale / rotation for the next SHOW) + set
                           revealed=false. Position is never lost. */}
                       {folderNpcs.length > 0 && (() => {
@@ -1616,7 +1616,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
           )}
       </div>
 
-      {/* Multi-select action bar — sticks to the bottom of the roster
+      {/* Multi-select action bar - sticks to the bottom of the roster
           when selectMode is on and at least one NPC is selected. Hide
           and Reveal call the same path the folder-level buttons use,
           so the visibility flip + tactical-token sync goes through
@@ -1714,11 +1714,11 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       <span style={{ fontSize: '13px', fontWeight: 700, color: ring.color, fontFamily: 'Carlito, sans-serif' }}>{form.name ? getInitials(form.name) : '?'}</span>
                     )}
                   </div>
-                  {/* Disposition picker — sets the ring color (friendly
+                  {/* Disposition picker - sets the ring color (friendly
                       green / neutral yellow / hostile red). Independent
                       of portrait; can pick any disposition whether or
                       not there's an uploaded image. */}
-                  <div style={{ display: 'flex', gap: '3px' }} title="Disposition — drives ring color">
+                  <div style={{ display: 'flex', gap: '3px' }} title="Disposition - drives ring color">
                     {([
                       ['friendly', '#2d5a1b', '#1a2e10'],
                       ['neutral',  '#a17a14', '#2a2010'],
@@ -1823,7 +1823,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               )}
             </div>
 
-            {/* Inventory — items players see when looting via 🎒 Search
+            {/* Inventory - items players see when looting via 🎒 Search
                 Remains. Quick-pick from the SRD catalog OR add a custom
                 row. Empty rows are stripped on save so leaving a stub
                 while editing doesn't pollute the loot table. */}
@@ -1934,7 +1934,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 setForm(f => ({ ...f, weapon: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
               }}
                 style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                <option value="">— None —</option>
+                <option value="">- None -</option>
                 <optgroup label="Melee">{MELEE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
                 <optgroup label="Ranged">{RANGED_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
                 <optgroup label="Explosive">{EXPLOSIVE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
@@ -1961,7 +1961,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   setForm(f => ({ ...f, weapon2: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
                 }}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                  <option value="">— None —</option>
+                  <option value="">- None -</option>
                   <optgroup label="Melee">{MELEE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
                   <optgroup label="Ranged">{RANGED_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
                   <optgroup label="Explosive">{EXPLOSIVE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
@@ -1995,7 +1995,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               </div>
             </div>
 
-            {/* Player-visible description — shows on PlayerNpcCard
+            {/* Player-visible description - shows on PlayerNpcCard
                 whenever this NPC's tile is opened by a PC. Distinct
                 from GM Notes (kept private below). Author one-liners
                 like 'Tall Black man, late 50s, badge on his belt.' */}
@@ -2011,7 +2011,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             <div style={{ marginBottom: '8px' }}>
               <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>GM Notes <span style={{ color: '#cce0f5', opacity: 0.6 }}>(private)</span></div>
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Private notes — never shown to players"
+                placeholder="Private notes - never shown to players"
                 rows={3}
                 style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
             </div>
@@ -2019,7 +2019,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             {/* Relationships (edit only) */}
             {editingId && pcEntries && pcEntries.length > 0 && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Relationships — First Impressions</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Relationships - First Impressions</div>
                 {pcEntries.map(pc => {
                   const rel = relationships.find(r => r.character_id === pc.characterId)
                   const cmod = rel?.relationship_cmod ?? 0
@@ -2029,7 +2029,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       <select value={cmod} onChange={e => handleRelationshipChange(pc.characterId, parseInt(e.target.value, 10))}
                         style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: cmod > 0 ? '#7fc458' : cmod < 0 ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         {FIRST_IMPRESSIONS.map(fi => (
-                          <option key={fi.value} value={fi.value}>{fi.value > 0 ? `+${fi.value}` : fi.value} — {fi.label}</option>
+                          <option key={fi.value} value={fi.value}>{fi.value > 0 ? `+${fi.value}` : fi.value} - {fi.label}</option>
                         ))}
                       </select>
                     </div>
@@ -2091,7 +2091,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   <div style={{ padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                     <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Publish to World</div>
                     <textarea value={publishDesc} onChange={e => setPublishDesc(e.target.value)}
-                      placeholder="Public description — what other GMs will see"
+                      placeholder="Public description - what other GMs will see"
                       rows={2}
                       style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: '6px' }} />
                     <select value={publishSetting} onChange={e => setPublishSetting(e.target.value)}
@@ -2185,7 +2185,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>🐺 Bestiary</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>Spawn Animal</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', lineHeight: 1.5 }}>
-              Drops a fully-statted NPC into this campaign with the canonical CRB stats. Default type is <span style={{ color: '#f5a89a' }}>foe</span> — flip to bystander on the NPC sheet if it's a tame Dog or Horse. Click any row to spawn; spawning the same animal twice creates "Wolf #2", etc.
+              Drops a fully-statted NPC into this campaign with the canonical CRB stats. Default type is <span style={{ color: '#f5a89a' }}>foe</span> - flip to bystander on the NPC sheet if it's a tame Dog or Horse. Click any row to spawn; spawning the same animal twice creates "Wolf #2", etc.
             </div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
               {ANIMALS.map(animal => (

@@ -27,7 +27,7 @@ const moodRow = (
   </tr>
 )
 
-export const metadata = { title: 'Community Structure — XSE SRD §08' }
+export const metadata = { title: 'Community Structure - XSE SRD §08' }
 
 export default function StructurePage() {
   return (
@@ -52,7 +52,7 @@ export default function StructurePage() {
           <tr>
             <td style={ruleTableTdStyle}><Term>Gatherers</Term></td>
             <td style={ruleTableTdStyle}>33% (round down)</td>
-            <td style={ruleTableTdStyle}>Hunt, forage, farm, fish, scavenge — bring in Rations.</td>
+            <td style={ruleTableTdStyle}>Hunt, forage, farm, fish, scavenge - bring in Rations.</td>
             <td style={ruleTableTdStyle}>Fed Check</td>
           </tr>
           <tr>
@@ -63,7 +63,7 @@ export default function StructurePage() {
           </tr>
           <tr>
             <td style={ruleTableTdStyle}><Term>Safety</Term></td>
-            <td style={ruleTableTdStyle}>5–10%</td>
+            <td style={ruleTableTdStyle}>5-10%</td>
             <td style={ruleTableTdStyle}>Policing, patrol, firefighting, emergency services. Leadership comes from here.</td>
             <td style={ruleTableTdStyle}>Drives Morale modifiers only.</td>
           </tr>
@@ -85,9 +85,9 @@ export default function StructurePage() {
           <tbody>
             {moodRow('Moment of High Insight (6+6)', 'Enough luxury items are found to give the community a real boost.', '+2', true)}
             {moodRow('Wild Success (14+)', 'Rations surplus.', '+1', true)}
-            {moodRow('Success (9–13)', 'Baseline ration needs are met.', '0')}
-            {moodRow('Failure (4–8)', 'Shortfall in Rations leading to only 1 meal a day.', '−1')}
-            {moodRow('Dire Failure (0–3)', 'Continuously hungry, sometimes days between Rations.', '−2')}
+            {moodRow('Success (9-13)', 'Baseline ration needs are met.', '0')}
+            {moodRow('Failure (4-8)', 'Shortfall in Rations leading to only 1 meal a day.', '−1')}
+            {moodRow('Dire Failure (0-3)', 'Continuously hungry, sometimes days between Rations.', '−2')}
             {moodRow('Moment of Low Insight (1+1)', 'Food contamination, famine onset.', '−3')}
           </tbody>
         </RuleTable>
@@ -108,9 +108,9 @@ export default function StructurePage() {
           <tbody>
             {moodRow('Moment of High Insight (6+6)', 'Buildings and equipment in perfect working order; project goes well.', '+2', true)}
             {moodRow('Wild Success (14+)', 'Buildings and equipment adequately repaired, maintained, even improved.', '+1', true)}
-            {moodRow('Success (9–13)', 'All systems, buildings, and equipment adequately maintained.', '0')}
-            {moodRow('Failure (4–8)', 'Minor breakdowns, or a deficit in required Supplies.', '−1')}
-            {moodRow('Dire Failure (0–3)', 'Continued breakdowns impacting the community.', '−2')}
+            {moodRow('Success (9-13)', 'All systems, buildings, and equipment adequately maintained.', '0')}
+            {moodRow('Failure (4-8)', 'Minor breakdowns, or a deficit in required Supplies.', '−1')}
+            {moodRow('Dire Failure (0-3)', 'Continued breakdowns impacting the community.', '−2')}
             {moodRow('Moment of Low Insight (1+1)', 'Critical infrastructure damaged or destroyed.', '−3')}
           </tbody>
         </RuleTable>
@@ -118,7 +118,7 @@ export default function StructurePage() {
 
       <RuleSection id="safety" title="Safety">
         <P>
-          5–10% of any community is required for policing, patrol,
+          5-10% of any community is required for policing, patrol,
           firefighting, and other emergency services. This group is also where
           community leadership is drawn from.
         </P>
@@ -143,7 +143,7 @@ export default function StructurePage() {
       <RuleSection id="activity-blocks" title="Activity Blocks">
         <P>
           When the table jumps between scenes, the GM advances time in
-          <Term> Activity Blocks </Term> — named tiers that frame what a
+          <Term> Activity Blocks </Term> - named tiers that frame what a
           character can credibly accomplish without a scene playing out
           on screen. Anything narratively appropriate inside one Block
           can be Filled In The Gaps; anything bigger needs to spend
@@ -183,7 +183,7 @@ export default function StructurePage() {
         <P>
           Activity Blocks are the canonical names for time granularity
           when GMs and players talk about off-screen work. They&apos;re
-          not a separate resource that gets spent — they&apos;re a
+          not a separate resource that gets spent - they&apos;re a
           shared vocabulary so &quot;Junie spends a Daily Block on
           Stress recovery for Marv&quot; means the same thing at every
           table.

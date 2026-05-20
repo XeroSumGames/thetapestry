@@ -14,7 +14,7 @@ export default function CreatingACharacterPage() {
             Building Your Survivor
           </h1>
           <p style={{ fontSize: '17px', color: '#f5f2ee', lineHeight: 1.8, margin: 0 }}>
-            Every character in Distemper has a story before the story begins. The Xero Sum Engine give you three ways to tell yours — from a detailed lifepathing, point-buy approach to a quick-start option for when you just want to get to the table.
+            Every character in Distemper has a story before the story begins. The Xero Sum Engine give you three ways to tell yours - from a detailed lifepathing, point-buy approach to a quick-start option for when you just want to get to the table.
           </p>
         </div>
 
@@ -31,9 +31,9 @@ export default function CreatingACharacterPage() {
               tag: 'Recommended',
               tagColor: '#2d5a1b',
               tagText: '#7fc458',
-              desc: 'The full experience. You spend Character Development Points (CDP) across nine chapters of your character\'s life — where they grew up, what they learned, how they made their way in the world. Every decision shapes who they are and what they can do.',
+              desc: 'The full experience. You spend Character Development Points (CDP) across nine chapters of your character\'s life - where they grew up, what they learned, how they made their way in the world. Every decision shapes who they are and what they can do.',
               bestFor: 'Players who want to know their character inside and out before the first session.',
-              time: '15–30 minutes',
+              time: '15-30 minutes',
             },
             {
               href: '/characters/quick',
@@ -41,9 +41,9 @@ export default function CreatingACharacterPage() {
               tag: 'Experienced Players',
               tagColor: '#1a3a5c',
               tagText: '#7ab3d4',
-              desc: 'Skip the life-stage structure and spend 20 CDP directly — 5 on attributes and 15 on skills. You pick a profession for context, choose your complication and motivation, then gear up and go.',
+              desc: 'Skip the life-stage structure and spend 20 CDP directly - 5 on attributes and 15 on skills. You pick a profession for context, choose your complication and motivation, then gear up and go.',
               bestFor: 'Players who know the XSE system and have a clear character concept in mind.',
-              time: '5–10 minutes',
+              time: '5-10 minutes',
             },
             {
               href: '/characters/random',
@@ -51,7 +51,7 @@ export default function CreatingACharacterPage() {
               tag: 'Just Get Playing',
               tagColor: '#3a2800',
               tagText: '#EF9F27',
-              desc: 'The Tapestry generates a complete character for you using one of the 12 Distemper Paradigms — pre-built archetypes like Biker, EMT, Mercenary, or Antiques Dealer. You land in the Final Review to add your name and personal touches.',
+              desc: 'The Tapestry generates a complete character for you using one of the 12 Distemper Paradigms - pre-built archetypes like Biker, EMT, Mercenary, or Antiques Dealer. You land in the Final Review to add your name and personal touches.',
               bestFor: 'New players, one-shots, or anyone who wants to be surprised by who they are.',
               time: 'Under 2 minutes',
             },
@@ -80,14 +80,14 @@ export default function CreatingACharacterPage() {
             The Backstory System
           </h2>
           <p style={{ fontSize: '16px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1.5rem' }}>
-            Distemper uses the Xero Sum Engine backstory generation system, which builds your character through the chapters of their life rather than allocating stats on a blank sheet. You\'re not picking numbers — you\'re making decisions about who this person was before everything fell apart.
+            Distemper uses the Xero Sum Engine backstory generation system, which builds your character through the chapters of their life rather than allocating stats on a blank sheet. You\'re not picking numbers - you\'re making decisions about who this person was before everything fell apart.
           </p>
 
           <h3 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
             Character Development Points (CDP)
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1rem' }}>
-            CDP is the currency of character creation. You get a fixed budget at each life stage and spend it raising attributes and skills. Unspent CDP is gone — the rules do not allow banking between steps. This keeps characters grounded in their history rather than optimised in a vacuum.
+            CDP is the currency of character creation. You get a fixed budget at each life stage and spend it raising attributes and skills. Unspent CDP is gone - the rules do not allow banking between steps. This keeps characters grounded in their history rather than optimised in a vacuum.
           </p>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8 }}>
             Over the full backstory, you spend a total of 20 CDP: 5 on attributes and 15 on skills.
@@ -97,7 +97,7 @@ export default function CreatingACharacterPage() {
             RAPID Range Attributes
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1rem' }}>
-            Every character has five attributes — <strong>Reason, Acumen, Physicality, Influence, Dexterity</strong> — referred to as RAPID. They start at 0 (Average) and range from −2 (Diminished) to +4 (Human Peak). During character creation they can only be raised to +3 (Exceptional).
+            Every character has five attributes - <strong>Reason, Acumen, Physicality, Influence, Dexterity</strong> - referred to as RAPID. They start at 0 (Average) and range from −2 (Diminished) to +4 (Human Peak). During character creation they can only be raised to +3 (Exceptional).
           </p>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8 }}>
             Attributes feed directly into secondary stats like Wound Points, Initiative, and Perception, and add their modifier to every dice check using that attribute.
@@ -107,7 +107,7 @@ export default function CreatingACharacterPage() {
             Skills
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1rem' }}>
-            Distemper has 29 skills, each linked to an attribute. Most start at 0 (Untrained). Vocational skills — marked with an asterisk like <strong>Medicine*</strong> or <strong>Tactics*</strong> — start at −3 (Inept) and require 1 CDP to reach Beginner (+1). They represent specialised training that most people simply don\'t have.
+            Distemper has 29 skills, each linked to an attribute. Most start at 0 (Untrained). Vocational skills - marked with an asterisk like <strong>Medicine*</strong> or <strong>Tactics*</strong> - start at −3 (Inept) and require 1 CDP to reach Beginner (+1). They represent specialised training that most people simply don\'t have.
           </p>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8 }}>
             Skills cap at +3 (Professional) during creation. +4 (Life\'s Work) is only achievable through play.
@@ -153,8 +153,8 @@ export default function CreatingACharacterPage() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '1.5rem' }}>
             {[
-              { range: '0–3', label: 'Dire Failure', desc: 'Failed with an additional setback or consequence.', color: '#7a1f16' },
-              { range: '4–8', label: 'Failure', desc: 'The action simply fails.', color: '#3a3a3a' },
+              { range: '0-3', label: 'Dire Failure', desc: 'Failed with an additional setback or consequence.', color: '#7a1f16' },
+              { range: '4-8', label: 'Failure', desc: 'The action simply fails.', color: '#3a3a3a' },
               { range: '9-13', label: 'Success', desc: 'The action succeeds.', color: '#2d5a1b' },
               { range: '14+', label: 'Wild Success', desc: 'Succeeds with an additional positive result.', color: '#1a3a5c' },
               { range: '1+1', label: 'Moment of Low Insight', desc: 'Dire Failure - but earn an Insight Die.', color: '#3a2800' },
@@ -173,7 +173,7 @@ export default function CreatingACharacterPage() {
             <strong>Insight Dice</strong> are earned on Moments of Insight and can be spent in three ways: roll 3d6 and take the best two, add +3 to a conditional modifier before rolling, or re-roll one or both dice after seeing the result. Characters start with 2 Insight Dice and carry them between sessions.
           </p>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8 }}>
-            This is why your attribute and skill choices matter — every point of AMod or SMod shifts your probability meaningfully on a 2d6 curve. A character with +3 in a skill is genuinely dangerous at it. A character with 0 is taking a real risk.
+            This is why your attribute and skill choices matter - every point of AMod or SMod shifts your probability meaningfully on a 2d6 curve. A character with +3 in a skill is genuinely dangerous at it. A character with 0 is taking a real risk.
           </p>
         </div>
 

@@ -148,7 +148,7 @@ export interface GeneratedNpc {
 }
 
 export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
-  // Name + gender — 50/50 male/female. Neutral names pooled into whichever is picked.
+  // Name + gender - 50/50 male/female. Neutral names pooled into whichever is picked.
   const gender: 'man' | 'woman' = chance(50) ? 'man' : 'woman'
   const namePool = gender === 'man' ? [...MALE_NAMES, ...NEUTRAL_NAMES] : [...FEMALE_NAMES, ...NEUTRAL_NAMES]
   const firstName = pick(namePool)
@@ -267,7 +267,7 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
     const w = pick(pool)
     weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ?? 0, ammoMax: w.clip ?? 0, reloads: w.ammo ? 2 : 0 }
   } else if (npcType === 'antagonist') {
-    // Uncommon or rare — favour ranged
+    // Uncommon or rare - favour ranged
     const goodRanged = RANGED_WEAPONS.filter(w => w.rarity === 'Uncommon' || w.rarity === 'Rare')
     const goodMelee = MELEE_WEAPONS.filter(w => w.rarity === 'Uncommon')
     const pool = [...goodRanged, ...goodRanged, ...goodMelee] // double weight ranged

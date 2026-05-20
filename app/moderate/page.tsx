@@ -26,7 +26,7 @@ interface Profile {
   email: string
   role: string
   created_at: string
-  // Legacy boolean — pre-2026-05-04 schema had a `suspended` flag.
+  // Legacy boolean - pre-2026-05-04 schema had a `suspended` flag.
   // The current column is `suspended_until` (timestamptz) which
   // RLS predicates check; this stays optional for back-compat reads.
   suspended?: boolean
@@ -78,7 +78,7 @@ export default function ModerationPage() {
   const [usersLoading, setUsersLoading] = useState(false)
   const [worldNpcs, setWorldNpcs] = useState<any[]>([])
   const [npcsLoading, setNpcsLoading] = useState(false)
-  // Phase E Sprint 2 — world_communities moderation queue. Same
+  // Phase E Sprint 2 - world_communities moderation queue. Same
   // shape as world_npcs: pending / approved / rejected via the
   // shared filter state. Approve writes moderation_status +
   // approved_by + approved_at per the world_communities RLS.
@@ -86,7 +86,7 @@ export default function ModerationPage() {
   const [communitiesLoading, setCommunitiesLoading] = useState(false)
   const [modules, setModules] = useState<any[]>([])
   const [modulesLoading, setModulesLoading] = useState(false)
-  // Phase 4B — three new Campfire moderation queues. Same shape as
+  // Phase 4B - three new Campfire moderation queues. Same shape as
   // world_communities: text moderation_status with pending/approved/
   // rejected, approve writes approved_by + approved_at. RLS for all
   // three tables lets thrivers SELECT/UPDATE.
@@ -96,7 +96,7 @@ export default function ModerationPage() {
   const [warStoriesLoading, setWarStoriesLoading] = useState(false)
   const [lfgPosts, setLfgPosts] = useState<any[]>([])
   const [lfgLoading, setLfgLoading] = useState(false)
-  // Role check — all four queues on this page are gated by an RLS
+  // Role check - all four queues on this page are gated by an RLS
   // policy that requires profiles.role = 'thriver'. Non-Thrivers see
   // 0 rows silently, which is a trap. We pull the role once on mount
   // and render a banner when it's not 'thriver'.
@@ -240,7 +240,7 @@ export default function ModerationPage() {
     async function check() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
-      // Cache role for the banner gate. Not a hard block — the page
+      // Cache role for the banner gate. Not a hard block - the page
       // still loads so the user can see the empty state alongside
       // the banner, but at least they know why.
       const { data: prof } = await supabase
@@ -288,13 +288,13 @@ export default function ModerationPage() {
 
   async function loadWorldCommunities() {
     setCommunitiesLoading(true)
-    // Plain fetch — the previous embed-join syntax
+    // Plain fetch - the previous embed-join syntax
     // `publisher:published_by(username)` fails silently because
     // published_by FKs into `auth.users`, which has no `username`
     // column and isn't traversable from PostgREST. Count queries
     // happened to work (no join), which is why the tab lit up with
     // a "1" badge while the list stayed empty. Do a two-step
-    // hydration instead — plain SELECT, then batched lookups for
+    // hydration instead - plain SELECT, then batched lookups for
     // publisher username + source campaign name.
     const { data, error } = await supabase
       .from('world_communities')
@@ -337,7 +337,7 @@ export default function ModerationPage() {
       approved_at: new Date().toISOString(),
     }).eq('id', id)
     if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
-    // Match the NPC pattern — drop the row from this filter's list so
+    // Match the NPC pattern - drop the row from this filter's list so
     // the queue shortens immediately. Switching filter tabs re-fetches.
     setWorldCommunities(prev => prev.filter(c => c.id !== id))
     setActing(null)
@@ -570,7 +570,7 @@ export default function ModerationPage() {
 
   async function loadUsers() {
     setUsersLoading(true)
-    // SECURITY DEFINER RPC — joins profiles + auth.users for the
+    // SECURITY DEFINER RPC - joins profiles + auth.users for the
     // last_sign_in_at field that the client SDK can't read directly.
     // Gated to Thrivers inside the function. Sorted by created_at desc.
     // Source: sql/admin-users-with-login.sql
@@ -585,13 +585,13 @@ export default function ModerationPage() {
   }
 
   // Send a password-reset email to the user. Uses the public
-  // resetPasswordForEmail API rather than the admin one — same delivery
+  // resetPasswordForEmail API rather than the admin one - same delivery
   // path, same template, but doesn't require service-role from the
   // browser. The user clicks the link in the email, lands on
   // /auth/callback (verifyOtp branch with type=recovery), gets a
   // session, and redirects to /account where they can set a new password.
   async function handleResetPassword(email: string | null) {
-    if (!email) { alert('No email on file for this user — can\'t send a reset link.'); return }
+    if (!email) { alert('No email on file for this user - can\'t send a reset link.'); return }
     if (!confirm(`Send a password-reset email to ${email}?`)) return
     // ?reset=1 on the destination tells /account to surface the
     // "you're in reset mode, scroll down and pick a new password" banner.
@@ -714,7 +714,7 @@ export default function ModerationPage() {
     setBulkActing(false)
 
     if (failed.length === 0) {
-      // Quiet success — list updated, no need to interrupt with a dialog.
+      // Quiet success - list updated, no need to interrupt with a dialog.
     } else {
       const sample = failed.slice(0, 3).map(f => `• ${f.id.slice(0, 8)}: ${f.error}`).join('\n')
       const more = failed.length > 3 ? `\n…and ${failed.length - 3} more` : ''
@@ -775,7 +775,7 @@ export default function ModerationPage() {
       </div>
 
       {/* Thriver-only gate. Non-Thrivers get a single compact banner
-          and nothing else — no empty queues to rummage through, no
+          and nothing else - no empty queues to rummage through, no
           tab strip, no page contents. Suppressed until roleChecked
           flips so we don't flash the banner during the profile
           fetch. */}
@@ -791,7 +791,7 @@ export default function ModerationPage() {
           rumors / npcs / communities gate on actual pending rows,
           users counts "new signups in last 7 days" since it has no
           moderation status concept. Green supersedes the active-red
-          only when the tab isn't currently selected — the selected
+          only when the tab isn't currently selected - the selected
           tab keeps its red accent so the user can tell where they
           are. Count badge appears next to the label. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
@@ -946,7 +946,7 @@ export default function ModerationPage() {
             )}
           </div>
 
-          {/* Bulk-action bar — only renders when at least one user is
+          {/* Bulk-action bar - only renders when at least one user is
               checked. Position:sticky keeps it visible while scrolling
               long lists. */}
           {selectedUserIds.size > 0 && (
@@ -1005,7 +1005,7 @@ export default function ModerationPage() {
                     title="Select for bulk delete"
                     style={{ position: 'absolute', left: '8px', top: '14px', cursor: bulkActing ? 'not-allowed' : 'pointer' }}
                   />
-                  {/* TOP: identity row — username + chips on their own
+                  {/* TOP: identity row - username + chips on their own
                       line. The OLD layout put email inline with username
                       and ellipsized the whole row, which silently hid
                       emails behind long random usernames (the wEpAfxk…
@@ -1042,7 +1042,7 @@ export default function ModerationPage() {
                     <span><span style={{ color: '#7a8a9a' }}>Last login </span>{lastLogin ? formatDate(lastLogin.toISOString()) : 'never'}</span>
                   </div>
 
-                  {/* BOTTOM: action row — every button on a single line,
+                  {/* BOTTOM: action row - every button on a single line,
                       left-aligned. Wraps only if the viewport is too narrow.
                       Order: role-flip, Message, Characters, Track,
                       Suspend/Unsuspend, Delete. */}
@@ -1058,7 +1058,7 @@ export default function ModerationPage() {
                         Promote
                       </button>
                     )}
-                    {/* DM deep-link — opens the existing /messages page on
+                    {/* DM deep-link - opens the existing /messages page on
                         this user. Same `?dm=<userId>` pattern used by
                         campfire/lfg, forums, stories member list, and
                         CampaignCommunity roster. */}
@@ -1080,7 +1080,7 @@ export default function ModerationPage() {
                     <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
                       Characters
                     </Link>
-                    {/* TRACK — opens the cross-surface activity dossier:
+                    {/* TRACK - opens the cross-surface activity dossier:
                         characters, campaigns, recent rolls, forum posts,
                         war stories, LFG posts, bug reports, map pins. */}
                     <Link href={`/moderate/users/${u.id}/activity`} style={{ ...actionBtn('#1a4a3a', '#7adcb3'), textDecoration: 'none', textAlign: 'center' }}>
@@ -1090,7 +1090,7 @@ export default function ModerationPage() {
                         are always ONE flex item in the parent wrap container.
                         Without this, when the select wraps to its own line it
                         fills the full row width regardless of width:'auto'.
-                        globals.css still sets select{width:100%} — the inline
+                        globals.css still sets select{width:100%} - the inline
                         width:'auto' overrides that, but only matters once the
                         select and delete share a line inside this inner flex. */}
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
@@ -1187,7 +1187,7 @@ export default function ModerationPage() {
       {/* ── WORLD COMMUNITIES (Phase E Sprint 2) ── */}
       {section === 'communities' && (
         <>
-          {/* Filter — pending / approved / rejected. Same control as
+          {/* Filter - pending / approved / rejected. Same control as
               the rumor queue; re-uses the shared `filter` state. */}
           <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
             {(['pending', 'approved', 'rejected'] as const).map(f => (
@@ -1251,11 +1251,11 @@ export default function ModerationPage() {
                       <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Homestead:</span>{' '}
                       {hasCoords
                         ? <span style={{ fontFamily: 'monospace', color: '#f5f2ee' }}>{wc.homestead_lat.toFixed(4)}, {wc.homestead_lng.toFixed(4)}</span>
-                        : <span style={{ color: '#EF9F27' }}>unlocated — won't appear on the world map</span>}
+                        : <span style={{ color: '#EF9F27' }}>unlocated - won't appear on the world map</span>}
                     </span>
                     <span>
                       <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Last update:</span>{' '}
-                      <span style={{ color: '#f5f2ee' }}>{wc.last_public_update_at ? formatDate(wc.last_public_update_at) : '—'}</span>
+                      <span style={{ color: '#f5f2ee' }}>{wc.last_public_update_at ? formatDate(wc.last_public_update_at) : '-'}</span>
                     </span>
                   </div>
 

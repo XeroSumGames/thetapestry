@@ -11,7 +11,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Backstory Generation — XSE SRD §04' }
+export const metadata = { title: 'Backstory Generation - XSE SRD §04' }
 
 const stepRow = (step: string, name: string, spend: string, cap: string): React.ReactNode => (
   <tr>
@@ -33,7 +33,7 @@ export default function Page() {
           <>
             The full character creation method: <Term>20 Character
             Development Points (CDP)</Term> allocated across nine life
-            stages. Each stage adds 1–2 sentences to the character's
+            stages. Each stage adds 1-2 sentences to the character's
             backstory and a small CDP spend to RAPID attributes or skills.
           </>
         }
@@ -66,16 +66,16 @@ export default function Page() {
             </tr>
           </thead>
           <tbody>
-            {stepRow('X', 'Who Are You?', 'Concept: name, age, height, weight, 3 thematic words. No CDP spent.', '—')}
-            {stepRow('1', 'Where You Grew Up', '1 CDP on a RAPID attribute (0→+1). 2 CDP on skills — either +2 to one skill or +1 to two.', '+2 skill')}
+            {stepRow('X', 'Who Are You?', 'Concept: name, age, height, weight, 3 thematic words. No CDP spent.', '-')}
+            {stepRow('1', 'Where You Grew Up', '1 CDP on a RAPID attribute (0→+1). 2 CDP on skills - either +2 to one skill or +1 to two.', '+2 skill')}
             {stepRow('2', 'What You Learned', '1 CDP on attribute. 3 CDP on skills.', '+2 skill')}
             {stepRow('3', 'What You Learned That Day', "Skills picked up in spare time. 1 CDP on attribute. 3 CDP on skills.", '+2 skill')}
             {stepRow('4', 'What Drives You?', 'Pick a Complication + Motivation (or roll 2d6 on each table).', '+2 skill')}
             {stepRow('5', 'How You Make Your Money', "Profession pick (or freeform skills that fit). 2 CDP on attributes. 4 CDP on skills.", '+3 attr / +3 skill')}
             {stepRow('6', 'What Makes You Tick?', 'Round-out spend. 3 CDP on skills.', '+3 attr / +3 skill')}
-            {stepRow('7', 'Secondary Stats', 'Auto-derived from RAPID — see Character Overview › Secondary Stats. No spend.', '—')}
-            {stepRow('8', 'What You Have', "Pick primary + secondary weapon from Tables 16-19, 1 item from Table 20: Equipment, plus 1 incidental flavour item.", '—')}
-            {stepRow('N', 'Final Form', 'Review + final tweaks. Confirm the character matches the concept and the 3 words still fit.', '—')}
+            {stepRow('7', 'Secondary Stats', 'Auto-derived from RAPID - see Character Overview › Secondary Stats. No spend.', '-')}
+            {stepRow('8', 'What You Have', "Pick primary + secondary weapon from Tables 16-19, 1 item from Table 20: Equipment, plus 1 incidental flavour item.", '-')}
+            {stepRow('N', 'Final Form', 'Review + final tweaks. Confirm the character matches the concept and the 3 words still fit.', '-')}
           </tbody>
         </RuleTable>
       </RuleSection>

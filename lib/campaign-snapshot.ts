@@ -1,29 +1,29 @@
-// Campaign snapshot + restore — capture a campaign's current content state
+// Campaign snapshot + restore - capture a campaign's current content state
 // into a jsonb blob and restore it in place later. The campaign id / invite
 // code / player memberships stay intact; only the content rows are wiped and
 // re-inserted.
 //
-// Scope — what IS in a snapshot:
+// Scope - what IS in a snapshot:
 //   campaign_npcs
 //   campaign_pins
 //   tactical_scenes
 //   scene_tokens (nested under their scene)
 //   campaign_notes
-//   campaigns.vehicles (JSONB array — fuel, WP, cargo, crew/passenger
+//   campaigns.vehicles (JSONB array - fuel, WP, cargo, crew/passenger
 //                       seat assignments, mounted-weapon shooters)
-//   pregens (characters.data where type='pregen' on this campaign — see note below)
+//   pregens (characters.data where type='pregen' on this campaign - see note below)
 //   character_states (optional, via includesCharacterStates flag)
 //
 // NOT in a snapshot (session-scope, wiped on restore):
-//   initiative_order       — cleared
-//   roll_log               — cleared (optional; we clear to avoid stale refs)
-//   chat_messages          — cleared
-//   scene_tokens anim      — transient
-//   communities (Phase 4b) — TODO once the tables are in use
+//   initiative_order       - cleared
+//   roll_log               - cleared (optional; we clear to avoid stale refs)
+//   chat_messages          - cleared
+//   scene_tokens anim      - transient
+//   communities (Phase 4b) - TODO once the tables are in use
 //
 // On restore we DELETE current rows then INSERT from the snapshot. All within
 // a single Promise.all per table; failures are reported but the wipe has
-// already happened — GM must re-restore or the campaign is empty. We accept
+// already happened - GM must re-restore or the campaign is empty. We accept
 // this MVP risk given the alternative (stored procedure or edge function)
 // is heavier infrastructure. See spec-modules.md §6 for the production path.
 
@@ -38,7 +38,7 @@ export interface CampaignSnapshot {
   pins: any[]
   scenes: { scene: any; tokens: any[] }[]
   notes: any[]
-  // campaigns.vehicles JSONB array — Minnie's fuel, WP, cargo, driver/
+  // campaigns.vehicles JSONB array - Minnie's fuel, WP, cargo, driver/
   // navigator/passenger seats, mounted-weapon shooters. Pre-2026-05-05
   // snapshots predate this field; restore tolerates `vehicles` being
   // undefined and skips the vehicle write rather than nuking the
@@ -96,7 +96,7 @@ export async function captureCampaignSnapshot(
 }
 
 /** Wipe the campaign's current content and restore from a snapshot.
- *  Note: this is NOT atomic — if a step fails, prior wipes are not reverted.
+ *  Note: this is NOT atomic - if a step fails, prior wipes are not reverted.
  *  The UI warns the GM before calling this. */
 export async function restoreCampaignSnapshot(
   supabase: SupabaseClient,
@@ -105,7 +105,7 @@ export async function restoreCampaignSnapshot(
 ): Promise<{ ok: boolean; errors: string[] }> {
   const errors: string[] = []
 
-  // 1. Clear session-scope tables (initiative + logs + chat) — these aren't in the snapshot
+  // 1. Clear session-scope tables (initiative + logs + chat) - these aren't in the snapshot
   //    but we wipe them so the restored state starts clean.
   const clearSession = await Promise.all([
     supabase.from('initiative_order').delete().eq('campaign_id', campaignId),
@@ -124,7 +124,7 @@ export async function restoreCampaignSnapshot(
   ])
   for (const r of wipes) if (r.error) errors.push(`wipe: ${r.error.message}`)
 
-  // 3. Restore NPCs, pins, notes — flat inserts.
+  // 3. Restore NPCs, pins, notes - flat inserts.
   if (snap.npcs.length > 0) {
     const r = await supabase.from('campaign_npcs').insert(snap.npcs.map(stripGenerated))
     if (r.error) errors.push(`npcs insert: ${r.error.message}`)
@@ -140,7 +140,7 @@ export async function restoreCampaignSnapshot(
 
   // 4. Restore scenes + tokens. Scenes carry their original id so that
   //    tokens' scene_id still points where it should. We insert ALL
-  //    scenes in one shot, then ALL tokens in one shot — replaces the
+  //    scenes in one shot, then ALL tokens in one shot - replaces the
   //    previous per-scene `for await` loop that paid one round-trip per
   //    scene. Trade-off: a single bad scene now fails the whole batch
   //    rather than skipping that scene and continuing. Restore is
@@ -163,10 +163,10 @@ export async function restoreCampaignSnapshot(
     }
   }
 
-  // 5. Vehicles — single UPDATE to campaigns.vehicles JSONB column.
+  // 5. Vehicles - single UPDATE to campaigns.vehicles JSONB column.
   //    Skipped (no overwrite) when the snapshot predates 2026-05-05
   //    and lacks the field, so older snapshots don't nuke the GM's
-  //    current vehicle state. Empty array IS a write — that's how a
+  //    current vehicle state. Empty array IS a write - that's how a
   //    GM intentionally clears all vehicles via snapshot.
   if (snap.vehicles !== undefined) {
     const r = await supabase.from('campaigns').update({ vehicles: snap.vehicles }).eq('id', campaignId)
@@ -198,7 +198,7 @@ function stripGenerated(row: any): any {
  *
  *  Unlike `restoreCampaignSnapshot`, which rewinds state inside the same
  *  campaign, this is used when the caller wants a FRESH new campaign
- *  populated with another campaign's content — e.g. "share The Arena with
+ *  populated with another campaign's content - e.g. "share The Arena with
  *  a player so they can run it."
  *
  *  Every row gets a fresh `id` via crypto.randomUUID(), `campaign_id` is
@@ -206,7 +206,7 @@ function stripGenerated(row: any): any {
  *  through in-memory id-maps so pins, NPCs, scenes, and scene_tokens all
  *  cross-reference correctly after insert. Preserving the original ids
  *  (as an earlier version did) caused pkey collisions because UUIDs are
- *  globally unique — a snapshot row's id already exists in the source
+ *  globally unique - a snapshot row's id already exists in the source
  *  campaign in the same table.
  *
  *  Character states are intentionally NOT cloned: they reference PCs in
@@ -217,7 +217,7 @@ function stripGenerated(row: any): any {
  *  Scene_tokens.character_id (references a player's PC) is nulled during
  *  clone since the target campaign has different players. NPC tokens
  *  (token_type='npc') re-link to the newly-cloned NPCs via npcIdMap.
- *  Object tokens (crates, barrels) carry fine — they're self-contained.
+ *  Object tokens (crates, barrels) carry fine - they're self-contained.
  *
  *  RLS note: the caller must be GM of the TARGET campaign. This function
  *  is intended to be run by the target GM (e.g. a player who just
@@ -238,14 +238,14 @@ export async function cloneSnapshotIntoCampaign(
   const sceneIdMap = new Map<string, string>()
   for (const { scene } of snap.scenes) sceneIdMap.set(scene.id, newId())
 
-  // 2) Pins — fresh id + target campaign_id.
+  // 2) Pins - fresh id + target campaign_id.
   if (snap.pins.length > 0) {
     const rows = snap.pins.map((p: any) => ({ ...p, id: pinIdMap.get(p.id), campaign_id: targetCampaignId }))
     const r = await supabase.from('campaign_pins').insert(rows)
     if (r.error) errors.push(`pins: ${r.error.message}`)
   }
 
-  // 3) NPCs — fresh id + target campaign_id + remapped campaign_pin_id.
+  // 3) NPCs - fresh id + target campaign_id + remapped campaign_pin_id.
   if (snap.npcs.length > 0) {
     const rows = snap.npcs.map((n: any) => ({
       ...n,
@@ -257,14 +257,14 @@ export async function cloneSnapshotIntoCampaign(
     if (r.error) errors.push(`npcs: ${r.error.message}`)
   }
 
-  // 4) Notes — fresh id + target campaign_id.
+  // 4) Notes - fresh id + target campaign_id.
   if (snap.notes.length > 0) {
     const rows = snap.notes.map((n: any) => ({ ...n, id: newId(), campaign_id: targetCampaignId }))
     const r = await supabase.from('campaign_notes').insert(rows)
     if (r.error) errors.push(`notes: ${r.error.message}`)
   }
 
-  // 5) Scenes + their tokens — same single-batch shape as restore.
+  // 5) Scenes + their tokens - same single-batch shape as restore.
   //    Scenes go in one INSERT (with remapped ids), then ALL tokens
   //    go in another (pointing at the new scene_id + remapped npc_id;
   //    PC references nulled since the target campaign has different
@@ -296,7 +296,7 @@ export async function cloneSnapshotIntoCampaign(
     }
   }
 
-  // 6) Vehicles — fresh ids, target campaign, all PC crew references
+  // 6) Vehicles - fresh ids, target campaign, all PC crew references
   //    nulled. NPC references nulled too: while NPCs are remapped via
   //    npcIdMap, vehicle slots store kind+id pairs and the safe path
   //    is to null them and let the target GM re-assign. Cargo + fuel
@@ -317,7 +317,7 @@ export async function cloneSnapshotIntoCampaign(
     if (r.error) errors.push(`vehicles: ${r.error.message}`)
   }
 
-  // 7) character_states intentionally skipped — they reference PCs owned
+  // 7) character_states intentionally skipped - they reference PCs owned
   //    by specific users in the original campaign, not transferable to
   //    a new campaign with different members.
 

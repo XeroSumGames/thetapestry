@@ -1,5 +1,5 @@
 'use client'
-// /characters/paradigms — the third character-creation funnel.
+// /characters/paradigms - the third character-creation funnel.
 //
 // Backstory wizard = full 7-step authored character. Random = one click,
 // here's a Survivor. This page is the in-between: the player browses the
@@ -8,7 +8,7 @@
 // existing edit wizard with that Paradigm's RAPID + skills pre-seeded.
 //
 // Pick → routes to /characters/random?paradigm=<name>. The random page
-// (which already drops users at /characters/[id]/edit?step=4 — Final
+// (which already drops users at /characters/[id]/edit?step=4 - Final
 // Review) honors the ?paradigm= param and seeds with that specific
 // Paradigm instead of a random pick. From Final Review the player can
 // freely tweak RAPID + skills within the standard creation caps before
@@ -80,7 +80,7 @@ export default function ParadigmsPage() {
 
       {/* ParadigmPicker is the same reusable component used by the
           Apprentice creation wizard. The "Pick" button on each card
-          fires onChange — we route to the Random generator with the
+          fires onChange - we route to the Random generator with the
           chosen Paradigm name. value=null because no card is "already
           picked" on this entry surface. */}
       <ParadigmPicker value={null} onChange={handlePick} />

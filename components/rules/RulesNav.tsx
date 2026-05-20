@@ -37,7 +37,7 @@ export default function RulesNav() {
   // Track which H2 is currently most visible. Scroll happens on the
   // <main> column (see app/rules/layout.tsx), so we pin the
   // IntersectionObserver root to that element. Without an explicit root,
-  // the observer would watch viewport intersections — but the viewport
+  // the observer would watch viewport intersections - but the viewport
   // doesn't scroll, only main does, so the highlight wouldn't update.
   // Intersect at 35% from top so the highlight changes when a heading
   // hits the upper third of the visible area.
@@ -142,7 +142,7 @@ export default function RulesNav() {
               <span style={{ color: '#7a7a7a', marginRight: 8 }}>
                 {section.number}
               </span>
-              {section.title.replace(/^Appendix [A-D] — /, '')}
+              {section.title.replace(/^Appendix [A-D] - /, '')}
             </Link>
             {isActive && section.anchors.length > 0 && (
               <div style={{ paddingTop: 4, paddingBottom: 6 }}>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// In-memory IP token bucket. Per-instance, not distributed — a serverless
+// In-memory IP token bucket. Per-instance, not distributed - a serverless
 // function with N warm instances can leak ~N × LIMIT requests through
 // before any one instance enforces. Sufficient for "stop one client looping"
 // abuse, NOT for distributed abuse. Upgrade to a KV-backed limiter
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
   const secret = process.env.TURNSTILE_SECRET_KEY
   if (!secret) {
-    // Secret not configured — fail open in dev so local signup still works.
+    // Secret not configured - fail open in dev so local signup still works.
     // In production this env var must be set in Vercel.
     if (process.env.NODE_ENV !== 'production') return NextResponse.json({ ok: true })
     return NextResponse.json({ ok: false, error: 'turnstile not configured' }, { status: 500 })

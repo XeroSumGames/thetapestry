@@ -1,17 +1,17 @@
 'use client'
-// QuickAddModal — the "Set the Table" / "Putting Down Roots" modal,
+// QuickAddModal - the "Set the Table" / "Putting Down Roots" modal,
 // extracted so multiple surfaces can use it. Originally lived inline
 // in app/stories/[id]/table/page.tsx; now the shared home.
 //
 // Two modes:
-//   - mode='campaign' — writes pins to `campaign_pins` (scoped to a
+//   - mode='campaign' - writes pins to `campaign_pins` (scoped to a
 //     campaign). Community panel available (hideCommunity=false).
-//   - mode='world'    — writes pins to `map_pins` (world map). No
+//   - mode='world'    - writes pins to `map_pins` (world map). No
 //     community concept; hideCommunity is always true in this mode.
 //
 // The caller chooses the mode, supplies ids / role / seed coords, and
 // gets onPinSaved / onCommunitySaved callbacks when either commits.
-// The modal closes only on the caller's onClose — allowing multi-
+// The modal closes only on the caller's onClose - allowing multi-
 // submit within one session.
 
 import { useEffect, useState } from 'react'
@@ -28,12 +28,12 @@ export interface QuickAddModalProps {
   // Seed coords; ignored if not provided.
   initialLat?: number | string
   initialLng?: number | string
-  // Campaign mode — required when mode='campaign'.
+  // Campaign mode - required when mode='campaign'.
   campaignId?: string
   // Controls the Community panel visibility (campaign mode only).
   // Default false = show both panels; true = pin only.
   hideCommunity?: boolean
-  // World mode — used to set pin_type + status on map_pins.
+  // World mode - used to set pin_type + status on map_pins.
   userRole?: 'survivor' | 'thriver' | null
   userId?: string | null
   // Fire-and-forget post-save hooks so the caller can refresh their
@@ -83,19 +83,19 @@ export default function QuickAddModal({
   const [pinAttachments, setPinAttachments] = useState<File[]>([])
   const [pinSaving, setPinSaving] = useState(false)
   const [pinDone, setPinDone] = useState(false)
-  // World mode only — controls whether the pin goes to the Thriver
+  // World mode only - controls whether the pin goes to the Thriver
   // queue (public rumor) or stays as a private personal note. Default
   // off so players aren't spamming the queue with private bookmarks.
   // Thrivers can also uncheck to keep a pin private to themselves.
   const [worldShare, setWorldShare] = useState(false)
-  // Parent pin nesting — optional. Lets a sub-rumor ("the basement")
+  // Parent pin nesting - optional. Lets a sub-rumor ("the basement")
   // hang off a parent pin ("the abandoned warehouse") so dense
   // narrative geography doesn't flat-spam the world map. Picker is
   // populated below from existing world pins owned by this user.
   const [pinParentId, setPinParentId] = useState('')
   const [parentPinChoices, setParentPinChoices] = useState<{ id: string; title: string }[]>([])
 
-  // Address search — geocodes a human-typed place name via Nominatim
+  // Address search - geocodes a human-typed place name via Nominatim
   // and fills in Lat/Lng when the player picks a result. No auto-
   // submit; the player still hits Save Pin themselves.
   const [addrQuery, setAddrQuery] = useState('')
@@ -154,7 +154,7 @@ export default function QuickAddModal({
     ;(async () => {
       const [{ data: comms }, { data: mems }] = await Promise.all([
         supabase.from('communities').select('id, name').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
-        // Active members only — pending join requests don't count
+        // Active members only - pending join requests don't count
         // toward the visible roster size shown in the Join dropdown.
         supabase.from('community_members').select('community_id, communities!inner(campaign_id)').is('left_at', null).eq('status', 'active').eq('communities.campaign_id', campaignId),
       ])
@@ -182,7 +182,7 @@ export default function QuickAddModal({
     if (initialLng != null) setPinLng(String(initialLng))
   }, [initialLat, initialLng])
 
-  // World mode — load this user's existing world pins to populate the
+  // World mode - load this user's existing world pins to populate the
   // optional Parent Pin picker. Scoped to user_id so the dropdown
   // stays personal (you nest under your own pins, not strangers').
   useEffect(() => {
@@ -228,7 +228,7 @@ export default function QuickAddModal({
         void appendProgressionEntry(supabase, myPcId, 'pin', `📍 Dropped a pin: "${pinName.trim()}" (${pinCategory}).`)
       }
     } else {
-      // World mode — map_pins. Share flag decides whether this goes
+      // World mode - map_pins. Share flag decides whether this goes
       // public (Thriver queue for Survivors, auto-approved for
       // Thrivers) or stays as a private personal note.
       if (!userId) { setPinSaving(false); alert('Sign in to drop a pin'); return }
@@ -272,7 +272,7 @@ export default function QuickAddModal({
     setPinAttachments([])
     setWorldShare(false)
     setPinParentId('')
-    // World mode — refresh parent picker so the just-saved pin
+    // World mode - refresh parent picker so the just-saved pin
     // appears as a candidate parent for follow-up sub-rumors.
     if (mode === 'world' && userId) {
       const { data: parents } = await supabase.from('map_pins').select('id, title').eq('user_id', userId).order('title', { ascending: true })
@@ -311,11 +311,11 @@ export default function QuickAddModal({
     setCommJoining(false)
     if (error) {
       // Surface a helpful diagnostic if the status column is missing
-      // — i.e. the approval-flow migration hasn't been run on this
+      // - i.e. the approval-flow migration hasn't been run on this
       // Supabase yet. Otherwise show the raw message.
       const isMigrationMissing = /status.*schema cache|column.*status.*does not exist/i.test(error.message)
       setCommJoinError(isMigrationMissing
-        ? 'Leader-approval flow not live yet — the GM needs to run sql/community-members-join-requests.sql in Supabase. Once that\'s done, Join requests will route to the leader for approval.'
+        ? 'Leader-approval flow not live yet - the GM needs to run sql/community-members-join-requests.sql in Supabase. Once that\'s done, Join requests will route to the leader for approval.'
         : error.message)
       return
     }
@@ -347,7 +347,7 @@ export default function QuickAddModal({
     }
     // Auto-enroll the creator's PC as the first member. Skips cleanly
     // if the creator doesn't have a PC in the campaign (GMs, etc.).
-    // NOTE: `status` is intentionally omitted — the column's DEFAULT
+    // NOTE: `status` is intentionally omitted - the column's DEFAULT
     // ('active') from sql/community-members-join-requests.sql handles
     // new-schema installs, and old-schema installs (column missing)
     // work by ignoring the unsent field. This keeps auto-enroll
@@ -390,7 +390,7 @@ export default function QuickAddModal({
     : 'Putting Down Roots'
   const subtitle = hideCommunity
     ? (mode === 'world'
-        ? 'Title, notes, category, attachments — all go with the pin on the world map.'
+        ? 'Title, notes, category, attachments - all go with the pin on the world map.'
         : 'Drop a pin at the location you just double-clicked. Title, notes, and attachments all go with the pin.')
     : 'Drop a pin on the map, start a community, or both. Each saves independently and can include attachments.'
 
@@ -425,7 +425,7 @@ export default function QuickAddModal({
               </div>
             </div>
 
-            {/* Address search — geocodes via Nominatim, fills Lat/Lng
+            {/* Address search - geocodes via Nominatim, fills Lat/Lng
                 when the player picks a result. Sits between the
                 Lat/Lng row and Category per user spec. */}
             <div style={{ marginBottom: '8px' }}>
@@ -456,7 +456,7 @@ export default function QuickAddModal({
 
             <div style={{ marginBottom: '8px' }}>
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>
-                Category — {categories.find(c => c.value === pinCategory)?.label ?? getCategoryLabel(pinCategory)}
+                Category - {categories.find(c => c.value === pinCategory)?.label ?? getCategoryLabel(pinCategory)}
               </div>
               {/* Icon grid - mirrors CampaignPins. Native <select>
                   options can't be CSS-filtered, which is why the old
@@ -492,7 +492,7 @@ export default function QuickAddModal({
               </div>
             </div>
 
-            {/* World mode — optional Parent Pin picker. Nests this pin
+            {/* World mode - optional Parent Pin picker. Nests this pin
                 under another world pin in the sidebar (a sub-rumor
                 hanging off a parent location). Hidden in campaign
                 mode; campaign_pins doesn't carry the same FK. */}
@@ -501,7 +501,7 @@ export default function QuickAddModal({
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Parent Pin (optional)</div>
                 <select value={pinParentId} onChange={e => setPinParentId(e.target.value)}
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                  <option value="">— top-level (no parent) —</option>
+                  <option value="">- top-level (no parent) -</option>
                   {parentPinChoices.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
               </div>
@@ -526,7 +526,7 @@ export default function QuickAddModal({
               )}
             </div>
 
-            {/* World-mode share toggle — off = private note only I can
+            {/* World-mode share toggle - off = private note only I can
                 see; on = public rumor (submitted to Thriver queue for
                 Survivors, auto-approved for Thrivers). */}
             {mode === 'world' && (
@@ -540,7 +540,7 @@ export default function QuickAddModal({
                     {roleIsThriver(userRole)
                       ? 'Auto-approved for Thrivers. Visible to all players as a Rumor.'
                       : 'Goes to the Thriver queue. If approved, becomes a Rumor visible to all players.'}
-                    {!worldShare && ' Otherwise kept private — only you can see it.'}
+                    {!worldShare && ' Otherwise kept private - only you can see it.'}
                   </span>
                 </span>
               </label>
@@ -557,14 +557,14 @@ export default function QuickAddModal({
             )}
           </div>
 
-          {/* ── Start a Community — campaign mode only, not hidden ── */}
+          {/* ── Start a Community - campaign mode only, not hidden ── */}
           {!hideCommunity && (
             <div style={{ padding: '14px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '4px' }}>
               <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>
                 🏘️ {existingCommunities.length > 0 ? 'Join or Start a Community' : 'Start a Community'}
               </div>
 
-              {/* Mode toggle — only shown when at least one community
+              {/* Mode toggle - only shown when at least one community
                   exists in the campaign. Join is the default (more
                   common action for a player arriving at a table with
                   an existing group); Start New is the escape hatch. */}
@@ -588,7 +588,7 @@ export default function QuickAddModal({
                     <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Community</div>
                     <select value={commJoinId} onChange={e => setCommJoinId(e.target.value)}
                       style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                      <option value="">— pick a community —</option>
+                      <option value="">- pick a community -</option>
                       {existingCommunities.map(c => (
                         <option key={c.id} value={c.id}>{c.name} ({c.memberCount} member{c.memberCount === 1 ? '' : 's'})</option>
                       ))}
@@ -618,7 +618,7 @@ export default function QuickAddModal({
                 </>
               )}
 
-              {/* ── Start New branch — the original flow ──────────── */}
+              {/* ── Start New branch - the original flow ──────────── */}
               {commMode === 'start' && (
               <>
               <div style={{ marginBottom: '8px' }}>
@@ -637,7 +637,7 @@ export default function QuickAddModal({
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Homestead pin (optional)</div>
                 <select value={commHomestead} onChange={e => setCommHomestead(e.target.value)}
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                  <option value="">— none —</option>
+                  <option value="">- none -</option>
                   {(() => {
                     // Homestead-tagged pins float to the top with a 🏡
                     // marker; other pins follow. Keeps the right pin
@@ -668,7 +668,7 @@ export default function QuickAddModal({
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 <input type="checkbox" checked={commPublic} onChange={e => setCommPublic(e.target.checked)} />
-                Make public (LFG — coming soon)
+                Make public (LFG - coming soon)
               </label>
 
               <div style={{ marginBottom: '12px' }}>

@@ -4,7 +4,7 @@ import { SKILLS, deriveSecondaryStats } from '../../lib/xse-schema'
 import { getWeaponByName } from '../../lib/weapons'
 
 // Optional live-state payload for printing an existing campaign character.
-// Wizard print paths don't pass liveState — they get a blank-form sheet.
+// Wizard print paths don't pass liveState - they get a blank-form sheet.
 // CharacterCard's print path passes the player's current relationships,
 // lasting wounds, and progression-log history so the printout doubles as
 // a "here's what's happened" record between sessions.
@@ -48,7 +48,7 @@ export default function PrintSheet({ state, liveState }: Props) {
   return (
     <div id="print-sheet-inner" style={{ fontFamily: 'Carlito, Arial, sans-serif', color: '#000', background: '#fff', width: '100%', fontSize: '8pt', padding: '8pt' }}>
 
-      {/* Header — name + demographics only. Distemper wordmark / URL
+      {/* Header - name + demographics only. Distemper wordmark / URL
           and the Complication / Motivation / Personality sidebar were
           removed per Xero feedback to clean up the printable. */}
       <div style={{ borderBottom: '2px solid #000', paddingBottom: '4pt', marginBottom: '6pt' }}>
@@ -59,7 +59,7 @@ export default function PrintSheet({ state, liveState }: Props) {
         {state.concept && <div style={{ fontSize: '7pt', color: '#000', fontStyle: 'italic', marginTop: '2pt' }}>{state.concept}</div>}
       </div>
 
-      {/* RAPID Attributes — empty hand-fill boxes with the CDP-derived
+      {/* RAPID Attributes - empty hand-fill boxes with the CDP-derived
           value pre-printed in light grey as a starting hint. Player
           tracks current value in pencil; grey value is for reference. */}
       <div style={{ display: 'flex', gap: '3pt', marginBottom: '6pt' }}>
@@ -76,7 +76,7 @@ export default function PrintSheet({ state, liveState }: Props) {
         })}
       </div>
 
-      {/* WP / RP — circles stay blank for hand-tally. */}
+      {/* WP / RP - circles stay blank for hand-tally. */}
       <div style={{ display: 'flex', gap: '12pt', marginBottom: '6pt' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2pt' }}>
@@ -103,7 +103,7 @@ export default function PrintSheet({ state, liveState }: Props) {
       </div>
 
       {/* Trackers row: Stress, Insight, CDP, Morality. ALWAYS blank for
-          hand-tally per Xero feedback — values change between sessions
+          hand-tally per Xero feedback - values change between sessions
           and a frozen print snapshot was unhelpful. */}
       <div style={{ display: 'flex', gap: '8pt', marginBottom: '6pt' }}>
         {[
@@ -123,7 +123,7 @@ export default function PrintSheet({ state, liveState }: Props) {
         ))}
       </div>
 
-      {/* Skills grid — each skill is a hand-fill box with the CDP-derived
+      {/* Skills grid - each skill is a hand-fill box with the CDP-derived
           value pre-printed in light grey when the player has invested
           (and an empty box otherwise). Vocational skills marked with *. */}
       <div style={{ background: '#fff', border: '1px solid #000', borderRadius: '3pt', padding: '4pt', marginBottom: '6pt' }}>
@@ -136,7 +136,7 @@ export default function PrintSheet({ state, liveState }: Props) {
             // the player darkens them in pen as they level up in play.
             // Vocational skills also show a '-3' label to remind the
             // player their base is Inept (-3) until they take their
-            // first level — at which point the skill jumps to +1 and
+            // first level - at which point the skill jumps to +1 and
             // pip 1 fills.
             //
             // Layout: 3 columns (33% width) with name + pips sitting
@@ -166,10 +166,10 @@ export default function PrintSheet({ state, liveState }: Props) {
         </div>
       </div>
 
-      {/* Unarmed + Secondary Stats — Unarmed reduced and de-emoji'd per
+      {/* Unarmed + Secondary Stats - Unarmed reduced and de-emoji'd per
           Xero feedback; secondary stats unchanged. */}
       <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt' }}>
-        {/* Unarmed Attack — compact line, no icon. */}
+        {/* Unarmed Attack - compact line, no icon. */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #000', borderRadius: '3pt', padding: '2pt 6pt', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6pt' }}>
           <span style={{ fontSize: '6pt', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#000', letterSpacing: '.06em' }}>Unarmed</span>
           <span style={{ fontSize: '7pt', color: '#000' }}>
@@ -194,7 +194,7 @@ export default function PrintSheet({ state, liveState }: Props) {
         </div>
       </div>
 
-      {/* Weapons — side by side */}
+      {/* Weapons - side by side */}
       <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt' }}>
         {[{ wep: pWep, label: 'Primary', ammo: state.primaryAmmo }, { wep: sWep, label: 'Secondary', ammo: state.secondaryAmmo }].map(({ wep, label, ammo }) => (
           <div key={label} style={{ flex: 1, background: '#fff', border: '1px solid #000', borderRadius: '3pt', overflow: 'hidden' }}>
@@ -244,7 +244,7 @@ export default function PrintSheet({ state, liveState }: Props) {
           {state.rations && <div style={{ fontSize: '6pt', color: '#000' }}>Rations: 2 × {state.rations}</div>}
           {!state.equipment && !state.incidentalItem && <div style={{ fontSize: '6pt', color: '#000' }}>None</div>}
         </div>
-        {/* Relationships — pre-fills from npc_relationships when liveState
+        {/* Relationships - pre-fills from npc_relationships when liveState
             is provided; falls back to 4 empty rule-lines for hand-fill. */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #000', borderRadius: '3pt', padding: '4pt 6pt' }}>
           <div style={{ fontSize: '6pt', color: '#000', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2pt' }}>Relationships / CMod</div>
@@ -266,7 +266,7 @@ export default function PrintSheet({ state, liveState }: Props) {
             })
           })()}
         </div>
-        {/* Lasting Wounds — pulled from progression_log entries with
+        {/* Lasting Wounds - pulled from progression_log entries with
             type='wound' when liveState is provided; blank rule-lines
             for the wizard print path. */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #000', borderRadius: '3pt', padding: '4pt 6pt' }}>
@@ -296,7 +296,7 @@ export default function PrintSheet({ state, liveState }: Props) {
         </div>
       )}
 
-      {/* Progression Log — surfaced for the player so a printout months
+      {/* Progression Log - surfaced for the player so a printout months
           after creation still shows the journey markers (level-ups,
           deaths-and-back, lasting wounds, milestone moments). Only
           renders when liveState provides the log; the wizard print

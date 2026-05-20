@@ -5,16 +5,16 @@
 //
 // State sync model:
 //   • DB-backed scene fields (name, grid_cols, grid_rows, cell_feet,
-//     background_url, is_locked) — written to Supabase; the main
+//     background_url, is_locked) - written to Supabase; the main
 //     window picks them up via its tactical_scenes realtime sub.
 //     Snapshot to/from the popout via the same realtime sub on this
 //     side.
 //   • Local UI state (zoom, cellPx, showGrid, gridColor, gridOpacity,
-//     showRangeOverlay, mapLocked-toggle UX) — synced via
+//     showRangeOverlay, mapLocked-toggle UX) - synced via
 //     BroadcastChannel through lib/scene-controls-bus.ts. Bidirectional;
 //     the popout requests a snapshot on mount, the main window replies
 //     with current values.
-//   • View-fit commands (Fit to Map, Fit to Screen, Place Tokens) —
+//   • View-fit commands (Fit to Map, Fit to Screen, Place Tokens) -
 //     unidirectional cmd messages popout → main. They depend on
 //     bgImageRef + containerRef which only exist in TacticalMap, so
 //     the popout just signals intent.
@@ -57,14 +57,14 @@ export default function SceneControlsPopoutPage() {
   // its message because Chromium sizes the dialog from the parent
   // window width (~250px), so the prompt body ("Delete the map
   // image?") gets clipped behind a "thetapestry.distemperver…" header.
-  // We render our own modal instead — no clipping, full control.
+  // We render our own modal instead - no clipping, full control.
   const [confirming, setConfirming] = useState<null | 'map' | 'scene'>(null)
-  // GM's library of background images across all their campaigns —
+  // GM's library of background images across all their campaigns -
   // surfaced as a dropdown so they can re-skin the current scene with
   // a map they've already uploaded somewhere else.
   const [reusableMaps, setReusableMaps] = useState<{ key: string; label: string; url: string }[]>([])
 
-  // Local UI state — mirror the keys that TacticalMap holds. Defaults
+  // Local UI state - mirror the keys that TacticalMap holds. Defaults
   // get overwritten by the snapshot the main window posts back in
   // response to our request_snapshot on mount.
   const [zoom, setZoom] = useState(1)
@@ -76,7 +76,7 @@ export default function SceneControlsPopoutPage() {
   const [mapLocked, setMapLocked] = useState(false)
 
   const busRef = useRef<SceneControlsBus | null>(null)
-  // Suppress one round-trip when we apply an inbound state — otherwise
+  // Suppress one round-trip when we apply an inbound state - otherwise
   // we'd echo the change right back out and start a feedback loop.
   const suppressOutboundRef = useRef(false)
   // Tracks the last scene whose DB cell_px we hydrated into local
@@ -166,7 +166,7 @@ export default function SceneControlsPopoutPage() {
     return () => { cancelled = true }
   }, [supabase, campaignId])
 
-  // Bus setup — listen for state echoes + snapshots, request a snapshot
+  // Bus setup - listen for state echoes + snapshots, request a snapshot
   // on mount to populate our local state from the main window.
   useEffect(() => {
     if (!campaignId) return
@@ -214,7 +214,7 @@ export default function SceneControlsPopoutPage() {
     return () => { offState(); offSnapshot(); bus.close(); busRef.current = null }
   }, [campaignId])
 
-  // Outbound broadcasters — fire when local state changes due to a
+  // Outbound broadcasters - fire when local state changes due to a
   // user-driven setX in the popout. The suppression flag prevents
   // echoes when state was set by an inbound bus message.
   useEffect(() => { if (!suppressOutboundRef.current) busRef.current?.postState('zoom', zoom) }, [zoom])
@@ -249,7 +249,7 @@ export default function SceneControlsPopoutPage() {
   }, [cellPx, scene?.id, supabase])
 
   // showGrid / gridColor / gridOpacity persist mirrors. Same pattern
-  // as cellPx — debounced (400ms), suppress-aware so hydrating from
+  // as cellPx - debounced (400ms), suppress-aware so hydrating from
   // DB doesn't fire a redundant write back. Toggling Grid ON/OFF or
   // changing color is rare enough that one write per change is fine.
   const showGridPersistRef = useRef<any>(null)
@@ -297,7 +297,7 @@ export default function SceneControlsPopoutPage() {
     return () => { if (gridOpacityPersistRef.current) clearTimeout(gridOpacityPersistRef.current) }
   }, [gridOpacity, scene?.id, supabase])
 
-  // Helpers — mirror TacticalMap's onClick handlers but operate directly
+  // Helpers - mirror TacticalMap's onClick handlers but operate directly
   // on supabase / local state. The main window will see DB updates via
   // its existing tactical_scenes realtime sub.
   async function uploadBackground(file: File) {
@@ -377,7 +377,7 @@ export default function SceneControlsPopoutPage() {
       </label>
 
       {reusableMaps.length > 0 && (
-        // Reuse-from-library — pick a background_url from any of the
+        // Reuse-from-library - pick a background_url from any of the
         // GM's other scenes and stamp it onto the current one. The
         // current scene's URL is excluded from the list.
         <select
@@ -430,9 +430,9 @@ export default function SceneControlsPopoutPage() {
         <button onClick={() => busRef.current?.postCommand('fit_to_map')}
           style={{ ...btn, color: '#7ab3d4', marginBottom: '4px' }}>Fit to Map</button>
 
-        {/* 2×2 stepper grid — was 4 stacked rows. Layout transposes
+        {/* 2×2 stepper grid - was 4 stacked rows. Layout transposes
             so Cols stacks above Rows in the left column and Cell (ft)
-            stacks above Cell (px) in the right column — pairs the
+            stacks above Cell (px) in the right column - pairs the
             grid-dimension steppers and the cell-size steppers
             visually. */}
         <div style={{ display: 'flex', gap: '4px' }}>
@@ -468,7 +468,7 @@ export default function SceneControlsPopoutPage() {
 
       <button onClick={() => setConfirming('scene')} style={{ ...btn, border: '1px solid #c0392b', color: '#f5a89a' }}>Delete Scene</button>
 
-      {/* In-app confirmation overlay — replaces native confirm() which
+      {/* In-app confirmation overlay - replaces native confirm() which
           gets clipped by the narrow popout window width. */}
       {confirming && (
         <ModalBackdrop onClose={() => setConfirming(null)} zIndex={Z_INDEX.dropdown} opacity={0.85} padding={10}>
@@ -499,7 +499,7 @@ export default function SceneControlsPopoutPage() {
   )
 }
 
-// ── Stepper subcomponent — replaces three inline copies in TacticalMap
+// ── Stepper subcomponent - replaces three inline copies in TacticalMap
 // for cols / rows / cell_feet so the popout panel stays readable.
 function Stepper({ label, value, onChange, suffix, step = 1 }: {
   label: string; value: number; onChange: (v: number) => void; suffix?: string; step?: number

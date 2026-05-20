@@ -9,14 +9,14 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Upkeep — XSE SRD §07' }
+export const metadata = { title: 'Upkeep - XSE SRD §07' }
 
 const OUT: Array<[string, string, boolean]> = [
   ['Moment of High Insight (6+6)', "Condition raised by 2 levels (max Used).", true],
   ['Wild Success (14+)', "Condition raised by 1 level (max Used).", true],
-  ['Success (9–13)', "No change to the item's condition.", false],
-  ['Failure (4–8)', "Condition reduced by 1 level.", false],
-  ['Dire Failure (0–3)', 'The item breaks immediately.', false],
+  ['Success (9-13)', "No change to the item's condition.", false],
+  ['Failure (4-8)', "Condition reduced by 1 level.", false],
+  ['Dire Failure (0-3)', 'The item breaks immediately.', false],
   ['Moment of Low Insight (1+1)', 'Item breaks immediately AND deals 1 WP damage to the character.', false],
 ]
 
@@ -57,7 +57,7 @@ export default function Page() {
 
       <P>
         Note that an Upkeep check can only restore an item to{' '}
-        <Term>Used</Term> condition — the +1 CMod of <Term>Pristine</Term>{' '}
+        <Term>Used</Term> condition - the +1 CMod of <Term>Pristine</Term>{' '}
         is reserved for genuinely new or freshly factory-maintained gear.
       </P>
     </>

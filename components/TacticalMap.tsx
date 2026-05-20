@@ -5,7 +5,7 @@ import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'
 import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-controls-bus'
 
-// Feet per band — used when drawing the primary-weapon range circle for PC/NPC tokens
+// Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
   'Engaged': 5,
   'Close': 30,
@@ -30,12 +30,12 @@ interface Token {
   destroyed_portrait_url: string | null
   grid_x: number
   grid_y: number
-  // Multi-cell footprint (objects only — defaults to 1×1). Lets a wide
+  // Multi-cell footprint (objects only - defaults to 1×1). Lets a wide
   // truck or long wall actually occupy the cells it covers, instead of
   // visually overflowing a single-cell anchor.
   grid_w: number
   grid_h: number
-  // PCs that the GM has opted-in to move this token (objects only — a
+  // PCs that the GM has opted-in to move this token (objects only - a
   // PC token is implicitly controlled by its owner). Empty = GM-only.
   controlled_by_character_ids?: string[] | null
   is_visible: boolean
@@ -51,11 +51,11 @@ interface Token {
   door_open?: boolean | null
   // Walls + windows. Walls block movement + vision unconditionally.
   // Windows block movement (you're not walking through glass) but
-  // vision passes through — a PC behind a window still illuminates
+  // vision passes through - a PC behind a window still illuminates
   // fog beyond it.
   is_wall?: boolean | null
   is_window?: boolean | null
-  // Per-token vision radius (cells) — overrides the default 6 used
+  // Per-token vision radius (cells) - overrides the default 6 used
   // by the fog punch-through. Lets a torch-bearing PC illuminate
   // 8 cells, a sneaking scout 4, etc. NPC tokens can also carry a
   // value for future Phase 3 NPC-vision work.
@@ -78,7 +78,7 @@ interface Scene {
   show_grid?: boolean | null
   grid_color?: string | null
   grid_opacity?: number | null
-  // GM-painted fog. Sparse map keyed by "x,y" (cell coords) — only
+  // GM-painted fog. Sparse map keyed by "x,y" (cell coords) - only
   // fogged cells stored, missing key = clear. Players see fogged
   // cells as opaque black + tokens inside fog are hidden from their
   // render. GM sees fog at reduced opacity. Phase 1 of the vision
@@ -127,7 +127,7 @@ interface Props {
   // around the cell under the cursor so the thrower can SEE the blast
   // footprint before committing. friendlyCharacterIds: any of these PCs
   // inside the 100ft far-band trigger a confirm() prompt before the
-  // throw fires — saves the player from accidentally lobbing a grenade
+  // throw fires - saves the player from accidentally lobbing a grenade
   // into their own teammates.
   throwMode?: { attackerCharId: string | null; attackerNpcId: string | null; rangeFeet: number; hasBlast?: boolean; friendlyCharacterIds?: string[] } | null
   onThrowComplete?: (gx: number, gy: number) => void
@@ -139,7 +139,7 @@ interface Props {
   // on whichever initiative row owns the token. GM drags of off-turn
   // tokens stay free (cleanup / repositioning use case).
   onGMDragMove?: (args: { characterId?: string; npcId?: string }) => void
-  // Campaign vehicle data — used as a fallback for object tokens that
+  // Campaign vehicle data - used as a fallback for object tokens that
   // were placed without their wp_max/wp_current copied across (so the
   // selected-token panel still shows the correct stats by name match).
   vehicles?: {
@@ -148,7 +148,7 @@ interface Props {
     wp_max?: number
     wp_current?: number
     speed?: number
-    // Seat assignments — used to hide aboard tokens from the canvas
+    // Seat assignments - used to hide aboard tokens from the canvas
     // (passengers/crew vanish into the vehicle, with a badge on the
     // vehicle token showing the headcount) and to drive
     // syncVehiclePassengers when the vehicle moves.
@@ -159,7 +159,7 @@ interface Props {
     navigator_character_id?: string | null
     navigator_kind?: string | null
     passenger_seats?: ({ character_id: string; kind: string } | null)[]
-    // Mounted weapons — fields used to render firing arc cones AND to
+    // Mounted weapons - fields used to render firing arc cones AND to
     // hide the assigned shooter token (treat shooters as aboard).
     mounted_weapons?: {
       name: string
@@ -184,7 +184,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  // Pan coalescing — multiple mousemove events per frame get merged into
+  // Pan coalescing - multiple mousemove events per frame get merged into
   // a single scroll write via requestAnimationFrame. Without this, every
   // move wrote to scrollLeft/scrollTop synchronously, which thrashed
   // layout/paint and felt jerky at high mouse rates on large maps.
@@ -207,8 +207,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Toggle a body-level class while a token drag is in progress so any
   // fixed-position overlay (notification dropdown, messages dropdown,
   // future popups pinned to viewport edges) can opt out of intercepting
-  // the drop via CSS — `body.dragging-token .drag-blocker { pointer-events: none }`.
-  // Per Xero's playtest report — bottom-left of the tactical map was
+  // the drop via CSS - `body.dragging-token .drag-blocker { pointer-events: none }`.
+  // Per Xero's playtest report - bottom-left of the tactical map was
   // unreachable because some overlay was catching the drop.
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -219,13 +219,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const dragPosRef = useRef<{ px: number; py: number } | null>(null) // pixel position of dragged token (canvas coords)
   const dragRAFRef = useRef<number | null>(null)                     // rAF handle for drag-move redraws (playtest #28)
   const [selectedToken, setSelectedToken] = useState<string | null>(null)
-  // Multistory Path B — when set, the token-action panel renders a
+  // Multistory Path B - when set, the token-action panel renders a
   // scene picker so the GM can shunt the token to another scene
   // (e.g. PCs going upstairs in a multi-floor building). Initiative
   // entries are campaign-scoped, so combat continuity is preserved
   // automatically; only scene_tokens.scene_id needs to flip.
   const [movingTokenToScene, setMovingTokenToScene] = useState<string | null>(null)
-  // Firing arc overlays — set of "tokenId:weaponIdx" strings the GM
+  // Firing arc overlays - set of "tokenId:weaponIdx" strings the GM
   // wants visualized on the map. Lets a vehicle's front-mounted M60
   // (90° forward) render a translucent cone showing what the weapon
   // can actually hit, accounting for token rotation. Toggle per
@@ -275,7 +275,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // toolbar. Fog tools (paint/erase/rect) and structure tools
   // (wall/door/window) all live here so the GM has one consolidated
   // editor instead of two competing toolbars. Name kept as
-  // `fogEditMode` to avoid churning every callsite — it's "scene
+  // `fogEditMode` to avoid churning every callsite - it's "scene
   // edit mode" in spirit now.
   const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'rect-erase' | 'wall' | 'wall-rect' | 'door' | 'window' | 'select' | null>(null)
   // Selected segment id (set by clicking a wall/door/window in Select
@@ -287,7 +287,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   useEffect(() => { selectedSegmentIdRef.current = selectedSegmentId }, [selectedSegmentId])
   useEffect(() => { if (fogEditMode !== 'select') setSelectedSegmentId(null) }, [fogEditMode])
   // GM fog/lighting toolbar position. Defaults to top-left (8,8) but
-  // the GM can drag the ⠿ handle to reposition it — useful when the
+  // the GM can drag the ⠿ handle to reposition it - useful when the
   // toolbar is covering content the GM needs to interact with (e.g. a
   // token in the corner). Per-campaign localStorage so each GM's
   // preferred placement persists across sessions.
@@ -311,7 +311,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     barWidth: number; barHeight: number
     containerWidth: number; containerHeight: number
   } | null>(null)
-  // The toolbar element ref — measured at drag-start so we know its
+  // The toolbar element ref - measured at drag-start so we know its
   // current width/height (the bar grows when Edit Fog expands the
   // paint/erase/rect controls). Used to clamp the drag target so the
   // toolbar can't be dragged past any edge of the canvas wrapper.
@@ -374,7 +374,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // overlaps and fog them in one batch.
   const [fogRectStart, setFogRectStart] = useState<{ x: number; y: number } | null>(null)
   const [fogRectEnd, setFogRectEnd] = useState<{ x: number; y: number } | null>(null)
-  // Wall-rect mode — drag from one corner to the opposite, commits 4
+  // Wall-rect mode - drag from one corner to the opposite, commits 4
   // walls forming a closed rectangle. Faster than 4 click-click chains
   // for boxing in a square room. SHIFT honored via getSegmentEndpoint.
   const [wallRectStart, setWallRectStart] = useState<{ x: number; y: number } | null>(null)
@@ -389,7 +389,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [wallDrawStart, setWallDrawStart] = useState<{ x: number; y: number } | null>(null)
   const [wallDrawHover, setWallDrawHover] = useState<{ x: number; y: number } | null>(null)
   const wallsPendingSaveRef = useRef<number | null>(null)
-  // Local mirror — the canonical fog state lives on `scene.fog_state`
+  // Local mirror - the canonical fog state lives on `scene.fog_state`
   // but during a drag we update this immediately and persist on a
   // debounce; reconcile back to scene state when the realtime row
   // update lands.
@@ -402,7 +402,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const portraitCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const tokenAnimRef = useRef<Map<string, { fromX: number; fromY: number; toX: number; toY: number; t: number }>>(new Map())
   const animFrameRef = useRef<number>(0)
-  // Which scene we've already auto-centered the scroll for — prevents
+  // Which scene we've already auto-centered the scroll for - prevents
   // stealing the user's scroll after they've moved around.
   const centeredSceneIdRef = useRef<string | null>(null)
   const sceneRef = useRef<Scene | null>(null)
@@ -444,7 +444,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const cleaned = cleanupOverlappingWalls(incoming)
     setWallsLocal(cleaned)
     if (isGM && cleaned.length !== incoming.length) {
-      // Persist async — the local mirror is already correct.
+      // Persist async - the local mirror is already correct.
       wallsLocalRef.current = cleaned
       scheduleWallsPersist()
     }
@@ -452,7 +452,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Retroactive auto-split: when a scene loads, walk every door /
   // window segment and slice any wall that overlaps it. Returns the
-  // new array (walls split + openings preserved). Idempotent — a
+  // new array (walls split + openings preserved). Idempotent - a
   // second pass on already-clean data is a no-op.
   function cleanupOverlappingWalls(all: WallSegment[]): WallSegment[] {
     const openings = all.filter(w => w.kind === 'door' || w.kind === 'window')
@@ -467,10 +467,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Split any wall segments that overlap a new door/window/wall
   // segment on the same axis-aligned line. Returns the rewritten
   // array of pre-existing walls (with overlapping pieces sliced
-  // out). The new segment itself is NOT included — caller appends.
+  // out). The new segment itself is NOT included - caller appends.
   // Diagonal walls aren't split for v1 (no rotated buildings yet).
   function splitOverlappingSegments(existing: WallSegment[], inserted: WallSegment): WallSegment[] {
-    // Tolerance for "same axis-aligned line" — float-precision
+    // Tolerance for "same axis-aligned line" - float-precision
     // segment authoring means y-coords might differ by a tiny
     // fraction even when the GM clicked "the same wall." Anything
     // within ~1px at typical zoom counts as coincident.
@@ -480,10 +480,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const isVert  = (s: WallSegment) => Math.abs(s.x1 - s.x2) < EPS
     const insHoriz = isHoriz(inserted)
     const insVert  = isVert(inserted)
-    if (!insHoriz && !insVert) return existing.slice() // diagonal — skip split
+    if (!insHoriz && !insVert) return existing.slice() // diagonal - skip split
     for (const w of existing) {
       // Only walls auto-split. Doors and windows stay intact when a
-      // new segment is drawn over them — the GM can manually right-
+      // new segment is drawn over them - the GM can manually right-
       // click delete those if they truly want to replace.
       if (w.kind !== 'wall') { result.push(w); continue }
       const wHoriz = isHoriz(w)
@@ -502,7 +502,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (iMax < wMax) {
           result.push({ id: crypto.randomUUID(), x1: iMax, y1: y, x2: wMax, y2: y, kind: 'wall' })
         }
-        // (No else — wall is fully consumed by overlap; drop it.)
+        // (No else - wall is fully consumed by overlap; drop it.)
       } else if (insVert && wVert && Math.abs(w.x1 - inserted.x1) < EPS) {
         const wMin = Math.min(w.y1, w.y2)
         const wMax = Math.max(w.y1, w.y2)
@@ -536,7 +536,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   // Free-form mouse → cell-units conversion for wall/door/window
-  // segment authoring. NOT rounded — segments now follow the cursor
+  // segment authoring. NOT rounded - segments now follow the cursor
   // pixel-precise so the GM can trace organic building shapes that
   // don't align to grid intersections. Doors and windows additionally
   // snap to nearby walls (see snapPointToNearestWall) so the
@@ -565,7 +565,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Project a point onto the nearest WALL segment within `threshold`
   // cells. Returns the projected point if a wall is close enough, or
   // the original point otherwise. Used for door + window authoring
-  // so a click-near-wall lands ON the wall's line — guaranteeing the
+  // so a click-near-wall lands ON the wall's line - guaranteeing the
   // auto-split overlap check finds a match even with a fuzzy click.
   function snapPointToNearestWall(p: { x: number; y: number }, threshold = 0.45): { x: number; y: number } {
     let best: { x: number; y: number } | null = null
@@ -623,7 +623,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Load scenes
   // Tracks the last scene whose saved cellPx / imgScale we applied to
-  // local UI state. cellPx and imgScale are LIVE local controls — the
+  // local UI state. cellPx and imgScale are LIVE local controls - the
   // popout's Cell-px stepper and the zoom slider write them via the
   // broadcast channel without persisting to the DB on every tick.
   // Without this guard, a `tactical_scenes` realtime UPDATE (e.g. from
@@ -651,7 +651,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       //
       // Player path: ALWAYS apply cellPx/imgScale from DB. Players
       // don't have a popout, can't make local changes, so there's
-      // nothing to clobber. Pre-fix bug — when the GM adjusted
+      // nothing to clobber. Pre-fix bug - when the GM adjusted
       // cellPx or imgScale via the popout, the player's view stayed
       // at the original first-load values forever, producing
       // dramatically different zoom/scale between GM and player
@@ -661,12 +661,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (active.cell_px) setCellPx(active.cell_px)
         // img_scale is trickier than cell_px. The bg-image-load
         // effect (~line 780) runs a local auto-fit when the scene
-        // has no saved img_scale (null or default 1) — sets the
+        // has no saved img_scale (null or default 1) - sets the
         // player's local imgScale to fit-to-container width. That
         // value is NOT persisted to the DB.
         //
         // If we re-apply `active.img_scale` on every loadScenes
-        // call (which fires on every tactical_scenes UPDATE — e.g.
+        // call (which fires on every tactical_scenes UPDATE - e.g.
         // GM toggling a window or wall), the local auto-fit value
         // (~0.6) gets clobbered back to the DB's default (1 or
         // null), causing the player's view to zoom-jump on every
@@ -674,12 +674,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         //
         // Only re-apply when the GM has set a non-default scale
         // via the popout. The default (null/1) means "let the
-        // viewer auto-fit" — leave the local value alone.
+        // viewer auto-fit" - leave the local value alone.
         if (active.img_scale && active.img_scale !== 1) setImgScale(active.img_scale)
       }
       if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
-        // Grid render settings — persisted in tactical_scenes per
+        // Grid render settings - persisted in tactical_scenes per
         // sql/tactical-scenes-grid-persist.sql so a main-window
         // refresh doesn't revert to the useState defaults.
         if (typeof active.show_grid === 'boolean') setShowGrid(active.show_grid)
@@ -688,7 +688,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         lastSyncedSceneIdRef.current = active.id
       }
     } else if (data && data.length > 0 && isGM) {
-      // No active scene — auto-activate the most recent one
+      // No active scene - auto-activate the most recent one
       const first = data[0]
       await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', first.id)
       setScene(first)
@@ -703,7 +703,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         lastSyncedSceneIdRef.current = first.id
       }
     } else if ((!data || data.length === 0) && isGM) {
-      // No scenes at all — open Create Scene modal
+      // No scenes at all - open Create Scene modal
       setShowSetup(true)
     }
   }
@@ -738,7 +738,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       })
       .on('broadcast', { event: 'scene_activated' }, () => {
         // GM activated a different tactical scene. Reload the scene
-        // list — loadScenes auto-picks the is_active=true row, so the
+        // list - loadScenes auto-picks the is_active=true row, so the
         // player's view follows immediately whether their pane is
         // open or closed.
         loadScenes()
@@ -768,7 +768,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       })
       .on('broadcast', { event: 'tactical_zoom' }, (msg: any) => {
         // GM zoom snaps players' view to match (playtest #27). Players
-        // can still zoom locally afterwards — the sync only fires when
+        // can still zoom locally afterwards - the sync only fires when
         // the GM actively changes zoom, so a player's later adjustment
         // isn't clobbered until the GM zooms again.
         if (!isGM) {
@@ -849,7 +849,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       bgImageRef.current = img
       // If the scene has no saved img_scale yet (first time), every
       // viewer (GM AND players) picks a fit-to-container default
-      // locally. Pre-fix this was GM-only — the player kept
+      // locally. Pre-fix this was GM-only - the player kept
       // img_scale=1 (raw natural pixels), which overflowed their
       // container any time the natural image was wider than their
       // viewport. Result: GM saw the whole scene, player saw a
@@ -858,7 +858,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // had db_img_scale=1; the GM auto-fit locally, the player
       // didn't, hence the visual divergence).
       //
-      // Auto-fit is local-only — not persisted. Each viewer fits
+      // Auto-fit is local-only - not persisted. Each viewer fits
       // their own container width. GM manual adjustments via the
       // popout still persist via the existing cellPx debounce path
       // and override this auto-fit on subsequent loads.
@@ -870,7 +870,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
       draw()
       // Center once per scene. After the image loads, canvas dimensions are
-      // final — this is the right moment to scroll to the middle.
+      // final - this is the right moment to scroll to the middle.
       if (centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
         centerViewport()
@@ -882,7 +882,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Refresh tokens when parent signals a change
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
-  // Live token-patch listener — lets external popups (like ObjectCard's
+  // Live token-patch listener - lets external popups (like ObjectCard's
   // rotation slider) push optimistic patches into our `tokens` state
   // mid-drag without going through DB → realtime → reload, which is
   // too slow for slider-style continuous interaction. The DB write
@@ -901,13 +901,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }, [])
 
   // Redraw on token/scene changes
-  // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  // `vehicles` MUST be in this dep array — the aboard-token filter +
+  // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately - missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
+  // `vehicles` MUST be in this dep array - the aboard-token filter +
   // passenger-count badge live inside draw() and read from the
   // vehicles prop via closure. Without this dep, boarding/disembarking
   // updated parent state but the canvas kept rendering the prior frame
   // until something else in the dep list happened to change. Cost is
-  // one extra draw per vehicle update (cheap — single rAF tick).
+  // one extra draw per vehicle update (cheap - single rAF tick).
   useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, wallRectStart, wallRectEnd, firingArcs, toggleLabel, vehicles])
 
   // Notify parent of token positions for range calculations
@@ -930,7 +930,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Spacebar = pan-mode visual cue + click-and-drag override.
   // Arrow keys (or WASD) = continuous smooth pan via rAF, no mouse
   // needed. Multiple keys can be held for diagonal pan. Steady 60fps
-  // velocity decouples pan from mouse jitter — fixes the "still
+  // velocity decouples pan from mouse jitter - fixes the "still
   // jerky" complaint where mouse-rate-bound drag was the bottleneck.
   useEffect(() => {
     const heldKeys = new Set<string>()
@@ -948,7 +948,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (heldKeys.has('ArrowUp') || heldKeys.has('KeyW')) dy -= PAN_PX_PER_FRAME
       if (heldKeys.has('ArrowDown') || heldKeys.has('KeyS')) dy += PAN_PX_PER_FRAME
       if (dx !== 0 || dy !== 0) {
-        // Diagonal normalization — keep total speed consistent so
+        // Diagonal normalization - keep total speed consistent so
         // diagonals don't outpace cardinals by 1.41×.
         if (dx !== 0 && dy !== 0) {
           dx *= 0.707
@@ -971,7 +971,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // preventDefault on EVERY spacebar keydown (including the
       // auto-repeats fired while held), not just the first. The
       // browser default for spacebar is page-down scroll, and on
-      // auto-repeat each repeat fires another scroll — which during
+      // auto-repeat each repeat fires another scroll - which during
       // a spacebar+drag pan reads as the page constantly jumping
       // back up against the user's drag. The state-set gates on
       // !e.repeat so we don't churn the spaceHeld state every frame,
@@ -1045,7 +1045,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const gridH = s.grid_rows * cellSize
     // Image size is derived from the image's own natural dimensions (same file
     // → same dims for everyone) scaled by img_scale. This keeps GM and players
-    // pixel-identical AND decouples the image from grid changes — adding a
+    // pixel-identical AND decouples the image from grid changes - adding a
     // column or row moves the grid, not the map.
     let imgW = 0, imgH = 0
     if (bgImageRef.current) {
@@ -1065,11 +1065,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     ctx.fillStyle = '#111'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Apply zoom — scales everything: image, grid, tokens
+    // Apply zoom - scales everything: image, grid, tokens
     ctx.save()
     ctx.scale(zoom, zoom)
 
-    // Background image — natural-dimensions × img_scale, same for every viewer.
+    // Background image - natural-dimensions × img_scale, same for every viewer.
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const scaledW = img.naturalWidth * imgScale
@@ -1126,7 +1126,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     ctx.globalAlpha = 1
     } // end showGrid
 
-    // Move mode highlight — draw valid movement cells
+    // Move mode highlight - draw valid movement cells
     if (moveMode) {
       const ft = s.cell_feet ?? 3
       const moveCells = Math.floor(moveMode.feet / ft)
@@ -1158,7 +1158,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
     }
 
-    // Throw-to-cell highlight — paint every cell within weapon range of
+    // Throw-to-cell highlight - paint every cell within weapon range of
     // the attacker token orange so the player can see where they can
     // place the grenade. Uses Chebyshev distance (same as moveMode) so
     // diagonal cells count as 1 step, matching how ranges are shown
@@ -1194,7 +1194,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
         }
 
-        // Blast preview — when the weapon has Blast Radius, paint
+        // Blast preview - when the weapon has Blast Radius, paint
         // Engaged/Close/Far rings around the cell under the cursor so
         // the thrower can see the splash footprint before committing.
         // Bands per CRB p.71-72: Engaged = 5ft full, Close = 30ft 50%,
@@ -1223,11 +1223,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               }
               blastZoneCacheRef.current = { key: bzKey, engCells, clCells }
             }
-            ctx.fillStyle = 'rgba(192,57,43,0.45)'  // red — full damage
+            ctx.fillStyle = 'rgba(192,57,43,0.45)'  // red - full damage
             for (const { gx, gy } of blastZoneCacheRef.current!.engCells) {
               ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
             }
-            ctx.fillStyle = 'rgba(239,159,39,0.32)'  // amber — 50%
+            ctx.fillStyle = 'rgba(239,159,39,0.32)'  // amber - 50%
             for (const { gx, gy } of blastZoneCacheRef.current!.clCells) {
               ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
             }
@@ -1241,8 +1241,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
     }
 
-    // Range circles for selected PC/NPC token — Engaged, Move 9ft, primary weapon range.
-    // Object tokens (crates, cars, doors) don't get circles — they don't attack or move.
+    // Range circles for selected PC/NPC token - Engaged, Move 9ft, primary weapon range.
+    // Object tokens (crates, cars, doors) don't get circles - they don't attack or move.
     // Visibility rule (playtest #19): range bands are attacker-side info. The GM
     // sees circles on any selected token; a player only sees circles on their
     // OWN PC token. Clicking an enemy NPC or another player no longer reveals
@@ -1278,13 +1278,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ? (MELEE_RANGE_FEET[weaponRangeBand] ?? 5)
           : (RANGE_BAND_FEET[weaponRangeBand] ?? 5)
         const rawWeaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
-        // Clamp visual radius to the map's own extent — a 300ft/600ft circle on a
+        // Clamp visual radius to the map's own extent - a 300ft/600ft circle on a
         // 20-cell map just engulfs everything. Label keeps the real range so the
         // player still knows "Sniper (600ft)" even when the circle stops at the edge.
         const mapExtentCells = Math.max(s.grid_cols, s.grid_rows)
         const weaponCells = Math.min(rawWeaponCells, mapExtentCells)
         const clampedLabel = rawWeaponCells > mapExtentCells
-          ? `${weaponRangeBand} (${weaponRangeFt}ft — reaches map edge)`
+          ? `${weaponRangeBand} (${weaponRangeFt}ft - reaches map edge)`
           : `${weaponRangeBand} (${weaponRangeFt}ft)`
 
         const circles = [
@@ -1320,13 +1320,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     //
     // PC vision punch-through: each PC token clears a Chebyshev
     // radius around itself from the rendered fog. Computed at draw
-    // time so the GM's authored fog_state stays untouched — the GM
+    // time so the GM's authored fog_state stays untouched - the GM
     // edit-mode view still shows the raw layer for predictable
     // painting. Out of edit mode, the GM sees what the players see.
     const VISION_RADIUS_CELLS = 30
     const rawFog = fogLocalRef.current
     let fogMap = rawFog
-    // PC tokens that fire vision. PC-only by spec — NPCs don't lift
+    // PC tokens that fire vision. PC-only by spec - NPCs don't lift
     // fog of war for players. is_visible=false (hidden NPC, but
     // shouldn't apply to a PC anyway) is also excluded as a safety.
     const pcVisionTokens = tokensRef.current.filter(t =>
@@ -1339,9 +1339,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (!fogEditMode && (hasPCs || hasPainted)) {
       // Build the segment + cell-based blocker sets. Both authoring
       // models coexist:
-      //   • Wall/door/window SEGMENTS (cell edges, thin) — preferred,
+      //   • Wall/door/window SEGMENTS (cell edges, thin) - preferred,
       //     drawn via the toolbar's Wall/Door/Window tools.
-      //   • Wall/door/window OBJECTS (whole-cell tokens, legacy) —
+      //   • Wall/door/window OBJECTS (whole-cell tokens, legacy) -
       //     still respected so existing scenes keep working.
       const segs = wallsLocalRef.current
       // Vision blockers: walls (always), closed doors, AND closed
@@ -1368,7 +1368,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
       // Whether the scene has any vision-blocking geometry. Drives
       // both the painted-fog defeasibility rule and the auto-fog
-      // gate below — see the comment block at the painted-fog loop.
+      // gate below - see the comment block at the painted-fog loop.
       const hasBlockers = visionSegs.length > 0 || cellBlockers.size > 0
       // Standard "do two segments cross" test (proper intersection,
       // touching endpoints don't count). Used for both segment LoS
@@ -1423,8 +1423,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         visible = new Set<string>()
         // Vision sweep only runs if the scene has authored blockers
         // (walls / closed doors / closed windows / wall-tagged tokens).
-        // On a no-blocker scene — building drawn into the background
-        // image, no segments authored — day-mode unbounded sight would
+        // On a no-blocker scene - building drawn into the background
+        // image, no segments authored - day-mode unbounded sight would
         // mark every cell visible, defeating both painted fog and the
         // auto-fog blanket below. Skipping the sweep here means
         // `visible` stays empty, painted fog renders absolute, and
@@ -1507,7 +1507,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       //     while choosing what to fog.
       //   • Everyone else (GM not painting + every player): fully
       //     opaque black. Pre-fix this was `0.92` for players (8%
-      //     translucent — token shadows + structure still bled
+      //     translucent - token shadows + structure still bled
       //     through) and a permanent `0.35` for the GM whether or
       //     not they were editing. Reported tonight as "the fog
       //     isn't completely dark".
@@ -1565,7 +1565,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
 
     // Tokens. Sort so objects render first (bottom), then NPCs, then PCs
-    // on top — canvas is painter's-algorithm, last draw wins. Prevents a
+    // on top - canvas is painter's-algorithm, last draw wins. Prevents a
     // barrel or crate from covering a player token when they share a
     // neighboring cell. Stable within each tier via index fallback.
     const toks = [...tokensRef.current]
@@ -1581,7 +1581,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // is invisible to non-GM viewers. GM sees everything (their
       // overlay is only 35% opacity above). Combined with the
       // auto-fog-outside-PC-LoS pass earlier in this render, this is
-      // the LoS gating — tokens behind walls are auto-fogged and
+      // the LoS gating - tokens behind walls are auto-fogged and
       // therefore filtered out here. For multi-cell tokens we scan
       // the entire grid_w × grid_h footprint: a token is visible iff
       // ANY of its cells is unfogged. (Anchor-only previously caused
@@ -1608,7 +1608,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     let hasActiveAnim = false
     toks.forEach(t => {
       if (!t.is_visible && !isGM) return
-      // Multi-cell footprint (objects only — defaults to 1×1). The
+      // Multi-cell footprint (objects only - defaults to 1×1). The
       // anchor cell stays (grid_x, grid_y); the visual is centered on
       // the rectangle's midpoint so a 5×2 truck covers the cells it
       // says it does.
@@ -1636,7 +1636,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const tokenScale = t.scale ?? 1.0
       const radius = cellSize * 0.4 * tokenScale
 
-      // Pin marker — minimal render, just the emoji at the grid center.
+      // Pin marker - minimal render, just the emoji at the grid center.
       // No square background, no name label, no WP bar. token_type='pin'
       // is reserved for these markers (set by the "Add to tactical map"
       // button on campaign pins). Click hit detection still works
@@ -1655,7 +1655,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return
       }
 
-      // Active combatant glow — pure white. Pre-fix this used the
+      // Active combatant glow - pure white. Pre-fix this used the
       // friendly-disposition green (#7fc458), which was indistinguishable
       // from a friendly NPC's own border color and confused the GM about
       // who actually had the turn. White is the only ring that doesn't
@@ -1676,7 +1676,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         ctx.shadowBlur = 16
       }
 
-      // GM always sees tokens at full opacity — no fading for "hidden"
+      // GM always sees tokens at full opacity - no fading for "hidden"
       // tokens. The is_visible flag only gates player rendering (line
       // above: skip if !is_visible && !isGM). For the GM, the token is
       // simply on the map; whether players can see it is the GM's
@@ -1706,7 +1706,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
       // Destroyed objects fade further than downed PCs/NPCs so they read as
       // "gone" rather than just "out of the fight". Keep full opacity when a
-      // destroyed portrait is set — the alt art is the story, don't mute it.
+      // destroyed portrait is set - the alt art is the story, don't mute it.
       const hasDestroyedArt = t.token_type === 'object' && tokenDead && !!t.destroyed_portrait_url
       if (tokenDead && !hasDestroyedArt) ctx.globalAlpha = t.token_type === 'object' ? 0.3 : 0.5
 
@@ -1719,7 +1719,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         ctx.translate(-cx, -cy)
       }
 
-      // Token shape — circle for PC/NPC, square for objects
+      // Token shape - circle for PC/NPC, square for objects
       const isObject = t.token_type === 'object'
       // Destroyed objects swap to the alternate portrait if one is set, so
       // broken crates / wrecked cars visually transform instead of just
@@ -1750,7 +1750,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           drawH = radius * 2
         }
         // Object-kind visual decision tree. Doors win first (they
-        // have the most state — open/closed), then walls (always
+        // have the most state - open/closed), then walls (always
         // solid), then windows (always transparent + mullion), then
         // generic objects fall through to the existing treatment.
         // Drawn for both portrait + emoji branches so custom art on
@@ -1797,7 +1797,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
         // Helper: draw a glass pane with a cross mullion. Used for
         // windows and any future "transparent obstacle" type. Windows
-        // are see-through by default — the fill is barely-there blue
+        // are see-through by default - the fill is barely-there blue
         // tint so the cell content stays fully readable; the mullion
         // is the structural cue that says "this is a window."
         function drawGlassFill(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
@@ -1820,7 +1820,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const rectY = cy - drawH / 2
         if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
           // Open door fades so the cell beyond reads as passable.
-          // Open window (default) is barely-tinted — vision passes
+          // Open window (default) is barely-tinted - vision passes
           // through clear glass. Closed window (blinds) renders at
           // full opacity to look "covered" and visually telegraph
           // that vision is blocked.
@@ -1861,7 +1861,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           }
         } else {
           // Emoji-rendered objects. Walls get a stone-brick fill +
-          // dark border (no emoji — the texture is the visual);
+          // dark border (no emoji - the texture is the visual);
           // windows get the glass + mullion treatment; doors keep
           // the existing open/closed colorway; everything else
           // falls back to the generic object look.
@@ -1882,7 +1882,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             } else {
               ctx.fillStyle = '#3e3220'
               ctx.fillRect(rectX, rectY, drawW, drawH)
-              // Horizontal slats — fast suggestion of blinds without
+              // Horizontal slats - fast suggestion of blinds without
               // a real texture.
               ctx.strokeStyle = 'rgba(168,146,74,0.6)'
               ctx.lineWidth = 1
@@ -1919,8 +1919,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               ctx.strokeRect(rectX, rectY, drawW, drawH)
             }
           }
-          // Emoji or initials. Walls render their texture only — no
-          // emoji label — so the brickwork stays clean.
+          // Emoji or initials. Walls render their texture only - no
+          // emoji label - so the brickwork stays clean.
           if (!isWall) {
             ctx.fillStyle = '#f5f2ee'
             ctx.font = `${Math.max(12, radius * 1.2)}px sans-serif`
@@ -1961,7 +1961,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.fillText(initials, cx, cy)
         }
       }
-      // Load portrait(s) for next draw — both intact and destroyed URLs, so
+      // Load portrait(s) for next draw - both intact and destroyed URLs, so
       // WP transitions don't flash an empty square while the alt image loads.
       const urlsToPreload = [t.portrait_url, t.destroyed_portrait_url].filter((u): u is string => !!u)
       for (const url of urlsToPreload) {
@@ -1978,12 +1978,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
 
-      // Dead or mortally wounded — red combat X for everyone (PCs, NPCs,
+      // Dead or mortally wounded - red combat X for everyone (PCs, NPCs,
       // destroyed objects). Previously objects got a subtle dark-crack
       // pattern that was too easy to miss at a glance on busy terrain;
       // the red X matches the PC/NPC "this token is out of the fight"
       // convention so the map reads consistently. Skip when a destroyed
-      // portrait is rendering — the portrait itself conveys destruction.
+      // portrait is rendering - the portrait itself conveys destruction.
       if ((tokenMortal || tokenDead) && !useDestroyedArt) {
         ctx.save()
         ctx.globalAlpha = 1
@@ -2005,7 +2005,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // Restore rotation before drawing name (name should be horizontal)
       if (tokenRotation !== 0) ctx.restore()
 
-      // Name below — objects get up to 2 lines, characters get first word only
+      // Name below - objects get up to 2 lines, characters get first word only
       const fontSize = Math.max(14, cellSize * 0.34)
       ctx.font = `bold ${fontSize}px Carlito`
       ctx.textAlign = 'center'
@@ -2124,7 +2124,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ctx.globalAlpha = 1
     })
 
-    // Ping — double pulsing ring that fades out (GM=orange, player=green)
+    // Ping - double pulsing ring that fades out (GM=orange, player=green)
     if (ping) {
       const pingCx = offsetX + ping.gx * cellSize + cellSize / 2
       const pingCy = offsetY + ping.gy * cellSize + cellSize / 2
@@ -2163,7 +2163,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // weapon's arc_degrees, extending to the weapon's max range
     // band. Drawn after tokens (so they overlay the vehicle without
     // being hidden) and after the wall segment block above is drawn
-    // separately below — order: tokens → arcs → walls so doors etc.
+    // separately below - order: tokens → arcs → walls so doors etc.
     // remain crisp on top of arc fills.
     if (firingArcs.size > 0 && vehicles && vehicles.length > 0) {
       const cellW = (s.grid_cols * cellSize) / s.grid_cols
@@ -2199,7 +2199,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const facingDeg = tokenRot + w.mount_angle - 90
           const facingRad = facingDeg * Math.PI / 180
           const halfArc = (w.arc_degrees / 2) * Math.PI / 180
-          // Wedge fill — purple-ish with low alpha so the underlying
+          // Wedge fill - purple-ish with low alpha so the underlying
           // map stays readable. Border at full opacity to anchor the
           // shape against busy backgrounds.
           ctx.beginPath()
@@ -2228,7 +2228,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
 
     // Wall / door / window segments. Drawn after tokens so they sit
-    // on top of object portraits — important for doors that need to
+    // on top of object portraits - important for doors that need to
     // visually intersect a wall run. Color-coded by kind:
     //   wall       → solid stone gray, 4px
     //   door open  → dashed green, 3px
@@ -2251,7 +2251,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           // sit visually above the wall flow. Colors brightened for
           // contrast against the warm-tan wall palette. Endpoint
           // dots draw below to signal "this segment terminates here,
-          // it's a thing" — walls stay clean. Windows additionally
+          // it's a thing" - walls stay clean. Windows additionally
           // draw a dashed white halo first so they pop unambiguously
           // against the wall palette (especially the closed-amber
           // state which would otherwise blend into the tan walls).
@@ -2267,7 +2267,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.lineWidth = 6
             ctx.setLineDash(open ? [6, 4] : [])
           } else {
-            // window — OPEN (default) = sky-blue dashed line, reads
+            // window - OPEN (default) = sky-blue dashed line, reads
             // as "see-through frame." CLOSED = blinds drawn, renders
             // as a solid amber line that visually "blocks" the view
             // (matches the mechanical vision-block when closed).
@@ -2294,7 +2294,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.moveTo(x1, y1)
           ctx.lineTo(x2, y2)
           ctx.stroke()
-          // Endpoint dots — doors and windows only. Filled circle
+          // Endpoint dots - doors and windows only. Filled circle
           // in the segment's accent color, ~3.5px radius. Walls
           // skip this so a long run of walls stays a clean line.
           if (seg.kind !== 'wall') {
@@ -2309,7 +2309,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.fill()
             ctx.restore()
           }
-          // Selection highlight — bright white glow around the
+          // Selection highlight - bright white glow around the
           // currently-selected segment so the GM can see exactly
           // which one the action panel is acting on. Drawn AFTER
           // the kind-specific stroke so it overlays cleanly.
@@ -2345,7 +2345,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.stroke()
           ctx.globalAlpha = 1
         }
-        // Endpoint markers when in a draw mode — small dots at each
+        // Endpoint markers when in a draw mode - small dots at each
         // segment endpoint so the GM can see snap points.
         if (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') {
           ctx.setLineDash([])
@@ -2369,7 +2369,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
     }
 
-    // Wall-rect drag preview — dashed tan rectangle outline. Lives
+    // Wall-rect drag preview - dashed tan rectangle outline. Lives
     // OUTSIDE the segments.length>0 block so it renders on empty
     // scenes too (when boxing in the very first room).
     if (fogEditMode === 'wall-rect' && wallRectStart && wallRectEnd && scene) {
@@ -2393,14 +2393,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ctx.restore()
     }
 
-    // Rectangle marquee preview — draws while the GM is dragging
+    // Rectangle marquee preview - draws while the GM is dragging
     // the Rect fog tool. On mouseup the rectangle is committed to
     // fog_state and the preview clears. Erase variant gets a red
     // tint so the GM knows it'll subtract.
     if ((fogEditMode === 'rect' || fogEditMode === 'rect-erase') && fogRectStart && fogRectEnd) {
       const cellW = (s.grid_cols * cellSize) / s.grid_cols
       const cellH = (s.grid_rows * cellSize) / s.grid_rows
-      // Float-coord marquee — pixel-precise box that doesn't snap.
+      // Float-coord marquee - pixel-precise box that doesn't snap.
       const minX = Math.min(fogRectStart.x, fogRectEnd.x)
       const maxX = Math.max(fogRectStart.x, fogRectEnd.x)
       const minY = Math.min(fogRectStart.y, fogRectEnd.y)
@@ -2421,7 +2421,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ctx.restore()
     }
 
-    // Transient toggle label — flashes "Door opened" / "Window
+    // Transient toggle label - flashes "Door opened" / "Window
     // closed" near the click point so the player gets explicit
     // feedback on what just happened. Auto-clears via setTimeout.
     if (toggleLabel) {
@@ -2472,7 +2472,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Float-precision sub-cell mouse position. Used by the rect-fog
   // tool so the GM can drag a rectangle that doesn't snap to grid
-  // intersections — gives a smooth marquee box. Out-of-bounds values
+  // intersections - gives a smooth marquee box. Out-of-bounds values
   // are clamped to scene edges so a drag past the canvas edge stays
   // on the map.
   function getCellPosFloat(e: React.MouseEvent): { x: number; y: number } | null {
@@ -2501,8 +2501,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (exact) return exact
 
     // Second pass: visual-scale fallback. A token with scale > 1
-    // renders a circle of `cellSize * 0.4 * scale` pixels — i.e.
-    // `0.4 * scale` cells radius — but its grid footprint stays at
+    // renders a circle of `cellSize * 0.4 * scale` pixels - i.e.
+    // `0.4 * scale` cells radius - but its grid footprint stays at
     // grid_w × grid_h. Without this pass, a vehicle scaled up to
     // look the right size on the canvas (e.g. Minnie at scale ~4)
     // is only grabbable from the single anchor cell, even though the
@@ -2542,7 +2542,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     })
   }
 
-  // Vehicle passenger sync helper — when an object token whose name
+  // Vehicle passenger sync helper - when an object token whose name
   // matches a campaign vehicle moves, every PC/NPC riding in one of
   // its slots (driver / brewer / navigator / gunner / passenger_seats)
   // has their own token dragged along by the same (dx, dy). Called
@@ -2612,7 +2612,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // open/closed (existing behavior); window state flips
     // closed-glass (movement blocked, vision passes) ↔ open-glass
     // (passable both ways). Plain right-click + edit mode still
-    // means "delete nearest segment" — alt distinguishes the two.
+    // means "delete nearest segment" - alt distinguishes the two.
     if (e.button === 2 && e.altKey && canvasRef.current && scene) {
       e.preventDefault()
       const rect = canvasRef.current.getBoundingClientRect()
@@ -2647,7 +2647,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         scheduleWallsPersist()
         return
       }
-      // 2) Fall through to object TOKEN under the cursor — only doors
+      // 2) Fall through to object TOKEN under the cursor - only doors
       //    or windows. Toggle door_open the same way the existing
       //    door-token click handler does.
       const pos = getGridPos(e)
@@ -2664,7 +2664,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
       return
     }
-    // Select mode — left-click finds the nearest wall/door/window
+    // Select mode - left-click finds the nearest wall/door/window
     // segment (any kind, within ~half a cell) and highlights it. The
     // selected-segment action panel below the fog toolbar exposes
     // delete + open/close + convert. Click empty space to deselect.
@@ -2727,7 +2727,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
       return
     }
-    // Door / window SEGMENT click — plain click toggles open/closed
+    // Door / window SEGMENT click - plain click toggles open/closed
     // when not in any edit mode (gameplay interaction). Detection is
     // point-to-segment distance against door + window segments.
     if (!fogEditMode && e.button === 0 && wallsLocalRef.current.some(w => w.kind === 'door' || w.kind === 'window')) {
@@ -2764,7 +2764,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             return next
           })
           scheduleWallsPersist()
-          // Toast — render midpoint of the segment.
+          // Toast - render midpoint of the segment.
           const midX = (bestSeg.x1 + bestSeg.x2) / 2
           const midY = (bestSeg.y1 + bestSeg.y2) / 2
           showToggleLabel(midX, midY, `${bestSeg.kind === 'door' ? 'Door' : 'Window'} ${nextOpen ? 'opened' : 'closed'}`)
@@ -2772,7 +2772,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
       }
     }
-    // Wall-rect mode — drag from one corner to opposite corner.
+    // Wall-rect mode - drag from one corner to opposite corner.
     // mouseup commits 4 walls forming a closed rectangle. SHIFT-snap
     // honored automatically via getSegmentEndpoint. ESC cancels.
     if (fogEditMode === 'wall-rect' && isGM && e.button === 0) {
@@ -2791,7 +2791,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const raw = getSegmentEndpoint(e)
       if (!raw) return
       // Doors + windows snap onto the nearest wall so they always
-      // land on a wall's line — auto-split has a clean coincidence
+      // land on a wall's line - auto-split has a clean coincidence
       // to detect. Walls themselves stay free-form.
       const inter = (fogEditMode === 'wall') ? raw : snapPointToNearestWall(raw)
       if (!wallDrawStart) {
@@ -2799,9 +2799,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         setWallDrawHover(inter)
         return
       }
-      // Second click — commit the segment if it's not zero-length.
+      // Second click - commit the segment if it's not zero-length.
       if (inter.x === wallDrawStart.x && inter.y === wallDrawStart.y) {
-        // Same point — treat as cancel.
+        // Same point - treat as cancel.
         setWallDrawStart(null)
         setWallDrawHover(null)
         return
@@ -2822,7 +2822,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       setWallsLocal(prev => {
         // Auto-split: when a new segment overlaps an existing wall
         // segment on the same axis-aligned line, the new segment
-        // "punches a hole" in the wall — split the wall into the
+        // "punches a hole" in the wall - split the wall into the
         // pieces NOT under the new segment. Without this, a GM who
         // draws a continuous wall and then drops a door onto it
         // ends up with the wall AND the door coexisting at the
@@ -2834,14 +2834,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return next
       })
       scheduleWallsPersist()
-      // Chain — pre-seed the next segment from the just-clicked
+      // Chain - pre-seed the next segment from the just-clicked
       // endpoint so the GM can draw an L or run-of-walls without
       // re-clicking. Press ESC or pick a different tool to stop.
       setWallDrawStart(inter)
       setWallDrawHover(inter)
       return
     }
-    // Fog edit mode — paint or erase the cell under the cursor and
+    // Fog edit mode - paint or erase the cell under the cursor and
     // start tracking drag so handleMouseMove fills cells along the
     // drag path. Checked BEFORE every other mode so the GM can paint
     // fog without worrying about fall-through to token clicks.
@@ -2850,7 +2850,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (pos) {
         fogPaintingRef.current = true
         if (fogEditMode === 'rect' || fogEditMode === 'rect-erase') {
-          // Defer the state mutation to mouseup — during the drag
+          // Defer the state mutation to mouseup - during the drag
           // we only render a preview overlay so the GM can pick the
           // bounds. Capture float (sub-cell) coords so the marquee
           // box doesn't snap to grid intersections; a single-click
@@ -2874,7 +2874,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
       return
     }
-    // Throw-to-cell — click a valid cell to drop the grenade there.
+    // Throw-to-cell - click a valid cell to drop the grenade there.
     // Checked BEFORE moveMode because a GM/player in throwMode never
     // wants to accidentally fall through to move-click semantics.
     if (throwMode) {
@@ -2889,7 +2889,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (throwerTok) {
           const dist = Math.max(Math.abs(pos.gx - throwerTok.grid_x), Math.abs(pos.gy - throwerTok.grid_y))
           if (dist <= rangeCells) {
-            // Friendly-fire confirm — for Blast Radius weapons, scan
+            // Friendly-fire confirm - for Blast Radius weapons, scan
             // the 100ft far-band for any token whose character_id is
             // in the friendlyCharacterIds list. If we find any, prompt
             // the player by name + band before firing the throw.
@@ -2897,7 +2897,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             // without re-clicking the Attack button.
             // Friendly-fire scan now includes the attacker themselves
             // (the splash code no longer carves out the thrower per
-            // CRB p.71-72 — they take damage if they're in radius).
+            // CRB p.71-72 - they take damage if they're in radius).
             // Self-hits get a (YOU) tag in the confirm dialog so the
             // player knows what they're doing before they cook off a
             // grenade at their own feet.
@@ -2931,11 +2931,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           }
         }
       }
-      // Out-of-range click — cancel so the player can retry or back out.
+      // Out-of-range click - cancel so the player can retry or back out.
       onThrowCancel?.()
       return
     }
-    // Move mode — click a valid cell to move the token there
+    // Move mode - click a valid cell to move the token there
     if (moveMode) {
       const pos = getGridPos(e)
       if (pos && scene) {
@@ -2948,7 +2948,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         )
         if (moveTok) {
           const dist = Math.max(Math.abs(pos.gx - moveTok.grid_x), Math.abs(pos.gy - moveTok.grid_y))
-          // Open doors are passable — exclude them from the occupied
+          // Open doors are passable - exclude them from the occupied
           // set. Closed doors stay in `occupied` and additionally
           // get a clearer reject below so we can surface "the door is
           // closed" feedback rather than a silent no-op.
@@ -2956,7 +2956,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             tokens
               .filter(t => t.id !== moveTok.id)
               // Open doors pass through. Windows ALWAYS block movement
-              // (glass is always there — toggle only affects vision via
+              // (glass is always there - toggle only affects vision via
               // blinds, not movement). Walls always block.
               .filter(t => !(t.is_door && t.door_open))
               .map(t => `${t.grid_x},${t.grid_y}`)
@@ -3023,7 +3023,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     const pos = getGridPos(e)
     // Alt+left-click on ANY cell (empty or with a token) fires a ping.
-    // Bumped above the token-click branch per Xero — the previous
+    // Bumped above the token-click branch per Xero - the previous
     // "empty-cell only" gate meant you couldn't ping a specific NPC's
     // location, which is the most common case.
     if (pos && e.altKey) {
@@ -3037,7 +3037,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (tok) {
         // Door / window click intercept. Players (no drag permission
         // on this token) toggle immediately. GMs fall through to the
-        // normal select+drag flow — handleMouseUp checks "drag with
+        // normal select+drag flow - handleMouseUp checks "drag with
         // no move" on a door/window and toggles in that case, so the
         // GM has move + click-to-toggle on one button.
         if (tok.is_door || tok.is_window) {
@@ -3063,7 +3063,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         //   - GM: always (can reposition any token at any time)
         //   - Player: only their own PC token, AND only if they still have
         //     actions remaining this round. Once actions_remaining hits 0,
-        //     their token is locked until their next turn — playtest #10.
+        //     their token is locked until their next turn - playtest #10.
         //     Out of combat (no initiative entry exists), always draggable.
         const ownInitEntry = tok.character_id
           ? initiativeOrder.find((e: any) => e.character_id === tok.character_id)
@@ -3115,7 +3115,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
       }
     }
-    // No token or handle clicked — start panning (unless locked)
+    // No token or handle clicked - start panning (unless locked)
     setSelectedToken(null)
     onTokenSelect?.(null)
     console.warn('[playtest-trace] [TacticalMap] plain mousedown fell-through to pan branch', {
@@ -3135,7 +3135,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function handleMouseMove(e: React.MouseEvent) {
-    // Wall draw preview — when a wallDrawStart exists, the moving
+    // Wall draw preview - when a wallDrawStart exists, the moving
     // cursor traces a live segment to the cursor pos. Cheap state
     // update; render is gated on wallDrawHover changes. Doors and
     // windows snap to the nearest wall (matches commit-time
@@ -3146,11 +3146,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (inter && (!wallDrawHover || wallDrawHover.x !== inter.x || wallDrawHover.y !== inter.y)) {
         setWallDrawHover(inter)
       }
-      // Don't return — fall through is fine, but no other handler
+      // Don't return - fall through is fine, but no other handler
       // should fire while in segment mode.
       return
     }
-    // Fog drag — extend the paint/erase from mousedown along the
+    // Fog drag - extend the paint/erase from mousedown along the
     // cursor path. We touch each unique cell at most once per drag
     // so re-entering a cell mid-drag doesn't undo the operation.
     // Rect mode just updates the preview end cell; commit happens
@@ -3265,7 +3265,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // bounds here as one bulk write.
     if (fogPaintingRef.current) {
       fogPaintingRef.current = false
-      // Wall-rect commit — 4 wall segments forming a closed rectangle.
+      // Wall-rect commit - 4 wall segments forming a closed rectangle.
       if (fogEditMode === 'wall-rect' && wallRectStart && wallRectEnd) {
         const minX = Math.min(wallRectStart.x, wallRectEnd.x)
         const maxX = Math.max(wallRectStart.x, wallRectEnd.x)
@@ -3353,7 +3353,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // anywhere inside the token's existing footprint is a click, not
     // a move. The old check compared `pos.gx !== tok.grid_x`, which
     // treats the top-left cell as "stayed put" and every other
-    // footprint cell as "moved" — so clicking Minnie's center cell
+    // footprint cell as "moved" - so clicking Minnie's center cell
     // snapped her top-left to where the cursor landed. Footprint-
     // overlap test fixes both axes for any grid_w/grid_h. 1-cell
     // tokens are unchanged (the footprint collapses to one cell).
@@ -3400,7 +3400,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // Distance gate for player drags (playtest #24): a player dragging their
     // own PC token is performing a Move action, capped at 1 move = ~10ft =
     // 3 cells at 3ft/cell (or ceil(10/cell_feet) for other grid scales). GMs
-    // bypass this entirely — they can reposition any token anywhere.
+    // bypass this entirely - they can reposition any token anywhere.
     // Out-of-combat (no initiative entry) also bypasses.
     const isPlayerDrag = !isGM && tok && myCharacterId && tok.character_id === myCharacterId
     const ownInit = isPlayerDrag && tok ? initiativeOrder.find((ie: any) => ie.character_id === tok.character_id) : null
@@ -3410,11 +3410,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const dragDistCells = pos && tok ? Math.max(Math.abs(pos.gx - tok.grid_x), Math.abs(pos.gy - tok.grid_y)) : 0
     const outOfRange = isPlayerDrag && inCombat && moved && dragDistCells > maxMoveCells
     if (outOfRange) {
-      alert(`Can't move that far — max ${maxMoveCells} cell${maxMoveCells === 1 ? '' : 's'} (${cellFt * maxMoveCells}ft) per Move action.`)
+      alert(`Can't move that far - max ${maxMoveCells} cell${maxMoveCells === 1 ? '' : 's'} (${cellFt * maxMoveCells}ft) per Move action.`)
     }
     // Snap the token's anchor (top-left) cell from dragPosRef rather than
     // pos.gx/gy. dragPosRef tracks where the anchor center actually is,
-    // honoring dragging.offsetX/offsetY — so grabbing Minnie by her center
+    // honoring dragging.offsetX/offsetY - so grabbing Minnie by her center
     // cell keeps her top-left offset on release. Using pos.gx/gy directly
     // (the cursor's cell) would snap the anchor to the cursor and Minnie
     // would jump +N cells beyond where the drag ended.
@@ -3432,7 +3432,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const toY = newGy * cellPx + cellPx / 2
       tokenAnimRef.current.set(tokenId, { fromX: dragPosRef.current.px, fromY: dragPosRef.current.py, toX, toY, t: 0 })
     }
-    // Clear drag state synchronously — never block cursor release on DB I/O
+    // Clear drag state synchronously - never block cursor release on DB I/O
     dragPosRef.current = null
     if (dragRAFRef.current != null) {
       cancelAnimationFrame(dragRAFRef.current)
@@ -3447,18 +3447,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (error) console.warn('[TacticalMap] token move failed:', error)
         else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
       })
-      // Vehicle passenger sync — drag path. Helper handles the
+      // Vehicle passenger sync - drag path. Helper handles the
       // object-token + non-zero (dx,dy) gate internally; safe to call
       // for any token. Same helper is invoked from the MOVE-button
       // moveMode commit so both gestures carry passengers.
       if (tok) syncVehiclePassengers(tok, tokenId, dx, dy)
       // Player drag in combat costs 1 action. Parent handles the DB write
-      // via consumeAction (no log entry — drag movement is self-evident from
+      // via consumeAction (no log entry - drag movement is self-evident from
       // the token animation on the map).
       if (isPlayerDrag && inCombat && tok && tok.character_id) {
         onPlayerDragMove?.(tok.character_id)
       }
-      // GM drag of the active combatant's token — same 1-action cost as
+      // GM drag of the active combatant's token - same 1-action cost as
       // a player drag. Without this branch the GM could drag an active NPC
       // (e.g. Frankie) across the map repeatedly with actions_remaining
       // never decrementing, so the round wouldn't advance. GM drags of
@@ -3481,7 +3481,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (!pos) return
     const tok = getTokenAt(pos.gx, pos.gy)
     if (tok && onTokenClick) { onTokenClick(tok); return }
-    // Bare double-click on empty cell does nothing — ping moved to
+    // Bare double-click on empty cell does nothing - ping moved to
     // Alt+left-click on mousedown (single click). Removed Alt+double-
     // click duplicate path 2026-04-29.
   }
@@ -3507,7 +3507,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     await loadScenes()
     // Force-push the scene switch to every connected client. Even if the
     // postgres_changes UPDATE on tactical_scenes is delivered, the
-    // broadcast is a guaranteed nudge — particularly important so
+    // broadcast is a guaranteed nudge - particularly important so
     // players whose TacticalMap pane is closed open it on the new scene.
     tacticalChannelRef.current?.send({ type: 'broadcast', event: 'scene_activated', payload: { sceneId } })
   }
@@ -3545,7 +3545,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // both the inline panel onClick AND the popped-out controls (via
   // BroadcastChannel) can trigger them. They depend on bgImageRef +
   // containerRef which only exist in this component, so the popout
-  // can't run them itself — it sends a 'fit_to_map' / 'fit_to_screen'
+  // can't run them itself - it sends a 'fit_to_map' / 'fit_to_screen'
   // command and we run it here.
   async function fitToMap() {
     if (!bgImageRef.current || !containerRef.current || !scene) return
@@ -3578,7 +3578,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (containerRef.current) { containerRef.current.scrollTop = 0; containerRef.current.scrollLeft = 0 }
   }
 
-  // Scene-controls bus — keeps the popped-out controls window in sync.
+  // Scene-controls bus - keeps the popped-out controls window in sync.
   // State broadcasts go out whenever local UI state changes; commands
   // come in from the popout (Fit to Map, Fit to Screen, Place Tokens).
   const sceneControlsBusRef = useRef<SceneControlsBus | null>(null)
@@ -3637,7 +3637,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGM, campaignId])
 
-  // Outbound state broadcasts — fire when local state changes due to a
+  // Outbound state broadcasts - fire when local state changes due to a
   // user-driven setX in this window. Suppressed during inbound apply.
   useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('zoom', zoom) }, [zoom])
   useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('cellPx', cellPx) }, [cellPx])
@@ -3652,7 +3652,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (!tok) return
     await supabase.from('scene_tokens').update({ is_visible: !tok.is_visible }).eq('id', tokenId)
     setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, is_visible: !t.is_visible } : t))
-    // Notify parent so it can broadcast token_changed — previously players had
+    // Notify parent so it can broadcast token_changed - previously players had
     // to hard-refresh to see a Reveal. postgres_changes on scene_tokens may
     // not fire reliably for all clients (replication/RLS quirks); the
     // broadcast path is the reliable fallback.
@@ -3664,7 +3664,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     setTokens(prev => prev.filter(t => t.id !== tokenId))
   }
 
-  // No scene — show setup (z-index above NPC cards overlay)
+  // No scene - show setup (z-index above NPC cards overlay)
   if (!scene && isGM) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', position: 'relative', zIndex: 1200 }}>
@@ -3697,15 +3697,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   return (
     <div style={{ flex: 1, display: 'flex', background: '#111', overflow: 'hidden' }}>
       {/* GM scene-controls used to live here as an inline 130-px left
-          strip. Moved to a separate browser window — opened via the
+          strip. Moved to a separate browser window - opened via the
           "Map Setup" header button on the table page (table/page.tsx).
           State syncs over BroadcastChannel; see lib/scene-controls-bus.ts
           and the bus handlers earlier in this file. The map canvas now
           gets the full table-page width. */}
 
-      {/* Map canvas area — scrollable when zoomed */}
+      {/* Map canvas area - scrollable when zoomed */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {/* Zoom control + Share View — top right. Share View is the
+        {/* Zoom control + Share View - top right. Share View is the
             tactical-map sibling of the CampaignMap "👁 Share View"
             button (added 2026-05-11). GM-only one-shot push of the
             current scroll position + zoom + imgScale to all players.
@@ -3746,14 +3746,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           </div>
         </div>
 
-        {/* GM Fog editor — top left by default; draggable via the ⠿
+        {/* GM Fog editor - top left by default; draggable via the ⠿
             handle on the left edge. Compact when collapsed (just the
             toggle button); expands into paint/erase + bulk controls
             when in edit mode. Hidden entirely from players. */}
         {isGM && scene && (
           <div ref={fogBarRef} style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
             {/* Drag handle. ⠿ braille dots are universal "grippy" UX
-                — same icon GmNotes / NpcRoster / CampaignPins all use
+                - same icon GmNotes / NpcRoster / CampaignPins all use
                 for drag-to-reorder. mousedown starts the drag, doc-
                 level listeners track move + up so the cursor doesn't
                 have to stay on the handle. The drag is clamped to the
@@ -3763,14 +3763,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               title="Drag to reposition the fog/lighting toolbar"
               style={{ cursor: 'move', color: '#5a5550', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 4px', flexShrink: 0 }}>⠿</div>
             {/* Reset to default position. Only shown when the bar has
-                actually been moved — clean default state has no
+                actually been moved - clean default state has no
                 visible reset affordance. Click → snap back to top-left. */}
             {(fogBarPos.x !== 8 || fogBarPos.y !== 8) && (
               <button onClick={resetFogBarPos}
                 title="Reset toolbar to default position (top-left)"
                 style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', lineHeight: 1, cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}>↺</button>
             )}
-            {/* Day / Night toggle — outdoor scenes default 'day' (PCs
+            {/* Day / Night toggle - outdoor scenes default 'day' (PCs
                 see for miles, only walls block). Indoor/dark scenes
                 flip to 'night' (per-token sight_radius governs;
                 auto-fog kicks in beyond). Persists on
@@ -3783,7 +3783,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   await supabase.from('tactical_scenes').update({ lighting_mode: next }).eq('id', scene.id)
                   setScene(p => p ? { ...p, lighting_mode: next } : p)
                 }}
-                  title={isDay ? 'Day — sight unbounded, only walls block. Click to switch to Night.' : 'Night — per-token sight radius governs, auto-fog beyond. Click to switch to Day.'}
+                  title={isDay ? 'Day - sight unbounded, only walls block. Click to switch to Night.' : 'Night - per-token sight radius governs, auto-fog beyond. Click to switch to Day.'}
                   style={{ padding: '4px 10px', background: isDay ? '#2a2010' : '#0f1a2e', border: `1px solid ${isDay ? '#EF9F27' : '#7ab3d4'}`, borderRadius: '3px', color: isDay ? '#EF9F27' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   {isDay ? '🌞 Day' : '🌙 Night'}
                 </button>
@@ -3819,7 +3819,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   Erase
                 </button>
                 <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
-                {/* Select cursor — click any wall/door/window segment
+                {/* Select cursor - click any wall/door/window segment
                     to highlight it. The action panel below the toolbar
                     exposes delete + open/close + kind conversion. Same
                     half-cell hit threshold as the right-click delete
@@ -3830,19 +3830,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   ↖ Select
                 </button>
                 <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
-                {/* Structure tools — author thin wall/door/window
+                {/* Structure tools - author thin wall/door/window
                     segments on cell edges. Click two intersections to
                     place a segment; segments chain (the second click
                     becomes the next segment's start) so an L-shaped
                     wall is two clicks. ESC or pick a different tool
                     to stop. Right-click any segment to delete it. */}
                 <button onClick={() => { setFogEditMode('wall'); setWallDrawStart(null) }}
-                  title="Draw walls — click intersection-to-intersection. Right-click a segment to delete."
+                  title="Draw walls - click intersection-to-intersection. Right-click a segment to delete."
                   style={{ padding: '4px 10px', background: fogEditMode === 'wall' ? '#2a2010' : '#1a1a1a', border: `1px solid ${fogEditMode === 'wall' ? '#a08e75' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'wall' ? '#a08e75' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   🧱 Wall
                 </button>
                 <button onClick={() => { setFogEditMode('wall-rect'); setWallDrawStart(null); setWallRectStart(null); setWallRectEnd(null) }}
-                  title="Drag to draw a rectangular room — commits 4 wall segments at once. SHIFT to snap corners to grid."
+                  title="Drag to draw a rectangular room - commits 4 wall segments at once. SHIFT to snap corners to grid."
                   style={{ padding: '4px 10px', background: fogEditMode === 'wall-rect' ? '#2a2010' : '#1a1a1a', border: `1px solid ${fogEditMode === 'wall-rect' ? '#a08e75' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'wall-rect' ? '#a08e75' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   ⬛ Wall Rect
                 </button>
@@ -3852,7 +3852,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   🚪 Door
                 </button>
                 <button onClick={() => { setFogEditMode('window'); setWallDrawStart(null) }}
-                  title="Draw windows — block movement, vision passes through."
+                  title="Draw windows - block movement, vision passes through."
                   style={{ padding: '4px 10px', background: fogEditMode === 'window' ? '#0f1a2e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'window' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'window' ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   🪟 Window
                 </button>
@@ -3877,7 +3877,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   Clear All
                 </button>
                 <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
-                {/* Hint banner — shown only in structure-edit modes
+                {/* Hint banner - shown only in structure-edit modes
                     so the GM knows right-click + clear-walls exist
                     without digging through tooltips. */}
                 {(fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') && (
@@ -3900,7 +3900,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   </>
                 )}
                 <button onClick={() => setFogEditMode(null)}
-                  title="Exit fog editing — players see fog as-painted"
+                  title="Exit fog editing - players see fog as-painted"
                   style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   Done
                 </button>
@@ -3908,7 +3908,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             )}
           </div>
         )}
-        {/* Selection action panel — appears below the fog toolbar
+        {/* Selection action panel - appears below the fog toolbar
             when Select mode is active AND a segment is selected.
             Tracks the toolbar's drag position so the two move
             together. Exposes the per-segment ops the right-click
@@ -3946,7 +3946,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   {isOpen ? 'Close' : 'Open'}
                 </button>
               )}
-              {/* Convert kind — wall ↔ door ↔ window cycle. Each click
+              {/* Convert kind - wall ↔ door ↔ window cycle. Each click
                   steps to the next kind so the GM can fix a misplaced
                   segment without delete + redraw. */}
               <button onClick={() => {
@@ -4016,12 +4016,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         />
         </div>
 
-      {/* Selected token info — bottom left */}
+      {/* Selected token info - bottom left */}
       {selectedToken && (() => {
         const tok = tokens.find(t => t.id === selectedToken)
         if (!tok) return null
         // Players who are listed in this token's controlled_by_character_ids
-        // (e.g. the driver of a vehicle) get the Rot slider here too —
+        // (e.g. the driver of a vehicle) get the Rot slider here too -
         // matches the GM's instant-feedback experience for their own
         // controllable tokens. Size / Cells / Hide / Remove / Edit
         // stay GM-only since those are bookkeeping ops the player
@@ -4037,7 +4037,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               <button onClick={() => setSelectedToken(null)} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '14px', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
             </div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{tok.token_type} · {String.fromCharCode(65 + tok.grid_x)}{tok.grid_y + 1}</div>
-            {/* WP bar — object tokens only. Falls back to the matching
+            {/* WP bar - object tokens only. Falls back to the matching
                 vehicle's wp_max/wp_current when the token itself was
                 placed without those stats copied across. Same fallback
                 logic as ObjectCard so the two surfaces agree. */}
@@ -4060,7 +4060,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                 </div>
               )
             })()}
-            {/* Action buttons — split into two groups so the GM-only
+            {/* Action buttons - split into two groups so the GM-only
                 ones (Hide/Reveal/Remove/Edit) stay gated while Move
                 is available to anyone who can rotate the token (i.e.
                 listed in controlled_by_character_ids). */}
@@ -4072,7 +4072,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     Move
                   </button>
                 )}
-                {/* Popout — opens the full vehicle sheet in a new window
+                {/* Popout - opens the full vehicle sheet in a new window
                     for any vehicle token. Shown to everyone (not just
                     controllers) since the popout's own canEdit gate
                     decides who can mutate, and reading should be open. */}
@@ -4131,14 +4131,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                             return next
                           })
                         }}
-                        title={`Toggle firing arc — ${w.arc_degrees}° at mount ${w.mount_angle}°`}
+                        title={`Toggle firing arc - ${w.arc_degrees}° at mount ${w.mount_angle}°`}
                         style={{ padding: '2px 6px', background: active ? '#2a1a3e' : '#1a1a2e', border: `1px solid ${active ? '#c4a7f0' : '#2e2e5a'}`, borderRadius: '2px', color: active ? '#c4a7f0' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         🎯 {w.name}
                       </button>
                     )
                   })
                 })()}
-                {/* Multistory Path B — shunt this token to another
+                {/* Multistory Path B - shunt this token to another
                     scene. Hidden when there's only one scene in the
                     campaign (no destination to pick). */}
                 {isGM && scenes.length > 1 && (
@@ -4168,7 +4168,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                           .eq('id', tok.id)
                         setMovingTokenToScene(null)
                         setSelectedToken(null)
-                        // Local mirror — strip from current scene
+                        // Local mirror - strip from current scene
                         // immediately so the GM sees the token gone
                         // before realtime catches up.
                         setTokens(prev => prev.filter(t => t.id !== tok.id))
@@ -4215,7 +4215,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{(tok.rotation ?? 0).toFixed(0)}°</span>
                 </div>
                 )}
-                {/* Multi-cell footprint controls — objects only, GM only.
+                {/* Multi-cell footprint controls - objects only, GM only.
                     PCs/NPCs are always 1×1 (their visual is already cell-
                     sized via the scale slider). */}
                 {isGM && tok.token_type === 'object' && (
@@ -4240,7 +4240,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                       style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
                   </div>
                 )}
-                {/* Sight radius — only meaningful for PC tokens that
+                {/* Sight radius - only meaningful for PC tokens that
                     actually project vision. Range 0-20 cells; 6 is
                     the default (matches the legacy hardcoded value).
                     GM-only edit; the column is read at draw time so
@@ -4254,7 +4254,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                         setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, sight_radius_cells: v } : t))
                         await supabase.from('scene_tokens').update({ sight_radius_cells: v }).eq('id', tok.id)
                       }}
-                      title={`Vision radius — ${tok.sight_radius_cells ?? 30} cells`}
+                      title={`Vision radius - ${tok.sight_radius_cells ?? 30} cells`}
                       style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
                     <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{tok.sight_radius_cells ?? 30}</span>
                   </div>
@@ -4292,7 +4292,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 // Wrap in memo so re-renders triggered by parent updates that don't
 // change ANY of TacticalMap's props (chat messages, modal toggles,
 // rolls feed updates) skip the entire canvas component. Default
-// shallow comparison is sufficient — the parent passes data props
+// shallow comparison is sufficient - the parent passes data props
 // by reference (initiativeOrder / entries / campaignNpcs / vehicles
 // / mapTokens) and stabilized callbacks via useStableCallback. When
 // any data ref changes (real combat update), props differ and the

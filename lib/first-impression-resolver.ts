@@ -1,4 +1,4 @@
-// First Impression roll resolution — pure helpers extracted from
+// First Impression roll resolution - pure helpers extracted from
 // app/stories/[id]/table/page.tsx (executeRoll's FI branch) as Phase 1
 // of the FI streamline (see chat 2026-05-19). All three functions are
 // side-effect-free and unit-tested.
@@ -48,7 +48,7 @@ export function firstImpressionVibe(delta: number): string {
   return 'catastrophic first impression'
 }
 
-// Progression log message — what gets appended to the rolling PC's
+// Progression log message - what gets appended to the rolling PC's
 // progression-log when the First Impression resolves. Format:
 //   "Met <NpcName> - <vibe> (CMod <signed-delta>)."
 // Signed: '+2' / '+0' / '-3' (no '+' on negatives; matches the
@@ -60,21 +60,21 @@ export function firstImpressionProgressionMessage(npcName: string, delta: number
 }
 
 // ── Phase 2: side-effectful resolver ──────────────────────────────
-// Single entry point for "First Impression roll completed — write
+// Single entry point for "First Impression roll completed - write
 // everything." Used by the new <FirstImpressionModal> component to
 // resolve a roll in one call instead of routing through executeRoll +
 // RollModal. The legacy executeRoll FI branch stays alive during
 // Phase 2 as a fallback; Phase 3 removes it.
 //
-// Does three best-effort writes (each independent — a failure in one
+// Does three best-effort writes (each independent - a failure in one
 // doesn't block the others, and the caller surfaces the warnings):
-//   1. roll_log row — the dice + outcome (mirrors executeRoll's
+//   1. roll_log row - the dice + outcome (mirrors executeRoll's
 //      saveRollToLog shape for the FI label).
-//   2. bump_npc_relationship_cmod RPC — atomic accumulate-with-clamp
+//   2. bump_npc_relationship_cmod RPC - atomic accumulate-with-clamp
 //      on npc_relationships.relationship_cmod (±3). RPC runs as
 //      SECURITY DEFINER per c30a34d so non-GM PCs can write their
 //      own relationship rows.
-//   3. progression_log append — "Met X - <vibe> (CMod <signed>).";
+//   3. progression_log append - "Met X - <vibe> (CMod <signed>).";
 //      best-effort, never throws (matches appendProgressionEntry's
 //      contract).
 //

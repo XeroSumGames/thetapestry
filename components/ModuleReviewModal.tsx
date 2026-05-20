@@ -1,5 +1,5 @@
 'use client'
-// Phase 5 Sprint 3b — Review modal.
+// Phase 5 Sprint 3b - Review modal.
 //
 // When a subscriber's campaign is behind on module updates, this
 // modal lets them selectively apply the diff between their cloned
@@ -130,12 +130,12 @@ export default function ModuleReviewModal({
       scenes:   { added: [], changed: [], removed: [] },
       handouts: { added: [], changed: [], removed: [] },
     }
-    // ADDED — check all.
+    // ADDED - check all.
     for (const n of diff.npcs.added)     if (n._external_id) seed.npcs.added.push(n._external_id)
     for (const p of diff.pins.added)     if (p._external_id) seed.pins.added.push(p._external_id)
     for (const s of diff.scenes.added)   if (s._external_id) seed.scenes.added.push(s._external_id)
     for (const h of diff.handouts.added) if (h._external_id) seed.handouts.added.push(h._external_id)
-    // CHANGED — check unless locally edited.
+    // CHANGED - check unless locally edited.
     const seedChanged = <T extends { _external_id?: string; name?: string; title?: string }>(
       section: SectionDiff<T>,
       flags: Map<string, boolean>,
@@ -153,7 +153,7 @@ export default function ModuleReviewModal({
     seedChanged(diff.pins,     editedFlags.pins,     seed.pins.changed,     'name')
     seedChanged(diff.scenes,   editedFlags.scenes,   seed.scenes.changed,   'name')
     seedChanged(diff.handouts, editedFlags.handouts, seed.handouts.changed, 'title')
-    // REMOVED — leave unchecked by default.
+    // REMOVED - leave unchecked by default.
     setChecks(seed)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flagsLoaded, diff])
@@ -187,7 +187,7 @@ export default function ModuleReviewModal({
         accepted: checks,
       })
       if (result.errors.length > 0) {
-        setError(`Apply partial — ${result.errors.length} error(s):\n${result.errors.join('\n')}`)
+        setError(`Apply partial - ${result.errors.length} error(s):\n${result.errors.join('\n')}`)
         setApplying(false)
         return
       }
@@ -228,7 +228,7 @@ export default function ModuleReviewModal({
     border: '1px solid #2e2e2e',
   }
 
-  // Render helper — one checkbox row per change item.
+  // Render helper - one checkbox row per change item.
   function renderItems<T extends { _external_id?: string; name?: string; title?: string }>(
     items: T[],
     bucket: 'added' | 'changed' | 'removed',
@@ -257,7 +257,7 @@ export default function ModuleReviewModal({
               {label}
             </span>
             {locallyEdited && (
-              <span title="You've locally edited this row — skip by default to keep your changes"
+              <span title="You've locally edited this row - skip by default to keep your changes"
                 style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', flexShrink: 0 }}>
                 ⚠ Customized
               </span>
@@ -273,7 +273,7 @@ export default function ModuleReviewModal({
 
         <div style={header}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
-            📦 Review Update — {moduleName}
+            📦 Review Update - {moduleName}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#c4a7f0', fontSize: '22px', cursor: 'pointer' }}>×</button>
         </div>
@@ -321,7 +321,7 @@ export default function ModuleReviewModal({
             <div>
               <div style={sectionLabel}>✘ Removed upstream ({diff.totals.removed})</div>
               <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Carlito, sans-serif' }}>
-                Check any you also want to delete from your campaign. Default: keep them — the author removed them from the module but you may have become attached.
+                Check any you also want to delete from your campaign. Default: keep them - the author removed them from the module but you may have become attached.
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {renderItems(diff.npcs.removed,     'removed', 'npcs',     'NPC',     'name')}

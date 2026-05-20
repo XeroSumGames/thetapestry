@@ -12,7 +12,7 @@ import { findSection } from '../../../../lib/rules/sections'
 import { ARMOR } from '../../../../lib/xse-schema'
 import { rarityColor } from '../../../../lib/rarity-colors'
 
-export const metadata = { title: 'Armor — XSE §07' }
+export const metadata = { title: 'Armor - XSE §07' }
 
 export default function Page() {
   return (
@@ -60,7 +60,7 @@ export default function Page() {
         <P>
           Armor pieces stack additively. A character wearing
           Tactical Armor (DM 2), a Metal Helmet (DM 1), and carrying
-          a Riot Shield (DM 1, reactive — see below) is at{' '}
+          a Riot Shield (DM 1, reactive - see below) is at{' '}
           <Term>−4 DM</Term> against melee attackers, <Term>−3 DM</Term>{' '}
           against ranged.
         </P>
@@ -86,7 +86,7 @@ export default function Page() {
           This is a deliberate departure from the QS Table 7 default
           (where Riot Shield was a flat DM 2 that worked against
           everything). The reactive flag stops Riot Gear + Riot
-          Shield from double-stacking against ranged combat — they
+          Shield from double-stacking against ranged combat - they
           cover overlapping gaps in a head-on firefight.
         </P>
       </RuleSection>
@@ -118,7 +118,7 @@ export default function Page() {
           Phase 1 of the platform implementation surfaces a manual
           Upkeep button on each worn armor item. Phase 2 will
           auto-fire upkeep on any armor "involved" in a Moment of
-          Low Insight (1+1) during combat — same trigger pattern as
+          Low Insight (1+1) during combat - same trigger pattern as
           weapon upkeep.
         </P>
       </RuleSection>

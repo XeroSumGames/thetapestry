@@ -12,7 +12,7 @@ import { useCallback, useRef } from 'react'
 // the lifetime of the component (so memo'd children skip re-renders
 // when only this prop "changes"), but every invocation reads the
 // LATEST version of the wrapped function via a ref. Stale-closure
-// bugs are eliminated structurally — the wrapped function always
+// bugs are eliminated structurally - the wrapped function always
 // has fresh closure state.
 //
 // Mirrors the proposed `useEvent` / `useEffectEvent` pattern from the
@@ -27,7 +27,7 @@ import { useCallback, useRef } from 'react'
 //
 // Caveats:
 //   - DON'T use during render (no `useStableCallback(() => something)()` in render).
-//   - DON'T pass to useEffect's deps array as if it were a "real" dep —
+//   - DON'T pass to useEffect's deps array as if it were a "real" dep -
 //     it'll never change, so the effect won't re-run. Effects that
 //     genuinely need to re-run on the wrapped fn's logic should use
 //     real useCallback or an explicit dep.
@@ -38,7 +38,7 @@ export function useStableCallback<TArgs extends any[], TReturn>(
 ): (...args: TArgs) => TReturn {
   const ref = useRef(fn)
   // Update on every render so the next invocation reads the latest fn.
-  // Assignment in render body is fine — refs don't trigger re-renders.
+  // Assignment in render body is fine - refs don't trigger re-renders.
   ref.current = fn
   // Stable wrapper, never re-created. Calls ref.current at call-time
   // so the latest fn (with current closure state) is what runs.

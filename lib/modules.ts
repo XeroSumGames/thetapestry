@@ -1,4 +1,4 @@
-// Phase 5 Sprint 1 — Module System client helpers.
+// Phase 5 Sprint 1 - Module System client helpers.
 //
 // The MVP loop is: an author publishes a module_versions row with a
 // flat jsonb snapshot of their campaign's content; a subscriber
@@ -6,7 +6,7 @@
 // cloneModuleIntoCampaign. Cloned rows carry source_module_* pointers
 // so Phase B can diff+merge upstream updates without re-cloning.
 //
-// No RPC / stored procedure — everything runs through the supabase-js
+// No RPC / stored procedure - everything runs through the supabase-js
 // client so RLS applies. The clone is not atomic at the DB level; if a
 // later step fails the caller is expected to surface the error and
 // leave the partial state visible (same pattern the existing setting
@@ -114,11 +114,11 @@ export interface ModuleListing {
   // Curation column added in sql/modules-sort-order.sql. Lower number
   // sorts first; NULL sorts LAST. Tiebreaker is created_at DESC.
   sort_order: number | null
-  // Active subscription count — denormalized via the trigger in
+  // Active subscription count - denormalized via the trigger in
   // sql/modules-subscriber-count.sql. Surfaced as the "downloads"
   // number on the marketplace card.
   subscriber_count: number | null
-  // Ratings aggregate — maintained by trigger in
+  // Ratings aggregate - maintained by trigger in
   // sql/modules-phase-c-reviews.sql. avg_rating is 0 when no reviews;
   // rating_count is 0 → don't render the chip on cards.
   avg_rating: number | null
@@ -192,7 +192,7 @@ export async function listAvailableModules(
   // Try with the subscriber_count column first (added in
   // sql/modules-subscriber-count.sql). If the migration hasn't been
   // applied on this database yet, PostgREST 400s on the missing
-  // column — retry without it instead of falling all the way through
+  // column - retry without it instead of falling all the way through
   // to the empty-state path. The marketplace card just shows "📥 0"
   // for every module until the migration runs + the trigger backfills.
   const fullSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, avg_rating, rating_count, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
@@ -206,7 +206,7 @@ export async function listAvailableModules(
     .order('created_at', { ascending: false })
 
   if (error && /subscriber_count/.test(error.message ?? '')) {
-    // Migration not applied yet — retry without the column.
+    // Migration not applied yet - retry without the column.
     const retry = await supabase
       .from('modules')
       .select(liteSelect)
@@ -281,7 +281,7 @@ async function listAvailableModulesFallback(
 // handouts. Each section records source_module_id +
 // source_module_version_id on the cloned rows.
 //
-// Not atomic — if a later step fails, earlier rows stay committed.
+// Not atomic - if a later step fails, earlier rows stay committed.
 // Callers should surface the error message alongside "campaign was
 // partially seeded" the same way the setting-seed pipeline already
 // does.
@@ -305,7 +305,7 @@ export async function cloneModuleIntoCampaign(
 
   const counts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0 }
 
-  // 2. Pins first — NPCs and (in the future) pin-anchored content
+  // 2. Pins first - NPCs and (in the future) pin-anchored content
   // reference them. We key the remap on _external_id when present,
   // falling back to name for older snapshots that didn't capture it.
   // Lenient reader (per the file header comment): tolerate `title` as
@@ -317,11 +317,11 @@ export async function cloneModuleIntoCampaign(
   const pinNameMap: Record<string, string> = {}
   if (snapshot.pins && snapshot.pins.length > 0) {
     const pinRows: any[] = []
-    const pinSourceForRow: any[] = []  // parallel array — preserves source pin per inserted row for the remap pass
+    const pinSourceForRow: any[] = []  // parallel array - preserves source pin per inserted row for the remap pass
     snapshot.pins.forEach((p: any, i: number) => {
       const resolvedName = p.name ?? p.title
       if (!resolvedName) {
-        console.warn('[cloneModuleIntoCampaign] pin row has no name/title — skipping:', p)
+        console.warn('[cloneModuleIntoCampaign] pin row has no name/title - skipping:', p)
         return
       }
       pinRows.push({
@@ -357,17 +357,17 @@ export async function cloneModuleIntoCampaign(
     }
   }
 
-  // 3. NPCs — remap campaign_pin_id through pinMap / pinNameMap. Keep
+  // 3. NPCs - remap campaign_pin_id through pinMap / pinNameMap. Keep
   // WP/RP current at max on clone since a module-derived campaign is
   // fresh, no matter how worn the source campaign's NPCs got.
   // Lenient: legacy snapshots stored the source pin id under
-  // `campaign_pin_id` (campaign-snapshot shape) — fall through to that
+  // `campaign_pin_id` (campaign-snapshot shape) - fall through to that
   // before giving up. NPCs with no name skip + warn.
   const npcMap: Record<string, string> = {}
   if (snapshot.npcs && snapshot.npcs.length > 0) {
     const filteredNpcs = (snapshot.npcs as any[]).filter((n: any) => {
       if (!n.name) {
-        console.warn('[cloneModuleIntoCampaign] npc has no name — skipping:', n)
+        console.warn('[cloneModuleIntoCampaign] npc has no name - skipping:', n)
         return false
       }
       return true
@@ -411,7 +411,7 @@ export async function cloneModuleIntoCampaign(
     inserted?.forEach((row: any, i: number) => {
       const src = filteredNpcs[i]
       if (src._external_id) npcMap[src._external_id] = row.id
-      // Legacy shape — campaign-snapshot stored source DB id at `id`.
+      // Legacy shape - campaign-snapshot stored source DB id at `id`.
       if (src.id) npcMap[src.id] = row.id
     })
     counts.npcs = inserted?.length ?? 0
@@ -419,7 +419,7 @@ export async function cloneModuleIntoCampaign(
 
   // 4. Scenes + their tokens. Pre-fix this was a `for ... of` loop over
   // scenes with one INSERT round-trip per scene + a nested INSERT for
-  // each scene's tokens — so 20 scenes meant 40 sequential round-trips.
+  // each scene's tokens - so 20 scenes meant 40 sequential round-trips.
   // Now we do two batched INSERTs: one for all scenes, one for all
   // tokens. Postgres preserves row order on `INSERT ... RETURNING` for
   // multi-row inserts, so we correlate created scene ids back to the
@@ -435,7 +435,7 @@ export async function cloneModuleIntoCampaign(
       const flat = sceneRaw?.scene ? { ...sceneRaw.scene, tokens: sceneRaw.tokens } : sceneRaw
       const { tokens, _external_id: _unused, ...rest } = flat
       if (!rest.name) {
-        console.warn('[cloneModuleIntoCampaign] scene has no name — skipping:', sceneRaw)
+        console.warn('[cloneModuleIntoCampaign] scene has no name - skipping:', sceneRaw)
         continue
       }
       scenesPrepared.push({ rest, tokens })
@@ -537,7 +537,7 @@ export async function cloneModuleIntoCampaign(
     .select('id')
     .single()
   if (subErr) {
-    // Not fatal — the content is already cloned. Surface the error
+    // Not fatal - the content is already cloned. Surface the error
     // so the caller can warn, but don't roll anything back.
     throw new Error(`module_subscription: ${subErr.message}`)
   }
@@ -570,7 +570,7 @@ export async function cloneModuleIntoCampaign(
 // Returns the author's module for this campaign (if any). Used by
 // the edit page to decide between "Publish as Module" (first time)
 // and "Publish New Version" (re-publish). Only the author's own
-// module counts — two GMs can't co-author the same source today.
+// module counts - two GMs can't co-author the same source today.
 export async function getModuleForCampaign(
   supabase: SupabaseClient,
   campaignId: string,
@@ -605,7 +605,7 @@ export async function getModuleForCampaign(
 // _external_id so cross-row links (NPC → pin, scene token → NPC)
 // survive the clone into a new campaign. Per-session state
 // (wp_current / rp_current / death_countdown / is_active etc) is
-// intentionally omitted — a cloned module should start fresh.
+// intentionally omitted - a cloned module should start fresh.
 export async function buildCampaignSnapshot(
   supabase: SupabaseClient,
   campaignId: string,
@@ -690,7 +690,7 @@ export async function buildCampaignSnapshot(
     }
     snapshot.scenes = sceneRows.map((s: any) => {
       const rawTokens = tokensByScene[s.id] ?? []
-      // Character-linked tokens (PC tokens) never clone — PCs don't
+      // Character-linked tokens (PC tokens) never clone - PCs don't
       // travel with modules. Filter them out at snapshot time.
       const usefulTokens = rawTokens.filter((t: any) => !t.character_id)
       const tokens = usefulTokens.map((t: any) => ({
@@ -781,7 +781,7 @@ export async function publishModuleVersion(
   let moduleId = params.moduleId
 
   if (!moduleId) {
-    // First publish — create the module row. Listed modules enter
+    // First publish - create the module row. Listed modules enter
     // Thriver moderation as 'pending'; private / unlisted skip the
     // queue.
     const insertRow: any = {
@@ -799,7 +799,7 @@ export async function publishModuleVersion(
     if (error || !data) throw new Error(`Create module failed: ${error?.message ?? 'unknown'}`)
     moduleId = data.id as string
   } else {
-    // Re-publish — keep the module row alive, refresh metadata.
+    // Re-publish - keep the module row alive, refresh metadata.
     // Listed re-submissions reset moderation to 'pending'; other
     // tiers stay approved.
     const update: any = {
@@ -866,7 +866,7 @@ export function bumpSemver(current: string, kind: 'major' | 'minor' | 'patch'): 
 
 // ── Subscription-side helpers (Phase 5 Sprint 3b) ──────────────
 
-// Fork — user opts out of future update prompts. The module
+// Fork - user opts out of future update prompts. The module
 // subscription stays so the version history UI can still show
 // what they cloned from, but `module_version_published` triggers
 // skip forked rows.
@@ -881,7 +881,7 @@ export async function forkSubscription(
   if (error) throw new Error(`Fork failed: ${error.message}`)
 }
 
-// Unsubscribe — breaks the link entirely. Cloned rows stay in
+// Unsubscribe - breaks the link entirely. Cloned rows stay in
 // place (source_module_version_id preserved on them so the user
 // can see where they came from) but no future updates land.
 export async function unsubscribeSubscription(
@@ -911,19 +911,19 @@ export async function reactivateSubscription(
 // Walks the diff between the subscriber's cloned content and the
 // target version's snapshot, applying the changes the user
 // selected in the Review modal. Atomicity: not wrapped in a
-// transaction — each bucket is applied in order; errors surface
+// transaction - each bucket is applied in order; errors surface
 // mid-way and the caller re-queries.
 //
 // Apply semantics, per change bucket:
-//   ADDED    — INSERT a fresh row in the target campaign/community
+//   ADDED    - INSERT a fresh row in the target campaign/community
 //              carrying the new snapshot's data + source_module_*
 //              pointers to the new version id
-//   CHANGED  — UPDATE the existing cloned row's fields in place,
+//   CHANGED  - UPDATE the existing cloned row's fields in place,
 //              including source_module_version_id → new version
 //              id (the flip_edited_since_clone trigger sees the
 //              source_module_version_id change and skips marking
 //              edited_since_clone)
-//   REMOVED  — DELETE the cloned row (only if the user opted in;
+//   REMOVED  - DELETE the cloned row (only if the user opted in;
 //              default is to keep removed rows since the GM may
 //              have become attached to them)
 //
@@ -1044,7 +1044,7 @@ export async function applyModuleUpdate(
         })
         .eq('campaign_id', campaignId)
         .eq('source_module_id', sourceModuleId)
-        .ilike('name', p.name) // loose match — pins don't have a stable id back to external
+        .ilike('name', p.name) // loose match - pins don't have a stable id back to external
       if (error) errors.push(`pins.changed[${xid}]: ${error.message}`)
       else applied.pins.changed++
     }
@@ -1059,7 +1059,7 @@ export async function applyModuleUpdate(
         // Without a stable external-id back-ref, we match by name
         // captured at removal time via the snapshot's previous copy.
         // Caller passes the old snapshot's pin name via the _external_id
-        // key (the xid itself was an id at publish time) — best-effort.
+        // key (the xid itself was an id at publish time) - best-effort.
         .eq('id', xid)  // may no-op if xid isn't a local id; that's fine
       if (error) errors.push(`pins.removed[${xid}]: ${error.message}`)
       else applied.pins.removed++
@@ -1296,7 +1296,7 @@ export async function applyModuleUpdate(
     }
   }
 
-  // Finally — rehome the subscription to the new version.
+  // Finally - rehome the subscription to the new version.
   const { error: subErr } = await supabase
     .from('module_subscriptions')
     .update({ current_version_id: newVersionId, status: 'active' })
@@ -1336,7 +1336,7 @@ export async function archiveModule(
     return { deleted: true, subscriberCount: 0 }
   }
 
-  // Archive — stamp archived_at and notify all active subscribers.
+  // Archive - stamp archived_at and notify all active subscribers.
   const { data: mod, error: modErr } = await supabase
     .from('modules')
     .update({ archived_at: new Date().toISOString(), archived_by: user.id })
@@ -1380,7 +1380,7 @@ export async function archiveModule(
 // ── Module reviews ──────────────────────────────────────────────────
 // Surfaced on /rumors/[id] under version history. RLS allows insert
 // only when the caller has an active module_subscriptions row for the
-// module — the policy is in sql/modules-phase-c-reviews.sql.
+// module - the policy is in sql/modules-phase-c-reviews.sql.
 
 export interface ModuleReview {
   id: string

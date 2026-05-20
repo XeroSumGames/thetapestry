@@ -11,7 +11,7 @@ import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
 
-// GM Tools section constants (lifted from the retired /edit page —
+// GM Tools section constants (lifted from the retired /edit page -
 // the Edit form is now inlined on the hub itself).
 const MAP_STYLES = [
   ['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'],
@@ -80,13 +80,13 @@ export default function CampaignPage() {
   const [assignedCharName, setAssignedCharName] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
-  // (cloning state removed — Clone button retired Apr 2026)
+  // (cloning state removed - Clone button retired Apr 2026)
   const [showPregens, setShowPregens] = useState(false)
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
-  // GM Tools (edit form) state — lifted from the retired /edit page.
+  // GM Tools (edit form) state - lifted from the retired /edit page.
   // These are GM-or-Thriver-only; non-GM members never see this surface.
   const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -124,7 +124,7 @@ export default function CampaignPage() {
         setEditMapCenter({ lat: camp.map_center_lat, lng: camp.map_center_lng })
       }
 
-      // Thriver lookup — drives gmLike for godmode UI. Thrivers visiting
+      // Thriver lookup - drives gmLike for godmode UI. Thrivers visiting
       // a campaign they don't GM still see the GM-side hub (no Rejoin /
       // Leave / My Survivor cards, full member-management controls).
       const { data: profile } = await supabase
@@ -151,7 +151,7 @@ export default function CampaignPage() {
       }
 
       // Module publish + subscriber-update state moved to
-      // <StoryActionBar> — that component fetches its own module
+      // <StoryActionBar> - that component fetches its own module
       // context. Hub no longer needs the duplicate query.
 
       // Check if this player was kicked from the current session
@@ -227,7 +227,7 @@ export default function CampaignPage() {
   // campaign_members row + clears any character_states they own in
   // this campaign so a future re-join lands them clean. Confirms by
   // username so a misclick on the wrong row can't silently nuke
-  // someone. Their character itself is preserved — only their seat
+  // someone. Their character itself is preserved - only their seat
   // at this table is removed. Thriver godmode bypasses the GM check
   // (DB RLS already widened to admit them).
   async function handleRemoveMember(member: Member) {
@@ -248,7 +248,7 @@ export default function CampaignPage() {
     setMembers(prev => prev.filter(m => m.user_id !== member.user_id))
   }
 
-  // GM Tools — Save form (Name / Description / Map Style / Map Center).
+  // GM Tools - Save form (Name / Description / Map Style / Map Center).
   // Lifted from the retired /edit page. GM-or-Thriver gated at the JSX
   // call-site; the function itself trusts the caller.
   async function handleEditSave() {
@@ -271,7 +271,7 @@ export default function CampaignPage() {
     setTimeout(() => setEditSaved(false), 2000)
   }
 
-  // GM Tools — Sync to Seed (Thriver only, non-custom settings). Overwrites
+  // GM Tools - Sync to Seed (Thriver only, non-custom settings). Overwrites
   // setting_seed_* rows with this campaign's NPCs/pins/scenes/handouts so
   // future campaigns using the same setting inherit the curated state.
   async function handleEditSyncSeed() {
@@ -355,19 +355,19 @@ export default function CampaignPage() {
       .eq('user_id', userId)
     if (error) {
       console.error('[handleRejoin] failed:', error.message)
-      alert('Could not rejoin — please try again or ask the GM.')
+      alert('Could not rejoin - please try again or ask the GM.')
       setRejoining(false)
       return
     }
     setAmKicked(false)
     setRejoining(false)
-    // Instantly launch the game — match the Launch button behavior
+    // Instantly launch the game - match the Launch button behavior
     // (new tab) so the player doesn't have to click Launch as a
     // second step right after rejoining. Last minute fix #3.
     window.open(`/stories/${id}/table`, '_blank', 'noopener,noreferrer')
   }
 
-  // (handleClone removed — the in-app Clone button was retired in
+  // (handleClone removed - the in-app Clone button was retired in
   // favor of the Module marketplace flow. To duplicate a campaign,
   // publish it as a Module and subscribe to it from a fresh campaign,
   // OR use Snapshot → Download to export a portable JSON.)
@@ -413,7 +413,7 @@ export default function CampaignPage() {
         </div>
       )}
 
-      {/* Canonical campaign-page header — setting label, role chip,
+      {/* Canonical campaign-page header - setting label, role chip,
           campaign name, description, red separator, and the action
           bar (full 7 buttons for GM, slim Launch/Share for player +
           inline Rejoin/Leave via extraButtons so all player actions
@@ -431,7 +431,7 @@ export default function CampaignPage() {
         </>
       ) : undefined} />
 
-      {/* Invite link — both views */}
+      {/* Invite link - both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Invite Link</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -448,7 +448,7 @@ export default function CampaignPage() {
         </div>
       </div>
 
-      {/* My Survivor — player only (Thriver godmode also hides this) */}
+      {/* My Survivor - player only (Thriver godmode also hides this) */}
       {!gmLike && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
@@ -467,7 +467,7 @@ export default function CampaignPage() {
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
                 style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
-                <option value="">— Select a survivor —</option>
+                <option value="">- Select a survivor -</option>
                 {myCharacters.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -478,7 +478,7 @@ export default function CampaignPage() {
               </button>
             </div>
           )}
-          {/* Shortcut row — three character-creation paths so a new player
+          {/* Shortcut row - three character-creation paths so a new player
               doesn't have to find the sidebar to make their first survivor.
               Each link carries ?return=<story-id> so the creation pages can
               bounce the new player right back here when they're done. */}
@@ -496,7 +496,7 @@ export default function CampaignPage() {
               Random Character
             </a>
           </div>
-          {/* Pregen selection — only for settings with pregens */}
+          {/* Pregen selection - only for settings with pregens */}
           {campaign.setting && SETTING_PREGENS[campaign.setting] && (
             <div style={{ marginTop: '10px' }}>
               <button onClick={() => setShowPregens(!showPregens)}
@@ -524,7 +524,7 @@ export default function CampaignPage() {
         </div>
       )}
 
-      {/* Members list — both views */}
+      {/* Members list - both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
         <div style={{ fontSize: '13px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
           Members ({members.length})
@@ -555,7 +555,7 @@ export default function CampaignPage() {
                       </a>
                     )}
                     {/* GM-or-Thriver Remove. Hidden for the GM's own
-                        row to prevent self-removal — a campaign needs
+                        row to prevent self-removal - a campaign needs
                         a GM. Thrivers can remove members on any
                         campaign via godmode. */}
                     {gmLike && !isThisGM && (
@@ -573,7 +573,7 @@ export default function CampaignPage() {
         )}
       </div>
 
-      {/* GM Tools — Edit form, lifted from the retired /edit page (2026-05-15).
+      {/* GM Tools - Edit form, lifted from the retired /edit page (2026-05-15).
           GM-or-Thriver only. Story Name / Description / Default Map Style /
           Map Center Location, with Save Changes. Seed Management sub-section
           is Thriver-only and only visible on non-custom settings. */}
@@ -649,7 +649,7 @@ export default function CampaignPage() {
               </div>
             )}
             {!editMapCenter && (
-              <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>No custom center — map uses default view</div>
+              <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>No custom center - map uses default view</div>
             )}
           </div>
 
@@ -669,7 +669,7 @@ export default function CampaignPage() {
             )}
           </div>
 
-          {/* Sync to Seed — Thriver only, non-custom settings. Overwrites
+          {/* Sync to Seed - Thriver only, non-custom settings. Overwrites
               setting_seed_* tables with this campaign's curated content. */}
           {isThriver && campaign.setting && campaign.setting !== 'custom' && (
             <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e' }}>
@@ -698,7 +698,7 @@ export default function CampaignPage() {
         </Link>
       </div>
 
-      {/* ModulePublishModal lives inside <StoryActionBar> now —
+      {/* ModulePublishModal lives inside <StoryActionBar> now -
           opening from the Publish button there. */}
 
     </div>

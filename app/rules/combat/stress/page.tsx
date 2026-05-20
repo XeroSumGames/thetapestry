@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Stress & Breaking Point — XSE SRD §06' }
+export const metadata = { title: 'Stress & Breaking Point - XSE SRD §06' }
 
 const BREAKING: Array<[number, string, string]> = [
   [2, 'Catatonia', '−1 on Dexterity checks'],
@@ -38,15 +38,15 @@ export default function Page() {
             Each character starts with a <Term>Stress Level</Term> of 0,
             tracked on a 5-pip bar. Brutal scenes push Stress up; reaching
             pip 5 triggers a last-chance <Term>Hold It Together</Term> save
-            — and if that fails, a Breaking Point reaction from Table 13.
+            - and if that fails, a Breaking Point reaction from Table 13.
           </>
         }
       />
 
       <RuleSection id="stress-check" title="Stress Check">
         <P>
-          When faced with extreme stress or emotional trauma — at the
-          GM's discretion or when the narrative calls for it — PCs make a{' '}
+          When faced with extreme stress or emotional trauma - at the
+          GM's discretion or when the narrative calls for it - PCs make a{' '}
           <Term>Stress Check</Term>: roll <Term>2d6 + Stress Modifier</Term>{' '}
           (RSN + ACU AMod) plus any CMods the GM applies. Standard outcome
           ladder: <Term>Success (9+)</Term> means the character holds it
@@ -58,7 +58,7 @@ export default function Page() {
           character's Stress bar fires this roll. The result broadcasts
           to the table via the dice feed, and the GM (or the player on a
           GM nod) applies the +1 manually using the ± buttons. The Stress
-          increment is not auto-applied — keeps the GM in the loop on
+          increment is not auto-applied - keeps the GM in the loop on
           severity judgement.
         </P>
         <P>
@@ -78,7 +78,7 @@ export default function Page() {
           <Term>2d6 + RSN AMod + ACU AMod + CMod</Term>.
         </P>
         <P>
-          Threshold is <Term>7 or above</Term> — lower than a standard
+          Threshold is <Term>7 or above</Term> - lower than a standard
           Success, because this is the cliff edge. On a Success, Stress
           drops back to <Term>4</Term> (one pip cleared, the bar still
           full of warning). On a Failure, Stress stays at 5 and the
@@ -86,7 +86,7 @@ export default function Page() {
         </P>
         <P>
           The Hold It Together save is the only Stress Check with a
-          non-standard success threshold. CMods apply normally — Psychology*
+          non-standard success threshold. CMods apply normally - Psychology*
           help from another PC, Luxury Rations consumed before the brink,
           or whatever the GM judges relevant.
         </P>
@@ -127,7 +127,7 @@ export default function Page() {
         <P>
           Characters can reduce their Stress Level by 1 by spending at
           least <Term>8 uninterrupted in-game hours</Term> free from
-          combat, interpersonal conflict, or environmental threat — while
+          combat, interpersonal conflict, or environmental threat - while
           doing something they enjoy (fishing, reading, drinking with
           friends).
         </P>

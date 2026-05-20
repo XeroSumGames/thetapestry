@@ -12,7 +12,7 @@ import { FEATURED_SETTING_SLUGS, settingLabel, settingAccent } from '../../lib/c
 import { createClient } from '../../lib/supabase-browser'
 import { listAvailableModules, type ModuleListing } from '../../lib/modules'
 
-// /campfire — two-mode hub.
+// /campfire - two-mode hub.
 //
 //   No ?tab=… in the URL  → portal/landing layout (CampfirePortal): a card
 //                           grid with Setting Hubs (DZ + Kings Crossroads)
@@ -47,7 +47,7 @@ const TABS: TabDef[] = [
   { id: 'homebrew',     label: 'Homebrew',           accent: '#1a4a6b', soon: true },
 ]
 
-// Top-level switcher. Reading ?tab once on render is enough — useState is
+// Top-level switcher. Reading ?tab once on render is enough - useState is
 // then wired to it inside the tab-strip so the URL stays in sync as the
 // user clicks tabs. Clicking a portal card sets ?tab=<id> via Link, which
 // flips the page over to the tab-strip mode automatically.
@@ -99,13 +99,13 @@ const EXPLORE: ExploreCard[] = [
 ]
 
 // Picks the single best module to feature on the portal. Ranks by:
-//   1) listed visibility (private/unlisted skipped — they're not for
+//   1) listed visibility (private/unlisted skipped - they're not for
 //      discovery)
 //   2) explicit curation via sort_order (lower = higher priority,
 //      NULL deprioritized)
 //   3) highest avg_rating among modules with at least 1 review
 //   4) most subscribers as final tiebreaker
-// Returns null when no module qualifies — the portal then renders no
+// Returns null when no module qualifies - the portal then renders no
 // Featured row (graceful empty).
 function pickFeatured(list: ModuleListing[]): ModuleListing | null {
   const listed = list.filter(m => m.visibility === 'listed')
@@ -128,7 +128,7 @@ function CampfirePortal() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
-  // Featured module — null while loading, then either a ModuleListing
+  // Featured module - null while loading, then either a ModuleListing
   // or null (empty state). Rendered between Setting Hubs and Explore.
   const [featured, setFeatured] = useState<ModuleListing | null>(null)
   const [featuredLoaded, setFeaturedLoaded] = useState(false)
@@ -204,7 +204,7 @@ function CampfirePortal() {
           </div>
         </div>
 
-        {/* Featured Module — single hero card driving people into
+        {/* Featured Module - single hero card driving people into
             the marketplace. Hidden when no listed modules exist (the
             ranker returns null). The card mirrors the ⭐ chip + cover
             treatment from /rumors so it's recognizably-the-same
@@ -326,7 +326,7 @@ function CampfireTabStrip() {
   const [activeTab, setActiveTab] = useState<TabId>(initial)
 
   // Keep ?tab in sync as the user clicks. Replace (not push) preserves
-  // back-button behavior — back from a tab returns to the portal.
+  // back-button behavior - back from a tab returns to the portal.
   useEffect(() => {
     const current = searchParams.get('tab')
     if (current === activeTab) return
@@ -409,7 +409,7 @@ function CampfireTabStrip() {
                 onMouseLeave={e => { if (!t.soon && !selected) (e.currentTarget as HTMLButtonElement).style.color = '#d4cfc9' }}
               >
                 {t.label}
-                {t.soon && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#cce0f5', opacity: .4 }}>— soon</span>}
+                {t.soon && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#cce0f5', opacity: .4 }}>- soon</span>}
                 {t.preview && <span style={{ marginLeft: '6px', fontSize: '13px', color: t.accent, opacity: .7 }}>· preview</span>}
               </button>
             )
@@ -432,7 +432,7 @@ function CampfireTabStrip() {
               {active.label}
             </div>
             <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
-              Coming soon. Custom rules, house variants, fan content — all in one place.
+              Coming soon. Custom rules, house variants, fan content - all in one place.
             </div>
           </div>
         )}

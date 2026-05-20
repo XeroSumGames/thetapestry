@@ -4,7 +4,7 @@
 // Lets a GM stand the community's Leader NPC in for a PC during
 // recruitment so a community can grow itself between sessions.
 // "I sent Marcus to recruit the doctor while the party was off in
-// the woods" — instead of dragging that into the table page, the GM
+// the woods" - instead of dragging that into the table page, the GM
 // resolves it on the community admin surface.
 //
 // What this is NOT: it's not the table-page recruitment modal in a
@@ -13,7 +13,7 @@
 //   - No Apprentice unlock (apprentices bond 1:1 to PCs).
 //   - No Inspiration auto-stack (we'd need NPC skill levels first +
 //     those are loose; SRD treats the +1/level as a PC habit anyway).
-//   - First-impression CMod stays 0 — npc_relationships.relationship_cmod
+//   - First-impression CMod stays 0 - npc_relationships.relationship_cmod
 //     tracks PC↔NPC, not NPC↔NPC. GM can dial CMod manually if they want
 //     to model "they already trust each other."
 //
@@ -93,7 +93,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
   const [rolling, setRolling] = useState(false)
   const [result, setResult] = useState<RollResult | null>(null)
 
-  // Initial load — leader + candidate list. Candidates = revealed,
+  // Initial load - leader + candidate list. Candidates = revealed,
   // alive NPCs in this campaign who aren't already in any community.
   useEffect(() => {
     let cancelled = false
@@ -111,7 +111,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
           .eq('campaign_id', campaignId)
           .neq('status', 'dead')
           .order('name'),
-        // Every active community_members.npc_id in this campaign — used
+        // Every active community_members.npc_id in this campaign - used
         // to (a) filter the candidate list, (b) compute the poaching
         // -3 CMod when the picked NPC is in another community.
         supabase.from('community_members')
@@ -152,7 +152,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
   }, [community.leader_npc_id, campaignId, supabase])
 
   // Re-evaluate poaching whenever target picks change. Reads the
-  // claim map we cached on window above (intentionally local — we
+  // claim map we cached on window above (intentionally local - we
   // don't need this in React state, just at compute time).
   useEffect(() => {
     if (!targetId) { setPoachingId(null); return }
@@ -179,7 +179,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
     if (!leader || !target || !skill) return
     if (approach === 'conscript') {
       const ack = confirm(
-        `Conscription — pressgang.\n\n` +
+        `Conscription - pressgang.\n\n` +
         `This is coercion, not persuasion. ${leader.name} must have established a credible threat (weapons drawn, leverage held, escape cut off, etc.) before this roll can proceed.\n\n` +
         `Confirm the threat is credible and roll?`
       )
@@ -214,11 +214,11 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
         memberId = data?.id ?? null
       }
     }
-    // Roll log row — tag metadata.proxy = true so the feed knows it
+    // Roll log row - tag metadata.proxy = true so the feed knows it
     // was an NPC-on-NPC off-screen action, not a PC at the table.
     const logLabel = isSuccess
       ? `🤝 ${leader.name} recruited ${target.name} as a ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)} to ${community.name} (off-screen)`
-      : `🤝 ${leader.name} tried to recruit ${target.name} (off-screen) — ${outcome}`
+      : `🤝 ${leader.name} tried to recruit ${target.name} (off-screen) - ${outcome}`
     await supabase.from('roll_log').insert({
       campaign_id: campaignId,
       user_id: userId,
@@ -291,7 +291,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
 
         {!loading && leader && !result && (
           <>
-            {/* Leader stat block — read-only summary so the GM knows
+            {/* Leader stat block - read-only summary so the GM knows
                 what's about to roll. Shows INF + the picked-skill
                 level. */}
             <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
@@ -312,7 +312,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Target NPC</div>
               <select value={targetId} onChange={e => setTargetId(e.target.value)}
                 style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                <option value="">— pick an NPC —</option>
+                <option value="">- pick an NPC -</option>
                 {candidates.map(n => (
                   <option key={n.id} value={n.id}>
                     {n.name}{(window as any).__proxyClaimed?.[n.id] ? ' (in another community)' : ''}
@@ -333,18 +333,18 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
                 ))}
               </div>
               <div style={{ marginTop: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
-                {approach === 'cohort' && 'Shared interest or goal — joins until the next Morale Check.'}
-                {approach === 'conscript' && 'Pressgang — coercive recruitment under credible threat. Requires confirmation.'}
-                {approach === 'convert' && 'Lasting buy-in — joins fully and stays through Morale checks.'}
+                {approach === 'cohort' && 'Shared interest or goal - joins until the next Morale Check.'}
+                {approach === 'conscript' && 'Pressgang - coercive recruitment under credible threat. Requires confirmation.'}
+                {approach === 'convert' && 'Lasting buy-in - joins fully and stays through Morale checks.'}
               </div>
             </div>
 
-            {/* Skill — suggested first, then full list */}
+            {/* Skill - suggested first, then full list */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Skill</div>
               <select value={skill} onChange={e => setSkill(e.target.value)}
                 style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                <option value="">— pick a skill —</option>
+                <option value="">- pick a skill -</option>
                 <optgroup label={`Suggested for ${approach}`}>
                   {suggestedSkills().map(s => (
                     <option key={`sug-${s}`} value={s}>{s} ({getNpcSkillLevel(leader, s) >= 0 ? '+' : ''}{getNpcSkillLevel(leader, s)})</option>
@@ -358,7 +358,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
               </select>
             </div>
 
-            {/* CMod — poaching + GM dial. No first-impression line
+            {/* CMod - poaching + GM dial. No first-impression line
                 because relationship_cmod is PC↔NPC; no Inspiration
                 stack (PC mechanic). */}
             <div style={{ marginBottom: '14px', padding: '10px 12px', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px' }}>

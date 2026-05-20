@@ -23,7 +23,7 @@ interface SearchOpts {
   limit?: number
   /** AbortSignal to cancel in-flight requests when the input changes. */
   signal?: AbortSignal
-  /** Override the default fetch behavior — test seam. */
+  /** Override the default fetch behavior - test seam. */
   fetcher?: typeof fetch
 }
 
@@ -48,7 +48,7 @@ export async function searchNominatimUSFirst(
   const usData = (await usRes.json()) as NominatimResult[]
   if (usData.length > 0) return usData
 
-  // 2) Fallback — global. Ignore quota concerns; the caller's
+  // 2) Fallback - global. Ignore quota concerns; the caller's
   // typical typing cadence is debounced.
   const globalUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trimmed)}&limit=${limit}`
   const globalRes = await fetcher(globalUrl, { signal: opts.signal })

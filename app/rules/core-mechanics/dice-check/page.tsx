@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Dice Check Outcomes — XSE SRD §02' }
+export const metadata = { title: 'Dice Check Outcomes - XSE SRD §02' }
 
 const row = (range: string, label: string, desc: string, emphasized = false): React.ReactNode => (
   <tr style={emphasized ? { background: '#150f0e', borderLeft: '2px solid #c0392b' } : undefined}>
@@ -46,11 +46,11 @@ export default function Page() {
           </tr>
         </thead>
         <tbody>
-          {row('14+', 'Wild Success', "The action succeeds — and there is an additional positive result that benefits the character. The safe opens AND there's something unexpected of value inside.", true)}
+          {row('14+', 'Wild Success', "The action succeeds - and there is an additional positive result that benefits the character. The safe opens AND there's something unexpected of value inside.", true)}
           {row('6+6', 'Moment of High Insight', 'A double-six. Counts as a Wild Success AND grants an Insight Die.', true)}
-          {row('9–13', 'Success', 'The action or task succeeds.')}
-          {row('4–8', 'Failure', 'The action or task fails.')}
-          {row('0–3', 'Dire Failure', 'Not only unsuccessful — there is an additional setback or consequence. A failed safe-cracking attempt irreparably jams the lock.')}
+          {row('9-13', 'Success', 'The action or task succeeds.')}
+          {row('4-8', 'Failure', 'The action or task fails.')}
+          {row('0-3', 'Dire Failure', 'Not only unsuccessful - there is an additional setback or consequence. A failed safe-cracking attempt irreparably jams the lock.')}
           {row('1+1', 'Moment of Low Insight', 'A double-one. Counts as a Dire Failure AND grants an Insight Die.')}
         </tbody>
       </RuleTable>

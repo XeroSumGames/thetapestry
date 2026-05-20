@@ -12,7 +12,7 @@ interface Notification {
   link: string | null
   read: boolean
   created_at: string
-  // Phase E Sprint 4 — structured payload for action-bearing
+  // Phase E Sprint 4 - structured payload for action-bearing
   // notifications (encounters, link proposals, etc). Carries
   // encounter_id / link_id / world_community_id so the inline
   // Accept/Decline buttons can target the right row without
@@ -36,7 +36,7 @@ export default function NotificationBell() {
   const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  // Phase E Sprint 4c — once the user accepts or declines an action
+  // Phase E Sprint 4c - once the user accepts or declines an action
   // notification (encounter / link proposal), drop it into this set
   // so the inline buttons hide. Keyed by notification id; cleared on
   // bell-init reload.
@@ -45,7 +45,7 @@ export default function NotificationBell() {
 
   // Auth + realtime + outside-click + open state via the shared
   // bell-dropdown scaffolding. Realtime subscribes to new notifications
-  // for this user only — RLS gates rows, but the explicit filter also
+  // for this user only - RLS gates rows, but the explicit filter also
   // keeps the wire chatter scoped.
   const { userId, open, setOpen, containerRef } = useBellDropdown({
     channelKey: 'notif',
@@ -120,7 +120,7 @@ export default function NotificationBell() {
     setOpen(false)
   }
 
-  // Phase E Sprint 4c — Accept / Decline handlers for action-bearing
+  // Phase E Sprint 4c - Accept / Decline handlers for action-bearing
   // notifications. The metadata jsonb on the notification carries
   // the underlying row id (encounter_id or link_id). The actual
   // status flip happens on community_encounters / world_community_links;
@@ -160,7 +160,7 @@ export default function NotificationBell() {
     if (!n.read) markAsRead(n.id)
   }
 
-  // Phase 4E (final) — campaign invitations. LFG sendInvite now writes
+  // Phase 4E (final) - campaign invitations. LFG sendInvite now writes
   // a campaign_invitations row; the recipient sees a notification with
   // metadata.invitation_id. Accept flips status to 'accepted' (server
   // trigger auto-adds them to campaign_members + redirects); Decline
@@ -241,7 +241,7 @@ export default function NotificationBell() {
       const match = body.match(/^(.+?) submitted (?:a pin|an NPC): (.+)$/)
       if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> submitted: <span style={{ color: '#EF9F27' }}>{match[2]}</span></>
     }
-    // Phase E — Thriver queue alert when a new world_community is
+    // Phase E - Thriver queue alert when a new world_community is
     // submitted. Body: `<submitter> submitted "<name>" from
     // <campaign> for Tapestry publication.`
     if (type === 'moderation_community') {
@@ -265,12 +265,12 @@ export default function NotificationBell() {
       const match = body.match(/Your pin [""]?(.+?)[""]? has been reviewed/)
       if (match) return <>Your pin <span style={{ color: '#EF9F27' }}>{match[1]}</span> has been reviewed and was not approved</>
     }
-    // "X has grown to N members — it's officially a Community now."
+    // "X has grown to N members - it's officially a Community now."
     if (type === 'community_milestone') {
-      const match = body.match(/^(.+?) has grown to (\d+) members — it'?s officially a Community now\.?$/)
-      if (match) return <><span style={{ color: '#c0392b' }}>{match[1]}</span> has grown to <span style={{ color: '#EF9F27' }}>{match[2]}</span> members — it's officially a <span style={{ color: '#7fc458' }}>Community</span> now.</>
+      const match = body.match(/^(.+?) has grown to (\d+) members - it'?s officially a Community now\.?$/)
+      if (match) return <><span style={{ color: '#c0392b' }}>{match[1]}</span> has grown to <span style={{ color: '#EF9F27' }}>{match[2]}</span> members - it's officially a <span style={{ color: '#7fc458' }}>Community</span> now.</>
     }
-    // Phase E Sprint 4a — cross-campaign encounter. Body shape (the
+    // Phase E Sprint 4a - cross-campaign encounter. Body shape (the
     // trigger emits "encountered" without "has", so match either
     // form defensively so old + new rows both colorize):
     //   <username>'s campaign "<campaign>" [has ]encountered your community "<community>"[: narrative]
@@ -285,7 +285,7 @@ export default function NotificationBell() {
         </>
       )
     }
-    // Phase E Sprint 4b — link proposal. Body shape:
+    // Phase E Sprint 4b - link proposal. Body shape:
     //   <username> proposes a <type> between "<from>" and your "<to>"[: narrative]
     if (type === 'community_link_proposal') {
       const m = body.match(/^(.+?) proposes a (trade|alliance|feud) between "(.+?)" and your "(.+?)"(?::\s*(.+))?$/)
@@ -302,7 +302,7 @@ export default function NotificationBell() {
         )
       }
     }
-    // Phase E Sprint 4e — migration request. Body shape:
+    // Phase E Sprint 4e - migration request. Body shape:
     //   Survivor "<npc>" from "<source>" seeks shelter in your "<target>"[: narrative]
     if (type === 'community_migration') {
       const m = body.match(/^Survivor "(.+?)" from "(.+?)" seeks shelter in your "(.+?)"(?::\s*(.+))?$/)
@@ -315,7 +315,7 @@ export default function NotificationBell() {
         </>
       )
     }
-    // Phase E Sprint 4e — migration response. Body shape:
+    // Phase E Sprint 4e - migration response. Body shape:
     //   "<target>" accepted|declined "<npc>" from your "<source>"
     if (type === 'community_migration_response') {
       const m = body.match(/^"(.+?)" (accepted|declined) "(.+?)" from your "(.+?)"$/)
@@ -332,7 +332,7 @@ export default function NotificationBell() {
         )
       }
     }
-    // Phase E — Thriver approve / reject on world_communities. Body
+    // Phase E - Thriver approve / reject on world_communities. Body
     // starts with 'Your published community "<name>"'. We bold the
     // name and colorize the status word.
     if (type === 'world_community_moderation') {
@@ -349,19 +349,19 @@ export default function NotificationBell() {
       }
     }
 
-    // Phase E — Thriver deletion of a published community.
+    // Phase E - Thriver deletion of a published community.
     if (type === 'world_community_deleted') {
       const name = (metadata as any)?.name as string | undefined
       if (name) {
         return (
           <>
-            A Thriver removed <span style={{ color: '#EF9F27' }}>"{name}"</span> from the Distemperverse. The source campaign community is untouched — you can re-publish from the Community ▾ Status panel.
+            A Thriver removed <span style={{ color: '#EF9F27' }}>"{name}"</span> from the Distemperverse. The source campaign community is untouched - you can re-publish from the Community ▾ Status panel.
           </>
         )
       }
     }
 
-    // Phase 5 Sprint 3 — subscriber alert when a new module version
+    // Phase 5 Sprint 3 - subscriber alert when a new module version
     // is published.
     if (type === 'module_version_published') {
       const name = (metadata as any)?.module_name as string | undefined
@@ -378,7 +378,7 @@ export default function NotificationBell() {
       }
     }
 
-    // Phase E — Thriver-side alert when a published community's
+    // Phase E - Thriver-side alert when a published community's
     // public info is edited (description / faction / homestead /
     // etc.). metadata.changed_fields is a string[].
     if (type === 'world_community_updated') {
@@ -396,7 +396,7 @@ export default function NotificationBell() {
       }
     }
 
-    // Phase 5 — someone started running the author's module.
+    // Phase 5 - someone started running the author's module.
     if (type === 'module_subscriber') {
       const name = (metadata as any)?.module_name as string | undefined
       if (name) {
@@ -408,7 +408,7 @@ export default function NotificationBell() {
       }
     }
 
-    // Phase 5 — Thriver approved or rejected a listed module submission.
+    // Phase 5 - Thriver approved or rejected a listed module submission.
     if (type === 'module_approved') {
       const name = (metadata as any)?.module_name as string | undefined
       if (name) {
@@ -445,11 +445,11 @@ export default function NotificationBell() {
       }
     }
 
-    // Inventory wedge B — cross-user item transfer. metadata carries
+    // Inventory wedge B - cross-user item transfer. metadata carries
     // item_name / qty / from_label / target_character_name. Body shape
     // (from notify_inventory_received RPC):
     //   You received <qty>× <item> from <from_label>
-    // Phase 4E — LFG interest pings. Body shape:
+    // Phase 4E - LFG interest pings. Body shape:
     //   '<username> is interested in "<post title>"'
     // Trigger lives in sql/lfg-interests.sql; clicking the row deep-
     // links to the post on /campfire/lfg via `link`.
@@ -465,7 +465,7 @@ export default function NotificationBell() {
       }
     }
 
-    // Phase 4E (final) — campaign invitations. Body shape from the
+    // Phase 4E (final) - campaign invitations. Body shape from the
     // notify_campaign_invitation trigger:
     //   '<sender> invited you to "<campaign>"'
     if (type === 'campaign_invitation') {
@@ -508,7 +508,7 @@ export default function NotificationBell() {
       }
     }
 
-    // Phase E Sprint 4b — link response. Body shape:
+    // Phase E Sprint 4b - link response. Body shape:
     //   "<recipient>" <status> your <type> proposal with "<proposer>"
     if (type === 'community_link_response') {
       const m = body.match(/^"(.+?)" (active|declined) your (trade|alliance|feud) proposal with "(.+?)"$/)
@@ -624,7 +624,7 @@ export default function NotificationBell() {
                 </div>
                 <div style={{
                   fontSize: '14px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left',
-                  // Belt + suspenders — some earlier ancestor CSS was
+                  // Belt + suspenders - some earlier ancestor CSS was
                   // still truncating with ellipsis on narrow widths.
                   // Explicitly force normal wrap, no truncation, and
                   // clamp to the row width.
@@ -632,7 +632,7 @@ export default function NotificationBell() {
                   whiteSpace: 'normal', textOverflow: 'clip',
                   wordWrap: 'break-word', wordBreak: 'break-word', overflowWrap: 'anywhere',
                 }}>{colorizeBody(n.body, n.type, (n as any).metadata)}</div>
-                {/* Phase E Sprint 4c — inline Accept / Decline. Shown
+                {/* Phase E Sprint 4c - inline Accept / Decline. Shown
                     on action-bearing notifications when the user
                     hasn't yet acted on this card in the current
                     session. After action the buttons hide (see

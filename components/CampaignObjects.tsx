@@ -96,7 +96,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [editProps, setEditProps] = useState<TokenProperty[]>([])
   const [editContents, setEditContents] = useState<ContentItem[]>([])
   const [editControllers, setEditControllers] = useState<string[]>([])
-  // Campaign PCs available to be assigned as controllers — fetched once
+  // Campaign PCs available to be assigned as controllers - fetched once
   // when the modal opens. Shape: { id, name, ownerName? }.
   const [campaignPcs, setCampaignPcs] = useState<{ id: string; name: string; ownerName?: string }[]>([])
   const [contentPickerValue, setContentPickerValue] = useState('')
@@ -107,7 +107,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   // lootingObj.contents. Mirrors ObjectCard's pattern.
   const [lootItemPick, setLootItemPick] = useState<Record<number, string>>({})
   const [givingItemIdx, setGivingItemIdx] = useState<number | null>(null)
-  // Crop modal — selected file waits here until user confirms crop, then uploads.
+  // Crop modal - selected file waits here until user confirms crop, then uploads.
   // `target` distinguishes between the Add-object flow and the Edit-object flow
   // so we know where to apply the resulting URL.
   const [cropFile, setCropFile] = useState<{ file: File; target: 'add' | 'edit' | 'edit-destroyed' } | null>(null)
@@ -188,7 +188,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     }
 
     if (activeSceneId) {
-      // Scene is active — place directly. Doors auto-flag is_door
+      // Scene is active - place directly. Doors auto-flag is_door
       // (toggle to block sight + movement when closed). Walls flag
       // is_wall (always block). Windows flag is_window (block
       // movement, vision passes through). All other icons stay as
@@ -219,7 +219,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       onTokenChanged?.()
       loadObjects()
     } else {
-      // No scene — save as a library template with full metadata.
+      // No scene - save as a library template with full metadata.
       const { user } = await getCachedAuth()
       if (user) {
         await supabase.from('object_token_library').insert({
@@ -267,7 +267,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     loadObjects()
   }
 
-  // Generic uploader — takes a Blob (cropper outputs JPEG or PNG depending
+  // Generic uploader - takes a Blob (cropper outputs JPEG or PNG depending
   // on whether the input had transparency) and returns the public URL.
   // Throws on failure so callers can surface the message; a 30 s watchdog
   // guarantees we don't sit on a stalled connection forever.
@@ -289,7 +289,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     return urlData.publicUrl
   }
 
-  // Cropper confirmed — upload the cropped blob and route to the right target.
+  // Cropper confirmed - upload the cropped blob and route to the right target.
   // mimeType comes from the cropper: 'image/png' if the input was PNG (so
   // transparent backgrounds round-trip correctly), 'image/jpeg' otherwise.
   async function handleCropConfirm(blob: Blob, mimeType: string = 'image/jpeg') {
@@ -373,7 +373,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
             <label style={{ flex: 1, display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer' }}>
-              {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image — click to replace' : 'Or upload custom image'}
+              {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image - click to replace' : 'Or upload custom image'}
               <input key={`add-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'add' }); e.target.value = '' }} />
             </label>
             {addCustomUrl && !uploading && (
@@ -382,15 +382,15 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             )}
           </div>
 
-          {/* Library picker — image items set portrait; template items (metadata) can be placed directly */}
+          {/* Library picker - image items set portrait; template items (metadata) can be placed directly */}
           <div style={{ marginBottom: '6px' }}>
             <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
             <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '96px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
               {library.length === 0 ? (
-                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty — upload an image or save an object without a scene</div>
+                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty - upload an image or save an object without a scene</div>
               ) : library.map(lib => (
                 lib.metadata ? (
-                  // Template item — shows name + WP chip; Place button when scene active
+                  // Template item - shows name + WP chip; Place button when scene active
                   <div key={lib.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', padding: '3px 4px', background: '#1a1a1a', borderRadius: '2px', border: '1px solid #2e2e2e' }}>
                     <img src={lib.image_url} alt="" style={{ width: '24px', height: '24px', objectFit: 'cover', borderRadius: '2px', flexShrink: 0 }} />
                     <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lib.name}</span>
@@ -410,7 +410,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     )}
                   </div>
                 ) : (
-                  // Image-only item — sets portrait for the object being added
+                  // Image-only item - sets portrait for the object being added
                   <button key={lib.id} title={lib.name}
                     onClick={() => setAddCustomUrl(lib.image_url)}
                     style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: addCustomUrl === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
@@ -430,7 +430,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', cursor: 'pointer', fontSize: '13px', color: addIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
             <input type="checkbox" checked={addIndestructible} onChange={e => setAddIndestructible(e.target.checked)}
               style={{ cursor: 'pointer' }} />
-            Indestructible (decorative only — not attackable)
+            Indestructible (decorative only - not attackable)
           </label>
 
           <button onClick={handleAdd} disabled={!addName.trim() || saving}
@@ -439,7 +439,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           </button>
           {!activeSceneId && (
             <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginTop: '4px' }}>
-              No active scene — object will be saved to your library for later.
+              No active scene - object will be saved to your library for later.
             </div>
           )}
         </div>
@@ -447,7 +447,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
       {objects.length === 0 && !showAdd && (
         <div style={{ color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', padding: '1rem' }}>
-          {activeSceneId ? 'No objects in this scene' : 'No active scene — add objects to your library and place them when a scene is ready'}
+          {activeSceneId ? 'No objects in this scene' : 'No active scene - add objects to your library and place them when a scene is ready'}
         </div>
       )}
 
@@ -459,7 +459,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             onDragLeave={() => { if (dragOverObjId === obj.id) setDragOverObjId(null) }}
             onDrop={() => handleObjDrop(obj.id)}
             style={{ padding: '6px', marginBottom: '3px', background: dragOverObjId === obj.id ? '#242424' : '#1a1a1a', border: `1px solid ${dragOverObjId === obj.id ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', opacity: destroyed ? 0.4 : dragObjId === obj.id ? 0.4 : 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {/* Row 1 — identifier: handle, icon, name/WP, remove × */}
+            {/* Row 1 - identifier: handle, icon, name/WP, remove × */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {isGM && (
                 <div draggable onDragStart={() => setDragObjId(obj.id)} onDragEnd={() => { setDragObjId(null); setDragOverObjId(null) }}
@@ -477,7 +477,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     {destroyed ? 'DESTROYED' : `WP ${obj.wp_current}/${obj.wp_max}`}
                   </div>
                 )}
-                {/* Contents preview for GM on intact crates — chip per item with icon + short name.
+                {/* Contents preview for GM on intact crates - chip per item with icon + short name.
                     Full item name + quantity shown on hover via title. */}
                 {Array.isArray(obj.contents) && obj.contents.length > 0 && !destroyed && isGM && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '3px' }}>
@@ -497,7 +497,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}>×</button>
               )}
             </div>
-            {/* Revealed properties (and all properties for GM) — only rendered if any */}
+            {/* Revealed properties (and all properties for GM) - only rendered if any */}
             {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed || destroyed).length > 0 && (
               <div style={{ paddingLeft: '24px' }}>
                 {obj.properties.filter(p => isGM || p.revealed || destroyed).map((p, i) => (
@@ -519,7 +519,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 </button>
               </div>
             )}
-            {/* Contents loot list — only when destroyed (players can take) */}
+            {/* Contents loot list - only when destroyed (players can take) */}
             {destroyed && Array.isArray(obj.contents) && obj.contents.length > 0 && (
               <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {obj.contents.map((item, i) => (
@@ -535,7 +535,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 ))}
               </div>
             )}
-            {/* Row 2 — GM action buttons, even-width across the card */}
+            {/* Row 2 - GM action buttons, even-width across the card */}
             {isGM && (
               <div style={{ display: 'flex', gap: '4px' }}>
                 <button onClick={async () => {
@@ -666,7 +666,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                           for (let q = 0; q < item.quantity; q++) additions.push(item.name)
                           const updatedEquip = [...currentEquip, ...additions]
                           // Bail before mutating the object if the character
-                          // write fails — otherwise the item would disappear
+                          // write fails - otherwise the item would disappear
                           // (RLS denial / network hiccup, etc.).
                           const { error: charErr } = await supabase
                             .from('characters')
@@ -711,7 +711,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 })}
               </div>
             )}
-            {/* Bulk path stays for "give everything to one PC" — useful
+            {/* Bulk path stays for "give everything to one PC" - useful
                 when the GM doesn't need granularity. */}
             {lootingObj.contents.length > 0 && (
               <>
@@ -736,7 +736,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   }
                   const updatedEquip = [...currentEquip, ...newItems]
                   // Bail before clearing the object if the character write
-                  // fails — otherwise the loot vanishes (RLS denial, network
+                  // fails - otherwise the loot vanishes (RLS denial, network
                   // hiccup, etc. all silently dropped items pre-fix).
                   const { error: charErr } = await supabase
                     .from('characters')
@@ -751,7 +751,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     .update({ contents: [] })
                     .eq('id', lootingObj.id)
                   if (tokenErr) {
-                    // Items already on the character — surface so GM knows
+                    // Items already on the character - surface so GM knows
                     // the object still shows contents and can clear manually.
                     alert(`Items transferred to character, but couldn't clear the object: ${tokenErr.message}`)
                     return
@@ -791,7 +791,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', cursor: 'pointer', fontSize: '13px', color: editIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
               <input type="checkbox" checked={editIndestructible} onChange={e => setEditIndestructible(e.target.checked)}
                 style={{ cursor: 'pointer' }} />
-              Indestructible (decorative only — not attackable)
+              Indestructible (decorative only - not attackable)
             </label>
             <div style={{ marginBottom: '10px' }}>
               <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Image</div>
@@ -799,12 +799,12 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 {uploading ? 'Uploading...' : 'Upload new image'}
                 <input key={`edit-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit' }); e.target.value = '' }} />
               </label>
-              {/* Library picker — always visible so GM knows it exists */}
+              {/* Library picker - always visible so GM knows it exists */}
               <div>
                 <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
                 <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '80px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                   {library.length === 0 ? (
-                    <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
+                    <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty - upload an image and it'll show here</div>
                   ) : library.map(lib => (
                     <button key={lib.id} title={lib.name}
                       onClick={async () => {
@@ -817,7 +817,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 </div>
               </div>
             </div>
-            {/* Destroyed image — optional alt portrait shown when WP hits 0 */}
+            {/* Destroyed image - optional alt portrait shown when WP hits 0 */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
                 <div style={{ ...LABEL_STYLE_TIGHT }}>Destroyed image (optional)</div>
@@ -867,7 +867,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               {editProps.length === 0 && <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic' }}>No properties set</div>}
             </div>
 
-            {/* Contents — lootable items */}
+            {/* Contents - lootable items */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <div style={{ ...LABEL_STYLE_TIGHT }}>Contents (Lootable)</div>
@@ -905,7 +905,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               </div>
             </div>
 
-            {/* Controlled By — opt-in list of PCs allowed to drag this
+            {/* Controlled By - opt-in list of PCs allowed to drag this
                 token on the tactical map. Empty = GM-only (the default).
                 Useful for vehicle objects so the driver can move the
                 token, or for any prop the GM wants a player to push
@@ -964,7 +964,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         </ModalBackdrop>
       )}
 
-      {/* Image crop modal — appears when a file is selected via Upload */}
+      {/* Image crop modal - appears when a file is selected via Upload */}
       {cropFile && (
         <ObjectImageCropper
           file={cropFile.file}

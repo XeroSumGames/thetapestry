@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Infection — XSE §06' }
+export const metadata = { title: 'Infection - XSE §06' }
 
 const WOUND_OUTCOMES: Array<[string, string]> = [
   ['Wild Success / High Insight', 'No infection. High Insight earns 1 Insight Die.'],
@@ -55,7 +55,7 @@ export default function Page() {
           Once combat ends, any character who took at least one
           shot, stab, or cut wound during the fight makes a single{' '}
           <Term>Physicality check</Term> to see if their wounds
-          become Infected. One check per character per combat —
+          become Infected. One check per character per combat -
           regardless of how many hits they took.
         </P>
         <RuleTable>
@@ -80,7 +80,7 @@ export default function Page() {
         <P>
           A year on from the dog flu, disease and pestilence remain
           rife. Characters exposed to particularly toxic conditions
-          — a pit of dead bodies, a sewer wade, contaminated water —
+          - a pit of dead bodies, a sewer wade, contaminated water -
           may need to make a <Term>Physicality check</Term> to
           avoid getting sick. The GM decides when the trigger fires.
         </P>
@@ -113,13 +113,13 @@ export default function Page() {
         </P>
       </RuleSection>
 
-      <RuleSection id="sick-state" title="The 'Sick' state — what it costs">
+      <RuleSection id="sick-state" title="The 'Sick' state - what it costs">
         <P>
           While a character is sick (either branch), they suffer
           mechanical penalties for the duration:
         </P>
         <ul style={{ margin: '0 0 1rem 1.25rem', color: '#d4cfc9', lineHeight: 1.65 }}>
-          <li><Term>-2 CMod</Term> on physical checks: Athletics, Melee Combat, Ranged Combat, Stealth, Survival, Unarmed Combat. Applied automatically by the platform — when the roll fires, a <Term>🤒 Sick</Term> note lands in the roll-feed traitNotes so the deduction is visible.</li>
+          <li><Term>-2 CMod</Term> on physical checks: Athletics, Melee Combat, Ranged Combat, Stealth, Survival, Unarmed Combat. Applied automatically by the platform - when the roll fires, a <Term>🤒 Sick</Term> note lands in the roll-feed traitNotes so the deduction is visible.</li>
           <li><Term>RP capped at half-max</Term> (round down). If the character was above the cap when they got sick, current RP gets clamped down.</li>
           <li>WP regen still works at the standard <Term>1 WP per day of rest</Term>. RP regen still works at the standard rate, but the half-max cap is the ceiling until they recover.</li>
         </ul>
@@ -132,10 +132,10 @@ export default function Page() {
         </P>
       </RuleSection>
 
-      <RuleSection id="treatment" title="Treatment — Medicine* check">
+      <RuleSection id="treatment" title="Treatment - Medicine* check">
         <P>
           An ally with Medicine* may attempt to treat a sick
-          character. <Term>One check per sick incident</Term> — not
+          character. <Term>One check per sick incident</Term> - not
           per day. After this attempt, the patient cannot be treated
           again until they recover (or relapse from a fresh trigger).
         </P>
@@ -172,7 +172,7 @@ export default function Page() {
           to avoid Lasting Damage. Failure rolls 2d6 on{' '}
           <a href="/rules/combat/incapacitation#lasting-wounds" style={{ color: '#7ab3d4' }}>Table 12: Lasting Wounds</a>.
           Dire Failure on the original Infection check skips this
-          step — the Lasting Damage applies automatically.
+          step - the Lasting Damage applies automatically.
         </P>
       </RuleSection>
     </>

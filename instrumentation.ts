@@ -1,4 +1,4 @@
-// Next.js instrumentation hook — runs once per worker on cold start.
+// Next.js instrumentation hook - runs once per worker on cold start.
 // We use it solely to pick the right Sentry config for the current
 // runtime (Node or Edge). The actual SDK init happens inside each
 // sentry.*.config.ts file.

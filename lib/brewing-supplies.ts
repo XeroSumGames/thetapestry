@@ -1,7 +1,7 @@
 // Brewing supplies stockpile helpers (Q4-d, 2026-05-19).
 //
 // Vehicles with a still (Minnie, future others) gain a small stockpile of
-// "brewing materials" — days of gathered raw material ready to distill.
+// "brewing materials" - days of gathered raw material ready to distill.
 // Per canon (Minnie's seed notes): "1 day of gathering materials and 1
 // day of distilling to produce 2 days of fuel." Pre-fix the gather and
 // distill steps were lock-step; the stockpile lets the party gather
@@ -37,14 +37,14 @@ export function currentBrewingSupplies(v: BrewingSuppliesVehicle): number {
   return v.brewing_supplies_current ?? 0
 }
 
-/** Whether the brew check can fire — needs at least 1 day of supplies on
+/** Whether the brew check can fire - needs at least 1 day of supplies on
  *  hand. UI guards on this; rollCheck() also re-validates so a stale
  *  client can't force-roll without supplies. */
 export function canBrew(v: BrewingSuppliesVehicle): boolean {
   return currentBrewingSupplies(v) >= 1
 }
 
-/** Whether the gather button can fire — feature must be enabled AND there
+/** Whether the gather button can fire - feature must be enabled AND there
  *  must be room left below the cap. */
 export function canGatherMaterials(v: BrewingSuppliesVehicle): boolean {
   const max = effectiveBrewingMax(v)
@@ -69,7 +69,7 @@ export function gatherMaterials<V extends BrewingSuppliesVehicle>(v: V): Brewing
 }
 
 /** Consume 1 day of materials (called when a Brew check fires). Errors
- *  when nothing on hand — the UI is supposed to block first, but this
+ *  when nothing on hand - the UI is supposed to block first, but this
  *  is the defensive last-line guard. Decrement is unconditional on
  *  outcome (Q4-d spec: every brew attempt consumes 1, success or fail).
  *  Materialist semantics: you used the materials, success or not. */

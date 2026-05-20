@@ -51,7 +51,7 @@ function pinInRegion(p: { lat: number; lng: number }, key: string): boolean {
   return p.lat >= r.latMin && p.lat <= r.latMax && p.lng >= r.lngMin && p.lng <= r.lngMax
 }
 
-// Local alias keeps existing callers working — implementation lives in
+// Local alias keeps existing callers working - implementation lives in
 // lib/pin-categories.ts so CampaignPins picks up the same source.
 function getCategoryEmoji(category: string): string {
   return sharedGetCategoryEmoji(category)
@@ -72,7 +72,7 @@ interface Pin {
   sort_order?: number
   event_date?: string | null
   address?: string | null
-  // Parent/child structure — null for top-level pins, references
+  // Parent/child structure - null for top-level pins, references
   // another map_pins.id for sub-rumors (e.g. "the basement" hanging
   // off "the abandoned warehouse"). FK is ON DELETE SET NULL so a
   // deleted parent orphans its children rather than cascading.
@@ -105,7 +105,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [userId, setUserId] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'survivor' | 'thriver'>('survivor')
   const [showForm, setShowForm] = useState(false)
-  // Quick Add modal — shared with /table. Replaces the old inline
+  // Quick Add modal - shared with /table. Replaces the old inline
   // "Add a Pin" panel. The legacy showForm / form / handleSavePin
   // code path remains only because startEdit() historically used
   // setShowForm(false) to dismiss it; harmless now.
@@ -127,14 +127,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [pinsVisible, setPinsVisible] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign' | 'whispers'>('public')
   const [campaignPins, setCampaignPins] = useState<{ id: string; name: string; notes: string | null; lat: number; lng: number; category: string; campaign_name: string }[]>([])
-  // Whispers — public message wall. Distinct from the in-table /whisper
+  // Whispers - public message wall. Distinct from the in-table /whisper
   // chat command (private DM). Anyone signed-in posts; Thrivers can
   // hard-delete. Schema in sql/whispers.sql; RLS enforces both.
   const [whispers, setWhispers] = useState<{ id: string; author_user_id: string; content: string; created_at: string; author_username?: string }[]>([])
   const [whisperDraft, setWhisperDraft] = useState('')
   const [postingWhisper, setPostingWhisper] = useState(false)
   const [deletingWhisperId, setDeletingWhisperId] = useState<string | null>(null)
-  // Phase E Sprint 3 polish — synthetic "🌐 Published Communities"
+  // Phase E Sprint 3 polish - synthetic "🌐 Published Communities"
   // sidebar folder. Populated during loadPins so the sidebar can
   // list approved world_communities alongside the normal pin folder
   // tree, with the same eye-toggle hide mechanism (via the
@@ -151,7 +151,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     campaign_name: string
   }[]>([])
 
-  // Phase E Sprint 4a — GM-to-GM Contact Handshake. The encountering
+  // Phase E Sprint 4a - GM-to-GM Contact Handshake. The encountering
   // GM picks one of their campaigns + types a one-line narrative;
   // submit inserts a community_encounters row whose Postgres trigger
   // fires a notification to the source community's GM.
@@ -161,7 +161,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [encounterNarrative, setEncounterNarrative] = useState<string>('')
   const [encounterSubmitting, setEncounterSubmitting] = useState<boolean>(false)
 
-  // Phase E Sprint 5 — Community subscription. Set of world_community
+  // Phase E Sprint 5 - Community subscription. Set of world_community
   // ids the current user follows. Loaded on mount; mutated inline by
   // the Follow / Following toggle in the world-community popup. Used
   // to seed the button label at popup-creation time + check current
@@ -170,7 +170,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const subscribedIdsRef = useRef<Set<string>>(new Set())
   subscribedIdsRef.current = subscribedIds
 
-  // Phase E Sprint 4b — Trade / Alliance / Feud links between
+  // Phase E Sprint 4b - Trade / Alliance / Feud links between
   // published communities. The user picks one of THEIR approved
   // world_communities + link type + narrative; submit inserts a
   // world_community_links row whose trigger fires a notification
@@ -193,7 +193,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
   const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '', cmod_active: false, cmod_impact: '', cmod_radius_km: '', cmod_label: '', parent_pin_id: '' })
   // Address autocomplete (Nominatim) state for the Edit Pin modal.
-  // Mirrors the world-map address-search bar at the top — type 3+ chars
+  // Mirrors the world-map address-search bar at the top - type 3+ chars
   // and we offer matching geocodes; click one to fill lat/lng/address.
   const [editAddressSuggestions, setEditAddressSuggestions] = useState<any[]>([])
   const editAddressDebounceRef = useRef<any>(null)
@@ -207,7 +207,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     return new Set<string>()
   })
 
-  // Phase E Sprint 4a — delegated click listener for the encounter
+  // Phase E Sprint 4a - delegated click listener for the encounter
   // button inside Leaflet popups. Popup HTML is a string and can't
   // bind React handlers; we mark the button with a data attribute
   // and intercept the click here. Pre-flights: must be signed in
@@ -240,7 +240,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       // community_subscriptions table; update the button's label +
       // styling inline so the popup reflects the new state without
       // a refetch. Buttons on other open popups stay stale until
-      // their popup is reopened — acceptable since following is a
+      // their popup is reopened - acceptable since following is a
       // single-target action. Outer handler is sync; the actual DB
       // toggle runs in an async IIFE so we don't fight TS about
       // top-level await inside a non-async listener.
@@ -284,7 +284,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         const name = linkBtn.getAttribute('data-name') ?? ''
         if (!worldCommunityId) return
         // Must own at least one published+approved community OTHER
-        // than the target — links connect two distinct communities.
+        // than the target - links connect two distinct communities.
         const eligible = myPublishedCommunities.filter(wc => wc.id !== worldCommunityId)
         if (eligible.length === 0) {
           alert('To propose a link you need an approved published community of your own that isn\'t the target. Publish one and wait for Thriver approval first.')
@@ -367,7 +367,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         if (existing) {
           const appended = [
             (existing as any).narrative?.trim(),
-            trimmedNarrative ? `— Follow-up: ${trimmedNarrative}` : '— Follow-up (no additional notes)',
+            trimmedNarrative ? `- Follow-up: ${trimmedNarrative}` : '- Follow-up (no additional notes)',
           ].filter(Boolean).join('\n\n')
           const { error: updErr } = await supabase
             .from('community_encounters')
@@ -499,13 +499,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         setUserId(user.id)
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
         if (profile) setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
-        // Phase E Sprint 4a — preload the campaigns this user GMs
+        // Phase E Sprint 4a - preload the campaigns this user GMs
         // so the encounter modal's campaign picker is ready when
         // they click an encounter button on a published community.
         const { data: gmCamps } = await supabase
           .from('campaigns').select('id, name').eq('gm_user_id', user.id).order('name')
         if (gmCamps) setMyGmCampaigns(gmCamps as { id: string; name: string }[])
-        // Phase E Sprint 4b — preload the user's approved
+        // Phase E Sprint 4b - preload the user's approved
         // world_communities so the link-propose modal can list
         // them as eligible "from" endpoints. Filter to approved
         // because pending/rejected communities aren't on the map.
@@ -518,7 +518,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             .order('name')
           if (myWc) setMyPublishedCommunities(myWc as { id: string; name: string }[])
         }
-        // Phase E Sprint 5 — preload the user's community
+        // Phase E Sprint 5 - preload the user's community
         // subscriptions so the world-community popup's Follow button
         // seeds in the right state on first paint.
         const { data: subs } = await supabase
@@ -550,7 +550,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       mapInstanceRef.current = map
 
       map.on('click', (e: any) => {
-        if (!user) return // Ghost mode — read only
+        if (!user) return // Ghost mode - read only
         setQuickAddLat(e.latlng.lat)
         setQuickAddLng(e.latlng.lng)
         setShowQuickAdd(true)
@@ -568,7 +568,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       }
       window.addEventListener('tapestry-fly-to', flyToHandler)
 
-      // URL-param flyTo — lets other pages deep-link into /map at
+      // URL-param flyTo - lets other pages deep-link into /map at
       // specific coords (e.g. /moderate "View on map" button).
       // Format: /map?flyTo=<lat>,<lng>[&zoom=<z>]. Runs once at
       // init, after the map instance is ready.
@@ -633,7 +633,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // badge: pins authored by a Thriver are authoritative Tapestry-team
     // content (e.g. "The Mousetrap"). Surfaced as a 🛡️ overlay on the
     // marker icon and as an inline 'CANON' tag next to the pin title in
-    // the expanded folder-list row. (Tried a popup pill — too heavy.)
+    // the expanded folder-list row. (Tried a popup pill - too heavy.)
     const uids = [...new Set(data.map((p: any) => p.user_id).filter(Boolean))]
     const thriverIds = new Set<string>()
     if (uids.length > 0) {
@@ -650,7 +650,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // Remove old cluster group
     if (clusterGroupRef.current) { mapInst.removeLayer(clusterGroupRef.current) }
     markersRef.current = {}
-    // Phase E Sprint 4b — clear old link polylines too. They live
+    // Phase E Sprint 4b - clear old link polylines too. They live
     // directly on the map (not in the cluster group) since lines
     // don't cluster meaningfully.
     if (polylinesRef.current.length > 0) {
@@ -691,7 +691,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       // background, dark border so it stays visible on any map tile.
       // Tooltip explains the meaning to first-time visitors.
       const canonOverlay = isCanon
-        ? `<div title="Canon — published by The Tapestry team" style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;background:#EF9F27;border:1.5px solid #1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.6);">🛡️</div>`
+        ? `<div title="Canon - published by The Tapestry team" style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;background:#EF9F27;border:1.5px solid #1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.6);">🛡️</div>`
         : ''
       const icon = leaflet.divIcon({
         html: `<div style="position:relative;font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);" title="${pin.title}${isCanon ? ' (Canon)' : ''}">${emojiHtml}${canonOverlay}</div>`,
@@ -725,7 +725,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       markersRef.current[pin.id] = marker
     })
 
-    // Phase E Sprint 3 — overlay approved world_communities as
+    // Phase E Sprint 3 - overlay approved world_communities as
     // size-banded markers in the SAME cluster group so they mingle
     // with regular pins at distance but fan out on zoom. Only fetch
     // approved rows with coords (homestead_lat/lng); the RLS policy
@@ -783,7 +783,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           : status === 'Dissolved' ? '#5a5550'
           : '#cce0f5'
         // Distinct visual language from pins: solid colored circle
-        // with a thin dark outline + subtle glow. No emoji — the
+        // with a thin dark outline + subtle glow. No emoji - the
         // shape itself reads as "settled place".
         const icon = leaflet.divIcon({
           html: `<div style="width:${sizePx}px;height:${sizePx}px;background:${dotColor};border:2px solid #1a1a1a;border-radius:50%;box-shadow:0 0 8px rgba(212,139,212,0.6);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-family:'Carlito',sans-serif;font-size:${Math.max(11, sizePx / 2.5)}px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;" title="${(row.name || '').replace(/"/g, '&quot;')} - ${sizeBand}"></div>`,
@@ -797,11 +797,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         const escapedDesc = (row.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         const escapedFaction = (row.faction_label || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         const escapedCamp = (campName || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        // Phase E Sprint 4a — encounter button. Visible to GMs only,
+        // Phase E Sprint 4a - encounter button. Visible to GMs only,
         // and only on communities NOT from one of their own campaigns
         // (no point encountering yourself). Button onclick dispatches
         // a window CustomEvent that a React listener picks up to open
-        // the encounter modal — Leaflet popups are HTML strings so
+        // the encounter modal - Leaflet popups are HTML strings so
         // we can't bind React handlers directly.
         const isMyOwnCommunity = currentUserId
           ? campaignNames[row.source_campaign_id] !== undefined && (() => {
@@ -813,11 +813,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           : false
         // Check directly whether the source campaign is one I GM:
         const sourceIsMine = !!currentUserId && rows && (() => {
-          // No DB call here — we look at the snapshot of myGmCampaigns
+          // No DB call here - we look at the snapshot of myGmCampaigns
           // already loaded in init(). Use the closure ref.
           return false
         })()
-        // Defer the check to render time — embed both pieces of data
+        // Defer the check to render time - embed both pieces of data
         // and let the JS in the popup call back through the window
         // event with the source campaign id; the React listener does
         // the membership check before opening the modal. Cleaner than
@@ -830,7 +830,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               <span style="font-size:10px;background:#1a1a2e;color:#7ab3d4;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${sizeBand}</span>
               <span style="font-size:10px;background:#1a2010;color:#7fc458;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${status}</span>
               ${row.faction_label ? `<span style="font-size:10px;background:#2a2010;color:#EF9F27;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${escapedFaction}</span>` : ''}
-              <span style="font-size:10px;background:#2a1a3e;color:#c4a7f0;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em" title="Followers — players tracking this community on the Tapestry">★ ${row.subscriber_count ?? 0}</span>
+              <span style="font-size:10px;background:#2a1a3e;color:#c4a7f0;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em" title="Followers - players tracking this community on the Tapestry">★ ${row.subscriber_count ?? 0}</span>
             </div>
             <div style="font-size:11px;color:#888;margin-bottom:8px">From <strong>${escapedCamp}</strong></div>
             ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
@@ -859,7 +859,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     clusterGroup.addTo(mapInst)
     clusterGroupRef.current = clusterGroup
 
-    // Phase E Sprint 4b — Trade / Alliance / Feud polylines.
+    // Phase E Sprint 4b - Trade / Alliance / Feud polylines.
     // Active links between two approved communities render as
     // colored lines connecting their Homestead coords. Hidden when
     // the world_community folder is toggled off (same gate as the
@@ -1042,7 +1042,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   if (!Number.isNaN(latVal)) updatePayload.lat = latVal
   if (!Number.isNaN(lngVal)) updatePayload.lng = lngVal
   // World-event CMod propagation fields. Only round-tripped when
-  // the pin actually carries the world_event category — for any
+  // the pin actually carries the world_event category - for any
   // other category these stay untouched in the DB.
   if (editForm.categories.includes('world_event')) {
     const impactRaw = editForm.cmod_impact.trim()
@@ -1187,7 +1187,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Phase E Sprint 4b — Propose Link modal. Opens when the user
+      {/* Phase E Sprint 4b - Propose Link modal. Opens when the user
           clicks "🔗 Propose link" on a world community popup. Pick
           which of YOUR approved communities is the proposing endpoint
           + link type (trade/alliance/feud) + optional narrative. The
@@ -1201,14 +1201,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                  🔗 Propose Link — {linkTarget.name}
+                  🔗 Propose Link - {linkTarget.name}
                 </div>
                 <button onClick={() => !linkSubmitting && setLinkTarget(null)}
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
               </div>
               <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-                  Both GMs must agree before this link goes live on the world map. The other community's GM will get a notification with your one-line context — they accept or decline.
+                  Both GMs must agree before this link goes live on the world map. The other community's GM will get a notification with your one-line context - they accept or decline.
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>From your community</div>
@@ -1236,7 +1236,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Narrative (optional)</div>
                   <textarea value={linkNarrative}
-                    placeholder="e.g. Weekly trade caravans run between us — clean water for medicine."
+                    placeholder="e.g. Weekly trade caravans run between us - clean water for medicine."
                     onChange={e => setLinkNarrative(e.target.value)}
                     rows={3}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
@@ -1255,7 +1255,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         )
       })()}
 
-      {/* Phase E Sprint 4a — Encounter modal. Opens when the user
+      {/* Phase E Sprint 4a - Encounter modal. Opens when the user
           clicks the "🤝 My PCs encountered this" button on a world
           community popup. Pick which of your campaigns is the
           encountering side, type a one-line narrative, submit. The
@@ -1270,7 +1270,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                  🤝 Encounter — {encounterTarget.name}
+                  🤝 Encounter - {encounterTarget.name}
                 </div>
                 <button onClick={() => !encounterSubmitting && setEncounterTarget(null)}
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
@@ -1372,7 +1372,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             {/* Content */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {sidebarTab === 'whispers' ? (
-                /* Whispers — public message wall. Compose at top, list
+                /* Whispers - public message wall. Compose at top, list
                     below, newest first. Thrivers see an X next to each
                     row to hard-delete. */
                 <div style={{ padding: '8px 10px' }}>
@@ -1464,7 +1464,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               ) : (
               /* Public / My Pins folder tree */
               (() => {
-                // Group displayed pins by category — pins with multiple categories appear in multiple folders
+                // Group displayed pins by category - pins with multiple categories appear in multiple folders
                 const folderMap: Record<string, Pin[]> = {}
                 for (const p of displayedPins) {
                   const rawCats = p.categories
@@ -1481,7 +1481,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   } else {
                     folderMap[cat].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
                   }
-                  // Parent/child interleave — when a pin's parent_pin_id
+                  // Parent/child interleave - when a pin's parent_pin_id
                   // points to another pin in this same folder, render the
                   // child directly under its parent (and indent it in the
                   // row markup). Children whose parent isn't in this
@@ -1510,7 +1510,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 // Sort categories: Distemper Timeline first, then the rest in PIN_CATEGORIES order
                 const sortedCats = PIN_CATEGORIES.filter(c => folderMap[c.value] && folderMap[c.value].length > 0)
                   .sort((a, b) => a.value === 'world_event' ? -1 : b.value === 'world_event' ? 1 : 0)
-                // Phase E — synthetic "🌐 Published Communities" folder.
+                // Phase E - synthetic "🌐 Published Communities" folder.
                 // Sits above the normal PIN_CATEGORIES folders because
                 // it's a distinct layer, not a pin category. Filtered
                 // by pinSearch against name or campaign name.
@@ -1563,7 +1563,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     {wcFolderOpen && (
                       <div style={{ padding: '2px 0 4px' }}>
                         {wcFiltered.map(wc => {
-                          // Status-tier dot color — mirrors the map
+                          // Status-tier dot color - mirrors the map
                           // marker palette so players recognize the
                           // community in both surfaces.
                           const color = wc.community_status === 'Thriving' ? '#7fc458'
@@ -1671,14 +1671,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                     {isChild && <span style={{ color: '#5a5550', marginRight: '4px' }}>↳</span>}
                                     {p.title}
                                   {isExpanded && p.user_id && thriverUserIds.has(p.user_id) && (
-                                    <span title="Canon — published by The Tapestry team" style={{ marginLeft: '6px', padding: '1px 6px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                                    <span title="Canon - published by The Tapestry team" style={{ marginLeft: '6px', padding: '1px 6px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
                                       🛡️ Canon
                                     </span>
                                   )}
                                 </div>
                                 {isExpanded && (
                                   <div style={{ marginTop: '4px' }}>
-                                    {/* Parent breadcrumb — surfaces the parent
+                                    {/* Parent breadcrumb - surfaces the parent
                                         pin's title when this pin is nested.
                                         Click jumps to the parent (expand it +
                                         flyTo). Lookup is against `pins`, so
@@ -1859,7 +1859,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         ))}
       </select>
     </div>
-    {/* Parent pin — optional. When set, this pin nests under the
+    {/* Parent pin - optional. When set, this pin nests under the
         chosen pin in the browser (a "rumor about the basement"
         hangs off "the abandoned warehouse"). The picker excludes
         the editing pin itself + any pin that already has it as
@@ -1868,7 +1868,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       <label style={lbl}>Parent Pin (optional)</label>
       <select style={inp} value={editForm.parent_pin_id}
         onChange={e => setEditForm(p => ({ ...p, parent_pin_id: e.target.value }))}>
-        <option value="">— top-level (no parent) —</option>
+        <option value="">- top-level (no parent) -</option>
         {pins
           .filter(p => p.id !== editingPin?.id && p.parent_pin_id !== editingPin?.id)
           .sort((a, b) => a.title.localeCompare(b.title))
@@ -1896,7 +1896,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
         <label style={{ ...lbl, color: '#7ab3d4', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <input type="checkbox" checked={!!editForm.cmod_active} onChange={e => setEditForm(p => ({ ...p, cmod_active: e.target.checked }))} />
-          World Event — currently active
+          World Event - currently active
         </label>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
           <div style={{ flex: '0 0 90px' }}>
@@ -1913,7 +1913,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           </div>
         </div>
         <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
-          When <strong>Active</strong> is on, this event automatically applies its CMod to every community whose Homestead falls inside the radius — no manual entry required in the Weekly Morale Check.
+          When <strong>Active</strong> is on, this event automatically applies its CMod to every community whose Homestead falls inside the radius - no manual entry required in the Weekly Morale Check.
         </div>
       </div>
       </>
@@ -1931,7 +1931,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     <div style={{ marginBottom: '12px', position: 'relative' }}>
       <label style={lbl}>Address</label>
       <input style={inp} value={editForm.address}
-        placeholder="Street, City, State — start typing to search"
+        placeholder="Street, City, State - start typing to search"
         onChange={e => {
           const v = e.target.value
           setEditForm(p => ({ ...p, address: v }))

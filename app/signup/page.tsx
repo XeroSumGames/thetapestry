@@ -38,7 +38,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [redirect, setRedirect] = useState<string | null>(null)
-  // Honeypot — real users never see or fill this field (positioned off-screen).
+  // Honeypot - real users never see or fill this field (positioned off-screen).
   // Bots that auto-fill all inputs will populate it; we silently drop the request.
   const [honeypot, setHoneypot] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -101,10 +101,10 @@ export default function SignupPage() {
     setSubmitting(true)
 
     try {
-    // Honeypot — if filled, it's a bot. Silently succeed to avoid tipping off scrapers.
+    // Honeypot - if filled, it's a bot. Silently succeed to avoid tipping off scrapers.
     if (honeypot) { router.push(redirect ?? '/dashboard'); return }
 
-    // Username sanity — block machine-generated random strings.
+    // Username sanity - block machine-generated random strings.
     if (looksRandom(username)) {
       setError('Username looks randomly generated - please choose a recognizable name.')
       return
@@ -112,7 +112,7 @@ export default function SignupPage() {
 
     // Turnstile (soft gate). When the widget produces a token we verify
     // server-side and hard-block on rejection. When it doesn't (ad
-    // blocker, blocked CDN, fast submit before mount) we fall through —
+    // blocker, blocked CDN, fast submit before mount) we fall through -
     // honeypot + looksRandom are first-line defenses, and the captchaToken
     // is forwarded to supabase.auth.signUp so a future dashboard toggle
     // (Authentication → Attack Protection → Enable Captcha) can tighten
@@ -160,7 +160,7 @@ export default function SignupPage() {
     // Profile row is created server-side by the handle_new_user() trigger
     // (SECURITY DEFINER, bypasses RLS). The previous client-side upsert
     // here was meant as belt-and-suspenders, but with email-confirm ON
-    // there's no session yet — auth.uid() is null on the client, so the
+    // there's no session yet - auth.uid() is null on the client, so the
     // upsert hits the profiles RLS "id = auth.uid()" check and rejects
     // with "new row violates row-level security policy."
     //
@@ -188,7 +188,7 @@ export default function SignupPage() {
     logEvent('signup', { username })
 
     // If "Confirm email" is enabled in the Supabase dashboard, signUp
-    // returns { user, session: null } — the user is created but can't sign
+    // returns { user, session: null } - the user is created but can't sign
     // in until they click the email link. Surface that state instead of
     // pushing to /dashboard (where they'd just bounce back to /login).
     //
@@ -238,7 +238,7 @@ export default function SignupPage() {
             </div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', lineHeight: 1.5 }}>
               Didn't get it? Check your spam folder. Still nothing after a
-              few minutes — click below to resend.
+              few minutes - click below to resend.
             </div>
             <button
               type="button"
@@ -278,8 +278,8 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Honeypot — visually off-screen, never filled by real users.
-              Not display:none (bots detect that) — use position:absolute + clip. */}
+          {/* Honeypot - visually off-screen, never filled by real users.
+              Not display:none (bots detect that) - use position:absolute + clip. */}
           <input
             aria-hidden="true"
             tabIndex={-1}
@@ -314,7 +314,7 @@ export default function SignupPage() {
 
       </div>
     </main>
-    {/* Invisible Turnstile widget — rendered off-screen, executed on submit */}
+    {/* Invisible Turnstile widget - rendered off-screen, executed on submit */}
     <div id="turnstile-container" style={{ position: 'absolute', left: '-9999px' }} />
     </>
   )

@@ -2,7 +2,7 @@ import { RuleHero, RuleSection, TryIt, P, Term } from '../../../../components/ru
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Psychology* — XSE SRD §05' }
+export const metadata = { title: 'Psychology* - XSE SRD §05' }
 
 export default function Page() {
   return (
@@ -13,7 +13,7 @@ export default function Page() {
         title="Psychology*"
         intro={
           <>
-            <Term>Psychology*</Term> (RSN, vocational) — leveraging an
+            <Term>Psychology*</Term> (RSN, vocational) - leveraging an
             understanding of human behaviour to influence, predict,
             exploit, or manipulate outcomes.
           </>
@@ -29,7 +29,7 @@ export default function Page() {
         domestic conflict, or recognising a pattern of abuse.
       </P>
 
-      <RuleSection id="stress-recovery" title="Stress recovery — Activity Block">
+      <RuleSection id="stress-recovery" title="Stress recovery - Activity Block">
         <P>
           A character with at least 1 level in <Term>Psychology*</Term> can
           spend a <Term>Daily Activity Block</Term> with another character to
@@ -39,7 +39,7 @@ export default function Page() {
         </P>
       </RuleSection>
 
-      <RuleSection id="lv4-trait" title="Level 4 — Insightful Counselor">
+      <RuleSection id="lv4-trait" title="Level 4 - Insightful Counselor">
         <P>
           At <Term>Psychology* Level 4 (Life's Work)</Term>, a character
           who has spent time as part of a community is able to understand
@@ -48,7 +48,7 @@ export default function Page() {
           Check.
         </P>
         <P>
-          The bonus is gated on tenure with the community — the character
+          The bonus is gated on tenure with the community - the character
           must actually be a member long enough to know its rhythms. See{' '}
           <a href="/rules/communities/morale" style={{ color: '#7ab3d4' }}>
             §08 Communities → Morale Check

@@ -1,14 +1,14 @@
-// GM Kit export — bundles a campaign's content into a downloadable zip.
+// GM Kit export - bundles a campaign's content into a downloadable zip.
 //
 // Output structure:
 //   gm-kit-<slug>-<date>.zip
-//   ├── manifest.json                 — campaign meta
-//   ├── pins.json                     — campaign_pins rows
-//   ├── npcs.json                     — campaign_npcs rows
-//   ├── scenes.json                   — tactical_scenes rows
-//   ├── tokens.json                   — scene_tokens grouped by scene_id
-//   ├── handouts.json                 — campaign_notes rows (with attachment metadata)
-//   └── images/                       — actual image files referenced above
+//   ├── manifest.json                 - campaign meta
+//   ├── pins.json                     - campaign_pins rows
+//   ├── npcs.json                     - campaign_npcs rows
+//   ├── scenes.json                   - tactical_scenes rows
+//   ├── tokens.json                   - scene_tokens grouped by scene_id
+//   ├── handouts.json                 - campaign_notes rows (with attachment metadata)
+//   └── images/                       - actual image files referenced above
 //       ├── scene-bg-<sceneId>.<ext>
 //       ├── npc-<npcId>.<ext>
 //       ├── token-<tokenId>.<ext>
@@ -17,7 +17,7 @@
 // Image URLs in the JSON are rewritten to relative paths under images/ so a
 // downstream consumer can read the kit offline.
 //
-// JSZip is loaded via dynamic import inside exportGmKit (~50KB) — it's only
+// JSZip is loaded via dynamic import inside exportGmKit (~50KB) - it's only
 // needed when the GM clicks Export, so skip pulling it into any bundle that
 // merely touches this module.
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -49,7 +49,7 @@ async function fetchAsBlob(url: string): Promise<Blob | null> {
 }
 
 export async function exportGmKit(supabase: SupabaseClient, campaignId: string): Promise<ExportResult> {
-  // Wave 1 — campaign + every directly-filterable table in parallel.
+  // Wave 1 - campaign + every directly-filterable table in parallel.
   const [
     { data: campaign, error: campErr },
     { data: pins },
@@ -65,7 +65,7 @@ export async function exportGmKit(supabase: SupabaseClient, campaignId: string):
   ])
   if (campErr || !campaign) return { ok: false, error: campErr?.message ?? 'Campaign not found' }
 
-  // Wave 2 — scene_tokens scoped to THIS campaign's scenes only.
+  // Wave 2 - scene_tokens scoped to THIS campaign's scenes only.
   // Pre-fix this lived in Wave 1 as an UNFILTERED `select('*')`, so every
   // GM Kit export streamed every other campaign's tokens across the wire
   // and relied on RLS as the only real defense. Now we hold the filter
@@ -76,7 +76,7 @@ export async function exportGmKit(supabase: SupabaseClient, campaignId: string):
     : { data: [] as any[] }
   const scopedTokens = (scopedTokensData ?? []) as any[]
 
-  // Lazy-load JSZip — top-level import previously pulled ~50KB into any
+  // Lazy-load JSZip - top-level import previously pulled ~50KB into any
   // client bundle that imported this module even when nobody clicked
   // Export. Dynamic import keeps that cost gated to actual exports.
   const { default: JSZip } = await import('jszip')
@@ -87,7 +87,7 @@ export async function exportGmKit(supabase: SupabaseClient, campaignId: string):
 
   async function pullImage(url: string | null | undefined, name: string): Promise<string | null> {
     if (!url) return null
-    if (urlMap[url]) return urlMap[url] // de-dupe — same portrait used twice = one file
+    if (urlMap[url]) return urlMap[url] // de-dupe - same portrait used twice = one file
     const blob = await fetchAsBlob(url)
     if (!blob) return null
     const ext = extFromUrl(url, blob.type.split('/')[1] || 'jpg')

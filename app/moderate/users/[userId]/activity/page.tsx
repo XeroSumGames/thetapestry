@@ -3,7 +3,7 @@
 // Cross-surface activity dossier for a single user. Used by the
 // TRACK button on the /moderate user list. All data sources are
 // queried in parallel; each section shows a count + the most
-// recent ~10 items as a preview. No edit affordances — pure
+// recent ~10 items as a preview. No edit affordances - pure
 // observation surface for moderators investigating a user.
 
 import { useEffect, useState } from 'react'
@@ -99,7 +99,7 @@ interface VisitRow {
 }
 
 function formatDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -107,7 +107,7 @@ function formatDate(iso: string | null) {
 }
 
 function shortDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
@@ -144,7 +144,7 @@ export default function UserActivityPage() {
       const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (!roleIsThriver(myProfile)) { router.push('/dashboard'); return }
 
-      // All 13 data sources in parallel — header, character list +
+      // All 13 data sources in parallel - header, character list +
       // count, campaigns owned + joined, roll log preview + count,
       // forum threads + replies, war stories, LFG posts, bug reports,
       // map pins, pages visited (visitor_logs, most recent 30).
@@ -210,7 +210,7 @@ export default function UserActivityPage() {
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
-      {/* Header — mirrors the moderate page user-row layout: identity
+      {/* Header - mirrors the moderate page user-row layout: identity
           chips on top, key dates inline. No action buttons here; this
           page is read-only. */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
@@ -249,7 +249,7 @@ export default function UserActivityPage() {
         </div>
       </div>
 
-      {/* Section grid — each panel: title row with count, then a list
+      {/* Section grid - each panel: title row with count, then a list
           preview. Empty sections collapse to a single muted line. */}
       <Section title="Characters" count={characterCount} viewAllHref={`/moderate/users/${userId}/characters`}>
         {characters.length === 0 ? <Empty /> : characters.map(c => (
@@ -276,7 +276,7 @@ export default function UserActivityPage() {
       <Section title="Recent rolls" count={rollCount} subtitle={rollCount > rolls.length ? `showing ${rolls.length} most recent` : undefined}>
         {rolls.length === 0 ? <Empty /> : rolls.map(r => (
           <Row key={r.id}
-            primary={`${r.character_name ?? '—'} · ${r.label ?? 'roll'}`}
+            primary={`${r.character_name ?? '-'} · ${r.label ?? 'roll'}`}
             secondary={`${[r.outcome, r.total].filter(v => v != null && v !== '').join(' · ')} · ${shortDate(r.created_at)}`} />
         ))}
       </Section>
@@ -307,7 +307,7 @@ export default function UserActivityPage() {
       <Section title="LFG posts" count={lfgPosts.length}>
         {lfgPosts.length === 0 ? <Empty /> : lfgPosts.map(p => (
           <Row key={p.id} primary={p.title}
-            secondary={`${p.setting ?? '—'} · ${shortDate(p.created_at)}`} />
+            secondary={`${p.setting ?? '-'} · ${shortDate(p.created_at)}`} />
         ))}
       </Section>
 
@@ -315,14 +315,14 @@ export default function UserActivityPage() {
         {bugs.length === 0 ? <Empty /> : bugs.map(b => (
           <Row key={b.id}
             primary={(b.description ?? '').slice(0, 80) + ((b.description?.length ?? 0) > 80 ? '…' : '')}
-            secondary={`${b.status} · ${b.page_url ?? '—'} · ${shortDate(b.created_at)}`} />
+            secondary={`${b.status} · ${b.page_url ?? '-'} · ${shortDate(b.created_at)}`} />
         ))}
       </Section>
 
       <Section title="Map pins" count={pins.length}>
         {pins.length === 0 ? <Empty /> : pins.map(p => (
           <Row key={p.id} primary={p.title ?? '(untitled)'}
-            secondary={`${p.pin_type ?? '—'} · ${p.status ?? '—'} · ${shortDate(p.created_at)}`} />
+            secondary={`${p.pin_type ?? '-'} · ${p.status ?? '-'} · ${shortDate(p.created_at)}`} />
         ))}
       </Section>
 

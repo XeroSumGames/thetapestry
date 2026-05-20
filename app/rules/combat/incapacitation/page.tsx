@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Incapacitation — XSE SRD §06' }
+export const metadata = { title: 'Incapacitation - XSE SRD §06' }
 
 const LASTING: Array<[number, string, string]> = [
   [2, 'Lost Eye', '−1 on checks using Dexterity'],
@@ -129,7 +129,7 @@ export default function Page() {
         <P>
           <Term>Compounded wounds:</Term> a character can take Lasting Damage
           more than once over their career, and the same result can come up
-          again. When that happens, the effects compound — a second roll of
+          again. When that happens, the effects compound - a second roll of
           Brain Injury stacks the −2 Reason penalty (becoming −4 Reason);
           rolling Lost Eye twice means the character is blind.
         </P>

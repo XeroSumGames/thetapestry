@@ -14,7 +14,7 @@ export interface InventoryItem {
   custom: boolean
   /** Armor only: true when the item is currently equipped (DM
    *  applies to damage resolution). ENC does NOT change with
-   *  worn status — armor weighs the same on or off. Default false
+   *  worn status - armor weighs the same on or off. Default false
    *  for non-armor items and unset entries. See
    *  `lib/xse-schema.ts:ARMOR` for the canonical armor catalog. */
   worn?: boolean

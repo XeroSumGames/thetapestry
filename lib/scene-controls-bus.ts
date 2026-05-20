@@ -3,12 +3,12 @@
 // window.
 //
 // Two message kinds:
-//   • 'state'   — bidirectional. Either window mutates a shared local
+//   • 'state'   - bidirectional. Either window mutates a shared local
 //                 UI state (zoom, gridColor, gridOpacity, showGrid,
 //                 showRangeOverlay, cellPx, mapLocked); the other
 //                 window applies the same setX call.
-//   • 'cmd'     — popout → main only. Commands that need access to
-//                 main-window-only refs (bgImageRef, containerRef) —
+//   • 'cmd'     - popout → main only. Commands that need access to
+//                 main-window-only refs (bgImageRef, containerRef) -
 //                 fit_to_map, fit_to_screen, place_tokens.
 //
 // Channel name is keyed by campaignId so multi-campaign tabs in the
@@ -17,7 +17,7 @@
 // receive a campaign GM's controls.
 //
 // DB-backed scene fields (name, grid_cols, grid_rows, cell_feet,
-// background_url, is_locked) are NOT sent over this bus — they're
+// background_url, is_locked) are NOT sent over this bus - they're
 // persisted to Supabase and the main window picks them up via the
 // existing tactical_scenes realtime subscription. Single source of
 // truth, no risk of bus and DB disagreeing.

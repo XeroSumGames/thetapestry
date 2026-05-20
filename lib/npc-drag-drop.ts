@@ -1,4 +1,4 @@
-// NPC roster drag/drop helpers — shared between the GM-side NpcRoster
+// NPC roster drag/drop helpers - shared between the GM-side NpcRoster
 // component and the player-side inline render in
 // app/stories/[id]/table/page.tsx. Pure helpers + thin async writers
 // so both surfaces compute reorders identically and persist via the
@@ -6,7 +6,7 @@
 // in sql/campaign-npcs-rls-fix.sql).
 //
 // Extracted 2026-05-19 alongside Q2 scope C (post-playtest mark
-// 01:32:51 — "players should be able to drag/drop NPCs in their NPC
+// 01:32:51 - "players should be able to drag/drop NPCs in their NPC
 // tab"). RLS allowed the writes already; the gap was purely UI side.
 
 import type { SupabaseClient } from '@supabase/supabase-js'

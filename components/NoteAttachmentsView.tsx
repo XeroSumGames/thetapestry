@@ -35,7 +35,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
 
   return (
     <>
-      {/* Image attachments — large inline previews */}
+      {/* Image attachments - large inline previews */}
       {images.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: files.length > 0 ? '8px' : 0 }}>
           {images.map(att => (
@@ -64,7 +64,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
         </div>
       )}
 
-      {/* Non-image attachments — compact chips */}
+      {/* Non-image attachments - compact chips */}
       {files.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {files.map(att => (
@@ -82,7 +82,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
         </div>
       )}
 
-      {/* Lightbox — click image to view full-size */}
+      {/* Lightbox - click image to view full-size */}
       {lightbox && (
         <div
           onClick={() => setLightbox(null)}

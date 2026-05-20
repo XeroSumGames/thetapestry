@@ -11,7 +11,7 @@ import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 import { ANIMALS } from '../../../../lib/animals'
 
-export const metadata = { title: 'Bestiary — XSE §06' }
+export const metadata = { title: 'Bestiary - XSE §06' }
 
 export default function Page() {
   const baseAnimals = ANIMALS.filter(a => !a.distemperInfected)
@@ -25,7 +25,7 @@ export default function Page() {
         title="Animals & Distemper-Infected Canines"
         intro={
           <>
-            Wildlife players are likely to encounter — six base
+            Wildlife players are likely to encounter - six base
             species plus two H724-infected canine variants. Stats
             from CRB v0.9.2 p.194-195. Use these as drop-in
             templates when the GM needs a feral threat.
@@ -83,13 +83,13 @@ export default function Page() {
         <P>
           All species of canines can still be infected with and
           carry <Term>H724</Term>, even if they appear asymptomatic.
-          The virus has mutated again — it invariably erodes their
+          The virus has mutated again - it invariably erodes their
           brains and creates heightened aggression, but it's no
           longer terminal in all infected animals.
         </P>
         <P>
           Smaller, weaker, domesticated dogs rarely survived their
-          infection, leaving only the larger, stronger breeds —
+          infection, leaving only the larger, stronger breeds -
           found in hostile, dangerous, roving packs that are
           largely nocturnal. Wolves, coyotes, jackals, and even
           some foxes may present one of the biggest threats players
@@ -161,7 +161,7 @@ export default function Page() {
         </RuleTable>
         <P>
           If characters get bitten by a Distemper-infected canine,
-          the standard <a href="/rules/combat/infection" style={{ color: '#7ab3d4' }}>Infection</a> flow applies —
+          the standard <a href="/rules/combat/infection" style={{ color: '#7ab3d4' }}>Infection</a> flow applies -
           Wound Infection check after combat, sick days, possible
           Lasting Damage. The H724 strain is no longer guaranteed
           terminal but the bite still carries it.

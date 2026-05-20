@@ -1,5 +1,5 @@
 'use client'
-// /modules — Phase C marketplace browse page.
+// /modules - Phase C marketplace browse page.
 //
 // Public-facing surface for discovering modules (the campaign-create
 // picker shows the same data, but only at the moment of starting a new
@@ -29,8 +29,8 @@ const SORT_LABELS: Record<SortKey, string> = {
   newest: 'Newest',
   subs: 'Most subscribed',
   rated: 'Highest rated',
-  az: 'A–Z',
-  za: 'Z–A',
+  az: 'A-Z',
+  za: 'Z-A',
 }
 
 export default function ModuleMarketplacePage() {
@@ -40,7 +40,7 @@ export default function ModuleMarketplacePage() {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortKey>('featured')
   // Thriver-only DELETE on each module card. Resolved once on mount.
-  // RLS on `modules` already gates DELETE to author OR Thriver — UI
+  // RLS on `modules` already gates DELETE to author OR Thriver - UI
   // surface here matches that, hiding the button for everyone else
   // so it's not even visible.
   const [isThriver, setIsThriver] = useState(false)
@@ -66,7 +66,7 @@ export default function ModuleMarketplacePage() {
   }, [supabase])
 
   async function handleDelete(m: ModuleListing) {
-    // Pre-fetch counts for an honest confirm. Don't block on errors —
+    // Pre-fetch counts for an honest confirm. Don't block on errors -
     // fall back to a generic confirm if either count fails.
     const [{ count: versionCount }, { count: subCount }] = await Promise.all([
       supabase.from('module_versions').select('*', { count: 'exact', head: true }).eq('module_id', m.id),
@@ -96,7 +96,7 @@ export default function ModuleMarketplacePage() {
       alert(`Delete failed: ${error.message}`)
       return
     }
-    // Optimistic local removal — don't refetch the whole list.
+    // Optimistic local removal - don't refetch the whole list.
     setModules(prev => prev ? prev.filter(x => x.id !== m.id) : prev)
   }
 
@@ -148,7 +148,7 @@ export default function ModuleMarketplacePage() {
         <h1 style={{ margin: 0, fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
           Module Marketplace
         </h1>
-        {/* Inbound import path — once a GM has a campaign-snapshot
+        {/* Inbound import path - once a GM has a campaign-snapshot
             export, /rumors/import publishes it as a module. Linked
             from here so users who land on the marketplace directly
             don't have to hunt for it in the sidebar. */}
@@ -203,7 +203,7 @@ export default function ModuleMarketplacePage() {
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
             {search
               ? 'Clear the search to see all available modules.'
-              : <>Be the first to publish — open any campaign&apos;s edit page and click <strong>Publish as Module</strong>, or upload an exported snapshot at <Link href="/rumors/import" style={{ color: '#c4a7f0' }}>/rumors/import</Link>.</>}
+              : <>Be the first to publish - open any campaign&apos;s edit page and click <strong>Publish as Module</strong>, or upload an exported snapshot at <Link href="/rumors/import" style={{ color: '#c4a7f0' }}>/rumors/import</Link>.</>}
           </div>
         </div>
       ) : (
@@ -345,7 +345,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 🔒 Private
               </span>
             )}
-            {/* Rating chip — always rendered for visual consistency
+            {/* Rating chip - always rendered for visual consistency
                 with the 📥 chip. When rating_count is 0 we show
                 "Unrated" in a muted treatment instead of "0.0 (0)" so
                 fresh modules don't look like they got 1-star bombed.
@@ -370,7 +370,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 : <>⭐ Unrated</>
               }
             </span>
-            {/* Subscriber count chip — shown on every card; reads
+            {/* Subscriber count chip - shown on every card; reads
                 "0 downloads" for fresh modules so the chip is always
                 visible (helps players gauge popularity at a glance).
                 Maintained denormalized on modules.subscriber_count via
@@ -381,7 +381,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
               fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
               display: 'inline-flex', alignItems: 'center', gap: '4px',
             }}
-              title="Active subscriptions — campaigns currently using this module">
+              title="Active subscriptions - campaigns currently using this module">
               📥 {m.subscriber_count ?? 0}
             </span>
             {publishedAt && (

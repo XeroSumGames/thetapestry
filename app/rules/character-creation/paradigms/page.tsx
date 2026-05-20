@@ -2,7 +2,7 @@ import { RuleHero, RuleSection, TryIt, P, Term } from '../../../../components/ru
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Paradigms & Pregens — XSE SRD §04' }
+export const metadata = { title: 'Paradigms & Pregens - XSE SRD §04' }
 
 export default function Page() {
   return (
@@ -17,7 +17,7 @@ export default function Page() {
             ship with attributes and skills predefined; the player picks a
             name, Motivation, Complication, 3 Words, weapons, and gear.{' '}
             <Term>Pregenerated Characters</Term> (Pregens) ship fully built
-            — read the sheet and play.
+            - read the sheet and play.
           </>
         }
       />
@@ -29,7 +29,7 @@ export default function Page() {
           Generation method.
         </P>
         <P>
-          Paradigms come with attributes and skills predefined — a player
+          Paradigms come with attributes and skills predefined - a player
           only needs to pick a name, Motivation, Complication, 3 Words,
           weapons, and equipment in order to start playing.
         </P>
@@ -37,7 +37,7 @@ export default function Page() {
           Paradigms are setting-specific. The 12 Paradigms from Distemper
           are detailed in{' '}
           <a href="/rules/appendix-paradigms" style={{ color: '#7ab3d4' }}>
-            Appendix D — Paradigms
+            Appendix D - Paradigms
           </a>
           .
         </P>

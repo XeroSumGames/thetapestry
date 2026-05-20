@@ -31,7 +31,7 @@ export interface Vehicle {
   //                      drums currently installed = base = max).
   //   fuel_storage_max - absolute cap on fuel_max after install
   //                      (Minnie = 6). If absent or <= fuel_max_base,
-  //                      the install button is disabled — feature opt-in
+  //                      the install button is disabled - feature opt-in
   //                      per vehicle. Smaller vehicles default to no cap
   //                      expansion until rules figure out their numbers.
   fuel_max_base?: number
@@ -45,7 +45,7 @@ export interface Vehicle {
   //                              by Brew check, +1 per Gather Materials).
   //   brewing_supplies_max     - cap on the stockpile (Minnie = 2).
   // Brew check is BLOCKED when current = 0 (per Q4-d spec). Both optional
-  // per-vehicle — absence disables the feature (no still on this vehicle
+  // per-vehicle - absence disables the feature (no still on this vehicle
   // anyway, typically).
   brewing_supplies_current?: number
   brewing_supplies_max?: number
@@ -55,7 +55,7 @@ export interface Vehicle {
   floorplan_url?: string | null
   cargo: VehicleCargo[]
   // Currently-assigned driver (auto-rolls Driving check). Either a PC
-  // character id or a campaign NPC id — see crewMemberKind below.
+  // character id or a campaign NPC id - see crewMemberKind below.
   driver_character_id?: string | null
   driver_kind?: 'pc' | 'npc' | null
   // Currently-assigned brewer (auto-rolls Mechanic*/Tinkerer brew check).
@@ -63,14 +63,14 @@ export interface Vehicle {
   brewer_character_id?: string | null
   brewer_kind?: 'pc' | 'npc' | null
   // Navigator / shotgun seat. Single slot. Same shape as driver/brewer
-  // (id + kind). Used by the tactical-map move-sync — when the
+  // (id + kind). Used by the tactical-map move-sync - when the
   // vehicle's token moves, every PC/NPC riding it (driver + navigator
   // + gunners + passengers) gets dragged along by the same delta.
   navigator_character_id?: string | null
   navigator_kind?: 'pc' | 'npc' | null
   // Up to 6 passenger slots. Each is { character_id, kind } or null.
   // Fixed length so the popout renders 6 rows even when half are
-  // empty. Order is presentational — slot 0 = first row, etc. — and
+  // empty. Order is presentational - slot 0 = first row, etc. - and
   // does NOT correspond to any in-world physical seat ordering.
   passenger_seats?: Array<{ character_id: string; kind: 'pc' | 'npc' } | null>
   // Whether this vehicle has an integrated still that produces fuel via
@@ -86,7 +86,7 @@ export interface Vehicle {
     notes?: string
     shooter_character_id?: string | null
     shooter_kind?: 'pc' | 'npc' | null
-    // Tactical-map firing arc — degrees relative to the vehicle's
+    // Tactical-map firing arc - degrees relative to the vehicle's
     // forward direction + total cone opening. Optional; only used by
     // the tactical map's arc overlay.
     mount_angle?: number
@@ -99,18 +99,18 @@ interface Props {
   campaignId: string
   canEdit: boolean
   onUpdate: (vehicle: Vehicle) => void
-  // Optional — when omitted, the close ✕ button hides. Used by surfaces
+  // Optional - when omitted, the close ✕ button hides. Used by surfaces
   // that render the card inline (no separate close affordance needed).
   onClose?: () => void
   // When set, the header (image + name) becomes a clickable region that
-  // fires this callback — used by the table page to open the full sheet
+  // fires this callback - used by the table page to open the full sheet
   // inline-takeover the same way clicking a player avatar opens the
   // inline character sheet. Popout button still works alongside.
   onClickInline?: () => void
 }
 
 export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate, onClose, onClickInline }: Props) {
-  // Slim summary card — the full data (cargo, operator notes, driver/
+  // Slim summary card - the full data (cargo, operator notes, driver/
   // brewer dropdowns, Driving + Brew checks) lives on the popout. This
   // card stays light enough to sit in the right-side Assets panel
   // without dominating it.
@@ -123,7 +123,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
   const wpColor = wpPct > 0.5 ? '#7fc458' : wpPct > 0.25 ? '#EF9F27' : '#c0392b'
   const fuelPct = v.fuel_max > 0 ? v.fuel_current / v.fuel_max : 0
 
-  // Cargo encumbrance — sum of (item.enc × qty) across cargo, normalized
+  // Cargo encumbrance - sum of (item.enc × qty) across cargo, normalized
   // so legacy rows without .enc treat as 0. Compared to v.encumbrance
   // (the vehicle's cap, derived from size × 20 per CRB §10).
   const cargoTotalEnc = (v.cargo ?? []).reduce((sum, raw) => {
@@ -138,7 +138,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
   return (
     <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '10px 12px' }}>
 
-      {/* Header — image + name region is clickable when onClickInline
+      {/* Header - image + name region is clickable when onClickInline
           is wired, opening the full sheet inline. The Popout button is
           a sibling so its own click doesn't trigger the inline open
           (stopPropagation on the buttons keeps them isolated). */}
@@ -162,7 +162,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
         )}
       </div>
 
-      {/* Stats row — Enc shows current cargo / cap so the player can
+      {/* Stats row - Enc shows current cargo / cap so the player can
           see at a glance whether the vehicle is loaded down. Red value
           when over cap. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
@@ -173,7 +173,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
           { label: 'Enc', value: `${cargoTotalEnc} / ${v.encumbrance}`, color: cargoOverloaded ? '#c0392b' : undefined },
         ].map(s => (
           <div key={s.label} style={{ flex: 1, background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '3px 0', textAlign: 'center' }}
-            title={s.label === 'Enc' ? (cargoOverloaded ? `OVERLOADED — cargo (${cargoTotalEnc}) exceeds vehicle capacity (${v.encumbrance})` : `Cargo enc total / vehicle capacity`) : undefined}>
+            title={s.label === 'Enc' ? (cargoOverloaded ? `OVERLOADED - cargo (${cargoTotalEnc}) exceeds vehicle capacity (${v.encumbrance})` : `Cargo enc total / vehicle capacity`) : undefined}>
             <div style={lbl}>{s.label}</div>
             <div style={{ ...val, color: s.color ?? val.color }}>{s.value}</div>
           </div>
@@ -235,7 +235,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
             </div>
           )}
         </div>
-        {/* Pips render at half-day granularity — fuel_max * 2 pips, each
+        {/* Pips render at half-day granularity - fuel_max * 2 pips, each
             represents 0.5 days. Pip i is filled when fuel_current >= the
             day-mark this pip represents (i.e. (i+1) * 0.5). Old behavior
             was 1 pip per day, which masked half-day fuel transactions
@@ -248,7 +248,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
       </div>
 
       {/* Cargo, operator notes, driver/brewer, and the Driving / Brew
-          checks all live on the popout — keeps this card light. */}
+          checks all live on the popout - keeps this card light. */}
     </div>
   )
 }

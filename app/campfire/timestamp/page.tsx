@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 
-// /campfire/timestamp — HammerTime-style timestamp generator. Pick a date
+// /campfire/timestamp - HammerTime-style timestamp generator. Pick a date
 // + time + source timezone and copy a Discord-style <t:UNIX:format>
 // token that anyone (or any platform that parses these) renders in
 // their own local timezone. The tokens cross-post to Discord cleanly,
@@ -9,10 +9,10 @@ import { useEffect, useMemo, useState } from 'react'
 // localized <time> elements in user content here too.
 //
 // Format reference (matches Discord + HammerTime):
-//   t / T  — short / long time
-//   d / D  — short / long date
-//   f / F  — short / long date+time
-//   R      — relative ("in 2 hours", "5 minutes ago")
+//   t / T  - short / long time
+//   d / D  - short / long date
+//   f / F  - short / long date+time
+//   R      - relative ("in 2 hours", "5 minutes ago")
 
 interface FormatRow {
   code: string
@@ -190,7 +190,7 @@ export default function TimestampPage() {
         </div>
         {FORMATS.map(f => {
           const token = `<t:${unix}:${f.code}>`
-          const preview = previewDate ? f.render(previewDate) : '—'
+          const preview = previewDate ? f.render(previewDate) : '-'
           const flashing = copiedFlash === f.code
           return (
             <div key={f.code} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', alignItems: 'center' }}>
@@ -221,14 +221,14 @@ export default function TimestampPage() {
             </button>
           </div>
           <div style={{ ...tableCell, color: '#5a5550', fontStyle: 'italic' }}>
-            (raw integer — paste into anything that takes a unix epoch)
+            (raw integer - paste into anything that takes a unix epoch)
           </div>
         </div>
       </div>
 
       {/* Help */}
       <div style={{ marginTop: '1.25rem', fontSize: '13px', color: '#5a5550', lineHeight: 1.6 }}>
-        Tip — these tokens are the same format Discord uses for{' '}
+        Tip - these tokens are the same format Discord uses for{' '}
         <a href="https://discord.com/developers/docs/reference#message-formatting-timestamp-styles" target="_blank" rel="noreferrer" style={{ color: '#7ab3d4' }}>timestamp messages</a>.
         Paste a copied token into any Discord channel and it renders in everyone's local time automatically.
       </div>

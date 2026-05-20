@@ -1,4 +1,4 @@
-// Phase C Community mechanics — pure helpers shared between the Morale
+// Phase C Community mechanics - pure helpers shared between the Morale
 // modal and any log-rendering that needs to interpret the stored rows.
 // Source of truth: tasks/rules-extract-communities.md (SRD §08 + CRB).
 
@@ -19,7 +19,7 @@ export interface CommunityLite {
   leader_user_id: string | null
 }
 
-// "2d6" outcome — matches the table page's getOutcome so the morale
+// "2d6" outcome - matches the table page's getOutcome so the morale
 // modal shares the same SRD-canonical interpretation (Low Insight 1+1,
 // High Insight 6+6, thresholds 4 / 9 / 14).
 export function classifyRoll(total: number, die1: number, die2: number): string {
@@ -46,7 +46,7 @@ export function outcomeToMoraleCmod(outcome: string): number {
 }
 
 // Percentage of community that LEAVES on a Morale check failure tier.
-// Success tiers stay at 0 — no departures.
+// Success tiers stay at 0 - no departures.
 export function outcomeToDeparturePct(outcome: string): number {
   switch (outcome) {
     case 'Failure': return 0.25
@@ -62,7 +62,7 @@ export function isMoraleFailure(outcome: string): boolean {
   return outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight'
 }
 
-// "Enough Hands" CMod — mechanical, per SRD §08 (pages 23–24).
+// "Enough Hands" CMod - mechanical, per SRD §08 (pages 23-24).
 // Page 23: "Communities without enough members acting as Gatherers,
 // Maintainers, or Safety suffer a −1 CMod for each group that is short,
 // up to a maximum CMod of −3."
@@ -91,13 +91,13 @@ export function computeEnoughHandsCmod(members: CommunityMemberLite[]): number {
   return Math.max(-3, cmod)
 }
 
-// "A Clear Voice" — 0 with an acknowledged leader, −1 leaderless.
+// "A Clear Voice" - 0 with an acknowledged leader, −1 leaderless.
 export function computeClearVoiceCmod(community: CommunityLite): number {
   if (community.leader_user_id || community.leader_npc_id) return 0
   return -1
 }
 
-// "Someone To Watch Over Me" — +1 if Safety ≥ 10% of labor pool,
+// "Someone To Watch Over Me" - +1 if Safety ≥ 10% of labor pool,
 // −1 if < 5%, else 0.
 export function computeSafetyCmod(members: CommunityMemberLite[]): number {
   const laborPool = members.filter(m => !!m.npc_id && m.role !== 'assigned')

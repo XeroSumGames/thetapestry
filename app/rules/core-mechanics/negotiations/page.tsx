@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Negotiations — XSE SRD §02' }
+export const metadata = { title: 'Negotiations - XSE SRD §02' }
 
 const gambitRow = (label: string, effect: string, emphasized = false): React.ReactNode => (
   <tr style={emphasized ? { background: '#150f0e', borderLeft: '2px solid #c0392b' } : undefined}>
@@ -39,7 +39,7 @@ export default function Page() {
       <P>
         Negotiations open when one party (PC or NPC) wants something the
         other has, or wants the other to do something. Both sides should
-        Fill In The Gaps as the negotiation unfolds — the mechanic is just
+        Fill In The Gaps as the negotiation unfolds - the mechanic is just
         the spine, the role-play is the meat.
       </P>
 
@@ -51,10 +51,10 @@ export default function Page() {
           The skill choice depends on the approach:
         </P>
         <ul style={{ fontSize: 17, lineHeight: 1.8, color: '#f5f2ee', paddingLeft: '1.5rem', margin: '0 0 1rem' }}>
-          <li><Term>Barter</Term> — haggling, deal-making, "what's it worth to you?"</li>
-          <li><Term>Inspiration</Term> — appealing to higher purpose or shared belief</li>
-          <li><Term>Manipulation</Term> — playing on emotions, leverage, half-truths</li>
-          <li><Term>Psychology*</Term> — reading the target's pressure points</li>
+          <li><Term>Barter</Term> - haggling, deal-making, "what's it worth to you?"</li>
+          <li><Term>Inspiration</Term> - appealing to higher purpose or shared belief</li>
+          <li><Term>Manipulation</Term> - playing on emotions, leverage, half-truths</li>
+          <li><Term>Psychology*</Term> - reading the target's pressure points</li>
         </ul>
         <RuleTable>
           <thead>
@@ -65,9 +65,9 @@ export default function Page() {
           </thead>
           <tbody>
             {gambitRow('Wild Success (14+)', 'The Gambit truly resonates. Other side gets −3 CMod on their Rebuttal.', true)}
-            {gambitRow('Success (9–13)', 'The Gambit lands. Other side gets −1 CMod on their Rebuttal.')}
-            {gambitRow('Failure (4–8)', 'Argument falls short. Other side gets +1 CMod on their Rebuttal.')}
-            {gambitRow('Dire Failure (0–3)', 'So weak or so offensive that the other side does not respond at all. Negotiation is over — possibly hostile.')}
+            {gambitRow('Success (9-13)', 'The Gambit lands. Other side gets −1 CMod on their Rebuttal.')}
+            {gambitRow('Failure (4-8)', 'Argument falls short. Other side gets +1 CMod on their Rebuttal.')}
+            {gambitRow('Dire Failure (0-3)', 'So weak or so offensive that the other side does not respond at all. Negotiation is over - possibly hostile.')}
           </tbody>
         </RuleTable>
       </RuleSection>
@@ -88,9 +88,9 @@ export default function Page() {
           </thead>
           <tbody>
             {gambitRow('Wild Success (14+)', 'The Rebuttal is a compelling counteroffer. Other side is very likely to consider their proposal.', true)}
-            {gambitRow('Success (9–13)', 'Counter is met favourably. A deal or agreement can be reached.')}
-            {gambitRow('Failure (4–8)', 'Cannot present a cogent counterargument. Negotiations are at an impasse — no deal, no harm.')}
-            {gambitRow('Dire Failure (0–3)', 'Things go spectacularly wrong. Negotiation is immediately over and the situation could turn hostile.')}
+            {gambitRow('Success (9-13)', 'Counter is met favourably. A deal or agreement can be reached.')}
+            {gambitRow('Failure (4-8)', 'Cannot present a cogent counterargument. Negotiations are at an impasse - no deal, no harm.')}
+            {gambitRow('Dire Failure (0-3)', 'Things go spectacularly wrong. Negotiation is immediately over and the situation could turn hostile.')}
           </tbody>
         </RuleTable>
       </RuleSection>
@@ -101,7 +101,7 @@ export default function Page() {
           until the situation changes. This might be the offered terms
           changing, more information being uncovered, or external events
           shifting the leverage between the parties. A second Negotiation
-          on the same terms with the same parties is not a Negotiation —
+          on the same terms with the same parties is not a Negotiation -
           it's nagging.
         </P>
       </RuleSection>

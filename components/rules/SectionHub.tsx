@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { RuleHero } from './RuleSection'
 import type { RuleSection } from '../../lib/rules/sections'
 
-// SectionHub — the per-section landing layout that won A/B testing.
+// SectionHub - the per-section landing layout that won A/B testing.
 // Renders the section hero + a card grid where each card is one anchor
 // from the section's outline. Used by every /rules/<section>/page.tsx
 // after the 2026-05-01 SRD redesign so the experience is consistent
@@ -11,14 +11,14 @@ import type { RuleSection } from '../../lib/rules/sections'
 //
 // For non-stub sections, cards link to /rules/<section>/<anchor>. For
 // stub sections, cards render with a "forthcoming" eyebrow and don't
-// navigate — clicking them is a no-op until the sub-page exists.
+// navigate - clicking them is a no-op until the sub-page exists.
 
 export default function SectionHub({ section }: { section: RuleSection }) {
   return (
     <>
       <RuleHero
         eyebrow={`§${section.number} · ${section.title}`}
-        title={section.title.replace(/^Appendix [A-D] — /, '')}
+        title={section.title.replace(/^Appendix [A-D] - /, '')}
         intro={section.summary}
       />
       {section.anchors.length === 0 ? (

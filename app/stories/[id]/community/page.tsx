@@ -8,7 +8,7 @@ import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import StoryActionBar from '../../../../components/StoryActionBar'
 import type { Community, Member } from '../../../../lib/types/community'
 
-// Phase D — Community Dashboard. Campaign-scoped full-screen GM view
+// Phase D - Community Dashboard. Campaign-scoped full-screen GM view
 // into every Community in this campaign: Morale/Fed/Clothed history,
 // current role distribution vs SRD minimums, recruitment success
 // breakdown by approach, member-type breakdown.
@@ -16,7 +16,7 @@ import type { Community, Member } from '../../../../lib/types/community'
 // via the inline block in CampaignCommunity + this page's "access
 // denied" branch). Route: /stories/[campaignId]/community.
 
-// Community / Member — pulled from lib/types/community.ts.
+// Community / Member - pulled from lib/types/community.ts.
 interface MoraleRow {
   week_number: number
   outcome: string
@@ -121,7 +121,7 @@ export default function CommunityDashboardPage() {
           .select('id, npc_id, character_id, role, recruitment_type')
           .eq('community_id', selectedId)
           .is('left_at', null),
-        // Recruitment history — pull from roll_log for this campaign
+        // Recruitment history - pull from roll_log for this campaign
         // where the recruit's damage_json.communityId matches. Cheaper
         // than joining; filter client-side since damage_json isn't
         // easily queryable without a GIN.
@@ -141,7 +141,7 @@ export default function CommunityDashboardPage() {
 
   const selected = useMemo(() => communities.find(c => c.id === selectedId) ?? null, [communities, selectedId])
 
-  // Role distribution — NPC labor pool only (matches CampaignCommunity
+  // Role distribution - NPC labor pool only (matches CampaignCommunity
   // and the Morale modal's Enough Hands computation).
   const roleDistribution = useMemo(() => {
     const labor = members.filter(m => m.npc_id && m.role !== 'assigned')
@@ -158,7 +158,7 @@ export default function CommunityDashboardPage() {
     }
   }, [members])
 
-  // Recruitment stats — totals by approach, success/failure split.
+  // Recruitment stats - totals by approach, success/failure split.
   const recruitStats = useMemo(() => {
     const byApproach: Record<string, { success: number; fail: number }> = {
       cohort: { success: 0, fail: 0 },
@@ -209,7 +209,7 @@ export default function CommunityDashboardPage() {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       <StoryActionBar campaignId={campaignId} />
-      {/* Sub-page label — small, below the canonical campaign name. */}
+      {/* Sub-page label - small, below the canonical campaign name. */}
       <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '1.25rem' }}>
         Community Dashboard
       </div>
@@ -328,7 +328,7 @@ export default function CommunityDashboardPage() {
                         )}
                       </div>
                       <span style={{ width: '90px', textAlign: 'right', color: ok ? '#7fc458' : row.min > 0 ? '#c0392b' : '#cce0f5', fontWeight: 700 }}>{row.count} ({row.pct}%)</span>
-                      <span style={{ width: '60px', textAlign: 'right', color: '#5a5550', fontSize: '13px' }}>{row.min > 0 ? `min ${row.min}%` : '—'}</span>
+                      <span style={{ width: '60px', textAlign: 'right', color: '#5a5550', fontSize: '13px' }}>{row.min > 0 ? `min ${row.min}%` : '-'}</span>
                     </div>
                   )
                 })}

@@ -14,7 +14,7 @@ export default function NpcSheetPage() {
   const npcId = params.get('npc')
   // Opener passes &gm=1 or &gm=0 because it already knows the viewer's role.
   // When the hint is present (the common case), we skip the auth.getUser() +
-  // campaigns gm_user_id round-trips entirely — the popout used to do three
+  // campaigns gm_user_id round-trips entirely - the popout used to do three
   // sequential queries on mount before rendering anything; with this hint
   // it does one. Falls back to a runtime check for old bookmarked URLs that
   // predate the hint. Security: GM vs Player view is purely a UI selection,
@@ -66,9 +66,9 @@ export default function NpcSheetPage() {
 
   useEffect(() => {
     if (!npcId) return
-    // Realtime sync — two channels, both converging to the same setNpc:
-    //   postgres_changes UPDATE — reliable but can lag 0.5-2s on busy projects.
-    //   npc_damaged broadcast — fires instantly from whichever client dealt
+    // Realtime sync - two channels, both converging to the same setNpc:
+    //   postgres_changes UPDATE - reliable but can lag 0.5-2s on busy projects.
+    //   npc_damaged broadcast - fires instantly from whichever client dealt
     //     the damage on the campaign's initiative channel. This is how the
     //     main table page updates in real time; subscribing here too means
     //     the popout window no longer lags behind the attacker's main tab.
@@ -104,7 +104,7 @@ export default function NpcSheetPage() {
         <NpcCard
           npc={npc}
           onClose={() => window.close()}
-          // Edit / Map / Publish / Popout hidden in the popout itself — they
+          // Edit / Map / Publish / Popout hidden in the popout itself - they
           // only make sense back in the table page's Asset panel. Restore and
           // Stabilize still work because they hit Supabase directly.
         />

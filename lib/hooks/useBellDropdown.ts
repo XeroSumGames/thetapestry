@@ -1,5 +1,5 @@
 'use client'
-// useBellDropdown — shared scaffolding for the header bell components
+// useBellDropdown - shared scaffolding for the header bell components
 // (NotificationBell, MessagesBell). Both follow the same shape:
 //
 //   1. Resolve the current user via getCachedAuth().
@@ -14,9 +14,9 @@
 // (auth events, presence pings, etc.) only need to be added in one place.
 //
 // What this hook intentionally does NOT do:
-//   • Hold the items list — different bells store different shapes
+//   • Hold the items list - different bells store different shapes
 //     (Notification[] vs ConvItem[]); each bell keeps its own state.
-//   • Render anything — bells render their own buttons + dropdowns.
+//   • Render anything - bells render their own buttons + dropdowns.
 //
 // Race-safety: the mount effect uses a `cancelled` flag so a fast unmount
 // (e.g. React Strict Mode double-invoke or rapid route nav) can't leave
@@ -29,13 +29,13 @@ import { getCachedAuth } from '../auth-cache'
 type SupabaseChannel = ReturnType<ReturnType<typeof createClient>['channel']>
 
 export interface UseBellDropdownOptions {
-  /** Prefix for the realtime channel — final name becomes `${channelKey}_${userId}`. */
+  /** Prefix for the realtime channel - final name becomes `${channelKey}_${userId}`. */
   channelKey: string
-  /** Initial data load — runs once after the user resolves, before channel subscribe. */
+  /** Initial data load - runs once after the user resolves, before channel subscribe. */
   loadItems: (userId: string) => void | Promise<void>
   /** Wire up `.on(...)` handlers on the supplied channel and return the
    *  `.subscribe()` chain result. The hook will store + later remove
-   *  whatever you return. The `userId` arg is the auth'd user — capture
+   *  whatever you return. The `userId` arg is the auth'd user - capture
    *  it in your handler closures so they don't go stale. */
   setupChannel: (channel: SupabaseChannel, userId: string) => SupabaseChannel
 }

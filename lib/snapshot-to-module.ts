@@ -1,6 +1,6 @@
 // Pure transform from a campaign-snapshot JSON file (the export format
 // produced by `lib/campaign-snapshot.ts`) into a `ModuleSnapshot` ready
-// to feed into `publishModuleVersion`. No DB calls, no auth — runs
+// to feed into `publishModuleVersion`. No DB calls, no auth - runs
 // entirely on the parsed JSON object.
 //
 // Mirrors the field selection in `buildCampaignSnapshot` so a module
@@ -8,18 +8,18 @@
 // published from the live campaign it came from.
 //
 // What's intentionally dropped:
-//   • character_states[] — orphan live-state references; the underlying
+//   • character_states[] - orphan live-state references; the underlying
 //     `characters` rows aren't in the snapshot, so the IDs would dangle
-//   • campaign_id / captured_at / version metadata — not part of the
+//   • campaign_id / captured_at / version metadata - not part of the
 //     module shape; the new module gets its own metadata at publish time
-//   • PC tokens (token.character_id != null) — PCs don't travel with
+//   • PC tokens (token.character_id != null) - PCs don't travel with
 //     modules, same rule as buildCampaignSnapshot
 //   • per-NPC live state (wp_current/rp_current/death_countdown/incap)
-//     — clones start fresh
+//     - clones start fresh
 
 import type { ModuleSnapshot, SnapshotCounts } from './modules'
 
-// Loose shape — we treat the file leniently and skip unknown sections.
+// Loose shape - we treat the file leniently and skip unknown sections.
 export interface CampaignSnapshotFile {
   npcs?: any[]
   pins?: any[]
@@ -94,7 +94,7 @@ export function snapshotToModuleSnapshot(
   if (opts.includeScenes && Array.isArray(file.scenes)) {
     snapshot.scenes = file.scenes.map((wrap: any) => {
       // Snapshot files wrap each scene as { scene: {...}, tokens: [...] }
-      // — flatten to the ModuleSnapshotScene shape (scene fields at top
+      // - flatten to the ModuleSnapshotScene shape (scene fields at top
       // level, tokens as a child array).
       const s = wrap.scene ?? {}
       const rawTokens: any[] = Array.isArray(wrap.tokens) ? wrap.tokens : []
@@ -144,7 +144,7 @@ export function snapshotToModuleSnapshot(
   return { snapshot, counts }
 }
 
-// Sanity check — does this object look like a campaign-snapshot file?
+// Sanity check - does this object look like a campaign-snapshot file?
 // Used by /modules/import to reject non-snapshot uploads early with a
 // clear error message instead of letting the transform produce empty
 // arrays silently.

@@ -2,7 +2,7 @@ import { RuleHero, P, Term } from '../../../../components/rules/RuleSection'
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Introduction — XSE SRD §01' }
+export const metadata = { title: 'Introduction - XSE SRD §01' }
 
 export default function Page() {
   return (
@@ -14,7 +14,7 @@ export default function Page() {
         intro={
           <>
             The Xero Sum Engine (XSE) is a tabletop roleplaying game
-            framework designed for <Term>2–6 players</Term>, with robust
+            framework designed for <Term>2-6 players</Term>, with robust
             core mechanics that can be applied to most genres or settings,
             while remaining lightweight enough to keep the story at the
             centre of the action.

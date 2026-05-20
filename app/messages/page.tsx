@@ -67,7 +67,7 @@ export default function MessagesPage() {
       // directly. Used by the MessagesBell dropdown's per-row OPEN button
       // so a click can deep-link straight into the right thread instead of
       // dumping the user at the conversation list. We trust loadConversations'
-      // RLS-filtered list to gate access — only set activeConvId if the user
+      // RLS-filtered list to gate access - only set activeConvId if the user
       // is actually a participant in that conv.
       const convId = searchParams.get('conv')
       if (convId) {
@@ -467,7 +467,7 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            {/* Send form — at the top for easy access */}
+            {/* Send form - at the top for easy access */}
             <div style={{ padding: '12px 20px', borderBottom: '1px solid #2e2e2e', display: 'flex', gap: '8px', flexShrink: 0 }}>
               <input
                 autoFocus
@@ -484,7 +484,7 @@ export default function MessagesPage() {
               </button>
             </div>
 
-            {/* Messages — spacer pushes content to bottom without the justifyContent overflow bug */}
+            {/* Messages - spacer pushes content to bottom without the justifyContent overflow bug */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
               <div style={{ flex: 1 }} />
               {loadingMsgs && <div style={{ color: '#4d7a35', fontSize: '13px', textAlign: 'center' }}>Loading…</div>}

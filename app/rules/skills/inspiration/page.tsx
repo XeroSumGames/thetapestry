@@ -2,7 +2,7 @@ import { RuleHero, RuleSection, TryIt, P, Term } from '../../../../components/ru
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Inspiration — XSE SRD §05' }
+export const metadata = { title: 'Inspiration - XSE SRD §05' }
 
 export default function Page() {
   return (
@@ -13,7 +13,7 @@ export default function Page() {
         title="Inspiration"
         intro={
           <>
-            <Term>Inspiration</Term> (INF) — being able to boost the
+            <Term>Inspiration</Term> (INF) - being able to boost the
             morale of individuals or groups, or motivate them behind a
             shared vision or belief.
           </>
@@ -37,13 +37,13 @@ export default function Page() {
         </P>
       </RuleSection>
 
-      <RuleSection id="lv4-trait" title="Level 4 — Beacon of Hope">
+      <RuleSection id="lv4-trait" title="Level 4 - Beacon of Hope">
         <P>
           At <Term>Inspiration Level 4 (Life's Work)</Term>, the character
           adds <Term>+4 to any Community Morale Check</Term> they
           participate in. They can also make rousing speeches that
-          convince any community they are a part of to risk everything —
-          including their own lives — for the good of the larger group.
+          convince any community they are a part of to risk everything -
+          including their own lives - for the good of the larger group.
         </P>
         <P>
           See{' '}

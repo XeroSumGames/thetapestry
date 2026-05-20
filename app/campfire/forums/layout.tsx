@@ -11,14 +11,14 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Forums',
-  description: 'Community threads — lore discussion, rules questions, session recaps, and everything in between. The Tapestry community boards.',
+  description: 'Community threads - lore discussion, rules questions, session recaps, and everything in between. The Tapestry community boards.',
   openGraph: {
-    title: 'Forums — The Tapestry',
-    description: 'Community threads — lore, rules, session recaps, and more.',
+    title: 'Forums - The Tapestry',
+    description: 'Community threads - lore, rules, session recaps, and more.',
   },
   twitter: {
-    title: 'Forums — The Tapestry',
-    description: 'Community threads — lore, rules, session recaps, and more.',
+    title: 'Forums - The Tapestry',
+    description: 'Community threads - lore, rules, session recaps, and more.',
   },
 }
 

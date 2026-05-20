@@ -1,4 +1,4 @@
-// AuthorBadge — compact "<avatar circle> username" pair shown next to
+// AuthorBadge - compact "<avatar circle> username" pair shown next to
 // authored content (forum posts, war stories, LFG cards, replies).
 // Pure presentation; the calling page owns the data fetch and passes
 // the hydrated username + avatar URL down. This keeps the component

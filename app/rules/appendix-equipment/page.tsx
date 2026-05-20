@@ -10,7 +10,7 @@ import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS } from 
 import { EQUIPMENT } from '../../../lib/xse-schema'
 import { rarityColor } from '../../../lib/rarity-colors'
 
-export const metadata = { title: 'Appendix C — Weapons & Equipment — XSE SRD' }
+export const metadata = { title: 'Appendix C - Weapons & Equipment - XSE SRD' }
 
 interface WeaponLike {
   name: string
@@ -48,11 +48,11 @@ function WeaponTable({ weapons }: { weapons: WeaponLike[] }) {
             <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap' }}>{w.skill}</td>
             <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap' }}>{w.range}</td>
             <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: rarityColor(w.rarity) }}>{w.rarity}</td>
-            <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', color: '#cce0f5' }}>{w.damage || '—'}</td>
+            <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', color: '#cce0f5' }}>{w.damage || '-'}</td>
             <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{w.rpPercent}%</td>
             <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{w.enc}</td>
-            <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{w.clip ?? '—'}</td>
-            <td style={ruleTableTdStyle}>{w.traits.length ? w.traits.join(', ') : '—'}</td>
+            <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{w.clip ?? '-'}</td>
+            <td style={ruleTableTdStyle}>{w.traits.length ? w.traits.join(', ') : '-'}</td>
           </tr>
         ))}
       </tbody>
@@ -77,23 +77,23 @@ export default function Page() {
         }
       />
 
-      <RuleSection id="melee" title="Table 16 — Melee Weapons">
+      <RuleSection id="melee" title="Table 16 - Melee Weapons">
         <WeaponTable weapons={MELEE_WEAPONS as unknown as WeaponLike[]} />
       </RuleSection>
 
-      <RuleSection id="ranged" title="Table 17 — Ranged Weapons">
+      <RuleSection id="ranged" title="Table 17 - Ranged Weapons">
         <WeaponTable weapons={RANGED_WEAPONS as unknown as WeaponLike[]} />
       </RuleSection>
 
-      <RuleSection id="explosive" title="Table 18 — Explosive Weapons">
+      <RuleSection id="explosive" title="Table 18 - Explosive Weapons">
         <WeaponTable weapons={EXPLOSIVE_WEAPONS as unknown as WeaponLike[]} />
       </RuleSection>
 
-      <RuleSection id="specialist" title="Table 19 — Heavy / Specialist Weapons">
+      <RuleSection id="specialist" title="Table 19 - Heavy / Specialist Weapons">
         <WeaponTable weapons={HEAVY_WEAPONS as unknown as WeaponLike[]} />
       </RuleSection>
 
-      <RuleSection id="equipment" title="Table 20 — Equipment">
+      <RuleSection id="equipment" title="Table 20 - Equipment">
         <P>
           Each character begins with one piece of equipment from this
           table, plus an Incidental item that has no combat value but
@@ -114,7 +114,7 @@ export default function Page() {
                 <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', fontWeight: 700, color: '#f5f2ee' }}>{item.name}</td>
                 <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: rarityColor(item.rarity) }}>{item.rarity}</td>
                 <td style={{ ...ruleTableTdStyle, textAlign: 'center' }}>{item.enc}</td>
-                <td style={ruleTableTdStyle}>{item.notes || '—'}</td>
+                <td style={ruleTableTdStyle}>{item.notes || '-'}</td>
               </tr>
             ))}
           </tbody>

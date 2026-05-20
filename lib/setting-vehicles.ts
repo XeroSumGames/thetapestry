@@ -7,7 +7,7 @@
 //
 // Shape MUST match VehicleCard's Vehicle interface (camelCase fields).
 // Cargo is the unified InventoryItem shape now (was { name, qty, notes }
-// only — extra fields default to enc=0 / rarity='Common' / custom=true
+// only - extra fields default to enc=0 / rarity='Common' / custom=true
 // at read time via normalizeInventoryItem). wp_current/fuel_current
 // default to their respective max so the vehicle starts at full health/
 // tank.
@@ -38,13 +38,13 @@ export interface SeedVehicle {
   fuel_current: number
   // Per-vehicle fuel storage expansion (Q4-c, 2026-05-19). See
   // VehicleCard.tsx for the rationale. fuel_max_base = floor for
-  // uninstall; fuel_storage_max = cap on install. Both optional —
+  // uninstall; fuel_storage_max = cap on install. Both optional -
   // a vehicle without these fields can't have drums added.
   fuel_max_base?: number
   fuel_storage_max?: number
   // Brewing supplies stockpile (Q4-d, 2026-05-19). See VehicleCard.tsx
   // for rationale. brewing_supplies_current = days of materials on
-  // hand; brewing_supplies_max = stockpile cap. Both optional —
+  // hand; brewing_supplies_max = stockpile cap. Both optional -
   // absence disables the feature.
   brewing_supplies_current?: number
   brewing_supplies_max?: number
@@ -114,7 +114,7 @@ const MINNIE: SeedVehicle = {
   // where there's a name match; otherwise reasonable estimates per
   // SRD §05 weapon-class encumbrance (long guns 2, pistols/melee 1,
   // mounted heavies 3, body armor 1, throwables 0). Sums to 98 of
-  // Minnie's 100 capacity — slack so a couple of looted extras fit
+  // Minnie's 100 capacity - slack so a couple of looted extras fit
   // before OVERLOADED kicks in.
   cargo: [
     { name: 'Tactical Vests',       qty: 6,  enc: 1, notes: '-3 DMR/DMM' },

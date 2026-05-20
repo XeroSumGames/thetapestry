@@ -7,7 +7,7 @@ import { OUTCOME } from '../../lib/roll-outcomes'
 // anything else would silently break the column without these guards.
 // They're cheap insurance.
 
-describe('OUTCOME — roll result labels (capital-case)', () => {
+describe('OUTCOME - roll result labels (capital-case)', () => {
   it('Success = "Success"', () => {
     expect(OUTCOME.Success).toBe('Success')
   })
@@ -28,7 +28,7 @@ describe('OUTCOME — roll result labels (capital-case)', () => {
   })
 })
 
-describe('OUTCOME — grapple-specific results', () => {
+describe('OUTCOME - grapple-specific results', () => {
   it('Grappled = "Grappled!" (includes the bang)', () => {
     expect(OUTCOME.Grappled).toBe('Grappled!')
   })
@@ -40,7 +40,7 @@ describe('OUTCOME — grapple-specific results', () => {
   })
 })
 
-describe('OUTCOME — event tags (lowercase, key matches value)', () => {
+describe('OUTCOME - event tags (lowercase, key matches value)', () => {
   // Spot-check: if any of these drift, the renderer falls through to
   // the default branch and the row renders generically. Lock the set.
   const lowercaseTags = [

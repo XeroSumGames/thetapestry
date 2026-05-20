@@ -2,17 +2,17 @@
 // Chat panel pieces for the GM-table feed area.
 //
 // What lives where:
-//   - useChatPanel (hook)        — owns chat state + realtime channel.
+//   - useChatPanel (hook)        - owns chat state + realtime channel.
 //                                  Parent calls this so it can read
 //                                  `messages` for the Both-tab merged
 //                                  render that interleaves chat+rolls.
-//   - <ChatMessageRow>           — single-message bubble. Used both
+//   - <ChatMessageRow>           - single-message bubble. Used both
 //                                  by <ChatMessageList> (Chat tab) and
 //                                  by the parent's Both-tab merged feed.
-//   - <ChatMessageList>          — Chat-tab full list (empty state
+//   - <ChatMessageList>          - Chat-tab full list (empty state
 //                                  + map). Renders only when feedTab
 //                                  === 'chat'.
-//   - <ChatComposer>             — textarea + Send button + whisper
+//   - <ChatComposer>             - textarea + Send button + whisper
 //                                  indicator. Owns input state and the
 //                                  send/slash-command logic. Renders
 //                                  whenever feedTab is 'chat' or 'both'.
@@ -49,7 +49,7 @@ export interface WhisperTarget {
   characterName: string
 }
 
-// Minimal subset of TableEntry the chat actually reads — keeps the
+// Minimal subset of TableEntry the chat actually reads - keeps the
 // component decoupled from the parent's full TableEntry shape.
 export interface ChatTableEntry {
   userId: string
@@ -57,7 +57,7 @@ export interface ChatTableEntry {
   character: { name: string }
 }
 
-// Minimal subset of Campaign — only gm_user_id is read (for /w gm).
+// Minimal subset of Campaign - only gm_user_id is read (for /w gm).
 export interface ChatCampaign {
   gm_user_id: string
 }
@@ -66,7 +66,7 @@ export interface ChatCampaign {
 
 export interface UseChatPanelArgs {
   campaignId: string
-  // userIdRef so refetch always reads the freshest value — parent's
+  // userIdRef so refetch always reads the freshest value - parent's
   // userId state can be stale inside long-lived closures.
   userIdRef: React.MutableRefObject<string | null>
   // Auto-switch the parent's feed tab when an inbound whisper lands.
@@ -82,8 +82,8 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
   const channelRef = useRef<any>(null)
 
   // Stash the parent-provided callbacks in refs so refetch can stay
-  // referentially stable across renders. Without this — if the parent
-  // passes inline arrow functions (which they will, by default) — every
+  // referentially stable across renders. Without this - if the parent
+  // passes inline arrow functions (which they will, by default) - every
   // render recreates the callbacks, refetch's deps change, the
   // useEffects below fire on every render, the realtime channel
   // re-subscribes, and the postgres_changes events compound into a
@@ -94,7 +94,7 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
   setFeedTabRef.current = setFeedTab
   scrollFeedToBottomRef.current = scrollFeedToBottom
 
-  // Sequence guard — postgres_changes on chat_messages can fire in
+  // Sequence guard - postgres_changes on chat_messages can fire in
   // bursts (multi-line GM whispers, players typing back-and-forth).
   // A slower earlier refetch can finish AFTER a faster later one and
   // overwrite fresh messages with stale data. Same defense as
@@ -114,7 +114,7 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
       .order('created_at', { ascending: false })
       .limit(100)
     if (error) { console.warn('[useChatPanel] fetch error:', error.message); return }
-    // Drop stale results — a newer refetch already won. Has to come
+    // Drop stale results - a newer refetch already won. Has to come
     // after the await but before any setState so we don't clobber
     // fresher data the later refetch already wrote.
     if (seq !== refetchSeqRef.current) return
@@ -182,7 +182,7 @@ interface ChatMessageRowProps {
 
 // React.memo so a parent re-render doesn't re-execute the entries.find
 // + renderRichText for every visible chat row when nothing about that
-// row changed. Pairs with virtualization in <ChatMessageList> below —
+// row changed. Pairs with virtualization in <ChatMessageList> below -
 // virtualization keeps off-screen rows out of the DOM, memo keeps
 // on-screen rows from re-parsing on unrelated parent ticks.
 export const ChatMessageRow = memo(function ChatMessageRow({
@@ -222,7 +222,7 @@ interface ChatMessageListProps {
   entries: ChatTableEntry[]
   formatTime: (iso: string) => string
   // The parent's existing scroll container. When supplied, the list
-  // virtualizes via react-virtuoso's `customScrollParent` mode — only
+  // virtualizes via react-virtuoso's `customScrollParent` mode - only
   // visible rows get rendered, even though the parent owns the scrollbar
   // (shared with the Logs / Both tabs). Until the ref resolves on first
   // mount we fall back to a plain map render so nothing flickers.
@@ -257,7 +257,7 @@ export function ChatMessageList({
       data={messages}
       customScrollParent={scrollParent}
       // followOutput="smooth" keeps the list anchored to the bottom on
-      // new messages — same behavior the parent's scroll-to-bottom
+      // new messages - same behavior the parent's scroll-to-bottom
       // helper provides for the rolls feed. Returning 'smooth' from
       // the function (rather than the boolean true) lets Virtuoso
       // skip the auto-scroll if the user has scrolled up to read
@@ -302,11 +302,11 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
     let isWhisper = !!whisperTarget
     let messageBody = trimmed
 
-    // Dice roller — `/r <expr>` or `/roll <expr>`. Expression is
+    // Dice roller - `/r <expr>` or `/roll <expr>`. Expression is
     // NdM with optional +/- modifiers (e.g. `/r 1d6`, `/r 3d20+3-1`).
     // Output replaces the chat body with a formatted result line and
     // rides through the normal send path (so it respects whisper
-    // target — set whisper to GM first if you want a secret roll).
+    // target - set whisper to GM first if you want a secret roll).
     // Capped at 100 dice / 1000 sides as a safety guard. Trigger was
     // `/d` originally; flipped to `/r` per Xero on 2026-05-04 since
     // `/d` collided with muscle memory from other tools that use it
@@ -316,7 +316,7 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
       const expr = diceCmd[1].replace(/\s+/g, '')
       const m = expr.match(/^(\d+)d(\d+)((?:[+\-]\d+)*)$/i)
       if (!m) {
-        alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /r NdM[+/-K] — e.g. /r 1d6, /r 3d20+3+2-1, /r 1d100-2`)
+        alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /r NdM[+/-K] - e.g. /r 1d6, /r 3d20+3+2-1, /r 1d100-2`)
         return
       }
       const count = Math.min(100, Math.max(1, parseInt(m[1], 10)))
@@ -338,7 +338,7 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
       messageBody = `🎲 ${exprPretty} → [${rolls.join('+')}]${modStr} = ${total}`
     }
 
-    // Whisper command — `/whisper <target> <body>` or `/w <target> <body>`.
+    // Whisper command - `/whisper <target> <body>` or `/w <target> <body>`.
     // Walks the tail of the command from longest-prefix to shortest,
     // trying each candidate as exact / prefix / substring against
     // character_name OR username (case-insensitive). So all of these

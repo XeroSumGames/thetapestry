@@ -1,5 +1,5 @@
 'use client'
-// Phase 5 Sprint 3 — Module version history page.
+// Phase 5 Sprint 3 - Module version history page.
 //
 // Route: /stories/<campaign_id>/modules/<module_id>/versions
 //
@@ -19,7 +19,7 @@
 //   - Thrivers (for moderation)
 //
 // The campaign_id in the URL is mainly for the "Review this update"
-// flow — so the page knows which subscriber context to consider
+// flow - so the page knows which subscriber context to consider
 // current. If the viewer isn't actually subscribed, the page still
 // renders but the Review button is hidden.
 
@@ -105,7 +105,7 @@ export default function ModuleVersionsPage() {
       {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #8b5cf6', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
-          📦 {moduleName || 'Module'} — Version History
+          📦 {moduleName || 'Module'} - Version History
         </div>
         <div style={{ flex: 1 }} />
         <button onClick={() => router.back()}

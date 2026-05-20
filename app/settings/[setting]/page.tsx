@@ -12,18 +12,18 @@ import {
   type SettingMeta,
 } from '../../../lib/setting-meta'
 
-// /settings/[setting] — Phase 4C setting hub. One dynamic page per
+// /settings/[setting] - Phase 4C setting hub. One dynamic page per
 // featured setting (District Zero + Kings Crossroads). The page is the
 // landing surface for cross-campaign discovery within a setting:
 //
-//   1. Header — name, tagline, blurb, "Run a campaign in [Setting]" CTA.
-//   2. Canon timeline — all SETTING_PINS[slug] rendered as a list with
+//   1. Header - name, tagline, blurb, "Run a campaign in [Setting]" CTA.
+//   2. Canon timeline - all SETTING_PINS[slug] rendered as a list with
 //      category-keyed icons + per-pin "View on map" deep-link
 //      (?flyTo=lat,lng&zoom=…).
-//   3. Communities — published world_communities sourced from any
+//   3. Communities - published world_communities sourced from any
 //      campaign tagged with this setting (joined through campaigns).
 //      Only `moderation_status='approved'` rows render.
-//   4. Setting feed — recent N posts from each Campfire surface
+//   4. Setting feed - recent N posts from each Campfire surface
 //      (Forums / War Stories / LFG) filtered to this setting via the
 //      Phase 4A `setting` discriminator. Each block links to the full
 //      surface with the setting context dropdown pre-set.
@@ -138,7 +138,7 @@ export default function SettingHubPage() {
 
   async function loadFeeds() {
     setFeedLoading(true)
-    // Three parallel fetches — only approved + tagged-to-this-setting
+    // Three parallel fetches - only approved + tagged-to-this-setting
     // rows. Each fetch limits to RECENT_FEED_LIMIT so the page paints
     // fast even when a feed is dense; the "See all" links route to the
     // full surface with the setting filter pre-applied.
@@ -163,7 +163,7 @@ export default function SettingHubPage() {
         .limit(RECENT_FEED_LIMIT),
     ])
     // Single-batch profile lookup across all three feeds for username
-    // hydration — saves three round-trips.
+    // hydration - saves three round-trips.
     const allRows = [
       ...(forumsRes.data ?? []),
       ...(warStoriesRes.data ?? []),
@@ -219,7 +219,7 @@ export default function SettingHubPage() {
   return (
     <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif' }}>
 
-      {/* Header — name, tagline, blurb, primary CTA. The accent color
+      {/* Header - name, tagline, blurb, primary CTA. The accent color
           drives the underline + run-campaign button so each hub is
           visually distinct. */}
       <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: `2px solid ${meta.accent}` }}>
@@ -247,7 +247,7 @@ export default function SettingHubPage() {
         </div>
       </div>
 
-      {/* Canon Timeline — pins from SETTING_PINS, grouped by category.
+      {/* Canon Timeline - pins from SETTING_PINS, grouped by category.
           The section title says "Timeline" because the original spec
           framed these as the canonical setting markers; for hubs
           without temporal ordering they read more like a gazetteer. */}
@@ -288,14 +288,14 @@ export default function SettingHubPage() {
         )}
       </Section>
 
-      {/* Communities — published world_communities filtered to this
+      {/* Communities - published world_communities filtered to this
           setting's campaigns. Approved-only via the world_communities
           RLS + filter. */}
       <Section title="Communities" accent={meta.accent} count={communities.length}>
         {communitiesLoading ? (
           <Empty>Loading…</Empty>
         ) : communities.length === 0 ? (
-          <Empty>No published communities here yet. Be the first — run a campaign and publish your community to the Distemperverse.</Empty>
+          <Empty>No published communities here yet. Be the first - run a campaign and publish your community to the Distemperverse.</Empty>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {communities.map(c => {
@@ -336,7 +336,7 @@ export default function SettingHubPage() {
         )}
       </Section>
 
-      {/* Setting Feed — three feed-snapshot blocks for Forums / War
+      {/* Setting Feed - three feed-snapshot blocks for Forums / War
           Stories / LFG. Each block shows the most recent N posts
           tagged with this setting; "See all" links pre-apply the
           setting context filter on the destination. */}

@@ -17,7 +17,7 @@ interface Props {
 
 // Free-aspect cropper for object-token images. Loads the selected File,
 // shows the image with a draggable / corner-resizable crop box (any
-// rectangle — not forced square), and outputs a JPEG blob at the
+// rectangle - not forced square), and outputs a JPEG blob at the
 // cropped aspect ratio. Long edge is capped at OUT_LONG_EDGE so the
 // upload size stays sane for wide truck art.
 export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError, onClearError }: Props) {
@@ -45,7 +45,7 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
 
   // Output JPEG/PNG: cap the longer edge at this many pixels. Tokens
   // display at 64-128 px on the tactical map, so 768 is plenty of detail
-  // for any zoom and ~44 % less pixel count than 1024 — meaningful upload
+  // for any zoom and ~44 % less pixel count than 1024 - meaningful upload
   // savings on slow connections.
   const OUT_LONG_EDGE = 768
 
@@ -94,7 +94,7 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
       setBox({ x, y, w: sb.w, h: sb.h })
     } else {
       // Resize bottom-right corner. Width and height move independently
-      // so the GM can set any aspect they want — no aspect lock.
+      // so the GM can set any aspect they want - no aspect lock.
       const w = Math.max(32, Math.min(imgSize.w - sb.x, sb.w + dx))
       const h = Math.max(32, Math.min(imgSize.h - sb.y, sb.h + dy))
       setBox({ x: sb.x, y: sb.y, w, h })
@@ -109,7 +109,7 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
     if (!srcUrl || !box || !imgSize) return
     const img = decodedImgRef.current
     if (!img) {
-      // Source still loading — protect against double-click before the
+      // Source still loading - protect against double-click before the
       // initial decode fires. The button is disabled in this state too,
       // but the guard makes the failure mode obvious.
       setLocalError('Image is still loading. Wait a moment and try again.')
@@ -139,9 +139,9 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
       if (!ctx) throw new Error('Browser refused to create a 2D canvas context.')
       ctx.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, outW, outH)
       // Output format. PNG inputs MAY have transparency (top-down vehicle
-      // art typically does) — but only the actually-cropped region matters,
+      // art typically does) - but only the actually-cropped region matters,
       // so we sample the canvas to check. If the crop has no transparent
-      // pixels, fall back to JPEG even for PNG sources — typically 5-10×
+      // pixels, fall back to JPEG even for PNG sources - typically 5-10×
       // smaller for the same visible result. Big upload-speed win on
       // photos saved as PNG by mistake.
       const isPng = file.type === 'image/png'
@@ -180,7 +180,7 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
     <ModalBackdrop onClose={onCancel} zIndex={10003} opacity={0.92} padding="1rem">
       <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', maxWidth: '500px' }}>
         <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Crop Image</div>
-        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Drag the box to move, drag the corner to resize. Crop to any shape — wide trucks, tall walls, square crates.</div>
+        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Drag the box to move, drag the corner to resize. Crop to any shape - wide trucks, tall walls, square crates.</div>
 
         {srcUrl && imgSize && box ? (
           <div
@@ -195,12 +195,12 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
             <div style={{ position: 'absolute', left: 0, right: 0, top: `${(box.y + box.h) * displayScale}px`, bottom: 0, background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', left: 0, top: `${box.y * displayScale}px`, width: `${box.x * displayScale}px`, height: `${box.h * displayScale}px`, background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', left: `${(box.x + box.w) * displayScale}px`, right: 0, top: `${box.y * displayScale}px`, height: `${box.h * displayScale}px`, background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
-            {/* Crop frame — draggable */}
+            {/* Crop frame - draggable */}
             <div
               onPointerDown={e => onPointerDown(e, 'move')}
               style={{ position: 'absolute', left: `${box.x * displayScale}px`, top: `${box.y * displayScale}px`, width: `${box.w * displayScale}px`, height: `${box.h * displayScale}px`, border: '2px solid #EF9F27', boxSizing: 'border-box', cursor: 'move', background: 'transparent' }}
             />
-            {/* Resize handle — bottom-right; free aspect (w and h move independently) */}
+            {/* Resize handle - bottom-right; free aspect (w and h move independently) */}
             <div
               onPointerDown={e => onPointerDown(e, 'resize')}
               style={{ position: 'absolute', left: `${(box.x + box.w) * displayScale - 7}px`, top: `${(box.y + box.h) * displayScale - 7}px`, width: '14px', height: '14px', background: '#EF9F27', border: '2px solid #1a1a1a', cursor: 'nwse-resize', borderRadius: '2px' }}

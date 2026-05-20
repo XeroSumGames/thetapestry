@@ -128,17 +128,17 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         )
       })}
 
-      {/* Attribute picker — only shown when maxAttr > 0 */}
+      {/* Attribute picker - only shown when maxAttr > 0 */}
       {maxAttr > 0 && (
         <div>
-          <div style={sh}>Attribute — raise one (max +{maxAttr} {ATTRIBUTE_LABELS[maxAttr]})</div>
+          <div style={sh}>Attribute - raise one (max +{maxAttr} {ATTRIBUTE_LABELS[maxAttr]})</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
             <div style={{ display: 'flex', gap: '3px' }}>
               {[0].map(i => (
                 <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#3a3a3a'}`, background: i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#0f0f0f' }} />
               ))}
             </div>
-            <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — raise one attribute</span>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Attribute CDP - raise one attribute</span>
             <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: stepData.attrKey ? '#f5a89a' : '#f5f2ee' }}>
               {stepData.attrKey ? '0 left' : '1 left'}
             </span>
@@ -158,7 +158,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                 }}>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                     {k}
-                    <HelpTooltip title={`${k} — ${ATTR_FULL[k]}`} text={ATTRIBUTE_DESCRIPTIONS[k]} iconStyle={{ width: '13px', height: '13px', fontSize: '13px' }} />
+                    <HelpTooltip title={`${k} - ${ATTR_FULL[k]}`} text={ATTRIBUTE_DESCRIPTIONS[k]} iconStyle={{ width: '13px', height: '13px', fontSize: '13px' }} />
                   </div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
@@ -185,7 +185,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
 
       {/* Skill picker */}
       <div style={{ ...sh, display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span>Skills — {skillBudget} CDP (max +{maxSkill} {SKILL_LABELS[maxSkill]})</span>
+        <span>Skills - {skillBudget} CDP (max +{maxSkill} {SKILL_LABELS[maxSkill]})</span>
         <HelpTooltip title="Skill levels" text={SKILL_TIER_DESCRIPTION} />
         <HelpTooltip title="Vocational skills (*)" text={VOCATIONAL_DESCRIPTION} icon="*" iconStyle={{ color: '#EF9F27', borderColor: '#EF9F27' }} />
       </div>
@@ -227,13 +227,13 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                 <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
                   <HelpTooltip
-                    title={`${sk.name}${sk.vocational ? ' (vocational)' : ''} — ${sk.attribute}`}
+                    title={`${sk.name}${sk.vocational ? ' (vocational)' : ''} - ${sk.attribute}`}
                     text={sk.description ?? 'No description on file.'}
                     iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }}
                   />
                 </div>
                 <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
-                  {sk.attribute} — {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
+                  {sk.attribute} - {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>

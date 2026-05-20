@@ -2,7 +2,7 @@ import { RuleHero, P, Term } from '../../../../components/rules/RuleSection'
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'In-World Time — XSE SRD §01' }
+export const metadata = { title: 'In-World Time - XSE SRD §01' }
 
 export default function Page() {
   return (
@@ -25,7 +25,7 @@ export default function Page() {
       <P>
         <strong>Anchor.</strong> The first recorded H724 (Dog Flu /
         Distemper) death occurred on <strong>March 2nd, Year 0</strong>.
-        This is canon_day 0 — the system&apos;s zero point for all
+        This is canon_day 0 - the system&apos;s zero point for all
         calendar math.
       </P>
       <P>
@@ -48,9 +48,9 @@ export default function Page() {
         shows three pieces of time:
       </P>
       <ul style={{ fontSize: 17, lineHeight: 1.8, color: '#f5f2ee', paddingLeft: '1.5rem', margin: '0 0 1rem' }}>
-        <li><strong>Campaign Day N</strong> — days since the campaign started (Day 1 on the first day).</li>
-        <li><strong>Time, date, year</strong> — e.g. &quot;6 PM, September 15th, Year 1&quot;.</li>
-        <li><strong>X days after the first recorded death</strong> — the canon_day value, for situating the campaign on the universal timeline.</li>
+        <li><strong>Campaign Day N</strong> - days since the campaign started (Day 1 on the first day).</li>
+        <li><strong>Time, date, year</strong> - e.g. &quot;6 PM, September 15th, Year 1&quot;.</li>
+        <li><strong>X days after the first recorded death</strong> - the canon_day value, for situating the campaign on the universal timeline.</li>
       </ul>
       <P>
         Module authors can stamp a canonical start date onto their

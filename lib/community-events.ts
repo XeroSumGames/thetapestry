@@ -3,7 +3,7 @@
 // event type so the four hook points (Morale finalize / Schism / Migration
 // / Dissolution) and the manual GM composer all share a single shape.
 //
-// Insert failures are non-blocking by design — these auto-posts are a
+// Insert failures are non-blocking by design - these auto-posts are a
 // nice-to-have feed, not a critical path. If the insert fails (RLS, schema
 // drift, transient outage), the upstream action still succeeds. We log a
 // warning but don't surface it to the user.
@@ -19,11 +19,11 @@ export interface MoraleOutcomePayload {
   clothed_outcome: string
   /** Number of NPCs who left this week. Zero on success tiers. */
   departures_count: number
-  /** Short human-readable summary of the modifier slots — e.g. "Mood +1, Hands -1, Safety -1". */
+  /** Short human-readable summary of the modifier slots - e.g. "Mood +1, Hands -1, Safety -1". */
   modifiers_summary?: string
   /** Final morale roll total for the card subtitle. */
   total: number
-  /** The leader's name (or community name if leaderless) — drives the byline. */
+  /** The leader's name (or community name if leaderless) - drives the byline. */
   leader_name: string
 }
 

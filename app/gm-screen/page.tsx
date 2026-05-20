@@ -1,7 +1,7 @@
 'use client'
 
 // Skip Next's static prerender entirely. /gm-screen mounts a Supabase
-// client (via the GmNotes panel) and reads useSearchParams() — both
+// client (via the GmNotes panel) and reads useSearchParams() - both
 // patterns that have hit prerender-time failures on Vercel even with
 // the env wired correctly. The popout is always opened from a story
 // header, never crawled, so dynamic rendering is the right call.
@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamicImport from 'next/dynamic'
 
-// Client-only import — GmNotes pulls in @supabase/ssr's browser
+// Client-only import - GmNotes pulls in @supabase/ssr's browser
 // client at module load. Even with force-dynamic above, keeping this
 // out of the server bundle is cheap insurance and shrinks the SSR
 // payload for the path that doesn't need it.
@@ -116,7 +116,7 @@ const DEFAULT_LAYOUT: Record<BoxKey, BoxLayout> = {
   'cmods':            { x: 0,   y: 515, w: 430, h: 240 },
   'healing':          { x: 440, y: 470, w: 430, h: 200 },
   'skills-attrs':     { x: 440, y: 680, w: 430, h: 380 },
-  // GM Notes — only renders when /gm-screen?c=<campaignId>. Default
+  // GM Notes - only renders when /gm-screen?c=<campaignId>. Default
   // position fills the col-1 dead space below CMods so the canvas
   // height stays the same as before (driven by skills-attrs at 1060).
   'gm-notes':         { x: 0,   y: 765, w: 430, h: 295 },
@@ -131,7 +131,7 @@ const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Carlito,
 
 export default function GMScreen() {
   const searchParams = useSearchParams()
-  // /gm-screen?c=<campaign-id> — present when launched from a story's
+  // /gm-screen?c=<campaign-id> - present when launched from a story's
   // header. Drives the GM Notes panel below; without it, that panel
   // renders a placeholder ("open from a story").
   const campaignId = searchParams?.get('c') ?? ''
@@ -299,14 +299,14 @@ export default function GMScreen() {
 
   // Close × in the title bar of each box. stopPropagation so the click
   // doesn't trigger drag start; the parent's onMouseDown is set on the
-  // whole title bar. Visible regardless of locked state — declutter is
+  // whole title bar. Visible regardless of locked state - declutter is
   // a separate concern from edit-layout mode.
   function closeBtn(key: BoxKey): React.ReactNode {
     return (
       <button
         onMouseDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); hideBox(key) }}
-        title="Hide this panel — Reset Layout brings it back"
+        title="Hide this panel - Reset Layout brings it back"
         aria-label="Hide panel"
         style={{
           width: 22, height: 22, padding: 0,
@@ -473,7 +473,7 @@ export default function GMScreen() {
           </div>
         </div>
 
-        {/* GM Notes — same component the chat-window panel uses. The
+        {/* GM Notes - same component the chat-window panel uses. The
             inner GmNotes element handles its own scroll, so we drop the
             page-level bodyStyle padding and let it take the full panel
             height. Only renders when ?c=<campaignId> was supplied. */}

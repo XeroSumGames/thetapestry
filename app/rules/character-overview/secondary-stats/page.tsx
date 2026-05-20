@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Secondary Stats — XSE SRD §03' }
+export const metadata = { title: 'Secondary Stats - XSE SRD §03' }
 
 const row = (stat: string, abbrev: string, formula: string, desc: string): React.ReactNode => (
   <tr>
@@ -54,18 +54,18 @@ export default function Page() {
           {row('Initiative Mod', 'INIT', 'ACU + DEX', 'Added to initiative checks to determine the order in which participants act during combat.')}
           {row('Encumbrance', 'ENC', '6 + PHY', 'How much weight a character can carry before needing to stop and rest, or drop something.')}
           {row('Perception', 'PER', 'RSN + ACU', 'How well a character picks up on subtleties and how tuned in they are to their environment.')}
-          {row('Stress Modifier', 'SM', 'RSN + ACU', 'Added to Stress Checks at the end of brutal scenes — see §06 Combat → Stress.')}
+          {row('Stress Modifier', 'SM', 'RSN + ACU', 'Added to Stress Checks at the end of brutal scenes - see §06 Combat → Stress.')}
           {row('Stress Level', 'SL', 'starts at 0, max 5', 'Rises by 1 on a failed Stress Check (manual) or when entering 0 WP / 0 RP (automatic). At pip 5, the character makes a Hold It Together save (2d6 + RSN + ACU + CMod ≥ 7); failure triggers a Breaking Point reaction from Table 13. See §06 Combat → Stress.')}
           {row('Morality', 'MOR', '3', "How true a character is acting to their own ethical compass. Affects how they interact with the world.")}
         </tbody>
       </RuleTable>
       <P>
         Defense Mods serve double duty: they lower the chance of getting
-        hit AND mitigate any damage that does land — so a high PHY
+        hit AND mitigate any damage that does land - so a high PHY
         character is harder to hit in melee AND takes less damage when hit.
       </P>
       <TryIt href="/dashboard">
-        Every character sheet shows the live derived stats — open one to
+        Every character sheet shows the live derived stats - open one to
         see them computed from your RAPID values.
       </TryIt>
     </>

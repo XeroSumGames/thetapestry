@@ -1,15 +1,15 @@
 'use client'
 
-// Campaign Sheet — Phase 2.
+// Campaign Sheet - Phase 2.
 //
 // Popout-style page (sidebar auto-hidden via LayoutShell's
 // FULL_WIDTH_PATTERN matching the `-sheet` suffix). Panels:
 //   - Clock header with today's canon event + GM advance buttons
-//   - Party Status — every PC's WP/RP/Stress in one glance
-//   - Vehicle Status — every vehicle's WP/Stress/Fuel
-//   - Pending Effects — active streaming heals (and future ration /
+//   - Party Status - every PC's WP/RP/Stress in one glance
+//   - Vehicle Status - every vehicle's WP/Stress/Fuel
+//   - Pending Effects - active streaming heals (and future ration /
 //     subsistence / world-event-expiry ticks)
-//   - Timeline — past + present canon events only
+//   - Timeline - past + present canon events only
 //
 // See tasks/spec-campaign-sheet.md for the locked rules.
 
@@ -221,7 +221,7 @@ export default function CampaignSheetPage() {
       ])
       if (cancelled) return
       setMyUserId(auth.user?.id ?? null)
-      // Thriver lookup — once per page load. Result drives gmLike for
+      // Thriver lookup - once per page load. Result drives gmLike for
       // every GM-gated affordance below (Advance Time, Heal modal,
       // Edit Clock modal, Pending Heal cancel, Export Log).
       if (auth.user?.id) {
@@ -384,7 +384,7 @@ export default function CampaignSheetPage() {
             style={actionBtn('#1a2e10', '#2d5a1b', '#7fc458')}>
             🩹 Heal
           </button>
-          {/* Placeholder buttons — Phase 3 will wire each to its
+          {/* Placeholder buttons - Phase 3 will wire each to its
               event type:
                 Eat   → ration_consumed events for everyone present
                 Rest  → bulk WP/RP restoration over scheduled hours
@@ -396,7 +396,7 @@ export default function CampaignSheetPage() {
             title="Consume rations for everyone present (Phase 3)">
             🍞 Eat
           </button>
-          <button onClick={() => alert('Resting (placeholder).\n\nPhase 3 will queue a bulk rest action — full WP/RP restoration over a configurable rest duration, with interruption rules. For now this is just a visible affordance.')} disabled={advancing}
+          <button onClick={() => alert('Resting (placeholder).\n\nPhase 3 will queue a bulk rest action - full WP/RP restoration over a configurable rest duration, with interruption rules. For now this is just a visible affordance.')} disabled={advancing}
             style={actionBtn('#0f1a2e', '#1a3a5c', '#7ab3d4')}
             title="Begin a rest (Phase 3)">
             💤 Rest
@@ -687,7 +687,7 @@ function advanceBtn(disabled: boolean): React.CSSProperties {
   }
 }
 
-// Generic action button — same geometry as advance buttons but the
+// Generic action button - same geometry as advance buttons but the
 // caller picks the color theme. Used by Queue Heal, Eat, Rest, and
 // the player-side Discharge Stress placeholder so they all share the
 // 32px height in the same toolbar row.
@@ -743,7 +743,7 @@ function PartyCard({ row: p, onConsumeLuxury }: { row: PartyRow; onConsumeLuxury
         <button onClick={onConsumeLuxury}
           title={`Consume 1 of ${p.rations_count} Luxury Rations - drops Stress by 1 per canon`}
           style={{ marginTop: 6, padding: '4px 10px', background: '#2a1a10', border: '1px solid #5a3a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', width: '100%' }}>
-          🍷 Consume Luxury Ration ({p.rations_count} left) — Stress -1
+          🍷 Consume Luxury Ration ({p.rations_count} left) - Stress -1
         </button>
       )}
     </div>

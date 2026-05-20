@@ -1,6 +1,6 @@
 // setting-reseed.ts
 // Compute + apply an idempotent re-seed of a campaign's setting content.
-// Used by /tools/reseed-campaign — when the canonical seed configs evolve
+// Used by /tools/reseed-campaign - when the canonical seed configs evolve
 // (new pins, NPCs, tactical scenes, handouts), existing campaigns can pull
 // the missing items in without losing GM customizations.
 //
@@ -65,7 +65,7 @@ async function resolveSeeds(supabase: SupabaseClient, setting: string): Promise<
     ? handoutsDb.data
     : (SETTING_HANDOUTS[setting] ?? [])
 
-  // NPCs need a touch more shaping when falling back to TS — the .ts
+  // NPCs need a touch more shaping when falling back to TS - the .ts
   // constants don't pre-build the `notes` jsonb that campaign_npcs
   // expects. Match the create-campaign flow's normalization.
   let npcs: any[]

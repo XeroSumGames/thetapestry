@@ -2,7 +2,7 @@ import { RuleHero, P, Term } from '../../../../components/rules/RuleSection'
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Filling In The Gaps — XSE SRD §02' }
+export const metadata = { title: 'Filling In The Gaps - XSE SRD §02' }
 
 export default function Page() {
   return (

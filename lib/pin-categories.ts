@@ -1,6 +1,6 @@
 // Shared pin-category taxonomy. Used by MapView (world map_pins) and
 // CampaignPins (campaign-private campaign_pins) so the icon set stays
-// in sync. If you add a category, do it here — both surfaces pick it
+// in sync. If you add a category, do it here - both surfaces pick it
 // up automatically.
 
 export interface PinCategory {
@@ -10,10 +10,10 @@ export interface PinCategory {
 }
 
 // Order also drives the picker grid (8 columns × 2 rows = 16 slots).
-// Layout locked 2026-05-15 — clean 8x2 grid, no overflow row.
+// Layout locked 2026-05-15 - clean 8x2 grid, no overflow row.
 //
 // Categories DROPPED in the 2026-05-15 consolidation:
-//   military / hospital / settlement / landmark — migrated to
+//   military / hospital / settlement / landmark - migrated to
 //   government / medical / community / location respectively. See
 //   sql/pin-category-consolidation-2026-05-15.sql for the live DB
 //   migration. Seed data in lib/setting-pins.ts patched in the same
@@ -78,7 +78,7 @@ export function getCategoryFilter(category: string | null | undefined): string |
 // Back-compat: kept so existing callers that ask "should I apply the
 // white filter?" still work. Now also covers categories whose filter
 // is the white-flatten string (group, person). Animals returns false
-// here even though it HAS a filter — callers checking this helper
+// here even though it HAS a filter - callers checking this helper
 // won't tint animals red. Prefer getCategoryFilter() for new code.
 export function categoryNeedsWhiteFilter(category: string | null | undefined): boolean {
   return getCategoryFilter(category) === 'brightness(0) invert(1)'

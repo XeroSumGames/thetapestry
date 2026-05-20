@@ -1,5 +1,5 @@
 'use client'
-// CharacterEvolution — the spend side of the CDP loop. Triggered from
+// CharacterEvolution - the spend side of the CDP loop. Triggered from
 // the purple Evolution button on <CharacterCard>. Players use this to
 // turn earned CDP into RAPID raises and skill raises (or new-skill
 // learns). The GM-side award flow already exists at /stories/[id]/table
@@ -15,15 +15,15 @@
 //     requires a Fill-In-The-Gaps justification stored on the
 //     progression-log entry. No formal GM-approval pipeline in v1
 //     (per the 2026-04-29 backburner ruling).
-//   - Lv 4 Skill Trait mechanics stay backburnered — the +1 SMod from
+//   - Lv 4 Skill Trait mechanics stay backburnered - the +1 SMod from
 //     Lv 4 still applies, no Trait surface exposed.
 //
 // Save flow:
-//   1. UPDATE character_states.cdp (deduct cost) — per-campaign.
+//   1. UPDATE character_states.cdp (deduct cost) - per-campaign.
 //   2. UPDATE characters.data.rapid OR characters.data.skills
-//      (cross-campaign — same character row across all their stories).
+//      (cross-campaign - same character row across all their stories).
 //   3. APPEND progression_log entry (type 'attribute' | 'skill' |
-//      'item' — finally populating types the curation pass declared
+//      'item' - finally populating types the curation pass declared
 //      but left unwritten).
 
 import { useEffect, useMemo, useState } from 'react'
@@ -82,13 +82,13 @@ export default function CharacterEvolution({
   const [pending, setPending] = useState<PendingSpend | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Spend target — defaults to the master PC. Flips to 'apprentice'
+  // Spend target - defaults to the master PC. Flips to 'apprentice'
   // when the toggle is clicked, which swaps the spend list to read
   // the Apprentice's RAPID + skills + write back to campaign_npcs
   // instead of characters.data. CDP still deducts from the master
   // PC's character_states.cdp regardless of target (the master PC's
   // earned CDP fuels both their own and the Apprentice's growth, per
-  // Distemper CRB §08 p.21 — "CDP the PC earns later can be spent on
+  // Distemper CRB §08 p.21 - "CDP the PC earns later can be spent on
   // the Apprentice").
   const [target, setTarget] = useState<'pc' | 'apprentice'>('pc')
   const [apprentice, setApprentice] = useState<ApprenticeTarget | null>(null)
@@ -96,7 +96,7 @@ export default function CharacterEvolution({
   // Look up the master PC's Apprentice on mount. Single query: the
   // community_members row tagged apprentice_of_character_id = master
   // PC, joined to the campaign_npcs row that IS the Apprentice. Only
-  // looks within this campaign — Apprentice bonds are campaign-scoped
+  // looks within this campaign - Apprentice bonds are campaign-scoped
   // via community membership.
   useEffect(() => {
     let cancelled = false
@@ -137,7 +137,7 @@ export default function CharacterEvolution({
     return () => { cancelled = true }
   }, [characterId, campaignId, supabase])
 
-  // PC's RAPID + skills off characters.data — the master-PC source of
+  // PC's RAPID + skills off characters.data - the master-PC source of
   // truth. Same character row across all campaigns.
   const pcRapid: Record<AttributeName, number> = useMemo(() => {
     const r = (characterData?.rapid ?? {}) as any
@@ -153,7 +153,7 @@ export default function CharacterEvolution({
     return m
   }, [characterData])
 
-  // The active spend target's stats — flips to the Apprentice when the
+  // The active spend target's stats - flips to the Apprentice when the
   // toggle is set. Falls back to the PC's stats when no Apprentice is
   // bound (the toggle doesn't render in that case anyway).
   const rapid = target === 'apprentice' && apprentice ? apprentice.rapid : pcRapid
@@ -206,7 +206,7 @@ export default function CharacterEvolution({
   async function commit() {
     if (!pending) return
     if (pending.needsNarrative && pending.narrative.trim().length < 12) {
-      setError('Lv 4 raises require a Fill-In-The-Gaps narrative — at least one full sentence so the GM can read back why the breakthrough happened.')
+      setError('Lv 4 raises require a Fill-In-The-Gaps narrative - at least one full sentence so the GM can read back why the breakthrough happened.')
       return
     }
     setSaving(true)
@@ -222,11 +222,11 @@ export default function CharacterEvolution({
         .eq('id', stateId)
       if (stErr) throw new Error(`deduct CDP: ${stErr.message}`)
 
-      // 2) Apply the raise. Forks by target — PC writes to
+      // 2) Apply the raise. Forks by target - PC writes to
       //    characters.data (cross-campaign source of truth); Apprentice
       //    writes to campaign_npcs columns (the NPC IS the Apprentice).
       if (target === 'apprentice') {
-        if (!apprentice) throw new Error('apprentice target lost — try reopening the modal')
+        if (!apprentice) throw new Error('apprentice target lost - try reopening the modal')
         // Read current row to merge skills.entries safely (don't blow
         // away other slots like equipment / portrait_url / etc.).
         const { data: npcRow, error: nReadErr } = await supabase
@@ -257,7 +257,7 @@ export default function CharacterEvolution({
           .eq('id', apprentice.npcId)
         if (nUpdErr) throw new Error(`update apprentice: ${nUpdErr.message}`)
       } else {
-        // PC path — read characters.data, mutate, write back.
+        // PC path - read characters.data, mutate, write back.
         const { data: charRow, error: readErr } = await supabase
           .from('characters')
           .select('data')
@@ -288,7 +288,7 @@ export default function CharacterEvolution({
         if (chErr) throw new Error(`update character: ${chErr.message}`)
       }
 
-      // 3) Append a progression-log entry — the curation pass left the
+      // 3) Append a progression-log entry - the curation pass left the
       //    'attribute' / 'skill' types declared but unwritten because
       //    nothing actually spent CDP via UI. The Calculator finally
       //    populates them.
@@ -304,15 +304,15 @@ export default function CharacterEvolution({
         ? `Apprentice ${apprentice.name}: `
         : ''
       const headline = pending.kind === 'rapid'
-        ? `📈 ${apprenticePrefix}${ATTR_FULL[pending.key as AttributeName]} ${niceFromTo} — ${pending.cost} CDP.`
+        ? `📈 ${apprenticePrefix}${ATTR_FULL[pending.key as AttributeName]} ${niceFromTo} - ${pending.cost} CDP.`
         : pending.fromLevel < 1
-          ? `📈 ${apprenticePrefix}Learned ${pending.key} (Lv ${pending.toLevel}) — ${pending.cost} CDP.`
-          : `📈 ${apprenticePrefix}${pending.key} ${niceFromTo} — ${pending.cost} CDP.`
+          ? `📈 ${apprenticePrefix}Learned ${pending.key} (Lv ${pending.toLevel}) - ${pending.cost} CDP.`
+          : `📈 ${apprenticePrefix}${pending.key} ${niceFromTo} - ${pending.cost} CDP.`
       const narrative = pending.needsNarrative
         ? ` "${pending.narrative.trim()}"`
         : ''
       // Map our internal `kind` to the progression-log type vocabulary
-      // — RAPID raises log as 'attribute' per the curation memory.
+      // - RAPID raises log as 'attribute' per the curation memory.
       const logType = pending.kind === 'rapid' ? 'attribute' : 'skill'
       void appendProgressionEntry(
         supabase,
@@ -323,7 +323,7 @@ export default function CharacterEvolution({
 
       // 4) Append a roll_log entry with outcome='evolution' so the
       //    spend surfaces in the session feed (per the spec). Fire
-      //    fire-and-forget — the spend already committed; a failed
+      //    fire-and-forget - the spend already committed; a failed
       //    feed insert shouldn't roll anything back. damage_json
       //    carries the structured spend so future renderers (or a
       //    GM oversight surface) can decode the entry without
@@ -376,7 +376,7 @@ export default function CharacterEvolution({
     }
   }
 
-  // Skill rows sorted by current level descending — the eye lands on
+  // Skill rows sorted by current level descending - the eye lands on
   // the player's standout skills first, untrained skills cluster at
   // the bottom for "I want to learn something new" mode.
   const sortedSkills = useMemo(() => {
@@ -414,7 +414,7 @@ export default function CharacterEvolution({
 
         {/* Body */}
         <div style={{ padding: '14px 18px', flex: 1, overflowY: 'auto' }}>
-          {/* Spend-target toggle — only renders when the master PC has
+          {/* Spend-target toggle - only renders when the master PC has
               an Apprentice. Per Distemper CRB §08 p.21, "CDP the PC
               earns later can be spent on the Apprentice." Both targets
               draw from the same per-campaign CDP balance. */}
@@ -451,7 +451,7 @@ export default function CharacterEvolution({
             </div>
           )}
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, marginBottom: '14px' }}>
-            One spend raises one stat by one level. Costs follow SRD §07 — RAPID raises cost 3× the new level; skill raises cost current+next; learning a new skill costs 1 CDP. Lv 4 (Human Peak / Life&apos;s Work) requires a Fill-In-The-Gaps narrative.
+            One spend raises one stat by one level. Costs follow SRD §07 - RAPID raises cost 3× the new level; skill raises cost current+next; learning a new skill costs 1 CDP. Lv 4 (Human Peak / Life&apos;s Work) requires a Fill-In-The-Gaps narrative.
             {target === 'apprentice' && apprentice && (
               <> Spends here apply to <strong style={{ color: '#d48bd4' }}>{apprentice.name}</strong>; CDP still draws from {characterName}&apos;s balance.</>
             )}
@@ -491,7 +491,7 @@ export default function CharacterEvolution({
                         whiteSpace: 'nowrap', minWidth: '160px',
                         fontWeight: isLv4Step(current) ? 700 : 400,
                       }}>
-                      Raise to {current + 1}{isLv4Step(current) ? ' ⭐' : ''} — {cost} CDP
+                      Raise to {current + 1}{isLv4Step(current) ? ' ⭐' : ''} - {cost} CDP
                     </button>
                   )}
                 </div>
@@ -535,7 +535,7 @@ export default function CharacterEvolution({
                         whiteSpace: 'nowrap', minWidth: '160px',
                         fontWeight: isLv4Step(current) ? 700 : 400,
                       }}>
-                      {learning ? `Learn` : `Raise to ${next}`}{isLv4Step(current) ? ' ⭐' : ''} — {cost} CDP
+                      {learning ? `Learn` : `Raise to ${next}`}{isLv4Step(current) ? ' ⭐' : ''} - {cost} CDP
                     </button>
                   )}
                 </div>
@@ -545,7 +545,7 @@ export default function CharacterEvolution({
         </div>
       </div>
 
-      {/* Confirm overlay — appears on top of the spend list when a row
+      {/* Confirm overlay - appears on top of the spend list when a row
           is clicked. Lv 4 steps require a narrative; everything else
           is a single-tap confirm. */}
       {pending && (
@@ -553,7 +553,7 @@ export default function CharacterEvolution({
           <div
             style={{ background: '#1a1a1a', border: `1px solid ${pending.needsNarrative ? '#EF9F27' : '#5a2e5a'}`, borderRadius: '4px', width: '480px', maxWidth: '100%', padding: '18px' }}>
             <div style={{ fontSize: '13px', color: pending.needsNarrative ? '#EF9F27' : '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
-              {pending.needsNarrative ? '⭐ Lv 4 — Fill In The Gaps' : 'Confirm Spend'}
+              {pending.needsNarrative ? '⭐ Lv 4 - Fill In The Gaps' : 'Confirm Spend'}
             </div>
             <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700, marginBottom: '8px' }}>
               {pending.kind === 'rapid'
@@ -565,14 +565,14 @@ export default function CharacterEvolution({
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '12px' }}>
               Spend <strong style={{ color: '#7ab3d4' }}>{pending.cost} CDP</strong> from your {cdpBalance} balance.
               {pending.needsNarrative && (
-                <> Lv 4 is the human ceiling — write how your character broke through.</>
+                <> Lv 4 is the human ceiling - write how your character broke through.</>
               )}
             </div>
             {pending.needsNarrative && (
               <textarea value={pending.narrative}
                 onChange={e => setPending(p => p ? { ...p, narrative: e.target.value } : p)}
                 rows={4}
-                placeholder="One full sentence minimum. The GM reads this back later — make it a real moment in your character's arc."
+                placeholder="One full sentence minimum. The GM reads this back later - make it a real moment in your character's arc."
                 style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '10px' }} />
             )}
             {error && (

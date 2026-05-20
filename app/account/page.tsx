@@ -1,19 +1,19 @@
 'use client'
-// /account — player account management. Distinct from character
+// /account - player account management. Distinct from character
 // management (which lives at /characters): this is the human behind
 // the screen, not the character they're playing.
 //
 // Sections:
-//   • Avatar — account-level icon, used in sidebar / Campfire / any
+//   • Avatar - account-level icon, used in sidebar / Campfire / any
 //     multi-user surface. Stored in the account-avatars storage
 //     bucket; URL persisted to profiles.avatar_url.
-//   • Identity — username (display), email (auth-managed), role
-//     (read-only — set by Thriver moderation).
-//   • Password — supabase auth.updateUser({ password }).
-//   • Subscriptions — placeholder block; populated when Phase 5D
+//   • Identity - username (display), email (auth-managed), role
+//     (read-only - set by Thriver moderation).
+//   • Password - supabase auth.updateUser({ password }).
+//   • Subscriptions - placeholder block; populated when Phase 5D
 //     module monetization lands.
 //
-// Account avatars are PUBLIC (same as character portraits) — they
+// Account avatars are PUBLIC (same as character portraits) - they
 // show up next to usernames in chat, forums, war stories, LFG.
 //
 // Re-uses the shared resizeImage helper to keep avatar uploads sane.
@@ -264,7 +264,7 @@ export default function AccountPage() {
             {profile?.username ?? 'Account'}
           </div>
           <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.5 }}>
-            This is YOU — separate from any character. Manage your avatar, identity, and security here.{' '}
+            This is YOU - separate from any character. Manage your avatar, identity, and security here.{' '}
             <Link href="/characters" style={{ color: '#c4a7f0' }}>Characters</Link> are managed elsewhere.
           </div>
         </div>
@@ -379,7 +379,7 @@ export default function AccountPage() {
             {pwdSaving ? 'Saving…' : 'Update password'}
           </button>
           <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
-            Minimum 8 characters. You won&apos;t be logged out — your current session keeps working.
+            Minimum 8 characters. You won&apos;t be logged out - your current session keeps working.
           </div>
           {pwdMessage && (
             <div style={msgStyle(pwdMessage.toLowerCase().includes('fail') || pwdMessage.toLowerCase().includes('match') || pwdMessage.toLowerCase().includes('must') ? 'err' : 'ok')}>
@@ -389,7 +389,7 @@ export default function AccountPage() {
         </div>
 
         {/* Subscriptions placeholder. Phase 5D module monetization
-            will wire this — for now it just declares the slot exists
+            will wire this - for now it just declares the slot exists
             so users know where to expect it. */}
         <div style={card}>
           <div style={cardTitle}>Subscriptions</div>
@@ -398,11 +398,11 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Danger zone — account deletion. GDPR-style data deletion:
+        {/* Danger zone - account deletion. GDPR-style data deletion:
             invokes the existing delete-user edge function (which now
             permits self-delete). Wipes the user's profile, characters,
             campaign memberships, owned campaigns, pins, notifications,
-            funnel events, etc. — see the function for the full list.
+            funnel events, etc. - see the function for the full list.
             Requires typing the username to confirm. */}
         <DangerZone profile={profile} />
 
@@ -414,7 +414,7 @@ export default function AccountPage() {
           <Link href="/terms" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Terms of Service</Link>
         </div>
 
-        {/* Sign out — bottom of page, secondary action so it's not
+        {/* Sign out - bottom of page, secondary action so it's not
             the dominant CTA. The sidebar Log Out is the everyday
             path; this duplicate is for users who landed here. */}
         <div style={{ marginTop: '2rem', textAlign: 'center' }}>

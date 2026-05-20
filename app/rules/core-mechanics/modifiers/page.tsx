@@ -10,7 +10,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Modifiers — XSE SRD §02' }
+export const metadata = { title: 'Modifiers - XSE SRD §02' }
 
 const modRow = (mod: string, label: string): React.ReactNode => (
   <tr>
@@ -38,7 +38,7 @@ export default function Page() {
 
       <RuleSection id="amod" title="Attribute Modifier (AMod)">
         <P>
-          Each character has five attributes — <Term>R A P I D</Term>{' '}
+          Each character has five attributes - <Term>R A P I D</Term>{' '}
           (Reason, Acumen, Physicality, Influence, Dexterity). Attributes
           range from −2 to +4 for humans (animals and machines can reach
           +5). Each value is the AMod applied to any Dice Check using that
@@ -68,7 +68,7 @@ export default function Page() {
         <P>
           Each character has skills that range from −3 to +4 based on
           expertise. Each skill is linked to an attribute (e.g.
-          Physicality → Unarmed Combat) — a Dice Check often combines both
+          Physicality → Unarmed Combat) - a Dice Check often combines both
           AMod and SMod.
         </P>
         <P>

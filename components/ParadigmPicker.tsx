@@ -1,5 +1,5 @@
 'use client'
-// ParadigmPicker — reusable Paradigm card grid + expand-to-detail.
+// ParadigmPicker - reusable Paradigm card grid + expand-to-detail.
 //
 // Two surfaces consume this:
 //   1. The Apprentice creation wizard (recruit a Moment-of-High-Insight
@@ -9,7 +9,7 @@
 //
 // Single source of presentation truth so the two surfaces don't drift.
 //
-// Pure presentation — no DB writes, no auth, no campaign context. The
+// Pure presentation - no DB writes, no auth, no campaign context. The
 // caller hands in `value` (the currently-selected Paradigm name, if
 // any) and receives a callback when the user clicks a Pick button.
 // The component renders the canonical PARADIGMS array from xse-schema.
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function ParadigmPicker({ value, onChange }: Props) {
-  // Cards always show every skill — no expand/collapse, no "headline
+  // Cards always show every skill - no expand/collapse, no "headline
   // top-2" treatment. Players want to read the full loadout when
   // picking, and the toggling cost more than it bought.
   return (
@@ -64,7 +64,7 @@ export default function ParadigmPicker({ value, onChange }: Props) {
               </button>
             </div>
 
-            {/* RAPID summary — every Paradigm shows the same 5-attribute strip */}
+            {/* RAPID summary - every Paradigm shows the same 5-attribute strip */}
             <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
               {ATTR_ORDER.map(k => {
                 const v = p.rapid[k]
@@ -82,7 +82,7 @@ export default function ParadigmPicker({ value, onChange }: Props) {
             </div>
 
             {/* Full skill list, sorted by level descending. Every
-                skill renders as the same green chip — full-saturation
+                skill renders as the same green chip - full-saturation
                 green box, green text. No muted-tier treatment; the
                 level number inside each chip is the only visual
                 differentiator (e.g. "Entertainment 2" vs "Stealth 1"). */}

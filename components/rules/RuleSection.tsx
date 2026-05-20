@@ -139,7 +139,7 @@ export function TryIt({
   )
 }
 
-// Simple table primitive — Carlito body + uppercase headers.
+// Simple table primitive - Carlito body + uppercase headers.
 export function RuleTable({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ margin: '1rem 0', overflowX: 'auto' }}>
@@ -177,7 +177,7 @@ export const ruleTableTdStyle: React.CSSProperties = {
   verticalAlign: 'top',
 }
 
-// Para — body paragraph at the SRD reading-size.
+// Para - body paragraph at the SRD reading-size.
 export function P({ children }: { children: React.ReactNode }) {
   return (
     <p

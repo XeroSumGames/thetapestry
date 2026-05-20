@@ -8,7 +8,7 @@ import {
 } from '../../../components/rules/RuleSection'
 import { SKILLS } from '../../../lib/xse-schema'
 
-export const metadata = { title: 'Appendix B — Skills — XSE SRD' }
+export const metadata = { title: 'Appendix B - Skills - XSE SRD' }
 
 export default function Page() {
   return (
@@ -54,7 +54,7 @@ export default function Page() {
                 {s.attribute}
               </td>
               <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: s.vocational ? '#cce0f5' : '#5a5550' }}>
-                {s.vocational ? '★' : '—'}
+                {s.vocational ? '★' : '-'}
               </td>
               <td style={ruleTableTdStyle}>{s.description}</td>
             </tr>

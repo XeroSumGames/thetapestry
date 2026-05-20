@@ -12,15 +12,15 @@ import {
   eventSummaryLine,
 } from '../../lib/community-events'
 
-// My Communities — top-level index. Lists every community the current user
-// can see (via RLS — they're the GM of the campaign, or a member of it).
+// My Communities - top-level index. Lists every community the current user
+// can see (via RLS - they're the GM of the campaign, or a member of it).
 // Grouped by campaign. Clicking a card opens the detail page. "+ New
 // Community" header button opens a modal to create one inside any campaign
 // the user belongs to (as GM or member, since Phase B opened RLS writes to
 // all members per sql/communities-rls-open-to-members.sql).
 
 // Coarse "X ago" formatter for the Following card's "Updated" line.
-// Keep buckets wide — minute-level precision isn't worth the visual
+// Keep buckets wide - minute-level precision isn't worth the visual
 // noise, and the timestamp updates are weekly-ish anyway. Hover title
 // shows the exact ISO timestamp via the parent element.
 function formatRelativeTime(iso: string): string {
@@ -66,7 +66,7 @@ interface PinOption {
   name: string
 }
 
-// Phase E Sprint 5 — Community subscriptions. The user follows a
+// Phase E Sprint 5 - Community subscriptions. The user follows a
 // public-faced world_communities row; this page surfaces the list as
 // a "Following" section below My Communities so it's all in one place.
 interface FollowedCommunity {
@@ -83,7 +83,7 @@ interface FollowedCommunity {
   followedAt: string
   subscriberCount: number          // total followers on the world face
   lastPublicUpdateAt: string | null
-  // Phase 4D — recent community events (latest 3 by created_at DESC).
+  // Phase 4D - recent community events (latest 3 by created_at DESC).
   // Populated for followers via the public-published RLS branch on
   // community_events. Null for any community without recent events.
   recentEvents?: CommunityEventRow[]
@@ -142,7 +142,7 @@ export default function CommunitiesIndexPage() {
       }
     })
     setRows(enriched)
-    // Phase E Sprint 5 — load the user's followed communities (world
+    // Phase E Sprint 5 - load the user's followed communities (world
     // map subscriptions). Joins community_subscriptions to
     // world_communities for the public face. RLS scopes to the
     // user's own subscriptions automatically.
@@ -154,7 +154,7 @@ export default function CommunitiesIndexPage() {
     const fol: FollowedCommunity[] = []
     for (const r of (subs ?? []) as any[]) {
       const wc = Array.isArray(r.world_communities) ? r.world_communities[0] : r.world_communities
-      // Skip rejected / pending — Follow should only show approved
+      // Skip rejected / pending - Follow should only show approved
       // entries (the world map already does the same gate).
       if (!wc || wc.moderation_status !== 'approved') continue
       fol.push({
@@ -173,7 +173,7 @@ export default function CommunitiesIndexPage() {
         lastPublicUpdateAt: wc.last_public_update_at ?? null,
       })
     }
-    // Phase 4D — batch-fetch the most recent 3 events per followed
+    // Phase 4D - batch-fetch the most recent 3 events per followed
     // community. RLS on community_events has a public-published branch
     // that lets us read events for any approved-published community
     // without needing campaign membership.
@@ -282,7 +282,7 @@ export default function CommunitiesIndexPage() {
         .maybeSingle()
       const myCharacterId = (myCm as any)?.character_id as string | undefined
       if (myCharacterId) {
-        // status omitted — DB default 'active' covers new schema,
+        // status omitted - DB default 'active' covers new schema,
         // missing-column old schema ignores the unsent field.
         const { error: enrollErr } = await supabase.from('community_members').insert({
           community_id: data.id,
@@ -308,7 +308,7 @@ export default function CommunitiesIndexPage() {
   // Leader picks one of their communities + an email or username of
   // a user to invite. We insert a community_members row with
   // status='pending' + invited_by_user_id so the invitee can see +
-  // accept it. No PC is attached yet — they pick their own PC when
+  // accept it. No PC is attached yet - they pick their own PC when
   // they accept (future iteration; for now leader picks the
   // character from the list of PCs in the campaign).
   const [showInvite, setShowInvite] = useState(false)
@@ -369,7 +369,7 @@ export default function CommunitiesIndexPage() {
     if (error) {
       const isMigrationMissing = /status.*schema cache|column.*(?:status|invited_by_user_id).*does not exist/i.test(error.message)
       setInviteError(isMigrationMissing
-        ? 'Invite flow not live yet — a GM needs to run sql/community-members-join-requests.sql in Supabase. Once applied, invites route to the community leader for approval.'
+        ? 'Invite flow not live yet - a GM needs to run sql/community-members-join-requests.sql in Supabase. Once applied, invites route to the community leader for approval.'
         : error.message)
       return
     }
@@ -458,7 +458,7 @@ export default function CommunitiesIndexPage() {
         )
       })}
 
-      {/* Phase E Sprint 5 — Following: public communities the user
+      {/* Phase E Sprint 5 - Following: public communities the user
           has subscribed to via the world map's ★ Follow button. Shows
           their public face (name + size + status + faction) and an
           Unfollow button. The cards link to the world-map view
@@ -533,7 +533,7 @@ export default function CommunitiesIndexPage() {
         </section>
       )}
 
-      {/* Invite to Community modal — creates a pending community_members
+      {/* Invite to Community modal - creates a pending community_members
           row. The community's leader still has to approve before the PC
           goes active. */}
       {showInvite && (
@@ -555,7 +555,7 @@ export default function CommunitiesIndexPage() {
               ) : (
                 <select value={inviteCommId} onChange={e => handleInviteCommunityPicked(e.target.value)}
                   style={{ ...inp, appearance: 'none' }}>
-                  <option value="">— pick a community —</option>
+                  <option value="">- pick a community -</option>
                   {rows.map(c => (
                     <option key={c.id} value={c.id}>{c.name}{c.campaign_name ? ` · ${c.campaign_name}` : ''}</option>
                   ))}
@@ -573,7 +573,7 @@ export default function CommunitiesIndexPage() {
                 ) : (
                   <select value={inviteCharId} onChange={e => setInviteCharId(e.target.value)}
                     style={{ ...inp, appearance: 'none' }}>
-                    <option value="">— pick a PC —</option>
+                    <option value="">- pick a PC -</option>
                     {inviteCandidates.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 )}
@@ -587,7 +587,7 @@ export default function CommunitiesIndexPage() {
             )}
             {inviteDone && (
               <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'center' }}>
-                ✓ Invitation sent — awaiting leader approval.
+                ✓ Invitation sent - awaiting leader approval.
               </div>
             )}
 
@@ -620,7 +620,7 @@ export default function CommunitiesIndexPage() {
               ) : (
                 <select value={newCampaignId} onChange={e => { setNewCampaignId(e.target.value); loadPinsForCampaign(e.target.value) }}
                   style={{ ...inp, appearance: 'none' }}>
-                  <option value="">— pick a campaign —</option>
+                  <option value="">- pick a campaign -</option>
                   {campaigns.map(c => (
                     <option key={c.id} value={c.id}>{c.name}{c.setting ? ` · ${c.setting}` : ''}{c.i_am_gm ? ' (GM)' : ''}</option>
                   ))}
@@ -643,7 +643,7 @@ export default function CommunitiesIndexPage() {
               <select value={newHomestead} onChange={e => setNewHomestead(e.target.value)}
                 disabled={!newCampaignId}
                 style={{ ...inp, appearance: 'none', opacity: newCampaignId ? 1 : 0.5 }}>
-                <option value="">— none —</option>
+                <option value="">- none -</option>
                 {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>

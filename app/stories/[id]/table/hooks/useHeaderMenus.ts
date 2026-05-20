@@ -1,4 +1,4 @@
-// useHeaderMenus — owns the header-bar nested-dropdown state shared by
+// useHeaderMenus - owns the header-bar nested-dropdown state shared by
 // the Checks / Community / GM Tools triggers in the live-session view.
 // Extracted from page.tsx as Phase 3.0 step 2 of the decomposition
 // (tasks/page-tsx-decomposition-plan.md).
@@ -6,7 +6,7 @@
 // Behavior preserved verbatim:
 //   - Only one menu opens at a time.
 //   - Hover opens (when not pinned); mouse-leave closes (when not pinned).
-//   - Clicking the trigger toggles a "pinned" state — stays open even
+//   - Clicking the trigger toggles a "pinned" state - stays open even
 //     when the mouse wanders away, until clicked again, clicked outside,
 //     or ESC. Pinning fixes the "I'm chasing the buttons" jitter where
 //     moving toward a child accidentally crossed a dead zone.
@@ -34,7 +34,7 @@ export function useHeaderMenus(): UseHeaderMenus {
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
   // anything outside that closes the menu. Effect only attaches while
-  // a menu is open — when nothing is open, no listeners are wasted.
+  // a menu is open - when nothing is open, no listeners are wasted.
   useEffect(() => {
     if (!openHeaderMenu) return
     function handleClick(e: MouseEvent) {

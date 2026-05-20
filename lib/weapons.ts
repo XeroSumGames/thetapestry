@@ -99,10 +99,10 @@ export const RANGED_WEAPONS: Weapon[] = [
   { name: 'Shotgun (Pump-Action)', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '5+2d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 5, traits: ['Close-Up'] },
   { name: 'Shotgun (Sawed-Off)', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Uncommon', damage: '2+3d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 2, traits: ['Close-Up'] },
   { name: 'Slingshot', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '1+1d3', rpPercent: 100, enc: 0, ammo: 'Common', clip: 1, traits: ['Tracking'] },
-  // Tranquilizer Gun — Xero override 2026-05-09. QS Table 19 had it
+  // Tranquilizer Gun - Xero override 2026-05-09. QS Table 19 had it
   // at `0` damage / 100% RP which renders as 0/0 every hit (useless
   // under the new Stun-aware damage path). Override: 1d3 base x 400%
-  // RP yields up to 12 RP per hit (avg 8) — one-shot KO on most NPCs,
+  // RP yields up to 12 RP per hit (avg 8) - one-shot KO on most NPCs,
   // matches Taser's stun-weapon scaling. See
   // tasks/rules-extract-armor-explosives.md.
   { name: 'Tranquilizer Gun', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Rare', damage: '1d3', rpPercent: 400, enc: 1, ammo: 'Rare', clip: 1, traits: ['Stun'] },
@@ -117,7 +117,7 @@ export const EXPLOSIVE_WEAPONS: Weapon[] = [
   { name: 'Mortar', category: 'explosive', skill: 'Demolitions', range: 'Distant', rarity: 'Rare', damage: '5+2d6', rpPercent: 100, enc: 2, ammo: 'Rare', clip: 1, traits: ['Blast Radius'] },
   { name: 'Shiv-Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Flash-Bang Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
-  // Molotov — rebalanced to QS Table 19 canon 2026-05-09 (was 5+2d6
+  // Molotov - rebalanced to QS Table 19 canon 2026-05-09 (was 5+2d6
   // Rare 100% Blast Radius). Note: Blast Radius DROPPED to match QS;
   // the splash-damage behavior in the table page may need the GM to
   // narrate-radius manually now. Skill flipped Demolitions -> Athletics
@@ -126,7 +126,7 @@ export const EXPLOSIVE_WEAPONS: Weapon[] = [
   { name: 'Rocket Launcher', category: 'explosive', skill: 'Demolitions', range: 'Distant', rarity: 'Rare', damage: '3+3d6', rpPercent: 100, enc: 3, ammo: 'Uncommon', clip: 1, traits: ['Blast Radius'] },
 ]
 
-// ── HEAVY WEAPONS (Table 19 — partial) ──
+// ── HEAVY WEAPONS (Table 19 - partial) ──
 
 export const HEAVY_WEAPONS: Weapon[] = [
   { name: 'Flame-Thrower', category: 'heavy', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '3+2d6', rpPercent: 50, enc: 2, ammo: 'Rare', clip: 30, traits: ['Burning (3)'] },

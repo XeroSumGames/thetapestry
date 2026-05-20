@@ -9,7 +9,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Item Condition — XSE SRD §07' }
+export const metadata = { title: 'Item Condition - XSE SRD §07' }
 
 const COND: Array<[string, string, string]> = [
   ['Pristine', '+1 CMod', 'Top condition. Equipment is new or freshly maintained.'],
@@ -28,9 +28,9 @@ export default function Page() {
         title="Item Condition"
         intro={
           <>
-            Items are in one of five conditions —{' '}
+            Items are in one of five conditions -{' '}
             <Term>Pristine</Term>, <Term>Used</Term>, <Term>Worn</Term>,{' '}
-            <Term>Damaged</Term>, <Term>Broken</Term> — each tied to a
+            <Term>Damaged</Term>, <Term>Broken</Term> - each tied to a
             CMod that applies to any check made with that item.
           </>
         }

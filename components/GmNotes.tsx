@@ -57,7 +57,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
-  // Inline edit state — when set, the expanded note swaps the <pre> body
+  // Inline edit state - when set, the expanded note swaps the <pre> body
   // (and its title header) for editable inputs + Save / Cancel buttons.
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
@@ -124,7 +124,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
     next.splice(insertAt, 0, moved)
     // No-op if dropping back into the same visual slot.
     if (next.every((n, i) => n.id === notes[i].id)) return
-    // Optimistic local update — write through to DB after.
+    // Optimistic local update - write through to DB after.
     const renumbered = next.map((n, i) => ({ ...n, sort_order: i + 1 }))
     setNotes(renumbered)
     // Persist in parallel. If sort_order is missing the alert points
@@ -183,7 +183,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   async function handleSave() {
     if (!title.trim()) return
     setSaving(true)
-    // New notes go to the end of the list — find the current max
+    // New notes go to the end of the list - find the current max
     // sort_order and add 1. If no notes have an order yet (migration
     // not run), sort_order stays null and the new row sorts after
     // existing rows by created_at, which is what users expect.
@@ -434,7 +434,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           <div onClick={() => toggle(n.id)}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#f5f2ee', minWidth: 0, flex: 1 }}>
-              {/* Drag handle — purely visual (the whole card is draggable);
+              {/* Drag handle - purely visual (the whole card is draggable);
                   the grip glyph just signals "this is reorderable" so a GM
                   doesn't have to discover the affordance by accident. */}
               <span title="Drag to reorder" aria-hidden style={{ color: '#5a5550', cursor: 'grab', fontSize: '13px', userSelect: 'none', flexShrink: 0 }}>⋮⋮</span>
@@ -475,7 +475,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 </button>
                 <button onClick={async () => {
                   const next = !n.shared
-                  // .select() returns the updated rows — a 0-length array means
+                  // .select() returns the updated rows - a 0-length array means
                   // RLS silently blocked the write (Supabase doesn't surface an error).
                   const { data, error } = await supabase
                     .from('campaign_notes')
@@ -484,11 +484,11 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                     .select('id')
                   if (error) { alert(`Share failed: ${error.message}`); return }
                   if (!data || data.length === 0) {
-                    alert('Share did not affect any rows — likely an RLS / permissions issue. Check console.')
+                    alert('Share did not affect any rows - likely an RLS / permissions issue. Check console.')
                     return
                   }
                   setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
-                  // Broadcast to players — postgres_changes can drop the UPDATE
+                  // Broadcast to players - postgres_changes can drop the UPDATE
                   // event on their client when a row transitions out of their
                   // RLS-visible set (un-share), so we signal explicitly.
                   supabase.channel(`gm_notes_share_${campaignId}`).send({
@@ -524,7 +524,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 </pre>
               )}
 
-              {/* Attachments — large inline image previews + lightbox */}
+              {/* Attachments - large inline image previews + lightbox */}
               {n.attachments.length > 0 && (
                 <div style={{ marginBottom: '0' }}>
                   <NoteAttachmentsView attachments={n.attachments} onDelete={att => handleDeleteAttachment(n, att)} />

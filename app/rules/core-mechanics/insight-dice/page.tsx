@@ -2,7 +2,7 @@ import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSecti
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Insight Dice — XSE SRD §02' }
+export const metadata = { title: 'Insight Dice - XSE SRD §02' }
 
 export default function Page() {
   return (
@@ -27,9 +27,9 @@ export default function Page() {
         <li>Add a +3 CMod to the Dice Check before rolling.</li>
         <li>After a Dice Check, drop one or both dice and replace them with an Insight Die rolled fresh.</li>
         <li>Spend Insight Dice for a flashback, retcon, or anything else the player can <Term>Make The Case</Term> for.</li>
-        <li>Spend an Insight Die to introduce a story element (e.g. trying the door again and finding it unlocked) — with GM approval and a successful Make The Case.</li>
+        <li>Spend an Insight Die to introduce a story element (e.g. trying the door again and finding it unlocked) - with GM approval and a successful Make The Case.</li>
         <li>Spend ALL available Insight Dice to recover 1 Wound Point + 1 Resilience Point (total, regardless of how many dice were surrendered) and save the character from Death.</li>
-        <li>Stave off death by <Term>Subsistence Damage</Term> (starvation/dehydration) by surrendering Insight Dice — each die buys one additional day before WP loss begins.</li>
+        <li>Stave off death by <Term>Subsistence Damage</Term> (starvation/dehydration) by surrendering Insight Dice - each die buys one additional day before WP loss begins.</li>
       </ul>
       <P>
         Once a player uses an Insight Die, they surrender it back to the
@@ -38,7 +38,7 @@ export default function Page() {
         session to session.
       </P>
       <TryIt href="/dashboard">
-        Insight Dice are tracked on every character sheet — open one to see
+        Insight Dice are tracked on every character sheet - open one to see
         the running count.
       </TryIt>
     </>

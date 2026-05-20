@@ -7,7 +7,7 @@ import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { RARITY_COLOR, RARITY_BG, RARITY_BORDER } from '../lib/rarity-colors'
 import { ARMOR } from '../lib/xse-schema'
 
-// Combined inventory catalog — SRD equipment + all weapons.
+// Combined inventory catalog - SRD equipment + all weapons.
 // Weapons are normalized into the EquipmentItem shape (name/enc/rarity/notes)
 // so they can be held in inventory alongside gear. Equipping a held weapon
 // (swapping it to Primary/Secondary) is done separately via the character sheet.
@@ -33,7 +33,7 @@ export interface InventoryItem {
   notes: string
   qty: number
   custom: boolean
-  /** Armor only — see lib/inventory.ts for canon. */
+  /** Armor only - see lib/inventory.ts for canon. */
   worn?: boolean
 }
 // Re-export the shared shape from lib/inventory for non-component
@@ -54,7 +54,7 @@ interface Props {
   onGiveTo?: (item: InventoryItem, targetCharId: string, qty: number) => void
   // Optional NPC recipients (community quartermasters, merchants, etc.).
   // Routed to onGiveToNpc to keep the PC + NPC write paths separate at
-  // the parent — different tables (characters vs. campaign_npcs) and
+  // the parent - different tables (characters vs. campaign_npcs) and
   // different broadcast events.
   otherNpcs?: { id: string; name: string }[]
   onGiveToNpc?: (item: InventoryItem, targetNpcId: string, qty: number) => void
@@ -143,7 +143,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
     const item = inventory[idx]
     setGivingItem(item)
     // Single-use explosives (Grenade, Molotov, Shiv-Grenade, Flash-Bang,
-    // RPG round) default to qty 1 — each one is a discrete consumable
+    // RPG round) default to qty 1 - each one is a discrete consumable
     // and "give the whole pile" is rarely what the player wants. For
     // every other stackable item, default = full stack (give-all-of-X
     // is the common case). User can override either way via the +/-
@@ -213,7 +213,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         </div>
 
         {/* Search + sort for your own inventory. Hidden until you
-            cross 6 items — under that, scrolling is fine and the
+            cross 6 items - under that, scrolling is fine and the
             controls just take up space. */}
         {inventory.length >= 6 && (
           <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
@@ -230,7 +230,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
           </div>
         )}
 
-        {/* Item list — filtered + sorted view. Indices we hand to
+        {/* Item list - filtered + sorted view. Indices we hand to
             removeItem/giveItem must point at the original `inventory`
             array, not the filtered one, so we carry the original
             index alongside the display row. */}
@@ -278,7 +278,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                     {item.notes && <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.3 }}>{item.notes}</div>}
                   </div>
                   <span style={{ fontSize: '13px', color: rc.color, background: rc.bg, border: `1px solid ${rc.border}`, borderRadius: '2px', padding: '0 4px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>{item.rarity}</span>
-                  <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', flexShrink: 0, minWidth: '24px', textAlign: 'center' }}>{item.enc > 0 ? `${item.enc}` : '—'}</span>
+                  <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', flexShrink: 0, minWidth: '24px', textAlign: 'center' }}>{item.enc > 0 ? `${item.enc}` : '-'}</span>
                   {canEdit && isArmor && (
                     <button
                       onClick={() => onUpdate(inventory.map((i, j) => j === idx ? { ...i, worn: !i.worn } : i))}
@@ -321,7 +321,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
             )}
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>To:</div>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              {/* PC recipients — blue trim */}
+              {/* PC recipients - blue trim */}
               {(otherCharacters ?? []).map(ch => (
                 <button key={`pc:${ch.id}`} onClick={() => confirmGive({ id: ch.id, kind: 'pc' })}
                   title="Give to player character"
@@ -329,7 +329,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   👤 {ch.name}
                 </button>
               ))}
-              {/* NPC recipients — orange trim, distinct from PCs */}
+              {/* NPC recipients - orange trim, distinct from PCs */}
               {onGiveToNpc && (otherNpcs ?? []).map(n => (
                 <button key={`npc:${n.id}`} onClick={() => confirmGive({ id: n.id, kind: 'npc' })}
                   title="Give to non-player character"
@@ -337,7 +337,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   🎭 {n.name}
                 </button>
               ))}
-              {/* Community stockpile recipients — purple trim. Lists
+              {/* Community stockpile recipients - purple trim. Lists
                   every community the giver is a member of. */}
               {onGiveToCommunity && (otherCommunities ?? []).map(c => (
                 <button key={`community:${c.id}`} onClick={() => confirmGive({ id: c.id, kind: 'community' })}
@@ -346,7 +346,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   🏘 {c.name}
                 </button>
               ))}
-              {/* Vehicle cargo recipients — green trim. Stashes the
+              {/* Vehicle cargo recipients - green trim. Stashes the
                   item in the campaign vehicle's cargo loadout
                   (campaigns.vehicles[N].cargo). */}
               {onGiveToVehicle && (otherVehicles ?? []).map(v => (
@@ -395,11 +395,11 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                       {item.name}
-                      {item.notes && <span style={{ fontSize: '13px', color: '#5a5550', marginLeft: '6px' }}>— {item.notes}</span>}
+                      {item.notes && <span style={{ fontSize: '13px', color: '#5a5550', marginLeft: '6px' }}>- {item.notes}</span>}
                     </span>
                     {isWeapon && <span style={{ fontSize: '13px', color: '#f5a89a', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', padding: '0 3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>WPN</span>}
                     <span style={{ fontSize: '13px', color: rc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{item.rarity}</span>
-                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '20px', textAlign: 'right' }}>{item.enc > 0 ? item.enc : '—'}</span>
+                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '20px', textAlign: 'right' }}>{item.enc > 0 ? item.enc : '-'}</span>
                   </div>
                 )
               })}

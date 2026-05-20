@@ -8,7 +8,7 @@ import {
   ruleTableTdStyle,
 } from '../../../components/rules/RuleSection'
 
-export const metadata = { title: 'Appendix A — Tables — XSE SRD' }
+export const metadata = { title: 'Appendix A - Tables - XSE SRD' }
 
 const LASTING: Array<[number, string, string]> = [
   [2, 'Lost Eye', '−1 ACU. Damaged'],
@@ -100,7 +100,7 @@ export default function Page() {
         </RuleTable>
       </RuleSection>
 
-      <RuleSection id="lasting-wounds" title="Table 12 — Lasting Wounds">
+      <RuleSection id="lasting-wounds" title="Table 12 - Lasting Wounds">
         <P>
           Roll <Term>2d6</Term> when a Mortally Wounded character fails
           their Physicality check to avoid a permanent wound.
@@ -117,7 +117,7 @@ export default function Page() {
         </RuleTable>
       </RuleSection>
 
-      <RuleSection id="breaking-point" title="Table 13 — Breaking Point">
+      <RuleSection id="breaking-point" title="Table 13 - Breaking Point">
         <P>
           Roll <Term>2d6</Term> when a character's Stress Level reaches
           their Breaking Point.

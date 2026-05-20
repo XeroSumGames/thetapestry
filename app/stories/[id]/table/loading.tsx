@@ -3,7 +3,7 @@
 // The table page is a 9k-line 'use client' component that pulls in 30+
 // child components and ~600KB of JS. On a soft-nav into this route, the
 // browser sits on the OLD page's content until the new chunk finishes
-// downloading + parsing — anywhere from a few hundred ms on a fast
+// downloading + parsing - anywhere from a few hundred ms on a fast
 // connection to several seconds on a cold deploy. Without this file the
 // user has no signal that anything's happening.
 //

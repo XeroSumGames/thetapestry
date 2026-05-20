@@ -202,7 +202,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
-              {/* Actions at the TOP — player can submit / delete a
+              {/* Actions at the TOP - player can submit / delete a
                   note without scrolling past its body. */}
               <div style={{ display: 'flex', gap: '6px', marginTop: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                 <button onClick={() => toggleSubmit(n)}

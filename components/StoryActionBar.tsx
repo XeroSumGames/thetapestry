@@ -1,15 +1,15 @@
 'use client'
-// StoryActionBar — the canonical campaign-page header rendered at the
+// StoryActionBar - the canonical campaign-page header rendered at the
 // top of every campaign page (hub + Snapshots + Sessions + Community).
 // Carries:
-//   1. Setting label + role chip — "CUSTOM SETTING — GAME MASTER"
+//   1. Setting label + role chip - "CUSTOM SETTING - GAME MASTER"
 //   2. Campaign name as the big H1
 //   3. Optional description
 //   4. Red separator
 //   5. The 6-button action bar (Launch / GM Notes / Snapshot /
 //      Publish / Delete / GM Kit)
 //
-// Per the 2026-04-29 follow-up directive — "make each of these sub-
+// Per the 2026-04-29 follow-up directive - "make each of these sub-
 // pages look exactly like this. not just the buttons but the name at
 // the top too." Single component = guaranteed visual + behavioral
 // consistency end-to-end.
@@ -63,7 +63,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
   const [campaign, setCampaign] = useState<CampaignLite | null>(null)
   const [isGM, setIsGM] = useState(false)
   const [existingModule, setExistingModule] = useState<ModuleForCampaign | null>(null)
-  // Subscriber-side update notice — separate from existingModule
+  // Subscriber-side update notice - separate from existingModule
   // (which is "this campaign IS a module's source"). moduleUpdate is
   // "this campaign was subscribed to a module that the author has
   // since pushed a newer version of." Renders as a button on the bar
@@ -102,7 +102,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
         const mod = await getModuleForCampaign(supabase, campaignId)
         if (!cancelled) setExistingModule(mod)
 
-        // Subscriber-side update check — surface the first outdated
+        // Subscriber-side update check - surface the first outdated
         // module subscription. Mirrors the pattern that used to live
         // on /stories/[id]/page.tsx so the bar carries the notice on
         // every page, not just the hub.
@@ -155,14 +155,14 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
 
   async function handleDelete() {
     // Stronger confirm when this campaign is the source for a
-    // published module — deleting it disconnects the module from
+    // published module - deleting it disconnects the module from
     // its source, so the GM can't push new versions without
     // re-linking a fresh source campaign. Surfacing the module
     // name in the prompt makes the consequence explicit instead
     // of silent. Companion to the dashboard list-view treatment
     // (blue bar + "Template of <module>") in app/stories/page.tsx.
     const msg = existingModule
-      ? `⚠️ This is the template for "${existingModule.name}".\n\nDeleting it disconnects the published module from its source — you won't be able to push new versions of "${existingModule.name}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
+      ? `⚠️ This is the template for "${existingModule.name}".\n\nDeleting it disconnects the published module from its source - you won't be able to push new versions of "${existingModule.name}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
       : 'Permanently delete this story? This cannot be undone.'
     if (!confirm(msg)) return
     await supabase.from('campaigns').delete().eq('id', campaignId)
@@ -195,7 +195,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
     }
   }
 
-  // Render nothing until the campaign loads — avoids a flash of an
+  // Render nothing until the campaign loads - avoids a flash of an
   // empty-state header. Brief absence on hard reload is hardly
   // noticed; the page below it renders its own loading state.
   if (!campaign) return null
@@ -204,7 +204,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
 
   return (
     <div>
-      {/* Canonical header — setting label + role + campaign name +
+      {/* Canonical header - setting label + role + campaign name +
           optional description + red separator. Mirrors the hub's
           original H1 block so every sub-page reads as "FIGHT CLUB"
           consistently. */}
@@ -226,7 +226,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
           GM-only actions just don't render. */}
       {/* Order locked by Xero (2026-05-06, EDIT removed 2026-05-15):
           LAUNCH → GM NOTES → SNAPSHOT → PUBLISH → DELETE → GM KIT.
-          Share button removed — the always-visible Invite Link box
+          Share button removed - the always-visible Invite Link box
           below the action bar already has its own COPY LINK button,
           so Share was redundant. The Edit page was retired 2026-05-15
           and its form lives inline on the campaign hub itself; clicking
@@ -239,14 +239,14 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
       </a>
       {isGM && (
         <button onClick={() => {
-          // Popout — same window-features as /gm-screen so it lands
+          // Popout - same window-features as /gm-screen so it lands
           // beside the table page rather than as a tab. Helps the GM
           // keep notes open on a second monitor while running combat.
           const w = 980, h = 800
           window.open(`/gm-notes-popout?c=${campaignId}`, `gm-notes-${campaignId}`,
             `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`)
         }}
-          title="Open the GM Notes popout — story overview, scenes, NPC list, plot beats"
+          title="Open the GM Notes popout - story overview, scenes, NPC list, plot beats"
           style={btn('#1a2e2e', '#7adcd4', '#2e5a5a', false) as any}>
           GM Notes
         </button>
@@ -272,7 +272,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
       )}
       {isGM && existingModule && !existingModule.archived_at && (
         <button onClick={handleArchiveModule}
-          title="Archive this module — removes it from the marketplace, notifies subscribers"
+          title="Archive this module - removes it from the marketplace, notifies subscribers"
           style={btn('#1a1a1a', '#5a5550', '#3a3a3a', false) as any}>
           Archive
         </button>
@@ -299,7 +299,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
       {extraButtons}
 
       </div>
-      {/* Publish modal — owned by the bar so it's reachable from any
+      {/* Publish modal - owned by the bar so it's reachable from any
           page that mounts the bar. Refreshes existingModule on success
           so the button re-labels with the new version number. */}
       {isGM && publishOpen && (

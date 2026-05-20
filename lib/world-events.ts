@@ -1,4 +1,4 @@
-// Communities Phase E — World Event CMod propagation helper.
+// Communities Phase E - World Event CMod propagation helper.
 //
 // Distemper Timeline pins (map_pins.category='world_event') with a
 // non-null cmod_impact and cmod_active=true apply a CMod to Weekly
@@ -19,7 +19,7 @@ export interface ActiveWorldEvent {
   pinId: string
   title: string
   label: string         // cmod_label || title
-  cmod: number          // signed integer — sums into moraleSlotsTotal
+  cmod: number          // signed integer - sums into moraleSlotsTotal
   distanceKm: number    // distance from the community's Homestead
   radiusKm: number      // the event's reach
   pinLat: number

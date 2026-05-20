@@ -2,7 +2,7 @@ import { RuleHero, RuleSection, P, Term } from '../../../../components/rules/Rul
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Damage — XSE SRD §06' }
+export const metadata = { title: 'Damage - XSE SRD §06' }
 
 export default function Page() {
   return (
@@ -28,7 +28,7 @@ export default function Page() {
           <Term>RP damage = 50% of WP damage</Term>, rounded down. Attacks
           that inflict concussive damage or blunt force trauma (fists,
           batons, grenades) often do equal RP and WP damage.{' '}
-          <Term>Tables 16–19</Term> in §07 list each weapon's WP/RP split.
+          <Term>Tables 16-19</Term> in §07 list each weapon's WP/RP split.
         </P>
         <P>
           When using Melee Weapons or Unarmed Combat, the user adds their{' '}

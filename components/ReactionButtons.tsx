@@ -1,5 +1,5 @@
 'use client'
-// Phase 4E — shared reaction up/down buttons used by Forums (B), War
+// Phase 4E - shared reaction up/down buttons used by Forums (B), War
 // Stories, and LFG. Each surface persists to its own table (different
 // FK column name); the table + column are passed in as props.
 //
@@ -24,7 +24,7 @@ interface Props {
   /** Initial counts pulled from the parent's loader. */
   initialUp: number
   initialDown: number
-  /** Initial own vote state — null = no vote, 'up' / 'down' otherwise. */
+  /** Initial own vote state - null = no vote, 'up' / 'down' otherwise. */
   initialOwn: Kind | null
   /** Optional compact mode for dense card layouts. */
   compact?: boolean
@@ -46,7 +46,7 @@ export default function ReactionButtons({
     const previous = own
     // Optimistic local flip.
     if (own === direction) {
-      // Retract — same direction clicked again.
+      // Retract - same direction clicked again.
       setOwn(null)
       if (direction === 'up') setUp(n => Math.max(0, n - 1))
       else setDown(n => Math.max(0, n - 1))
@@ -73,7 +73,7 @@ export default function ReactionButtons({
         if (wasOpposite) setUp(n => Math.max(0, n - 1))
       }
       // UNIQUE(target, user) lets a single upsert handle both fresh +
-      // flip cases — the conflict target lifts the existing row's kind.
+      // flip cases - the conflict target lifts the existing row's kind.
       const { error } = await supabase
         .from(table)
         .upsert(
@@ -84,7 +84,7 @@ export default function ReactionButtons({
         // Rollback to the previous state.
         setOwn(previous)
         // Recompute counts from the rollback delta. Simpler than trying
-        // to thread per-step diffs — we just undo everything we added.
+        // to thread per-step diffs - we just undo everything we added.
         if (direction === 'up') setUp(n => Math.max(0, n - 1))
         else setDown(n => Math.max(0, n - 1))
         if (wasOpposite) {

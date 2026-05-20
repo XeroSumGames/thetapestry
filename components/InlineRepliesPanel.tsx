@@ -1,5 +1,5 @@
 'use client'
-// Phase 4E — inline-expand reply panel for War Stories + LFG. Mirrors
+// Phase 4E - inline-expand reply panel for War Stories + LFG. Mirrors
 // the Forums thread-detail reply UX (flat list ordered ASC by
 // created_at + textarea composer at the bottom) but lives inline
 // inside a parent feed card that toggles open/closed.
@@ -132,7 +132,7 @@ export default function InlineRepliesPanel({
       {loading ? (
         <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic' }}>Loading…</div>
       ) : replies.length === 0 ? (
-        <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic' }}>No replies yet — be the first.</div>
+        <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic' }}>No replies yet - be the first.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {replies.map(r => {

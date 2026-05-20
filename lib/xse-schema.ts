@@ -1,5 +1,5 @@
 // ============================================================
-// XERO SUM ENGINE SRD v1.1 — Character Schema & Static Data
+// XERO SUM ENGINE SRD v1.1 - Character Schema & Static Data
 // ============================================================
 
 // ----------------------------
@@ -316,7 +316,7 @@ export function findEquipmentByName(input: string): EquipmentItem | undefined {
 }
 
 // ----------------------------
-// RATIONS (Quickstart Table 16) — canon
+// RATIONS (Quickstart Table 16) - canon
 // ----------------------------
 // Locked 2026-05-09 by Xero. Three rarity tiers; each ration covers
 // one day of food + water for one character. Used by:
@@ -346,7 +346,7 @@ export const RATIONS: RationItem[] = [
 // Legacy data: characters created before the promotion stored
 // `rations: string` (e.g. "Standard Rations" or empty). The
 // normalizer below accepts both shapes so old characters keep
-// rendering correctly. Never read `c.data.rations` directly —
+// rendering correctly. Never read `c.data.rations` directly -
 // always go through normalizeRations() so the count is right.
 export interface CharacterRations {
   type: string  // empty string when no rations
@@ -382,7 +382,7 @@ export function normalizeRations(raw: unknown): CharacterRations {
   return { type: '', count: 0 }
 }
 
-/** Display formatter — "2 × Standard Rations", or "Standard
+/** Display formatter - "2 × Standard Rations", or "Standard
  *  Rations" when count is 1, or empty when count is 0. */
 export function formatRations(r: CharacterRations): string {
   if (!r.type || r.count <= 0) return ''
@@ -391,7 +391,7 @@ export function formatRations(r: CharacterRations): string {
 }
 
 // ----------------------------
-// ARMOR (Quickstart Table 7) — canon
+// ARMOR (Quickstart Table 7) - canon
 // ----------------------------
 // Locked 2026-05-09 by Xero. 8 entries, 6 derived from QS Table 7
 // + 2 user overrides:
@@ -418,7 +418,7 @@ export interface ArmorItem {
   name: string
   rarity: ItemRarity
   enc: number
-  /** Defensive Modifier — positive number, applied as `-dm` to
+  /** Defensive Modifier - positive number, applied as `-dm` to
    *  attacker's chance and to landed damage. */
   dm: number
   traits: ArmorTrait[]
@@ -429,11 +429,11 @@ export const ARMOR: ArmorItem[] = [
   { name: 'Improvised',      rarity: 'Uncommon', enc: 2, dm: 3, traits: ['requires_phy_1_or_cmod_1'], notes: 'Scrap-metal-and-leather lashed together. Requires PHY 1 to wear or -1 CMod to all actions.' },
   { name: 'Leather',         rarity: 'Common',   enc: 1, dm: 1, traits: [], notes: 'Stitched hide. Light, common, and quiet.' },
   { name: 'Makeshift Shield',rarity: 'Common',   enc: 1, dm: 1, traits: [], notes: 'A trash-can lid, a salvaged door panel, anything you can hide behind.' },
-  { name: 'Metal Helmet',    rarity: 'Uncommon', enc: 0, dm: 1, traits: [], notes: 'Stacks freely with body armor — covers a different part of you.' },
+  { name: 'Metal Helmet',    rarity: 'Uncommon', enc: 0, dm: 1, traits: [], notes: 'Stacks freely with body armor - covers a different part of you.' },
   { name: 'Plate Steel',     rarity: 'Common',   enc: 3, dm: 4, traits: ['requires_phy_1_or_cmod_2'], notes: 'Heavy steel plates. Requires PHY 1 to wear or -2 CMod to all actions.' },
   { name: 'Riot Gear',       rarity: 'Uncommon', enc: 2, dm: 2, traits: [], notes: 'Police-style body armor with kevlar, padding, and rigid plates.' },
   { name: 'Riot Shield',     rarity: 'Uncommon', enc: 1, dm: 1, traits: ['reactive_melee_only'], notes: 'Reactive: only applies vs melee or unarmed attacks. Useless against gunfire.' },
-  { name: 'Tactical Armor',  rarity: 'Uncommon', enc: 1, dm: 2, traits: [], notes: 'Modern military / SWAT body armor — light enough to move in.' },
+  { name: 'Tactical Armor',  rarity: 'Uncommon', enc: 1, dm: 2, traits: [], notes: 'Modern military / SWAT body armor - light enough to move in.' },
 ]
 
 // ----------------------------
@@ -450,7 +450,7 @@ export interface Paradigm {
   profession: string;
   rapid: Record<AttributeName, AttributeValue>;
   skills: ParadigmSkillEntry[];
-  // Starter loadout — used by the Paradigm + Random character flows
+  // Starter loadout - used by the Paradigm + Random character flows
   // to seed weapons + equipment without a separate randomization
   // pass. Optional so existing call sites (e.g. the Apprentice flow,
   // which only reads RAPID + skills) keep working without these
@@ -956,7 +956,7 @@ export function buildCharacterFromPregen(seed: {
   const secondary = deriveSecondaryStats(rapid);
   const words = seed.three_words.split(',').map(w => w.trim());
 
-  // Build skill levels from seed — start with canonical defaults, then overlay
+  // Build skill levels from seed - start with canonical defaults, then overlay
   const skillMap = new Map(seed.skills.map(s => [s.skillName, s.level]));
   const skills: CharacterSkill[] = SKILLS.map(s => ({
     skillName: s.name,

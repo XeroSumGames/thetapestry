@@ -9,7 +9,7 @@ export interface RuleAnchor {
 }
 
 export interface RuleSection {
-  /** Route slug — page lives at /rules/{slug} */
+  /** Route slug - page lives at /rules/{slug} */
   slug: string
   /** Section number from the SRD table of contents */
   number: string
@@ -130,33 +130,33 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'activity-blocks', label: 'Activity Blocks' },
       { id: 'crb-additions', label: 'Distemper CRB additions' },
     ],
-    // not a stub — full content
+    // not a stub - full content
   },
   {
     slug: 'appendix-tables',
     number: 'A',
-    title: 'Appendix A — Tables',
+    title: 'Appendix A - Tables',
     summary: 'All reference tables in one place: outcomes, modifiers, traits.',
     anchors: [],
   },
   {
     slug: 'appendix-skills',
     number: 'B',
-    title: 'Appendix B — Skills',
+    title: 'Appendix B - Skills',
     summary: 'The full skill catalog with descriptions.',
     anchors: [],
   },
   {
     slug: 'appendix-equipment',
     number: 'C',
-    title: 'Appendix C — Weapons & Equipment',
+    title: 'Appendix C - Weapons & Equipment',
     summary: 'Weapon stats, equipment lists, and item traits in detail.',
     anchors: [],
   },
   {
     slug: 'appendix-paradigms',
     number: 'D',
-    title: 'Appendix D — Paradigms',
+    title: 'Appendix D - Paradigms',
     summary: 'The 12 Distemper Paradigms and Vibe Shifts.',
     anchors: [],
   },

@@ -73,14 +73,14 @@ interface ChatMessageRow {
   created_at: string
 }
 
-// Bespoke banner renderer — mirrors RollsFeed.tsx's Tier-A banners so
+// Bespoke banner renderer - mirrors RollsFeed.tsx's Tier-A banners so
 // the export visually matches the live feed for the high-signal row
 // types (combat start/end, initiative, drop, defer, sprint, death,
 // incap, revive). Returns null for rows that should fall through to
 // the generic skill-roll template below. Ported 2026-05-15.
 //
 // Out of scope (still falls through to generic for now): retention_check,
-// fed_check, clothed_check, morale_check — those have their own row-
+// fed_check, clothed_check, morale_check - those have their own row-
 // table layouts that need bespoke porting too, larger surgery.
 function renderBespokeBanner(r: RollLogRow): string | null {
   const time = formatTime(r.created_at)
@@ -348,7 +348,7 @@ function renderChat(m: ChatMessageRow): string {
 }
 
 function renderRow(r: RollLogRow): string {
-  // Bespoke banners short-circuit — high-signal row types (combat
+  // Bespoke banners short-circuit - high-signal row types (combat
   // start/end, drop, defer, sprint, death, incap, revive, initiative)
   // each have their own template that mirrors RollsFeed.tsx.
   const bespoke = renderBespokeBanner(r)
@@ -404,7 +404,7 @@ function renderRow(r: RollLogRow): string {
 </div>`
 }
 
-// Combined feed item — discriminated union so the interleave can sort
+// Combined feed item - discriminated union so the interleave can sort
 // rolls + chat by created_at and render each through its own template.
 type FeedItem =
   | { kind: 'roll'; created_at: string; row: RollLogRow }
@@ -444,7 +444,7 @@ function renderHtml(args: { campaignName: string; sessionNumber: number; exporte
   .badge { display: inline-block; font-size: 13px; color: var(--green); background: #1a2e10; border: 1px solid #2d5a1b; padding: 1px 5px; border-radius: 2px; margin-left: 6px; }
   .spent { font-size: 13px; color: var(--green); margin-top: 2px; }
   .empty { color: #888; font-style: italic; padding: 1rem; }
-  /* Bespoke banners — mirror the live feed Tier-A row types. */
+  /* Bespoke banners - mirror the live feed Tier-A row types. */
   .banner { margin-bottom: 8px; padding: 8px 10px; border-radius: 3px; border: 1px solid var(--border); border-left-width: 3px; border-left-style: solid; }
   .banner-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
   .banner-title { font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-family: 'Carlito', sans-serif; }
@@ -465,7 +465,7 @@ function renderHtml(args: { campaignName: string; sessionNumber: number; exporte
   .banner-death { background: #1a0a0a; border-color: #5a1b1b; border-left-color: var(--red); }
   .banner-incap { background: #1a1408; border-color: #5a4218; border-left-color: var(--amber); }
   .banner-revive { background: #0f1f08; border-color: #2d5a1b; border-left-color: var(--green); }
-  /* Chat messages — interleaved with rolls by created_at. */
+  /* Chat messages - interleaved with rolls by created_at. */
   .chat { margin-bottom: 6px; padding: 6px 10px; background: #14181c; border: 1px solid #2e2e2e; border-radius: 3px; }
   .chat.whisper { background: #1a0f1a; border-color: #5a2e5a; }
   .chat-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
@@ -496,7 +496,7 @@ export async function exportSessionLog(args: {
   sessionNumber: number
 }): Promise<void> {
   const supabase = createClient()
-  // Parallel fetches — independent tables.
+  // Parallel fetches - independent tables.
   const [rollsRes, chatRes] = await Promise.all([
     supabase
       .from('roll_log')
@@ -515,13 +515,13 @@ export async function exportSessionLog(args: {
     return
   }
   if (chatRes.error) {
-    // Don't fail the export on chat-fetch error — the roll log is the
+    // Don't fail the export on chat-fetch error - the roll log is the
     // higher-signal payload. Log + continue without chat.
     console.warn('[session-export] chat_messages fetch failed (continuing without chat):', chatRes.error.message)
   }
   const rows = (rollsRes.data ?? []) as RollLogRow[]
   const chat = (chatRes.data ?? []) as ChatMessageRow[]
-  // Interleave by created_at — rolls and chat ordered chronologically.
+  // Interleave by created_at - rolls and chat ordered chronologically.
   const items: FeedItem[] = [
     ...rows.map(r => ({ kind: 'roll' as const, created_at: r.created_at, row: r })),
     ...chat.map(m => ({ kind: 'chat' as const, created_at: m.created_at, msg: m })),

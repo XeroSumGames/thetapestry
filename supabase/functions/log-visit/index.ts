@@ -1,4 +1,4 @@
-// IMPORTANT: Deploy with --no-verify-jwt flag — Ghost visitors have no auth token
+// IMPORTANT: Deploy with --no-verify-jwt flag - Ghost visitors have no auth token
 // npx supabase functions deploy log-visit --no-verify-jwt --project-ref jbudzglgtxeoaufpejrv
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     // Count prior visits from this IP hash. visitNumber === 1 means
     // we've never seen this hash before; that's the gate the email
     // alert uses (see below). The per-session "first visit" check
-    // that used to live here was dropped 2026-05-08 — it sent on
+    // that used to live here was dropped 2026-05-08 - it sent on
     // every new browser session, which spammed the inbox for repeat
     // visitors.
     let visitNumber = 1
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     // logged-in repeat visitors ran the visitNumber so high that
     // emails went silent. New rule is binary: visitNumber === 1, no
     // session-level retries, no signed-in/ghost split. Bot suppression
-    // by city stays — ip_hash 1 from Ashburn is still a bot.
+    // by city stays - ip_hash 1 from Ashburn is still a bot.
     const suppressedCities = ['san jose', 'ashburn', 'boardman', 'council bluffs']
     const isSuppressedCity = city && suppressedCities.includes(city.toLowerCase())
     const isNewVisitor = visitNumber === 1
@@ -87,8 +87,8 @@ Deno.serve(async (req) => {
       const location = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown'
 
       const subject = isGhost
-        ? `[The Tapestry] New Visitor${locationParts.length > 0 ? ' — ' + [city, country_code].filter(Boolean).join(', ') : ''}`
-        : `[The Tapestry] Survivor Active${locationParts.length > 0 ? ' — ' + [city, country_code].filter(Boolean).join(', ') : ''}`
+        ? `[The Tapestry] New Visitor${locationParts.length > 0 ? ' - ' + [city, country_code].filter(Boolean).join(', ') : ''}`
+        : `[The Tapestry] Survivor Active${locationParts.length > 0 ? ' - ' + [city, country_code].filter(Boolean).join(', ') : ''}`
 
       const now = new Date().toLocaleString('en-US', {
         weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',

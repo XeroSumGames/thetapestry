@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
 };
 
 // Wrap with Sentry. When SENTRY_AUTH_TOKEN isn't set (local dev or
-// pre-account-creation), source-map upload is silently skipped — the
+// pre-account-creation), source-map upload is silently skipped - the
 // runtime SDK still captures errors, just with minified stack traces.
 // SENTRY_ORG and SENTRY_PROJECT are pulled from env vars at build time.
 export default withSentryConfig(nextConfig, {

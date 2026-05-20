@@ -24,7 +24,7 @@ const outcomeRow = (
   </tr>
 )
 
-export const metadata = { title: 'Recruitment Check — XSE SRD §08' }
+export const metadata = { title: 'Recruitment Check - XSE SRD §08' }
 
 export default function RecruitmentPage() {
   return (
@@ -36,7 +36,7 @@ export default function RecruitmentPage() {
         intro={
           <>
             A Recruitment Check uses a skill that aligns with the approach the
-            PCs are taking — most commonly <Term>Barter</Term>,{' '}
+            PCs are taking - most commonly <Term>Barter</Term>,{' '}
             <Term>Psychology*</Term>, or <Term>Tactics*</Term>. The First
             Impression a player made on the NPC applies as a CMod.
           </>
@@ -63,7 +63,7 @@ export default function RecruitmentPage() {
           </tr>
           <tr>
             <td style={ruleTableTdStyle}><Term>Conscript</Term></td>
-            <td style={ruleTableTdStyle}>Coerced — requires a credible threat</td>
+            <td style={ruleTableTdStyle}>Coerced - requires a credible threat</td>
             <td style={ruleTableTdStyle}>While the coercion holds</td>
           </tr>
           <tr>
@@ -85,9 +85,9 @@ export default function RecruitmentPage() {
           <tbody>
             {outcomeRow('Wild Success (14+)', 'NPC becomes a Cohort immediately (no probation).', true)}
             {outcomeRow('Moment of High Insight (6+6)', 'Same as Wild Success + may take the NPC as Apprentice.', true)}
-            {outcomeRow('Success (9–13)', 'NPC joins until next Morale Check.')}
-            {outcomeRow('Failure (4–8)', 'Does not join. Retry only if circumstances materially change.')}
-            {outcomeRow('Dire Failure (0–3)', 'No interest in joining.')}
+            {outcomeRow('Success (9-13)', 'NPC joins until next Morale Check.')}
+            {outcomeRow('Failure (4-8)', 'Does not join. Retry only if circumstances materially change.')}
+            {outcomeRow('Dire Failure (0-3)', 'No interest in joining.')}
             {outcomeRow('Moment of Low Insight (1+1)', 'NPC is alienated or offended. Possible escalation, including violent rejection.')}
           </tbody>
         </RuleTable>
@@ -107,11 +107,11 @@ export default function RecruitmentPage() {
             </tr>
           </thead>
           <tbody>
-            {outcomeRow('Wild Success (14+)', 'Joins willingly — fully committed, loyal follower.', true)}
+            {outcomeRow('Wild Success (14+)', 'Joins willingly - fully committed, loyal follower.', true)}
             {outcomeRow('Moment of High Insight (6+6)', 'Wild Success + Apprentice option.', true)}
-            {outcomeRow('Success (9–13)', 'Complies under duress. Will follow orders until next Morale Check.')}
-            {outcomeRow('Failure (4–8)', 'Appears to comply but will attempt to escape at first opportunity.')}
-            {outcomeRow('Dire Failure (0–3)', 'Steadfastly refuses to join.')}
+            {outcomeRow('Success (9-13)', 'Complies under duress. Will follow orders until next Morale Check.')}
+            {outcomeRow('Failure (4-8)', 'Appears to comply but will attempt to escape at first opportunity.')}
+            {outcomeRow('Dire Failure (0-3)', 'Steadfastly refuses to join.')}
             {outcomeRow('Moment of Low Insight (1+1)', 'Refuses + hostile or violent response possible.')}
           </tbody>
         </RuleTable>
@@ -119,7 +119,7 @@ export default function RecruitmentPage() {
 
       <RuleSection id="convert" title="Convert outcomes">
         <P>
-          Converts are recruited through a shared belief or ideology — promised
+          Converts are recruited through a shared belief or ideology - promised
           answers, direction, or security, ultimately joining because they
           believe in the message or vision presented by the PC.
         </P>
@@ -133,9 +133,9 @@ export default function RecruitmentPage() {
           <tbody>
             {outcomeRow('Wild Success (14+)', 'Committed believer and follower.', true)}
             {outcomeRow('Moment of High Insight (6+6)', 'Wild Success + Apprentice option.', true)}
-            {outcomeRow('Success (9–13)', 'Joins as probationary Convert. Commits after first Morale Check passes.')}
-            {outcomeRow('Failure (4–8)', 'No interest. Retry allowed if PCs Fill In The Gaps on a different approach.')}
-            {outcomeRow('Dire Failure (0–3)', 'Becomes wary and distances themselves from the PC.')}
+            {outcomeRow('Success (9-13)', 'Joins as probationary Convert. Commits after first Morale Check passes.')}
+            {outcomeRow('Failure (4-8)', 'No interest. Retry allowed if PCs Fill In The Gaps on a different approach.')}
+            {outcomeRow('Dire Failure (0-3)', 'Becomes wary and distances themselves from the PC.')}
             {outcomeRow('Moment of Low Insight (1+1)', 'So unwilling to join they may become hostile or violent.')}
           </tbody>
         </RuleTable>

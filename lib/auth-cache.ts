@@ -5,7 +5,7 @@
 // each used to call `supabase.auth.getUser()` + `supabase.auth.getSession()`.
 // Both calls take the auth Web Lock; getUser() additionally hits
 // `GET /auth/v1/user` over the network to validate the JWT. None of those
-// validations are necessary for logging — we just need to know "who, if
+// validations are necessary for logging - we just need to know "who, if
 // anyone, is signed in." Repeating the work on every soft-nav was a
 // measurable nav-latency tax and a contributor to the lock-contention
 // issues the user has hit before.
@@ -15,7 +15,7 @@
 //     short TTL. getSession() reads from localStorage so it's cheap, but
 //     it still acquires the lock; deduping under a TTL eliminates the
 //     repeat work between same-tab navigations.
-//   - Dedupes in-flight calls — if two callers race during a cold start,
+//   - Dedupes in-flight calls - if two callers race during a cold start,
 //     they share one Promise instead of stacking lock waits.
 //   - Subscribes to onAuthStateChange and invalidates the cache on real
 //     auth events (SIGNED_IN, SIGNED_OUT, USER_UPDATED, TOKEN_REFRESHED)
@@ -71,7 +71,7 @@ function attachAuthListener() {
     })
   } catch {
     // If the client can't be created (server build, no env), silently
-    // skip — getCachedAuth callers will fall through to a direct fetch.
+    // skip - getCachedAuth callers will fall through to a direct fetch.
   }
 }
 

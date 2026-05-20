@@ -9,7 +9,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'RAPID Range Attributes — XSE SRD §03' }
+export const metadata = { title: 'RAPID Range Attributes - XSE SRD §03' }
 
 const row = (name: string, desc: string): React.ReactNode => (
   <tr>
@@ -27,7 +27,7 @@ export default function Page() {
         title="RAPID Range Attributes"
         intro={
           <>
-            Each character has five attributes — <Term>R · A · P · I · D</Term>.
+            Each character has five attributes - <Term>R · A · P · I · D</Term>.
             Attributes start at 0 (Average) and range from −2 (Diminished)
             to +4 (Human Peak). RAPID values are written together in the
             format <Term>R-A-P-I-D</Term>; an all-Average character is{' '}

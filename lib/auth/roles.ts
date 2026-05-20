@@ -17,8 +17,8 @@
 //
 // Rule going forward
 // ------------------
-//   1. NEVER compare role strings inline — always use isThriver / isSurvivor.
-//   2. NEVER write a capital-case role literal — use THRIVER / SURVIVOR / GHOST.
+//   1. NEVER compare role strings inline - always use isThriver / isSurvivor.
+//   2. NEVER write a capital-case role literal - use THRIVER / SURVIVOR / GHOST.
 //   3. The guardrail script `node scripts/check-role-literals.mjs` will flag
 //      any raw `'Thriver'` / `'Survivor'` / `'Ghost'` literal in app code.
 //
@@ -41,7 +41,7 @@ export function normalizeRole(input: unknown): Role | null {
   return null
 }
 
-// Role probes — accept either a raw role string OR a profile-shaped object
+// Role probes - accept either a raw role string OR a profile-shaped object
 // with a `.role` field. The latter form is what most callers actually have
 // from `supabase.from('profiles').select(...)`.
 type RoleHolder = { role?: unknown } | null | undefined

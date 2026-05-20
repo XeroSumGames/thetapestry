@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 
-// HelpTooltip — small ⓘ icon that reveals an explanation card on
+// HelpTooltip - small ⓘ icon that reveals an explanation card on
 // hover (desktop) or tap (mobile). Built lightweight on purpose: no
 // external library, no portal, no animation framework. Positions
 // itself above or below the trigger based on available viewport
@@ -17,8 +17,8 @@ interface Props {
    *  callers pass through lib/help-text constants or short authored
    *  copy. */
   text: string
-  /** Optional bold heading shown above the text — useful for
-   *  "RSN — Reason" style headers above the description. */
+  /** Optional bold heading shown above the text - useful for
+   *  "RSN - Reason" style headers above the description. */
   title?: string
   /** Override the trigger glyph. Default ⓘ; some surfaces want a
    *  question-mark or a small "?" pill instead. */
@@ -26,7 +26,7 @@ interface Props {
   /** Optional CSS overrides for the icon. */
   iconStyle?: React.CSSProperties
   /** When true, the popover anchors to the icon's right edge instead
-   *  of centred — useful when the icon sits at the right of a row. */
+   *  of centred - useful when the icon sits at the right of a row. */
   anchorRight?: boolean
 }
 
@@ -35,7 +35,7 @@ export default function HelpTooltip({ text, title, icon, iconStyle, anchorRight 
   const [placement, setPlacement] = useState<'above' | 'below'>('below')
   const wrapRef = useRef<HTMLSpanElement>(null)
 
-  // Smart placement — flip to 'above' when there's more space above
+  // Smart placement - flip to 'above' when there's more space above
   // the trigger than below it. Recomputes on open so the user gets
   // the right placement even after scrolling.
   useEffect(() => {

@@ -74,7 +74,7 @@ export default function StepXero({ state, onChange }: Props) {
       {/* Character concept */}
       <div style={sh}>Character concept</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '10px' }}>
-        <label style={lbl}>In a sentence or two — who is this person before the story begins?</label>
+        <label style={lbl}>In a sentence or two - who is this person before the story begins?</label>
         <textarea style={ta} value={state.concept}
           onChange={e => onChange({ concept: e.target.value })}
           placeholder="e.g. A disgraced detective who walked away from everything after a case went wrong..." />

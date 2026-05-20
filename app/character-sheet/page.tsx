@@ -104,7 +104,7 @@ export default function CharacterSheetPage() {
         } : undefined}
         onRoll={(campaignId && (isMySheet || isGM || isThriver)) ? (label, amod, smod, weapon) => {
           // Skills / attacks clicked in the popout broadcast to the parent
-          // table tab over BroadcastChannel — the table tab owns the roll
+          // table tab over BroadcastChannel - the table tab owns the roll
           // modal + initiative gates + CMod stack, so reuse it. Same-browser
           // same-origin only; if the user's table tab isn't open, the click
           // is a no-op (UX gap to revisit if it bites).
@@ -135,7 +135,7 @@ export default function CharacterSheetPage() {
         </button>
       </div>
 
-      {/* Progression Log — full view */}
+      {/* Progression Log - full view */}
       {character && (
         <div style={{ marginTop: '16px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
           <ProgressionLog

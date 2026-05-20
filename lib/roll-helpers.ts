@@ -63,7 +63,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // through to the verbose dice card.
   if (r.outcome === 'wound_infection_warning') return r.label
   // Weapon malfunction (Low Insight on a non-Unarmed weapon roll).
-  // Label is the full sentence — return verbatim, no trim needed.
+  // Label is the full sentence - return verbatim, no trim needed.
   if (r.outcome === 'weapon_malfunction') return r.label
   // Lasting Wound acquired announcement (post-Lasting-Damage-Check
   // resolution). Label is the full sentence, e.g.
@@ -71,15 +71,15 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   //    (-1 CMod on initiative rolls)"
   // Return verbatim - no compact transformation needed.
   if (r.outcome === 'lasting_wound_acquired') return r.label
-  // Advantage consumed (C3 share). Label is the full sentence —
-  // "X used their +N <skill> advantage (<description>)" — return
+  // Advantage consumed (C3 share). Label is the full sentence -
+  // "X used their +N <skill> advantage (<description>)" - return
   // verbatim so the feed shows the redemption cleanly.
   if (r.outcome === 'advantage_used') return r.label
-  // Brewing materials gathered (Q4-d). Label is the full sentence —
+  // Brewing materials gathered (Q4-d). Label is the full sentence -
   // "<name> gathers a day of brewing materials for <vehicle> (now N/M)"
-  // — return verbatim. Passive 1-day action, no dice.
+  // - return verbatim. Passive 1-day action, no dice.
   if (r.outcome === 'gather_materials') return r.label
-  // Strip the "<name> - " or "<name> — " prefix that GM-from-popout rolls
+  // Strip the "<name> - " or "<name> - " prefix that GM-from-popout rolls
   // and some legacy paths bake into the label, so the downstream regex
   // matchers see the bare suffix ("ACU Check", "Medicine* (RSN)", etc.).
   // Handles ASCII hyphen (current convention per project rule "no em-dash
@@ -394,7 +394,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         default:              return `STRESS CHECK ${name} ${hit ? 'calms themselves down' : 'fails to calm and reaches their Breaking Point'}`
       }
     }
-    // mid-play — no mechanical bits per project rule "Compact log
+    // mid-play - no mechanical bits per project rule "Compact log
     // narratives NEVER show mechanical bits" (lessons.md 2026-05-19).
     // The +1 stress consequence is visible via the live stress pips
     // on the character card; repeating it in the feed line is

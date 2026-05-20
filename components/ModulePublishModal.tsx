@@ -1,5 +1,5 @@
 'use client'
-// Phase 5 Sprint 2 — Module publish wizard.
+// Phase 5 Sprint 2 - Module publish wizard.
 //
 // A single-page modal (not a multi-step wizard) that lets the GM turn
 // their current campaign into a published module version. The modal
@@ -10,7 +10,7 @@
 // at the existing module and lets the user pick a semver bump kind.
 //
 // The snapshot build happens client-side through buildCampaignSnapshot
-// — same supabase client, RLS applies to every read. Publish inserts
+// - same supabase client, RLS applies to every read. Publish inserts
 // the module_versions row with the jsonb snapshot. No server RPC.
 
 import { useState, useEffect } from 'react'
@@ -29,7 +29,7 @@ import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 export interface ModulePublishModalProps {
   supabase: SupabaseClient
   // null when publishing from an uploaded snapshot file (no source
-  // campaign in the DB) — see /modules/import. The source_campaign_id
+  // campaign in the DB) - see /modules/import. The source_campaign_id
   // column on `modules` is nullable per spec §5.
   campaignId: string | null
   campaignName: string
@@ -57,7 +57,7 @@ export default function ModulePublishModal({
   onPublished,
 }: ModulePublishModalProps) {
   const isRepublish = !!existingModule
-  // Snapshot-source mode flag — the modal switches behavior in three
+  // Snapshot-source mode flag - the modal switches behavior in three
   // places: preview useEffect (skipped), include-toggles UI (hidden),
   // and the publish handler (uses initialSnapshot directly instead of
   // calling buildCampaignSnapshot against the live campaign).
@@ -82,11 +82,11 @@ export default function ModulePublishModal({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string>('')
 
-  // Cover image — pre-fill from the existing module on re-publish so
+  // Cover image - pre-fill from the existing module on re-publish so
   // a previously-uploaded cover persists across versions. State value:
-  //   string  — current cover URL (existing or freshly uploaded)
-  //   null    — explicitly cleared by the user (will save as null)
-  //   ''      — never set; treated as null on save
+  //   string  - current cover URL (existing or freshly uploaded)
+  //   null    - explicitly cleared by the user (will save as null)
+  //   ''      - never set; treated as null on save
   // The "dirty" flag tracks whether the user actually changed the
   // cover this session, so re-publish without touching it doesn't
   // overwrite cover_image_url with an unintended value.
@@ -133,10 +133,10 @@ export default function ModulePublishModal({
     setError('')
     try {
       // Two source modes:
-      //   • snapshot upload (initialSnapshot set) — use the pre-parsed
+      //   • snapshot upload (initialSnapshot set) - use the pre-parsed
       //     ModuleSnapshot directly; campaignId is null since there's
       //     no source campaign in the DB.
-      //   • live campaign — read fresh from the DB at publish time so
+      //   • live campaign - read fresh from the DB at publish time so
       //     any in-modal edits to the include-toggles take effect.
       let snapshotToPublish: ModuleSnapshot
       if (isSnapshotSource && initialSnapshot) {
@@ -147,7 +147,7 @@ export default function ModulePublishModal({
         })
         snapshotToPublish = result.snapshot
       } else {
-        throw new Error('No campaign and no snapshot — nothing to publish.')
+        throw new Error('No campaign and no snapshot - nothing to publish.')
       }
       const result = await publishModuleVersion(supabase, {
         campaignId,
@@ -172,7 +172,7 @@ export default function ModulePublishModal({
     }
   }
 
-  // Cover image upload — same hardened cropper used for object
+  // Cover image upload - same hardened cropper used for object
   // tokens (15 s encode timeout, 30 s upload timeout, error surfacing,
   // PNG-without-transparency falls back to JPEG, file input remounts
   // after each upload to avoid Safari's stale-selection bug).
@@ -238,7 +238,7 @@ export default function ModulePublishModal({
 
         <div style={header}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
-            📦 {isRepublish ? `Publish New Version — ${existingModule!.name}` : isSnapshotSource ? 'Publish from Snapshot' : 'Publish as Module'}
+            📦 {isRepublish ? `Publish New Version - ${existingModule!.name}` : isSnapshotSource ? 'Publish from Snapshot' : 'Publish as Module'}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#c4a7f0', fontSize: '22px', cursor: 'pointer' }}>×</button>
         </div>
@@ -263,7 +263,7 @@ export default function ModulePublishModal({
             <textarea style={{ ...inp, minHeight: '70px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="What this module is, who it's for, how many sessions it runs…" />
           </div>
 
-          {/* Cover image — shown on /modules cards + the detail page hero. */}
+          {/* Cover image - shown on /modules cards + the detail page hero. */}
           <div>
             <label style={lbl}>Cover image <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
@@ -320,7 +320,7 @@ export default function ModulePublishModal({
             </div>
           </div>
 
-          {/* Content section — live campaign shows include toggles
+          {/* Content section - live campaign shows include toggles
               (so the author can exclude pins/scenes/etc.); snapshot
               source shows a read-only summary since the file is already
               filtered before it reaches the modal. */}
@@ -418,7 +418,7 @@ export default function ModulePublishModal({
 
       </div>
 
-      {/* Cover crop modal — overlays on top of the publish wizard
+      {/* Cover crop modal - overlays on top of the publish wizard
           while the user is cropping. Cropper does the encoding +
           surfaces upload errors via uploadError. On confirm we get
           the blob and mime type, run handleCoverCrop, and clear

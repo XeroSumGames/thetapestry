@@ -2,7 +2,7 @@
 //
 // LOCKED 2026-05-09 by Xero. Every surface that renders a rarity chip,
 // label, or border MUST use these colors verbatim. Don't reintroduce
-// the older amber-Rare or grey-Common variants — they were inconsistent
+// the older amber-Rare or grey-Common variants - they were inconsistent
 // across the wizard / inventory / rules tables, and Xero unified the
 // scheme to:
 //
@@ -10,7 +10,7 @@
 //   Uncommon  blue           #7ab3d4
 //   Rare      purple         #c4a7f0
 //
-// `RARITY_COLOR` returns the foreground / text color — the canonical
+// `RARITY_COLOR` returns the foreground / text color - the canonical
 // per-rarity value. `RARITY_BG` and `RARITY_BORDER` are subtle chip
 // backgrounds matched to each foreground for use on dark surfaces.
 //

@@ -1,4 +1,4 @@
-// Auth callback — handles the redirect that comes back from Supabase
+// Auth callback - handles the redirect that comes back from Supabase
 // after the user clicks an email-confirmation link, OR an OAuth/PKCE
 // flow returns. The two flows arrive with different query params and
 // require different exchange APIs:
@@ -7,12 +7,12 @@
 //   - OAuth / magic link:  ?code=<...>                    → exchangeCodeForSession()
 //
 // First version of this file only handled the OAuth shape, which broke
-// every email-confirmation link silently — Supabase actually sends
+// every email-confirmation link silently - Supabase actually sends
 // token_hash on the email link, not code. Real-world signup tested
 // 2026-05-08 and got "Invalid login credentials" because the email
 // was never marked confirmed.
 //
-// Optional `?next=/path` survives both flows — invite links can
+// Optional `?next=/path` survives both flows - invite links can
 // preserve "land on /join/<code>" through the confirmation round-trip.
 // Falls back to /dashboard.
 //
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     }
   )
 
-  // Branch 1 — email confirmation / password recovery / email change.
+  // Branch 1 - email confirmation / password recovery / email change.
   // verifyOtp marks the email confirmed (or completes the recovery /
   // change flow) AND sets a session in one shot.
   let userId: string | null = null
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     userEmail = data.user?.email ?? null
     userMetadataUsername = (data.user?.user_metadata?.username as string | undefined) ?? null
   } else if (code) {
-    // Branch 2 — OAuth / magic-link / PKCE flows. Different API, same
+    // Branch 2 - OAuth / magic-link / PKCE flows. Different API, same
     // outcome (sets a session cookie on the response).
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
   // Belt-and-suspenders profile upsert. The handle_new_user() trigger
   // (SECURITY DEFINER) normally creates the profile row when auth.users
   // gets inserted, but the trigger swallows errors (per the EXCEPTION
-  // block in sql/handle-new-user-hardened.sql) — so a username collision
+  // block in sql/handle-new-user-hardened.sql) - so a username collision
   // or a newly-added NOT NULL column would silently leave the user with
   // no profile. Doing the upsert here, post-verify, runs while
   // auth.uid() == user.id so the RLS policy accepts it; if the trigger
@@ -106,7 +106,7 @@ export async function GET(request: Request) {
       onboarded: false,
     }, { onConflict: 'id' })
     if (profileError) {
-      // Profile setup failure here is non-fatal — the user has a session,
+      // Profile setup failure here is non-fatal - the user has a session,
       // they can still navigate; we just log so a missing-profile bug
       // doesn't go unnoticed.
       console.error('[auth/callback] profile upsert error:', profileError.message)

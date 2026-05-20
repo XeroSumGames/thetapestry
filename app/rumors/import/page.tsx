@@ -1,5 +1,5 @@
 'use client'
-// /modules/import — second entry point into the module-publish flow.
+// /modules/import - second entry point into the module-publish flow.
 //
 // The first entry point is from a campaign edit page ("Publish as
 // Module" → opens ModulePublishModal with the live campaign as the
@@ -9,7 +9,7 @@
 //
 // Used to migrate The Arena out of the paused GM Kit v1 seed-table
 // pipeline and into the canonical module system, but doubles as a
-// permanent tool — any GM with a snapshot they exported can publish a
+// permanent tool - any GM with a snapshot they exported can publish a
 // module from it.
 
 import { useState } from 'react'
@@ -52,7 +52,7 @@ export default function ImportSnapshotPage() {
         throw new Error('That file isn\'t valid JSON. Did you pick the right export?')
       }
       if (!looksLikeCampaignSnapshot(json)) {
-        throw new Error('That JSON doesn\'t look like a campaign snapshot — expected top-level npcs/pins/scenes arrays.')
+        throw new Error('That JSON doesn\'t look like a campaign snapshot - expected top-level npcs/pins/scenes arrays.')
       }
       const { snapshot, counts } = snapshotToModuleSnapshot(json)
       setParsed({
@@ -91,7 +91,7 @@ export default function ImportSnapshotPage() {
         Publish from Snapshot
       </h1>
       <p style={{ margin: '0 0 24px', fontSize: '15px', lineHeight: 1.6, color: '#cce0f5', maxWidth: '620px' }}>
-        Upload a campaign-snapshot JSON file (the export format produced by the snapshots panel on a campaign's edit page) and publish it as a module — same flow as &ldquo;Publish as Module&rdquo; from a live campaign, but sourced from the file instead of the database.
+        Upload a campaign-snapshot JSON file (the export format produced by the snapshots panel on a campaign's edit page) and publish it as a module - same flow as &ldquo;Publish as Module&rdquo; from a live campaign, but sourced from the file instead of the database.
       </p>
 
       <label style={{ display: 'block', padding: '20px', background: parsed ? '#1a2e10' : '#1a1a1a', border: `2px dashed ${parsed ? '#2d5a1b' : '#5a2e5a'}`, borderRadius: '4px', textAlign: 'center', cursor: 'pointer', marginBottom: '12px', transition: 'background 200ms' }}>
@@ -127,7 +127,7 @@ export default function ImportSnapshotPage() {
       {published && (
         <div style={{ marginTop: '16px', padding: '14px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px' }}>
           <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
-            ✓ Module published — v{published.version}
+            ✓ Module published - v{published.version}
           </div>
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>
             The module is live and (if you set visibility to Listed) queued for Thriver review. It will appear in the Module picker on campaign creation as soon as it's approved.

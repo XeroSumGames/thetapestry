@@ -131,8 +131,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [ ] **GM force-push view to players** - sync scene/view changes across all clients (no `view_changed` broadcast event yet)
 - [ ] **Character Evolution / CDP Calculator** - post-creation CDP spend surface (no `app/characters/[id]/evolve/` route)
 - [ ] **Em-dash backlog sweep (68 places)** - guardrail caught these 2026-05-19 after the targeted 13-file sweep shipped; they're spread across user-facing JSX text / placeholder attrs / title attrs / hard-coded prose. Mostly in `app/campfire/lfg/page.tsx`, `app/campfire/page.tsx`, `app/creating-a-character/page.tsx`, `app/gm-notes-popout/page.tsx`. Each may want individual copy review (some prose might be intentional). Run `node scripts/check-em-dashes.mjs` with staging to enumerate. Discrete sweep, ~1-2 hours.
-- [ ] **King's Crossroads Mall - tactical scenes** - author battle maps and wire into [lib/setting-scenes.ts](../lib/setting-scenes.ts) under `kings_crossroads_mall` (NOTE: key is `kings_crossroads_mall`, NOT `kings_crossing_mall`)
-- [ ] **King's Crossroads Mall - handouts** - port broadcasts/journals into [lib/setting-handouts.ts](../lib/setting-handouts.ts) under same key
+- *(Setting content - King's Crossroads Mall scenes/handouts + new settings "Astoria: Home by the Sea" + "Pelee Island" - DEFERRED to back of list per Xero 2026-05-20: "content comes when the platform is stable.")*
 - [ ] **Streamline player login flow** - too many steps; needs design call before build
 - [x] ~~**PCs riding vehicles don't move with the vehicle**~~ - RESOLVED 2026-05-16 by the vanish-inside-vehicle model + canvas redraw deps fix (commits `8ee54f4` + `16e33d6`). Aboard tokens are hidden from the canvas; the passenger-count badge rides on the vehicle token. No ghost tokens left behind. Xero confirmed fixed in playtest.
 - [ ] **Tactical map pan via mouse drag - broken** ([tasks/long-term-fixes.md](long-term-fixes.md)). WASD/arrow workaround exists. Deferred since 2026-04-27.
@@ -1715,3 +1714,12 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 
 - [x] **Run `sql/messages-realtime-publication.sql` on prod database** - applied 2026-04-28; Xero confirmed chat in `/messages` now refreshes live without reload. Adds `public.messages` and `public.conversation_participants` to the `supabase_realtime` publication and sets `REPLICA IDENTITY FULL` on `conversation_participants` so the bell's `user_id=eq.<uid>` filter survives UPDATE payloads.
 - [ ] **Welcome page → Quick Reference card content TBD.** [app/welcome/page.tsx](app/welcome/page.tsx) has a `Quick Reference` placeholder card. Needs cheat-sheet content per Xero's direction: CDP, WP/RP, Stress, Inspiration, links into the SRD/CRB. Wait for Xero to specify what to surface first, then wire it in.
+
+## 🔒 Backburner - Setting content (deferred 2026-05-20 per Xero: "content comes when the platform is stable")
+
+- [ ] **King's Crossroads Mall - tactical scenes** - author battle maps for the mall complex (motel courtyard, Costco interior, gas station, Belvedere's etc.) and wire into `SETTING_SCENES.kings_crossroads_mall` in `lib/setting-scenes.ts` using the filter-from-CHASED_SCENES pattern as the pins + NPCs. (Was active list; moved to backburner 2026-05-20.)
+- [ ] **King's Crossroads Mall - handouts** - port in-world broadcasts, journal pages, ham-radio transcripts into `SETTING_HANDOUTS.kings_crossroads_mall` in `lib/setting-handouts.ts`. Mirror the filter-from-CHASED_HANDOUTS approach.
+- [ ] **Astoria: Home by the Sea** - new setting. Pins / NPCs / scenes / handouts. Needs setting key (suggest `astoria_home_by_the_sea`), SETTING_CENTERS entry, full content pass.
+- [ ] **Pelee Island** - new setting. Pins / NPCs / scenes / handouts. Needs setting key (suggest `pelee_island`), SETTING_CENTERS entry, full content pass.
+
+(Order: stabilize platform first - finish CRB workstreams, modal unification residue, performance. Then setting content.)

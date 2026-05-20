@@ -6,7 +6,7 @@ import type { RuleSection } from '../../lib/rules/sections'
 // Generic pill nav for /rules/<section>/<anchor> pages. Renders one pill
 // per anchor in the section's outline + a leading "Overview" pill that
 // links back to the section hub. The active pill is detected from
-// pathname — reusing the generic SubNav across every section avoids the
+// pathname - reusing the generic SubNav across every section avoids the
 // per-section copy-pastes.
 //
 // Replaces components/rules/communities/SubNav.tsx (Communities-only)

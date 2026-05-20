@@ -1,5 +1,5 @@
 'use client'
-// ApprenticeCreationWizard — modal that runs the Apprentice creation flow
+// ApprenticeCreationWizard - modal that runs the Apprentice creation flow
 // per spec-communities §2a / SRD §08 p.21. Triggered from the Apprentice
 // NPC card by the master PC after a Moment-of-High-Insight recruit.
 //
@@ -14,18 +14,18 @@
 //   - The Apprentice IS an existing campaign_npcs row.
 //
 // What this wizard does (5 steps):
-//   1. Identity — name + age + three trait words + freeform background.
+//   1. Identity - name + age + three trait words + freeform background.
 //      Locked Motivation + Complication chips at the top so the player
-//      sees what they're working with — these are inherent character.
-//   2. Profession — pick from PROFESSIONS via <ProfessionPicker>. Each
+//      sees what they're working with - these are inherent character.
+//   2. Profession - pick from PROFESSIONS via <ProfessionPicker>. Each
 //      profession skill auto-seeds at +1 CDP (vocational -3 → -1,
 //      non-vocational 0 → 1). Profession does NOT seed RAPID.
-//   3. RAPID — spend 3 CDP across the 5 RAPID attributes. Each ▲ costs
+//   3. RAPID - spend 3 CDP across the 5 RAPID attributes. Each ▲ costs
 //      1 CDP, max +4. Baseline is 0 across the board.
-//   4. Skills — spend 5 CDP across all skills on top of the profession
+//   4. Skills - spend 5 CDP across all skills on top of the profession
 //      seeding. Per-skill cap = min(SKILL_MAX, master_PC.skill - 1)
 //      per SRD §08 p.21 ("can train up to your skill - 1").
-//   5. Confirm — summary card.
+//   5. Confirm - summary card.
 //
 // Save flow:
 //   - UPDATE campaign_npcs SET name, reason, acumen, physicality,
@@ -65,7 +65,7 @@ interface ApprenticeMeta {
   age?: number
   three_words?: [string, string, string] | string[]
   profession?: string
-  paradigm?: string  // legacy field — older Apprentices were Paradigm-based.
+  paradigm?: string  // legacy field - older Apprentices were Paradigm-based.
   background?: string
   setup_complete?: boolean
   setup_at?: string
@@ -112,7 +112,7 @@ export default function ApprenticeCreationWizard({
   // Step 2: Profession.
   const [profession, setProfession] = useState<ProfessionDefinition | null>(null)
 
-  // Step 3: RAPID — Profession does NOT seed RAPID per spec. Baseline 0.
+  // Step 3: RAPID - Profession does NOT seed RAPID per spec. Baseline 0.
   const [rapidDelta, setRapidDelta] = useState<Record<AttributeName, number>>(
     { RSN: 0, ACU: 0, PHY: 0, INF: 0, DEX: 0 },
   )
@@ -125,17 +125,17 @@ export default function ApprenticeCreationWizard({
     INF: rapidDelta.INF, DEX: rapidDelta.DEX,
   }), [rapidDelta])
 
-  // Step 4: Skills — Profession seeds 1 CDP into each of its 5 skills.
+  // Step 4: Skills - Profession seeds 1 CDP into each of its 5 skills.
   // Player adds 5 more CDP via the stepper. Per-skill SRD cap kicks in
   // on top of both. The delta tracks ONLY the player's additional CDP
-  // — the profession seeding is an implicit baseline.
+  // - the profession seeding is an implicit baseline.
   const [skillDelta, setSkillDelta] = useState<Record<string, number>>({})
   const skillSpent = useMemo(
     () => Object.values(skillDelta).reduce((sum, n) => sum + n, 0),
     [skillDelta],
   )
 
-  // The profession's skill seeding — 1 CDP applied to each of its 5
+  // The profession's skill seeding - 1 CDP applied to each of its 5
   // skills, computed via skillStepUp from the schema default.
   const professionSeed = useMemo<Record<string, SkillValue>>(() => {
     const out: Record<string, SkillValue> = {}
@@ -163,7 +163,7 @@ export default function ApprenticeCreationWizard({
     return val
   }
 
-  // Master PC's skill levels — drives the SRD §08 p.21 per-skill cap
+  // Master PC's skill levels - drives the SRD §08 p.21 per-skill cap
   // (Apprentice can be trained "up to PC skill level − 1" in any single
   // skill the PC has). PCs store skills as data.skills[].skillName/level.
   // Skills the PC doesn't have at level >= 1 can't be trained at all
@@ -171,7 +171,7 @@ export default function ApprenticeCreationWizard({
   const [masterSkills, setMasterSkills] = useState<Record<string, number>>({})
   const [masterPcLoaded, setMasterPcLoaded] = useState(false)
   // Surface load failures so the user understands why every skill cap
-  // shows "untrainable" — silent failure here looked like a broken wizard.
+  // shows "untrainable" - silent failure here looked like a broken wizard.
   const [masterPcLoadError, setMasterPcLoadError] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
@@ -207,7 +207,7 @@ export default function ApprenticeCreationWizard({
     return Math.min(SKILL_MAX, pcLevel - 1)
   }
 
-  // Step gating — Continue button enabled when the current step is "complete enough."
+  // Step gating - Continue button enabled when the current step is "complete enough."
   const canContinueFromIdentity = name.trim().length > 0 && age > 0 && threeWords.every(w => w.trim().length > 0)
   const canContinueFromProfession = profession !== null
   const canContinueFromRapid = rapidSpent === RAPID_BUDGET
@@ -287,7 +287,7 @@ export default function ApprenticeCreationWizard({
         .eq('id', campaignNpcId)
       if (npcErr) throw new Error(`update npc: ${npcErr.message}`)
 
-      // 3) UPDATE community_members.apprentice_meta — flip
+      // 3) UPDATE community_members.apprentice_meta - flip
       //    setup_complete + persist Profession + age + words + background.
       const newMeta: ApprenticeMeta = {
         ...apprenticeMeta,
@@ -304,13 +304,13 @@ export default function ApprenticeCreationWizard({
         .eq('id', communityMemberId)
       if (cmErr) throw new Error(`update community_member: ${cmErr.message}`)
 
-      // 4) Progression log on the master PC — this is a memorable life
+      // 4) Progression log on the master PC - this is a memorable life
       //    moment per the curation rule.
       void appendProgressionEntry(
         supabase,
         masterCharacterId,
         'community',
-        `⭐ Apprentice ${name.trim()} set up — ${profession.name} (age ${age}).`,
+        `⭐ Apprentice ${name.trim()} set up - ${profession.name} (age ${age}).`,
       )
 
       onSaved()
@@ -364,7 +364,7 @@ export default function ApprenticeCreationWizard({
         {/* Body */}
         <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-          {/* Locked Motivation + Complication banner — visible on every step */}
+          {/* Locked Motivation + Complication banner - visible on every step */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <div style={{ padding: '6px 10px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
               <span style={{ color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.06em' }}>Motivation</span>
@@ -378,11 +378,11 @@ export default function ApprenticeCreationWizard({
             </div>
           </div>
 
-          {/* Step 1 — Identity */}
+          {/* Step 1 - Identity */}
           {step === 'identity' && (
             <>
               <div style={{ padding: '8px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
-                <strong style={{ color: '#7ab3d4' }}>Game time:</strong> per SRD §08 p.21 the Apprentice ritual represents <strong>1 month</strong> of in-game time — the master PC training them in skills they have, while the Apprentice settles into the community. Advance your campaign clock accordingly.
+                <strong style={{ color: '#7ab3d4' }}>Game time:</strong> per SRD §08 p.21 the Apprentice ritual represents <strong>1 month</strong> of in-game time - the master PC training them in skills they have, while the Apprentice settles into the community. Advance your campaign clock accordingly.
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <div style={{ flex: 1 }}>
@@ -416,26 +416,26 @@ export default function ApprenticeCreationWizard({
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Background — Fill In The Gaps</label>
+                <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Background - Fill In The Gaps</label>
                 <textarea value={background} onChange={e => setBackground(e.target.value)} rows={4}
                   placeholder="Where did they come from? How did they end up with the master PC? What's their unspoken hope?"
                   style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
-                  Optional but encouraged. Per SRD §08 p.21 the master PC + GM "Fill In The Gaps" together — anchor the Apprentice in the world.
+                  Optional but encouraged. Per SRD §08 p.21 the master PC + GM "Fill In The Gaps" together - anchor the Apprentice in the world.
                 </div>
               </div>
             </>
           )}
 
-          {/* Step 2 — Profession */}
+          {/* Step 2 - Profession */}
           {step === 'profession' && (
             <>
               <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-                Pick a setting-appropriate Profession. Each of its 5 skills auto-seeds at <strong style={{ color: '#7fc458' }}>+1 CDP</strong> — vocational skills go from -3 → -1, non-vocational from 0 → +1. You then spend 3 CDP on RAPID + 5 more on skills.
+                Pick a setting-appropriate Profession. Each of its 5 skills auto-seeds at <strong style={{ color: '#7fc458' }}>+1 CDP</strong> - vocational skills go from -3 → -1, non-vocational from 0 → +1. You then spend 3 CDP on RAPID + 5 more on skills.
               </div>
               <ProfessionPicker value={profession?.name ?? null} onChange={p => {
                 setProfession(p)
-                // Reset skill deltas when profession changes — the
+                // Reset skill deltas when profession changes - the
                 // baseline shifts so any previous spend is no longer
                 // valid against the new caps.
                 setSkillDelta({})
@@ -443,12 +443,12 @@ export default function ApprenticeCreationWizard({
             </>
           )}
 
-          {/* Step 3 — RAPID spend */}
+          {/* Step 3 - RAPID spend */}
           {step === 'rapid' && profession && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-                  Spend <strong style={{ color: '#d48bd4' }}>3 CDP</strong> on RAPID. Each ▲ adds +1 (max +{RAPID_MAX}). Profession does not seed RAPID — start from 0.
+                  Spend <strong style={{ color: '#d48bd4' }}>3 CDP</strong> on RAPID. Each ▲ adds +1 (max +{RAPID_MAX}). Profession does not seed RAPID - start from 0.
                 </div>
                 <div style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: rapidSpent === RAPID_BUDGET ? '#7fc458' : '#EF9F27', fontWeight: 600 }}>
                   {RAPID_BUDGET - rapidSpent} CDP remaining
@@ -478,7 +478,7 @@ export default function ApprenticeCreationWizard({
             </>
           )}
 
-          {/* Step 4 — Skills spend */}
+          {/* Step 4 - Skills spend */}
           {step === 'skills' && profession && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -490,7 +490,7 @@ export default function ApprenticeCreationWizard({
                 </div>
               </div>
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', lineHeight: 1.4 }}>
-                <strong style={{ color: '#7ab3d4' }}>SRD training cap:</strong> per SRD §08 p.21 you can only train your Apprentice up to <strong>your skill − 1</strong> in any given skill. Skills you don&apos;t have can&apos;t be trained — the Profession baseline still stands. Loading master PC: {masterPcLoadError ? <span style={{ color: '#f5a89a' }}>failed — {masterPcLoadError}</span> : masterPcLoaded ? <span style={{ color: '#7fc458' }}>ready</span> : <span style={{ color: '#EF9F27' }}>fetching…</span>}.
+                <strong style={{ color: '#7ab3d4' }}>SRD training cap:</strong> per SRD §08 p.21 you can only train your Apprentice up to <strong>your skill − 1</strong> in any given skill. Skills you don&apos;t have can&apos;t be trained - the Profession baseline still stands. Loading master PC: {masterPcLoadError ? <span style={{ color: '#f5a89a' }}>failed - {masterPcLoadError}</span> : masterPcLoaded ? <span style={{ color: '#7fc458' }}>ready</span> : <span style={{ color: '#EF9F27' }}>fetching…</span>}.
               </div>
               {masterPcLoadError && (
                 <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', lineHeight: 1.4 }}>
@@ -529,8 +529,8 @@ export default function ApprenticeCreationWizard({
                       <span style={{ minWidth: '24px', textAlign: 'center', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{final}</span>
                       <button onClick={() => canInc && setSkillDelta(d => ({ ...d, [s.name]: (d[s.name] ?? 0) + 1 }))} disabled={!canInc}
                         title={!masterPcLoaded ? 'Loading master PC…'
-                          : !trainable ? 'Master PC doesn\'t have this skill — can\'t train'
-                          : final >= cap ? `At training cap (${cap}) — your skill is ${pcLevel}`
+                          : !trainable ? 'Master PC doesn\'t have this skill - can\'t train'
+                          : final >= cap ? `At training cap (${cap}) - your skill is ${pcLevel}`
                           : skillSpent >= SKILL_BUDGET ? 'Out of CDP'
                           : 'Step up'}
                         style={{ padding: '1px 6px', background: canInc ? '#1a2e10' : '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '2px', color: canInc ? '#7fc458' : '#3a3a3a', cursor: canInc ? 'pointer' : 'not-allowed', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>▲</button>
@@ -541,7 +541,7 @@ export default function ApprenticeCreationWizard({
             </>
           )}
 
-          {/* Step 5 — Confirm */}
+          {/* Step 5 - Confirm */}
           {step === 'confirm' && profession && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
@@ -589,7 +589,7 @@ export default function ApprenticeCreationWizard({
           )}
         </div>
 
-        {/* Footer — Back / Continue / Save */}
+        {/* Footer - Back / Continue / Save */}
         <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Button
             tone="info"

@@ -43,7 +43,7 @@ export default function StepNine({ state, onChange }: Props) {
         Review everything below before saving your character.
       </p>
 
-      {/* Character header — portrait + name + details */}
+      {/* Character header - portrait + name + details */}
       <div style={section}>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '12px' }}>
           <label style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${state.photoDataUrl ? '#7ab3d4' : '#3a3a3a'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, cursor: 'pointer', position: 'relative' }}>
@@ -113,14 +113,14 @@ export default function StepNine({ state, onChange }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <label style={fieldLabel}>Complication</label>
             <select style={fieldInput} defaultValue={step6.complication ?? ''}>
-              <option value="">— none —</option>
+              <option value="">- none -</option>
               {complications.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <label style={fieldLabel}>Motivation</label>
             <select style={fieldInput} defaultValue={step6.motivation ?? ''}>
-              <option value="">— none —</option>
+              <option value="">- none -</option>
               {motivations.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
@@ -185,7 +185,7 @@ export default function StepNine({ state, onChange }: Props) {
         </div>
       )}
 
-      {/* Weapons & gear — Primary + Secondary are now editable
+      {/* Weapons & gear - Primary + Secondary are now editable
           dropdowns so the player can swap their seeded/picked
           loadout from the Final Touch screen without backtracking
           through Step 8. Other fields stay readonly. */}
@@ -198,7 +198,7 @@ export default function StepNine({ state, onChange }: Props) {
             <select value={state.weaponPrimary}
               onChange={e => onChange({ weaponPrimary: e.target.value, primaryAmmo: 0 })}
               style={{ ...fieldInput, appearance: 'none', cursor: 'pointer' }}>
-              <option value="">— None —</option>
+              <option value="">- None -</option>
               {ALL_WEAPONS.map(w => (
                 <option key={w.name} value={w.name}>
                   {w.name} ({w.category} · {w.damage})
@@ -212,7 +212,7 @@ export default function StepNine({ state, onChange }: Props) {
             <select value={state.weaponSecondary}
               onChange={e => onChange({ weaponSecondary: e.target.value, secondaryAmmo: 0 })}
               style={{ ...fieldInput, appearance: 'none', cursor: 'pointer' }}>
-              <option value="">— None —</option>
+              <option value="">- None -</option>
               {ALL_WEAPONS.map(w => (
                 <option key={w.name} value={w.name}>
                   {w.name} ({w.category} · {w.damage})
@@ -220,10 +220,10 @@ export default function StepNine({ state, onChange }: Props) {
               ))}
             </select>
           </div>
-          {/* Ammo — readonly (set on Step 8 via the Roll 1d3 button) */}
+          {/* Ammo - readonly (set on Step 8 via the Roll 1d3 button) */}
           {([
-            ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : '—'],
-            ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : '—'],
+            ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : '-'],
+            ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : '-'],
             ['Equipment',        state.equipment],
             ['Incidental item',  state.incidentalItem],
             ['Rations',          state.rations ? `2 × ${state.rations}` : ''],

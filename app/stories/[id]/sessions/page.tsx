@@ -131,7 +131,7 @@ export default function SessionHistoryPage() {
   return (
     <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
       <StoryActionBar campaignId={id} />
-      {/* Sub-page label — small, below the canonical campaign name. */}
+      {/* Sub-page label - small, below the canonical campaign name. */}
       <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
         Session History
       </div>
@@ -160,7 +160,7 @@ export default function SessionHistoryPage() {
                     </div>
                     <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
                       {formatDate(s.started_at)} {formatTime(s.started_at)}
-                      {s.ended_at && <> — {duration(s.started_at, s.ended_at)}</>}
+                      {s.ended_at && <> - {duration(s.started_at, s.ended_at)}</>}
                     </div>
                   </div>
                   {isActive && (

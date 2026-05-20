@@ -2,7 +2,7 @@ import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSecti
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Weapon Repair — XSE SRD §06' }
+export const metadata = { title: 'Weapon Repair - XSE SRD §06' }
 
 export default function Page() {
   return (
@@ -19,7 +19,7 @@ export default function Page() {
             level. A character can spend a Ready Weapon action to attempt
             a recovery roll. Firearms call it <strong>Unjam</strong>;
             melee weapons call it <strong>Repair</strong>. The mechanic
-            is identical — only the narrative verb and skill set differ.
+            is identical - only the narrative verb and skill set differ.
           </>
         }
       />

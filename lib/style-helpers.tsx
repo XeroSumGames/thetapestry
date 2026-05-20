@@ -1,5 +1,5 @@
 // Shared design-token style helpers. The codebase doesn't use a CSS-in-JS
-// framework — components inline their styles via the `style={{ ... }}`
+// framework - components inline their styles via the `style={{ ... }}`
 // prop. That's deliberate (no runtime cost, no build pipeline), but it
 // means recurring patterns get duplicated literally instead of referenced.
 //
@@ -13,7 +13,7 @@
 //   - 1,386 inline borderRadius values
 //
 // Use these helpers for new code. Existing call sites are migrated
-// opportunistically — full sweep is too big for one PR.
+// opportunistically - full sweep is too big for one PR.
 
 import type { CSSProperties, ReactNode } from 'react'
 
@@ -38,14 +38,14 @@ export const RADIUS = {
 
 // ── Z-index hierarchy ─────────────────────────────────────────────────
 // Maps the observed magic numbers to semantic layers. New code should
-// always pick a Z layer rather than inventing a new number — drift here
+// always pick a Z layer rather than inventing a new number - drift here
 // is how stacking-context bugs are born.
 //
 //  1000  in-page floats (dropdowns, chip menus, drag affordances)
 //  2000  in-page modal (settings, edit forms; sits above the page)
 //  3000  in-page modal that opens from inside another modal
 //  9999  app chrome (fixed nav, notification toasts)
-// 10000  critical modal (loot, edit token, trade — cannot be backgrounded)
+// 10000  critical modal (loot, edit token, trade - cannot be backgrounded)
 // 10100  helper that sits ON TOP of a critical modal (item picker etc.)
 export const Z_INDEX = {
   dropdown: 1000,
@@ -58,11 +58,11 @@ export const Z_INDEX = {
 
 // ── Label style ───────────────────────────────────────────────────────
 // The recurring "small uppercase Carlito caption" pattern that appears
-// above form fields, list section headers, etc. Two sizes — 13px (the
+// above form fields, list section headers, etc. Two sizes - 13px (the
 // AGENTS.md minimum) and 14px (form labels that want to read a touch
 // heavier). Both share the same shape; only fontSize differs.
 //
-// Both pair with `color: '#cce0f5'` (NOT `#3a3a3a` — that combo is
+// Both pair with `color: '#cce0f5'` (NOT `#3a3a3a` - that combo is
 // banned per AGENTS.md and flagged by scripts/check-font-sizes.mjs).
 //
 // Two letterSpacing values appear in the codebase: '.06em' (the
@@ -95,14 +95,14 @@ export const LABEL_STYLE_TIGHT: CSSProperties = {
   letterSpacing: '.08em',
 }
 
-// (Was: LABEL_STYLE_LG_TIGHT — 14px + .08em variant. Created defensively
+// (Was: LABEL_STYLE_LG_TIGHT - 14px + .08em variant. Created defensively
 // during the initial label sweep but the codebase had no 14px+.08em call
 // sites to map onto, so it sat unused. Removed 2026-05-03; restore from
 // git history if a real call site shows up later.)
 
 // ── ModalBackdrop ─────────────────────────────────────────────────────
 // `position: fixed; inset: 0; background: rgba(0,0,0, X); flex-center`
-// shows up ~20 times across components — extracting it here. Click on
+// shows up ~20 times across components - extracting it here. Click on
 // the backdrop fires `onClose` (most modals already follow this idiom);
 // click on children does NOT propagate, so the modal body stays open.
 
@@ -153,7 +153,7 @@ export function ModalBackdrop({
 
 export interface CloseButtonProps {
   onClick: () => void
-  /** Tooltip — modals usually want "Close", row removers want "Remove" etc. */
+  /** Tooltip - modals usually want "Close", row removers want "Remove" etc. */
   title?: string
   /** Default 'muted' (grey, reddens on hover). 'danger' (red always)
    *  matches the inventory row-remove style. */
@@ -191,16 +191,16 @@ export function CloseButton({ onClick, title = 'Close', tone = 'muted', children
 // with a tone/size prop pair lets new code adopt cleanly without
 // inventing yet another color palette per call site.
 //
-// Tones (background / color / border are picked together — these aren't
+// Tones (background / color / border are picked together - these aren't
 // named after meaning, they're named after visual feel):
-//   primary   — red, white text. Default CTA (Save, Submit, Apply Selected).
-//   secondary — grey, neutral text. Default for Cancel / Close / passive.
-//   confirm   — green. Apply, Yes, OK on a destructive prompt.
-//   warning   — amber. Caution flows (overwrites, force, paid spend).
-//   info      — blue. Informational / non-destructive next steps.
-//   magic     — purple. Module / Apprentice / Schism / world-feature flows.
-//   danger    — red text on dark red. Delete row, remove, destructive
-//                undoable actions (NOT primary CTA — use 'primary' for that).
+//   primary   - red, white text. Default CTA (Save, Submit, Apply Selected).
+//   secondary - grey, neutral text. Default for Cancel / Close / passive.
+//   confirm   - green. Apply, Yes, OK on a destructive prompt.
+//   warning   - amber. Caution flows (overwrites, force, paid spend).
+//   info      - blue. Informational / non-destructive next steps.
+//   magic     - purple. Module / Apprentice / Schism / world-feature flows.
+//   danger    - red text on dark red. Delete row, remove, destructive
+//                undoable actions (NOT primary CTA - use 'primary' for that).
 //
 // Sizes shape padding + fontSize. Color/tone is independent of size.
 //
@@ -213,9 +213,9 @@ export function CloseButton({ onClick, title = 'Close', tone = 'muted', children
 // `disabled` and `busy` both fall back to disabled+dimmed; `busy`
 // additionally hints `cursor: wait` so async-submitting buttons read
 // differently from invalid-form buttons. Pass `style` for one-offs
-// (flex: 1, marginTop, custom width — the helper merges yours last).
+// (flex: 1, marginTop, custom width - the helper merges yours last).
 //
-// The helper deliberately doesn't bake in hover handlers — the
+// The helper deliberately doesn't bake in hover handlers - the
 // codebase doesn't use JS hover effects for action buttons (color +
 // cursor change is the affordance), and adding a baseline hover here
 // would silently shift the look across every adopted site.
@@ -233,7 +233,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg'
 
 export type ButtonVariant = 'solid' | 'ghost'
 
-// `chroma` is the tone's signature color — used by the ghost variant
+// `chroma` is the tone's signature color - used by the ghost variant
 // for both border and text. Solid uses bg/color/border directly.
 // Note that primary's chroma is its bg (red); for tones whose color
 // IS the signature (info / confirm / magic / warning), chroma is the

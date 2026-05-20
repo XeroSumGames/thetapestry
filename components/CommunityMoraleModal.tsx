@@ -27,13 +27,13 @@ import type { Community, Member } from '../lib/types/community'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { OUTCOME } from '../lib/roll-outcomes'
 
-// Phase C — Weekly Morale Check modal. Single-button flow: GM fills in
+// Phase C - Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
 // modal rolls Fed → Clothed → Morale sequentially and shows the result.
 // Persistence is all-at-once on the Result stage's "Finalize" button so
 // a cancelled/closed modal leaves nothing partial in the DB.
 
-// Community / Member shapes — single source of truth in lib/types/community.ts.
+// Community / Member shapes - single source of truth in lib/types/community.ts.
 // Pulled in from there rather than redefined here.
 
 interface Props {
@@ -41,7 +41,7 @@ interface Props {
   onClose: () => void
   community: Community
   members: Member[]
-  memberNameById: Map<string, string>  // for pretty departure list — member.id → display name
+  memberNameById: Map<string, string>  // for pretty departure list - member.id → display name
   campaignId: string
   userId: string | null
   onComplete: () => void
@@ -61,7 +61,7 @@ interface LeaderInfo {
   kind: 'pc' | 'npc'
   amod: number
   // Per-skill level map across the MORALE_SOCIAL_SKILLS set. Drives
-  // the skill-picker dropdown — each option reads "Name (level)".
+  // the skill-picker dropdown - each option reads "Name (level)".
   // Skills not on the leader's sheet appear as 0.
   skillLevels: Record<string, number>
 }
@@ -163,7 +163,7 @@ export default function CommunityMoraleModal({
   const [moraleSkillName, setMoraleSkillName] = useState<string>('Inspiration')
 
   // Per-roll inputs. NPCs are assumed "reasonable proficiency" per SRD §08
-  // Fed/Clothed text — default A=0, S=1. Leader A/S defaults to 0/0 with
+  // Fed/Clothed text - default A=0, S=1. Leader A/S defaults to 0/0 with
   // the GM overriding if they know the leader's stats.
   const [fedAmod, setFedAmod] = useState(0)
   const [fedSmod, setFedSmod] = useState(1)
@@ -184,7 +184,7 @@ export default function CommunityMoraleModal({
   const [slotClearVoiceOverride, setSlotClearVoiceOverride] = useState<number | null>(null)
   const [slotSafetyOverride, setSlotSafetyOverride] = useState<number | null>(null)
 
-  // World Events — Distemper Timeline pins with cmod_active=true and
+  // World Events - Distemper Timeline pins with cmod_active=true and
   // a non-null cmod_impact within their radius of the community's
   // Homestead. Spec-communities.md §13 #1 + sql/map-pins-world-event-cmod.sql.
   // Each event is on by default but the GM can opt-out per-event
@@ -194,12 +194,12 @@ export default function CommunityMoraleModal({
 
   // Final result payload once rolls fire
   const [result, setResult] = useState<FinalResult | null>(null)
-  // Retention Check state — set when leader attempts to salvage on a
+  // Retention Check state - set when leader attempts to salvage on a
   // 3rd-failure dissolution. Null = not attempted. If survived=true,
   // the community does NOT dissolve despite willDissolve on result.
   const [retention, setRetention] = useState<RetentionResult | null>(null)
   const [rollingRetention, setRollingRetention] = useState(false)
-  // Independent skill pick for the Retention Check — defaults to whatever
+  // Independent skill pick for the Retention Check - defaults to whatever
   // skill drove the failed Morale roll, but a leader may want to swap
   // (e.g. Inspiration for the Morale check, Manipulation for the
   // last-ditch rally). The number track follows the picker's selected
@@ -226,11 +226,11 @@ export default function CommunityMoraleModal({
     setWorldEvents([])
     setWorldEventsApplied(new Set())
     setLoading(true)
-    // World Events query — runs in parallel with the prior-mood +
+    // World Events query - runs in parallel with the prior-mood +
     // leader fetches. Pulls the community's Homestead coords from
     // campaign_pins, then asks the world-events helper which active
     // timeline pins reach inside their radius. Default state: every
-    // returned event is "applied" — GM unchecks any that don't fit
+    // returned event is "applied" - GM unchecks any that don't fit
     // narratively. If the community has no Homestead pin, no events
     // can apply (the helper returns null for coords).
     ;(async () => {
@@ -241,7 +241,7 @@ export default function CommunityMoraleModal({
       setWorldEventsApplied(new Set(events.map(e => e.pinId)))
     })()
     ;(async () => {
-      // Parallel — prior Morale row for Mood, + the leader's stats for
+      // Parallel - prior Morale row for Mood, + the leader's stats for
       // the Morale roll (SRD p.22: check is made BY the designated
       // leader using their appropriate AMod/SMod).
       const moodPromise = supabase
@@ -252,7 +252,7 @@ export default function CommunityMoraleModal({
         .limit(1)
         .maybeSingle()
       const leaderPromise = (async (): Promise<LeaderInfo | null> => {
-        // Helper — build skillLevels map from a skills array. NPC
+        // Helper - build skillLevels map from a skills array. NPC
         // skills use `entries[].name`; PC skills use `skills[].skillName`.
         // Either way, result is a Record<skillName, level>.
         const pickSocialSkills = (get: (s: string) => number): Record<string, number> => {
@@ -273,7 +273,7 @@ export default function CommunityMoraleModal({
           const skillLevels = pickSocialSkills(s => entries.find(e => e.name === s)?.level ?? 0)
           return { name: (npc as any).name, kind: 'npc', amod: 0, skillLevels }
         }
-        // PC leader path — leader_user_id → campaign_members row for
+        // PC leader path - leader_user_id → campaign_members row for
         // the owned character → characters row for RAPID + skills.
         if (community.leader_user_id) {
           const { data: cm } = await supabase
@@ -306,7 +306,7 @@ export default function CommunityMoraleModal({
         setMoraleAmod(leader.amod)
         // Default-select the leader's best social skill (tie-break:
         // first in MORALE_SOCIAL_SKILLS order, which puts Inspiration
-        // ahead of others tied at the same level — Inspiration is the
+        // ahead of others tied at the same level - Inspiration is the
         // canonical Community-rally skill per CRB).
         let bestSkill = MORALE_SOCIAL_SKILLS[0]
         let bestLvl = leader.skillLevels[bestSkill] ?? 0
@@ -328,7 +328,7 @@ export default function CommunityMoraleModal({
   const memberCount = members.length
   const dissolved = community.status === 'dissolved'
   // Status is 'forming' for new communities and nothing auto-promotes it
-  // to 'active' — the "Community" chip is driven by the 13+ count, not
+  // to 'active' - the "Community" chip is driven by the 13+ count, not
   // status. Eligibility gate mirrors that: any non-dissolved community
   // at 13+ can run a weekly check. The first successful finalize flips
   // status → 'active' to mark the community as having completed a cycle.
@@ -339,7 +339,7 @@ export default function CommunityMoraleModal({
   const slotEnoughHands = slotEnoughHandsOverride ?? autoEnoughHands
   const slotClearVoice = slotClearVoiceOverride ?? autoClearVoice
   const slotSafety = slotSafetyOverride ?? autoSafety
-  // World Events slot — sum of every applied (checked) event's CMod.
+  // World Events slot - sum of every applied (checked) event's CMod.
   // Events the GM has unchecked drop out of the total but still get
   // recorded on the morale-check snapshot for the audit trail.
   const slotWorldEvents = worldEvents
@@ -349,7 +349,7 @@ export default function CommunityMoraleModal({
   // NOTE (2026-04-23): Inspiration Lv4 "Beacon of Hope" (+4) and
   // Psychology* Lv4 "Insightful Counselor" (+3) auto-CMods were
   // intentionally removed. Per Xero, Lv4 Skill Traits ship as a
-  // complete system or not at all — no piecemeal implementation
+  // complete system or not at all - no piecemeal implementation
   // while the broader Trait list is still being authored.
   // See memory:project_lv4_traits.md. If the GM wants to apply these
   // bonuses today, they stuff them into the Additional slot by hand.
@@ -358,7 +358,7 @@ export default function CommunityMoraleModal({
     if (!eligible || running) return
     setRunning(true)
 
-    // Roll 1 — Fed
+    // Roll 1 - Fed
     const fedDice = roll2d6()
     const fedTotal = fedDice.die1 + fedDice.die2 + fedAmod + fedSmod + fedCmod
     const fedOutcome = classifyRoll(fedTotal, fedDice.die1, fedDice.die2)
@@ -368,7 +368,7 @@ export default function CommunityMoraleModal({
       total: fedTotal, outcome: fedOutcome,
     }
 
-    // Roll 2 — Clothed
+    // Roll 2 - Clothed
     const clothedDice = roll2d6()
     const clothedTotal = clothedDice.die1 + clothedDice.die2 + clothedAmod + clothedSmod + clothedCmod
     const clothedOutcome = classifyRoll(clothedTotal, clothedDice.die1, clothedDice.die2)
@@ -378,7 +378,7 @@ export default function CommunityMoraleModal({
       total: clothedTotal, outcome: clothedOutcome,
     }
 
-    // Roll 3 — Morale. Uses Fed+Clothed outcomes just rolled (not the
+    // Roll 3 - Morale. Uses Fed+Clothed outcomes just rolled (not the
     // pre-form estimates, which are 0 before any roll fires).
     const moraleSlotsTotal =
       slotMood + fedCmodForMorale + clothedCmodForMorale +
@@ -399,7 +399,7 @@ export default function CommunityMoraleModal({
     const pct = outcomeToDeparturePct(moraleOutcome)
     const departCount = Math.floor(memberCount * pct)
     // Departures: weighted NPC-only pool. If the community will dissolve,
-    // mark everyone as departing (dissolved_reason='dissolved') — handled
+    // mark everyone as departing (dissolved_reason='dissolved') - handled
     // in persistence, not here.
     const departureIds = willDissolve
       ? [] // dissolution path handles all members at persist-time
@@ -439,18 +439,18 @@ export default function CommunityMoraleModal({
     setStage('result')
     // Seed the Retention skill picker from whatever drove the failed
     // Morale roll. Leader can swap on the Result stage before clicking
-    // Attempt — most of the time same skill is the right call.
+    // Attempt - most of the time same skill is the right call.
     setRetentionSkillName(moraleSkillName)
     setRetentionSmod(moraleSmod)
     setRunning(false)
   }
 
-  // Retention Check — fired only from the Result stage when willDissolve
+  // Retention Check - fired only from the Result stage when willDissolve
   // is true AND the leader hasn't attempted one yet. An immediate Morale
   // Check using the failed Morale's cmod_for_next as the Mood slot. No
   // other slots change; leader A unchanged. Success of any tier saves the
   // community. The skill (and therefore SMod) is independently picked on
-  // the Result stage — defaults to the same skill that drove the failed
+  // the Result stage - defaults to the same skill that drove the failed
   // Morale, but the leader can swap (e.g. drop Inspiration for
   // Manipulation if the rally needs a different angle). One attempt only.
   function attemptRetentionCheck() {
@@ -531,7 +531,7 @@ export default function CommunityMoraleModal({
     // Retention overrides dissolution if a successful Retention Check
     // was rolled on this Result stage. Per SRD p.22 the community is
     // saved; departures from the failed Morale still apply, and we
-    // drop consecutive_failures to 2 (one week's cushion — they're
+    // drop consecutive_failures to 2 (one week's cushion - they're
     // battered but not dead). If the retention attempt FAILED, the
     // community dissolves as originally planned.
     const retentionSucceeded = !!retention?.survived
@@ -549,7 +549,7 @@ export default function CommunityMoraleModal({
       const pct = outcomeToDeparturePct(morale.outcome)
       const reason = reasonByPct[pct] ?? 'manual'
       // left_reason check constraint: ('morale_25','morale_50','dissolved',
-      // 'manual','killed'). 75% loss maps to NEW reason 'morale_75' —
+      // 'manual','killed'). 75% loss maps to NEW reason 'morale_75' -
       // falls back to 'manual' if DB schema hasn't been widened yet.
       // Attempt the precise reason first; on FK/check violation retry with
       // 'manual' so the departures still persist.
@@ -635,7 +635,7 @@ export default function CommunityMoraleModal({
     //     world-facing public face. ALWAYS update last_public_update_at
     //     so subscribers' Following cards show fresh activity. CHANGE
     //     community_status when the Morale outcome tier maps to a
-    //     definite public-health shift — that's a public field change
+    //     definite public-health shift - that's a public field change
     //     so the subscriber-notify trigger fires for actual status
     //     transitions (e.g. Thriving → Struggling) but not for noisy
     //     same-tier outcomes. UPDATE is a no-op if no world_communities
@@ -645,18 +645,18 @@ export default function CommunityMoraleModal({
       : morale.outcome === 'High Insight' || morale.outcome === 'Wild Success' ? 'Thriving'
       : morale.outcome === 'Failure' ? 'Struggling'
       : morale.outcome === 'Dire Failure' || morale.outcome === 'Low Insight' ? 'Dying'
-      : null  // Success — leave existing status untouched
+      : null  // Success - leave existing status untouched
     const worldUpdate: Record<string, unknown> = { last_public_update_at: now }
     if (worldStatus) worldUpdate.community_status = worldStatus
     await supabase.from('world_communities')
       .update(worldUpdate)
       .eq('source_community_id', community.id)
 
-    // 4c) Phase 4D — auto-post the Morale outcome to the per-community
+    // 4c) Phase 4D - auto-post the Morale outcome to the per-community
     //     Campfire feed. Always logs morale_outcome; on dissolution,
     //     ALSO logs a separate dissolution event so the Feed timeline
     //     reads "the Morale failed → the community dissolved" as two
-    //     stacked cards. Both are fire-and-forget — feed insert failure
+    //     stacked cards. Both are fire-and-forget - feed insert failure
     //     never breaks the finalize path.
     const leaderName = leaderInfo?.name ?? community.name
     const moraleSlotsSummary = (() => {
@@ -670,7 +670,7 @@ export default function CommunityMoraleModal({
       if (slots?.safety) parts.push(`Safety ${formatCmod(slots.safety)}`)
       if (slots?.worldEvents) parts.push(`World ${formatCmod(slots.worldEvents)}`)
       if (slots?.additional) parts.push(`Other ${formatCmod(slots.additional)}`)
-      return parts.join(', ') || '—'
+      return parts.join(', ') || '-'
     })()
     if (userId) {
       await logMoraleOutcome({
@@ -717,7 +717,7 @@ export default function CommunityMoraleModal({
           : ''
     const moraleLabel = `📊 Week ${newWeek} · ${community.name} - ${leaderName} rolls ${moraleSkillName}: ${morale.outcome}${moraleSuffix}`
 
-    // Base rows — Fed, Clothed, Morale. Retention row appended below
+    // Base rows - Fed, Clothed, Morale. Retention row appended below
     // if attempted so the feed tells the story: Morale failed → Leader
     // rolled a salvage → Community survived (or collapsed anyway).
     const rows: any[] = [
@@ -893,7 +893,7 @@ export default function CommunityMoraleModal({
           <div style={header}>
             <div>
               <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                Weekly Check — {community.name}
+                Weekly Check - {community.name}
               </div>
               <div style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                 Week {community.week_number + 1} · {memberCount} members · {community.consecutive_failures}/3 consecutive failures
@@ -927,59 +927,59 @@ export default function CommunityMoraleModal({
                 component lands later we can port to that wholesale. */}
             {/* Fed */}
             <div>
-              <div style={sectionHeading} title="Fed Check — Gatherers roll weekly for Rations (hunting / foraging / farming / fishing / scavenging). Outcome becomes the Fed CMod on this week's Morale roll.">🌾 Fed Check · Gatherers</div>
+              <div style={sectionHeading} title="Fed Check - Gatherers roll weekly for Rations (hunting / foraging / farming / fishing / scavenging). Outcome becomes the Fed CMod on this week's Morale roll.">🌾 Fed Check · Gatherers</div>
               <div style={{ fontSize: '17px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Carlito, sans-serif' }}>
                 Community efforts to hunt, forage, farm, and fish. It is assumed this effort is led by an NPC; if it is led by a player, substitute their AMod and SMods.
               </div>
               <div style={rowFlex}>
-                <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
+                <span style={label} title="Attribute Modifier - the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
                 <input type="number" value={fedAmod} onChange={e => setFedAmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
-                <span style={label} title="Skill Modifier — the roller's level in the skill used (Farming / Scavenging / Survival). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
+                <span style={label} title="Skill Modifier - the roller's level in the skill used (Farming / Scavenging / Survival). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
                 <input type="number" value={fedSmod} onChange={e => setFedSmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
-                <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll (tool quality, weather, luck, etc.).">+ CMod</span>
+                <span style={label} title="Circumstance Modifier - any one-off GM adjustments to this specific roll (tool quality, weather, luck, etc.).">+ CMod</span>
                 <input type="number" value={fedCmod} onChange={e => setFedCmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
               </div>
             </div>
 
             {/* Clothed */}
             <div>
-              <div style={sectionHeading} title="Clothed Check — Maintainers roll weekly for Supplies (repairs, clothing, tools, batteries, vehicle upkeep). Outcome becomes the Clothed CMod on this week's Morale roll.">🔧 Clothed Check · Maintainers</div>
+              <div style={sectionHeading} title="Clothed Check - Maintainers roll weekly for Supplies (repairs, clothing, tools, batteries, vehicle upkeep). Outcome becomes the Clothed CMod on this week's Morale roll.">🔧 Clothed Check · Maintainers</div>
               <div style={{ fontSize: '17px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Carlito, sans-serif' }}>
                 Community efforts to scavenge for supplies to ensure housing and equipment are maintained and repaired. It is assumed this effort is led by an NPC; if it is led by a player, substitute their AMod and SMods.
               </div>
               <div style={rowFlex}>
-                <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
+                <span style={label} title="Attribute Modifier - the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
                 <input type="number" value={clothedAmod} onChange={e => setClothedAmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
-                <span style={label} title="Skill Modifier — the roller's level in the skill used (Mechanic / Tinkerer). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
+                <span style={label} title="Skill Modifier - the roller's level in the skill used (Mechanic / Tinkerer). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
                 <input type="number" value={clothedSmod} onChange={e => setClothedSmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
-                <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll.">+ CMod</span>
+                <span style={label} title="Circumstance Modifier - any one-off GM adjustments to this specific roll.">+ CMod</span>
                 <input type="number" value={clothedCmod} onChange={e => setClothedCmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
               </div>
             </div>
 
             {/* Morale */}
             <div>
-              <div style={sectionHeading} title="Morale Check — the acknowledged leader rolls at the start of each week. 2d6 + leader AMod + leader SMod + all 6 slot CMods below + Additional. Outcome drives member departures (Failure 25% / Dire 50% / Low Insight 75%) and sets next week's Mood.">📊 Morale Check · Leader</div>
+              <div style={sectionHeading} title="Morale Check - the acknowledged leader rolls at the start of each week. 2d6 + leader AMod + leader SMod + all 6 slot CMods below + Additional. Outcome drives member departures (Failure 25% / Dire 50% / Low Insight 75%) and sets next week's Mood.">📊 Morale Check · Leader</div>
               <div style={{ fontSize: '17px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Carlito, sans-serif' }}>
                 The modifiers below are tied to weekly events within the community, and GMs can provide CMods where relevant. The Fed + Clothed CMods will use the rolled outcome when "Run Weekly Check" is run.
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {/* Fed slot — live 0 until roll fires */}
-                <div style={slotRow} title="Set by this week's Fed Check (Gatherers). Outcome ladder: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Currently shows — because the Fed roll hasn't fired yet; it snaps to the actual rolled CMod when you click Run Weekly Check.">
+                {/* Fed slot - live 0 until roll fires */}
+                <div style={slotRow} title="Set by this week's Fed Check (Gatherers). Outcome ladder: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Currently shows - because the Fed roll hasn't fired yet; it snaps to the actual rolled CMod when you click Run Weekly Check.">
                   <span style={{ ...label, flex: 1 }}>Fed (post-roll)</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>snaps to Fed outcome</span>
-                  <span style={{ color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
+                  <span style={{ color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>-</span>
                   <div style={{ width: '64px' }} />
                 </div>
-                {/* Clothed slot — live 0 until roll fires */}
+                {/* Clothed slot - live 0 until roll fires */}
                 <div style={slotRow} title="Set by this week's Clothed Check (Maintainers). Same outcome ladder as Fed: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Snaps to the rolled CMod when you click Run Weekly Check.">
                   <span style={{ ...label, flex: 1 }}>Clothed (post-roll)</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>snaps to Clothed outcome</span>
-                  <span style={{ color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
+                  <span style={{ color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>-</span>
                   <div style={{ width: '64px' }} />
                 </div>
-                {/* Mood — carries over from prior week's cmod_for_next.
+                {/* Mood - carries over from prior week's cmod_for_next.
                     Positioned between the resource rolls and the mechanical
                     slots so the form visually reads: "this week's resources
                     first, then lingering mood, then structural/mechanical
@@ -988,7 +988,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, flex: 1 }}>Mood Around The Campfire</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(moodFromPrior), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(moodFromPrior)}</span>
-                  <input type="number" value={slotMoodOverride ?? ''} placeholder="—"
+                  <input type="number" value={slotMoodOverride ?? ''} placeholder="-"
                     onChange={e => setSlotMoodOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
@@ -997,7 +997,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, flex: 1 }}>Enough Hands</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>
-                  <input type="number" value={slotEnoughHandsOverride ?? ''} placeholder="—"
+                  <input type="number" value={slotEnoughHandsOverride ?? ''} placeholder="-"
                     onChange={e => setSlotEnoughHandsOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
@@ -1006,7 +1006,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, flex: 1 }}>A Clear Voice</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoClearVoice), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoClearVoice)}</span>
-                  <input type="number" value={slotClearVoiceOverride ?? ''} placeholder="—"
+                  <input type="number" value={slotClearVoiceOverride ?? ''} placeholder="-"
                     onChange={e => setSlotClearVoiceOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
@@ -1015,11 +1015,11 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, flex: 1 }}>Someone To Watch Over Me</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoSafety), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoSafety)}</span>
-                  <input type="number" value={slotSafetyOverride ?? ''} placeholder="—"
+                  <input type="number" value={slotSafetyOverride ?? ''} placeholder="-"
                     onChange={e => setSlotSafetyOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
-                {/* World Events — auto-pulled from active Distemper Timeline
+                {/* World Events - auto-pulled from active Distemper Timeline
                     pins inside the community's Homestead radius. Each event
                     is on by default; uncheck to opt this community out (e.g.
                     medically isolated from a regional plague). The slot
@@ -1053,8 +1053,8 @@ export default function CommunityMoraleModal({
                     })}
                   </div>
                 )}
-                {/* Additional — freeform */}
-                <div style={slotRow} title="GM freeform Fill-In-The-Gaps — event-specific modifiers this week (raids, crises, miracles, weather, a surprise resupply, a Distemper surge, etc.). Resets to 0 each time the modal opens so one-off events don't bleed into future weeks.">
+                {/* Additional - freeform */}
+                <div style={slotRow} title="GM freeform Fill-In-The-Gaps - event-specific modifiers this week (raids, crises, miracles, weather, a surprise resupply, a Distemper surge, etc.). Resets to 0 each time the modal opens so one-off events don't bleed into future weeks.">
                   <span style={{ ...label, flex: 1 }}>Additional (Fill-In-The-Gaps)</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>GM freeform</span>
                   <span style={{ color: cmodColor(additionalMoraleCmod), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(additionalMoraleCmod)}</span>
@@ -1069,7 +1069,7 @@ export default function CommunityMoraleModal({
                   is fetched on open from leader_npc_id / leader_user_id;
                   A/S mods auto-populate from their sheet. Skill picker
                   below lets the GM choose WHICH social skill the leader
-                  is using this week — SMod follows the selection. */}
+                  is using this week - SMod follows the selection. */}
               {leaderInfo ? (
                 <div style={{ marginTop: '10px', padding: '8px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '17px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Rolling</span>
@@ -1078,7 +1078,7 @@ export default function CommunityMoraleModal({
                 </div>
               ) : !loading && (
                 <div style={{ marginTop: '10px', padding: '8px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', fontSize: '17px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif' }}>
-                  No leader set on this community. Set one via the Leader dropdown on the community panel — the check is made by the acknowledged leader. Rolling with 0/0 defaults for now.
+                  No leader set on this community. Set one via the Leader dropdown on the community panel - the check is made by the acknowledged leader. Rolling with 0/0 defaults for now.
                 </div>
               )}
 
@@ -1148,7 +1148,7 @@ export default function CommunityMoraleModal({
         <div style={header}>
           <div>
             <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-              Week {r.newWeek} Results — {community.name}
+              Week {r.newWeek} Results - {community.name}
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
@@ -1187,7 +1187,7 @@ export default function CommunityMoraleModal({
             </div>
           </div>
 
-          {/* Retention Check card — shown after the leader attempts
+          {/* Retention Check card - shown after the leader attempts
               one. SRD p.22: immediate Morale Check, failed Morale's
               cmod_for_next as the only Mood CMod. Success of any tier
               saves the community; failure tiers let dissolution proceed. */}
@@ -1206,7 +1206,7 @@ export default function CommunityMoraleModal({
               </div>
               <div style={{ fontSize: '17px', color: retention.survived ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif', fontWeight: 600 }}>
                 {retention.survived
-                  ? `✓ The community holds together. Consecutive failures drop to 2 — one more failure next week dissolves it.`
+                  ? `✓ The community holds together. Consecutive failures drop to 2 - one more failure next week dissolves it.`
                   : `✗ The fragments scatter. Dissolution proceeds.`}
               </div>
             </div>
@@ -1226,7 +1226,7 @@ export default function CommunityMoraleModal({
               </div>
               {!retention && leaderInfo && (
                 <>
-                  {/* Skill picker — leader chooses what they're rolling
+                  {/* Skill picker - leader chooses what they're rolling
                       to rally with. Defaults to the failed Morale's skill
                       but a swap is encouraged (Manipulation, Streetwise,
                       etc. depending on the angle of the appeal). */}
@@ -1266,7 +1266,7 @@ export default function CommunityMoraleModal({
               </div>
               <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                 {leaderInfo?.name ?? 'The leader'} rallied the survivors. The community does NOT dissolve.
-                Original Morale failure consequence still applies: {r.departureIds.length} member{r.departureIds.length === 1 ? '' : 's'} leave — {r.departureIds.map(id => memberNameById.get(id) ?? '(unknown)').join(', ')}.
+                Original Morale failure consequence still applies: {r.departureIds.length} member{r.departureIds.length === 1 ? '' : 's'} leave - {r.departureIds.map(id => memberNameById.get(id) ?? '(unknown)').join(', ')}.
               </div>
               <div style={{ marginTop: '6px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                 Roster after: {r.membersAfter} · Consecutive failures reset to 2 (one week's cushion).
@@ -1301,9 +1301,9 @@ export default function CommunityMoraleModal({
             {running
               ? 'Saving…'
               : r.willDissolve && !retention?.survived
-                ? 'Finalize — Dissolve Community'
+                ? 'Finalize - Dissolve Community'
                 : r.willDissolve && retention?.survived
-                  ? 'Finalize — Save Community'
+                  ? 'Finalize - Save Community'
                   : 'Finalize & Save'}
           </button>
         </div>

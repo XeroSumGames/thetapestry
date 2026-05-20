@@ -19,7 +19,7 @@ import ReactionButtons, { aggregateReactions, type ReactionAggregate } from '../
 import InlineRepliesPanel from '../../../components/InlineRepliesPanel'
 import AuthorBadge from '../../../components/AuthorBadge'
 
-// /campfire/war-stories — post memorable session moments, legendary rolls,
+// /campfire/war-stories - post memorable session moments, legendary rolls,
 // character beats. Cross-campaign feed: anyone signed in can read; authors
 // manage their own posts. Optional campaign tag surfaces which story each
 // came from.
@@ -42,7 +42,7 @@ interface Story {
   setting: string | null
   moderation_status: 'pending' | 'approved' | 'rejected'
   moderator_notes: string | null
-  // Phase 4E final — count maintained by the war_story_replies trigger.
+  // Phase 4E final - count maintained by the war_story_replies trigger.
   // Nullable to tolerate rows from before the migration.
   reply_count: number | null
   created_at: string
@@ -81,21 +81,21 @@ export default function WarStoriesPage() {
   // Seeded from the ?setting= URL param so picking a setting on the
   // /campfire hub propagates here.
   const [settingFilter, setSettingFilter] = useUrlSettingFilter()
-  // Phase 4E — pagination. Same cursor-based shape as Forums.
+  // Phase 4E - pagination. Same cursor-based shape as Forums.
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [loadingMore, setLoadingMore] = useState<boolean>(false)
   const PAGE_SIZE = 50
-  // Phase 4E (final) — reaction aggregates per story. Empty default so
+  // Phase 4E (final) - reaction aggregates per story. Empty default so
   // first paint shows ▲0 / ▼0 until the loader fills in.
   const [reactions, setReactions] = useState<Record<string, ReactionAggregate>>({})
-  // Phase 4E (final) — full-text search. searchQuery is the user-typed
+  // Phase 4E (final) - full-text search. searchQuery is the user-typed
   // string; searchActive flips to true while a search is running and
   // the visible list is search-result-driven (vs. the normal feed).
   // Pagination is disabled in search mode (rank-ordered hits, capped).
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [searchActive, setSearchActive] = useState<boolean>(false)
   const [searching, setSearching] = useState<boolean>(false)
-  // Phase 4E (final) — inline reply expand. Stored as a single id so
+  // Phase 4E (final) - inline reply expand. Stored as a single id so
   // only one panel is open at a time; clicking the toggle on another
   // story switches focus.
   const [openRepliesFor, setOpenRepliesFor] = useState<string | null>(null)
@@ -109,7 +109,7 @@ export default function WarStoriesPage() {
   const [existingAttachments, setExistingAttachments] = useState<Attachment[]>([])
   const [saving, setSaving] = useState(false)
   // True when the war_stories table or one of its columns is absent
-  // from the schema cache — i.e. the GM hasn't applied the
+  // from the schema cache - i.e. the GM hasn't applied the
   // sql/war-stories.sql migration on this database yet. Detected on
   // the first SELECT in loadStories(); locks the composer with a
   // friendly banner instead of letting users hit a raw error on save.
@@ -122,7 +122,7 @@ export default function WarStoriesPage() {
       setMyId(user.id)
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
       setIsThriver(roleIsThriver(profile))
-      // Campaigns the user is a member of (GM or player) — used as the
+      // Campaigns the user is a member of (GM or player) - used as the
       // optional campaign-tag dropdown on the composer. Pulled via
       // campaign_members to include campaigns where the user is a player,
       // not just those they GM.
@@ -149,7 +149,7 @@ export default function WarStoriesPage() {
       .select('*')
       .order('updated_at', { ascending: false })
       .range(0, PAGE_SIZE - 1)
-    // Migration not applied yet — set the flag, render the banner,
+    // Migration not applied yet - set the flag, render the banner,
     // skip the rest of the load. Don't blow up the page.
     if (isMissingSchema(readErr)) {
       setTableMissing(true)
@@ -181,7 +181,7 @@ export default function WarStoriesPage() {
       author_avatar_url: avatarMap[s.author_user_id] ?? null,
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
-    // Reaction hydration — single batched fetch keyed by story ids so
+    // Reaction hydration - single batched fetch keyed by story ids so
     // each card's ▲/▼ counts are paint-ready on first render.
     const ids = list.map(s => s.id)
     if (ids.length > 0) {
@@ -194,7 +194,7 @@ export default function WarStoriesPage() {
     setLoading(false)
   }
 
-  // Phase 4E (final) — FTS search. Replaces the visible list with up
+  // Phase 4E (final) - FTS search. Replaces the visible list with up
   // to 50 highest-ranked hits matching the query against title+body.
   // Submitting an empty/whitespace query clears search mode and falls
   // back to the standard feed.
@@ -252,7 +252,7 @@ export default function WarStoriesPage() {
     setSearching(false)
   }
 
-  // Phase 4E — append the next page of stories. Same offset shape as
+  // Phase 4E - append the next page of stories. Same offset shape as
   // Forums; new updated_at touches above the cursor are tolerable for
   // a polish-tier feed.
   async function loadMoreStories() {
@@ -426,7 +426,7 @@ export default function WarStoriesPage() {
   }
 
   // When editing, let the author drop an attachment. Removes from the
-  // bucket first, then from the local `existingAttachments` list — the
+  // bucket first, then from the local `existingAttachments` list - the
   // subsequent save writes the updated list to the attachments column.
   async function removeExistingAttachment(att: Attachment) {
     if (!confirm(`Remove "${att.name}" from this story?`)) return
@@ -457,7 +457,7 @@ export default function WarStoriesPage() {
   }
 
   // Apply the active setting chip filter to the loaded stories. The chip
-  // strip itself is the only filter axis on War Stories — no category, no
+  // strip itself is the only filter axis on War Stories - no category, no
   // kind, so this collapses straight to the visible list.
   const visibleStories = useMemo(() => {
     if (settingFilter === null) return stories
@@ -477,7 +477,7 @@ export default function WarStoriesPage() {
     return map
   }, [stories])
 
-  // Author banner counts — surfaces own pending/rejected so the user
+  // Author banner counts - surfaces own pending/rejected so the user
   // knows their setting/global stories are queued. Campaign-scoped
   // stories instant-publish so they never contribute.
   const myPendingCount = stories.filter(s => s.author_user_id === myId && s.moderation_status === 'pending').length
@@ -504,19 +504,19 @@ export default function WarStoriesPage() {
             War Stories
           </div>
           <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
-            Session highlights, legendary rolls, character moments — share what happened at your table.
+            Session highlights, legendary rolls, character moments - share what happened at your table.
           </div>
         </div>
         {!composing && (
           <button onClick={startCompose} disabled={tableMissing}
-            title={tableMissing ? 'War Stories migration not applied yet — see banner below.' : undefined}
+            title={tableMissing ? 'War Stories migration not applied yet - see banner below.' : undefined}
             style={{ padding: '9px 16px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: tableMissing ? 'not-allowed' : 'pointer', opacity: tableMissing ? 0.4 : 1 }}>
             + New Story
           </button>
         )}
       </div>
 
-      {/* Migration-not-applied banner — friendly fallback when the
+      {/* Migration-not-applied banner - friendly fallback when the
           war_stories table is missing from the schema cache. The
           composer + post button are disabled until a Thriver applies
           the migration; existing readers don't see this. */}
@@ -524,7 +524,7 @@ export default function WarStoriesPage() {
         <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '12px 16px', marginBottom: '1.25rem', color: '#EF9F27', fontSize: '14px', lineHeight: 1.5 }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>Feature not yet enabled</div>
           <div style={{ color: '#d4cfc9' }}>
-            War Stories isn&apos;t live on this database yet — a Thriver needs to apply <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories.sql</code> (and <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories-attachments.sql</code> for image uploads) in Supabase. Once that&apos;s done, refresh and post away.
+            War Stories isn&apos;t live on this database yet - a Thriver needs to apply <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories.sql</code> (and <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories-attachments.sql</code> for image uploads) in Supabase. Once that&apos;s done, refresh and post away.
           </div>
         </div>
       )}
@@ -559,7 +559,7 @@ export default function WarStoriesPage() {
             <textarea style={{ ...inp, minHeight: '200px', resize: 'vertical', fontFamily: 'Carlito, sans-serif', lineHeight: 1.55 }} value={draft.body} onChange={e => setDraft(d => ({ ...d, body: e.target.value }))}
               placeholder="Tell the table what happened." />
           </div>
-          {/* Scope picker — replaces the old "From Campaign (optional)"
+          {/* Scope picker - replaces the old "From Campaign (optional)"
               dropdown. Three options: campaign-private (default if user
               has campaigns), setting-tagged, or fully global. The
               sub-control below the radio adapts to the selected scope. */}
@@ -599,7 +599,7 @@ export default function WarStoriesPage() {
             )}
             {draft.scope === 'global' && (
               <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 2px' }}>
-                Cross-setting — no setting or campaign tag. Visible everywhere.
+                Cross-setting - no setting or campaign tag. Visible everywhere.
               </div>
             )}
           </div>
@@ -654,7 +654,7 @@ export default function WarStoriesPage() {
         </div>
       )}
 
-      {/* Phase 4E (final) — full-text search. Submitting fires an FTS
+      {/* Phase 4E (final) - full-text search. Submitting fires an FTS
           query against title+body via the search_tsv generated column;
           clearing returns to the standard feed. */}
       {!tableMissing && (
@@ -676,7 +676,7 @@ export default function WarStoriesPage() {
         </form>
       )}
 
-      {/* Setting filter chip strip — featured settings + Global. Click "All"
+      {/* Setting filter chip strip - featured settings + Global. Click "All"
           to clear. War Stories has no other axis of filtering, so this is
           the only chip row. */}
       {!tableMissing && (
@@ -779,7 +779,7 @@ export default function WarStoriesPage() {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {/* Phase 4E — reactions row. Available to everyone
+                  {/* Phase 4E - reactions row. Available to everyone
                       signed in; the author can still vote on their own
                       story (mirrors Forums B). */}
                   <ReactionButtons
@@ -791,7 +791,7 @@ export default function WarStoriesPage() {
                     initialDown={reactions[s.id]?.down ?? 0}
                     initialOwn={reactions[s.id]?.own ?? null}
                   />
-                  {/* Phase 4E — replies toggle. Inline-expand panel
+                  {/* Phase 4E - replies toggle. Inline-expand panel
                       mirrors the Forums reply UX without needing a
                       detail page. */}
                   {(() => {
@@ -835,7 +835,7 @@ export default function WarStoriesPage() {
         </div>
       )}
 
-      {/* Phase 4E — Load older stories. */}
+      {/* Phase 4E - Load older stories. */}
       {!loading && hasMore && stories.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
           <button onClick={loadMoreStories} disabled={loadingMore}

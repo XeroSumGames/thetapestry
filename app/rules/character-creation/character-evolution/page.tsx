@@ -2,7 +2,7 @@ import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSecti
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Character Evolution — XSE SRD §04' }
+export const metadata = { title: 'Character Evolution - XSE SRD §04' }
 
 export default function Page() {
   return (

@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-// Storage buckets that hold files keyed by `<campaign_id>/...` — we clean
+// Storage buckets that hold files keyed by `<campaign_id>/...` - we clean
 // these up per owned campaign before the campaign row is deleted, since
 // storage objects aren't FK-linked to rows. portrait-bank is shared across
 // users (Thriver library), so it's intentionally excluded here.
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     // Authorization. Derive the caller from the Authorization Bearer JWT
-    // (pre-launch audit Y4) — do NOT trust caller_id from the request body.
+    // (pre-launch audit Y4) - do NOT trust caller_id from the request body.
     // The body field is still accepted from legacy callers but ignored.
     const authHeader = req.headers.get('Authorization') ?? ''
     const token = authHeader.replace(/^Bearer\s+/i, '')
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     // Two callers are allowed:
     //   1. A Thriver deleting any other user (the original moderation flow).
     //   2. A user deleting their OWN account (the /account "Danger Zone"
-    //      flow — required for GDPR-style data-deletion compliance).
+    //      flow - required for GDPR-style data-deletion compliance).
     // Anything else is rejected.
     const isSelfDelete = user_id === caller_id
     if (!isSelfDelete) {
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     await supabase.from('user_events').delete().eq('user_id', user_id)
     await supabase.from('visitor_logs').delete().eq('user_id', user_id)
 
-    // Collect the user's character ids — needed for relationships cleanup
+    // Collect the user's character ids - needed for relationships cleanup
     // AND the existing character_states cleanup. Previous code keyed
     // npc_relationships by user_id, which was always a no-op because
     // character_id references characters(id), not auth.users(id).
@@ -115,13 +115,13 @@ Deno.serve(async (req) => {
 
     if (charIds.length > 0) {
       // FIX: this delete was previously keyed off user_id instead of
-      // character_id — a no-op that left orphan relationships behind.
+      // character_id - a no-op that left orphan relationships behind.
       await supabase.from('npc_relationships').delete().in('character_id', charIds)
       await supabase.from('character_states').delete().in('character_id', charIds)
     }
     await supabase.from('campaign_members').delete().eq('user_id', user_id)
 
-    // Characters — community_members.character_id → characters(id)
+    // Characters - community_members.character_id → characters(id)
     // ON DELETE CASCADE handles the join cleanup automatically.
     await supabase.from('characters').delete().eq('user_id', user_id)
 
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     const ownedIds = (ownedCamps ?? []).map((c: any) => c.id)
 
     for (const campId of ownedIds) {
-      // Wipe campaign-scoped rows explicitly — many of these cascade via
+      // Wipe campaign-scoped rows explicitly - many of these cascade via
       // `campaigns.id ON DELETE CASCADE` already, but listing them makes
       // cleanup order deterministic and guards against any weakened FK
       // added in future migrations.
@@ -151,14 +151,14 @@ Deno.serve(async (req) => {
       // tactical_scenes deletes cascade into scene_tokens via FK, but
       // emptying the campaign proactively is cheap insurance.
       await supabase.from('tactical_scenes').delete().eq('campaign_id', campId)
-      // Communities — deleting the community cascades into community_members,
+      // Communities - deleting the community cascades into community_members,
       // community_morale_checks, and community_resource_checks via FK.
       await supabase.from('communities').delete().eq('campaign_id', campId)
       // All remaining campaign_members for this campaign (players other
       // than the user being deleted).
       await supabase.from('campaign_members').delete().eq('campaign_id', campId)
 
-      // Storage buckets — objects aren't FK-linked, so the campaign row
+      // Storage buckets - objects aren't FK-linked, so the campaign row
       // delete leaves files orphaned. Clean every campaign-scoped bucket.
       for (const bucket of CAMPAIGN_SCOPED_BUCKETS) {
         const paths = await listAllPaths(supabase, bucket, campId)
@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
     // Map pins the user submitted to the global map
     await supabase.from('map_pins').delete().eq('user_id', user_id)
 
-    // Profile + auth user — last step, so partial failures above don't
+    // Profile + auth user - last step, so partial failures above don't
     // strand an orphan auth account.
     await supabase.from('profiles').delete().eq('id', user_id)
     const { error } = await supabase.auth.admin.deleteUser(user_id)

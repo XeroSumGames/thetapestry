@@ -29,7 +29,7 @@ export default function EditCharacterPage() {
   const supabase = createClient()
 
   // Honor ?step=N from callers like /characters/random?paradigm=…
-  // (which routes here at step=4 — Final Review — after seeding the
+  // (which routes here at step=4 - Final Review - after seeding the
   // Paradigm). Clamp to 0..4 so a bad URL can't crash the wizard.
   const initialStep = (() => {
     const raw = parseInt(searchParams.get('step') ?? '0', 10)
@@ -50,7 +50,7 @@ export default function EditCharacterPage() {
       if (!user) { router.push('/login'); return }
 
       // Thrivers can edit any character (godmode surface 5).
-      // Everyone else must own the character — non-owners are redirected.
+      // Everyone else must own the character - non-owners are redirected.
       const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       const isThriver = roleIsThriver(prof)
 
@@ -184,7 +184,7 @@ export default function EditCharacterPage() {
         </div>
       </div>
 
-      {/* Print sheet — print-sheet-active is required for the print
+      {/* Print sheet - print-sheet-active is required for the print
           rule to keep it visible (otherwise it gets display:none'd). */}
       <div className="print-sheet-container print-sheet-active">
         <PrintSheet state={state} />

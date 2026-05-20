@@ -41,7 +41,7 @@ export default function DashboardPage() {
       trackGhostConversion()
       const { data: profile } = await supabase.from('profiles').select('username, role, onboarded').eq('id', user.id).single()
        if (profile) {
-        // First-visit welcome — replaces the trap-the-user `/welcome`
+        // First-visit welcome - replaces the trap-the-user `/welcome`
         // redirect that was disabled in playtest #12. Now it's a
         // dismissible modal on the dashboard; any dismiss flips
         // onboarded=true so it doesn't reappear. /firsttimers stays
@@ -84,7 +84,7 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Ghost landing — show the map directly, ghost wall triggers on interaction
+  // Ghost landing - show the map directly, ghost wall triggers on interaction
   if (!username) return (
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
       <MapView embedded showSidebar />
@@ -94,7 +94,7 @@ export default function DashboardPage() {
   return (
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-      {/* Center — map */}
+      {/* Center - map */}
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <MapView embedded showSidebar />
       </div>

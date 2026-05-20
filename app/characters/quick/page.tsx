@@ -151,7 +151,7 @@ export default function QuickCharacterPage() {
     logFirstEvent('first_character_created', { name: character.name })
     setSaved(true)
     setSaving(false)
-    // Same redirect rule as the Backstory wizard — send the user back
+    // Same redirect rule as the Backstory wizard - send the user back
     // to the story they were joining, or to /characters as the default
     // landing for new characters.
     if (returnStoryId) router.push(`/stories/${returnStoryId}`)
@@ -325,7 +325,7 @@ export default function QuickCharacterPage() {
           }
         </div>
       </div>
-      {/* Print sheet — see globals.css; print-sheet-active is the
+      {/* Print sheet - see globals.css; print-sheet-active is the
           class the @media print rule whitelists for visibility. */}
       <div className="print-sheet-container print-sheet-active">
         <PrintSheet state={state} />

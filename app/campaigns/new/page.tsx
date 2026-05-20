@@ -27,7 +27,7 @@ export default function NewCampaignPage() {
   const [locationQuery, setLocationQuery] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const [customCenter, setCustomCenter] = useState<{ lat: number; lng: number } | null>(null)
-  // Phase 5 Sprint 1 — Module picker. Mutually exclusive with the
+  // Phase 5 Sprint 1 - Module picker. Mutually exclusive with the
   // setting buttons: clicking a module button clears `setting` and
   // vice versa. When a module is picked, handleCreate skips the
   // setting-seed pipeline and calls cloneModuleIntoCampaign instead.
@@ -44,7 +44,7 @@ export default function NewCampaignPage() {
       setModules(rows)
       // Pre-select if /modules/[id] linked us here with ?module=<id>.
       // The marketplace's "Create campaign with this module" CTA uses
-      // this — clicking it lands on this page with the module already
+      // this - clicking it lands on this page with the module already
       // chosen so the user just types a name and hits create.
       const wantedId = searchParams?.get('module')
       if (wantedId) {
@@ -95,7 +95,7 @@ export default function NewCampaignPage() {
       return
     }
 
-    // Phase 5 Sprint 1 — module clone takes precedence over the
+    // Phase 5 Sprint 1 - module clone takes precedence over the
     // setting-seed pipeline. If the user picked a module, run the
     // jsonb snapshot clone and skip the TS/DB setting seeds.
     if (pickedModuleVersionId) {
@@ -233,7 +233,7 @@ export default function NewCampaignPage() {
           </div>
         </div>
 
-        {/* Phase 5 Sprint 1 — Module picker. Appears as a third
+        {/* Phase 5 Sprint 1 - Module picker. Appears as a third
             option below the Setting row. Picking a module clears
             the setting selection so the two don't double-seed. */}
         {modules.length > 0 && (

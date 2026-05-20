@@ -20,7 +20,7 @@ export default function JoinByCodePage() {
       // Auth-gate on mount so the invite target survives the login round-trip.
       // Previously the auth check lived inside handleJoin, meaning a logged-out
       // user who landed here had to click Join Story first before the
-      // ?redirect=/join/<code> param was ever set — and if any upstream flow
+      // ?redirect=/join/<code> param was ever set - and if any upstream flow
       // bounced them to /login before they clicked, the target was lost and
       // they ended up on /dashboard after sign-in. Encoding the target with
       // encodeURIComponent keeps the slash-in-a-query-value safe across routers.

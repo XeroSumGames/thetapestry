@@ -1,6 +1,6 @@
 // Smoke test for the signed-integer renderer used in the vehicle brew
 // + crew labels. Lives at tests/lib/ even though the helper is currently
-// inline in app/vehicle/page.tsx — locks the contract while the helper
+// inline in app/vehicle/page.tsx - locks the contract while the helper
 // finds its permanent home in a future extraction.
 
 import { describe, it, expect } from 'vitest'

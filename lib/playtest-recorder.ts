@@ -1,10 +1,10 @@
-// Playtest "tivo" — in-memory ring buffer of UI events the GM can dump to
+// Playtest "tivo" - in-memory ring buffer of UI events the GM can dump to
 // JSON when something goes weird. Always-on (cost is one click listener +
 // a 2000-entry array) so we never miss a moment by forgetting to flip a flag.
 //
 // Captured: clicks, route changes, window errors, unhandled rejections,
 // console.error/warn, manual marks. NEVER captures input values, cookies,
-// localStorage contents, or auth tokens — see redact() below.
+// localStorage contents, or auth tokens - see redact() below.
 
 // Sized for a full 3-hour playtest (180 min). At a moderate ~50 events/min
 // (active combat is denser, idle stretches are sparser), 3h ≈ 9000 events;
@@ -17,7 +17,7 @@ const STORAGE_KEY = 'tapestry_playtest_buffer'
 // next /table mount without user action. Key shape:
 //   tapestry_recorder_enabled_<campaignId> = '1' | (absent)
 const ENABLED_KEY_PREFIX = 'tapestry_recorder_enabled_'
-// Min ms between localStorage writes — protects against jank if something
+// Min ms between localStorage writes - protects against jank if something
 // throws/marks in a tight loop (each persist is a sync JSON.stringify of
 // up to PERSIST_BACKUP_COUNT events).
 const PERSIST_THROTTLE_MS = 2000
@@ -65,7 +65,7 @@ declare global {
 // Toggle the recorder's enabled flag for THIS tab. Tab-local: no DB
 // write, no cross-tab effect. Fires a window event so PlaytestRecorder
 // can sync its corner-dot visibility. Does NOT wipe the buffer or
-// trigger a download — those are explicit calls owned by the caller
+// trigger a download - those are explicit calls owned by the caller
 // (the table-page Record button handles both).
 export function setEnabled(enabled: boolean) {
   const r = getRecorder()
@@ -118,7 +118,7 @@ export function flushAllNow() {
 // Per-campaign persisted-enabled accessors. Used by the table page
 // to resume capture after refresh / back-nav and by the recorder
 // broadcast handlers to propagate GM-cascade state to all subscribed
-// tabs' localStorage. Safe to call SSR — returns false / no-ops.
+// tabs' localStorage. Safe to call SSR - returns false / no-ops.
 export function readCampaignEnabled(campaignId: string): boolean {
   if (typeof window === 'undefined') return false
   try { return localStorage.getItem(ENABLED_KEY_PREFIX + campaignId) === '1' } catch { return false }
@@ -192,7 +192,7 @@ export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown
   }
   r.buffer.push(ev)
   if (r.buffer.length > MAX_EVENTS) r.buffer.splice(0, r.buffer.length - MAX_EVENTS)
-  // Persist to localStorage on errors and marks — cheap insurance against
+  // Persist to localStorage on errors and marks - cheap insurance against
   // refresh wiping the buffer right when something interesting happened.
   // The periodic flush (every 60s) covers the no-interesting-event case.
   if (kind === 'error' || kind === 'rejection' || kind === 'mark') {

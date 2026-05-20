@@ -11,7 +11,7 @@ import { findSection } from '../../../../lib/rules/sections'
 import { rarityColor } from '../../../../lib/rarity-colors'
 import { RATIONS } from '../../../../lib/xse-schema'
 
-export const metadata = { title: 'Rations — XSE SRD §07' }
+export const metadata = { title: 'Rations - XSE SRD §07' }
 
 export default function Page() {
   return (

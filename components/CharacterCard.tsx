@@ -89,7 +89,7 @@ interface Props {
   canEdit?: boolean
   showButtons?: boolean
   isMySheet?: boolean
-  // Drives GM-only affordances on this card — currently the Cancel
+  // Drives GM-only affordances on this card - currently the Cancel
   // button on the at-max Stress Check modal (players have to roll;
   // GMs can dismiss the modal during testing or to course-correct
   // mid-session).
@@ -105,18 +105,18 @@ interface Props {
   campaignId?: string
   otherCharacters?: { id: string; name: string }[]
   onGiveItem?: (item: InventoryItem, targetCharId: string, qty: number) => void
-  // PC ↔ NPC trade — when both are passed, the InventoryPanel's "Give"
+  // PC ↔ NPC trade - when both are passed, the InventoryPanel's "Give"
   // picker also lists NPCs as recipients (orange-themed, distinct from
   // the blue PC chips). Parents pulling from `campaignNpcs` should
   // filter out hidden_from_players for non-GM viewers.
   otherNpcs?: { id: string; name: string }[]
   onGiveItemToNpc?: (item: InventoryItem, targetNpcId: string, qty: number) => void
-  // PC ↔ Community deposit — when both are passed, the give picker also
+  // PC ↔ Community deposit - when both are passed, the give picker also
   // lists communities the PC is a member of (purple-themed). Used for
   // depositing items into the shared community stockpile.
   otherCommunities?: { id: string; name: string }[]
   onGiveItemToCommunity?: (item: InventoryItem, targetCommunityId: string, qty: number) => void
-  // Phase 4F (Inventory followup) — vehicle cargo recipients. Lets the
+  // Phase 4F (Inventory followup) - vehicle cargo recipients. Lets the
   // PC stash items in any campaign vehicle. Parent updates
   // campaigns.vehicles[N].cargo.
   otherVehicles?: { id: string; name: string }[]
@@ -162,7 +162,7 @@ function CharacterCardImpl({
     wounds: string[]
     progressionLog: { date: string; type: string; text: string }[]
   } | null>(null)
-  // Phase 4F (Modal Unification) — Stress Check, Breaking Point, and
+  // Phase 4F (Modal Unification) - Stress Check, Breaking Point, and
   // Lasting Wound all migrated from bespoke inline JSX to the shared
   // <RollModal> shell. The state shape now mirrors the canonical
   // Attack Roll modal: `pending` controls visibility, `cmod` is a
@@ -215,7 +215,7 @@ function CharacterCardImpl({
     if (slot === 'weaponPrimary') { setWeaponPrimary(data); latestDataRef.current = { ...latestDataRef.current, weaponPrimary: data } }
     else { setWeaponSecondary(data); latestDataRef.current = { ...latestDataRef.current, weaponSecondary: data } }
     // Notify parent synchronously so its `entries` state patches before the
-    // DB write returns — otherwise the combat action bar's Attack button,
+    // DB write returns - otherwise the combat action bar's Attack button,
     // which reads `entries[i].character.data.weaponPrimary`, keeps showing
     // the old weapon until the next loadEntries. Same pattern as
     // onInventoryChange added for the + From Catalog bug.
@@ -229,7 +229,7 @@ function CharacterCardImpl({
     saveWeapon(slot, newData)
   }
 
-  // Local optimistic state — mirrors liveState, updates instantly on click
+  // Local optimistic state - mirrors liveState, updates instantly on click
   const [localState, setLocalState] = useState<LiveState | null>(liveState ?? null)
 
   // Sync when liveState changes from outside (Realtime updates)
@@ -240,7 +240,7 @@ function CharacterCardImpl({
       prevStressRef.current = liveState.stress
       setLocalState(liveState)
       // Trigger Stress Check when stress reaches 5 on whichever screen has the sheet open
-      // prevStress === -1 means first mount — also trigger if stress is already at 5
+      // prevStress === -1 means first mount - also trigger if stress is already at 5
       if (liveState.stress >= 5 && prevStress < 5 && !stressCheckPending && !breakingPointPending) {
         setStressCheckPending(true)
         setStressCheckCmod(0)
@@ -328,7 +328,7 @@ function CharacterCardImpl({
       console.warn('[print] relationships fetch failed:', err)
     }
     // Wounds live in characters.data.progression_log entries with type='wound'.
-    // The full log itself ships through too — printed at the bottom so a
+    // The full log itself ships through too - printed at the bottom so a
     // player who prints months later still has the journey-marker record.
     const log: Array<{ date: string; type: string; text: string }> = Array.isArray((c.data as any)?.progression_log)
       ? (c.data as any).progression_log
@@ -353,7 +353,7 @@ function CharacterCardImpl({
   function updateStat(stateId: string, field: string, value: number) {
     if (!onStatUpdate || !localState) return
     setLocalState(prev => prev ? { ...prev, [field]: value } : prev)
-    onStatUpdate(stateId, field, value) // fire and forget — no await
+    onStatUpdate(stateId, field, value) // fire and forget - no await
   }
 
   function handleSkillClick(skillName: string, level: number) {
@@ -450,12 +450,12 @@ function CharacterCardImpl({
               {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#2a2010', '#EF9F27')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
-              {/* Apprentice placeholder — unwired for now. Will surface
+              {/* Apprentice placeholder - unwired for now. Will surface
                   the PC's Apprentice NPC card when clicked once the
                   picker/display is built. Matches Inventory styling
                   (green community-palette) so it reads as a paired
                   bond surface. */}
-              <button onClick={() => alert('Apprentice view coming soon — check the Community roster for NPCs tagged ⇐ this PC.')} style={btn('#1a2e10', '#7fc458')}>Apprentice</button>
+              <button onClick={() => alert('Apprentice view coming soon - check the Community roster for NPCs tagged ⇐ this PC.')} style={btn('#1a2e10', '#7fc458')}>Apprentice</button>
               {/* GM-action trio (Reduce Stress / Env. Damage / Rest)
                   is gated on canEdit + localState because they only
                   make sense in a campaign session. */}
@@ -495,11 +495,11 @@ function CharacterCardImpl({
                         onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmgDays))
                         alert(`Subsistence: ${dmgDays} WP and ${dmgDays} RP damage (${days} day${days === 1 ? '' : 's'} - 1 free = ${dmgDays})`)
                       } else {
-                        alert(`No damage — day 1 is free.`)
+                        alert(`No damage - day 1 is free.`)
                       }
                     }
                   }} style={btn('#c0392b', '#f5a89a')}>Env. Damage</button>
-                  {/* Infection — single button that does the right thing
+                  {/* Infection - single button that does the right thing
                       based on current state (no nested dropdown). When
                       infection_state is null, prompts for which check to
                       roll (Wound vs. Sickness Progression) and routes
@@ -515,7 +515,7 @@ function CharacterCardImpl({
                         `Currently sick (${ls.infection_state}, ${days} day${days === 1 ? '' : 's'} left).\n\n` +
                         `1 = Tick Day (-1 day)\n` +
                         `2 = Resolve / Clear (treat as Day 0 reached)\n` +
-                        `3 = Treat with Medicine* (medic rolls separately — not yet wired here)`,
+                        `3 = Treat with Medicine* (medic rolls separately - not yet wired here)`,
                       )
                       if (choice === '1' || choice === '2') {
                         const newDays = choice === '2' ? 0 : Math.max(0, days - 1)
@@ -548,7 +548,7 @@ function CharacterCardImpl({
                       if (choice === '1' || choice === '2') {
                         const kind = choice === '1' ? 'Wound' : 'Sickness'
                         const source = prompt(
-                          `Source / cause? (free text — e.g. "Frankie's Sword", "Corpse pit", "Sewer wade")`,
+                          `Source / cause? (free text - e.g. "Frankie's Sword", "Corpse pit", "Sewer wade")`,
                           '',
                         )?.trim() || ''
                         if (source) onStatUpdate?.(localState.id, 'infection_infected_by', source as any)
@@ -559,7 +559,7 @@ function CharacterCardImpl({
                   <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')}>Rest</button>
                 </>
               )}
-              {/* Evolution — opens the Character Evolution / CDP
+              {/* Evolution - opens the Character Evolution / CDP
                   Calculator (spend CDP on RAPID raises, skill raises
                   + new-skill learns; SRD-canonical costs; Lv 4 needs
                   a Fill-In-The-Gaps narrative). Disabled when there's
@@ -567,7 +567,7 @@ function CharacterCardImpl({
                   (e.g. browsing your own character outside a session).
                   Purple to read as a "growth" surface. */}
               <button onClick={() => setShowEvolution(true)} disabled={!localState}
-                title={!localState ? 'Open Evolution from inside a campaign session — your CDP balance lives there.' : 'Spend CDP on RAPID + skill raises'}
+                title={!localState ? 'Open Evolution from inside a campaign session - your CDP balance lives there.' : 'Spend CDP on RAPID + skill raises'}
                 style={{ ...btn('#2a1a3e', '#c4a7f0'), opacity: localState ? 1 : 0.5, cursor: localState ? 'pointer' : 'not-allowed' }}>Evolution</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
@@ -580,7 +580,7 @@ function CharacterCardImpl({
             </div>
           )}
         </div>
-        {/* Concept/Complication/Motivation/Words — two aligned rows */}
+        {/* Concept/Complication/Motivation/Words - two aligned rows */}
         <div style={{ display: 'flex', marginBottom: '8px', fontSize: '13px' }}>
           <div style={{ flex: 1 }}>
             <div style={{ color: '#d4cfc9' }}>{profession || 'No profession'} &middot; Created {formatDate(c.created_at)}</div>
@@ -636,10 +636,10 @@ function CharacterCardImpl({
                     ) : (
                       <>
                         <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>
-                          🩸 Mortally Wounded{localState.death_countdown != null ? ` — Death in ${localState.death_countdown} round${localState.death_countdown !== 1 ? 's' : ''}` : ''}
+                          🩸 Mortally Wounded{localState.death_countdown != null ? ` - Death in ${localState.death_countdown} round${localState.death_countdown !== 1 ? 's' : ''}` : ''}
                         </div>
                         <button onClick={() => {
-                          // PHY check first — success = no lasting wound,
+                          // PHY check first - success = no lasting wound,
                           // failure = open the unified Lasting Wound roll
                           // modal so the player can input a CMod (rare;
                           // specific traits/conditions might apply one).
@@ -648,7 +648,7 @@ function CharacterCardImpl({
                           const phyMod = rapid.PHY ?? 0
                           const total = d1 + d2 + phyMod
                           if (total >= 9) {
-                            alert(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} — Success! No lasting wound.`)
+                            alert(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} - Success! No lasting wound.`)
                           } else {
                             setLastingWoundCmod(0)
                             setLastingWoundPending(true)
@@ -676,7 +676,7 @@ function CharacterCardImpl({
                 <DotTracker label="Resilience Points" current={localState.rp_current} max={localState.rp_max} field="rp_current" color="#7ab3d4" />
                 {localState.rp_current === 0 && localState.wp_current > 0 && (
                   <div style={{ marginTop: '4px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                    💤 Incapacitated{localState.incap_rounds != null ? ` — ${localState.incap_rounds} round${localState.incap_rounds !== 1 ? 's' : ''} remaining` : ''}
+                    💤 Incapacitated{localState.incap_rounds != null ? ` - ${localState.incap_rounds} round${localState.incap_rounds !== 1 ? 's' : ''} remaining` : ''}
                   </div>
                 )}
               </div>
@@ -712,7 +712,7 @@ function CharacterCardImpl({
                       change, failure = +1 stress, cascades to 'at-max'
                       if +1 fills the bar). Bypasses onRoll because that
                       path would lose the cascade. Always rollable (no
-                      stress-level gate) — players are commanded to
+                      stress-level gate) - players are commanded to
                       check at the GM's discretion regardless of
                       current pip count. */}
                   <button onClick={() => {
@@ -742,7 +742,7 @@ function CharacterCardImpl({
                     style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.stress < 5 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.stress < 5 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
                 </div>
               </div>
-              {/* Insight bar — 10 blocks */}
+              {/* Insight bar - 10 blocks */}
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Insight</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
@@ -759,7 +759,7 @@ function CharacterCardImpl({
                     style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
                 </div>
               </div>
-              {/* CDP bar — 10 blocks */}
+              {/* CDP bar - 10 blocks */}
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>CDP</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
@@ -776,7 +776,7 @@ function CharacterCardImpl({
                     style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.cdp < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.cdp < 10 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
                 </div>
               </div>
-              {/* Morality bar — 7 blocks */}
+              {/* Morality bar - 7 blocks */}
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Morality</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
@@ -850,12 +850,12 @@ function CharacterCardImpl({
               const cmodVal = CONDITION_CMOD[cond]
               return (
                 <div key={label} style={{ flex: 1, minWidth: '200px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px', display: 'flex', flexDirection: 'column' }}>
-                  {/* Weapon selector — inline with label */}
+                  {/* Weapon selector - inline with label */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', flexShrink: 0 }}>{label}</span>
                     <select value={weapon.weaponName} onChange={e => changeWeapon(slot, e.target.value)} disabled={!canEdit}
                       style={{ flex: 1, padding: '4px 6px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default' }}>
-                      <option value="">— None —</option>
+                      <option value="">- None -</option>
                       <optgroup label="Melee">{MELEE_WEAPONS.map(mw => <option key={mw.name} value={mw.name}>{mw.name}</option>)}</optgroup>
                       <optgroup label="Ranged">{RANGED_WEAPONS.map(rw => <option key={rw.name} value={rw.name}>{rw.name}</option>)}</optgroup>
                       <optgroup label="Explosive">{EXPLOSIVE_WEAPONS.map(ew => <option key={ew.name} value={ew.name}>{ew.name}</option>)}</optgroup>
@@ -882,7 +882,7 @@ function CharacterCardImpl({
                           </select>
                         </span>
                       </div>
-                      {/* Upkeep Check + Unequip — weapon admin row */}
+                      {/* Upkeep Check + Unequip - weapon admin row */}
                       {canEdit && (
                         <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
                           {cond !== 'Pristine' && (
@@ -929,7 +929,7 @@ function CharacterCardImpl({
                             style={{ padding: '2px 8px', background: weapon.reloads > 0 ? '#1a2e10' : '#2a1210', border: `1px solid ${weapon.reloads > 0 ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: weapon.reloads > 0 ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5 }}>
                             Reload
                           </button>
-                          {/* Reload tracker — 5 pips */}
+                          {/* Reload tracker - 5 pips */}
                           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>Clips</span>
                           <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                             <button disabled={!canEdit || weapon.reloads <= 0}
@@ -953,7 +953,7 @@ function CharacterCardImpl({
                           ))}
                         </div>
                       )}
-                      {/* Attack button — pushed to bottom */}
+                      {/* Attack button - pushed to bottom */}
                       <div style={{ flex: 1 }} />
                       {onRoll && (
                         <button onClick={() => {
@@ -996,7 +996,7 @@ function CharacterCardImpl({
             )
           })()}
 
-          {/* Progression Log — compact */}
+          {/* Progression Log - compact */}
           <div id={`progression-${c.id}`} style={{ marginTop: '8px', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', scrollMarginTop: '12px' }}>
             <ProgressionLog
               characterId={c.id}
@@ -1025,7 +1025,7 @@ function CharacterCardImpl({
           phyMod={rapid.PHY ?? 0}
           canEdit={canEdit}
           onUpdate={async (newInventory) => {
-            // Optimistic local update first — the panel reads from this.
+            // Optimistic local update first - the panel reads from this.
             setInventoryState(newInventory)
             const newData = { ...latestDataRef.current, inventory: newInventory }
             latestDataRef.current = newData
@@ -1117,7 +1117,7 @@ function CharacterCardImpl({
       )}
 
       {/* ── Phase 4F: unified roll modals via <RollModal> shell ────── */}
-      {/* Stress Check — two modes share this shell.
+      {/* Stress Check - two modes share this shell.
           'mid-play' (manual CHECK button): success = no change, failure
             = +1 stress (cap 5). If +1 fills the bar to 5, cascade into
             'at-max' on the same close.
@@ -1237,7 +1237,7 @@ function CharacterCardImpl({
         }}
       />
 
-      {/* Breaking Point — d6+d6+CMod table lookup. Custom outcome
+      {/* Breaking Point - d6+d6+CMod table lookup. Custom outcome
           renderer shows the table result + 1d6h duration. */}
       <RollModal
         open={breakingPointPending}
@@ -1297,7 +1297,7 @@ function CharacterCardImpl({
         onPostRollClose={() => { setBreakingPointResult(null); setBreakingPointCmod(0) }}
       />
 
-      {/* Lasting Wound — Table 12 lookup, opens after a failed PHY
+      {/* Lasting Wound - Table 12 lookup, opens after a failed PHY
           check. Permanent; no rerolls. */}
       <RollModal
         open={lastingWoundPending}
@@ -1322,7 +1322,7 @@ function CharacterCardImpl({
             table_effect: lw.result.effect,
           })
           setLastingWoundPending(false)
-          // Lasting Wounds are permanent — durable journey marker.
+          // Lasting Wounds are permanent - durable journey marker.
           void appendProgressionEntry(supabase, c.id, 'wound', `🩸 Lasting Wound: ${lw.result.name}.`)
         }}
         rollLabel="Roll Lasting Wound"
@@ -1348,7 +1348,7 @@ function CharacterCardImpl({
         onPostRollClose={() => { setLastingWoundResult(null); setLastingWoundCmod(0) }}
       />
 
-      {/* Character Evolution / CDP Calculator — opens from the
+      {/* Character Evolution / CDP Calculator - opens from the
           purple Evolution button. Owns its own confirm overlay +
           Lv 4 narrative input. Refreshes the parent's character row
           after a successful spend so the new RAPID / skill values

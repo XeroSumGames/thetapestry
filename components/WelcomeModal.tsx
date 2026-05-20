@@ -7,12 +7,12 @@ import { createClient } from '../lib/supabase-browser'
 // flips onboarded = true so the modal doesn't reappear.
 //
 // Replaces the previous /firsttimers redirect, which was disabled
-// during playtest #12 because it trapped new users — they couldn't
+// during playtest #12 because it trapped new users - they couldn't
 // navigate away. /firsttimers stays as a static reference page (the
 // sidebar's "A Guide to the Tapestry" link points at /welcome, which
 // is also where this modal mirrors the content from).
 //
-// Content mirrors /firsttimers/page.tsx — kept duplicated rather than
+// Content mirrors /firsttimers/page.tsx - kept duplicated rather than
 // extracted into a shared component because the surfaces will likely
 // diverge over time (modal-friendly trims vs. full-page treatment).
 
@@ -25,7 +25,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
   const supabase = createClient()
 
   // Mark onboarded once on dismiss, regardless of which path the user
-  // took. Fire-and-forget — we don't want to block the close.
+  // took. Fire-and-forget - we don't want to block the close.
   function dismiss() {
     void (async () => {
       const { data } = await supabase.auth.getUser()
@@ -78,7 +78,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
           fontFamily: 'Carlito, sans-serif', color: '#f5f2ee',
         }}>
 
-        {/* Close X — top-right, sticky so it's reachable on long scroll. */}
+        {/* Close X - top-right, sticky so it's reachable on long scroll. */}
         <button
           onClick={dismiss}
           aria-label="Close"
@@ -111,7 +111,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
             </div>
           )}
           <div style={{ fontSize: '15px', color: '#f5f2ee', maxWidth: '560px', lineHeight: 1.7 }}>
-            <p style={{ marginBottom: '0.85rem' }}>The Tapestry is the online home of Distemper, a post-apocalyptic comic book &amp; tabletop RPG that take place in the aftermath of the dog flu, a pandemic that wiped out almost 90% of mankind in less than a year. What is left is a dangerous, brutal, and capricious new reality where only the strong survive. There are no zombies, mutants, or aliens — just other, desperate survivors.</p>
+            <p style={{ marginBottom: '0.85rem' }}>The Tapestry is the online home of Distemper, a post-apocalyptic comic book &amp; tabletop RPG that take place in the aftermath of the dog flu, a pandemic that wiped out almost 90% of mankind in less than a year. What is left is a dangerous, brutal, and capricious new reality where only the strong survive. There are no zombies, mutants, or aliens - just other, desperate survivors.</p>
             <p style={{ marginBottom: '0.85rem' }}>The Tapestry is a one-stop shop with tools for character creation, world building, writing and playing story, as well as finding your people in this broken new world.</p>
             <p>Collectively, the narratives weaved together across various media and via disparate platforms make up The Tapestry of The DistemperVerse.</p>
           </div>
@@ -126,7 +126,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
             <div>
               <div style={sectionTitle}>Create Your Survivor</div>
               <div style={sectionBody}>
-                <p style={{ marginBottom: '0.6rem' }}>Build a character through Backstory Generation — spend Character Development Points across the chapters of their life, defining where they grew up, what they learned, and how they made their way before and after.</p>
+                <p style={{ marginBottom: '0.6rem' }}>Build a character through Backstory Generation - spend Character Development Points across the chapters of their life, defining where they grew up, what they learned, and how they made their way before and after.</p>
                 <p>Experienced players can use the Quick Character Generator to spend 20 CDP and customize directly. Every character has a story before the story begins; here is where you write yours.</p>
               </div>
             </div>
@@ -148,12 +148,12 @@ export default function WelcomeModal({ username, onClose }: Props) {
             <div>
               <div style={sectionTitle}>The Campfire</div>
               <div style={sectionBody}>
-                <p style={{ marginBottom: '0.6rem' }}>The Campfire is the post-apocalyptic equivalent of the town notice board — where survivors gather to share what they&apos;ve heard, warn others, and find people to travel with. Inside you&apos;ll find:</p>
+                <p style={{ marginBottom: '0.6rem' }}>The Campfire is the post-apocalyptic equivalent of the town notice board - where survivors gather to share what they&apos;ve heard, warn others, and find people to travel with. Inside you&apos;ll find:</p>
                 <ul style={{ paddingLeft: '1.2rem', margin: '0', lineHeight: 1.9 }}>
-                  <li>Looking for Group — players seeking a game, GMs seeking players</li>
-                  <li>Rumors from the map — pins surface here with extra detail</li>
-                  <li>War Stories — write-ups and fiction from sessions past</li>
-                  <li>World events — updates from the publisher and the world itself</li>
+                  <li>Looking for Group - players seeking a game, GMs seeking players</li>
+                  <li>Rumors from the map - pins surface here with extra detail</li>
+                  <li>War Stories - write-ups and fiction from sessions past</li>
+                  <li>World events - updates from the publisher and the world itself</li>
                 </ul>
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
             </a>
           </div>
 
-          {/* CTA — same dismiss path as backdrop / X / ESC. */}
+          {/* CTA - same dismiss path as backdrop / X / ESC. */}
           <div style={{ textAlign: 'center', paddingBottom: '2rem' }}>
             <button onClick={dismiss}
               style={{ padding: '12px 36px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer' }}>

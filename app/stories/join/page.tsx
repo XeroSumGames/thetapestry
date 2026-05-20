@@ -38,7 +38,7 @@ export default function JoinCampaignPage() {
 
     if (joinErr) {
       if (joinErr.code === '23505') {
-        // Already a member — just redirect
+        // Already a member - just redirect
         router.push(`/stories/${campaign.id}`)
         return
       }

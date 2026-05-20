@@ -122,19 +122,19 @@ export default function StepFour({ state, onChange }: Props) {
       {/* Profession */}
       <div style={sh}>Profession</div>
       <div style={{ marginBottom: '10px' }}>
-        <label style={lbl}>Choose a profession — vocation skills highlighted (recommendation only)</label>
+        <label style={lbl}>Choose a profession - vocation skills highlighted (recommendation only)</label>
         <select
           style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
           value={stepData.profession ?? ''}
           onChange={e => updateStep({ profession: e.target.value })}>
-          <option value="">— select —</option>
+          <option value="">- select -</option>
           {PROFESSIONS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
         </select>
       </div>
 
-      {/* Skill picker — 4 CDP */}
+      {/* Skill picker - 4 CDP */}
       <div style={{ ...sh, display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span>Skills — 4 CDP (max Professional +3)</span>
+        <span>Skills - 4 CDP (max Professional +3)</span>
         <HelpTooltip title="Skill levels" text={SKILL_TIER_DESCRIPTION} />
         <HelpTooltip title="Vocational skills (*)" text={VOCATIONAL_DESCRIPTION} icon="*" iconStyle={{ color: '#EF9F27', borderColor: '#EF9F27' }} />
       </div>
@@ -182,13 +182,13 @@ export default function StepFour({ state, onChange }: Props) {
                 <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isProfSk ? '#f5a89a' : deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
                   <HelpTooltip
-                    title={`${sk.name}${sk.vocational ? ' (vocational)' : ''} — ${sk.attribute}`}
+                    title={`${sk.name}${sk.vocational ? ' (vocational)' : ''} - ${sk.attribute}`}
                     text={sk.description ?? 'No description on file.'}
                     iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }}
                   />
                 </div>
                 <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
-                  {sk.attribute} — {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
+                  {sk.attribute} - {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
@@ -209,7 +209,7 @@ export default function StepFour({ state, onChange }: Props) {
         style={{ width: '100%', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minHeight: '60px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
         value={stepData.note ?? ''}
         onChange={e => updateStep({ note: e.target.value })}
-        placeholder="1–2 sentences: what did they do for work before the Dog Flu?" />
+        placeholder="1-2 sentences: what did they do for work before the Dog Flu?" />
 
     </div>
   )

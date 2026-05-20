@@ -2,7 +2,7 @@ import { RuleHero, P, Term } from '../../../../components/rules/RuleSection'
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Making The Case — XSE SRD §02' }
+export const metadata = { title: 'Making The Case - XSE SRD §02' }
 
 export default function Page() {
   return (
@@ -21,7 +21,7 @@ export default function Page() {
       <P>
         If the GM agrees that what the player is proposing makes narrative
         sense, they may add a CMod to the Dice Check. The CMod's size is
-        proportional to how compelling the case is — a casual observation
+        proportional to how compelling the case is - a casual observation
         might earn +1, while a fully-realised plan with payoff against
         established setup might earn +3 or more.
       </P>

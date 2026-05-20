@@ -27,14 +27,14 @@ interface Props {
   portraitUrl: string | null
   isGM: boolean
   entries?: LootEntry[]
-  // Player's own character — when set and the object is destroyed, the player
+  // Player's own character - when set and the object is destroyed, the player
   // can self-loot items without going through the GM.
   myCharacter?: { id: string; name: string; data?: any } | null
   onLoot?: (objectName: string, item: ContentItem, characterId: string, characterName: string) => void | Promise<void>
   onSearchEmpty?: (objectName: string, characterId: string, characterName: string) => void | Promise<void>
   // When provided, renders a "Move" button at the top of the card. Parent
   // decides who gets to see it (GM always; players who are in the token's
-  // controlled_by_character_ids list — e.g. drivers of a vehicle). Clicking
+  // controlled_by_character_ids list - e.g. drivers of a vehicle). Clicking
   // closes the card and enters move mode anchored on this token; vehicle
   // moves intentionally don't consume any combatant's action.
   onMove?: () => void
@@ -63,7 +63,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
   // Per-row "give to" character selection, keyed by item name+type to survive index shifts.
   const [givePick, setGivePick] = useState<Record<string, string>>({})
   const [giving, setGiving] = useState<string | null>(null)
-  // Rotation control — paired with the existing Move button so a driver
+  // Rotation control - paired with the existing Move button so a driver
   // can both reposition AND straighten the vehicle from the same popup.
   // Visible whenever onMove is wired (i.e. the viewer can control this
   // token); slider writes back to scene_tokens.rotation directly.
@@ -198,7 +198,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
         </div>
       )}
 
-      {/* Rotation slider — paired with the Move button so a controller
+      {/* Rotation slider - paired with the Move button so a controller
           (driver / GM) can both reposition and straighten the token
           from the same double-click popup. Hidden when onMove isn't
           wired (i.e. viewer can't control this token), since rotating
@@ -225,7 +225,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
               // Commit on release: write DB FIRST so the subsequent
               // tokenRefreshKey bump (in onRotate) re-reads the new
               // value, then call onRotate to trigger TacticalMap's
-              // loadTokens → canvas re-render. Order matters — if
+              // loadTokens → canvas re-render. Order matters - if
               // we bumped first, the reload would race the DB write
               // and pull the stale rotation.
               const v = parseFloat((e.target as HTMLInputElement).value)
@@ -238,7 +238,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
               onRotate?.(v)
             }}
             onKeyUp={async e => {
-              // Keyboard arrow-key adjustment of the slider — same commit
+              // Keyboard arrow-key adjustment of the slider - same commit
               // path as mouseup. Without this, hitting Enter / leaving
               // focus wouldn't persist the rotation.
               if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.key)) {
@@ -270,7 +270,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
         </div>
       )}
 
-      {/* Contents — GM always sees; players see only when destroyed or unlocked. */}
+      {/* Contents - GM always sees; players see only when destroyed or unlocked. */}
       {(isGM || canPlayerLoot) && !loading && contents.length > 0 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
@@ -282,7 +282,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                 onClick={toggleLootable}
                 disabled={togglingLock}
                 style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
-                title={lootable ? 'Click to lock — players can no longer loot' : 'Click to unlock — players can loot without destroying'}
+                title={lootable ? 'Click to lock - players can no longer loot' : 'Click to unlock - players can loot without destroying'}
               >
                 {togglingLock ? '…' : lootable ? '🔓 Unlocked' : '🔒 Locked'}
               </button>

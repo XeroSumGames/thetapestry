@@ -1,4 +1,4 @@
-// debug_log — client-side telemetry for triaging perf / failures
+// debug_log - client-side telemetry for triaging perf / failures
 // without screenshots.
 //
 // Captures:
@@ -10,7 +10,7 @@
 //
 // NOT INCLUDED: a global window.fetch wrapper. An earlier version of
 // this module tried to auto-capture every 5xx + slow request, which
-// required wrapping window.fetch — invasive, and a subtle bug there
+// required wrapping window.fetch - invasive, and a subtle bug there
 // broke every request in the app during one playtest. The manual
 // + error-handler subset captures most incidents (errors fire when
 // something throws / rejects) without that risk. Specific perf paths
@@ -109,7 +109,7 @@ async function flushNow() {
     await supabase.from('debug_log').insert(rows)
   } catch {
     // Swallowed. debug_log failures must not cascade into the app.
-    // Drop the batch — logging is best-effort.
+    // Drop the batch - logging is best-effort.
   }
 }
 
@@ -135,7 +135,7 @@ export function installDebugLog() {
     .then(({ user }) => { if (user) userId = user.id })
     .catch(() => {})
 
-  // Global error handlers — wrapped in try/catch so a buggy listener
+  // Global error handlers - wrapped in try/catch so a buggy listener
   // can't break page load.
   try {
     window.addEventListener('error', (e: ErrorEvent) => {
@@ -160,7 +160,7 @@ export function installDebugLog() {
     })
   } catch {}
 
-  // Page-load navigation timing — fire ~1.5s after mount so the entry has
+  // Page-load navigation timing - fire ~1.5s after mount so the entry has
   // settled values for loadEventEnd / domContentLoadedEventEnd.
   try {
     setTimeout(() => {

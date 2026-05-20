@@ -50,7 +50,7 @@ export default function CampaignsPage() {
       setUserId(user.id)
 
       // Housekeeping: end any session that's been "started but not
-      // explicitly ended" for over 48 hours. Fire-and-forget — the
+      // explicitly ended" for over 48 hours. Fire-and-forget - the
       // SECURITY DEFINER RPC sets ended_at on the stale sessions
       // and flips campaigns.session_status to idle. Doesn't touch
       // roll_log / chat / initiative so a GM resuming a long-stale
@@ -65,7 +65,7 @@ export default function CampaignsPage() {
         }
       )
 
-      // Pull both lists. Order coming back doesn't matter — we re-sort by
+      // Pull both lists. Order coming back doesn't matter - we re-sort by
       // last-played below.
       const { data: gmRaw } = await supabase
         .from('campaigns')
@@ -94,8 +94,8 @@ export default function CampaignsPage() {
       }
 
       // Build a campaign_id → most-recent-activity map. We layer two
-      // signals — the campaign's last_accessed_at (bumped on every
-      // table-page open) and the most recent session.started_at —
+      // signals - the campaign's last_accessed_at (bumped on every
+      // table-page open) and the most recent session.started_at -
       // taking whichever is later. Either signal beats created_at
       // when present, so a campaign you've prepped + opened sorts
       // above one you only created.
@@ -105,7 +105,7 @@ export default function CampaignsPage() {
       if (allIds.length > 0) {
         // Pull ended_at too so we can flag campaigns with a session
         // currently in flight (started, never ended). Powers the
-        // "Resume Active Session" banner at the top — saves a player
+        // "Resume Active Session" banner at the top - saves a player
         // who logs in mid-game from scrolling to find the right
         // campaign and clicking into it.
         const { data: sess } = await supabase
@@ -189,7 +189,7 @@ export default function CampaignsPage() {
         </Link>
       </div>
 
-      {/* Active-session banner — shown when one or more campaigns the
+      {/* Active-session banner - shown when one or more campaigns the
           user is in (as GM or player) has a session currently running.
           One row per active campaign with a Resume button that
           deep-links to /stories/[id]/table. Sits at the very top so a
@@ -213,7 +213,7 @@ export default function CampaignsPage() {
                       {c.name}
                     </div>
                     <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                      Session in progress · {c.gm_user_id === userId ? 'You\'re GMing' : `GM: ${gmNames[c.gm_user_id] ?? '—'}`}
+                      Session in progress · {c.gm_user_id === userId ? 'You\'re GMing' : `GM: ${gmNames[c.gm_user_id] ?? '-'}`}
                     </div>
                   </div>
                   <button onClick={() => router.push(`/stories/${c.id}/table`)}
@@ -278,7 +278,7 @@ export default function CampaignsPage() {
                   <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join/${c.invite_code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
                   <button onClick={async () => {
                     const msg = isTemplate
-                      ? `⚠️ This is the template for "${templateOf}".\n\nDeleting it disconnects the published module from its source — you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
+                      ? `⚠️ This is the template for "${templateOf}".\n\nDeleting it disconnects the published module from its source - you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
                       : 'Delete this story?'
                     if (!confirm(msg)) return
                     await supabase.from('campaigns').delete().eq('id', c.id)

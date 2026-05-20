@@ -9,11 +9,11 @@ export const metadata: Metadata = {
   title: 'Looking for Group',
   description: 'Find a Distemper campaign to join, or post that your table needs players. Cross-campaign GM/player matchmaking on The Tapestry.',
   openGraph: {
-    title: 'Looking for Group — The Tapestry',
+    title: 'Looking for Group - The Tapestry',
     description: 'Find a Distemper campaign to join, or post that your table needs players.',
   },
   twitter: {
-    title: 'Looking for Group — The Tapestry',
+    title: 'Looking for Group - The Tapestry',
     description: 'Find a Distemper campaign to join, or post that your table needs players.',
   },
 }

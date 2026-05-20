@@ -5,7 +5,7 @@ import { getCachedAuth } from '../lib/auth-cache'
 import { createClient } from '../lib/supabase-browser'
 import { record, downloadDump, getRecorder, startPeriodicFlush, flushAllNow } from '../lib/playtest-recorder'
 
-// Warns we never want in the dump — already filtered from the console by the
+// Warns we never want in the dump - already filtered from the console by the
 // head script in app/layout.tsx, but our recorder runs upstream of that
 // filter so we need to mirror its rules. Keep this list tight and exact.
 const BENIGN_WARN_SUBSTRINGS = [
@@ -29,7 +29,7 @@ function describeTarget(el: Element | null): Record<string, unknown> {
   const link = el.closest('a')
   const buttonText = button?.textContent?.trim().slice(0, 80) || null
   const linkHref = link?.getAttribute('href') || null
-  // Don't capture text from input/textarea — could contain PII.
+  // Don't capture text from input/textarea - could contain PII.
   let text: string | null = null
   if (tag !== 'input' && tag !== 'textarea') {
     text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80) || null
@@ -89,7 +89,7 @@ export default function PlaytestRecorder() {
     getCachedAuth().then(({ user }) => applyUser(user ?? null)).catch(() => {})
 
     // Periodic flush so a browser crash mid-session loses <=60s of
-    // context instead of the whole session. Idempotent —
+    // context instead of the whole session. Idempotent -
     // startPeriodicFlush no-ops if a timer is already running.
     startPeriodicFlush()
 
@@ -218,7 +218,7 @@ export default function PlaytestRecorder() {
         origLog.call(console, `[playtest] dumped → ${name}`)
       } else if (k === 'm') {
         e.preventDefault()
-        const label = window.prompt('Mark this moment — what happened?')
+        const label = window.prompt('Mark this moment - what happened?')
         if (label) {
           record('mark', { label, path: window.location.pathname })
           origLog.call(console, `[playtest] mark: ${label}`)
@@ -239,7 +239,7 @@ export default function PlaytestRecorder() {
     window.__tapestryRecord = record
   }, [])
 
-  // Route changes — captured separately so they update on every nav.
+  // Route changes - captured separately so they update on every nav.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const r = getRecorder()
@@ -252,7 +252,7 @@ export default function PlaytestRecorder() {
   // Don't render anything when the gate hasn't resolved yet, or when the
   // recorder is gated off for this user. The listeners stay installed
   // (they're cheap and harmless when record() short-circuits), but the
-  // dot is the visible UX signal — no point showing it if nothing's
+  // dot is the visible UX signal - no point showing it if nothing's
   // being captured.
   if (enabledUI !== true) return null
 

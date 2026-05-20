@@ -15,7 +15,7 @@
 // Some Year 2 day numbers in Xero's canonical table are +1 vs strict
 // Gregorian math (e.g. 15-Sep = Day 563 per canon, vs Day 562 per strict
 // math). We store the canon day numbers AS-IS for event lookup. The
-// dayToCalendar() helper uses strict Gregorian — so on-event-day display
+// dayToCalendar() helper uses strict Gregorian - so on-event-day display
 // matches the canon table for the date_short field stored on each entry,
 // while computed displays for intermediate days may differ by 1 day in
 // Year 2. Revisit if cosmetic mismatch becomes a problem.
@@ -28,9 +28,9 @@ export interface TimelineEntry {
 
 // Full canonical event list, ordered by canon_day. Source: Xero's
 // timeline spreadsheet (2026-05-12). Empty-event rows from the source
-// table are dropped — they're placeholders, not events to display.
+// table are dropped - they're placeholders, not events to display.
 export const DISTEMPER_TIMELINE: ReadonlyArray<TimelineEntry> = [
-  // ── Year 0 (Infection Year — 2025, the pandemic year) ─────────────────────────
+  // ── Year 0 (Infection Year - 2025, the pandemic year) ─────────────────────────
   { canon_day: 0,   date_short: '2-Mar',  event: 'First Recorded death in Chile' },
   { canon_day: 7,   date_short: '9-Mar',  event: 'WHO classifies the virus, believing it to be transmission based with a mortality rate just in advance of seasonal flu at 1.3%' },
   { canon_day: 31,  date_short: '2-Apr',  event: 'H724 has infected more people than the common cold' },
@@ -78,26 +78,26 @@ export const DISTEMPER_TIMELINE: ReadonlyArray<TimelineEntry> = [
   { canon_day: 246, date_short: '3-Nov',  event: 'The Irresistible Force' },
   { canon_day: 297, date_short: '24-Dec', event: 'Infection complete.' },
 
-  // ── Year 1 (The Year After — 2026) ─────────────────────────
+  // ── Year 1 (The Year After - 2026) ─────────────────────────
   { canon_day: 305, date_short: '1-Jan',  event: 'Apex of the pandemic' },
   { canon_day: 315, date_short: '11-Jan', event: 'To Hunker In the Bunker' },
   { canon_day: 362, date_short: '27-Feb', event: 'Empty' },
   { canon_day: 379, date_short: '15-Mar', event: 'Chased (Day 1)' },
   { canon_day: 380, date_short: '16-Mar', event: 'Chased (Day 2)' },
-  { canon_day: 408, date_short: '13-Apr', event: 'Home By The Sea — Arrival of Jace & Dulce' },
-  { canon_day: 409, date_short: '14-Apr', event: 'Home By The Sea — The Rescue of Janice / The power struggle' },
-  { canon_day: 410, date_short: '15-Apr', event: 'Home By The Sea — Canvasing the area' },
+  { canon_day: 408, date_short: '13-Apr', event: 'Home By The Sea - Arrival of Jace & Dulce' },
+  { canon_day: 409, date_short: '14-Apr', event: 'Home By The Sea - The Rescue of Janice / The power struggle' },
+  { canon_day: 410, date_short: '15-Apr', event: 'Home By The Sea - Canvasing the area' },
   { canon_day: 480, date_short: '24-Jun', event: 'On The Waterfront' },
   { canon_day: 563, date_short: '15-Sep', event: 'The Magnificent Mongrels' },
   { canon_day: 573, date_short: '25-Sep', event: 'Bad Faith Negotiations' },
   { canon_day: 633, date_short: '24-Nov', event: 'A Month In Hell' },
 
-  // ── Year 2 (Two Years On — 2027) ───────────────────────────
+  // ── Year 2 (Two Years On - 2027) ───────────────────────────
   { canon_day: 791, date_short: '1-May',  event: "Our Father's House" },
   { canon_day: 855, date_short: '4-Jul',  event: 'Greatest City on Earth' },
   { canon_day: 919, date_short: '6-Sep',  event: 'The Island' },
 
-  // ── Year 3 (Three Years On — 2028) ─────────────────────────
+  // ── Year 3 (Three Years On - 2028) ─────────────────────────
   { canon_day: 1085, date_short: '19-Feb', event: 'Mongrels' },
   { canon_day: 1095, date_short: '1-Mar',  event: 'Trade Routes of New Philly' },
   { canon_day: 1398, date_short: '29-Dec', event: 'The Procession' },

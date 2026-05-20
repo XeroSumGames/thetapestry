@@ -76,7 +76,7 @@ import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUN
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
 // Types + module constants live in ./types.ts (extracted 2026-05-17 as
-// Phase 3.0 step 1 of the page.tsx decomposition — pure mechanical move,
+// Phase 3.0 step 1 of the page.tsx decomposition - pure mechanical move,
 // no runtime change). See tasks/page-tsx-decomposition-plan.md.
 import {
   type Campaign,
@@ -143,7 +143,7 @@ export default function TablePage() {
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
   // anything outside that closes the menu.
-  // Recorder state sync — TAB-LOCAL ONLY. Each browser controls its
+  // Recorder state sync - TAB-LOCAL ONLY. Each browser controls its
   // OWN recorder; no DB writes, no realtime subscription, no global
   // gate (all of that was removed in e53211b along with the orphan
   // /record admin page). Previous "shared playtest_recorder_config"
@@ -170,7 +170,7 @@ export default function TablePage() {
     }
   }, [id])
 
-  // Toggle the recorder ON/OFF from the table page — GM-CASCADED.
+  // Toggle the recorder ON/OFF from the table page - GM-CASCADED.
   //
   // GM owns the lifecycle. GM's click does the work locally AND
   // broadcasts recorder_start / recorder_stop on initChannelRef so
@@ -179,7 +179,7 @@ export default function TablePage() {
   // back-nav / tab-close on every tab, so capture resumes on the
   // next /table mount without user action.
   //
-  // Supabase broadcasts do not loop back to the sender by default —
+  // Supabase broadcasts do not loop back to the sender by default -
   // this handler does the local actions explicitly (wipe / dump /
   // setEnabled). The matching .on('broadcast', ...) handlers below
   // run the same actions on every receiving tab.
@@ -232,7 +232,7 @@ export default function TablePage() {
   const [loading, setLoading] = useState(true)
   const [entriesLoading, setEntriesLoading] = useState(true)
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
-  // Vehicle inline takeover — mirrors the character-sheet inline path.
+  // Vehicle inline takeover - mirrors the character-sheet inline path.
   // When set, the full /vehicle popout UI renders as an iframe over the
   // center area (same absolute-inset-0 overlay as the character sheet).
   // Cleared on close, or when a character sheet opens (one inline view
@@ -541,7 +541,7 @@ export default function TablePage() {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set())
   const presenceChannelRef = useRef<any>(null)
 
-  // Playtest recorder ON/OFF mirror — local state driven by the
+  // Playtest recorder ON/OFF mirror - local state driven by the
   // playtest_recorder_config row. Lives on the table page so the GM
   // can flip ON / STOP without leaving the session tab (closing the
   // session tab kills its localStorage-backed recorder buffer, so the
@@ -690,15 +690,15 @@ export default function TablePage() {
   const [playerNpcDragOverFolder, setPlayerNpcDragOverFolder] = useState<string | null>(null)
   // Phase B (Q2 follow-up): player-side folder REORDERING. Mirrors the
   // GM's `folderOrder` in NpcRoster (localStorage per user-per-campaign).
-  // Combat + community buckets stay computed views — only the regular
+  // Combat + community buckets stay computed views - only the regular
   // custom folders + 'Unfiled' participate in the user-driven order.
-  // Key: `npc_folder_order_player_${campaignId}` — distinct from the
+  // Key: `npc_folder_order_player_${campaignId}` - distinct from the
   // GM's `npc_folder_order_${campaignId}` so a user who GMs one campaign
   // and plays another doesn't cross-pollute orderings.
   const [playerFolderDragId, setPlayerFolderDragId] = useState<string | null>(null)
   const [playerFolderDragOverId, setPlayerFolderDragOverId] = useState<string | null>(null)
 
-  // First Impression NPC picker — used as the modal's defaultNpcId when
+  // First Impression NPC picker - used as the modal's defaultNpcId when
   // entry is via PlayerNpcCard's quick-fire button (player clicks the
   // FI chip on an NPC card, we pre-select that NPC and open the modal).
   // The modal owns its own internal npcId / skillChoice / cmod state;
@@ -1484,7 +1484,7 @@ export default function TablePage() {
           // End-of-combat Wound Infection check (canon §06). The GM's
           // endCombat broadcasts this for every wounded PC, scoped to
           // that PC's owning userId. The target's client opens the
-          // standard roll modal — patient rolls their own check with
+          // standard roll modal - patient rolls their own check with
           // their CMod / Insight Dice. NPCs are rolled by the GM
           // directly (separate queue, no broadcast).
           //
@@ -1492,7 +1492,7 @@ export default function TablePage() {
           // inside the [id]-deps useEffect, so the React state
           // `userId` was captured at mount when it was still null
           // (setUserId fires inside the same load() but only schedules
-          // a re-render — the closure keeps the null binding). Result:
+          // a re-render - the closure keeps the null binding). Result:
           // `null !== <actual-user-id>` was always true, dropping
           // every broadcast on both tabs. Reading userIdRef.current
           // gets the always-fresh id (synced via the L244 effect).
@@ -1590,7 +1590,7 @@ export default function TablePage() {
       // Presence - track how many users are on this table page
       try {
         // Channel name MUST be stable across all viewers of the same
-        // campaign — anything that varies per page load (Date.now(),
+        // campaign - anything that varies per page load (Date.now(),
         // session-local UUIDs, etc.) silos each user into their own
         // channel and presence sync never sees anyone else. Pre-fix
         // this had `_${Date.now()}` appended and the online dot never
@@ -1726,7 +1726,7 @@ export default function TablePage() {
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
-      // Skip Esc when typing — let the input handle it (e.g. clear
+      // Skip Esc when typing - let the input handle it (e.g. clear
       // text). Same guard as the route/measure tool's Esc handler.
       const active = document.activeElement as HTMLElement | null
       if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return
@@ -1736,7 +1736,7 @@ export default function TablePage() {
       if (selectedEntry) { setSelectedEntry(null); return }
       if (showEndSessionModal) { setShowEndSessionModal(false); return }
       // Close-all NPC cards (post-playtest mark 02:37:45, Q4-a). Only
-      // when 2+ are open — single-card view uses its own Close button.
+      // when 2+ are open - single-card view uses its own Close button.
       if (viewingNpcs.length >= 2) { setViewingNpcs([]); return }
     }
     window.addEventListener('keydown', handleEsc)
@@ -2540,7 +2540,7 @@ export default function TablePage() {
       damage_json: { combatants } as any,
     })
     if (endLogErr) console.error('[endCombat] roll_log insert error:', endLogErr.message)
-    // Queue Wound Infection checks as roll modals — one per wounded
+    // Queue Wound Infection checks as roll modals - one per wounded
     // combatant (canon §06: one PHY check per character per combat).
     // The patient (or GM) sees each modal, can layer CMod / Insight
     // Dice / Stress like any other roll. PCs get a broadcast to
@@ -2569,7 +2569,7 @@ export default function TablePage() {
   // queue a roll-modal check.
   //
   // PCs: broadcast `infection_check_request` to the PC's owning
-  // userId — the player's client opens the modal on its own screen.
+  // userId - the player's client opens the modal on its own screen.
   // NPCs: queued on the GM's local pendingInfectionChecksRef; first
   // opens immediately, the rest drain from closeRollModal as each
   // modal closes.
@@ -2577,14 +2577,14 @@ export default function TablePage() {
   // Canon §06 outcome resolution lives in executeRoll's
   // "Infection Check (" label branch and runs on whichever client
   // wrote the roll_log row, so this function only orchestrates the
-  // modals — state writes happen there.
+  // modals - state writes happen there.
   //
   // Source of truth = DIRECT DB QUERY, not rollsFeed.rolls. The
   // in-memory feed can lag the DB by seconds after a warning emits,
   // so a fast End Combat click (< the feed refetch round-trip) would
   // see zero warnings and skip the sweep entirely. Documented bug
   // hit on the 21:20 playtest. Going direct is one extra query per
-  // End Combat — cheap and infrequent.
+  // End Combat - cheap and infrequent.
   async function queueWoundInfectionChecks() {
     const { data: combatStartRows, error: csErr } = await supabase
       .from('roll_log')
@@ -2619,7 +2619,7 @@ export default function TablePage() {
       const currentState = pcEntry
         ? (pcEntry.liveState as any)?.infection_state
         : (npcRow as any)?.infection_state
-      if (currentState) continue // already sick — canon: no stacking
+      if (currentState) continue // already sick - canon: no stacking
       if (pcEntry) {
         const phyAmod = pcEntry.character.data?.rapid?.PHY ?? 0
         // Broadcast scoped to the PC's owning userId. The listener
@@ -2636,7 +2636,7 @@ export default function TablePage() {
       }
     }
     if (npcQueue.length === 0) return
-    // GM rolls NPC checks sequentially — first opens now, the rest
+    // GM rolls NPC checks sequentially - first opens now, the rest
     // drain from closeRollModal as each closes.
     const first = npcQueue.shift()!
     pendingInfectionChecksRef.current = npcQueue
@@ -4776,7 +4776,7 @@ export default function TablePage() {
   //   1. Skip if !combatActive (canon trigger is in-combat only)
   //   2. In-memory ref (woundInfectionLoggedRef) for instant skip on
   //      back-to-back hits in the same render cycle.
-  //   3. rollsFeed cross-check — if a wound_infection_warning row for
+  //   3. rollsFeed cross-check - if a wound_infection_warning row for
   //      this character already exists since the most recent
   //      combat_start row, skip. Covers reload-mid-combat: ref is
   //      fresh but the row is in the feed.
@@ -4812,7 +4812,7 @@ export default function TablePage() {
     })
     if (error) {
       console.error('[wound-infection] roll_log insert error:', error.message)
-      // Don't roll back the ref — even on insert failure we don't
+      // Don't roll back the ref - even on insert failure we don't
       // want to spam retries every subsequent hit. Once-per-combat
       // stays.
     }
@@ -6641,7 +6641,7 @@ export default function TablePage() {
       if (lwLogErr) console.error('[lasting-wound] roll_log insert error:', lwLogErr.message)
     }
     // Drain queued weapon-malfunction row. Same after-attack ordering
-    // applies — malfunction is a consequence of the attack roll, so
+    // applies - malfunction is a consequence of the attack roll, so
     // its created_at must follow the attack row's.
     if (pendingJamLogRef.current) {
       const attackerName = pendingJamLogRef.current
@@ -6795,7 +6795,7 @@ export default function TablePage() {
     if (insightAwarded) {
       await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
-    // Drain queued wound-infection warnings — reroll-path parallel of
+    // Drain queued wound-infection warnings - reroll-path parallel of
     // the executeRoll drain (see comment there). Warning row's
     // created_at lands after the reroll's saveRollToLog completes.
     if (pendingWoundInfectionRef.current.size > 0) {
@@ -6905,7 +6905,7 @@ export default function TablePage() {
     // Drain the wound-infection check queue (populated by endCombat).
     // Whether the player rolled or cancelled, advance to the next
     // wounded character. setTimeout 0 yields to React so the current
-    // modal state fully tears down before the next modal opens —
+    // modal state fully tears down before the next modal opens -
     // without it the second modal can inherit pendingRoll = null
     // before handleRollRequest's setPendingRoll lands.
     if (pendingInfectionChecksRef.current.length > 0) {
@@ -7003,7 +7003,7 @@ export default function TablePage() {
     // React-state Set populated by the table-page presence channel
     // (the same source that drives the green border at L9082-9083),
     // so this reorders live as players join/leave. Stable sort by
-    // online-bit only — within each group the underlying `entries`
+    // online-bit only - within each group the underlying `entries`
     // order (≈ campaign join order) is preserved.
     const sorted = [...filtered].sort((a, b) => {
       const aOnline = onlineUserIds.has(a.userId) ? 1 : 0
@@ -7042,14 +7042,14 @@ export default function TablePage() {
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
-        {/* Recorder toggle — TEMP WIDENED to all signed-in users
+        {/* Recorder toggle - TEMP WIDENED to all signed-in users
             (2026-05-17, Xero) so playtesters can capture sessions
             during the MINNIE module shake-down. Revert to `isThriver`
             before going live. Default (locked) shape:
               {isThriver && ( ... )}
             The recorder is otherwise an internal QA tool for the
             Tapestry team, not a campaign mechanic. Lives on the
-            table page so the user never leaves the session tab —
+            table page so the user never leaves the session tab -
             closing the session tab kills its localStorage-backed
             recorder buffer before any auto-download can fire. */}
         {/* GM-CASCADE (2026-05-18): Record button is GM-only. GM's
@@ -7062,7 +7062,7 @@ export default function TablePage() {
         {gmLike && (
           <button onClick={toggleRecorder} disabled={recorderToggling}
             className="hdr-btn"
-            title={recorderEnabled ? 'Stop recording — every connected player tab auto-downloads its buffer' : 'Start recording — every connected player tab wipes its buffer and captures fresh'}
+            title={recorderEnabled ? 'Stop recording - every connected player tab auto-downloads its buffer' : 'Start recording - every connected player tab wipes its buffer and captures fresh'}
             style={{ ...hdrBtn(recorderEnabled ? '#2a1210' : '#242424', recorderEnabled ? '#f5a89a' : '#d4cfc9', recorderEnabled ? '#c0392b' : '#3a3a3a'), opacity: recorderToggling ? 0.5 : 1, cursor: recorderToggling ? 'not-allowed' : 'pointer' }}>
             {recorderToggling ? '...' : recorderEnabled ? '⏺ Stop Recording' : '⏺ Record'}
           </button>
@@ -7219,7 +7219,7 @@ export default function TablePage() {
               onClick: () => window.open(`/stories/${id}`, '_blank', 'noopener,noreferrer'),
             },
             {
-              // Campaign Sheet popout — clock, timeline, party
+              // Campaign Sheet popout - clock, timeline, party
               // status, vehicles, pending heals. GM gets the
               // advance-time + queue-effect controls; players see
               // everything read-only plus a Discharge Stress button
@@ -8164,7 +8164,7 @@ export default function TablePage() {
                   // result rows. Pre-fills the Grant Advantage modal
                   // with the roller as PC + this row's id as the source.
                   // Skipped for system / banner rows (combat_start,
-                  // drop, action, etc) — only meaningful on rolls a PC
+                  // drop, action, etc) - only meaningful on rolls a PC
                   // actually made.
                   const isDiceRow = (r.die1 ?? 0) > 0 || (r.die2 ?? 0) > 0
                   const rollerPc = isDiceRow ? entries.find(e => e.character.name === r.character_name) : null
@@ -8309,7 +8309,7 @@ export default function TablePage() {
             <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>
               {/* Close-all chip (post-playtest mark 02:37:45, Q4-a). Spans
                   the full row at the top so it's always reachable. Only
-                  renders when 2+ cards are open — single-card view uses
+                  renders when 2+ cards are open - single-card view uses
                   the per-card Close button. */}
               {viewingNpcs.length >= 2 && (
                 <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
@@ -9025,7 +9025,7 @@ export default function TablePage() {
                 const npcIsDead = freshNpc?.status === 'dead' || (npcWP === 0 && freshNpc?.death_countdown != null && freshNpc.death_countdown <= 0)
                 const npcIsMortal = npcWP === 0 && !npcIsDead
                 // Drag/drop only inside custom folders. Combat + community
-                // buckets are computed views, not editable groupings —
+                // buckets are computed views, not editable groupings -
                 // reordering them would just confuse players when the next
                 // render snaps them back into initiative / community order.
                 const isCombatBucket = bucket.key === '__combat__'
@@ -9053,7 +9053,7 @@ export default function TablePage() {
                         setPlayerNpcDragId(null); setPlayerNpcDragOverId(null); return
                       }
                       e.stopPropagation()
-                      // Reorder within the bucket — operate on bucket.npcs.
+                      // Reorder within the bucket - operate on bucket.npcs.
                       // Note: bucket.npcs are sorted by name in the player
                       // view (L8669); after this drop sort_order persists to
                       // DB and the GM/player view will reorder accordingly
@@ -9418,7 +9418,7 @@ export default function TablePage() {
             {gmTab === 'advantages' && (() => {
               // C3 visibility: RLS already scopes the rows. GM sees all
               // pending in campaign; players see only their own pending.
-              // Consumed advantages don't appear here — they're recorded
+              // Consumed advantages don't appear here - they're recorded
               // in the rolls feed via the consume flow (Phase 5).
               const myCharIds = new Set(entries.filter(e => e.userId === userId).map(e => e.character.id))
               const visible = gmLike
@@ -9490,7 +9490,7 @@ export default function TablePage() {
                                 } catch (e) {
                                   console.warn('[advantages] feed broadcast failed', e)
                                 }
-                                // Optimistic local update — realtime will reconcile too.
+                                // Optimistic local update - realtime will reconcile too.
                                 setAdvantages(prev => prev.filter(x => x.id !== a.id))
                                 setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
                               }}
@@ -9501,7 +9501,7 @@ export default function TablePage() {
                           {gmLike && (
                             <button type="button"
                               onClick={async () => {
-                                if (!confirm(`Delete advantage "+${a.cmod_delta} ${a.skill_name}" for ${holderName}? This is for mistakes — Use is the normal path.`)) return
+                                if (!confirm(`Delete advantage "+${a.cmod_delta} ${a.skill_name}" for ${holderName}? This is for mistakes - Use is the normal path.`)) return
                                 const { deleteAdvantage } = await import('../../../../lib/advantages')
                                 const { error } = await deleteAdvantage(supabase, a.id)
                                 if (error) { alert(`Delete failed: ${error}`); return }
@@ -11985,7 +11985,7 @@ export default function TablePage() {
             insightDice: en.liveState?.insight_dice ?? 0,
           }
         })
-        // Build eligible NPC list — on the active tactical map OR revealed
+        // Build eligible NPC list - on the active tactical map OR revealed
         // to any PC. Same dedup + alive filter as the prior FI picker.
         const onMap = mapTokens.filter(t => t.token_type !== 'object' && t.npc_id)
         const byId = new Map<string, any>()
@@ -12002,7 +12002,7 @@ export default function TablePage() {
           })
           .sort((a: any, b: any) => String(a.name).localeCompare(String(b.name)))
           .map((n: any) => ({ id: n.id, name: n.name }))
-        // Default PC pick — single eligible PC, or active combatant in GM-led combat.
+        // Default PC pick - single eligible PC, or active combatant in GM-led combat.
         let defaultPcId: string | undefined
         if (eligiblePcs.length === 1) defaultPcId = eligiblePcs[0].characterId
         else if (gmLike && combatActive) {

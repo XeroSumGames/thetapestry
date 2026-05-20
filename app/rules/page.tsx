@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { RULE_SECTIONS } from '../../lib/rules/sections'
 import { RuleHero } from '../../components/rules/RuleSection'
 
-// /rules — landing page. Hero + grid of section cards.
+// /rules - landing page. Hero + grid of section cards.
 
 export default function RulesIndexPage() {
   return (
@@ -10,7 +10,7 @@ export default function RulesIndexPage() {
       <RuleHero
         eyebrow="Xero Sum Engine"
         title="SRD v1.1"
-        intro="The complete system reference for the Xero Sum Engine, the rules-light d6 framework that powers Distemper. Every section below is canonical — when a rule here disagrees with anything in-app, the rules win."
+        intro="The complete system reference for the Xero Sum Engine, the rules-light d6 framework that powers Distemper. Every section below is canonical - when a rule here disagrees with anything in-app, the rules win."
       />
 
       <div style={{ marginTop: '2.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>

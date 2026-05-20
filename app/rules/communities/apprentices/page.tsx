@@ -7,7 +7,7 @@ import {
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Apprentices — XSE SRD §08' }
+export const metadata = { title: 'Apprentices - XSE SRD §08' }
 
 export default function ApprenticesPage() {
   return (
@@ -28,7 +28,7 @@ export default function ApprenticesPage() {
 
       <P>
         A player may also seek out a specific NPC and make a deliberate
-        Recruitment attempt aimed at Apprenticeship — same roll, same
+        Recruitment attempt aimed at Apprenticeship - same roll, same
         threshold, still needs the double-six.
       </P>
       <P>
@@ -48,7 +48,7 @@ export default function ApprenticesPage() {
         <li>Spends <Term>3 CDP</Term> on RAPID Range Attributes.</li>
         <li>Spends <Term>5 CDP</Term> on skills.</li>
         <li>
-          Picks one setting-appropriate <Term>Paradigm</Term> (SRD Table 8 —
+          Picks one setting-appropriate <Term>Paradigm</Term> (SRD Table 8 -
           Paradigms & Vibe Shifts).
         </li>
       </ul>
@@ -65,7 +65,7 @@ export default function ApprenticesPage() {
       </P>
 
       <TryIt href="/characters/new">
-        Apprentice creation lives inside Character Creation — start a
+        Apprentice creation lives inside Character Creation - start a
         character to spend the 3 / 5 CDP and pick a Paradigm.
       </TryIt>
     </>

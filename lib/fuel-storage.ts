@@ -1,7 +1,7 @@
 // Fuel-storage drum install / uninstall helpers (Q4-c, 2026-05-19).
 //
 // Vehicles can be expanded beyond their stock fuel capacity by installing
-// 55-Gallon Drums (an inventory item — see lib/xse-schema.ts EQUIPMENT).
+// 55-Gallon Drums (an inventory item - see lib/xse-schema.ts EQUIPMENT).
 // Each drum installed adds 1 day to the vehicle's fuel_max; uninstall
 // returns the drum to vehicle cargo and reduces fuel_max by 1.
 //
@@ -11,7 +11,7 @@
 //   fuel_storage_max - absolute cap on fuel_max after install (Minnie = 6).
 //
 // Both are optional per-vehicle; absence disables the feature for that
-// vehicle (smaller cars haven't had their numbers spec'd yet — rules pass
+// vehicle (smaller cars haven't had their numbers spec'd yet - rules pass
 // post-campaign).
 //
 // These helpers are PURE. They take the current vehicle + cargo array and

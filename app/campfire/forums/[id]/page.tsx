@@ -7,7 +7,7 @@ import { getCachedAuth } from '../../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { renderRichText } from '../../../../lib/rich-text'
 
-// /campfire/forums/[id] — thread detail. Original post + reply chain +
+// /campfire/forums/[id] - thread detail. Original post + reply chain +
 // reply composer at the bottom. Authors can edit/delete their own posts;
 // other users see a 💬 Message deep-link to /messages?dm=<authorId>.
 

@@ -1,7 +1,7 @@
 // lib/campfire-settings.ts
 // Shared helpers for the Phase 4A per-setting feed layer. Picker options
 // (used in compose dropdowns) and filter-chip options (used in reader chip
-// strips) for the three Campfire surfaces — forum_threads, war_stories,
+// strips) for the three Campfire surfaces - forum_threads, war_stories,
 // lfg_posts. Single source of truth so we don't drift across the three
 // pages.
 
@@ -13,7 +13,7 @@ import { SETTINGS } from './settings'
 // settings on the platform. These are the ones with full canon + setting
 // hubs (Phase 4C will surface them at /settings/[setting]).
 //
-// Order here matters — these render in this order on chip strips and at
+// Order here matters - these render in this order on chip strips and at
 // the top of the picker dropdown.
 export const FEATURED_SETTING_SLUGS = [
   'district_zero',
@@ -21,12 +21,12 @@ export const FEATURED_SETTING_SLUGS = [
 ] as const
 
 // Per-chip accent color so the chip strips are scannable. Reuses the
-// existing brand palette — DZ = teal-blue (matches the DZ sourcebook),
+// existing brand palette - DZ = teal-blue (matches the DZ sourcebook),
 // Kings Crossroads = warm orange (matches the Chased mall pin set).
 export const SETTING_ACCENT: Record<string, string> = {
   district_zero: '#7ab3d4',
   kings_crossroads_mall: '#EF9F27',
-  // Fallback for non-featured settings — used when older content is
+  // Fallback for non-featured settings - used when older content is
   // tagged with a deprecated slug (chased, mongrels, etc.).
   __default__: '#9aa5b0',
 }
@@ -43,7 +43,7 @@ export function settingAccent(slug: string | null | undefined): string {
 
 // Options for the compose-time setting picker. Featured slugs first
 // (DZ + Kings Crossroads), then the rest of SETTINGS in alphabetical
-// order — minus `custom`, which is per-campaign and doesn't make sense
+// order - minus `custom`, which is per-campaign and doesn't make sense
 // as a cross-campaign setting tag.
 export function composePickerOptions(): { value: string; label: string }[] {
   const featured = FEATURED_SETTING_SLUGS.map(slug => ({ value: slug, label: SETTINGS[slug] ?? slug }))
@@ -55,7 +55,7 @@ export function composePickerOptions(): { value: string; label: string }[] {
 }
 
 // Filter-chip strip for reader pages. "All" first, then the featured
-// slugs. We deliberately don't render a chip per deprecated setting —
+// slugs. We deliberately don't render a chip per deprecated setting -
 // posts tagged with those slugs only show in "All" until/if a chip is
 // added. Keeps the strip from sprawling.
 export interface FilterChipOption {
@@ -93,11 +93,11 @@ export function applySettingFilter<T extends { setting?: string | null }>(
 //
 // Param values:
 //   missing     → null  (All settings)
-//   "global"    → ''    (Global-only — rows with setting IS NULL)
+//   "global"    → ''    (Global-only - rows with setting IS NULL)
 //   <slug>      → <slug> (single setting)
 //
 // The `[settingFilter, setSettingFilter]` returned here is local React
-// state — we don't push back to the URL on chip clicks (that would fight
+// state - we don't push back to the URL on chip clicks (that would fight
 // the hub dropdown). The hub is the writer, the surfaces are readers.
 // This preserves "click a chip on Forums to filter just Forums without
 // affecting the hub context" behavior.

@@ -2,7 +2,7 @@ import { RuleHero, P, Term } from '../../../../components/rules/RuleSection'
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
-export const metadata = { title: 'Skills (Overview) — XSE SRD §03' }
+export const metadata = { title: 'Skills (Overview) - XSE SRD §03' }
 
 export default function Page() {
   return (
@@ -31,7 +31,7 @@ export default function Page() {
         Vocational skills are marked with an asterisk (e.g.{' '}
         <Term>Psychology*</Term>). They start at −3 (Inept) instead of 0.
         When a character earns 1 level in a vocational skill, they advance
-        from −3 (Inept) directly to +1 (Beginner) — the asterisk
+        from −3 (Inept) directly to +1 (Beginner) - the asterisk
         represents that one-time jump for a non-trivially-trained skill.
       </P>
       <P>

@@ -52,7 +52,7 @@ const SETTING_CENTERS: Record<string, { center: [number, number]; zoom: number }
 // tiles for, used as a hard cap on user zoom. Leaflet greys out the
 // +/scroll-wheel zoom past this. Without the cap, OpenTopoMap (z17)
 // returns a "max zoom layer = 17" placeholder image past its native
-// max — users zooming in to inspect a pin got tiled with that
+// max - users zooming in to inspect a pin got tiled with that
 // placeholder. Hard-cap blocks the action entirely.
 const TILE_LAYERS: Record<string, { url: string; attr: string; maxZoom: number }> = {
   street:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap', maxZoom: 19 },
@@ -73,7 +73,7 @@ const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }
   minnie:  { mph: 22, label: 'Minnie',   emoji: '🚐' },
 }
 
-// Local PIN_CATEGORIES — mirrors lib/pin-categories.ts canonical list
+// Local PIN_CATEGORIES - mirrors lib/pin-categories.ts canonical list
 // as of 2026-05-15. CampaignMap used to carry 'landmark' as a local-
 // only overflow; that category was consolidated into 'location' via
 // sql/pin-category-consolidation-2026-05-15.sql in the same change,
@@ -113,17 +113,17 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const placingRef = useRef(false)
   // Ping channel + active-ping markers. Alt+click anywhere on the
   // campaign map drops a transient pulse and broadcasts it to every
-  // other viewer of this campaign — same UX as the tactical map. GM
+  // other viewer of this campaign - same UX as the tactical map. GM
   // pings are orange; player pings are green.
   const pingChannelRef = useRef<any>(null)
-  // View-share channel — GM broadcasts current center/zoom/tile-layer
+  // View-share channel - GM broadcasts current center/zoom/tile-layer
   // to every other viewer of this campaign. Player receives → smooth
   // flyTo + matching tile layer. One-shot, not continuous-follow.
   const viewShareChannelRef = useRef<any>(null)
   const [sharedToast, setSharedToast] = useState<string | null>(null)
   const [shareFlash, setShareFlash] = useState(false)
   const pingMarkersRef = useRef<any[]>([])
-  // Measure tool — click to drop point A, click again for point B,
+  // Measure tool - click to drop point A, click again for point B,
   // shows total path distance + per-segment legs. Multi-click adds
   // segments (polyline-style); button toggle or Esc clears.
   const measureModeRef = useRef(false)
@@ -144,14 +144,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // (sustained cross-country cruise per Xero 2026-05-18; was 32 mph
   // midpoint of 30-35 from the Mongrels doc, lowered for realism on
   // mixed terrain + fuel conservation).
-  // Session-scoped — no localStorage. Defaults to walking.
+  // Session-scoped - no localStorage. Defaults to walking.
   type TravelMode = 'walking' | 'bicycle' | 'minnie'
   const [travelMode, setTravelMode] = useState<TravelMode>('walking')
   const travelModeRef = useRef<TravelMode>('walking')
   useEffect(() => { travelModeRef.current = travelMode }, [travelMode])
   useEffect(() => { measureModeRef.current = measureMode }, [measureMode])
 
-  // Route planner — click two points, OSRM road routing draws the
+  // Route planner - click two points, OSRM road routing draws the
   // real-world driving path. Distinct from Measure (which is straight-
   // line, multi-waypoint). Route is exactly two points: start +
   // destination. Esc/toggle clears. Local-only just like Measure.
@@ -202,7 +202,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const [pinForm, setPinForm] = useState({ name: '', notes: '', category: 'location' })
   const [saving, setSaving] = useState(false)
   const [attachments, setAttachments] = useState<File[]>([])
-  // Brief inline confirmation after a non-GM player submits a pin —
+  // Brief inline confirmation after a non-GM player submits a pin -
   // their own pin lands as revealed=false so they can't see it back
   // until the GM approves. Without this confirmation the form just
   // disappears and the player can't tell whether the submission worked.
@@ -211,7 +211,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // Keep ref in sync so the Leaflet click handler sees current state
   useEffect(() => { placingRef.current = placing }, [placing])
 
-  // Esc kills the measure tool — bail out of the multi-click flow
+  // Esc kills the measure tool - bail out of the multi-click flow
   // without having to re-toggle the button. Only attached while the
   // tool is active so we don't leak listeners or block other Esc UX.
   useEffect(() => {
@@ -226,7 +226,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     return () => window.removeEventListener('keydown', onKey)
   }, [measureMode])
 
-  // Esc bails out of the route tool — AND clears a lingering route line
+  // Esc bails out of the route tool - AND clears a lingering route line
   // even after route mode is off. Pre-2026-05-19 the listener only
   // attached while routeMode was true, so a completed route that the
   // user thought they could Esc away never cleared. Now attached on
@@ -249,7 +249,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
   // Inject ping pulse keyframes ONCE (per browser tab). Three staggered
   // rings (red -> green -> red) at 0.6s each with 0.4s stagger pop in
-  // ~1.4s total. The alternating colors are deliberate — easier to
+  // ~1.4s total. The alternating colors are deliberate - easier to
   // catch from peripheral vision than a single hue. The role color
   // passed to dropPing is now ignored; ping = always red/green/red.
   useEffect(() => {
@@ -277,7 +277,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // ── Measure tool helpers ──────────────────────────────────────
   // Haversine: great-circle distance between two lat/lng pairs in
   // metres. Earth radius 6,371 km is the conventional spherical
-  // average — accurate to ~0.5% for terrestrial distances, which is
+  // average - accurate to ~0.5% for terrestrial distances, which is
   // fine for "how far apart are these pins" use cases.
   function haversineMeters(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
     const R = 6371000
@@ -321,7 +321,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   }
   // Recompute every leg label + the TOTAL row using the current travel
   // mode. Called when the user switches mode after dropping waypoints
-  // — the on-map midpoint chips get fresh icons via setIcon (no
+  // - the on-map midpoint chips get fresh icons via setIcon (no
   // marker churn), the toolbar legs/total restate. Cheap loop over
   // existing points; no re-fetch, no flicker.
   function recomputeMeasureLabels() {
@@ -495,7 +495,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const latlngs = measurePointsRef.current.map(p => [p.lat, p.lng]) as [number, number][]
       if (measureLineRef.current) { try { map.removeLayer(measureLineRef.current) } catch {} }
       measureLineRef.current = L.polyline(latlngs, { color: '#7ab3d4', weight: 3, opacity: 0.9, dashArray: '6,6' }).addTo(map)
-      // Per-segment label — each leg gets its own distance + walk-time
+      // Per-segment label - each leg gets its own distance + walk-time
       // chip at its midpoint so multi-waypoint paths show the breakdown
       // (not just the total). Walk time at 3 mph per `formatWalkTime`.
       const prev = measurePointsRef.current[i - 2]
@@ -527,12 +527,12 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const L = (window as any).L
     const map = mapInstanceRef.current
     if (!L || !map) return
-    // Three staggered rings — red, green, red — for an alternating-
+    // Three staggered rings - red, green, red - for an alternating-
     // color pop that catches peripheral attention. Each ring runs one
     // pulse (0.6s); delays of 0s / 0.4s / 0.8s create a continuous
     // rhythm with light overlap. The `color` param is preserved for
     // back-compat with the broadcast handler but no longer drives the
-    // visual — the palette is fixed.
+    // visual - the palette is fixed.
     const ringHtml = (col: string, delayMs: number) =>
       `<div class="cm-ping-ring" style="color:${col};animation-delay:${delayMs}ms;"></div>`
     const html =
@@ -583,7 +583,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       maxClusterRadius: 40,
       // Disable the default click-zooms-to-bounds so alt+click and
       // measure-mode click can pass through to the ping / measure
-      // handlers instead. Plain-click still zooms — re-implemented in
+      // handlers instead. Plain-click still zooms - re-implemented in
       // the clusterclick handler below.
       zoomToBoundsOnClick: false,
       iconCreateFunction: (cluster: any) => {
@@ -803,7 +803,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         }
       } catch {}
       // Default fallback: Mediterranean (Tyrrhenian Sea, near Stromboli) at
-      // zoom 3 — wide regional view that frames Europe + N Africa for any
+      // zoom 3 - wide regional view that frames Europe + N Africa for any
       // campaign that hasn't picked a setting or set a custom center.
       const view = savedView ?? customCenter ?? settingView ?? { center: [38.6169, 15.2930] as [number, number], zoom: 3 }
       const t = TILE_LAYERS[mapLayer] ?? TILE_LAYERS.street
@@ -813,7 +813,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       mapInstanceRef.current = map
 
       // Persist view on every move/zoom so the next refresh resumes
-      // here. Cheap enough to fire on every settle event — no debounce
+      // here. Cheap enough to fire on every settle event - no debounce
       // needed for a single localStorage write per gesture.
       const saveView = () => {
         try {
@@ -825,7 +825,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       map.on('moveend', saveView)
       map.on('zoomend', saveView)
 
-      // Alt+click anywhere — drop a ping locally and broadcast it to
+      // Alt+click anywhere - drop a ping locally and broadcast it to
       // every other viewer of this campaign. GM/player both can ping;
       // color signals the role. Runs BEFORE the placing branch so an
       // alt-click while in placing mode pings instead of opening the
@@ -864,9 +864,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
       // Pin sync. Two listeners on the same channel:
       //   - postgres_changes is the lossy fallback (known flaky on RLS'd
-      //     tables — see CampaignPins.tsx L151-153 + lessons memo
+      //     tables - see CampaignPins.tsx L151-153 + lessons memo
       //     2026-04-11). Kept as a belt.
-      //   - broadcast 'pins_changed' is the reliable signal — every pin
+      //   - broadcast 'pins_changed' is the reliable signal - every pin
       //     mutation in CampaignPins (toggleReveal / revealAll / hideAll /
       //     edit / delete / reorder) fires this. Pre-this-fix
       //     (post-2026-05-18-playtest), CampaignMap relied only on
@@ -882,7 +882,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
         .subscribe()
 
-      // Ping broadcast channel — receive only. The sender draws its
+      // Ping broadcast channel - receive only. The sender draws its
       // own ping locally before the broadcast goes out (zero-latency
       // self-feedback) so we don't echo it back here.
       const pingCh = supabase.channel(`campaign_ping_${campaignId}`)
@@ -899,7 +899,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // View-share broadcast channel. GM Send-side fires payload
       // { lat, lng, zoom, tile }. Every other viewer flyTo()s to the
       // coords and switches their tile layer to match. One-shot.
-      // (Self-receive is OK and ignored — the GM is already there.)
+      // (Self-receive is OK and ignored - the GM is already there.)
       const viewCh = supabase.channel(`campaign_view_share_${campaignId}`)
         .on('broadcast', { event: 'cm_view_share' }, (msg: any) => {
           if (isGM) return // GMs ignore their own share echo + other GMs' shares
@@ -971,7 +971,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
   // Shared geometry/font for every control in the top-right toolbar row.
   // Locks height + font so the buttons, the <select>, the search input,
-  // and the Go button all line up — and gives the flex row predictable
+  // and the Go button all line up - and gives the flex row predictable
   // sizing so it never wraps when measure-mode adds the travel picker.
   const toolbarCtrl: React.CSSProperties = {
     height: 28,
@@ -994,7 +994,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     <div style={{ flex: 1, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%', cursor: (placing || measureMode) ? 'crosshair' : '' }} />
 
-      {/* Search + layer switcher — single right column (matches MapView).
+      {/* Search + layer switcher - single right column (matches MapView).
           Every control in the top form row shares `toolbarCtrl` for
           geometry + font so heights match and the row never wraps,
           regardless of how many conditional buttons are showing
@@ -1006,11 +1006,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               old isGM gate was UI-only. Player pins land revealed=false
               so the GM sees them in CampaignPins for review/reveal. */}
           <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
-            title={isGM ? 'Drop a pin on the campaign map' : 'Suggest a pin — GM will review and reveal it'}
+            title={isGM ? 'Drop a pin on the campaign map' : 'Suggest a pin - GM will review and reveal it'}
             style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
             {placing ? '✕ Cancel' : isGM ? '+ Pin' : '+ Suggest Pin'}
           </button>
-          {/* Measure tool — toggle on, click two (or more) points to
+          {/* Measure tool - toggle on, click two (or more) points to
               get total distance in mi/km. Esc or button-toggle clears.
               Anyone (GM + player) can measure; it's a local-only tool
               right now (no broadcast) so different viewers can run
@@ -1032,7 +1032,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
             {measureMode ? '✕ Stop' : '📏 Measure'}
           </button>
-          {/* Route planner — pick start, pick destination, OSRM returns
+          {/* Route planner - pick start, pick destination, OSRM returns
               real road geometry. Distinct from Measure (which is
               straight-line, multi-waypoint). Anyone can plot a route;
               local-only display just like Measure. Esc clears. */}
@@ -1067,7 +1067,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               ))}
             </select>
           )}
-          {/* Travel-mode picker — appears only while measure mode is
+          {/* Travel-mode picker - appears only while measure mode is
               active. Switching mode recomputes every leg + the TOTAL
               row in place, including the on-map midpoint chips, via
               the recomputeMeasureLabels effect. Walking / Bicycle /
@@ -1084,11 +1084,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               ))}
             </select>
           )}
-          {/* SHARE VIEW — GM-only. Snapshots the current map state
+          {/* SHARE VIEW - GM-only. Snapshots the current map state
               (center, zoom, tile layer) and broadcasts to every other
               viewer of this campaign. Players' maps smoothly flyTo
               the location and swap to the matching tile layer.
-              One-shot — not a continuous follow-mode. Flash green for
+              One-shot - not a continuous follow-mode. Flash green for
               ~1.5s after click so the GM has visual confirmation the
               broadcast went out. Added 2026-05-11. */}
           {isGM && (
@@ -1161,7 +1161,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Measure mode banner — per-leg breakdown stacked vertically,
+      {/* Measure mode banner - per-leg breakdown stacked vertically,
           TOTAL row at the bottom. Each leg has its own line: "Leg N→N+1:
           <dist> · <time>". Tucked above the placing banner spot so the
           two never overlap (measure forces placing off anyway). */}
@@ -1186,7 +1186,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Route planner banner — mirrors the measure-tool banner but
+      {/* Route planner banner - mirrors the measure-tool banner but
           orange-tinted to keep the two visually distinct. Shows the
           current step (click start, click destination, plotting, or
           final distance + ETA). */}
@@ -1197,7 +1197,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Player view-share toast — fires when the GM clicks SHARE
+      {/* Player view-share toast - fires when the GM clicks SHARE
           VIEW and this client receives the broadcast. Soft blue chip,
           auto-clears after 2.5s. GM never sees this; their own
           confirmation lives on the button itself. */}
@@ -1207,11 +1207,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Player pin submitted — 3-second confirmation that the pin
+      {/* Player pin submitted - 3-second confirmation that the pin
           reached the GM for review. Only fires for non-GM submitters. */}
       {submittedNotice && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,46,16,0.95)', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
-          ✓ Pin submitted — GM will review
+          ✓ Pin submitted - GM will review
         </div>
       )}
 

@@ -54,7 +54,7 @@ export function rollDamage(damageStr: string, phyAmod = 0, isMelee = false): {
  *
  * 1. Stun-tagged weapons (Taser, Cattle Prod) compute RP from
  *    RAW WP, not mitigated WP. The stun's whole purpose is to
- *    deal RP — the impact rocks the body even when the wound is
+ *    deal RP - the impact rocks the body even when the wound is
  *    deflected. Pass `rpFromRaw: true` when the attacking weapon's
  *    traits include `Stun` (or any future weapon whose RP should
  *    apply regardless of mitigation).
@@ -63,12 +63,12 @@ export function rollDamage(damageStr: string, phyAmod = 0, isMelee = false): {
  *    defensive modifier. Pass the defender's currently-worn armor
  *    via `armor`. Pieces tagged `reactive_melee_only` (Riot Shield)
  *    only contribute when `attackerCategory` is `melee` or
- *    `unarmed` — a bullet ignores the shield entirely. See
+ *    `unarmed` - a bullet ignores the shield entirely. See
  *    `lib/xse-schema.ts:ARMOR` for the canonical armor catalog
  *    and `tasks/rules-extract-armor-explosives.md` for the spec.
  *
  * `mitigated` in the return value is the FINAL summed defensive
- * value (PHY/DEX + applicable armor DMs) — useful for log
+ * value (PHY/DEX + applicable armor DMs) - useful for log
  * narration ("3 mitigated").
  */
 export interface ArmorPiece {
@@ -101,7 +101,7 @@ export function calculateDamage(
   const finalWP = Math.max(0, rawWP - mitigated)
   const rpSource = options?.rpFromRaw ? rawWP : finalWP
   const finalRP = Math.floor(rpSource * (rpPercent / 100))
-  // Diagnostic — playtest 2026-05-11 belt-and-suspenders trace inside
+  // Diagnostic - playtest 2026-05-11 belt-and-suspenders trace inside
   // calculateDamage itself, so the math is captured no matter which
   // caller invoked it (table page, vehicle popout, future paths). The
   // call-site trace in table/page.tsx around line 4390 has caller
