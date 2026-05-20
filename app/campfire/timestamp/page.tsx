@@ -5,8 +5,9 @@ import { useEffect, useMemo, useState } from 'react'
 // + time + source timezone and copy a Discord-style <t:UNIX:format>
 // token that anyone (or any platform that parses these) renders in
 // their own local timezone. The tokens cross-post to Discord cleanly,
-// and a follow-up Tapestry-side renderer (TODO) can convert them to
-// localized <time> elements in user content here too.
+// and the Tapestry-side renderer in lib/rich-text.tsx (TOKEN_RE at L19,
+// HammerTimeChip at L50) converts them to localized chips inside user
+// content here too.
 //
 // Format reference (matches Discord + HammerTime):
 //   t / T  - short / long time
