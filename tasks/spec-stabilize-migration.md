@@ -1,8 +1,8 @@
 # Spec: Stabilize Migration to Dedicated `<RollModal>`
 
-**Status:** scoped, not started. Deferred from sprint 2026-05-18→25.
-**Owner:** post-playtest sprint.
-**Estimated effort:** 3-5 hours (Phase 1 alone). Multi-day if all phases ship together.
+**Status:** Phase 1 SHIPPED 2026-05-20 (Stabilize, commit `2255ced`). Phase 2 SHIPPED 2026-05-20 (Distract). Phase 3 (First Impression) was ALREADY SHIPPED 2026-05-19 via the parallel FI streamline track - this spec was stale on that point. Only Phase 4 (retire legacy executeRoll branches) remains, gated on the 2026-05-25 playtest.
+**Owner:** post-playtest sprint for Phase 4 cleanup.
+**Estimated effort:** Phase 1+2 took ~4 hours total. Phase 4 deletion is ~15 minutes once playtest greenlights.
 
 ---
 
@@ -161,14 +161,17 @@ Defer to a separate file when starting.
 
 ---
 
-### Phase 3 - First Impression migration (2-3 hours after Phase 2)
+### Phase 3 - First Impression migration (ALREADY SHIPPED 2026-05-19)
 
-First Impression already has a half-migrated path via `PlayerNpcCard`
-quick-fire (the skip-target-picker shortcut shipped 2026-05-01). The
-GM-side path still routes through pendingRoll. Phase 3 unifies on a
-single dedicated modal usable from both surfaces.
+When this spec was written, FI had a half-migrated path via `PlayerNpcCard` quick-fire. Between then and 2026-05-20, the parallel **FI streamline** track shipped the full migration:
 
-Defer to a separate file when starting.
+- `<FirstImpressionModal>` component at `app/stories/[id]/table/components/FirstImpressionModal.tsx` owns the pick + roll + result flow end-to-end.
+- `resolveFirstImpression()` resolver in `lib/first-impression-resolver.ts` combines roll_log insert + `bump_npc_relationship_cmod` RPC + progression-log append in one call.
+- Legacy executeRoll FI branch DELETED (comment at table/page.tsx L6749: "First Impression branch deleted 2026-05-19 (FI streamline Phase 3)").
+- 18 unit tests in `tests/lib/first-impression-resolver.test.ts`.
+- All 3 entry points (GM Checks menu, per-NPC card quick-fire from PlayerNpcCard, per-NPC card quick-fire from NpcCard) route through the dedicated modal.
+
+Caught while starting Phase 2 (Distract) on 2026-05-20. Lesson captured in tasks/lessons.md: a spec can be stale on its own status when work happens on parallel tracks - always verify the legacy branch still exists before "migrating" it.
 
 ---
 

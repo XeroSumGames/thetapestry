@@ -72,6 +72,7 @@ import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { OUTCOME } from '../../../../lib/roll-outcomes'
 import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../../../lib/stabilize-helpers'
+import { distractActionDelta, distractNarrative } from '../../../../lib/distract-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
@@ -264,7 +265,25 @@ export default function TablePage() {
   const [stabilizeCmod, setStabilizeCmod] = useState(0)
   const [stabilizeResult, setStabilizeResult] = useState<SharedRollResult | null>(null)
   const [stabilizeNarrativeText, setStabilizeNarrativeText] = useState<string>('')
-  const actionPreConsumedRef = useRef(false)  // Set when Distract/Sprint/Unjam pre-consumes before the roll modal (Stabilize migrated off this 2026-05-20)
+  // Dedicated <RollModal> state for Distract - migrated off pendingRoll
+  // 2026-05-20 (Phase 2 of tasks/spec-stabilize-migration.md, companion
+  // to Stabilize Phase 1). Pre-roll: target dropdown rendered via
+  // preRollExtras (candidates = combatants within 30ft Close range).
+  // Post-roll: cascade applies the action-delta to the target's
+  // initiative_order row + fires the turn_changed broadcast.
+  const [distractPending, setDistractPending] = useState<{
+    rollerEntryId: string        // initiative_order.id of the active combatant
+    rollerName: string
+    amod: number                 // INF AMod
+    smod: number                 // max of Intimidation / Inspiration / Psychology* / Tactics*
+    candidates: Array<{ entryId: string; name: string; distFeet: number | null }>
+    preselectName: string | null
+  } | null>(null)
+  const [distractTargetName, setDistractTargetName] = useState<string>('')
+  const [distractCmod, setDistractCmod] = useState(0)
+  const [distractResult, setDistractResult] = useState<SharedRollResult | null>(null)
+  const [distractNarrativeText, setDistractNarrativeText] = useState<string>('')
+  const actionPreConsumedRef = useRef(false)  // Set when Sprint/Unjam pre-consumes before the roll modal (Stabilize + Distract migrated off this 2026-05-20)
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
   const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal - refs survive React batching
@@ -4560,33 +4579,6 @@ export default function TablePage() {
       else if (!cfRows || cfRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL - Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
       else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       await consumeAction(activeEntry.id, `${activeEntry.character_name} - Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
-    } else if (action === 'Distract') {
-      // SRD: Intimidation/Psychology*/Tactics* check → target loses next
-      // Combat Action on success. Auto-apply replaced with a real roll
-      // 2026-04-29 so the modal matches the standard ATTACK ROLL shape +
-      // failures don't punish the target. Active combatant burns one
-      // action either way (the attempt cost) - pre-consumed via the
-      // actionPreConsumedRef gate, mirroring Stabilize.
-      let amod = 0, smod = 0
-      const distractCharEntry = entries.find(e => e.character.name === activeEntry.character_name)
-      if (distractCharEntry) {
-        amod = distractCharEntry.character.data?.rapid?.INF ?? 0
-        const sk: any[] = Array.isArray(distractCharEntry.character.data?.skills) ? distractCharEntry.character.data.skills : []
-        const skLevel = (n: string) => (sk.find((s: any) => s.skillName === n)?.level ?? 0)
-        smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
-      } else {
-        const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
-        if (npcRoller) {
-          amod = (npcRoller as any).influence ?? 0
-          const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
-          const skLevel = (n: string) => (npcSkills.find((s: any) => s.name === n)?.level ?? 0)
-          smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
-        }
-      }
-      // Open roll modal FIRST (before consumeAction changes the active combatant)
-      handleRollRequest(`${activeEntry.character_name} - Distract → ${targetEntry.character_name}`, amod, smod)
-      actionPreConsumedRef.current = true
-      await consumeAction(activeEntry.id)
     } else if (action === 'Inspire') {
       // SRD: Inspiration check → target gains +1 Combat Action. Once per round.
       if (targetEntry.inspired_this_round) {
@@ -4951,6 +4943,52 @@ export default function TablePage() {
     setRosterNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } : n))
     setViewingNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } as CampaignNpc : n))
     return stabilizeNarrative(true, targetName, incapRounds)
+  }
+
+  // Distract cascade - runs after the dedicated Distract <RollModal>
+  // resolves. Phase 2 of tasks/spec-stabilize-migration.md (2026-05-20).
+  // Applies the action-delta to the target's initiative_order row +
+  // fires the turn_changed broadcast so all clients refresh. Returns
+  // the narrative for the modal banner. Per CRB §06: WS/HI = -2, S =
+  // -1, F/LI = no-op (cost only), DF = +1 ("Inspired").
+  async function runDistractCascade(p: {
+    targetEntryId: string
+    targetName: string
+    outcome: string
+  }): Promise<string> {
+    const { targetEntryId, targetName, outcome } = p
+    const delta = distractActionDelta(outcome)
+    if (delta === 0) {
+      return distractNarrative(targetName, 0, false)
+    }
+    // Fetch fresh actions_remaining - the optimistic state in
+    // initiativeOrder can be stale if other rolls have fired in
+    // parallel. Matches the legacy executeRoll pattern of reading off
+    // initiativeOrder.find() (page.tsx L6174-6176 pre-migration).
+    const targetEntry = initiativeOrder.find(e => e.id === targetEntryId)
+    if (!targetEntry) {
+      // Race: target left initiative (death, despawn). No-op narrative.
+      return distractNarrative(targetName, 0, false)
+    }
+    const cur = targetEntry.actions_remaining ?? 0
+    const newActions = Math.max(0, cur + delta)
+    const { data: distractRows, error: distractErr } = await supabase
+      .from('initiative_order')
+      .update({ actions_remaining: newActions })
+      .eq('id', targetEntryId)
+      .select('id, actions_remaining')
+    if (distractErr) {
+      console.error('[distract] update error:', distractErr.message)
+      return distractNarrative(targetName, 0, false)
+    }
+    if (!distractRows || distractRows.length === 0) {
+      console.warn('[distract] SILENT RLS FAIL - target actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
+      return distractNarrative(targetName, 0, false)
+    }
+    // Broadcast turn_changed so all clients refresh immediately even
+    // if the postgres_changes UPDATE is delayed.
+    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+    return distractNarrative(targetName, delta, true)
   }
 
   async function executeRoll() {
@@ -6158,16 +6196,11 @@ export default function TablePage() {
       }
     }
 
-    // Distract result - outcome scaling per CRB §06 Combat Actions:
-    //   Success                    → target loses 1 Combat Action
-    //   Wild Success / High Insight → target loses BOTH Combat Actions
-    //   Failure / Low Insight       → no effect (active still pays the
-    //                                 attempt's action cost)
-    //   Dire Failure                → target gains 1 action ("becomes
-    //                                 Inspired", per CRB)
-    //
-    // Target comes from the modal's targetName state (dropdown selection),
-    // not from the label.
+    // Distract result - LEGACY PATH (unreachable since 2026-05-20).
+    // The in-combat Distract button now routes through the dedicated
+    // <RollModal> + runDistractCascade helper. Kept here for Phase 4
+    // retirement alongside the Stabilize legacy branch (delete after
+    // the 2026-05-25 playtest verifies both modals are clean).
     let distractResult = ''
     if (pendingRoll.label.endsWith(' - Distract')) {
       const dtTargetName = targetName
@@ -7732,12 +7765,14 @@ export default function TablePage() {
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Dice Check</button>
 
-                {/* ── DISTRACT: opens the standard roll modal directly - the
-                    modal already includes a Target dropdown when combat is
-                    active, so the prior 2-step picker → modal flow
-                    collapses into one. Cover Fire and Inspire still use
-                    the picker because they don't fire a roll (they
-                    auto-apply effects). ── */}
+                {/* ── DISTRACT: dedicated <RollModal> (Phase 2 migration,
+                    2026-05-20). Same Close-range + alive-target filter
+                    as before; the candidates list, mods, and preselect
+                    are computed here on click, then passed into
+                    setDistractPending(...) which mounts the dedicated
+                    modal. Cover Fire + Inspire still use the
+                    socialTarget picker because they don't fire a roll
+                    (they auto-apply effects). ── */}
                 <button onClick={() => {
                   clearAimIfActive(activeEntry.id)
                   // Compute Distract roll mods from the active combatant.
@@ -7808,12 +7843,26 @@ export default function TablePage() {
                     const closest = [...candidates].sort((a, b) => (a.dist ?? 0) - (b.dist ?? 0))[0]
                     preselect = closest?.entry.character_name ?? null
                   }
-                  // Open the standard roll modal. Action is NOT pre-
-                  // consumed - closeRollModal handles the consume only
-                  // when the user actually clicks ROLL (didRoll=true).
-                  // Cancel = no roll fired = no action consumed.
-                  handleRollRequest(`${activeEntry.character_name} - Distract`, amod, smod)
-                  if (preselect) setTargetName(preselect)
+                  // Reset prior modal state then mount the new modal.
+                  // Action NOT pre-consumed - the modal's onRoll runs
+                  // consumeAction synchronously before the dice fire so
+                  // the action debit can't slip through if the modal
+                  // closes mid-flow.
+                  setDistractCmod(0)
+                  setDistractResult(null)
+                  setDistractNarrativeText('')
+                  setDistractTargetName(preselect ?? '')
+                  setDistractPending({
+                    rollerEntryId: activeEntry.id,
+                    rollerName: activeEntry.character_name,
+                    amod, smod,
+                    candidates: candidates.map(c => ({
+                      entryId: c.entry.id,
+                      name: c.entry.character_name,
+                      distFeet: c.dist,
+                    })),
+                    preselectName: preselect,
+                  })
                 }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
 
                 {/* ── FIRE FROM COVER: both actions, fire weapon + keep cover defense ── */}
@@ -12822,6 +12871,122 @@ export default function TablePage() {
           setStabilizeResult(null)
           setStabilizeNarrativeText('')
           setStabilizeCmod(0)
+        }}
+      />
+
+      {/* Distract - dedicated <RollModal> (Phase 2 migration, 2026-05-20).
+          Replaces the pendingRoll path for the in-combat Distract button.
+          Target picker rendered via preRollExtras - candidate list
+          computed at button-click time and stashed in distractPending. */}
+      <RollModal
+        open={distractPending !== null}
+        onClose={() => {
+          setDistractPending(null)
+          setDistractResult(null)
+          setDistractNarrativeText('')
+          setDistractCmod(0)
+          setDistractTargetName('')
+        }}
+        title="Distract"
+        subtitle={distractPending
+          ? `${distractPending.rollerName} distracts ${distractTargetName || '...'}`
+          : undefined}
+        rollFormula="2d6 + INF + Skill + CMod"
+        amod={distractPending?.amod ?? 0}
+        smod={distractPending?.smod ?? 0}
+        cmod={distractCmod}
+        setCmod={distractResult ? undefined : setDistractCmod}
+        preRollExtras={distractPending && !distractResult ? (
+          <div style={{ marginBottom: '12px', padding: '10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+              Target (Close range, ≤30 ft)
+            </div>
+            <select
+              value={distractTargetName}
+              onChange={(e) => setDistractTargetName(e.target.value)}
+              style={{ width: '100%', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+              <option value="">-- Pick a target --</option>
+              {distractPending.candidates.map(c => (
+                <option key={c.entryId} value={c.name}>
+                  {c.name}{c.distFeet !== null ? ` (${c.distFeet} ft)` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+        onRoll={async () => {
+          const dp = distractPending
+          if (!dp || distractResult || !distractTargetName) return
+          // Resolve target entry from the current candidates list. This
+          // is the entry the user selected; the cascade reads fresh
+          // actions_remaining off initiativeOrder so a parallel update
+          // doesn't lose its delta.
+          const targetCand = dp.candidates.find(c => c.name === distractTargetName)
+          if (!targetCand) return
+          const d1 = Math.floor(Math.random() * 6) + 1
+          const d2 = Math.floor(Math.random() * 6) + 1
+          const total = d1 + d2 + dp.amod + dp.smod + distractCmod
+          const outcome = getOutcome(total, d1, d2)
+          // Save to log FIRST. Label matches legacy shape so
+          // compactRollSummary's "Distract → <target>" auto-format
+          // (lib/roll-helpers.ts L6643+) renders the feed row right.
+          const label = `${dp.rollerName} - Distract`
+          await saveRollToLog(d1, d2, dp.amod, dp.smod, distractCmod, label, dp.rollerName, false, distractTargetName)
+          // Consume the active combatant's action - silent (no actionLabel)
+          // to match the legacy pre-consume behavior.
+          await consumeAction(dp.rollerEntryId)
+          const narrative = await runDistractCascade({
+            targetEntryId: targetCand.entryId,
+            targetName: distractTargetName,
+            outcome,
+          })
+          setDistractNarrativeText(narrative)
+          setDistractResult({
+            die1: d1, die2: d2,
+            amod: dp.amod, smod: dp.smod, cmod: distractCmod,
+            total, outcome,
+            insightAwarded: outcome === 'High Insight',
+          })
+          await rollsFeed.refetch()
+        }}
+        rollLabel="Roll Distract"
+        rollDisabled={!distractTargetName}
+        result={distractResult}
+        renderOutcome={(r) => {
+          const delta = distractActionDelta(r.outcome)
+          const applied = delta !== 0
+          // Narrative banner color: green on action-drain (Success / WS / HI),
+          // amber on Dire Failure ("Inspired" - bad for the medic), neutral
+          // grey on shrug-off (Failure / LI).
+          const bg = !applied ? '#1a1a1a' : (delta < 0 ? '#0f1a0f' : '#2a1810')
+          const border = !applied ? '#3a3a3a' : (delta < 0 ? '#2d5a1b' : '#5a4a1b')
+          return (
+            <>
+              <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+                [{r.die1}+{r.die2}]
+                {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
+                {r.outcome}
+              </div>
+              {distractNarrativeText && (
+                <div style={{ padding: '12px', background: bg, border: `1px solid ${border}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4, textAlign: 'center' }}>
+                  {distractNarrativeText}
+                </div>
+              )}
+            </>
+          )
+        }}
+        postRollCloseLabel="Close"
+        onPostRollClose={() => {
+          setDistractPending(null)
+          setDistractResult(null)
+          setDistractNarrativeText('')
+          setDistractCmod(0)
+          setDistractTargetName('')
         }}
       />
 

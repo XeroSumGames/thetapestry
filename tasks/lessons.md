@@ -1,5 +1,24 @@
 # Lessons Learned
 
+## Specs go stale on their OWN STATUS, not just on file paths (2026-05-20)
+
+**Rule:** Before "executing Phase N" of a multi-phase migration spec, verify that Phase N actually still needs doing. The legacy code it claims to migrate may already be gone, shipped via a different track between spec write-time and now.
+
+Today: Xero said "move straight to Phase 3" of `tasks/spec-stabilize-migration.md` (First Impression migration). Before coding, I checked the source-of-truth (the legacy `executeRoll` FI branch the spec claimed to migrate). It was already DELETED 2026-05-19 - a comment at table/page.tsx L6749 says "First Impression branch deleted 2026-05-19 (FI streamline Phase 3)". A parallel track had shipped FI's dedicated `<FirstImpressionModal>` + `resolveFirstImpression()` resolver, complete with 18 unit tests, weeks before this spec's Phase 3 was "next up." If I'd just done what Xero asked without checking, I'd have:
+- Re-built a feature that was already done.
+- Confused a working code path by inventing a parallel one.
+- Burned 2-3 hours producing waste.
+
+**Detection at the start of any "do Phase N" task:**
+1. Open the spec - find the legacy code it names (file:line).
+2. Grep that path / read those lines.
+3. If the legacy block is gone, marked unreachable, or wrapped in a "shipped" comment - STOP. The spec is stale on its own status.
+4. Update the spec to reflect reality, mark the phase shipped in todo, and surface what's actually next.
+
+**Companion to:** "Migration specs - verify every caller, don't trust the named trigger" (below). That rule is about which callers move; this rule is about whether anything needs to move at all.
+
+**Why this happens:** parallel chats / parallel tracks ship overlapping work. The spec was a single-track plan written when only one track existed. The world moved on. The spec didn't.
+
 ## Migration specs - verify every caller, don't trust the named trigger (2026-05-20)
 
 **Rule:** A migration spec naming "the trigger at X:Y" is a starting point, not the complete map. Before pulling code from path A → path B, grep for every call site of the old path. The Stabilize Phase 1 spec at `tasks/spec-stabilize-migration.md:77` named `components/CharacterCard.tsx:660` as the trigger to migrate. Reality: there were TWO triggers, and the named one was actually broken.
