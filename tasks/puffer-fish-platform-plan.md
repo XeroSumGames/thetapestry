@@ -170,7 +170,7 @@ Gated on Xero approving Supabase Pro + PITR. Until then, work the audit-log alte
 
 - [ ] A4.1 Pro + PITR upgrade (Xero approval)
 - [ ] A4.2 Backup drill execution (depends on P3.1)
-- [ ] A4.3 Audit log of destructive ops (higher priority if A4.1 stays deferred)
+- [~] **A4.3 Audit log of destructive ops.** SPEC SHIPPED 2026-05-20: [tasks/spec-audit-log-destructive-ops.md](spec-audit-log-destructive-ops.md). NEW table `audit_log` with append-only DELETE/BULK_DELETE/CRITICAL_UPDATE/CASCADE_DELETE rows. Trigger-driven on 18 hard-delete tables + app-level for edge functions + bulk ops. RLS scoped to Thriver (all) + self (own actor rows). 365-day retention. 6-phase migration AL1-AL6 over ~5 hunt-and-peck sessions. Without PITR, this IS the recovery mechanism. 5 risks logged (CASCADE write-amplification, hot-table overhead, NULL auth.uid in service-role contexts, recovery flow has no UI, audit log itself can be DELETEd by Thrivers - mitigated via explicit `DELETE USING (false)` RLS).
 - [x] **A4.4 Incident response runbook.** SHIPPED 2026-05-20: [tasks/ops-incident-response-2026-05-20.md](ops-incident-response-2026-05-20.md). 13 sections: when to open, pre-incident state inventory, P0-P3 severity classification, 4 P0/P1 playbooks (site down Vercel-side, DB unreachable, secret leaked, realtime desync + data corruption), env-var inventory table, pre-written comm templates, post-incident review pattern, what's NOT covered, maintenance.
 - [x] **A4.5 Secret rotation playbook.** SHIPPED 2026-05-20: [tasks/ops-secret-rotation-2026-05-20.md](ops-secret-rotation-2026-05-20.md). Per-service rotation procedures for Supabase service-role + anon, Turnstile, Sentry DSN, Vercel deploy tokens, Stripe (placeholder). 8 sections: when to rotate (emergency/proactive/scheduled), pre-rotation checklist, per-service procedures, post-rotation verification, scheduled cadence table, audit log format (first-4-chars only, never full keys), what's NOT covered, maintenance.
 
@@ -232,7 +232,7 @@ When all six axes hit threshold, the platform is "stable enough." Re-evaluate ag
 
 **LAST UPDATED:** 2026-05-20 (this commit).
 **LAST CHAT:** puffer-fish (writing the plan + seeding decisions.md).
-**NEXT ACTION (puffer-fish lane):** write `tasks/spec-audit-log-destructive-ops.md` (P3/A4.3). Today there is no `deleted_records` table - recovery from accidental delete relies entirely on Supabase PITR. With Pro+PITR deferred (per Xero 2026-05-20 launch-plan decision), this gap is higher-priority than originally framed. Spec the audit-log shape: which tables get audit rows, what fields, retention window, who reads it. Pure puffer-fish doc; no code shipped. Pairs with the soft-delete stance + backup playbook.
+**NEXT ACTION (puffer-fish lane):** Phase P3 is now spec-complete from this lane (A4.4 + A4.5 + A4.3 shipped; A4.1 + A4.2 are Xero-decision/drill-gated). Move into Phase P4 (security hardening). Start with `tasks/audit-csp-sri-third-party-scripts.md` (P4/A5.1) - read-only audit of Turnstile + Sentry script tags' CSP coverage + SRI integrity hashes. Currently unverified; baseline pass surfaces gaps for hunt-and-peck to fix.
 
 **NEXT ACTION (hunt-and-peck lane):** start Phase P1 step 1 of the decomposition plan - move types + module constants out of `app/stories/[id]/table/page.tsx` into `app/stories/[id]/table/types.ts`. -200 LOC. Trivial leaf. Hunt-and-peck owns; puffer-fish updates Risk Register + this plan after each phase ships.
 
