@@ -71,6 +71,7 @@ import { triangleBreakdown } from '../../../../lib/populate-triangle'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { OUTCOME } from '../../../../lib/roll-outcomes'
+import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../../../lib/stabilize-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
@@ -247,7 +248,23 @@ export default function TablePage() {
     if (selectedEntry) setSelectedVehicleId(null)
   }, [selectedEntry])
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
-  const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
+  // Dedicated <RollModal> state for Stabilize - migrated off pendingRoll
+  // 2026-05-20 (Phase 1 of tasks/spec-stabilize-migration.md). The legacy
+  // executeRoll Stabilize branch (around L6140) is now unreachable from
+  // the in-app dropdown trigger - left in place as a paper trail / safety
+  // net until Phase 4 retirement.
+  const [stabilizePending, setStabilizePending] = useState<{
+    medicEntryId: string         // initiative_order.id of the medic (active combatant)
+    medicName: string            // for narrative + log
+    targetName: string
+    targetKind: 'pc' | 'npc'
+    amod: number                 // medic's RSN AMod
+    smod: number                 // medic's Medicine SMod
+  } | null>(null)
+  const [stabilizeCmod, setStabilizeCmod] = useState(0)
+  const [stabilizeResult, setStabilizeResult] = useState<SharedRollResult | null>(null)
+  const [stabilizeNarrativeText, setStabilizeNarrativeText] = useState<string>('')
+  const actionPreConsumedRef = useRef(false)  // Set when Distract/Sprint/Unjam pre-consumes before the roll modal (Stabilize migrated off this 2026-05-20)
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
   const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal - refs survive React batching
@@ -4871,6 +4888,71 @@ export default function TablePage() {
     return { total, outcome, insightAwarded }
   }
 
+  // Stabilize cascade - runs after the dedicated RollModal resolves a
+  // Stabilize attempt. Pulled out of executeRoll 2026-05-20 (Phase 1 of
+  // tasks/spec-stabilize-migration.md). Pure-ish: the outcome → state
+  // mapping is deterministic via lib/stabilize-helpers, but the DB
+  // writes + optimistic-state updates + progression-log append still
+  // need the component closure (entries, campaignNpcs, setters,
+  // supabase, appendProgressionEntry). Returns the narrative string
+  // for the modal banner; null if the target is no longer mortally
+  // wounded (race: target died or was healed between dropdown open
+  // and roll commit).
+  async function runStabilizeCascade(p: {
+    medicName: string
+    targetName: string
+    targetKind: 'pc' | 'npc'
+    outcome: string
+  }): Promise<string> {
+    const { medicName, targetName, targetKind, outcome } = p
+    const success = isStabilizeSuccess(outcome)
+
+    if (targetKind === 'pc') {
+      const targetEntry = entries.find(e => e.character.name === targetName)
+      if (!targetEntry?.liveState || targetEntry.liveState.wp_current !== 0) {
+        return `${targetName} is no longer mortally wounded.`
+      }
+      if (!success) return stabilizeNarrative(false, targetName, 0)
+      const phyAmod = targetEntry.character.data?.rapid?.PHY ?? 0
+      const incapRounds = rollIncapRounds(phyAmod)
+      const { data: stabRows, error: stabErr } = await supabase
+        .from('character_states')
+        .update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() })
+        .eq('id', targetEntry.stateId)
+        .select('id, death_countdown, incap_rounds')
+      if (stabErr) console.error('[stabilize] character_states update error:', stabErr.message)
+      else if (!stabRows || stabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - stabilize did not persist for', targetName, '- Run sql/character-states-rls-fix.sql.')
+      setEntries(prev => prev.map(e =>
+        e.stateId === targetEntry.stateId
+          ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any }
+          : e,
+      ))
+      if (targetEntry.character?.id) void appendProgressionLog(targetEntry.character.id, 'wound', `🩸 Stabilized by ${medicName}.`)
+      return stabilizeNarrative(true, targetName, incapRounds)
+    }
+
+    // NPC branch
+    const targetNpc = campaignNpcs.find((n: any) => n.name === targetName)
+    if (!targetNpc) return `${targetName} not found.`
+    const npcWp = (targetNpc as any).wp_current ?? (targetNpc as any).wp_max ?? 10
+    if (npcWp !== 0) return `${targetName} is no longer mortally wounded.`
+    if (!success) return stabilizeNarrative(false, targetName, 0)
+    const npcPhyAmod = (targetNpc as any).physicality ?? 0
+    const incapRounds = rollIncapRounds(npcPhyAmod)
+    const { data: nstabRows, error: nstabErr } = await supabase
+      .from('campaign_npcs')
+      .update({ death_countdown: null, incap_rounds: incapRounds })
+      .eq('id', (targetNpc as any).id)
+      .select('id, death_countdown, incap_rounds')
+    if (nstabErr) console.error('[stabilize] campaign_npcs update error:', nstabErr.message)
+    else if (!nstabRows || nstabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - NPC stabilize did not persist for', targetName)
+    const npcPatch = { death_countdown: null, incap_rounds: incapRounds }
+    setCampaignNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } : n))
+    setRosterNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } : n))
+    setViewingNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } as CampaignNpc : n))
+    return stabilizeNarrative(true, targetName, incapRounds)
+  }
+
   async function executeRoll() {
     if (!pendingRoll || !userId) return
     // Self-attack confirmation
@@ -6123,7 +6205,15 @@ export default function TablePage() {
       }
     }
 
-    // Stabilize result - stop death countdown on success (PC or NPC)
+    // Stabilize result - LEGACY PATH (unreachable since 2026-05-20).
+    // The 🩸 STABILIZE dropdown now routes through the dedicated
+    // <RollModal> + runStabilizeCascade helper at L4895+. The broken
+    // per-card Stabilize button on CharacterCard.tsx (which used the
+    // patient's own stats as the medic's) was removed in the same
+    // change, eliminating every caller of `handleRollRequest` with a
+    // "Stabilize " label. This branch is kept in place for Phase 4
+    // retirement (tasks/spec-stabilize-migration.md) - if Phase 1 ships
+    // clean through one playtest, delete this whole block.
     let stabilizeResult = ''
     if (pendingRoll.label.includes('Stabilize ')) {
       const stTargetName = pendingRoll.label.split('Stabilize ')[1]
@@ -7999,7 +8089,12 @@ export default function TablePage() {
                   // One callback shape, per target. Engaged = open the roll;
                   // not engaged = warn the GM to move closer first. Same logic
                   // as before, just plumbed through the cascade helper.
-                  const fireStabilize = (t: StabTarget) => async () => {
+                  // Stabilize routes through the dedicated <RollModal>
+                  // (Phase 1 migration, 2026-05-20). No pre-consume here -
+                  // the modal's onRoll runs consumeAction synchronously
+                  // before the dice fire so the action debit can't slip
+                  // through if the modal closes mid-flow.
+                  const fireStabilize = (t: StabTarget) => () => {
                     let amod = 0, smod = 0
                     if (charEntry) {
                       const rapid = charEntry.character.data?.rapid ?? {}
@@ -8013,9 +8108,17 @@ export default function TablePage() {
                         smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
                       }
                     }
-                    handleRollRequest(`${activeEntry.character_name} - Stabilize ${t.name}`, amod, smod)
-                    actionPreConsumedRef.current = true
-                    await consumeAction(activeEntry.id)
+                    setStabilizeCmod(0)
+                    setStabilizeResult(null)
+                    setStabilizeNarrativeText('')
+                    setStabilizePending({
+                      medicEntryId: activeEntry.id,
+                      medicName: activeEntry.character_name,
+                      targetName: t.name,
+                      targetKind: t.kind,
+                      amod,
+                      smod,
+                    })
                   }
                   const items = inRange.map(t => {
                     const notEngaged = t.distFeet !== null && t.distFeet > 5
@@ -12633,6 +12736,94 @@ export default function TablePage() {
       />
       {/* (legacy roll-step + result-step JSX consolidated above) */}
       {false && (() => null)()}
+
+      {/* Stabilize - dedicated <RollModal> (Phase 1 migration, 2026-05-20).
+          Replaces the pendingRoll path for the 🩸 STABILIZE dropdown.
+          Single-target; the dropdown loops over mortally-wounded
+          combatants in range and fires this modal one per click. */}
+      <RollModal
+        open={stabilizePending !== null}
+        onClose={() => {
+          setStabilizePending(null)
+          setStabilizeResult(null)
+          setStabilizeNarrativeText('')
+          setStabilizeCmod(0)
+        }}
+        title="Stabilize"
+        subtitle={stabilizePending
+          ? `${stabilizePending.medicName} stabilizes ${stabilizePending.targetName}`
+          : undefined}
+        rollFormula="2d6 + RSN + Medicine + CMod"
+        amod={stabilizePending?.amod ?? 0}
+        smod={stabilizePending?.smod ?? 0}
+        cmod={stabilizeCmod}
+        setCmod={stabilizeResult ? undefined : setStabilizeCmod}
+        onRoll={async () => {
+          const sp = stabilizePending
+          if (!sp || stabilizeResult) return
+          const d1 = Math.floor(Math.random() * 6) + 1
+          const d2 = Math.floor(Math.random() * 6) + 1
+          const total = d1 + d2 + sp.amod + sp.smod + stabilizeCmod
+          const outcome = getOutcome(total, d1, d2)
+          // Save to log FIRST (before cascade) so the feed row exists
+          // even if the cascade DB write hits an RLS gap. Mirrors the
+          // legacy executeRoll ordering (saveRollToLog at L4873).
+          const label = `${sp.medicName} - Stabilize ${sp.targetName}`
+          await saveRollToLog(d1, d2, sp.amod, sp.smod, stabilizeCmod, label, sp.medicName, false, null)
+          // Consume the medic's action - silent (no actionLabel) to
+          // match the legacy pre-consume behavior. The saveRollToLog
+          // row above is the only feed entry for the attempt.
+          await consumeAction(sp.medicEntryId)
+          // Apply cascade (death_countdown=null, incap_rounds set, or
+          // failure narrative). Cascade returns the human-readable
+          // result; surfaced in renderOutcome below.
+          const narrative = await runStabilizeCascade({
+            medicName: sp.medicName,
+            targetName: sp.targetName,
+            targetKind: sp.targetKind,
+            outcome,
+          })
+          setStabilizeNarrativeText(narrative)
+          setStabilizeResult({
+            die1: d1, die2: d2,
+            amod: sp.amod, smod: sp.smod, cmod: stabilizeCmod,
+            total, outcome,
+            insightAwarded: outcome === 'High Insight',
+          })
+          await rollsFeed.refetch()
+        }}
+        rollLabel="Roll Stabilize"
+        result={stabilizeResult}
+        renderOutcome={(r) => (
+          <>
+            {/* Math line */}
+            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+              [{r.die1}+{r.die2}]
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+            </div>
+            {/* Outcome banner */}
+            <div style={{ fontSize: '18px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
+              {r.outcome}
+            </div>
+            {/* Cascade narrative - "Bob stabilized! Incap 3 rounds..." or "Failed to stabilize Bob." */}
+            {stabilizeNarrativeText && (
+              <div style={{ padding: '12px', background: isStabilizeSuccess(r.outcome) ? '#0f1a0f' : '#2a1210', border: `1px solid ${isStabilizeSuccess(r.outcome) ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4, textAlign: 'center' }}>
+                {stabilizeNarrativeText}
+              </div>
+            )}
+          </>
+        )}
+        postRollCloseLabel="Close"
+        onPostRollClose={() => {
+          setStabilizePending(null)
+          setStabilizeResult(null)
+          setStabilizeNarrativeText('')
+          setStabilizeCmod(0)
+        }}
+      />
 
       {/* Apprentice Creation Wizard - single instance, lifted from
           NpcCard / PlayerNpcCard so multiple open NPC cards share it.

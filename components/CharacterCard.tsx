@@ -657,16 +657,18 @@ function CharacterCardImpl({
                           style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                           Lasting Wound Check
                         </button>
-                        {onRoll && (
-                          <button onClick={() => {
-                            const amod = rapid.RSN ?? 0
-                            const smod = skills.find(s => s.skillName === 'Medicine')?.level ?? 0
-                            onRoll(`Stabilize ${c.name}`, amod, smod)
-                          }}
-                            style={{ marginLeft: '6px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                            Stabilize
-                          </button>
-                        )}
+                        {/* Stabilize button removed 2026-05-20: it was
+                            using the patient's own RSN/Medicine as the
+                            medic's amod/smod (a long-standing latent bug -
+                            Stabilize is canon "medic stabilizes downed
+                            ally", never self). The in-combat dropdown
+                            (🩸 STABILIZE on the active combatant's row,
+                            table/page.tsx L8060+) is now the only entry
+                            point and correctly uses the medic's stats.
+                            Follow-up: design a post-combat stabilize
+                            surface if there's playtest demand - currently
+                            mortally-wounded survivors are stabilized in
+                            combat or die during the death_countdown. */}
                       </>
                     )}
                   </div>

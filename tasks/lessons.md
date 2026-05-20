@@ -1,5 +1,23 @@
 # Lessons Learned
 
+## Migration specs - verify every caller, don't trust the named trigger (2026-05-20)
+
+**Rule:** A migration spec naming "the trigger at X:Y" is a starting point, not the complete map. Before pulling code from path A → path B, grep for every call site of the old path. The Stabilize Phase 1 spec at `tasks/spec-stabilize-migration.md:77` named `components/CharacterCard.tsx:660` as the trigger to migrate. Reality: there were TWO triggers, and the named one was actually broken.
+
+Sequence today:
+1. Spec said: migrate the CharacterCard Stabilize button → dedicated modal.
+2. Started recon - grep'd `Stabilize` in `app/stories/[id]/table/page.tsx` and found a SECOND trigger (header dropdown at L8060+) added 2026-05-19 that's the actually-live path.
+3. Read the CharacterCard button context - it sits inside `localState.wp_current === 0` (mortally wounded PC's own card) and uses `rapid.RSN ?? 0` / `skills.find(... 'Medicine') ?? 0` - the PATIENT's stats, not the medic's. Latent bug since inception.
+4. If I'd "just done the spec" without that second grep pass, I'd have migrated the dead/broken trigger, left the live trigger on the old path, and shipped a still-broken Stabilize.
+
+**Detection:** at the start of any "migrate X to Y" task:
+```sh
+grep -rn 'X' app/ components/ lib/  # find every call site of the old shape
+```
+If the spec names ONE site and grep returns N, audit the other N-1 before designing the new modal's API. They may be dead, broken, or actually-live - all three change the migration plan.
+
+**Reusable rule:** A spec is one writer's snapshot of the code. Verify the snapshot against live grep before acting on the spec.
+
 ## Never combine `git stash push <file>` with rebase --autostash (2026-05-19)
 
 **Banned workflow.** Cost ~30 min today + a silent missing-fixes ship (`d5fd410`).
