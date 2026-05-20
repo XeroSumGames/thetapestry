@@ -155,6 +155,21 @@ Honest about the limits so we don't fool ourselves:
 
 ---
 
+## Multi-chat lanes
+
+Tapestry runs across two Claude chats by deliberate split (per Xero 2026-05-20):
+
+- **Puffer-fish chat** - architecture, risk, audit, observability, scaffolding. Owns: stability audits, slash-convention scaffolding, operating-mode + debug-handoff + handoff maintenance, Risk Register triage, ops runbooks (Y11 / Y12 / R4 / R10), pre-launch audit follow-ups, lessons + decisions infrastructure. Read-only or doc-first work fits this lane; load-bearing refactors only when explicitly assigned.
+- **Hunt-and-peck chat** - tactical bug fixes, feature ships, narrative tweaks, modal migrations, day-to-day shipping. Owns: Stabilize / Distract / FI migrations, mounted-weapon narrative upgrades, Brew Check rework, playtest-bug triage, anything "one specific fix to a specific user-facing thing."
+
+Coordination is via the shared substrate (commits, lessons.md, todo.md, debug-handoff.md, the handoff file). Neither chat sees the other's in-flight thinking; they see each other's commits + doc updates. Rebase conflicts happen and are accepted as the cost of parallel work; both chats handle their own rebases without coordination.
+
+**When in doubt about which lane a request belongs to**, the puffer-fish chat (this one) defaults to "is this a structural / observability / doc / risk question?" If yes, work it here. If it's "fix this specific bug" or "ship this specific feature," redirect to the hunt-and-peck chat.
+
+The earlier MEMORY.md entry `process_multi_chat_tracks` lists three tracks (tactical / infrastructure / organize-thoughts); the canonical model is now this two-lane split. Memory entry to be refreshed accordingly.
+
+---
+
 ## How to evolve this file
 
 This is a first draft. Update it when:
