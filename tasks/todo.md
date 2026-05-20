@@ -24,12 +24,12 @@ Full punch list: [tasks/stability-audit-2026-05-19.md](stability-audit-2026-05-1
 - [x] ~~**L-2 `app/dashboard/page.tsx:52` accesses `profile.role` directly.**~~ SHIPPED 2026-05-19. Surprise root-cause fix: `userRole` state was completely unused (declared line 29, set line 52, never read). The "swap to a helper" recommendation would have wrapped a dead write in nicer syntax. Removed the dead state + setter call entirely. Permission branches use `roleIsThriver(profile)` already. tsc + role-literal guardrails clean.
 - [ ] **L-3 verify-turnstile: upgrade to KV-backed rate-limiter before paid signups.** Current in-memory bucket leaks ~N × LIMIT across N warm Vercel instances. Add `@vercel/kv` + `@upstash/ratelimit` (Upstash has a free tier; flag for Xero before installing). Pre-paid-signups blocker.
 
-**Risk Register triage (decide after 2026-05-25 playtest)**
-- [ ] **Demote `lib/campaign-clock.ts` YELLOW → GREEN** if drainers behave again.
-- [ ] **Demote `roll_log` writer YELLOW → GREEN** but hold one extra cycle (Advantages broadcast + FI cutover added write paths).
-- [ ] **Demote Initiative state machine YELLOW → GREEN** if no stuck-turn reports (Tier-2 Recruit drainers touch adjacency).
-- [ ] **Demote TacticalMap canvas YELLOW → GREEN** if no fog/range/drag regressions.
-- [ ] **Hold table page YELLOW** until 3-4 `useHeaderMenus`-style extractions land.
+**Risk Register triage (TRIAGED 2026-05-20)**
+- [x] ~~**Demote `lib/campaign-clock.ts` YELLOW -> GREEN-ish**~~ DEMOTED 2026-05-20. Phase 3 drainers playtested green 2026-05-18, no functional changes since.
+- [~] **`roll_log` writer YELLOW HELD** one extra cycle. 2026-05-19 added new write paths (Advantages `advantage_used` outcome + C3 broadcast, FI single-modal cutover, Stress 12-string narrative, Stabilize Phase 1 cascade) + outcomeColor dedup widens the consumer surface. Re-evaluate post-2026-05-25 playtest.
+- [x] ~~**Demote Initiative state machine YELLOW -> GREEN-ish**~~ DEMOTED 2026-05-20. No stuck-turn reports through 2026-05-18 playtest; Stabilize Phase 1 exercises consumeAction synchronously without breakage.
+- [x] ~~**Demote TacticalMap canvas YELLOW -> GREEN-ish**~~ DEMOTED 2026-05-20. Effective fog cache + drag-end fix + GM Share View all playtested green / additive-only.
+- [~] **Table page YELLOW HELD.** Now 13,192 lines (Stabilize Phase 1 added +200). `useHeaderMenus` (2426e5b) is the first real extraction; need 3-4 more before demote. The Stabilize/Distract/FI/Recruit-modal pattern repeating in-file hardens the case for going wider on the decomposition plan.
 
 ### Pre-launch audit (2026-05-17, structural)
 Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md). Items below are the operational checklist.

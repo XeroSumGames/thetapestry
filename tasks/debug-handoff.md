@@ -7,7 +7,7 @@ Diagnostic companion to `tasks/handoff.md`. Open this file when:
 - A playtest surfaces a regression and you need to triage it under pressure.
 - You're deciding "is this a quick fix or a structural issue?"
 
-Updated when architecture/risk shifts, not every session. Last full review: 2026-05-16 (added test-infra paid-down entry; updated Confidence Ledger TESTED row from "nothing" to 141-test inventory). Refreshed 2026-05-20: test count 141 -> 388 + coverage inventory expanded; em-dash sweep across 409 files / 7099 chars + new check-em-dashes pre-commit guardrail.
+Updated when architecture/risk shifts, not every session. Last full review: 2026-05-16 (added test-infra paid-down entry; updated Confidence Ledger TESTED row from "nothing" to 141-test inventory). Refreshed 2026-05-20: test count 141 -> 388 + coverage inventory expanded; em-dash sweep across 409 files / 7099 chars + new check-em-dashes pre-commit guardrail. Risk Register triage 2026-05-20: demoted `lib/campaign-clock.ts`, Initiative state machine, TacticalMap canvas from YELLOW to GREEN-ish (post-2026-05-18 playtest evidence + no fresh bug reports). Held `roll_log` writer YELLOW one extra cycle (2026-05-19 added new write paths: Advantages, FI cutover, Stress narrative, Stabilize Phase 1 cascade) and `app/stories/[id]/table/page.tsx` YELLOW (now 13,192 lines; Stabilize Phase 1 added +200; one extraction shipped, need 3-4 more before demote).
 
 ---
 
@@ -15,36 +15,36 @@ Updated when architecture/risk shifts, not every session. Last full review: 2026
 
 Each entry: where it lives, what depends on it, current health, what a player sees if it breaks.
 
-### `app/stories/[id]/table/page.tsx` - **YELLOW**
-- **What it is:** the in-session game table. One 10,000+ line client component.
+### `app/stories/[id]/table/page.tsx` - **YELLOW (held)**
+- **What it is:** the in-session game table. **13,192 lines** as of 2026-05-20 (up from 12,429 over the 2026-05-19 batch + Stabilize Phase 1 added another ~200).
 - **Touches:** combat, initiative, loot, healing, recruitment, grappling, fog, vehicles, broadcasts, modals, every roll_log write that happens during play.
 - **What players see if it breaks:** anything from "rolls don't appear in the feed" to "I can't take my turn" to "the page crashed and I lost my place." This is the throat of the app at session time.
-- **Why yellow:** size + coupling + frequent changes + zero tests. Every refactor here is "typecheck passed, fingers crossed."
+- **Why yellow (held 2026-05-20 triage):** size + coupling + frequent changes. `useHeaderMenus` extraction (`2426e5b`, 2026-05-19) is the first real decomposition step. Hold YELLOW until 3-4 more extractions in the same shape land. Stabilize Phase 1 + Recruit + Stress Check + Advantages all live in this file; pattern's repeating itself, hardening the architect case.
 - **First-place-to-look on a bug report from session:** here.
 
-### `lib/campaign-clock.ts` - **YELLOW**
+### `lib/campaign-clock.ts` - **GREEN-ish (demoted 2026-05-20)**
 - **What it is:** the only writer of `campaigns.clock`. Owns advance() + drainers (rations, subsistence, pending heals).
 - **What players see if it breaks:** time doesn't advance, or it does but the wrong things drain (rations don't decrement, heals don't tick, world events don't expire).
-- **Why yellow:** Phase 3 a/b/c/d shipped 2026-05-13, playtested green 2026-05-18. Demote candidate next review - keeping YELLOW one more cycle because the drainers touch multiple state surfaces and one clean playtest isn't a full audit.
+- **Why demoted from YELLOW:** Phase 3 a/b/c/d shipped 2026-05-13, playtested green 2026-05-18. No functional changes since (only em-dash sweep + clock-tick log entry). Two days of clean post-playtest behavior plus the Confidence Ledger HOPED-FOR drain on 2026-05-18 = enough evidence to demote. Same tier as Realtime channels now.
 - **First-place-to-look:** if anything time-related misbehaves, here.
 
-### `roll_log` writer path - **YELLOW**
+### `roll_log` writer path - **YELLOW (held)**
 - **What it is:** every event that produces a feed row. Touches `lib/roll-outcomes.ts`, `lib/roll-helpers.ts`, the 49 insert sites migrated to `OUTCOME.X` on 2026-05-15.
 - **What players see if it breaks:** feed rows render wrong, don't render, or render with wrong colors/labels.
-- **Why yellow:** the 49-site RollOutcome migration shipped 2026-05-15 is the largest single-day change to this path in the project's history. Playtested green 2026-05-18 - keeping YELLOW one cycle because feed-rendering bugs can be subtle (wrong color, slightly-off label).
-- **First-place-to-look:** if a feed row looks off post-2026-05-15, suspect the migration first.
+- **Why yellow (held 2026-05-20 triage):** RollOutcome migration playtested green 2026-05-18, but 2026-05-19 added new write paths on this surface (Advantages P3-Q4-b `advantage_used` outcome + C3 broadcast, FI single-modal cutover, Stress Check 12-string narrative lock, Stabilize Phase 1 cascade) plus 2026-05-19 `outcomeColor` dedup (canonical now accepts snake_case too - widens the affected surface). Hold one more playtest cycle (2026-05-25) to verify the new write paths render correctly.
+- **First-place-to-look:** if a feed row looks off post-2026-05-19, suspect the new write paths first; if pre-2026-05-19, the RollOutcome migration.
 
-### Initiative state machine - **YELLOW**
+### Initiative state machine - **GREEN-ish (demoted 2026-05-20)**
 - **What it is:** turn order, `actions_remaining` decrement, nextTurn cascades, initiative_order RLS.
 - **What players see if it breaks:** turns stick (stuck on one player), skip (player gets passed over), or duplicate (two players think it's their turn).
-- **Why yellow:** Nana 2-attack initiative-stuck bug fixed via SQL RLS tightening on 2026-05-15. No fresh stuck-turn reports as of 2026-05-18 playtest; demote candidate after one more playtest with active combat.
-- **First-place-to-look:** combat-turn bugs → `sql/initiative-order-rls-*.sql` + `lib/initiative-actions.ts` + the consumeAction wrapper in the table page.
+- **Why demoted from YELLOW:** Nana 2-attack stuck-turn bug fixed via SQL RLS tightening on 2026-05-15. No fresh stuck-turn reports through 2026-05-18 playtest. Tier-2 Recruit morale-tick drainer (2026-05-19, `1951d77`) is adjacent but doesn't write to initiative_order or call consumeAction. Stabilize Phase 1 (2026-05-20) consumes action via consumeAction synchronously in onRoll (cleaner than prior actionPreConsumedRef pattern) - direct verification that the consumeAction surface is being exercised by new code without breakage. Same tier as Realtime channels now.
+- **First-place-to-look:** combat-turn bugs -> `sql/initiative-order-rls-*.sql` + `lib/initiative-actions.ts` + the consumeAction wrapper in the table page.
 
-### TacticalMap canvas - **YELLOW**
+### TacticalMap canvas - **GREEN-ish (demoted 2026-05-20)**
 - **What it is:** `components/TacticalMap.tsx`. Renders the grid, tokens, fog, range circles, blast overlays.
 - **What players see if it breaks:** stale fog (cells stay dark after a PC walks past), wrong range overlay (range circle drawn at wrong size), invisible token movement, fog not clearing when a wall is opened.
-- **Why yellow:** the `effective` fog cache (commit `e83514b`, 2026-05-15) drops O(n²) draw work to zero on cache hit, but the cache key surface is non-trivial. Cache invalidation bugs would manifest as stale visual state. Playtested green 2026-05-18; also drag-end grab-offset fix (`d2ba6b6`, 2026-05-17) validated same day.
-- **First-place-to-look:** map-render bugs → `TacticalMap.tsx:1401-1437` (effective fog cache), `:1356-1399` (visible cache).
+- **Why demoted from YELLOW:** `effective` fog cache + drag-end grab-offset fix both playtested green 2026-05-18. GM Share View (`6a4669b`, 2026-05-19) is additive read-only mirror, not a render-path change. Vehicle canvas redraw deps fix (`16e33d6`) shipped 2026-05-15 and survived the playtest. Three clean rounds of evidence; demote.
+- **First-place-to-look:** map-render bugs -> `TacticalMap.tsx:1401-1437` (effective fog cache), `:1356-1399` (visible cache).
 
 ### Realtime channels (Supabase) - **GREEN-ish**
 - **What it is:** broadcast events for token moves, fog paint, initiative changes, chat messages, scene switches.
