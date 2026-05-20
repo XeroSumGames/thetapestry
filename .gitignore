@@ -52,7 +52,9 @@ docs/Rules/
 .env.sentry-build-plugin
 
 # Supabase CLI cache. The CLI writes supabase/.temp/cli-latest every
-# time it runs (version-check artifact). It's not source - it gets
-# regenerated whenever the CLI starts. Was blocking pushes multiple
-# times per day before this entry. Ignore the whole .temp directory.
+# time it runs (version-check artifact). Was blocking pushes multiple
+# times per day. linked-project.json + pooler-url + the version files
+# all derive from `supabase link` and are local-only - none belong in
+# git. Untracked 2026-05-19 (cli-latest via 3ec32d9, the other 8 via
+# this commit).
 supabase/.temp/
