@@ -51,8 +51,7 @@ Click the card to open the full NPC sheet:
   - Unarmed attack button.
   - Weapon attack button.
   - Equipment attacks.
-  - Stabilize button (if mortally wounded).
-  - Restore button (if dead - resets to full HP).
+  - Restore button (if mortally wounded or dead - resets to full HP).
   - Recruit button (during an active session).
   - Edit / Close buttons.
 

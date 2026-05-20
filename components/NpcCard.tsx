@@ -179,14 +179,18 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           {isPublished && (
             <span style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Published</span>
           )}
-          {displayStatus === 'mortally wounded' && onRoll && (
-            <button onClick={() => {
-              const amod = npc.reason ?? 0
-              const npcSkills: any[] = Array.isArray(npc.skills?.entries) ? npc.skills.entries : []
-              const smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
-              onRoll(`${npc.name} - Stabilize ${npc.name}`, amod, smod)
-            }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Stabilize</button>
-          )}
+          {/* Stabilize button removed 2026-05-20: same broken-stats pattern
+              as the per-card Stabilize button removed from CharacterCard.tsx
+              earlier the same day (npc.reason + npc Medicine = the patient's
+              own stats as the medic's; Stabilize is canon "medic stabilizes
+              downed ally", never self). The in-combat 🩸 STABILIZE dropdown
+              on the active combatant's header (table/page.tsx L8060+) is
+              the correct entry point and uses the medic's stats. Restore
+              button below stays as the GM's god-mode reset for both
+              mortally-wounded and dead NPCs. Removing this now also
+              prevents the silent-break that would land when the Phase 4
+              executeRoll cleanup merges (branch claude/phase4-prestage):
+              this button's pendingRoll path would lose its cascade. */}
           {(displayStatus === 'dead' || displayStatus === 'mortally wounded') && (
             <button onClick={async () => {
               await supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npc.id)
