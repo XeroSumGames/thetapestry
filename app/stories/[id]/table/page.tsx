@@ -73,6 +73,7 @@ import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../
 import { OUTCOME } from '../../../../lib/roll-outcomes'
 import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../../../lib/stabilize-helpers'
 import { distractActionDelta, distractNarrative } from '../../../../lib/distract-helpers'
+import { gutInstinctSmod } from '../../../../lib/gut-instinct-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
@@ -867,6 +868,20 @@ export default function TablePage() {
   const [gutInstinctPrompt, setGutInstinctPrompt] = useState<{ pcOwnerId: string; characterName: string; outcome: string } | null>(null)
   const [gutInstinctDetail, setGutInstinctDetail] = useState('')
   const [gutInstinctSending, setGutInstinctSending] = useState(false)
+  // Dedicated <RollModal> state for Gut Instinct - migrated off pendingRoll
+  // 2026-05-20 (companion to Stabilize Phase 1 + Distract Phase 2). The
+  // dice path lands here; the GM whisper-detail modal (already shipped
+  // 2026-05-19, adb9382) opens via the `gut_instinct_resolved` broadcast
+  // fired in the cascade below. No DB state changes - the broadcast IS
+  // the cascade.
+  const [gutInstinctPending, setGutInstinctPending] = useState<{
+    characterName: string
+    pcOwnerId: string | null    // null for GM-led on an unowned PC; falls through silently
+    amod: number                // RSN + ACU
+    smod: number                // best of Psychology / Streetwise / Tactics
+  } | null>(null)
+  const [gutInstinctCmod, setGutInstinctCmod] = useState(0)
+  const [gutInstinctRollResult, setGutInstinctRollResult] = useState<SharedRollResult | null>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [viewingObjects, setViewingObjects] = useState<{ tokenId: string; name: string; color: string; portraitUrl: string | null }[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -3808,12 +3823,19 @@ export default function TablePage() {
     if (!charEntry) return
     const rapid = charEntry.character.data?.rapid ?? {}
     const perMod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
-    // Can substitute Psychology, Streetwise, or Tactics
-    const skills = charEntry.character.data?.skills ?? []
-    const subSkills = ['Psychology', 'Streetwise', 'Tactics']
-    const bestSub = skills.filter((s: any) => subSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
-    const smod = bestSub?.level ?? 0
-    handleRollRequest(`${characterName} - Gut Instinct`, perMod, smod)
+    // Gut Instinct = Perception (RSN + ACU) + best of Psychology /
+    // Streetwise / Tactics. Picker logic lives in lib/gut-instinct-helpers
+    // (8 unit tests). Migrated off handleRollRequest 2026-05-20 onto the
+    // dedicated <RollModal> mounted at the bottom of this file.
+    const smod = gutInstinctSmod(charEntry.character.data?.skills ?? [])
+    setGutInstinctCmod(0)
+    setGutInstinctRollResult(null)
+    setGutInstinctPending({
+      characterName,
+      pcOwnerId: charEntry.userId ?? null,
+      amod: perMod,
+      smod,
+    })
     setShowSpecialCheck(null)
   }
 
@@ -6705,11 +6727,14 @@ export default function TablePage() {
         augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), ...lastingDamageJson }
       }
       await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3)
-      // Gut Instinct: broadcast resolved so the GM/Thriver client
-      // auto-opens a whisper-detail modal (option a per Xero 2026-05-19).
-      // Standard narrative feed row already landed via saveRollToLog;
-      // this fires the additional "GM color" prompt. Receiver gates
-      // on gmLikeRef + pcOwnerId !== userIdRef to skip self-roll.
+      // Gut Instinct - LEGACY BRANCH (unreachable since 2026-05-20).
+      // Migrated to the dedicated <RollModal> + cascade broadcast at
+      // the bottom of this file. triggerGutInstinct now sets
+      // gutInstinctPending instead of calling handleRollRequest, so
+      // no pendingRoll ever carries a 'Gut Instinct' label. Kept here
+      // for Phase 4 retirement alongside Stabilize + Distract (delete
+      // after the 2026-05-25 playtest verifies all three modals are
+      // clean).
       if (pendingRoll.label.includes('Gut Instinct')) {
         const pcEntry = entries.find(e => e.character.name === characterName)
         if (pcEntry?.userId && initChannelRef.current) {
@@ -12987,6 +13012,86 @@ export default function TablePage() {
           setDistractNarrativeText('')
           setDistractCmod(0)
           setDistractTargetName('')
+        }}
+      />
+
+      {/* Gut Instinct - dedicated <RollModal> (2026-05-20). The dice
+          path lives here; the GM whisper-detail modal (already shipped
+          2026-05-19 at L13280+) opens via the gut_instinct_resolved
+          broadcast fired in the cascade. No DB state changes - the
+          GM's whisper is the only outcome-dependent UX. Action consumed
+          ONLY if the rolling PC is the active combatant during active
+          combat (mirrors the legacy closeRollModal gate at L6884). */}
+      <RollModal
+        open={gutInstinctPending !== null}
+        onClose={() => {
+          setGutInstinctPending(null)
+          setGutInstinctRollResult(null)
+          setGutInstinctCmod(0)
+        }}
+        title="Gut Instinct"
+        subtitle={gutInstinctPending
+          ? `${gutInstinctPending.characterName} reads the room`
+          : undefined}
+        rollFormula="2d6 + PER (RSN + ACU) + Sub-skill + CMod"
+        amod={gutInstinctPending?.amod ?? 0}
+        smod={gutInstinctPending?.smod ?? 0}
+        cmod={gutInstinctCmod}
+        setCmod={gutInstinctRollResult ? undefined : setGutInstinctCmod}
+        warnings={gutInstinctRollResult ? null : (
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#0f1a1f', border: '1px solid #2e4a5a', borderRadius: '3px', textAlign: 'center' }}>
+            Sub-skill: best of Psychology / Streetwise / Tactics. GM whispers a private detail on resolve.
+          </div>
+        )}
+        onRoll={async () => {
+          const gi = gutInstinctPending
+          if (!gi || gutInstinctRollResult) return
+          const d1 = Math.floor(Math.random() * 6) + 1
+          const d2 = Math.floor(Math.random() * 6) + 1
+          const total = d1 + d2 + gi.amod + gi.smod + gutInstinctCmod
+          const outcome = getOutcome(total, d1, d2)
+          const label = `${gi.characterName} - Gut Instinct`
+          // Save first so the feed row exists regardless of whether the
+          // downstream broadcast lands.
+          await saveRollToLog(d1, d2, gi.amod, gi.smod, gutInstinctCmod, label, gi.characterName, false, null)
+          // Action accounting: only if the rolling PC is the active
+          // combatant in active combat. Mirrors closeRollModal's
+          // didRoll + rollerIsActive gate (page.tsx L6884) so a GM
+          // firing Gut Instinct on a PC out of combat doesn't drain
+          // someone else's actions.
+          if (combatActive) {
+            const activeEntry = initiativeOrder.find(e => e.is_active)
+            const myEntry = entries.find(e => e.character.name === gi.characterName)
+            if (activeEntry && myEntry?.character.id && activeEntry.character_id === myEntry.character.id) {
+              await consumeAction(activeEntry.id)
+            }
+          }
+          // Cascade: broadcast for the GM whisper-detail modal. Skipped
+          // silently when pcOwnerId is null (GM-led on an orphan PC).
+          // Receiver gates on gmLikeRef + pcOwnerId !== userIdRef to
+          // skip self-roll (no self-whisper).
+          if (gi.pcOwnerId && initChannelRef.current) {
+            initChannelRef.current.send({
+              type: 'broadcast',
+              event: 'gut_instinct_resolved',
+              payload: { pcOwnerId: gi.pcOwnerId, characterName: gi.characterName, outcome },
+            })
+          }
+          setGutInstinctRollResult({
+            die1: d1, die2: d2,
+            amod: gi.amod, smod: gi.smod, cmod: gutInstinctCmod,
+            total, outcome,
+            insightAwarded: outcome === 'High Insight' || outcome === 'Low Insight',
+          })
+          await rollsFeed.refetch()
+        }}
+        rollLabel="Roll Gut Instinct"
+        result={gutInstinctRollResult}
+        postRollCloseLabel="Close"
+        onPostRollClose={() => {
+          setGutInstinctPending(null)
+          setGutInstinctRollResult(null)
+          setGutInstinctCmod(0)
         }}
       />
 
