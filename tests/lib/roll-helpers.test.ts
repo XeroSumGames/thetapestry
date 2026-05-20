@@ -111,7 +111,7 @@ describe('compactRollSummary', () => {
   })
 
   it('returns label verbatim for lasting_wound_acquired', () => {
-    const label = 'Cree Hask has picked up a Lasting Wound and is now Skittish (-1 CMod on initiative rolls)'
+    const label = 'Cree Hask has picked up a Lasting Wound and is now Skittish (-1 Initiative Modifier)'
     expect(compactRollSummary({ label, character_name: 'Cree Hask', outcome: 'lasting_wound_acquired' })).toBe(label)
   })
 

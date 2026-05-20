@@ -81,7 +81,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // Lasting Wound acquired announcement (post-Lasting-Damage-Check
   // resolution). Label is the full sentence, e.g.
   //   "Cree Hask has picked up a Lasting Wound and is now Skittish
-  //    (-1 CMod on initiative rolls)"
+  //    (-1 Initiative Modifier)"
   // Return verbatim - no compact transformation needed.
   if (r.outcome === 'lasting_wound_acquired') return r.label
   // Advantage consumed (C3 share). Label is the full sentence -

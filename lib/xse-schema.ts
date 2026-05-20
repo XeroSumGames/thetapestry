@@ -737,7 +737,7 @@ export const LASTING_WOUND_NARRATIVE: Partial<Record<number, string>> = {
   4:  '-1 DEX attribute',                                       // Diminished
   5:  '-1 max RP',                                              // Shaken
   6:  '-1 max WP',                                              // Weakened
-  7:  '-1 CMod on initiative rolls',                            // Skittish (Xero-locked)
+  7:  '-1 Initiative Modifier',                                 // Skittish (Xero canon-locked 2026-05-20: lasting modifier, not per-roll CMod)
   8:  '-1 INF attribute',                                       // Scarring
   9:  '-1 PHY attribute',                                       // Fragile
   10: '-1 ACU attribute',                                       // Hearing Loss
