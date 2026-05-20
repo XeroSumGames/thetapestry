@@ -6,8 +6,11 @@
 
 ## 🎯 CURRENT OPEN - 2026-05-15
 
-### Launch plan (2026-06-15 limited public, ~26 days out)
-Full plan: [tasks/launch-plan-2026-06-15.md](launch-plan-2026-06-15.md). Target audience = reviewers / YouTubers / bloggers (not paying users, not closed beta). Composed 2026-05-20. **Six open Xero decisions blocking everything below; resolve this week (by 2026-05-24):**
+### Puffer-fish platform plan (active 2026-05-20)
+Full plan: [tasks/puffer-fish-platform-plan.md](puffer-fish-platform-plan.md). Xero redirected 2026-05-20: ignore the date-anchored launch plan; the mandate is making the platform as stable and optimized as possible. Multi-chat, no calendar pressure. 8 phases (P0-P8) sequenced by dependency; 6 measurable axes (bug-investigation cost / multi-client reliability / performance / recovery posture / security posture / test coverage); per-phase gate is playtest verification + substrate updates. Resume pointer at the bottom of the plan moves with every commit. **Launch plan (`tasks/launch-plan-2026-06-15.md`) is SUPERSEDED.**
+
+### Launch plan ARCHIVED (was 2026-06-15)
+Full plan: [tasks/launch-plan-2026-06-15.md](launch-plan-2026-06-15.md). Target audience was reviewers / YouTubers / bloggers. Composed 2026-05-20. **Superseded 2026-05-20** by the puffer-fish platform plan above. Per-role gap analysis + invite-code gate explainer + outsourcing-options content preserved in the file for reference, but the dated timeline is not active. Five of six Xero decisions from that plan were answered 2026-05-20; invite-code gate decision is still open if relevant later.
 - [ ] **Approve Supabase Pro + PITR** (~$125/mo). Blocks Y12 drill + the entire backup story. Without this, my recommendation is delay launch.
 - [ ] **Approve Upstash KV (or @vercel/kv)** ($0-10/mo). Blocks L-3 KV-backed rate-limiter; signup-fraud vector during launch window.
 - [ ] **Approve lawyer for TOS + Privacy review** ($500-2000 one-time). Cheapest insurance against a viral GDPR/CPRA article. 2-week turnaround means draft to lawyer by 2026-05-24.

@@ -1,4 +1,10 @@
-# Launch Plan: Limited Public, 2026-06-15
+# Launch Plan: Limited Public, 2026-06-15 (SUPERSEDED 2026-05-20)
+
+> **STATUS: ARCHIVED.** Xero redirected 2026-05-20: stop optimizing around a launch date. The platform-stability work is the entire mandate. See [tasks/puffer-fish-platform-plan.md](puffer-fish-platform-plan.md) for the active plan.
+>
+> This file is preserved for the audience-reframe + per-role gap analysis + outsourcing-options + invite-code-gate explainer content. The dated timeline + freeze-week + reviewer-outreach windows are NOT active. Do not act on the timeline below.
+
+
 
 Target audience: **reviewers, YouTubers, bloggers**. Not paying users. Not closed beta. Content-creators who will publish what they see, get linked from press releases, and shape early public perception. ~26 days from this plan's authoring (2026-05-20).
 
