@@ -6,6 +6,23 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-20 18:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [400 passed]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- Confidence Ledger fingerprint stale: ledger says 390 tests / 20 files; live suite is 400 tests / 21 files. `stabilize-helpers.test.ts` (10 tests) added 2026-05-20 after the last `refresh-ledger` run.
+
+**Action:** `node scripts/refresh-ledger.mjs` (drains the ledger; ~30 seconds)
+
+---
+
 ## 2026-05-20 15:03 UTC
 
 **Status:** DRIFT
