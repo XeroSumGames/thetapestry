@@ -11,6 +11,8 @@ import { decrementInitiativeAction } from '../../lib/initiative-actions'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
+import RollModal, { type RollResult as SharedRollResult } from '../../components/RollModal'
+import { outcomeColor as feedOutcomeColor } from '../../lib/roll-helpers'
 import { EQUIPMENT, findEquipmentByName, SKILLS } from '../../lib/xse-schema'
 import {
   installFuelDrum, removeFuelDrum, effectiveFuelMaxBase,
@@ -1896,230 +1898,201 @@ export default function VehiclePage() {
       {/* Check modal - Driving or Brew. Inputs prefilled from the assigned
           crew member's stats; result writes a row to roll_log and (for
           brew Success / Wild Success) bumps fuel_current. */}
+      {/* Vehicle check modal - migrated 2026-05-20 from a bespoke
+          ModalBackdrop shell to the canonical <RollModal> shell used
+          by Stabilize / Distract / Recruit / FI / Gut Instinct / Stress
+          Check / etc. The four `check.kind` variants (driving / brew /
+          navigate / attack) all flow through one <RollModal> with
+          conditional pre-roll extras (target picker, skill picker,
+          brew-skill toggle). AMOD/SMOD are now read-only chips for
+          uniformity with the rest of the codebase - mid-roll tuning
+          happens via the brew/navigate skill picker (auto-recomputes
+          AMOD+SMOD) or by swapping the crew member. CMOD remains
+          GM-tunable as in every other modal. */}
       {check && vehicle && (() => {
         const member = crew.find(c => c.id === check.crewId)
         const modalWeapon = check.kind === 'attack' && check.weaponIndex != null
           ? vehicle.mounted_weapons?.[check.weaponIndex]
           : undefined
         const modalWeaponDef = modalWeapon ? getWeaponByName(modalWeapon.name) : undefined
-        const verb = check.kind === 'driving'
+        const title = check.kind === 'driving'
           ? 'Driving Check'
           : check.kind === 'brew'
             ? 'Brew Check'
             : check.kind === 'navigate'
               ? 'Navigate Check'
               : `${modalWeapon?.name ?? 'Mounted Weapon'} Attack`
-        const accent = check.kind === 'driving' ? '#7ab3d4'
-          : check.kind === 'brew' ? '#b87333'
-          : check.kind === 'navigate' ? '#a78bfa'
-          : '#c0392b'
-        const accentBg = check.kind === 'driving' ? '#1a3a5c'
-          : check.kind === 'brew' ? '#3a2516'
-          : check.kind === 'navigate' ? '#241a3a'
-          : '#2a1210'
-        const outcomeColor = (o: string) =>
-          o === 'High Insight' || o === 'Wild Success' ? '#7fc458'
-          : o === 'Success' ? '#cce0f5'
-          : o === 'Failure' ? '#EF9F27'
-          : '#c0392b'
+        const subtitle = `${member?.name ?? '-'} · ${vehicle.name}`
+        const sharedResult: SharedRollResult | null = check.result ? {
+          die1: check.result.die1,
+          die2: check.result.die2,
+          amod: check.amod,
+          smod: check.smod,
+          cmod: check.cmod,
+          total: check.result.total,
+          outcome: check.result.outcome,
+          insightAwarded: check.result.outcome === 'High Insight' || check.result.outcome === 'Low Insight',
+        } : null
+        const arcBlocked = check.kind === 'attack'
+          && !!check.targetNpcId
+          && check.targets?.find(t => t.id === check.targetNpcId)?.inArc === false
+        const noTarget = check.kind === 'attack' && !check.targetNpcId
         return (
-          <ModalBackdrop onClose={() => setCheck(null)} zIndex={10001} opacity={0.92} padding="1rem">
-            <div style={{ background: '#1a1a1a', border: `1px solid ${accent}`, borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '1.25rem', width: '420px', maxWidth: '92vw' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: accent }}>{verb}</div>
-                <button onClick={() => setCheck(null)} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '18px', cursor: 'pointer' }}>✕</button>
-              </div>
-              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-                {member?.name ?? '-'} · {vehicle.name}
-              </div>
+          <RollModal
+            open={true}
+            onClose={() => setCheck(null)}
+            title={title}
+            subtitle={subtitle}
+            rollFormula="2d6 + AMOD + SMOD + CMOD"
+            amod={check.amod}
+            smod={check.smod}
+            cmod={check.cmod}
+            setCmod={check.result ? undefined : (n => setCheck({ ...check, cmod: n }))}
+            rolling={check.rolling}
+            rollLabel={`🎲 Roll ${title}`}
+            rollDisabled={check.rolling || arcBlocked || noTarget}
+            warnings={check.result ? null : (
+              <>
+                {brewingSuppliesError && (
+                  <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', textAlign: 'center', marginBottom: '6px' }}>
+                    {brewingSuppliesError}
+                  </div>
+                )}
+                {arcBlocked && (
+                  <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', textAlign: 'center', marginBottom: '6px' }}>
+                    ⛔ Outside this weapon&apos;s firing arc. Reposition the vehicle or pick a target in arc.
+                  </div>
+                )}
+                {check.kind === 'attack' && !arcBlocked && check.targetNpcId && check.targets?.find(t => t.id === check.targetNpcId)?.outOfRange && (
+                  <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', textAlign: 'center', marginBottom: '6px' }}>
+                    ⚠ Beyond this weapon&apos;s primary range band. Roll allowed but the GM may apply a Range CMod.
+                  </div>
+                )}
+              </>
+            )}
+            preRollExtras={check.result ? null : (
+              <>
+                {/* Target picker - NPCs currently on the active scene */}
+                {check.kind === 'attack' && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={lbl}>Target</div>
+                    {(check.targets?.length ?? 0) === 0 ? (
+                      <div style={{ fontSize: '13px', color: '#f5a89a', fontStyle: 'italic', padding: '6px 0' }}>
+                        No NPCs on the active scene to target. Place some on the tactical map first.
+                      </div>
+                    ) : (
+                      <select value={check.targetNpcId ?? ''}
+                        onChange={e => setCheck({ ...check, targetNpcId: e.target.value || undefined })}
+                        style={{ width: '100%', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}>
+                        <option value="">-- Pick a target --</option>
+                        {check.targets!.map(t => {
+                          const blocked = t.inArc === false
+                          const ofr = !!t.outOfRange
+                          const tag = blocked ? '⛔ Out of arc' : ofr ? '⚠ Out of range' : ''
+                          return (
+                            <option key={t.id} value={t.id} disabled={blocked}>
+                              {t.name}{tag ? ` - ${tag}` : ''}
+                            </option>
+                          )
+                        })}
+                      </select>
+                    )}
+                  </div>
+                )}
 
-              {/* Target picker - NPCs currently on the active scene
-                  (live tokens). Pre-selected to the first option;
-                  empty if no NPCs are on the map. */}
-              {check.kind === 'attack' && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={lbl}>Target</div>
-                  {(check.targets?.length ?? 0) === 0 ? (
-                    <div style={{ fontSize: '13px', color: '#f5a89a', fontStyle: 'italic', padding: '6px 0' }}>
-                      No NPCs on the active scene to target. Place some on the tactical map first.
+                {/* Navigate skill picker - default Navigation (ACU),
+                    swappable; AMod/SMod auto-recompute via
+                    switchNavigateSkill. */}
+                {check.kind === 'navigate' && (() => {
+                  const navSkillDef = SKILLS.find(s => s.name === check.navigateSkill)
+                  const navAttr = navSkillDef?.attribute ?? 'ACU'
+                  return (
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={lbl}>Skill</div>
+                      <select value={check.navigateSkill ?? 'Navigation'}
+                        onChange={e => switchNavigateSkill(e.target.value)}
+                        style={{ width: '100%', padding: '6px 8px', marginTop: '4px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}>
+                        {SKILLS.map(s => {
+                          const lvlHere = member?.skillByName[s.name] ?? 0
+                          return (
+                            <option key={s.name} value={s.name}>
+                              {s.name} ({s.attribute} · Skill +{lvlHere})
+                            </option>
+                          )
+                        })}
+                      </select>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontStyle: 'italic', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
+                        Default is Navigation ({navAttr}). Switch if the player has made a case for a different skill.
+                      </div>
                     </div>
-                  ) : (
-                    <>
-                    <select value={check.targetNpcId ?? ''}
-                      onChange={e => setCheck({ ...check, targetNpcId: e.target.value || undefined })}
-                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', boxSizing: 'border-box' }}>
-                      {check.targets!.map(t => {
-                        // Annotate the option with arc + range gates
-                        // when the weapon has cone data. ⛔ = blocked
-                        // (the roll button enforces this);
-                        // ⚠ Range = soft warn (still allowed but the
-                        // GM should know it's a long shot).
-                        const blocked = t.inArc === false
-                        const ofr = !!t.outOfRange
-                        const tag = blocked ? '⛔ Out of arc'
-                          : ofr ? '⚠ Out of range'
-                          : ''
-                        return (
-                          <option key={t.id} value={t.id} disabled={blocked}>
-                            {t.name}{tag ? ` - ${tag}` : ''}
-                          </option>
-                        )
-                      })}
-                    </select>
-                    {check.targetNpcId && (() => {
-                      const picked = check.targets?.find(t => t.id === check.targetNpcId)
-                      if (!picked) return null
-                      if (picked.inArc === false) {
-                        return (
-                          <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-                            ⛔ Outside this weapon&apos;s firing arc. Reposition the vehicle or pick a target in arc.
-                          </div>
-                        )
-                      }
-                      if (picked.outOfRange) {
-                        return (
-                          <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-                            ⚠ Beyond this weapon&apos;s primary range band. Roll allowed but the GM may apply a Range CMod.
-                          </div>
-                        )
-                      }
-                      return null
-                    })()}
-                    </>
-                  )}
-                </div>
-              )}
+                  )
+                })()}
 
-              {/* Navigate skill picker - default Navigation (ACU),
-                  swappable to any skill the player has argued for.
-                  AMod/SMod auto-recompute on change via
-                  switchNavigateSkill. SKILLS is the canonical list
-                  from lib/xse-schema.ts so the dropdown stays in sync
-                  with the rulebook. */}
-              {check.kind === 'navigate' && (() => {
-                const navSkillDef = SKILLS.find(s => s.name === check.navigateSkill)
-                const navAttr = navSkillDef?.attribute ?? 'ACU'
-                return (
+                {/* Brew skill toggle - Mechanic* (RSN) vs Tinkerer (DEX) */}
+                {check.kind === 'brew' && (
                   <div style={{ marginBottom: '12px' }}>
                     <div style={lbl}>Skill</div>
-                    <select value={check.navigateSkill ?? 'Navigation'}
-                      onChange={e => switchNavigateSkill(e.target.value)}
-                      style={{ width: '100%', padding: '6px 8px', marginTop: '4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', boxSizing: 'border-box' }}>
-                      {SKILLS.map(s => {
-                        const lvlHere = member?.skillByName[s.name] ?? 0
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                      {(['mechanic', 'tinkerer'] as BrewSkill[]).map(s => {
+                        const selected = check.brewSkill === s
+                        const label = s === 'mechanic'
+                          ? `Mechanic* (RSN ${signed(member?.rsn ?? 0)} · Skill ${signed(member?.mechanicLevel ?? 0)})`
+                          : `Tinkerer (DEX ${signed(member?.dex ?? 0)} · Skill ${signed(member?.tinkererLevel ?? 0)})`
                         return (
-                          <option key={s.name} value={s.name}>
-                            {s.name} ({s.attribute} · Skill +{lvlHere})
-                          </option>
+                          <button key={s} onClick={() => switchBrewSkill(s)}
+                            style={{ flex: 1, padding: '6px', background: selected ? '#1a2e10' : '#1a1a1a', border: `1px solid ${selected ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selected ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            {label}
+                          </button>
                         )
                       })}
-                    </select>
-                    <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginTop: '4px' }}>
-                      Default is Navigation ({navAttr}). Switch if the player has made a case for a different skill.
                     </div>
                   </div>
-                )
-              })()}
-
-              {/* Brew skill picker - Mechanic* (RSN) vs Tinkerer (DEX) */}
-              {check.kind === 'brew' && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={lbl}>Skill</div>
-                  <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-                    {(['mechanic', 'tinkerer'] as BrewSkill[]).map(s => {
-                      const selected = check.brewSkill === s
-                      const label = s === 'mechanic' ? `Mechanic* (RSN ${signed(member?.rsn ?? 0)} · Skill ${signed(member?.mechanicLevel ?? 0)})` : `Tinkerer (DEX ${signed(member?.dex ?? 0)} · Skill ${signed(member?.tinkererLevel ?? 0)})`
-                      return (
-                        <button key={s} onClick={() => switchBrewSkill(s)}
-                          style={{ flex: 1, padding: '6px', background: selected ? accentBg : '#242424', border: `1px solid ${selected ? accent : '#3a3a3a'}`, borderRadius: '3px', color: selected ? accent : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          {label}
-                        </button>
-                      )
-                    })}
+                )}
+              </>
+            )}
+            onRoll={rollCheck}
+            result={sharedResult}
+            renderOutcome={(r) => (
+              <>
+                <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+                  [{r.die1}+{r.die2}]
+                  {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                  {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                  {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                  <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: 700, color: feedOutcomeColor(r.outcome), fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
+                  {r.outcome}
+                </div>
+                {/* Brew success: +1 day fuel badge */}
+                {check.kind === 'brew' && (r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight') && (
+                  <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
+                    ⛽ +1 day fuel produced
                   </div>
-                </div>
-              )}
-
-              {/* Roll inputs */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginBottom: '14px' }}>
-                <div>
-                  <div style={lbl}>AMOD</div>
-                  <input type="number" value={check.amod}
-                    onChange={e => setCheck({ ...check, amod: parseInt(e.target.value, 10) || 0 })}
-                    style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
-                </div>
-                <div>
-                  <div style={lbl}>SMOD</div>
-                  <input type="number" value={check.smod}
-                    onChange={e => setCheck({ ...check, smod: parseInt(e.target.value, 10) || 0 })}
-                    style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
-                </div>
-                <div>
-                  <div style={lbl}>CMOD</div>
-                  <input type="number" value={check.cmod}
-                    onChange={e => setCheck({ ...check, cmod: parseInt(e.target.value, 10) || 0 })}
-                    style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
-                </div>
-              </div>
-
-              {/* Result */}
-              {check.result ? (
-                <div style={{ marginBottom: '14px', padding: '10px 12px', background: '#0f0f0f', border: `1px solid ${outcomeColor(check.result.outcome)}`, borderRadius: '3px' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: outcomeColor(check.result.outcome) }}>{check.result.total}</span>
-                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
-                      ({check.result.die1} + {check.result.die2}) + {check.amod} + {check.smod}{check.cmod !== 0 ? ` ${check.cmod >= 0 ? '+' : ''}${check.cmod}` : ''}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: outcomeColor(check.result.outcome) }}>
-                    {check.result.outcome}
-                  </div>
-                  {check.kind === 'brew' && (check.result.outcome === 'Success' || check.result.outcome === 'Wild Success' || check.result.outcome === 'High Insight') && (
-                    <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
-                      ⛽ +1 day fuel produced
+                )}
+                {/* Attack hit: weapon damage stat reminder for the GM */}
+                {check.kind === 'attack' && modalWeaponDef && (r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight') && (() => {
+                  const targetName = check.targets?.find(t => t.id === check.targetNpcId)?.name
+                  return (
+                    <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
+                      🎯 Hit{targetName ? ` on ${targetName}` : ''} · damage {modalWeaponDef.damage} · {modalWeaponDef.rpPercent}% RP
                     </div>
-                  )}
-                  {/* Attack damage info on a hit. The GM rolls damage
-                      separately and applies via the standard combat
-                      flow - this is just a reminder of the weapon's
-                      stats so they don't have to look them up. */}
-                  {check.kind === 'attack' && modalWeaponDef && (check.result.outcome === 'Success' || check.result.outcome === 'Wild Success' || check.result.outcome === 'High Insight') && (() => {
-                    const targetName = check.targets?.find(t => t.id === check.targetNpcId)?.name
-                    return (
-                      <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
-                        🎯 Hit{targetName ? ` on ${targetName}` : ''} · damage {modalWeaponDef.damage} · {modalWeaponDef.rpPercent}% RP
-                      </div>
-                    )
-                  })()}
-                  {check.kind === 'attack' && (check.result.outcome === 'Failure' || check.result.outcome === 'Dire Failure' || check.result.outcome === 'Low Insight') && (() => {
-                    const targetName = check.targets?.find(t => t.id === check.targetNpcId)?.name
-                    return (
-                      <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
-                        ✗ Miss{targetName ? ` (${targetName} unhurt)` : ''}
-                      </div>
-                    )
-                  })()}
-                </div>
-              ) : null}
-
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button onClick={rollCheck} disabled={
-                    check.rolling
-                    || !!check.result
-                    || (check.kind === 'attack' && !check.targetNpcId)
-                    || (check.kind === 'attack' && (check.targets?.find(t => t.id === check.targetNpcId)?.inArc === false))
-                  }
-                  style={{ flex: 1, padding: '10px', background: accentBg, border: `1px solid ${accent}`, borderRadius: '3px', color: accent, fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: check.rolling ? 'wait' : (check.result ? 'default' : 'pointer'), opacity: check.result ? 0.5 : 1 }}>
-                  {check.rolling ? 'Rolling...' : check.result ? 'Rolled' : `🎲 Roll ${verb}`}
-                </button>
-                <button onClick={() => setCheck(null)}
-                  style={{ padding: '10px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Close
-                </button>
-              </div>
-            </div>
-          </ModalBackdrop>
+                  )
+                })()}
+                {/* Attack miss: target-unhurt reminder */}
+                {check.kind === 'attack' && (r.outcome === 'Failure' || r.outcome === 'Dire Failure' || r.outcome === 'Low Insight') && (() => {
+                  const targetName = check.targets?.find(t => t.id === check.targetNpcId)?.name
+                  return (
+                    <div style={{ padding: '8px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
+                      ✗ Miss{targetName ? ` (${targetName} unhurt)` : ''}
+                    </div>
+                  )
+                })()}
+              </>
+            )}
+            postRollCloseLabel="Close"
+            onPostRollClose={() => setCheck(null)}
+          />
         )
       })()}
 
