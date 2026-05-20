@@ -160,7 +160,7 @@ Lane: puffer-fish writes specs, hunt-and-peck executes.
 
 - [~] A1.2 `DamagePayload` interface (spec + migration). **SPEC SHIPPED 2026-05-20:** [tasks/spec-damage-json-payload.md](spec-damage-json-payload.md). Discriminated union of 12+ payload variants, `kind` discriminator at write time, 5-phase migration plan (D1-D5) over 9-10 hunt-and-peck sessions, 4 risks logged. D3h (AttackDamage) gates on Phase 3.4 of the decomposition plan. Hunt-and-peck owns execution.
 - [ ] A1.4 `compactRollSummary` regex deprecation (spec + structured columns + parser swap)
-- [ ] A1.3 `outcome` column split (spec; execute after P1.4 lands since it touches the same surface)
+- [~] A1.3 `outcome` column split. **SPEC SHIPPED 2026-05-20:** [tasks/spec-outcome-column-split.md](spec-outcome-column-split.md). Reframed: the right fix is TYPE-ONLY kind discrimination (sub-unions + `outcomeKind()` helper + type guards), NOT schema migration. Schema migration (Option B) deferred unless DB-integrity bug surfaces. 3 phases (O1-O3) over 2.5-4 hunt-and-peck sessions. OC-R1 risk: SQL audit before Phase O2 to surface any historical outcomes not in the OUTCOME union.
 - [ ] A2.4 Re-entry guard audit (puffer-fish spec; hunt-and-peck inline)
 - [ ] A2.2 Stale-closure landmine sweep (puffer-fish audit; hunt-and-peck patches)
 
@@ -232,7 +232,7 @@ When all six axes hit threshold, the platform is "stable enough." Re-evaluate ag
 
 **LAST UPDATED:** 2026-05-20 (this commit).
 **LAST CHAT:** puffer-fish (writing the plan + seeding decisions.md).
-**NEXT ACTION (puffer-fish lane):** write `tasks/spec-outcome-column-split.md` - the canonical fix for the overloaded `outcome` column (Tech Debt Ledger A1.3). The column today stores roll results, event tags, AND grapple-result strings in one place. The RollOutcome union (2026-05-15) was a type-only band-aid; the right fix is a schema split. The spec should: (a) enumerate every distinct value class currently in `outcome`, (b) propose the split (kind enum + value), (c) define the migration path (deploy new columns, dual-write, drain reads, drop old), (d) gate on the table-page decomposition's Phase 3.4 since `executeRoll` is the largest writer.
+**NEXT ACTION (puffer-fish lane):** write `tasks/spec-compactrollsummary-regex-deprecation.md` - the canonical fix for the regex-driven label parser at `lib/roll-helpers.ts:compactRollSummary` (Tech Debt Ledger A1.4). Today the function derives structured data (who hit whom, who picked up what, etc.) by regex-matching the `label` field. Change a label text, break a parser. Right fix: add structured columns (e.g., `event_type text`, `target_name text`, `event_payload jsonb`) to `roll_log` and stop deriving structure from prose. Spec should: (a) enumerate every regex match in compactRollSummary, (b) propose the new columns + which fields each variant writes, (c) define the dual-write migration path, (d) sequence after A1.2 DamagePayload lands so the kind discriminator is available.
 
 **NEXT ACTION (hunt-and-peck lane):** start Phase P1 step 1 of the decomposition plan - move types + module constants out of `app/stories/[id]/table/page.tsx` into `app/stories/[id]/table/types.ts`. -200 LOC. Trivial leaf. Hunt-and-peck owns; puffer-fish updates Risk Register + this plan after each phase ships.
 
