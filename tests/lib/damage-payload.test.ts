@@ -15,6 +15,19 @@ import type {
   CoordEffortChainLead,
   DamagePayloadKind,
 } from '../../lib/damage-payload'
+import {
+  makeAttackDamage,
+  makeCombatantsList,
+  makeInitiativeOrder,
+  makeRecruitResult,
+  makeCommunityWeeklyCheck,
+  makeCharacterEvolutionSpend,
+  makeVehicleCheck,
+  makeFirstImpressionResult,
+  makeStabilizeResult,
+  makeDistractResult,
+  makeGutInstinctResult,
+} from '../../lib/damage-payload'
 
 // Phase D1 tests (tasks/spec-damage-json-payload.md). The types are
 // new and have no runtime consumers yet, so these tests are primarily
@@ -354,5 +367,234 @@ describe('DamagePayload union - discriminated switch exhaustiveness', () => {
     for (const k of expected) {
       expect(typeof k).toBe('string')
     }
+  })
+})
+
+// ─── Phase D2: writer helpers stamp the discriminator ─────────────
+// Each helper takes the variant shape minus the `kind` field and
+// returns the full variant. Tests below verify (a) the right `kind`
+// gets stamped, (b) input fields pass through unchanged, (c) helpers
+// don't mutate their input argument.
+
+describe('makeAttackDamage', () => {
+  it('stamps kind = "attack" + passes fields through', () => {
+    const r = makeAttackDamage({
+      rollWP: 7, rollRP: 3,
+      weaponName: 'Pistol', damageRoll: '2d6+1',
+      appliedWP: 5, appliedRP: 2,
+      rpPercent: 50, rpFloor: 'C',
+      targetName: 'Goon 1',
+    })
+    expect(r.kind).toBe('attack')
+    expect(r.weaponName).toBe('Pistol')
+    expect(r.targetName).toBe('Goon 1')
+  })
+  it('does not mutate input argument', () => {
+    const input = {
+      rollWP: 5, rollRP: 2, weaponName: 'P', damageRoll: '2d6',
+      appliedWP: 4, appliedRP: 2, rpPercent: 50, rpFloor: 'C' as const,
+      targetName: 'Goon 1',
+    }
+    const before = JSON.stringify(input)
+    makeAttackDamage(input)
+    expect(JSON.stringify(input)).toBe(before)
+  })
+})
+
+describe('makeCombatantsList', () => {
+  it('stamps kind = "combatants" + preserves combatants array', () => {
+    const r = makeCombatantsList({
+      combatants: [{ id: 'a', name: 'Alice', isNpc: false }],
+      combatRound: 1,
+    })
+    expect(r.kind).toBe('combatants')
+    expect(r.combatants.length).toBe(1)
+    expect(r.combatRound).toBe(1)
+  })
+})
+
+describe('makeInitiativeOrder', () => {
+  it('stamps kind = "initiative"', () => {
+    const r = makeInitiativeOrder({
+      initiative: [
+        { id: 'a', character_name: 'Alice', roll: 9, isNpc: false },
+      ],
+    })
+    expect(r.kind).toBe('initiative')
+  })
+})
+
+describe('makeRecruitResult', () => {
+  it('stamps kind = "recruit" on PC shape', () => {
+    const r = makeRecruitResult({
+      rollOutcome: 'Success',
+      approach: 'cohort', recruitmentType: 'cohort',
+      communityId: 'c1', communityName: 'Camp Hopeful',
+    })
+    expect(r.kind).toBe('recruit')
+    expect(r.approach).toBe('cohort')
+  })
+  it('stamps kind = "recruit" on proxy shape', () => {
+    const r = makeRecruitResult({
+      rollOutcome: 'Wild Success',
+      approach: 'convert', recruitmentType: 'convert',
+      proxy: true, leaderNpcId: 'npc1', leaderNpcName: 'Marshall',
+      communityId: 'c1', communityName: 'Camp Hopeful',
+    })
+    expect(r.kind).toBe('recruit')
+    expect(r.proxy).toBe(true)
+  })
+})
+
+describe('makeCommunityWeeklyCheck', () => {
+  it('stamps kind = "community_check"', () => {
+    const r = makeCommunityWeeklyCheck({
+      checkType: 'morale',
+      communityId: 'c1', communityName: 'Camp Hopeful',
+      weekNumber: 4, rollOutcome: 'Failure',
+    })
+    expect(r.kind).toBe('community_check')
+    expect(r.checkType).toBe('morale')
+  })
+})
+
+describe('makeCharacterEvolutionSpend', () => {
+  it('stamps kind = "evolution" on self spend', () => {
+    const r = makeCharacterEvolutionSpend({
+      spendKind: 'rapid', key: 'PHY',
+      fromLevel: 0, toLevel: 1, cost: 5,
+      target: 'self',
+    })
+    expect(r.kind).toBe('evolution')
+    expect(r.target).toBe('self')
+  })
+  it('stamps kind = "evolution" on apprentice spend', () => {
+    const r = makeCharacterEvolutionSpend({
+      spendKind: 'skill', key: 'Medicine',
+      fromLevel: 1, toLevel: 2, cost: 3,
+      target: 'apprentice', apprenticeNpcId: 'npc1',
+    })
+    expect(r.target).toBe('apprentice')
+    expect(r.apprenticeNpcId).toBe('npc1')
+  })
+})
+
+describe('makeVehicleCheck', () => {
+  it('stamps kind = "vehicle_check" on brew', () => {
+    const r = makeVehicleCheck({
+      vehicleId: 'v1', vehicleName: 'Minnie',
+      checkKind: 'brew', skillLabel: 'Mechanic*',
+      crewId: 'c1', crewKind: 'pc',
+      fuelDelta: 1, fuelBefore: 4, fuelAfter: 5,
+      suppliesDelta: -1, rollOutcome: 'Success',
+    })
+    expect(r.kind).toBe('vehicle_check')
+    expect(r.checkKind).toBe('brew')
+  })
+})
+
+describe('makeFirstImpressionResult', () => {
+  it('stamps kind = "first_impression"', () => {
+    const r = makeFirstImpressionResult({
+      npcId: 'n1', npcName: 'Marshall',
+      rollOutcome: 'High Insight',
+      startingRelationship: 0, newRelationship: 2,
+    })
+    expect(r.kind).toBe('first_impression')
+    expect(r.newRelationship).toBe(2)
+  })
+})
+
+describe('makeStabilizeResult', () => {
+  it('stamps kind = "stabilize" on PC success', () => {
+    const r = makeStabilizeResult({
+      medicCharacterId: 'pc1', patientName: 'Bob',
+      patientIsNpc: false, rollOutcome: 'Success',
+      incapRounds: 3, deathCountdownChange: -99,
+    })
+    expect(r.kind).toBe('stabilize')
+    expect(r.incapRounds).toBe(3)
+  })
+})
+
+describe('makeDistractResult', () => {
+  it('stamps kind = "distract" on WS drain', () => {
+    const r = makeDistractResult({
+      targetInitId: 'init1', targetName: 'Goon 1',
+      rollOutcome: 'Wild Success', actionsRemovedFromTarget: 2,
+    })
+    expect(r.kind).toBe('distract')
+    expect(r.actionsRemovedFromTarget).toBe(2)
+  })
+})
+
+describe('makeGutInstinctResult', () => {
+  it('stamps kind = "gut_instinct" without whisper', () => {
+    const r = makeGutInstinctResult({ rollOutcome: 'Success' })
+    expect(r.kind).toBe('gut_instinct')
+    expect(r.whisperDetail).toBeUndefined()
+  })
+  it('stamps kind = "gut_instinct" with whisper detail', () => {
+    const r = makeGutInstinctResult({
+      rollOutcome: 'High Insight',
+      whisperDetail: 'The merchant is overcharging.',
+    })
+    expect(r.whisperDetail).toContain('overcharging')
+  })
+})
+
+describe('All 11 make* helpers - cross-check via DamagePayloadKind', () => {
+  it('each helper returns a payload whose .kind is in the union', () => {
+    const all: DamagePayload[] = [
+      makeAttackDamage({
+        rollWP: 7, rollRP: 3, weaponName: 'P', damageRoll: '2d6',
+        appliedWP: 5, appliedRP: 2, rpPercent: 50, rpFloor: 'C',
+        targetName: 'Goon 1',
+      }),
+      makeCombatantsList({ combatants: [] }),
+      makeInitiativeOrder({ initiative: [] }),
+      makeRecruitResult({
+        rollOutcome: 'Success', approach: 'cohort', recruitmentType: 'cohort',
+      }),
+      makeCommunityWeeklyCheck({
+        checkType: 'fed', communityId: 'c1', communityName: 'C',
+        weekNumber: 1, rollOutcome: 'Success',
+      }),
+      makeCharacterEvolutionSpend({
+        spendKind: 'rapid', key: 'PHY', fromLevel: 0, toLevel: 1, cost: 5,
+        target: 'self',
+      }),
+      makeVehicleCheck({
+        vehicleId: 'v1', vehicleName: 'Minnie', checkKind: 'drive',
+        skillLabel: 'Driving', crewId: 'c1', crewKind: 'pc',
+        fuelDelta: 0, fuelBefore: 4, rollOutcome: 'Success',
+      }),
+      makeFirstImpressionResult({
+        npcId: 'n1', npcName: 'M', rollOutcome: 'Success',
+        startingRelationship: 0, newRelationship: 0,
+      }),
+      makeStabilizeResult({
+        medicCharacterId: 'pc1', patientName: 'B', patientIsNpc: false,
+        rollOutcome: 'Success',
+      }),
+      makeDistractResult({
+        targetInitId: 'i1', targetName: 'G', rollOutcome: 'Success',
+        actionsRemovedFromTarget: 1,
+      }),
+      makeGutInstinctResult({ rollOutcome: 'Success' }),
+    ]
+    expect(all.length).toBe(11)
+    const validKinds: DamagePayloadKind[] = [
+      'attack', 'combatants', 'initiative', 'recruit', 'community_check',
+      'evolution', 'vehicle_check', 'first_impression', 'stabilize',
+      'distract', 'gut_instinct',
+    ]
+    for (const p of all) {
+      expect(validKinds).toContain(p.kind)
+    }
+    // Each kind appears exactly once.
+    const kinds = all.map(p => p.kind).sort()
+    const unique = [...new Set(kinds)]
+    expect(unique.length).toBe(all.length)
   })
 })

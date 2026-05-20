@@ -215,3 +215,84 @@ export type DamagePayload =
 /** Discriminator literal. Useful for type guards + exhaustive switch
  *  checks in readers. */
 export type DamagePayloadKind = DamagePayload['kind']
+
+// ─── Phase D2: per-variant writer helpers ─────────────────────────
+//
+// Each variant gets a `make*` helper that stamps the `kind` field
+// automatically. Callers in Phase D3 replace inline
+// `damage_json: { ... }` literals with `damage_json: makeX({ ... })`,
+// removing one whole category of writer bugs (forgetting the
+// discriminator). Helpers take `Omit<Variant, 'kind'>` so the input
+// shape matches the variant exactly minus the discriminator.
+//
+// All helpers are trivial single-line wrappers, but writing them out
+// per-variant pays for itself: each helper signature is the canonical
+// proof that a caller passed the right shape, and the Phase D3
+// migrations get type errors instead of silent passthroughs.
+
+/** Stamp 'attack' on an AttackDamage payload. Used by executeRoll's
+ *  weapon-attack write path. */
+export function makeAttackDamage(args: Omit<AttackDamage, 'kind'>): AttackDamage {
+  return { kind: 'attack', ...args }
+}
+
+/** Stamp 'combatants' on a CombatantsList payload. Used by
+ *  confirmStartCombat in the table page. */
+export function makeCombatantsList(args: Omit<CombatantsList, 'kind'>): CombatantsList {
+  return { kind: 'combatants', ...args }
+}
+
+/** Stamp 'initiative' on an InitiativeOrder payload. Used by
+ *  rerollInitiative + dropCharacter in the table page. */
+export function makeInitiativeOrder(args: Omit<InitiativeOrder, 'kind'>): InitiativeOrder {
+  return { kind: 'initiative', ...args }
+}
+
+/** Stamp 'recruit' on a RecruitResult payload. Used by executeRoll's
+ *  PC recruit + apprentice paths AND by CommunityProxyRecruitModal. */
+export function makeRecruitResult(args: Omit<RecruitResult, 'kind'>): RecruitResult {
+  return { kind: 'recruit', ...args }
+}
+
+/** Stamp 'community_check' on a CommunityWeeklyCheck payload. Used
+ *  by CommunityMoraleModal at all 4 weekly-check write sites (fed,
+ *  clothed, morale, retention). */
+export function makeCommunityWeeklyCheck(args: Omit<CommunityWeeklyCheck, 'kind'>): CommunityWeeklyCheck {
+  return { kind: 'community_check', ...args }
+}
+
+/** Stamp 'evolution' on a CharacterEvolutionSpend payload. Used by
+ *  CharacterEvolution commit handler. */
+export function makeCharacterEvolutionSpend(args: Omit<CharacterEvolutionSpend, 'kind'>): CharacterEvolutionSpend {
+  return { kind: 'evolution', ...args }
+}
+
+/** Stamp 'vehicle_check' on a VehicleCheck payload. Used by the
+ *  /vehicle popout's rollCheck function for driving/brew/navigate. */
+export function makeVehicleCheck(args: Omit<VehicleCheck, 'kind'>): VehicleCheck {
+  return { kind: 'vehicle_check', ...args }
+}
+
+/** Stamp 'first_impression' on a FirstImpressionResult payload. Used
+ *  by lib/first-impression-resolver.ts. */
+export function makeFirstImpressionResult(args: Omit<FirstImpressionResult, 'kind'>): FirstImpressionResult {
+  return { kind: 'first_impression', ...args }
+}
+
+/** Stamp 'stabilize' on a StabilizeResult payload. Used by the
+ *  dedicated Stabilize <RollModal>'s onRoll path. */
+export function makeStabilizeResult(args: Omit<StabilizeResult, 'kind'>): StabilizeResult {
+  return { kind: 'stabilize', ...args }
+}
+
+/** Stamp 'distract' on a DistractResult payload. Used by the
+ *  dedicated Distract <RollModal>'s onRoll path. */
+export function makeDistractResult(args: Omit<DistractResult, 'kind'>): DistractResult {
+  return { kind: 'distract', ...args }
+}
+
+/** Stamp 'gut_instinct' on a GutInstinctResult payload. Used by the
+ *  dedicated Gut Instinct <RollModal>'s onRoll path. */
+export function makeGutInstinctResult(args: Omit<GutInstinctResult, 'kind'>): GutInstinctResult {
+  return { kind: 'gut_instinct', ...args }
+}
