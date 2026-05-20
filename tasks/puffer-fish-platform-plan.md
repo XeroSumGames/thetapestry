@@ -178,7 +178,7 @@ Gated on Xero approving Supabase Pro + PITR. Until then, work the audit-log alte
 
 - [ ] A5.4 KV rate-limiter (Xero approved; hunt-and-peck)
 - [x] **A5.1 CSP + SRI audit.** SHIPPED 2026-05-20: [tasks/audit-csp-sri-third-party-scripts-2026-05-20.md](audit-csp-sri-third-party-scripts-2026-05-20.md). Findings: ZERO security headers configured today (no CSP, no HSTS, no X-Frame-Options, no Permissions-Policy). Two third-party scripts: Turnstile (cannot SRI per Cloudflare docs - rotating script) + Sentry (tunneled through /monitoring same-origin). Recommended baseline CSP + 5 companion headers documented in spec section 4. 5 risks logged (unsafe-inline weakens CSP, Turnstile widget breakage, Sentry tunnel, Supabase wss requirement, Vercel preview URLs). 4-phase migration CSP1-CSP4 (report-only -> tighten -> enforce -> deferred nonce-based) hunt-and-peck owns.
-- [ ] A5.2 Storage bucket policy audit
+- [x] **A5.2 Storage bucket policy audit.** SHIPPED 2026-05-20: [tasks/audit-storage-bucket-policies-2026-05-20.md](audit-storage-bucket-policies-2026-05-20.md). 7 buckets inventoried; **5 lack SQL-tracked RLS policies** (session/note/pin-attachments, war-stories, object-tokens - dashboard-only). **`module-covers` policy is LAX** (any authenticated user can upload to any path; no folder scoping). `character-portraits` is the exemplar (folder = user_id RLS-scoped). 5-phase migration plan BP1-BP5: verification pass -> tighten module-covers -> add 5 missing bucket policies -> reconcile pin-attachments path shape inconsistency -> dashboard MIME whitelist. 4 risks logged. Hunt-and-peck owns execution; Xero owns BP1 dashboard verification.
 - [ ] A5.3 RLS gap sweep
 - [ ] A5.5 Rate-limit coverage audit (next API routes added)
 
@@ -232,7 +232,7 @@ When all six axes hit threshold, the platform is "stable enough." Re-evaluate ag
 
 **LAST UPDATED:** 2026-05-20 (this commit).
 **LAST CHAT:** puffer-fish (writing the plan + seeding decisions.md).
-**NEXT ACTION (puffer-fish lane):** write `tasks/audit-storage-bucket-policies.md` (P4/A5.2). Five Supabase storage buckets in use (session-attachments, note-attachments, pin-attachments, war-stories, module-covers). The `lib/safe-upload.ts` helper enforces sanitization + size + MIME at the application layer. The dashboard-level bucket policies (public-read scope, size limits, MIME whitelist enforced by Supabase Storage RLS) are UNVERIFIED. Audit them via dashboard inspection + write the spec to align with the safe-upload whitelist.
+**NEXT ACTION (puffer-fish lane):** write `tasks/audit-rls-gap-sweep.md` (P4/A5.3). Sweep every table in the public schema for RLS coverage. Most tables have RLS enabled; some may not. Output: per-table RLS status table (enabled? policies present? gaps obvious?) + recommended fill-in policies for any uncovered tables. Read-only audit; hunt-and-peck writes any policy SQL after.
 
 **NEXT ACTION (hunt-and-peck lane):** start Phase P1 step 1 of the decomposition plan - move types + module constants out of `app/stories/[id]/table/page.tsx` into `app/stories/[id]/table/types.ts`. -200 LOC. Trivial leaf. Hunt-and-peck owns; puffer-fish updates Risk Register + this plan after each phase ships.
 
