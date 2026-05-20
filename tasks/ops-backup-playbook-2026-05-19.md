@@ -27,6 +27,17 @@ If the recovery requires Supabase PITR and we're on the free tier, the answer is
 
 **Today's exposure:** Tapestry runs on the free tier. If the database is corrupted, dropped, or a runaway query wipes data, **we have no Supabase-side recovery.** Plan to upgrade to Pro + the PITR add-on before paid signups open. Tracked in [tasks/scaling-plan-tier-abc.md](scaling-plan-tier-abc.md) under "Supabase Pro upgrade."
 
+**Dashboard verification block** (re-check quarterly, paste here when you do):
+
+```
+Project ref: jbudzglgtxeoaufpejrv
+Tier:        [TODO confirm Free in dashboard -> Settings -> Billing]
+PITR:        [TODO no/yes; if yes, days]
+Retention:   [TODO 0 days on free]
+Last seen:   [TODO timestamp from dashboard -> Database -> Backups]
+Checked by:  Xero, [TODO YYYY-MM-DD]
+```
+
 ---
 
 ## In-app recovery: campaign snapshots
@@ -96,6 +107,42 @@ This needs to be documented in the public TOS / Privacy Policy before paid signu
 **Recovery path:** none today. Storage objects are not part of PITR (database-only).
 
 **Mitigation:** the upload pipeline now uses `lib/safe-upload.ts` (2026-05-19) which doesn't prevent loss but does mean bad uploads are rejected at the gate. Lossy operations on storage (the GmNotes `remove()` calls, the `delete-user` storage sweep) are intentional. No recovery story; accept the loss.
+
+### Scenario F: I need ONE row back without wiping today's work
+
+**Recovery path (Pro+PITR only; ~30-60 min):**
+1. Take a dump of the CURRENT (broken) live DB first: `npx supabase db dump --linked > /tmp/current-$(date +%s).sql`. This is your fallback if anything goes wrong with the surgery.
+2. Use the dashboard to restore PITR to a NEW throwaway Supabase project (Scenario C, step 3 - the original is NOT touched).
+3. Connect to the throwaway project via the SQL editor or `psql`: `SELECT * FROM <table> WHERE <id-of-the-row-you-want>`.
+4. `INSERT INTO ...` those specific rows into the live project (re-use the SQL editor, or `psql` with the live conn string).
+5. Tear down the throwaway project.
+
+Use this when only a few rows need to come back and rolling everything back via Scenario C is too coarse. On free tier this is not available; the answer collapses to "accept the loss."
+
+---
+
+## Pre-migration ritual
+
+For any SQL that touches many rows, alters schema, or runs UPDATE / DELETE without `WHERE id = ...`:
+
+```sh
+# 1. Take a labeled dump before applying the migration.
+npx supabase db dump --linked > /tmp/before-<migration-name>-$(date +%Y%m%d-%H%M).sql
+
+# 2. (When we have it.) Apply the migration on staging / local first.
+#    Today: spin up `npx supabase start` locally and run the migration
+#    there to catch SQL errors before live.
+
+# 3. Apply to live only after step 2 is clean.
+npx supabase db query --linked -f sql/<migration>.sql
+
+# 4. Verify expected row counts / shape.
+#    Example: SELECT count(*) FROM <table> WHERE <expected_condition>;
+```
+
+If step 4 looks wrong, the dump from step 1 is the safety net (replay it into a throwaway project, copy the affected rows back). PITR (when enabled) gives finer-grained rewind to the second BEFORE the migration ran.
+
+This ritual is the cheapest insurance against the worst class of "I wiped a whole table" mistakes.
 
 ---
 
