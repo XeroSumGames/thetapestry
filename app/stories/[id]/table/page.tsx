@@ -1485,9 +1485,19 @@ export default function TablePage() {
           loadEntries(id)
         }))
         .on('broadcast', { event: 'pc_mortal_wound' }, wrapBroadcast('pc_mortal_wound', (msg: any) => {
-          // Show insight save modal on the player's screen or GM's screen
+          // Show insight save modal on the player's screen or GM's screen.
+          //
+          // Stale-closure fix (2026-05-20, audit-stale-closure-landmines.md):
+          // this handler is installed inside an effect that runs once at
+          // mount. `userId` + `gmLike` captured at that point are often
+          // null/false because auth has not resolved yet. The targeted PC's
+          // tab would then silently drop the broadcast and the Insight Save
+          // modal would never open. Read userIdRef.current + gmLikeRef.current
+          // instead - the refs always reflect the latest values. Same class
+          // of fix as 56c0534 (infection_check_request) + lasting_damage_check_request
+          // a few lines below.
           const data = msg.payload
-          if (data && (data.targetUserId === userId || gmLike)) {
+          if (data && (data.targetUserId === userIdRef.current || gmLikeRef.current)) {
             setInsightSavePrompt(data)
           }
         }))
