@@ -1,7 +1,8 @@
+npm warn exec The following package was not found and will be installed: tsx@4.22.3
 # Tapestry Rules Canon - XSE SRD v1.1.17
 
 **Source of truth**: `lib/xse-schema.ts` and `app/rules/*` pages on TheTapestry platform.
-**Generated**: 2026-05-15.
+**Generated**: 2026-05-21.
 **Regenerate**: `npx tsx scripts/export-canon.ts > tasks/tapestry-rules-canon.md`
 
 This file is the platform's canonical reference for rules content. Every term, formula,
@@ -253,6 +254,8 @@ Source: `lib/xse-schema.ts` deriveSecondaryStats. These are the ground-truth for
 | Morality | MOR | starts at 3 |
 
 **Stress Level**: separate tracker, 0 to 5. Rises by 1 on a failed Stress Check or when entering 0 WP / 0 RP. At 5, the character hits their Breaking Point.
+
+**Encumbrance (over-limit rule)**: ENC limit = 6 + PHY AMod (+2 if carrying a Backpack / Military Backpack). A character can carry right up to their limit with no penalty. The moment they EXCEED it: their movement speed drops by half, and they take **1 RP damage per hour for each point they are over the limit** (3 over = 3 RP/hour, not 1) until they drop weight or rest. If this drives them to 0 RP they become Incapacitated - they regain consciousness + 1 RP within moments, but must then rest for four hours to recover half their RP before carrying on. Dropping enough gear to get back within the limit stops the RP damage immediately. (Canon restored 2026-05-20 - the rule was dropped between manuscript versions; see `tasks/rules-extract-encumbrance-2026-05-20.md`.)
 
 ## §04 Character Creation
 ### Backstory steps
@@ -718,11 +721,11 @@ Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 - Sniper's Rifle | Distant | Rare | 2+3d6 | 50% | 2 | ammo Uncommon, clip 10 | -
 - Taser | Close | Uncommon | 1 | 400% | 1 | ammo Rare, clip 1 | Stunned
 
-### Equipment (Table 20) - 34 canonical equipment items
+### Equipment (Table 20) - 35 canonical equipment items
 
 Source: `lib/xse-schema.ts` EQUIPMENT.
 
-Angler's Set, Backpack, Basic Survival Kit, Bicycle Repair Kit, Bolt Cutters, Binoculars, Canteen, Climbing Gear, Compass, Crowbar, Doctor's Bag, Fire-starting Kit, First Aid Kit, Fishing Kit, Flashbang, Flashlight, Grappling Hook, Handcuffs, Instant Camera, Lantern, Military Backpack, Multitool, Night Vision Goggles, Radio Scanner, Rope, Shovel, Survivalists Kit, Standard Lockpicks, Criminal Lockpicks, Hunting Traps, Toolkit, Walkie-Talkies, Weapons Toolkit, Workman's Toolkit.
+Angler's Set, Backpack, Basic Survival Kit, Bicycle Repair Kit, Bolt Cutters, Binoculars, Canteen, Climbing Gear, Compass, Crowbar, Doctor's Bag, Fire-starting Kit, First Aid Kit, Fishing Kit, Flashbang, Flashlight, Grappling Hook, Handcuffs, Instant Camera, Lantern, Military Backpack, Multitool, Night Vision Goggles, Radio Scanner, Rope, Shovel, Survivalists Kit, Standard Lockpicks, Criminal Lockpicks, Hunting Traps, Toolkit, Walkie-Talkies, Weapons Toolkit, Workman's Toolkit, 55-Gallon Drum.
 
 ### Rations (Quickstart Table 16) - canon
 

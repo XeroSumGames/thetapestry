@@ -483,6 +483,8 @@ Source: \`lib/xse-schema.ts\` deriveSecondaryStats. These are the ground-truth f
 | Morality | MOR | starts at 3 |
 
 **Stress Level**: separate tracker, 0 to 5. Rises by 1 on a failed Stress Check or when entering 0 WP / 0 RP. At 5, the character hits their Breaking Point.
+
+**Encumbrance (over-limit rule)**: ENC limit = 6 + PHY AMod (+2 if carrying a Backpack / Military Backpack). A character can carry right up to their limit with no penalty. The moment they EXCEED it: their movement speed drops by half, and they take **1 RP damage per hour for each point they are over the limit** (3 over = 3 RP/hour, not 1) until they drop weight or rest. If this drives them to 0 RP they become Incapacitated - they regain consciousness + 1 RP within moments, but must then rest for four hours to recover half their RP before carrying on. Dropping enough gear to get back within the limit stops the RP damage immediately. (Canon restored 2026-05-20 - the rule was dropped between manuscript versions; see \`tasks/rules-extract-encumbrance-2026-05-20.md\`.)
 `
 
 const PROSE_COMBAT = `## §06 Combat
