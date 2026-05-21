@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-21 09:11 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [473 passed]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **RLS P0 from 00:06 run: CLEARED.** `e8cffb8` (committed since last pulse) verified all 10 Tier-3 tables have `rls_enabled=true`. No action needed.
+- **Stale-open todo (carried from 00:06 run):** `todo.md:54` L-3 KV rate-limiter still marked `[ ]` despite shipping `dd1a452`. Also `todo.md:30` ("Approve Upstash KV") is moot — Upstash Redis used directly. Both need closing.
+- HOPED-FOR (2026-05-19 batch): 2 days old — below 3-day threshold, watching. Drain target: 2026-05-25 playtest.
+
+**Action:** Close L-3 + line 30 in `tasks/todo.md`. RLS P0 is resolved — no further action.
+
+---
+
 ## 2026-05-21 00:06 UTC
 
 **Status:** DRIFT
