@@ -10,11 +10,35 @@ Written by the puffer-fish lane as a one-shot handoff. Maps the spec/audit inven
 
 ---
 
-## 1. The IMMEDIATE fix (do FIRST)
+## 0. COMBAT SMOKE BUGS (2026-05-20/21) - do these FIRST, in this order
+
+Found by the decomposition 2-client smoke (Parts 0/2/3). All PRE-EXISTING, not decomposition regressions. All root-caused to file:line by the puffer-fish lane. The decomposition extractions themselves verified clean.
+
+### SMOKE-1 (HIGHEST - stalls combat): active combatant going down mid-turn doesn't auto-advance
+- **Symptom:** a combatant who drops to mortally-wounded/dead during their OWN turn (self-blast grenade) stays the active combatant, can't act, and `nextTurn` doesn't advance. Repro'd twice: NPC Hugo (died), PC Cree (mortally wounded, stuck active on player view).
+- **Root cause:** skip-downed logic at `app/stories/[id]/table/page.tsx:2169-2210` only runs when `nextTurn` walks FORWARD to the next actor (PCs skipped at `wp_current===0 || rp_current===0` L2201, dead/0-WP NPCs L2195). It does NOT handle the ACTIVE combatant going down during their own turn.
+- **Fix:** after damage resolution drops a combatant to MW/incap/dead in the post-damage / blast-resolution branch of `executeRoll`, if they're the active combatant, auto-fire `nextTurn` (or clear `is_active` so the GM NEXT advances cleanly). Mortally-wounded PCs STAY in the list (stabilizable); only death_countdown-expired leave the rotation.
+- **Verify:** NPC throws grenade at own cluster, dies -> turn auto-advances. PC drops to MW mid-turn -> turn advances, PC stays in list but isn't active.
+
+### SMOKE-2 (presentational): Coordinated Effort lead renders as a plain row, not a bespoke feed banner
+- **Symptom:** firing a coord-effort produces no meaningful log entry. Mechanics WORK (3-browser dump confirmed: lead roll fires, action consumed, +3 CMod chain activates) - but the activation only shows as a transient top-of-screen "COORDINATED EFFORT ACTIVE" banner, nothing persisted in the feed.
+- **Root cause:** `collapseCoordEffortChains` (`components/RollsFeed.tsx:122-181`) only renders the bespoke Coord-Effort banner once PARTICIPANTS have rolled (enrich path L160-176). A lead-only chain falls through L154-158 as a plain dice row. The lead roll IS written to roll_log (`page.tsx:4905`, coord_chain_id stamped at L4895-4903).
+- **Fix:** render a bespoke lead-only banner the moment the lead rolls ("Frankie starts a Coordinated Effort using <skill> - +N CMod to all participants"), persisted in the feed. The Tier-A Coord-Effort banner renderer already exists at `RollsFeed.tsx:776+`; extend it to the lead-only state instead of plain-row passthrough.
+- **Verify:** fire a coord-effort lead -> a bespoke banner appears in the feed immediately, showing the +N CMod; participant rolls then fold into it.
+
+### SMOKE-3 (cosmetic): grenade friendly-fire warning fires for NPC throwers hitting PCs
+- **Symptom:** GM throws an NPC's grenade at PCs -> "This blast will hit: Cree Hask (Engaged). Throw anyway?" - but hitting a PC is the NPC's intent, not friendly fire.
+- **Root cause:** `app/stories/[id]/table/page.tsx:7730-7732` builds `friendlyCharacterIds` from ALL other combatants regardless of faction. Consumed at `components/TacticalMap.tsx:2904-2927`.
+- **Fix:** (a) faction-aware friendlies (NPC thrower's friendlies = same-disposition NPCs, not PCs), OR (b) suppress the warning when `activeEntry.npc_id` is set (GM sees the whole board). Pick with Xero - intent is "only fire for actual friendly fire."
+- **Verify:** NPC grenade at PCs -> no warning. NPC grenade that catches another goon -> warning fires.
+
+---
+
+## 1. The IMMEDIATE fix (folds into SMOKE-1)
 
 ### pc_mortal_wound stale-closure bug
 
-Found 2026-05-20 by [tasks/audit-stale-closure-landmines.md](audit-stale-closure-landmines.md). One-line fix. Real bug; silent-drop failure mode.
+Found 2026-05-20 by [tasks/audit-stale-closure-landmines.md](audit-stale-closure-landmines.md). One-line fix. Real bug; silent-drop failure mode. **Likely related to SMOKE-1** - both are mortal-wound-on-the-active-PC paths; fix together.
 
 **Location:** `app/stories/[id]/table/page.tsx` L1487-L1493.
 
