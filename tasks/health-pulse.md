@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-21 15:10 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [473 passed, 24 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Stale-open todo (4th flag):** `todo.md:54` L-3 KV rate-limiter + `todo.md:30` "Approve Upstash KV" still `[ ]`. Shipped `dd1a452` 2026-05-20. Upstash Redis live (package.json confirmed). This is the 4th pulse flagging this; action is overdue.
+- HOPED-FOR (2026-05-19 batch): 2 days old — still below 3-day threshold. Will flag at 00:00 UTC 2026-05-22 if no playtest update. Drain target: 2026-05-25.
+
+**Action:** Check off `todo.md` lines 54 + 30 now. No code change needed — these are already shipped.
+
+---
+
 ## 2026-05-21 12:08 UTC
 
 **Status:** DRIFT
