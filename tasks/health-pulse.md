@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-21 21:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [476 passed, 24 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Confidence Ledger mismatch:** ledger says 473 tests / encumbrance (10); actual is 476 / encumbrance (13). Delta: +3 tests added by `fix(encumbrance): RP drain 1/hour PER POINT` (commit `6f04c53`) since last refresh 2026-05-20. Run `node scripts/refresh-ledger.mjs` to sync `tasks/debug-handoff.md`.
+- **Stale-open todo (6th flag):** `todo.md` L-3 KV rate-limiter + "Approve Upstash KV" still `[ ]`. Shipped `dd1a452`. Six consecutive flags; action is overdue.
+- HOPED-FOR (2026-05-19 batch): 2 days old - will cross 3-day threshold at ~09:00 UTC 2026-05-22. Drain target: 2026-05-25 playtest.
+
+**Action:** (1) Run `node scripts/refresh-ledger.mjs` to resync ledger count. (2) Close the L-3 / Upstash KV stale todos - they shipped.
+
+---
+
 ## 2026-05-21 18:10 UTC
 
 **Status:** DRIFT
