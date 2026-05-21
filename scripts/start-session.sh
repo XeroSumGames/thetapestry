@@ -125,6 +125,30 @@ echo ""
 echo "==> Last 5 commits on origin/main"
 git log --oneline origin/main -5 2>/dev/null
 
+# ---- Handoff freshness (trust calibration) ------------------------------
+# Per tasks/handoff.md "Handoff accuracy contract". The Session-State /
+# resume-pointer prose in these files is one chat's point-in-time belief.
+# Show how many commits origin/main is ahead of each file's last update so
+# you know how much to distrust its "what shipped / what's next" claims.
+
+echo ""
+echo "==> Handoff freshness (verify stale Session-State before acting on it)"
+for F in tasks/handoff.md tasks/puffer-fish-platform-plan.md tasks/hunt-and-peck-priority-queue-2026-05-20.md; do
+  [ -f "$F" ] || continue
+  HSHA=$(git log -1 --format='%h' origin/main -- "$F" 2>/dev/null)
+  if [ -z "$HSHA" ]; then
+    echo "  $F: (no committed history on origin/main)"
+    continue
+  fi
+  HDATE=$(git log -1 --format='%cd' --date=short origin/main -- "$F" 2>/dev/null)
+  HSINCE=$(git rev-list --count "${HSHA}..origin/main" 2>/dev/null || echo "?")
+  if [ "$HSINCE" = "0" ]; then
+    echo "  $F: current ($HDATE @ $HSHA, 0 commits since)"
+  else
+    echo "  $F: $HSINCE commits behind main ($HDATE @ $HSHA) - re-verify its claims vs git log + file existence"
+  fi
+done
+
 # ---- Tooling pointers ---------------------------------------------------
 
 echo ""

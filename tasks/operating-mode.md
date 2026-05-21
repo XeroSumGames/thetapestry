@@ -164,6 +164,8 @@ Tapestry runs across two Claude chats by deliberate split (per Xero 2026-05-20):
 
 Coordination is via the shared substrate (commits, lessons.md, todo.md, debug-handoff.md, the handoff file). Neither chat sees the other's in-flight thinking; they see each other's commits + doc updates. Rebase conflicts happen and are accepted as the cost of parallel work; both chats handle their own rebases without coordination.
 
+Because the two lanes ship in parallel, any handoff or resume-pointer prose one lane writes goes stale the moment the other lane commits. Both lanes follow the **Handoff accuracy contract** (`tasks/handoff.md`): on write, derive every factual claim (HEAD, test count, what shipped, what's next) from git/disk in the same turn, never from memory; on read, treat Session-State as hypothesis and spot-verify before acting. `sh scripts/start-session.sh` now reports how many commits behind main each state file is, so cross-lane drift is visible at session start.
+
 **When in doubt about which lane a request belongs to**, the puffer-fish chat (this one) defaults to "is this a structural / observability / doc / risk question?" If yes, work it here. If it's "fix this specific bug" or "ship this specific feature," redirect to the hunt-and-peck chat.
 
 The earlier MEMORY.md entry `process_multi_chat_tracks` lists three tracks (tactical / infrastructure / organize-thoughts); the canonical model is now this two-lane split. Memory entry to be refreshed accordingly.

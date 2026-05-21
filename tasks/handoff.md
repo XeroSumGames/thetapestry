@@ -42,6 +42,7 @@ These exist because I broke them and Xero corrected me. Do not violate.
 - **Remote agents default to feature branches.** When dispatching via `RemoteTrigger`, expect the spawned agent to create `claude/<name>` or named feature branches despite explicit "push directly to main" instructions - the safety prior wins. Easier to accept and merge than fight. Always specify a fallback branch name (e.g. `perf/<topic>-canvas`) in the prompt so you can find the branch by name afterward.
 - **Capture lessons + todo immediately.** After every meaningful ship, edit `tasks/lessons.md` + `tasks/todo.md` in the same response. Never offer "want me to add this?"
 - **Handoff = paste-ready CHAT BLOCK, not a file pointer.** When Xero asks for a handoff, the FINAL response in chat must be a self-contained block of text he can copy-paste into a new chat. Spells out role, working-dir rules, reference files, hard rules, response protocol, current state. `tasks/handoff.md` exists as scaffolding (rebuild + commit it in the background), but never end by saying "go read the file" or "paste tasks/handoff.md". The chat block IS the deliverable.
+- **Handoff accuracy: DERIVE, don't recall.** Every factual claim in a handoff (HEAD, test count, what shipped, what's next/untouched) must be verified against git/disk in the SAME turn it's written - never transcribed from conversation memory. The reader treats handoff Session-State as a HYPOTHESIS and spot-checks before acting. Full rule in "Handoff accuracy contract" below. (Locked 2026-05-21 after a puffer-fish handoff claimed "A5.5 untouched" when the audit had already shipped 2026-05-20 - a skipped file-existence check.)
 - **Never delete backlog items silently.** Move resolved items to a "Shipped" section with the commit hash.
 - **Testplan naming:** `tasks/<topic>testplan.md` with descriptive name (e.g. `loadtimestestplan.md`). Never overwrite generic `tasks/testplan.md`.
 - **Token spawn = top-left (1,1).** Never top-right.
@@ -133,6 +134,20 @@ If working from a worktree, also:
 git log -1 --oneline                         # worktree HEAD
 git log HEAD..origin/main --oneline          # commits behind main; if non-empty, rebase
 ```
+
+## Handoff accuracy contract (locked 2026-05-21)
+
+Handoffs kept asserting stale or wrong state. The Session-State section + the chat block are ONE chat's point-in-time belief; by the time the next chat reads them the other lane has shipped, and some claims were memory-drift wrong even when written (e.g. "A5.5 untouched" while the audit doc already existed on disk). Two halves close the gap:
+
+**WRITE side - derive, don't recall.** Every factual claim in Session-State + the chat block comes from a command run in the SAME turn you write the handoff, not from memory:
+- HEAD -> `git rev-parse --short HEAD` / `git log -1 --oneline`. Never transcribe.
+- Test count -> `node scripts/refresh-ledger.mjs`, then read it back.
+- "X shipped" -> `git log --oneline | grep`. "Y is next / untouched / to-be-written" -> Glob or `ls` the file (does it ALREADY exist?) AND confirm the todo item is actually open. The A5.5 miss was exactly a skipped file-existence check.
+- Stamp volatile claims with provenance: "(verified @ <sha>)". A claim with no provenance is a guess.
+
+**READ side - hypothesis, not ground truth.** `sh scripts/start-session.sh` verifies HEAD + incoming commits + per-state-file freshness (how many commits behind main `tasks/handoff.md` and the lane plans are). Before acting on any "what's next / what shipped" claim, spot-verify against git log / Glob / the todo. If the resume pointer says "write file Z," confirm Z does not already exist first.
+
+**Structural principle - facts belong to the substrate, not the handoff.** Anything git/disk answers in 2 seconds (HEAD, counts, shipped status, file existence) goes stale fast; do not freeze a copy in prose - point at how to derive it. The handoff's real payload is what the substrate CANNOT tell you: intent, judgment calls, why-this-order, gotchas, "I shipped X but Xero may want Y." Same principle as auto-memory: do not store what is derivable from current state.
 
 ## Sharpening + chat-block protocol
 
