@@ -4,7 +4,7 @@ Closes Phase P4 / A5.5 of `tasks/puffer-fish-platform-plan.md`. Inventories ever
 
 **Audience:** the hunt-and-peck chat (for any new limiter wiring) + Xero (for the Supabase-side limits that can only be set in the dashboard).
 
-**Status:** AUDIT 2026-05-20. Recommendations only.
+**Status:** AUDIT 2026-05-20. Recommendations only. **AUGMENTED 2026-05-21** - re-rated `log-visit` from LOW to HIGH after a re-read found an unauthenticated email-mailbomb / alert-channel-DoS vector the first pass missed (finding A-F4b). New triage item queued for hunt-and-peck.
 
 ---
 
@@ -29,7 +29,7 @@ The full inventory is small. 2 Next.js routes + 3 edge functions.
 | `app/api/health/route.ts` | DB-reachability check; returns `{status, checks, ms, ts}` | No | **No** - bare GET | LOW (read-only DB ping; minimal cost per hit) |
 | `supabase/functions/delete-user/index.ts` | Hard-deletes a user + all their data | Yes (JWT) + Thriver-only OR self-delete | **No** | HIGH if abused; LOW likelihood because JWT-gated AND Thriver-gated |
 | `supabase/functions/notify-thriver/index.ts` | Sends notification to Thrivers (moderation events) | Yes (service-role token) | **No** | MEDIUM - notification spam to Thrivers; mitigated by Y2 (caller-auth tightening) |
-| `supabase/functions/log-visit/index.ts` | Logs a visitor event | No (lightweight tracking) | **No** | LOW - row-spam on `visitor_logs` table |
+| `supabase/functions/log-visit/index.ts` | Logs a visitor event + fires a "new visitor" email to Xero | No (`--no-verify-jwt`) | **No** | **HIGH** - unauth email mailbomb + Resend-quota / alert-channel DoS + analytics poisoning (A-F4b) |
 
 ### Findings (Scope A)
 
@@ -39,7 +39,23 @@ The full inventory is small. 2 Next.js routes + 3 edge functions.
 
 **A-F3: `notify-thriver` has no rate limit.** Today: only the database trigger (`call_notify_thriver()`) can call it because of the Y2 caller-auth tightening - the function rejects 403 unless the Authorization header is `Bearer <SUPABASE_SERVICE_ROLE_KEY>`. External callers can't trigger it. **Effectively rate-limited by the DB trigger pace.** No action needed.
 
-**A-F4: `log-visit` has no rate limit.** Lowest-stakes: rows inserted into `visitor_logs`. A spammer can bloat the table but not exfiltrate data or affect users. Recommendation: add 60/min/IP when L-3 limiter is available. Or accept the risk + add a periodic `DELETE FROM visitor_logs WHERE created_at < now() - interval '90 days'` cleanup.
+**A-F4a: `log-visit` has no rate limit (row spam).** Rows inserted into `visitor_logs`. A spammer can bloat the table. Recommendation: add 60/min/IP when L-3 limiter is available. Or accept the risk + add a periodic `DELETE FROM visitor_logs WHERE created_at < now() - interval '90 days'` cleanup.
+
+**A-F4b: `log-visit` unauthenticated email mailbomb (CORRECTION - this surface is HIGH, not LOW).** The first pass rated `log-visit` "lowest-stakes... can't affect users." That was wrong. The function fires a "new visitor" email to Xero's alert inbox whenever `visitNumber === 1` (`supabase/functions/log-visit/index.ts:84`). `visitNumber` is computed by COUNTing `visitor_logs` rows whose `ip_hash` matches the value in the **request body** (line 27 + 42-48) - NOT a server-derived hash. The function already has the real client IP from `x-forwarded-for` (line 29) but uses it only for the stored `ip_address` column, never for the email gate. The only suppression is a hardcoded `suppressedCities` list, and `city` is **also** taken from the request body (line 27, 81-82).
+
+Consequences, all with **zero auth** (the function is deployed `--no-verify-jwt` per line 1, and its URL ships in the public client bundle at `lib/events.ts:66`, so it is trivially discoverable):
+
+- **Email mailbomb / Resend-quota DoS.** POST an empty-ish body with no `ip_hash` and no `city` -> the `if (ip_hash)` count block is skipped -> `visitNumber` stays `1` -> `isNewVisitor` is true -> `isSuppressedCity` is false -> an email fires. Every single request. Sends are backgrounded via `EdgeRuntime.waitUntil`, so the attacker does not even wait. This exhausts the Resend free-tier daily cap (real-money / quota surface) and, more insidiously, **buries or silences the legitimate new-visitor alerts** - the alerting channel fails under noise. Rotating a random `ip_hash` per request achieves the same and also defeats any naive "same hash" dedup.
+- **Analytics poisoning.** `user_id`, `is_ghost` (derived `!user_id`), `country_code`, `region`, `city`, `latitude`, `longitude` are all inserted verbatim from the body with no validation. An attacker can forge arbitrary geo + forge `user_id` to any UUID, corrupting every dashboard built on `visitor_logs`.
+
+**Root cause:** an unauthenticated endpoint trusts client-supplied input (`ip_hash`, `city`) to gate a side effect that costs real money and is the operator's primary traffic alarm. Rate-limiting alone (A-F4a) bounds the flood but an IP-rotating / botnet attacker still gets through, and it does nothing about analytics forgery.
+
+**Recommended fix (root-cause, queued for hunt-and-peck):**
+1. Derive the email-gate visit count from a **server-side** hash of the real `x-forwarded-for` IP, independent of the client-supplied `ip_hash`. The attacker cannot rotate the source IP per request without a botnet.
+2. Add the 60/min/IP limiter (A-F4a / Phase RL3) keyed off the same server-derived IP, as defense-in-depth.
+3. Validate / constrain the body fields used for analytics (reject non-UUID `user_id`; bound string lengths on `city`/`region`/`page`/`referrer`). Keep `ip_hash` accepted for the analytics dedup column if useful, but never let it gate the email.
+
+Note: changing the analytics dedup key from client-`ip_hash` to server-IP-hash is a behavior change to traffic stats - flag for Xero, do not silently alter analytics semantics. The security-critical change (email gate + rate limit + body validation) does not depend on that decision.
 
 ---
 
@@ -85,7 +101,7 @@ The threat model is: a logged-in playtester who decides to be annoying. Likeliho
 | `/api/health` | A | None | 120/min/IP via Upstash | LOW |
 | `delete-user` edge fn | A | None (auth-gated) | 10/min/user when feasible | MEDIUM |
 | `notify-thriver` edge fn | A | None (service-role-gated) | Skip - DB trigger is the gate | Done |
-| `log-visit` edge fn | A | None | 60/min/IP OR periodic table cleanup | LOW |
+| `log-visit` edge fn | A | None | Server-derive email-gate IP hash + 60/min/IP + body validation (A-F4b) | **HIGH** |
 | `roll_log` writes (client) | B | None | Defer client throttle + SQL check | LOW |
 | `scene_tokens` writes (client) | B | None | Defer | LOW |
 | `chat_messages` writes (client) | B | None | Defer | LOW |
@@ -107,9 +123,14 @@ Extract a shared `lib/rate-limit.ts` exposing a reusable `makeRateLimit(prefix, 
 
 Apply the shared helper at `/api/health/route.ts`. Generous limit (120/min/IP) since legitimate uptime monitors poll at 60/min max.
 
-### Phase RL3: `log-visit` edge function (~0.5 session)
+### Phase RL3: `log-visit` edge function (~1 session) - PROMOTED TO HIGH
 
-Edge functions run in Deno; `@upstash/ratelimit` works there too. Same pattern. 60/min/IP.
+Now the highest-priority item in this audit (finding A-F4b). Three parts, in order:
+1. **Email gate.** Replace the client-`ip_hash`-driven `visitNumber` count with a server-derived hash of the real `x-forwarded-for` IP. This is the security-critical change and is independent of the analytics question below.
+2. **Rate limit.** Edge functions run in Deno; `@upstash/ratelimit` works there too. Same pattern as verify-turnstile. 60/min/IP keyed off the server-derived IP.
+3. **Body validation.** Reject non-UUID `user_id`; bound string lengths on `city` / `region` / `page` / `referrer`.
+
+Open question for Xero (does NOT block parts 1-3): should the analytics dedup column also switch from client-`ip_hash` to the server-IP-hash? That changes traffic-stat semantics, so it's Xero's call.
 
 ### Phase RL4: `delete-user` edge function (~0.5 session)
 

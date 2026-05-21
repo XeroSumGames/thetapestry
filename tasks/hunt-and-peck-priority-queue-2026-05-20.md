@@ -10,7 +10,9 @@ Written by the puffer-fish lane as a one-shot handoff. Maps the spec/audit inven
 
 ---
 
-## 0. COMBAT SMOKE BUGS (2026-05-20/21) - do these FIRST, in this order
+## 0. COMBAT SMOKE BUGS (2026-05-20/21) - ALL SHIPPED 2026-05-21 (commit 7503179)
+
+**STATUS: DONE.** SMOKE-1/2/3 all shipped in `7503179` (see todo.md CURRENT OPEN for the as-shipped notes - the actual fix sites differed from the line numbers below; SMOKE-1 landed in the blast-resolution loop ~page.tsx:5546, not 2169-2210). Left here for provenance. Pending re-verify on the next 2-client smoke.
 
 Found by the decomposition 2-client smoke (Parts 0/2/3). All PRE-EXISTING, not decomposition regressions. All root-caused to file:line by the puffer-fish lane. The decomposition extractions themselves verified clean.
 
@@ -31,6 +33,27 @@ Found by the decomposition 2-client smoke (Parts 0/2/3). All PRE-EXISTING, not d
 - **Root cause:** `app/stories/[id]/table/page.tsx:7730-7732` builds `friendlyCharacterIds` from ALL other combatants regardless of faction. Consumed at `components/TacticalMap.tsx:2904-2927`.
 - **Fix:** (a) faction-aware friendlies (NPC thrower's friendlies = same-disposition NPCs, not PCs), OR (b) suppress the warning when `activeEntry.npc_id` is set (GM sees the whole board). Pick with Xero - intent is "only fire for actual friendly fire."
 - **Verify:** NPC grenade at PCs -> no warning. NPC grenade that catches another goon -> warning fires.
+
+---
+
+## 0.5. SECURITY HIGH (2026-05-21) - do this before the spec work in Section 2
+
+### log-visit unauthenticated email mailbomb + analytics poisoning
+
+Found by the puffer-fish A5.5 re-read 2026-05-21. Full write-up: [tasks/audit-rate-limit-coverage-2026-05-20.md](audit-rate-limit-coverage-2026-05-20.md) finding A-F4b + Phase RL3. Real, trivially exploitable, zero-auth.
+
+**Symptom:** any unauthenticated POST to `/functions/v1/log-visit` (URL is in the public client bundle) can fire a "new visitor" email to Xero's alert inbox on every request, and inject forged analytics rows.
+
+**Root cause:** `supabase/functions/log-visit/index.ts` is deployed `--no-verify-jwt`. The email gate at `:84` keys off `visitNumber`, COUNTed from the **body-supplied** `ip_hash` (`:27`, `:42-48`); the only suppression keys off the **body-supplied** `city` (`:81-82`). Omit both -> `visitNumber` stays 1 -> email fires every request. Resend-quota DoS + the genuine new-visitor alarm drowns in attacker noise. Body fields (`user_id`, geo) are inserted unvalidated -> analytics poisoning.
+
+**Fix (root-cause, 3 parts, in order):**
+1. Derive the email-gate visit count from a SERVER-side hash of the real `x-forwarded-for` IP (`:29` already reads it), NOT the body `ip_hash`.
+2. Add 60/min/IP `@upstash/ratelimit` (works in Deno; same pattern as verify-turnstile) keyed off the server IP.
+3. Validate body: reject non-UUID `user_id`; bound `city`/`region`/`page`/`referrer` lengths.
+
+**Xero decision (does NOT block parts 1-3):** whether the analytics dedup column also switches from client-`ip_hash` to the server IP hash - that changes traffic-stat semantics.
+
+**Effort:** ~1 session. **Verify:** curl the function with `{}` (no auth) repeatedly -> after the fix, no email fires for non-distinct source IPs and 429 after 60/min. No automated test covers edge functions yet; document the curl repro in a testplan if the Deno harness can't host one.
 
 ---
 
