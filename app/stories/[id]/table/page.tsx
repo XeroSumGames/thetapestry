@@ -5160,6 +5160,52 @@ export default function TablePage() {
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
+    // Throw-time consumable decrement. Explosives (Grenade, Molotov,
+    // Flash-Bang, Mortar, Rocket Launcher) are one-use thrown items whose
+    // carry count lives on the weapon slot (PC: data.weaponPrimary/Secondary.qty,
+    // NPC: skills.weapon/weapon2.qty). Spend one on ANY throw at a target or
+    // cell regardless of outcome - the pin is pulled / the bottle is lit
+    // whether or not it lands true. Gated on category 'explosive' (NOT the
+    // Blast Radius trait) to match where qty is seeded, so Molotov + Flash-Bang
+    // (no Blast trait, so they never hit the grenade-fumble path) decrement too.
+    if (pendingRoll.weapon && targetName) {
+      const thrownW = getWeaponByName(pendingRoll.weapon.weaponName)
+      if (thrownW?.category === 'explosive') {
+        const active = initiativeOrder.find(ie => ie.is_active)
+        const throwerEntry = (active ? entries.find(e => e.character.id === active.character_id) : null)
+          ?? entries.find(e => e.userId === userId)
+        const throwerNpc = active && !throwerEntry && active.npc_id
+          ? (rosterNpcs.find(n => n.id === active.npc_id) ?? campaignNpcs.find((n: any) => n.id === active.npc_id))
+          : null
+        const wname = pendingRoll.weapon.weaponName
+        if (throwerEntry) {
+          const cd = throwerEntry.character.data ?? {}
+          for (const slot of ['weaponPrimary', 'weaponSecondary'] as const) {
+            if (cd[slot]?.weaponName === wname) {
+              const cur = typeof cd[slot].qty === 'number' ? cd[slot].qty : 1
+              const newData = { ...cd, [slot]: { ...cd[slot], qty: Math.max(0, cur - 1) } }
+              await supabase.from('characters').update({ data: newData }).eq('id', throwerEntry.character.id)
+              setEntries(prev => prev.map(e => e.character.id === throwerEntry.character.id
+                ? { ...e, character: { ...e.character, data: newData } } : e))
+              break
+            }
+          }
+        } else if (throwerNpc) {
+          const sk = (throwerNpc as any).skills ?? {}
+          for (const slot of ['weapon', 'weapon2'] as const) {
+            if (sk[slot]?.weaponName === wname) {
+              const cur = typeof sk[slot].qty === 'number' ? sk[slot].qty : 1
+              const newSkills = { ...sk, [slot]: { ...sk[slot], qty: Math.max(0, cur - 1) } }
+              await supabase.from('campaign_npcs').update({ skills: newSkills }).eq('id', (throwerNpc as any).id)
+              setCampaignNpcs(prev => prev.map(n => n.id === (throwerNpc as any).id ? { ...n, skills: newSkills } : n))
+              setRosterNpcs(prev => prev.map(n => n.id === (throwerNpc as any).id ? { ...n, skills: newSkills } as any : n))
+              break
+            }
+          }
+        }
+      }
+    }
+
     // Calculate and apply damage for successful weapon attacks
     let damageResult: DamageResult | undefined
     let traitNotes: string[] = []
@@ -5413,8 +5459,10 @@ export default function TablePage() {
 
       damageResult = { base: totalBase, diceRoll: totalDice, diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc, phyBonus: totalPhy, totalWP: totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
-      // Auto-decrement ammo for ranged attacks
-      if (w && !isMelee && w.clip && myEntry) {
+      // Auto-decrement ammo for ranged attacks. Explosives are excluded -
+      // they carry clip:1 but are consumables tracked by qty (decremented
+      // above), not by the clip/reload system.
+      if (w && !isMelee && w.clip && w.category !== 'explosive' && myEntry) {
         const charData = myEntry.character.data ?? {}
         const slots = ['weaponPrimary', 'weaponSecondary'] as const
         for (const slot of slots) {
@@ -7666,7 +7714,16 @@ export default function TablePage() {
               charEntry?.character.data?.weaponPrimary?.ammoCurrent ??
               npcForWeapon?.skills?.weapon?.ammoCurrent ??
               null
-            const outOfAmmo = !!w && !isMelee && !!w.clip && w.clip > 0 && ammoCurrent !== null && ammoCurrent <= 0
+            const outOfAmmo = !!w && !isMelee && !!w.clip && w.clip > 0 && w.category !== 'explosive' && ammoCurrent !== null && ammoCurrent <= 0
+            // Explosive throw gate - explosives are one-use consumables tracked
+            // by qty on the slot (not the clip/ammo system). Block the throw when
+            // the carry count hits 0, mirroring the ammo gate. Legacy explosives
+            // with no qty set default to throwable (treated as 1 remaining).
+            const throwQty: number | null =
+              charEntry?.character.data?.weaponPrimary?.qty ??
+              npcForWeapon?.skills?.weapon?.qty ??
+              null
+            const outOfThrows = !!w && w.category === 'explosive' && throwQty !== null && throwQty <= 0
             const has2Actions = (activeEntry.actions_remaining ?? 0) >= 2
             const isGrappled = !!activeEntry.grappled_by
             const isGrappling = initiativeOrder.some(e => e.grappled_by === activeEntry.character_name)
@@ -7733,6 +7790,7 @@ export default function TablePage() {
                 <button onClick={() => {
                   if (!w || !weaponData) { alert('No weapon readied.'); return }
                   if (outOfAmmo) { alert(`${w.name} is empty. Reload via Ready Weapon before firing again.`); return }
+                  if (outOfThrows) { alert(`${w.name} - none left to throw.`); return }
                   const rapid = charEntry?.character.data?.rapid ?? {}
                   const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
                   const attrKey = isMelee ? 'PHY' : (w.skill === 'Ranged Combat' ? 'DEX' : 'ACU')
@@ -7781,10 +7839,10 @@ export default function TablePage() {
                   }
                   handleRollRequest(`${activeEntry.character_name} - Attack (${w.name})`, amod, smod, weaponCtx)
                 }}
-                  style={(w && !outOfAmmo) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
-                  disabled={!w || outOfAmmo}
-                  title={outOfAmmo ? `${w?.name ?? 'Weapon'} is empty - Reload via Ready Weapon` : undefined}>
-                  Attack{w ? ` (${w.name})` : ''}{outOfAmmo ? ' - empty, Reload' : ''}
+                  style={(w && !outOfAmmo && !outOfThrows) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
+                  disabled={!w || outOfAmmo || outOfThrows}
+                  title={outOfAmmo ? `${w?.name ?? 'Weapon'} is empty - Reload via Ready Weapon` : outOfThrows ? `${w?.name ?? 'Weapon'} - none left to throw` : undefined}>
+                  Attack{w ? ` (${w.name})` : ''}{outOfAmmo ? ' - empty, Reload' : ''}{outOfThrows ? ' - none left' : ''}
                 </button>
 
                 {/* ── CHARGE: both actions, melee/unarmed attack (always available) ── */}

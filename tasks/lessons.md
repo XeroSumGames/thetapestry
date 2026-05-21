@@ -1,5 +1,15 @@
 # Lessons Learned
 
+## A new counter on a category that already flows through an old counter = check for double-counting (2026-05-21)
+
+**Rule:** When you add a new per-item counter (here: explosive `qty` on the weapon slot) for a category that ALREADY rides an existing counter system, audit the old system for an interaction before shipping the new one. Don't assume the new counter is the only thing tracking that item.
+
+**The bug it caught:** Grenades/Molotovs are `category:'explosive'` but also carry `clip:1`. The pre-existing ranged ammo-decrement (`page.tsx` `executeRoll`) and the toolbar `outOfAmmo` gate both key off `clip`, so throwing a grenade drained its `ammoCurrent` 1->0 and locked the Attack button as "empty, Reload" - silently defeating the brand-new `qty` carry-count feature (button greyed after ONE throw no matter how many you carried). The throw-decrement task looked like "add a decrement"; the real fix was ALSO excluding explosives from the clip/ammo system (decrement + gate) so `qty` is their sole counter.
+
+**Detection:** before wiring a new counter's decrement/gate, grep the combat/attack path for every existing place the same item's OTHER fields (`clip`, `ammoCurrent`, `reloads`) get read or mutated. If the category trips an existing gate, the new feature is dead-on-arrival until you carve it out. (Surfacing this latent interaction is exactly the "long-term fix over quick fix / surface latent bugs even when off-request" rule paying off.)
+
+**Also:** gate the new behavior on the SAME predicate the feature uses to seed the field (`category === 'explosive'`), not a convenient-looking proxy (the `Blast Radius` trait). Molotov + Flash-Bang are explosive but carry no Blast trait, so a trait-based gate would have shown a qty stepper that never decremented.
+
 ## Specs + extracts are hypotheses - verify against the live source before acting (2026-05-20)
 
 **Rule:** A spec doc OR a pre-digested rules-extract is one writer's snapshot. Before executing it, verify against the actual live source (the real writer site for code; the real PDF/canon page for rules). Two instances surfaced in one session:
