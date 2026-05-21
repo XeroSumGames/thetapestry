@@ -69,6 +69,33 @@ describe('computeEncumbrance', () => {
     expect(result.overloaded).toBe(false) // strict greater-than for overload
   })
 
+  // overBy: points over the limit. Canon (restored 2026-05-20) - the
+  // RP-drain-per-hour is 1 PER POINT over, so overBy is the multiplier
+  // the Advance Time tick uses.
+  it('overBy = 0 when at or under the limit', () => {
+    const under = computeEncumbrance([{ name: 'Stuff', enc: 4, qty: 1 }], NO_WEAPONS[0], NO_WEAPONS[1], 0)
+    expect(under.overBy).toBe(0)
+    const exact = computeEncumbrance([{ name: 'Stuff', enc: 6, qty: 1 }], NO_WEAPONS[0], NO_WEAPONS[1], 0)
+    expect(exact.overBy).toBe(0) // at cap = not over
+  })
+
+  it('overBy = points over the limit when overloaded', () => {
+    const result = computeEncumbrance([{ name: 'Heavy Crate', enc: 10, qty: 1 }], NO_WEAPONS[0], NO_WEAPONS[1], 0)
+    expect(result.currentEnc).toBe(10)
+    expect(result.encLimit).toBe(6)
+    expect(result.overBy).toBe(4) // 10 - 6
+  })
+
+  it('overBy tracks the limit (PHY + backpack raise it, shrinking overBy)', () => {
+    // Same 10-enc load, but PHY 2 + backpack push the limit to 10 -> not over.
+    const inv: EncumbranceItem[] = [{ name: 'Backpack', enc: 0, qty: 1 }, { name: 'Load', enc: 10, qty: 1 }]
+    const result = computeEncumbrance(inv, NO_WEAPONS[0], NO_WEAPONS[1], 2)
+    expect(result.encLimit).toBe(10) // 6 + 2 PHY + 2 backpack
+    expect(result.currentEnc).toBe(10)
+    expect(result.overloaded).toBe(false)
+    expect(result.overBy).toBe(0)
+  })
+
   it('combines all sources: PHY mod + backpack + weapons + qty inventory', () => {
     const inv: EncumbranceItem[] = [
       { name: 'Backpack', enc: 0, qty: 1 },

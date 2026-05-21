@@ -10604,10 +10604,12 @@ export default function TablePage() {
           const enc = computeEncumbrance(inv, wp, ws, phy)
           if (!enc.overloaded) return []
           const cur = e.liveState.rp_current ?? 0
-          const next = Math.max(0, cur - hours)
+          // Canon (restored 2026-05-20): 1 RP/hour FOR EACH point over
+          // the limit, not a flat 1/hour. overBy is the multiplier.
+          const next = Math.max(0, cur - hours * enc.overBy)
           return [{
             stateId: e.stateId, name: e.character.name,
-            cur, next, phy,
+            cur, next, phy, overBy: enc.overBy,
             characterId: e.character.id,
             stress: e.liveState.stress ?? 0,
             wpCurrent: e.liveState.wp_current ?? 0,
@@ -10621,8 +10623,9 @@ export default function TablePage() {
           const enc = computeEncumbrance(inv, wp, ws, phy)
           if (!enc.overloaded) return []
           const cur = n.rp_current ?? n.rp_max ?? 0
-          const next = Math.max(0, cur - hours)
-          return [{ id: n.id, name: n.name, cur, next }]
+          // Canon: 1 RP/hour per point over the limit (see PC branch).
+          const next = Math.max(0, cur - hours * enc.overBy)
+          return [{ id: n.id, name: n.name, cur, next, overBy: enc.overBy }]
         })
         const total = affectedPcs.length + affectedNpcs.length
         return (
@@ -10633,7 +10636,7 @@ export default function TablePage() {
               <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Advance Time</div>
               <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>Overencumbered tick</div>
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '14px', lineHeight: 1.5 }}>
-                Each overencumbered character loses <strong>1 RP per hour</strong> until they rest or drop weight. RP can&apos;t go below 0; entering 0 triggers Incapacitation + the auto-Stress pip as usual.
+                Each overencumbered character loses <strong>1 RP per hour for every point over their limit</strong> until they rest or drop weight (Distemper canon). RP can&apos;t go below 0; entering 0 triggers Incapacitation + the auto-Stress pip as usual.
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
@@ -10655,13 +10658,13 @@ export default function TablePage() {
                 </div>
                 {affectedPcs.map(p => (
                   <div key={`pc:${p.stateId}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
-                    <span style={{ color: '#7ab3d4' }}>PC · {p.name}</span>
+                    <span style={{ color: '#7ab3d4' }}>PC · {p.name} <span style={{ color: '#5a5550' }}>({p.overBy} over · -{p.overBy}/h)</span></span>
                     <span style={{ color: p.next === 0 && p.cur > 0 ? '#c0392b' : '#cce0f5', fontWeight: 700 }}>RP {p.cur} → {p.next}{p.next === 0 && p.cur > 0 ? ' · INCAP' : ''}</span>
                   </div>
                 ))}
                 {affectedNpcs.map(n => (
                   <div key={`npc:${n.id}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
-                    <span style={{ color: '#EF9F27' }}>NPC · {n.name}</span>
+                    <span style={{ color: '#EF9F27' }}>NPC · {n.name} <span style={{ color: '#5a5550' }}>({n.overBy} over · -{n.overBy}/h)</span></span>
                     <span style={{ color: n.next === 0 && n.cur > 0 ? '#c0392b' : '#cce0f5', fontWeight: 700 }}>RP {n.cur} → {n.next}{n.next === 0 && n.cur > 0 ? ' · INCAP' : ''}</span>
                   </div>
                 ))}

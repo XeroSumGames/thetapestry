@@ -64,6 +64,24 @@ export default function Page() {
         hit AND mitigate any damage that does land - so a high PHY
         character is harder to hit in melee AND takes less damage when hit.
       </P>
+      <P>
+        <Term>Encumbrance limit</Term> is <strong>6 + PHY AMod</strong>,
+        plus <strong>2</strong> if the character is carrying a Backpack or
+        Military Backpack. A character can carry right up to their limit
+        with no penalty.
+      </P>
+      <P>
+        <Term>Overloaded.</Term> The moment a character exceeds their
+        Encumbrance limit, two things happen until they drop weight or
+        rest: their <strong>movement speed drops by half</strong>, and they
+        take <strong>1 RP damage per hour for each point they are over the
+        limit</strong> (so being 3 over costs 3 RP every hour, not 1). If
+        this drives them to 0 RP they become Incapacitated - they come to
+        within moments and recover 1 RP, but must then rest for four hours
+        to recover half their RP before carrying on. Alternatively they can
+        drop enough gear to get back within their limit, at which point the
+        RP damage stops immediately.
+      </P>
       <TryIt href="/dashboard">
         Every character sheet shows the live derived stats - open one to
         see them computed from your RAPID values.

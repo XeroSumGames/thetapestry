@@ -25,6 +25,12 @@ export interface Encumbrance {
   hasBackpack: boolean
   backpackBonus: number
   overloaded: boolean
+  /** Points over the limit (currentEnc - encLimit), floored at 0.
+   *  Canon (Distemper, restored 2026-05-20): an overloaded character
+   *  takes 1 RP damage per hour FOR EACH point over the limit (not a
+   *  flat 1/hr) + moves at half speed until they drop weight or rest.
+   *  This is the per-hour RP-drain multiplier. */
+  overBy: number
 }
 
 export function computeEncumbrance(
@@ -41,5 +47,7 @@ export function computeEncumbrance(
   const backpackBonus = hasBackpack ? BACKPACK_BONUS : 0
   const encLimit = BASE_ENC_LIMIT + phyMod + backpackBonus
   const currentEnc = weaponEnc + invEnc
-  return { weaponEnc, invEnc, currentEnc, encLimit, hasBackpack, backpackBonus, overloaded: currentEnc > encLimit }
+  const overloaded = currentEnc > encLimit
+  const overBy = Math.max(0, currentEnc - encLimit)
+  return { weaponEnc, invEnc, currentEnc, encLimit, hasBackpack, backpackBonus, overloaded, overBy }
 }
