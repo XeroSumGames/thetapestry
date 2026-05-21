@@ -2,9 +2,10 @@
 
 > Planning artifact for Phase 3 of the pre-launch audit (see [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md)). Produced 2026-05-17 by a Plan-subagent code-read of the 12,429-line file. This is the spec future sessions execute against. No code lands today.
 
-**Target:** `app/stories/[id]/table/page.tsx` (now **13,192 lines** as of 2026-05-20, was 12,429 at plan-authoring; +763 over 3 days from Stabilize Phase 1 modal + Distract Phase 2 modal + other ships)
+**Target:** `app/stories/[id]/table/page.tsx` (**13,565 lines** as of 2026-05-21 @ 5bdbf31; was 12,429 at plan-authoring 2026-05-17; **+1,136 in 4 days** from feature/fix accretion - the file is growing faster than it is being decomposed)
+**Decomposition landed so far:** `hooks/useHeaderMenus.ts`, `components/FirstImpressionModal.tsx`, `types.ts` (~720 LOC across the three siblings). The plan's leaf Batches A/B/C (the ~60% cut) have NOT been pulled. `executeRoll` is still the worst function (now at L5036, ~1850 LOC).
 **End state of Phase 3:** thin orchestrator under 500 lines composing hooks + sub-components.
-**Branch baseline:** d2ba6b6 at authoring; current HEAD floats with the lane work. Pre-commit gates: tsc, **419 Vitest tests** (was 141 at authoring), guardrails.
+**Branch baseline:** d2ba6b6 at authoring; current HEAD floats with the lane work. Pre-commit gates: tsc, **476 Vitest tests** (was 141 at authoring), guardrails.
 
 ---
 
