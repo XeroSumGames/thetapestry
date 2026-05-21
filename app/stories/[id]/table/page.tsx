@@ -313,6 +313,7 @@ export default function TablePage() {
     label: string
     hasBlast?: boolean
     friendlyCharacterIds?: string[]
+    friendlyNpcIds?: string[]
   } | null>(null)
   const [grenadeTargetCell, setGrenadeTargetCell] = useState<{ gx: number; gy: number } | null>(null)
 
@@ -3426,6 +3427,7 @@ export default function TablePage() {
       rangeFeet: throwMode.rangeFeet,
       hasBlast: throwMode.hasBlast,
       friendlyCharacterIds: throwMode.friendlyCharacterIds,
+      friendlyNpcIds: throwMode.friendlyNpcIds,
     } : null,
     [throwMode],
   )
@@ -5890,6 +5892,14 @@ export default function TablePage() {
           const npcLocalPatches = new Map<string, any>()     // npcId → patch
           const objLocalPatches = new Map<string, number>()  // tokenId → newWP
           const nowIso = new Date().toISOString()
+          // SMOKE-1: a thrower standing in their own grenade radius is a
+          // SPLASH victim, not the primary target - so the per-target
+          // auto-advance in the named-damage branches above never sees them.
+          // If the active combatant downs themselves here, combat stalls on a
+          // downed-but-still-active thrower (GM has to manually click NEXT).
+          // Track it and fire nextTurn once the blast writes have landed.
+          const activeInit = combatActive ? initiativeOrder.find(e => e.is_active) : null
+          let activeDownedByBlast = false
 
           for (const job of jobs) {
             if (job.kind === 'pc') {
@@ -5913,6 +5923,9 @@ export default function TablePage() {
               }
               tableUpdates.push(supabase.from('character_states').update(update).eq('id', job.pc.stateId))
               pcLocalPatches.set(job.pc.stateId, update)
+              if ((nWP === 0 || nRP === 0) && activeInit && !activeInit.is_npc && activeInit.character_id === job.pc.character.id) {
+                activeDownedByBlast = true
+              }
               if (splashStressReason) {
                 stressLogRows.push({
                   campaign_id: id, user_id: userId, character_name: 'System',
@@ -5931,6 +5944,9 @@ export default function TablePage() {
               if (nRP === 0 && curRP > 0 && nWP > 0) npcUpd.incap_rounds = Math.max(1, 4 - (job.npc.physicality ?? 0))
               tableUpdates.push(supabase.from('campaign_npcs').update(npcUpd).eq('id', job.npc.id))
               npcLocalPatches.set(job.npc.id, npcUpd)
+              if ((nWP === 0 || nRP === 0) && activeInit && activeInit.is_npc && activeInit.npc_id === job.npc.id) {
+                activeDownedByBlast = true
+              }
               blastTargets.push(`${job.npc.name} (${job.rangeBand}): ${job.splashWP} WP, ${job.splashRP} RP`)
             } else {
               // Object splash - barrels, crates, etc. get scaled WP damage
@@ -5980,6 +5996,19 @@ export default function TablePage() {
 
           if (blastTargets.length > 0) {
             traitNotes.push(`Blast hit: ${blastTargets.join(' | ')}`)
+          }
+
+          // SMOKE-1: the active thrower just downed themselves in their own
+          // blast. Zero their actions and advance the turn so combat doesn't
+          // stall. Mortally-wounded PCs STAY in the initiative list (still
+          // stabilizable) - they're just no longer the active combatant.
+          // nextTurn() re-fetches initiative_order from the DB, so the
+          // actions_remaining=0 write below is visible to its skip-walk.
+          if (activeDownedByBlast && activeInit) {
+            await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', activeInit.id)
+            await nextTurn()
+            await loadInitiative(id)
+            initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
           }
         }
       }
@@ -7720,16 +7749,24 @@ export default function TablePage() {
                   if (w.category === 'explosive') {
                     const rangeFeetMap: Record<string, number> = { Engaged: 5, Close: 30, Medium: 100, Long: 300, Distant: 1000 }
                     const rangeFeet = rangeFeetMap[w.range] ?? 30
-                    // Friendly list = every other PC currently on the
-                    // initiative roster. Used by TacticalMap to prompt
-                    // the player before lobbing a grenade onto their
-                    // own teammates. Attacker themselves is excluded
-                    // (their own PHY-mitigated splash is their problem
-                    // alone - no warning).
+                    // Faction-aware friendly list (SMOKE-3). The warning
+                    // must only fire for ACTUAL friendly fire - hitting your
+                    // OWN side. A PC thrower's side is the other PCs; an NPC
+                    // thrower's side is the other NPCs. We populate only the
+                    // list matching the thrower's faction and leave the other
+                    // empty, so a grenade landing on the OPPOSING faction
+                    // (an NPC's PCs, a PC's NPCs) is intended damage and never
+                    // prompts. The thrower themselves is excluded from the
+                    // friendly list (their own PHY-mitigated splash is shown
+                    // separately as a (YOU) self-hit tag by TacticalMap).
                     const hasBlast = (w.traits ?? []).some((t: string) => t.startsWith('Blast Radius'))
-                    const friendlyCharacterIds = entries
-                      .map(e => e.character.id)
-                      .filter(cid => cid !== activeEntry.character_id)
+                    const attackerIsNpc = !!activeEntry.npc_id
+                    const friendlyCharacterIds = attackerIsNpc
+                      ? []
+                      : entries.map(e => e.character.id).filter(cid => cid !== activeEntry.character_id)
+                    const friendlyNpcIds = attackerIsNpc
+                      ? campaignNpcs.map((n: any) => n.id).filter((nid: string) => nid !== activeEntry.npc_id)
+                      : []
                     setThrowMode({
                       attackerCharId: activeEntry.character_id,
                       attackerNpcId: activeEntry.npc_id,
@@ -7738,6 +7775,7 @@ export default function TablePage() {
                       label: `${activeEntry.character_name} - Attack (${w.name})`,
                       hasBlast,
                       friendlyCharacterIds,
+                      friendlyNpcIds,
                     })
                     return
                   }

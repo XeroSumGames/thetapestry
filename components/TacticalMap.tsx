@@ -125,11 +125,14 @@ interface Props {
   // token move, and the range math uses weapon range not movement feet.
   // hasBlast: when true, the TacticalMap renders Engaged/Close/Far rings
   // around the cell under the cursor so the thrower can SEE the blast
-  // footprint before committing. friendlyCharacterIds: any of these PCs
-  // inside the 100ft far-band trigger a confirm() prompt before the
-  // throw fires - saves the player from accidentally lobbing a grenade
-  // into their own teammates.
-  throwMode?: { attackerCharId: string | null; attackerNpcId: string | null; rangeFeet: number; hasBlast?: boolean; friendlyCharacterIds?: string[] } | null
+  // footprint before committing. friendlyCharacterIds / friendlyNpcIds:
+  // tokens on the thrower's OWN side (SMOKE-3, 2026-05-21). A PC thrower's
+  // friendlies are other PCs (friendlyCharacterIds); an NPC thrower's
+  // friendlies are other NPCs (friendlyNpcIds). Cross-faction tokens
+  // (an NPC's PCs, a PC's NPCs) are enemies and never trigger the warning -
+  // hitting them is intended damage, not friendly fire. Any friendly inside
+  // the blast bands triggers a confirm() before the throw fires.
+  throwMode?: { attackerCharId: string | null; attackerNpcId: string | null; rangeFeet: number; hasBlast?: boolean; friendlyCharacterIds?: string[]; friendlyNpcIds?: string[] } | null
   onThrowComplete?: (gx: number, gy: number) => void
   onThrowCancel?: () => void
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
@@ -2901,9 +2904,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             // Self-hits get a (YOU) tag in the confirm dialog so the
             // player knows what they're doing before they cook off a
             // grenade at their own feet.
+            // Faction-symmetric friendly-fire scan (SMOKE-3). A PC thrower's
+            // friendlies are PC tokens (friendlyCharacterIds); an NPC
+            // thrower's friendlies are NPC tokens (friendlyNpcIds). The page
+            // only populates the list matching the thrower's faction, so the
+            // opposing faction never matches here - hitting an enemy with a
+            // grenade is intended, not friendly fire.
             const friendlies = throwMode.friendlyCharacterIds ?? []
+            const friendlyNpcs = throwMode.friendlyNpcIds ?? []
             const attackerCharId = throwMode.attackerCharId
-            if (throwMode.hasBlast && (friendlies.length > 0 || attackerCharId)) {
+            const attackerNpcId = throwMode.attackerNpcId
+            if (throwMode.hasBlast && (friendlies.length > 0 || friendlyNpcs.length > 0 || attackerCharId || attackerNpcId)) {
               // Per playtest 2026-04-27: blast only damages Engaged and
               // Close. Anything beyond 30ft takes no damage, so don't
               // warn the player about it.
@@ -2911,9 +2922,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               const closeCells = Math.max(1, Math.round(30 / ft))
               const hits: { name: string; band: string; isSelf: boolean }[] = []
               for (const tok of tokens) {
-                if (!tok.character_id) continue
-                const isSelf = !!attackerCharId && tok.character_id === attackerCharId
-                const isFriendly = friendlies.includes(tok.character_id)
+                const isSelf =
+                  (!!attackerCharId && tok.character_id === attackerCharId) ||
+                  (!!attackerNpcId && tok.npc_id === attackerNpcId)
+                const isFriendly =
+                  (!!tok.character_id && friendlies.includes(tok.character_id)) ||
+                  (!!tok.npc_id && friendlyNpcs.includes(tok.npc_id))
                 if (!isSelf && !isFriendly) continue
                 const d = Math.max(Math.abs(tok.grid_x - pos.gx), Math.abs(tok.grid_y - pos.gy))
                 if (d > closeCells) continue

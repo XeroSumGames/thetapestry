@@ -857,6 +857,60 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
+  // Coordinated Effort - LEAD-ONLY banner. The chain has a lead row but
+  // no participants have rolled yet, so collapseCoordEffortChains passed
+  // it through UNENRICHED (no coordChainParticipants). Without this branch
+  // the lead falls through to the default narrative row and only becomes a
+  // banner once the first participant rolls - a visible "plain row morphs
+  // into a banner" flicker (SMOKE-2). Render the same Tier-A chrome now so
+  // the feed reads "COORDINATED EFFORT" the instant the chain starts. The
+  // narrative reuses compactRollSummary (single source of truth for the
+  // locked "kicks off a Coordinated Effort with <skill>" wording) rather
+  // than re-deriving it here.
+  if (r.label.startsWith('Coordinated Effort - ') && !(r.damage_json as any)?.coordChainParticipants) {
+    const outcomeColorVal = outcomeColor(r.outcome)
+    const isExpanded = expandedRollIds.has(r.id)
+    const isInsightOutcome = r.outcome === 'High Insight' || r.outcome === 'Low Insight'
+    let leadNarr = compactRollSummary(r) ?? r.label
+    if (!isInsightOutcome) {
+      leadNarr = leadNarr
+        .replace(/\s+and has a Moment of Insight\b.*$/, '')
+        .replace(/\s+but has a Moment of Insight\b.*$/, '')
+    }
+    return (
+      <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${outcomeColorVal}33`, borderRadius: '3px', borderLeft: `3px solid ${outcomeColorVal}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: outcomeColorVal, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Coordinated Effort</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+            <button onClick={() => toggleExpanded(r.id)}
+              title={isExpanded ? 'Hide dice' : 'View dice'}
+              style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
+              {isExpanded ? '▾' : '▸'}
+            </button>
+          </div>
+        </div>
+        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+          {leadNarr}
+          {r.insight_awarded && (r.outcome === 'High Insight' || r.outcome === 'Low Insight') && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+        </div>
+        {isExpanded && (
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+            <div>
+              <span style={{ color: '#cce0f5', fontWeight: 600 }}>{r.character_name} (lead):</span>{' '}
+              [{r.die1}+{r.die2}]
+              {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+              {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              <span style={{ marginLeft: '8px', color: outcomeColorVal, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.outcome}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Default: skill / attribute / attack roll.
   //
   // STRUCTURE (post-2026-05-13 unification):

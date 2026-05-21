@@ -763,9 +763,9 @@
   <div class="row amber"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:26 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie unsuccessfully attempts to grapple with Avery Xavier</div></div>
   <div class="row red"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:27 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie fails to grapple with Avery Xavier</div></div>
 
-  <h3 id="coordinate">Coordinated Effort (Tier A banner once participants roll in + legacy single-row when lead-only)</h3>
+  <h3 id="coordinate">Coordinated Effort (Tier A banner - both lead-only and once participants roll in)</h3>
 
-  <p class="note">Two display paths share the same `coord_chain_id`. Once at least one participant has rolled, <code>collapseCoordEffortChains</code> in `useRollsFeed` folds the chain into the bespoke Tier A banner below. While the chain is lead-only (just kicked off, no participants logged yet), the lead row falls through to the legacy single-row narrative. Both updated 2026-05-19 with new present-tense wording + no mechanical bits.</p>
+  <p class="note">Two narrative shapes share the same `coord_chain_id`, but BOTH render as the Tier A banner (SMOKE-2, 2026-05-21). Once at least one participant has rolled, <code>collapseCoordEffortChains</code> in `useRollsFeed` folds the chain into the enriched banner ("uses Tactics* to coordinate an effort with ...") and the ▸ expand lists every participant's dice. While the chain is lead-only (just kicked off, no participants logged yet), the lead renders as the SAME banner chrome with the lead-only narrative ("kicks off a Coordinated Effort with Tactics* ..."). No more plain-row-then-morph flicker. Narrative wording is the single source of truth in <code>compactRollSummary</code>; updated 2026-05-19 with present-tense + no mechanical bits.</p>
 
   <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 12px 0 6px;">Tier A banner (chain + participants)</h4>
   <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #7ab3d433; border-left: 3px solid var(--blue);">
@@ -794,13 +794,32 @@
   </div>
   <p class="note">Expanded ▸ view (not shown above): lead row's dice + AMod/SMod/CMod/total/outcome, followed by per-participant rows in the same format. Mechanical CMod chain effect lives in expanded view + the participants' visible cmod values mid-roll.</p>
 
-  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">Legacy single-row (lead-only chain, no participants yet)</h4>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and is wildly successful</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
-  <div class="row blue"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics*</div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but the team gets off to a rough start</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* but it goes badly for the team</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask kicks off a Coordinated Effort with Tactics* and the plan falls apart but Cree has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">Lead-only banner (chain just kicked off, no participants yet)</h4>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #7fc45833; border-left: 3px solid var(--green);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--green);">Coordinated Effort</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask kicks off a Coordinated Effort with Tactics* and is wildly successful</div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #7fc45833; border-left: 3px solid var(--green);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--green);">Coordinated Effort</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask kicks off a Coordinated Effort with Tactics* and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #7ab3d433; border-left: 3px solid var(--blue);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--blue);">Coordinated Effort</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask kicks off a Coordinated Effort with Tactics*</div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #EF9F2733; border-left: 3px solid var(--amber);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--amber);">Coordinated Effort</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask kicks off a Coordinated Effort with Tactics* but the team gets off to a rough start</div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #c0392b33; border-left: 3px solid var(--red);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--red);">Coordinated Effort</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask kicks off a Coordinated Effort with Tactics* but it goes badly for the team</div>
+  </div>
+  <div class="banner b-combat-end" style="background: #1a1a1a; border: 1px solid #c0392b33; border-left: 3px solid var(--red);">
+    <div class="banner-head"><span class="banner-title" style="color: var(--red);">Coordinated Effort</span><div class="right"><span class="time">2:29 PM</span><span class="toggle">▸</span></div></div>
+    <div class="banner-body">Cree Hask kicks off a Coordinated Effort with Tactics* and the plan falls apart but Cree has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div>
+  </div>
+  <p class="note">Expanded ▸ view (lead-only): just the lead's dice + AMod/SMod/CMod/total/outcome (no participant rows yet).</p>
 
   <h4 style="color: var(--label); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 18px 0 6px;">Unified-coordinate emoji-strip (executeRoll path, 🎯 prefix)</h4>
   <p class="note">When the active combatant rolls Tactics* against a target via the in-table Coordinate modal AND the chain has allies-within-Close-range to share the bonus with, executeRoll writes a row with label <code>🎯 &lt;name&gt; Successfully coordinated an attack against &lt;target&gt; with &lt;allies&gt;</code>. <code>compactRollSummary</code> strips the leading emoji so the narrative reads naturally; the dice + outcome are visible in the ▸ expand. The global outcome tag composes (WS / HI / LI as below). Live emit site: <code>app/stories/[id]/table/page.tsx:6658</code>.</p>
