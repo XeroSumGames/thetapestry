@@ -128,6 +128,7 @@ interface WeaponSectionProps {
   slot: 'weaponPrimary' | 'weaponSecondary'
   current: string
   ammo: number
+  qty: number
   tab: WeaponTab
   setTab: (t: WeaponTab) => void
   query: string
@@ -136,18 +137,25 @@ interface WeaponSectionProps {
 }
 
 function WeaponSection({
-  slot, current, ammo, tab, setTab, query, setQuery, onChange,
+  slot, current, ammo, qty, tab, setTab, query, setQuery, onChange,
 }: WeaponSectionProps) {
   const visible = filteredWeapons(tab, query)
 
   function selectWeapon(name: string) {
     if (current === name) {
-      if (slot === 'weaponPrimary') onChange({ weaponPrimary: '', primaryAmmo: 0 })
-      else onChange({ weaponSecondary: '', secondaryAmmo: 0 })
+      if (slot === 'weaponPrimary') onChange({ weaponPrimary: '', primaryAmmo: 0, primaryQty: 1 })
+      else onChange({ weaponSecondary: '', secondaryAmmo: 0, secondaryQty: 1 })
       return
     }
-    if (slot === 'weaponPrimary') onChange({ weaponPrimary: name, primaryAmmo: 0 })
-    else onChange({ weaponSecondary: name, secondaryAmmo: 0 })
+    // Reset carry-qty to 1 on every new pick; only matters for explosives.
+    if (slot === 'weaponPrimary') onChange({ weaponPrimary: name, primaryAmmo: 0, primaryQty: 1 })
+    else onChange({ weaponSecondary: name, secondaryAmmo: 0, secondaryQty: 1 })
+  }
+
+  function setQty(n: number) {
+    const next = Math.max(1, n)
+    if (slot === 'weaponPrimary') onChange({ primaryQty: next })
+    else onChange({ secondaryQty: next })
   }
 
   function rollAmmo() {
@@ -275,6 +283,19 @@ function WeaponSection({
             : <span style={{ fontSize: '13px', color: '#cce0f5' }}>Not yet rolled</span>}
         </div>
       )}
+
+      {/* Carry quantity for thrown explosives (grenade / molotov / etc).
+          These are consumables - the character carries N of them. */}
+      {current && getWeaponByName(current)?.category === 'explosive' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '1rem' }}>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>How many {current}{current.endsWith('s') ? '' : 's'} carried?</span>
+          <button type="button" onClick={() => setQty(qty - 1)}
+            style={{ padding: '4px 11px', fontSize: '14px', border: '1px solid #3a3a3a', borderRadius: '3px', background: '#1a1a1a', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>−</button>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{qty}</span>
+          <button type="button" onClick={() => setQty(qty + 1)}
+            style={{ padding: '4px 11px', fontSize: '14px', border: '1px solid #3a3a3a', borderRadius: '3px', background: '#1a1a1a', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+</button>
+        </div>
+      )}
     </div>
   )
 }
@@ -391,6 +412,7 @@ export default function StepEight({ state, onChange }: Props) {
         slot="weaponPrimary"
         current={state.weaponPrimary}
         ammo={state.primaryAmmo}
+        qty={state.primaryQty ?? 1}
         tab={primaryTab}
         setTab={setPrimaryTab}
         query={primaryQuery}
@@ -404,6 +426,7 @@ export default function StepEight({ state, onChange }: Props) {
         slot="weaponSecondary"
         current={state.weaponSecondary}
         ammo={state.secondaryAmmo}
+        qty={state.secondaryQty ?? 1}
         tab={secondaryTab}
         setTab={setSecondaryTab}
         query={secondaryQuery}

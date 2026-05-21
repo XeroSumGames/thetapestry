@@ -225,7 +225,9 @@ function CharacterCardImpl({
 
   function changeWeapon(slot: 'weaponPrimary' | 'weaponSecondary', weaponName: string) {
     const w = getWeaponByName(weaponName)
-    const newData = { weaponName, condition: 'Used' as Condition, ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? Math.floor(Math.random() * 3) + 1 : 0 }
+    // Thrown explosives (grenade/molotov) are consumables - seed a carry
+    // quantity so the sheet tracks how many the PC has.
+    const newData = { weaponName, condition: 'Used' as Condition, ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? Math.floor(Math.random() * 3) + 1 : 0, ...(w?.category === 'explosive' ? { qty: 1 } : {}) }
     saveWeapon(slot, newData)
   }
 
@@ -275,6 +277,8 @@ function CharacterCardImpl({
       weaponSecondary: data.weaponSecondary?.weaponName ?? '',
       primaryAmmo: data.weaponPrimary?.ammoCurrent ?? 0,
       secondaryAmmo: data.weaponSecondary?.ammoCurrent ?? 0,
+      primaryQty: data.weaponPrimary?.qty ?? 1,
+      secondaryQty: data.weaponSecondary?.qty ?? 1,
       equipment: data.equipment?.[0] ?? '',
       incidentalItem: data.incidentalItem ?? '',
       rations: normalizeRations(data.rations).type,
@@ -871,6 +875,7 @@ function CharacterCardImpl({
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill}</span>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
+                        {w.category === 'explosive' && <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Qty:</span> <span style={{ color: '#EF9F27', fontWeight: 700 }}>×{(weapon as any).qty ?? 1}</span></span>}
                       </div>
                       {/* Line 2: Range, Condition */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
@@ -884,6 +889,17 @@ function CharacterCardImpl({
                           </select>
                         </span>
                       </div>
+                      {/* Carry quantity stepper for thrown explosives. */}
+                      {w.category === 'explosive' && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Quantity</span>
+                          <button onClick={() => canEdit && setWeapon({ ...weapon, qty: Math.max(1, ((weapon as any).qty ?? 1) - 1) })} disabled={!canEdit}
+                            style={{ padding: '2px 9px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: canEdit ? 'pointer' : 'default' }}>−</button>
+                          <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', minWidth: '20px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{(weapon as any).qty ?? 1}</span>
+                          <button onClick={() => canEdit && setWeapon({ ...weapon, qty: ((weapon as any).qty ?? 1) + 1 })} disabled={!canEdit}
+                            style={{ padding: '2px 9px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: canEdit ? 'pointer' : 'default' }}>+</button>
+                        </div>
+                      )}
                       {/* Upkeep Check + Unequip - weapon admin row */}
                       {canEdit && (
                         <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>

@@ -10,6 +10,7 @@ import {
   COMPLICATIONS,
   MOTIVATIONS,
 } from './xse-schema'
+import { getWeaponByName } from './weapons'
 
 export function getBaseSkillValue(skillName: string): SkillValue {
   const skill = SKILLS.find(s => s.name === skillName)
@@ -103,6 +104,10 @@ export interface WizardState {
   weaponSecondary: string
   primaryAmmo: number
   secondaryAmmo: number
+  /** Carry count for thrown-explosive weapon slots (grenade/molotov).
+   *  Ignored for non-explosive weapons. Defaults to 1. */
+  primaryQty: number
+  secondaryQty: number
   equipment: string
   incidentalItem: string
   /** Backwards-compat: still typed as string in the wizard state
@@ -131,6 +136,8 @@ export function createWizardState(): WizardState {
     weaponSecondary: '',
     primaryAmmo: 0,
     secondaryAmmo: 0,
+    primaryQty: 1,
+    secondaryQty: 1,
     equipment: '',
     incidentalItem: '',
     rations: 'Standard Rations', // 2 starting per locked canon; promoted to { type, count: 2 } when the character is built.
@@ -217,11 +224,14 @@ char.creationMethod = 'backstory'
     weaponName: state.weaponPrimary,
     condition: 'Used',
     ammoCurrent: state.primaryAmmo,
+    // Carry count only for thrown explosives; omitted for other weapons.
+    ...(getWeaponByName(state.weaponPrimary)?.category === 'explosive' ? { qty: state.primaryQty ?? 1 } : {}),
   }
   char.weaponSecondary = {
     weaponName: state.weaponSecondary,
     condition: 'Used',
     ammoCurrent: state.secondaryAmmo,
+    ...(getWeaponByName(state.weaponSecondary)?.category === 'explosive' ? { qty: state.secondaryQty ?? 1 } : {}),
   }
   char.equipment = state.equipment ? [state.equipment] : []
   char.incidentalItem = state.incidentalItem

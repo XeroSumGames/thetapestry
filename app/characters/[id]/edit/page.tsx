@@ -92,6 +92,8 @@ export default function EditCharacterPage() {
         weaponSecondary: d.weaponSecondary?.weaponName ?? '',
         primaryAmmo: d.weaponPrimary?.ammoCurrent ?? 0,
         secondaryAmmo: d.weaponSecondary?.ammoCurrent ?? 0,
+        primaryQty: d.weaponPrimary?.qty ?? 1,
+        secondaryQty: d.weaponSecondary?.qty ?? 1,
         equipment: d.equipment?.[0] ?? '',
         incidentalItem: d.incidentalItem ?? '',
         rations: normalizeRations(d.rations).type,
