@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-21 00:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [473 passed]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Stale-open todo:** `todo.md:44` L-3 KV-backed rate-limiter marked `[ ]` but shipped 2026-05-20 via `dd1a452 feat(rate-limit): L-3 KV-backed verify-turnstile via Upstash Redis`. Check off + close blocking item at line 20 (`Approve Upstash KV`) which is moot (used Upstash Redis directly, not `@vercel/kv`).
+- **SECURITY PENDING (unconfirmed P0):** `tasks/audit-rls-gap-sweep-2026-05-20.md` (committed yesterday `ca699b4`) flags 10 Tier-3 tables (`campaign_members`, `campaign_notes`, `campaigns`, `character_states`, `characters`, `map_pins`, `notifications`, `profiles`, `session_attachments`, `sessions`) with policies in `sql/` but NO `ENABLE ROW LEVEL SECURITY` statement in repo. App works so dashboard-enabled is likely, but unverified. Query 1 in that doc confirms or escalates to P0.
+- HOPED-FOR (2026-05-19 batch): 2 days old, threshold is 3 - watching, not flagging. Drain target: 2026-05-25 playtest.
+
+**Action:** URGENT FIRST - run Query 1 from `tasks/audit-rls-gap-sweep-2026-05-20.md` in Supabase SQL editor; any `rls_enabled = false` on those 10 tables is a P0 fix. THEN close L-3 + line 20 in todo.md.
+
+---
+
 ## 2026-05-20 18:05 UTC
 
 **Status:** DRIFT
