@@ -110,26 +110,43 @@ export const RANGED_WEAPONS: Weapon[] = [
   { name: 'Taser', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Uncommon', damage: '1', rpPercent: 400, enc: 1, ammo: 'Rare', clip: 1, traits: ['Stun'] },
 ]
 
-// ── EXPLOSIVE WEAPONS (Table 18) ──
+// ── EXPLOSIVE WEAPONS (QS v1.0.2 Table 13: Special & Explosive Weapons) ──
+// Audited against canon 2026-05-20 (tasks/explosives-canon-audit-2026-05-20.md).
+// QS v1.0.2 + CRB v0.9.2 agree on the data. The extract's "Table 18/19"
+// numbering was the older v0.8.530 edition; v1.0.2 uses Table 13.
 
 export const EXPLOSIVE_WEAPONS: Weapon[] = [
-  { name: 'Grenade', category: 'explosive', skill: 'Athletics', range: 'Medium', rarity: 'Uncommon', damage: '4+4d3', rpPercent: 100, enc: 1, clip: 1, traits: ['Tracking', 'Blast Radius'] },
+  // Grenade damage corrected 4+4d3 -> 2+2d6 2026-05-20 (QS Table 13 +
+  // CRB L2583 both say 2+2d6). Range stays Medium (NOT canon base Close):
+  // CRB L2542 - handheld explosives throw to Medium on a successful
+  // Athletics check, so the `range` field encodes max reach. Traits
+  // [Tracking, Blast Radius] are canon-confirmed (CRB L2671).
+  { name: 'Grenade', category: 'explosive', skill: 'Athletics', range: 'Medium', rarity: 'Uncommon', damage: '2+2d6', rpPercent: 100, enc: 1, clip: 1, traits: ['Tracking', 'Blast Radius'] },
   { name: 'Mortar', category: 'explosive', skill: 'Demolitions', range: 'Distant', rarity: 'Rare', damage: '5+2d6', rpPercent: 100, enc: 2, ammo: 'Rare', clip: 1, traits: ['Blast Radius'] },
-  { name: 'Shiv-Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Flash-Bang Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
-  // Molotov - rebalanced to QS Table 19 canon 2026-05-09 (was 5+2d6
-  // Rare 100% Blast Radius). Note: Blast Radius DROPPED to match QS;
-  // the splash-damage behavior in the table page may need the GM to
-  // narrate-radius manually now. Skill flipped Demolitions -> Athletics
-  // (it's a thrown bottle, not a precision weapon) per QS.
-  { name: 'Molotov', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '1+1d3', rpPercent: 50, enc: 2, clip: 1, traits: ['Tracking', 'Burning (1)'] },
+  // Molotov - rebalanced 2026-05-09 (was 5+2d6 Rare 100% Blast Radius).
+  // ENC corrected 2 -> 0 2026-05-20 (canon QS + CRB both say 0). RP
+  // stays 50% as a DELIBERATE Xero nerf (Xero ruling 2026-05-20):
+  // canon QS v1.0.2 + CRB both say 100%, but the 50% is an intentional
+  // balance choice, not drift. Skill is Athletics (thrown bottle, not
+  // a precision weapon) per QS. Blast Radius dropped to match QS.
+  { name: 'Molotov', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '1+1d3', rpPercent: 50, enc: 0, clip: 1, traits: ['Tracking', 'Burning (1)'] },
   { name: 'Rocket Launcher', category: 'explosive', skill: 'Demolitions', range: 'Distant', rarity: 'Rare', damage: '3+3d6', rpPercent: 100, enc: 3, ammo: 'Uncommon', clip: 1, traits: ['Blast Radius'] },
+  // Shiv-Grenade REMOVED 2026-05-20 (Xero ruling): not in QS Table 13
+  // NOR the CRB. Was a homebrew stand-in with no canon source. Flash-Bang
+  // Grenade above is the canon Stun-explosive (CRB has it + Smoke-Grenade;
+  // Smoke-Grenade remains a canon gap, see todo).
 ]
 
-// ── HEAVY WEAPONS (Table 19 - partial) ──
+// ── HEAVY WEAPONS (QS v1.0.2 Special Weapons + Xero overrides) ──
 
 export const HEAVY_WEAPONS: Weapon[] = [
-  { name: 'Flame-Thrower', category: 'heavy', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '3+2d6', rpPercent: 50, enc: 2, ammo: 'Rare', clip: 30, traits: ['Burning (3)'] },
+  // Flame-Thrower RP corrected 50 -> 100 2026-05-20 (QS Table 13 + CRB
+  // L3281 both say 100%; the 2026-05-09 extract wrongly claimed it
+  // "matched canon"). Clip stays 30 as a DELIBERATE Xero choice (Xero
+  // ruling 2026-05-20): canon says clip 1, but 30 better models a
+  // fuel-tank weapon's many bursts.
+  { name: 'Flame-Thrower', category: 'heavy', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '3+2d6', rpPercent: 100, enc: 2, ammo: 'Rare', clip: 30, traits: ['Burning (3)'] },
   { name: 'Mounted Turret / Gatling Gun', category: 'heavy', skill: 'Heavy Weapons', range: 'Long', rarity: 'Rare', damage: '5+2d6', rpPercent: 50, enc: 3, ammo: 'Uncommon', clip: 100, traits: ['Automatic Burst (5)', 'Cumbersome (2)'] },
   { name: 'M60 (Mounted)', category: 'heavy', skill: 'Heavy Weapons', range: 'Long', rarity: 'Rare', damage: '4+2d6', rpPercent: 50, enc: 3, ammo: 'Uncommon', clip: 100, traits: ['Automatic Burst (5)', 'Cumbersome (2)'] },
 ]

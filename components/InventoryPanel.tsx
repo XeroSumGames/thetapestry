@@ -142,8 +142,8 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   function giveItem(idx: number) {
     const item = inventory[idx]
     setGivingItem(item)
-    // Single-use explosives (Grenade, Molotov, Shiv-Grenade, Flash-Bang,
-    // RPG round) default to qty 1 - each one is a discrete consumable
+    // Single-use explosives (Grenade, Molotov, Flash-Bang, RPG round)
+    // default to qty 1 - each one is a discrete consumable
     // and "give the whole pile" is rarely what the player wants. For
     // every other stackable item, default = full stack (give-all-of-X
     // is the common case). User can override either way via the +/-

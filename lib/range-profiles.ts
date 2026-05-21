@@ -93,7 +93,6 @@ const WEAPON_PROFILE_MAP: Record<string, string> = {
   // Explosive
   'Grenade': 'grenade',
   'Mortar': 'rpg',
-  'Shiv-Grenade': 'thrown',
   'Flash-Bang Grenade': 'thrown',
   'Molotov': 'grenade',
   'Rocket Launcher': 'rpg',

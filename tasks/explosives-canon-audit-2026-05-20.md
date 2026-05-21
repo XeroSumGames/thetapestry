@@ -66,20 +66,28 @@ CRB clarifications:
 
 ---
 
-## Recommended fix batch (pending Xero ruling)
+## Fix batch - SHIPPED 2026-05-20 (Xero ruled)
 
-Clear (canon agrees, no lock, no naming Q):
-- [ ] Grenade damage `4+4d3` -> `2+2d6`.
-- [ ] Flame-Thrower RP `50` -> `100`.
-- [ ] Molotov ENC `2` -> `0`.
+Clear canon corrections (applied):
+- [x] Grenade damage `4+4d3` -> `2+2d6`.
+- [x] Flame-Thrower RP `50` -> `100`.
+- [x] Molotov ENC `2` -> `0`.
 
-Needs Xero ruling before fix:
-- [ ] Molotov RP: keep locked `50` or correct to canon `100`?
-- [ ] Flame-Thrower clip: keep `30` (realism) or canon `1`?
-- [ ] Shiv-Grenade: rename to Smoke-Grenade / keep + add Smoke-Grenade / leave homebrew?
-- [ ] Grenade range: confirmed KEEP `Medium` (throw mechanic) - documented, no action.
+Xero rulings (applied):
+- [x] **Molotov RP: KEEP `50`** - Xero confirmed it's a deliberate nerf, not drift. Canon is 100%; the 50% stays as an intentional balance choice. Comment in `lib/weapons.ts` now documents this.
+- [x] **Flame-Thrower clip: KEEP `30`** - Xero confirmed; 30 better models a fuel-tank weapon's many bursts vs canon's clip 1. Comment documents the deliberate divergence.
+- [x] **Shiv-Grenade: REMOVED** - Xero ruled remove it. No canon source (not in QS nor CRB). Flash-Bang Grenade is the canon Stun-explosive that stays. Cleaned from `lib/weapons.ts`, `lib/range-profiles.ts`, + the `InventoryPanel.tsx` comment.
+- [x] Grenade range: KEPT `Medium` (throw mechanic per CRB L2542) - documented inline, no action.
 
-Once ruled, the fix is a single `lib/weapons.ts` edit + a note in `rules-extract-armor-explosives.md` correcting the "Flame-Thrower matches" + "Molotov 50%" claims + the Table 18/19 -> Table 13 renumber. The `/rules/appendix-equipment` page renders from `lib/weapons.ts` so it propagates automatically.
+Shipped in one `lib/weapons.ts` + `lib/range-profiles.ts` + `InventoryPanel.tsx` commit. `/rules/appendix-equipment` renders from `lib/weapons.ts` so the rules page propagates automatically.
+
+## Still open (canon gap, not blocking)
+
+- **Smoke-Grenade** - in CRB canon (Close / Uncommon / - dmg / Stunned), absent from the platform. Xero ruled "remove the shiv" but did not ask to add Smoke-Grenade, so it stays out for now. Tracked in todo as a canon gap if a GM wants smoke cover.
+
+## Source-of-truth correction for the extract (puffer-fish lane)
+
+`tasks/rules-extract-armor-explosives.md` still has now-known-wrong claims (Flame-Thrower "matches", Molotov "50% canon", Table 18/19 numbering). Puffer-fish owns rules-extract docs; flagged for their next pass.
 
 ---
 
