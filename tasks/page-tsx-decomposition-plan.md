@@ -24,54 +24,43 @@ This is normal: modal migrations are themselves prep work for the eventual decom
 
 ---
 
-## Launch-window carve-out (2026-05-20, gated to 2026-06-15)
+## Execution sequencing (AGGRESSIVE - 2026-05-20, supersedes the launch-gated pacing)
 
-Per `tasks/launch-plan-2026-06-15.md`, the public launch is ~26 days out. Full decomposition is 10.5 baseline sessions + 30% buffer = 12-14 sessions, which is more time than we have before launch given competing launch-must-do work (Supabase Pro, KV rate-limiter, lawyer review, landing page, mobile responsive, accessibility, press kit, demo video, modal-unification finish).
+Per Xero 2026-05-20: no date pressure, no launch gating. Solo dev + ~10 forgiving playtesters + zero paying users = the most permissive risk environment we'll ever have. **Go aggressive: batch the leaf work into a few big commits, isolate only the two trunk steps that have a 2-client-only failure mode.**
 
-**Realistic budget for decomposition pre-launch: 2-4 sessions.** The rest defers to post-launch.
+Why this is safe to rush: the leaf extractions (types, modals, sidebar, feed, header, tactical) have no failure mode that hides from a single user. If one breaks, it breaks visibly on the first load, tsc usually catches it, and a playtester reports it immediately. Coarse reverts are acceptable because the worst case is "roll back the batch, lost a few hours, re-do." That's a fine trade at this scale.
 
-**Pre-launch carve-out (Phases 3.0 + 3.1 only):**
+The two genuinely dangerous steps are the **roll engine** (R1) and **realtime sync** (R2). Their failure mode (stale closures, channel resubscription) ONLY surfaces with two live clients in a session. No unit test catches it. **These two must each land alone + get a 2-client smoke before the next one.**
 
-| Step | Phase | LOC removed | Risk |
-|---|---|---|---|
-| 1 | 3.0 Move types + module constants to `types.ts` | ~200 | Trivial |
-| 2 | 3.0 Extract `useHeaderMenus` | ~90 | **SHIPPED (`2426e5b`)** |
-| 3 | 3.0 Extract `useRecorderToggle` | ~30 | Trivial leaf |
-| 4 | 3.0 Centralize broadcast emissions via `lib/table-broadcasts.ts` | 0 net (mechanical) | Low; unlocks future |
-| 5 | 3.1 Extract `useGmTools` + `<GmModalStack>` | ~1500 | Leaf, big win |
-| 6 | 3.1 Extract `<SpecialCheckModal>` + `useSpecialChecks` | ~600 | Couples to roll dispatch |
-| 7 | 3.1 Extract `<RecruitWizard>` + `useRecruitFlow` | ~400 | Leaf |
-| 8 | 3.1 Extract `useTradeTarget` + push trade/apprentice modals into grid | ~150 | Leaf |
+### The batches
 
-**Cumulative pre-launch shrink: ~2980 LOC removed = table page 13,192 -> ~10,200.** Still YELLOW in the Risk Register but moving the right direction.
+| Batch | Contents (steps from old Phases 3.0-3.6) | LOC out | Risk | Commit shape |
+|---|---|---|---|---|
+| **A - Leaf foundation** | types/constants -> `types.ts`; `useRecorderToggle`; `lib/table-broadcasts.ts` helper; `useGmTools` + `<GmModalStack>`; `<SpecialCheckModal>` + `useSpecialChecks`; `<RecruitWizard>` + `useRecruitFlow`; `useTradeTarget` + trade/apprentice mounts. (`useHeaderMenus` already shipped `2426e5b`.) | ~2980 | Leaf | 1-2 big commits |
+| **B - Render extraction** | `<TableHeader>`; `<FeedColumn>` (keep `useChatPanel` at page level); `<GmSidebar>` (4 tabs). | ~2400 | Leaf | 1 big commit |
+| **C - Tactical + data** | `useTacticalSync` + `<TacticalRegion>`; `useTableAuth`; `useCampaignState`. (Tactical feeds rolls via throwMode but has no 2-client-only failure mode - it's leaf-grade for our purposes.) | ~1300 | Leaf-ish | 1 commit |
+| **TRUNK 1 - Initiative** | `useInitiative` + `<InitiativeStrip>`. Combat-turn logic. | ~1300 | Medium | **Own commit.** Light 2-client smoke (start combat, take turns on two clients). |
+| **TRUNK 2 - Roll engine** | `useRollResolution` (executeRoll + spendInsightDie + closeRollModal + handleRollRequest + saveRollToLog). **THE riskiest.** | ~2400 | **HIGH (R1)** | **ISOLATED. 2-client smoke REQUIRED before Trunk 3.** Land step 14 (extract pure helpers + tests) FIRST as the safety net. |
+| **TRUNK 3 - Realtime** | `useTableRealtime` (the 30-handler mega-effect). | ~510 | **HIGH (R2)** | **ISOLATED. LAST. 2-client smoke REQUIRED.** Deps array MUST be `[campaignId]` only. |
+| **FINAL - Compose** | Prune now-dead page state; confirm the orchestrator shape (~300 lines). | - | Trivial | 1 commit |
 
-**Post-launch (after 2026-06-15 launch settles, no earlier than 2026-06-22):**
-- Phase 3.2 (TableHeader, FeedColumn, GmSidebar - ~2400 LOC)
-- Phase 3.3 (TacticalSync, Initiative - ~2000 LOC)
-- Phase 3.4 (Roll pipeline, the riskiest extraction - ~2700 LOC)
-- Phase 3.5 (Auth, CampaignState, TableRealtime - ~600 LOC)
-- Phase 3.6 (Compose + polish)
+### The "by tomorrow morning" path
 
-**Hard rule:** **No Phase 3.4 (roll pipeline) extraction within 14 days of a planned launch.** This is the highest-risk single extraction (`executeRoll` is 1850 LOC, 12-dimensional branching, stale-closure landmines documented in R1). A regression here breaks every roll in every session.
+Batches A + B + C are leaf work with no 2-client failure mode. The hunt-and-peck chat can land all three TONIGHT, gated only by tsc + the test suite + a single-client click-through (mount as GM, mount as player, open every modal, every tab, every header button). That alone takes the file from 13,192 to roughly **5,500 lines** and removes ~75% of the surface.
 
-**Hard rule:** **No Phase 3.5 (realtime) extraction within 14 days of a planned launch.** `useTableRealtime` is the second-highest-risk extraction (R2). Channel resubscription bugs cause silent multi-client desync.
+The two trunk steps + initiative each need a 2-client smoke. **You are the 2 clients.** Open two browser windows (or one normal + one incognito, two accounts), start a session, and:
+- After TRUNK 1 (initiative): start combat, take a turn on each client, confirm turn order syncs, aim/ready/sprint work.
+- After TRUNK 2 (roll engine): roll on each client, attack, Insight Die, mortal-wound + save, confirm both clients see the feed rows correctly.
+- After TRUNK 3 (realtime): move a token / paint fog / advance initiative on one client, confirm the other sees it within ~2s.
 
-These two rules mean Phases 3.4 + 3.5 cannot ship before 6/29 even if 6/15 launches cleanly. Tactical-content extractions (Phase 3.3) are arguably possible 6/22-6/28 if launch goes calmly; if the launch surfaces any combat-related bugs, push 3.3 too.
+If you'll run those three 5-minute 2-client smokes tonight, there is nothing stopping the WHOLE decomposition landing by tomorrow morning. The only reason it'd slip is if a trunk smoke surfaces a real bug - and then you WANT it to slip, because that's the bug you'd otherwise have shipped.
 
-**Recommended sequencing for the hunt-and-peck lane:**
+### Order is non-negotiable on exactly two things
 
-| Window | Decomposition target | Realistic session count |
-|---|---|---|
-| 5/20-5/24 | Steps 1, 3, 4 (types, recorder, broadcasts helper) | 1 session, leaf-only |
-| 5/26-5/31 | Step 5 (`useGmTools` + `<GmModalStack>`) | 1 session, leaf |
-| 6/1-6/7 | Steps 6, 7, 8 (specials, recruit, trade) | 1-2 sessions, leaf |
-| 6/8-6/14 | **FREEZE** - no decomposition; bug fixes + launch prep only | 0 sessions |
-| 6/15 | Launch | 0 sessions |
-| 6/16-6/21 | Bug-fix triage + Y11/Y12 follow-up + watch metrics | 0 sessions |
-| 6/22 onward | Phase 3.2 starts (Header/Feed/GmSidebar) | 2 sessions |
-| 7/1 onward | Phase 3.3 + later phases | 6-8 sessions over the month |
+1. **Trunk 2's safety-net step (extract pure helpers + add tests) lands BEFORE the executeRoll hook extraction.** Per R1 mitigation. ~300 LOC + a test file; makes the big move mechanical.
+2. **Trunk 3 (realtime) lands LAST.** Every prior batch tightens its callback surface; extracting it early means re-doing it.
 
-This carves the 13k-line file down by ~3000 LOC before launch (to ~10,200) without putting the riskiest extractions inside the launch window.
+Everything else can be reordered or batched however the hunt-and-peck chat finds convenient.
 
 ---
 
