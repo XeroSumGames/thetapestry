@@ -157,12 +157,39 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ## Current main HEAD
 
-`6027f6f docs(todo): Phase 4 pre-stage status + Lost Eye/Crippled canon question queued`
+`b408d01 fix(weapons): explosives canon corrections + remove Shiv-Grenade (Xero-ruled)`
 
 Plus one pre-staged branch sitting on origin not yet merged:
-- `claude/phase4-prestage` at `fc24ca1` - retires the legacy `executeRoll` branches for Stabilize / Distract / Gut Instinct (-108 / +12 lines). Merge command lives in `tasks/todo.md` L104. **Do not merge before the Monday 2026-05-25 playtest verifies all three dedicated modals.**
+- `claude/phase4-prestage` at `3671c68` (rebased onto current main) - retires the legacy `executeRoll` branches for Stabilize / Distract / Gut Instinct (-108 / +12 lines). Merge command lives in `tasks/todo.md`. **Do not merge before the Monday 2026-05-25 playtest verifies all three dedicated modals.** All silent-break surfaces closed (NpcCard self-stabilize button + dead-Distract pendingRoll branches removed).
 
-## The arc this session (2026-05-20)
+## Part 2 - priority-queue run (later 2026-05-20)
+
+After the modal-unification arc (Part 1 below), the hunt-and-peck lane worked the puffer-fish-authored `tasks/hunt-and-peck-priority-queue-2026-05-20.md` top to bottom. Shipped, in order:
+
+| Commit | What |
+|---|---|
+| `1f07a9b` | `fix(realtime):` pc_mortal_wound reads refs to dodge stale-closure (queue #1; real silent-drop bug - Insight Save modal could fail to open on the patient's tab). |
+| `1b5d26a` | `feat(roll-outcomes):` Phase O1 kind discrimination (RollResult/GrappleResult/EventTag unions + outcomeKind + 3 guards + 14 tests). Pure additive. |
+| `3ad91a2` | `feat(damage-payload):` Phase D1 - 11-variant DamagePayload union + 24 tests. No consumers yet. |
+| `e8f8738` | `feat(damage-payload):` Phase D2 - 11 make* writer helpers + 20 tests. |
+| `aada631` | `feat(damage-payload):` Phase D3 step 1 - CharacterEvolution writer migrated; interface reshaped to match the live snake_case write (spec was prescriptive-wrong). |
+| `c1a5559` | `docs(audit):` D3 spec-vs-reality findings - D3 PAUSED until puffer-fish amends the spec (VehicleCheck mixes attack + check fields; architectural Option A/B/C pending). |
+| `dd1a452` | `feat(rate-limit):` L-3 KV-backed verify-turnstile via Upstash Redis. **Operator setup pending** (Vercel dashboard - see `tasks/l3-kv-ratelimiter-testplan-2026-05-20.md`). Prod returns 503 until env vars set. |
+| `f396f97` | `docs(reentry-guards):` A2/A3 reset-point + D6/D7/D8 mutual-exclusion inline comments. |
+| `fbd6d74` | `feat(audit-log):` Phase AL1 - audit_log table SQL. **Operator apply pending** (CLI not linked - see commit body for re-link OR dashboard SQL-editor path). |
+| `d3e03d5` + `b408d01` | explosives canon audit + fix: Grenade 2+2d6, Flame-Thrower RP 100, Molotov ENC 0, Shiv-Grenade removed. Read the image-only QS Table 13 via PyMuPDF + vision. |
+
+**Two operator actions owed by Xero** (both code-shipped, infra pending):
+1. **Upstash KV** setup in Vercel dashboard (L-3). Until done, prod `/api/auth/verify-turnstile` returns 503.
+2. **Apply `sql/audit-log-table-2026-05-20.sql`** to live (re-link supabase CLI OR paste into dashboard SQL editor).
+
+**Also pull `npm install` in the main checkout** - L-3 added `@upstash/redis` + `@upstash/ratelimit`; main checkout's node_modules lacks them until you install (Vercel installs on deploy, so prod is fine; only local `npm run dev` from main checkout is affected).
+
+**Two blocked-on-puffer-fish items:** DamagePayload D3 steps 2-11 (spec needs the per-writer reshape amendment + the VehicleCheck Option A/B/C ruling); rules-extract-armor-explosives.md still has stale Flame-Thrower/Molotov/Table-numbering claims.
+
+---
+
+## The arc this session - Part 1 (2026-05-20)
 
 After this morning's sprint close-out + em-dash sweep, today opened into a heavy build day in the hunt-and-peck lane. Xero's instruction: "focus on bugs and polish and UX and content and upgrades while another chat works on the puffer fish stuff." The two lanes ran in parallel. This session shipped the full modal-unification arc (4 migrations) + a complete narrative audit pass + a canon lock + the no-break-offers rule sharpening. Pre-playtest window (Monday 2026-05-25) constrained what to ship but not whether.
 

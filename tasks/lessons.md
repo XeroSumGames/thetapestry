@@ -1,5 +1,31 @@
 # Lessons Learned
 
+## Specs + extracts are hypotheses - verify against the live source before acting (2026-05-20)
+
+**Rule:** A spec doc OR a pre-digested rules-extract is one writer's snapshot. Before executing it, verify against the actual live source (the real writer site for code; the real PDF/canon page for rules). Two instances surfaced in one session:
+
+1. **DamagePayload D3.** The spec at `tasks/spec-damage-json-payload.md` Section 2 prescribed camelCase fields for every variant. The actual `CharacterEvolution.tsx:343` write uses snake_case + a different inner discriminator + an extra field the spec omitted. Shipping the spec's shape verbatim would have produced a type that didn't match what writers emit. Fix: reshape the interface to match the live write site, ship the migration, flag the spec for amendment (`tasks/spec-damage-payload-d3-audit-2026-05-20.md`). Each of the 11 D3 variants needs its own per-writer audit; ~30% of each step's effort is the reshape.
+
+2. **Explosives canon.** The extract `tasks/rules-extract-armor-explosives.md` claimed Flame-Thrower "already matches QS canon" + Molotov is "50% RP per QS Table 19." Reading the actual QS v1.0.2 PDF (Table 13, not 18/19 - the extract used older-edition numbering) + the CRB showed Flame-Thrower is 100% RP / clip 1 (code had 50 / 30) and Molotov is 100% RP (code had 50, locked by an earlier misread). The extract was wrong on three counts. Fix: read the primary source, correct the data, flag the extract.
+
+**Detection:** when handed "execute Phase N of spec X" or "apply the extract," open the live source FIRST (grep the writer; read the PDF page; query the DB). If the source disagrees with the doc, the source wins (per CLAUDE.md canon precedence + "verify before quoting scope"). Update the doc to match reality as a follow-up; don't code the doc's wrong shape.
+
+## Reading image-only PDF tables: PyMuPDF render -> PNG -> vision (2026-05-20)
+
+**Technique.** The Quickstart + CRB rulebook tables are images with no text layer (`pdftotext` / Grep on the `.txt` returns nothing; `page.search_for()` returns empty). The PDF Read tool also fails (`pdftoppm` not on PATH). Working path:
+
+```python
+# py -c (Windows: the `py` launcher has fitz; bare `python`/`python3` do not)
+import fitz
+doc = fitz.open(r'docs/Rules/<file>.pdf')
+pg = doc[PAGE_INDEX]              # 0-indexed
+clip = fitz.Rect(x0, y0, x1, y1) # crop to the table region (fractions of page rect)
+pix = pg.get_pixmap(matrix=fitz.Matrix(7,7), clip=clip)  # 7x zoom for legibility
+pix.save(r'.claude/tmp-x/out.png')
+```
+
+Then Read the PNG (vision). Iterate the clip rect + zoom until the table is crisp. Clean up the temp PNGs after (`rm -rf .claude/tmp-x`). On Windows use the `py` launcher, not `python` (the bare alias routes to the Microsoft Store stub). This is how the explosives audit (Table 13) got read.
+
 ## "Stop coding for the day" is NEVER a valid option (2026-05-20)
 
 **Banned phrasing, recurrence.** The MEMORY rule [feedback_no_break_offers] says: never close with "stop here?" / "keep going?" / any stamina-check phrasing. Today I violated it twice in one chat:
