@@ -5483,7 +5483,7 @@ export default function TablePage() {
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
-              label: `${targetEntry.character.name} has fallen, mortally wounded by ${characterName}, and will die if not stabilized in ${update.death_countdown} rounds.`,
+              label: `${targetEntry.character.name} has been mortally wounded by ${characterName}, and will die if not stabilized in ${update.death_countdown} rounds.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.death,
             })
             // Auto-log mortal wound to progression log
@@ -5572,7 +5572,7 @@ export default function TablePage() {
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId,
             character_name: 'Death is in the air',
-            label: `${targetNpc.name} has fallen, mortally wounded by ${characterName}, and will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
+            label: `${targetNpc.name} has been mortally wounded by ${characterName}, and will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.death,
           })
           // Kill log entry on the attacker's progression log (PCs only).

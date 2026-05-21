@@ -194,14 +194,14 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (fail) {
       const daysText = days != null ? `${days} day${days === 1 ? '' : 's'}` : '1d3 days'
       return kind === 'Wound'
-        ? `${r.character_name} has a wound that has become infected. ${first} is sick for ${daysText}. Lasting damage is possible if untreated.${outcomeTag}`
-        : `${r.character_name} has fallen sick. ${first} is ill for ${daysText}. Lasting damage is possible if untreated.${outcomeTag}`
+        ? `${r.character_name} has a wound that has become infected. ${first} will be sick for ${daysText}. Lasting damage is possible if untreated.${outcomeTag}`
+        : `${r.character_name} has fallen sick. ${first} will be ill for ${daysText}. Lasting damage is possible if untreated.${outcomeTag}`
     }
     if (dire) {
       const daysText = days != null ? `${days} day${days === 1 ? '' : 's'}` : '1d6 days'
       return kind === 'Wound'
-        ? `${r.character_name} has a wound that has become severely infected. ${first} is sick for ${daysText}. This will likely leave a lasting wound.${outcomeTag}`
-        : `${r.character_name} has fallen gravely sick. ${first} is ill for ${daysText}. Will progress to Mortally Wounded on Day 0.${outcomeTag}`
+        ? `${r.character_name} has a wound that has become severely infected. ${first} will be sick for ${daysText}. This will likely leave a lasting wound.${outcomeTag}`
+        : `${r.character_name} has fallen gravely sick. ${first} will be ill for ${daysText}. Will progress to Mortally Wounded on Day 0.${outcomeTag}`
     }
     // Defensive fallback for any outcome we didn't anticipate.
     return `${r.character_name} - Infection Check (${kind})${outcomeTag}`
