@@ -247,7 +247,7 @@ After 6/15: archive this file as `tasks/launch-plan-2026-06-15-postmortem.md` wi
   - **Lawyer review:** APPROVED in principle. Xero has a lawyer on retainer; asking them for a TOS/Privacy specialist recommendation. Action item: get the recommendation + brief them on the work this week.
   - **Launch day:** 2026-06-15 verified as a **Monday** (was incorrectly stated as Sunday in original plan; corrected today). Monday is OK but not optimal; Tue 6/16 or Wed 6/17 get more press traffic. Final-day-of-week decision still open.
   - **Press kit + demo video:** DIY confirmed. Outsourcing fallback open if DIY stalls (see "Outsourcing options" section below).
-  - **Invite-code gate:** PENDING - awaiting explanation (provided in "Invite-code gate" section below; Xero to decide after reading).
+  - **Invite-code gate:** RESOLVED 2026-05-20 = **HYBRID.** Optional code field on signup (empty = normal signup; filled = attribute + mark used) + a feature flag to flip it to REQUIRED if launch velocity needs capping. Queued for hunt-and-peck in `tasks/todo.md`. Logged in `tasks/decisions.md`.
 - 2026-05-20 (latest): Dummies shipped for #5 (Landing page) + #6 (Press kit) - placeholder copy at `/publiclanding` and `/press`. Real copy + assets needed before reviewer outreach (target 5/28-6/1).
 
 ---

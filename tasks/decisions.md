@@ -10,6 +10,29 @@ Newest first.
 
 ---
 
+## 2026-05-20: Soft-delete policy rulings (Y11) + invite-code gate + Pro/lawyer status
+
+**Decision:** Xero ruled on all five Y11 soft-delete questions + the invite-code gate + deferred two infra decisions.
+
+- **Y11-a `character_states`: PRESERVE.** Soft-delete via `archived_at` instead of cascade-delete on character delete. Revive flow can resurrect last-known state.
+- **Y11-b campaign delete: double-confirm YES.** "Type the campaign name to confirm" gate on the Delete Campaign button.
+- **Y11-c generalize decision tree: YES, scoped to communities.** `community with 0 active members = hard-delete OK; with members = soft-leave only`. Mirrors the modules archive-vs-delete pattern. NOT a blanket every-table sweep - communities specifically.
+- **Y11-d `campaign_snapshots`: SOFT.** `archived_at` flag + reaper hard-deletes after 30 days.
+- **Y11-e `roll_log` session clear: ARCHIVE.** Add `session_id`, drop the session-start DELETE, filter feed by session_id, prior sessions browsable read-only. No roll data lost.
+- **Invite-code gate: HYBRID.** Optional code field on signup (empty = sign up normally; filled = attribute + mark used) + a feature flag to make it REQUIRED if launch velocity needs capping.
+- **Supabase Pro + PITR: DEFERRED indefinitely.** Xero decides when needed. Until then the audit-log spec (AL1-AL4) is the recovery substitute.
+- **Lawyer for TOS/Privacy: PENDING.** Xero asking his retainer lawyer for a specialist recommendation.
+
+**Alternatives considered:** each question had a binary or scoped set laid out in `tasks/ops-soft-delete-stance-2026-05-19.md` + the chat exchange 2026-05-20.
+
+**Why these won:** Xero's calls as product owner. The throughline: preserve user-recoverable state (character_states, snapshots, roll history) rather than hard-delete, because the platform-stability mandate values "nothing is silently lost" over "clean slate." Invite-hybrid keeps zero-friction signup while retaining the velocity kill-switch.
+
+**What would change our mind:** if the soft-delete tables bloat storage materially, add reaper jobs (already planned for snapshots). If invite attribution proves unused, drop the optional field.
+
+**Execution:** all 7 ship-items queued for hunt-and-peck in `tasks/todo.md`. The 3 schema+behavior changes (Y11-a preserve, Y11-e session-archive, invite hybrid) warrant their own spec docs - puffer-fish writes those next.
+
+---
+
 ## 2026-05-20: Platform stability is the entire mandate; date-anchored launch planning is paused
 
 **Decision:** the puffer-fish lane's mandate is making the platform as stable and optimized as possible. No date pressure, no launch coordination, no press timing. The 2026-06-15 launch plan composed earlier today is SUPERSEDED; active plan is `tasks/puffer-fish-platform-plan.md`.

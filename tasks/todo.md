@@ -6,6 +6,16 @@
 
 ## 🎯 CURRENT OPEN - 2026-05-15
 
+### Xero soft-delete + invite rulings 2026-05-20 (HUNT-AND-PECK execution queue)
+All 7 decided by Xero 2026-05-20; logged in `tasks/decisions.md`; policy doc updated at `tasks/ops-soft-delete-stance-2026-05-19.md`. Three marked SPEC-FIRST need a puffer-fish spec before code.
+- [ ] **Y11-a `character_states` PRESERVE** (SPEC-FIRST). Soft-delete `character_states` via `archived_at` instead of cascade-delete when a character is deleted. Revive flow resurrects from archived state. Schema migration + delete-path change + revive UI. Bright-line-adjacent (deletes user content + schema): policy approved by Xero, implement with care + a backfill plan for existing rows.
+- [ ] **Y11-b campaign-delete double-confirm**. Add "type the campaign name to confirm" gate to the Delete Campaign button. Small UI change. No schema.
+- [ ] **Y11-c community hard-delete rule**. `community with 0 active members = hard-delete OK; community with members = soft-leave only`. Mirror the modules archive-vs-delete decision tree. Touches the delete-community path; check active-member count first.
+- [ ] **Y11-d `campaign_snapshots` soft-delete**. Add `archived_at` flag; snapshot "delete" sets it; reaper job hard-deletes archived snapshots after 30 days. Schema + reaper (cron edge function OR lazy clean-on-access).
+- [ ] **Y11-e `roll_log` session-archive** (SPEC-FIRST). Add `session_id` to `roll_log`; drop the session-start `DELETE FROM roll_log`; filter the in-session feed by current `session_id`; prior sessions browsable read-only at `/stories/[id]/sessions/<sid>`. Touches table-page session-start + feed query + sessions browse view. Medium-large.
+- [ ] **Invite-code gate HYBRID** (SPEC-FIRST). New `signup_invites` table `{ code, used_by, used_at, issued_to, issued_at }`. Optional code field on signup form (empty = normal; filled = attribute + mark used). Feature flag to flip REQUIRED. `/moderate` section to mint codes. ~1-2 sessions.
+- *(Supabase Pro + PITR: DEFERRED by Xero. Lawyer: PENDING recommendation. Neither is hunt-and-peck work.)*
+
 ### SHIPPED 2026-05-20: Beginners' Guide v2
 14 chapters as per-chapter txt files in `docs/`, voice-tightened per `feedback_user_guide_voice` (no em-dash, no step counts, no URL patterns, no Survivor/Thriver outside first-mention). Two NEW chapters vs v1: The Rules (Ch 5), Vehicles (Ch 11). One MERGE: Tactical Map + Fog of War (Ch 8). Chapter 13 (Campfire) has a placeholder paragraph where Forums would go - both Forums and Forums B are flagged for redesign before documentation. Chapter 14 (Rumors) is a full rewrite for the layered umbrella (modules + maps + pins). v1 monolith `docs/beginners-guide.{txt,docx}` left in place as archive. Build script at `scripts/build-beginners-docx.js` will regenerate the v2 docx once chapter content is approved.
 

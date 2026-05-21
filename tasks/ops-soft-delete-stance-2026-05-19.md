@@ -56,15 +56,17 @@ Hard-delete is used everywhere else. Notable cases below grouped by what's lost:
 
 ---
 
-## Inconsistencies + open questions for Xero
+## Inconsistencies + open questions for Xero - ALL RESOLVED 2026-05-20
 
-These are the spots where current behavior is unclear or could go either way. Stance to be locked when Xero is ready:
+Five questions; all five ruled on by Xero 2026-05-20. Decisions logged in `tasks/decisions.md`; execution queued for hunt-and-peck in `tasks/todo.md`.
 
-1. **`characters` + `character_states` cascade** - currently hard-delete from `characters` via the "Delete character" button. CASCADE on the FK pulls `character_states` with it. **Question:** should a PC death + revive cycle preserve historical state, or is the current "delete and start fresh" correct? Today it's the latter. (See Pre-Launch Audit R12.)
-2. **`campaigns` deletion** - GM hits "Delete campaign" and everything tagged by `campaign_id` is wiped via CASCADE. **Question:** for a paying GM whose laptop crashed mid-delete, is "Are you ABSOLUTELY sure (type DELETE)" double-confirm enough? Today there's a single confirm. (See bright-line in operating-mode.md.)
-3. **`modules` archive vs hard-delete decision tree** is the only place we have written-out logic for which kind of delete to use. Could be a template for other tables IF Xero decides to converge.
-4. **`campaign_snapshots` hard-delete** - snapshots are themselves a recovery mechanism; deleting one is intentional. No soft-delete needed.
-5. **`roll_log` clear at session start** - this LOSES rolling history forever. Recent feature: Export Session Log (`22d75dc`) gives the GM a one-shot save before clear. **Question:** should the clear be a soft-delete (`session_archived_at`) so the GM can scroll back into prior sessions inside the app? Today they have to keep the Export JSON to look back.
+1. **`characters` + `character_states` cascade** -> **RESOLVED: PRESERVE.** `character_states` becomes soft-deleted via `archived_at` instead of cascade-deleted. A character delete no longer wipes the state; a revive flow can resurrect from the archived state. Schema + delete-path behavior change. (Was: hard cascade-delete.)
+2. **`campaigns` deletion double-confirm** -> **RESOLVED: YES.** Delete-campaign button gets a "type the campaign name to confirm" gate. (Was: single confirm.)
+3. **Generalize the modules decision tree** -> **RESOLVED: YES, applied to communities.** Pattern: `community with 0 active members = can hard-delete; community with members = soft-leave only` (mirrors `module with 0 subscribers = hard-delete-OK; with subscribers = archive-only`). Scope is communities specifically, not a blanket every-table sweep.
+4. **`campaign_snapshots` soft-delete** -> **RESOLVED: SOFT.** `archived_at` flag + a reaper job that hard-deletes archived snapshots after 30 days. (Was: instant hard-delete.)
+5. **`roll_log` clear at session start** -> **RESOLVED: ARCHIVE PER SPEC.** Add `session_id` to `roll_log`; drop the session-start `DELETE`; filter the in-session feed by current `session_id`; prior sessions browsable read-only at `/stories/[id]/sessions/<sid>`. No roll data ever lost. (Was: hard-delete on session start.)
+
+These move the affected tables in the soft-delete-vs-hard-delete sections above. Update those sections when the executions ship.
 
 ---
 
