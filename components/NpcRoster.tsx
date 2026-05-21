@@ -1931,7 +1931,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 const weaponName = e.target.value
                 if (!weaponName) { setForm(f => ({ ...f, weapon: null } as any)); return }
                 const w = getWeaponByName(weaponName)
-                setForm(f => ({ ...f, weapon: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
+                // Explosives (grenade/molotov/etc) are thrown consumables -
+                // seed a carry quantity so the NPC tracks how many they have.
+                setForm(f => ({ ...f, weapon: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0, ...(w?.category === 'explosive' ? { qty: 1 } : {}) } } as any))
               }}
                 style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                 <option value="">- None -</option>
@@ -1942,11 +1944,26 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               </select>
               {(form as any).weapon?.weaponName && (() => {
                 const w = getWeaponByName((form as any).weapon.weaponName)
-                return w ? (
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
-                    {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
-                  </div>
-                ) : null
+                if (!w) return null
+                const isExplosive = w.category === 'explosive'
+                const qty = (form as any).weapon?.qty ?? 1
+                return (
+                  <>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+                      {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>{isExplosive ? <> · <span style={{ color: '#EF9F27', fontWeight: 700 }}>×{qty}</span></> : null}
+                    </div>
+                    {isExplosive && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                        <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Quantity</span>
+                        <button type="button" onClick={() => setForm(f => ({ ...f, weapon: { ...(f as any).weapon, qty: Math.max(1, ((f as any).weapon?.qty ?? 1) - 1) } } as any))}
+                          style={{ padding: '2px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>−</button>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
+                        <button type="button" onClick={() => setForm(f => ({ ...f, weapon: { ...(f as any).weapon, qty: ((f as any).weapon?.qty ?? 1) + 1 } } as any))}
+                          style={{ padding: '2px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>+</button>
+                      </div>
+                    )}
+                  </>
+                )
               })()}
             </div>
 
@@ -1958,7 +1975,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   const weaponName = e.target.value
                   if (!weaponName) { setForm(f => ({ ...f, weapon2: null } as any)); return }
                   const w = getWeaponByName(weaponName)
-                  setForm(f => ({ ...f, weapon2: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
+                  setForm(f => ({ ...f, weapon2: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0, ...(w?.category === 'explosive' ? { qty: 1 } : {}) } } as any))
                 }}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">- None -</option>
@@ -1969,11 +1986,26 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 </select>
                 {(form as any).weapon2?.weaponName && (() => {
                   const w = getWeaponByName((form as any).weapon2.weaponName)
-                  return w ? (
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
-                      {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
-                    </div>
-                  ) : null
+                  if (!w) return null
+                  const isExplosive = w.category === 'explosive'
+                  const qty = (form as any).weapon2?.qty ?? 1
+                  return (
+                    <>
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+                        {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>{isExplosive ? <> · <span style={{ color: '#EF9F27', fontWeight: 700 }}>×{qty}</span></> : null}
+                      </div>
+                      {isExplosive && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Quantity</span>
+                          <button type="button" onClick={() => setForm(f => ({ ...f, weapon2: { ...(f as any).weapon2, qty: Math.max(1, ((f as any).weapon2?.qty ?? 1) - 1) } } as any))}
+                            style={{ padding: '2px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>−</button>
+                          <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
+                          <button type="button" onClick={() => setForm(f => ({ ...f, weapon2: { ...(f as any).weapon2, qty: ((f as any).weapon2?.qty ?? 1) + 1 } } as any))}
+                            style={{ padding: '2px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>+</button>
+                        </div>
+                      )}
+                    </>
+                  )
                 })()}
               </div>
             )}

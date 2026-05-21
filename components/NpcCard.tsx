@@ -336,14 +336,14 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
           {w && (
             <span style={{ fontSize: '13px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
-              {w.name} · {w.damage} · {w.range}{weapon?.condition && weapon.condition !== 'Used' ? ` · ${weapon.condition}` : ''}
+              {w.name} · {w.damage} · {w.range}{w.category === 'explosive' ? ` · ×${(weapon as any)?.qty ?? 1}` : ''}{weapon?.condition && weapon.condition !== 'Used' ? ` · ${weapon.condition}` : ''}
             </span>
           )}
           {npc.skills?.weapon2 && (() => {
             const w2 = getWeaponByName(npc.skills.weapon2.weaponName)
             return w2 ? (
               <span style={{ fontSize: '13px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
-                {w2.name} · {w2.damage} · {w2.range}
+                {w2.name} · {w2.damage} · {w2.range}{w2.category === 'explosive' ? ` · ×${(npc.skills.weapon2 as any)?.qty ?? 1}` : ''}
               </span>
             ) : null
           })()}
