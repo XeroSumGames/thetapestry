@@ -44,6 +44,8 @@ The two genuinely dangerous steps are the **roll engine** (R1) and **realtime sy
 | **TRUNK 3 - Realtime** | `useTableRealtime` (the 30-handler mega-effect). | ~510 | **HIGH (R2)** | **ISOLATED. LAST. 2-client smoke REQUIRED.** Deps array MUST be `[campaignId]` only. |
 | **FINAL - Compose** | Prune now-dead page state; confirm the orchestrator shape (~300 lines). | - | Trivial | 1 commit |
 
+**Step-by-step smoke procedure:** [tasks/decomposition-2client-smoke-testplan.md](decomposition-2client-smoke-testplan.md). Part 0 (single-client) gates the leaf batches; Parts 1-3 (two-client) gate the trunk steps. Follow it action-by-action; each step has its PASS condition + the failure signature to watch for.
+
 ### The "by tomorrow morning" path
 
 Batches A + B + C are leaf work with no 2-client failure mode. The hunt-and-peck chat can land all three TONIGHT, gated only by tsc + the test suite + a single-client click-through (mount as GM, mount as player, open every modal, every tab, every header button). That alone takes the file from 13,192 to roughly **5,500 lines** and removes ~75% of the surface.
