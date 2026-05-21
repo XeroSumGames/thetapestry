@@ -57,9 +57,11 @@ Closes Phase P4 / A5.3 of `tasks/puffer-fish-platform-plan.md`. Sweeps every tab
 
 ### Tier 3: partial coverage (policies in repo, RLS-enable NOT in repo)
 
-10 tables. CONCERNING. Policies are in repo, but the `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` statement isn't. Two possibilities:
-- RLS WAS enabled at some earlier point (probably via a manual dashboard click OR an old SQL file that was deleted) and the policies are active. **Likely.**
-- RLS was NEVER enabled and the policies are decorative (don't enforce anything). **Disaster scenario** because every row is world-readable.
+**VERIFIED 2026-05-20 (Xero ran Query 1): all 10 tables return `rls_enabled = true` in prod. NO P0. NO data leak.** RLS is enabled in the live DB (dashboard-managed); the repo simply lacks the `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` statements. The "disaster scenario" below is RULED OUT. What remains is a **reproducibility gap** (documentation), not a security hole: a fresh DB rebuilt from `sql/` alone would NOT enable RLS, so the canonical-DDL fill-in work matters for disaster recovery + new-environment bootstrap, but there's no live exposure.
+
+10 tables. Policies are in repo, but the `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` statement isn't. Two possibilities (resolved above):
+- ~~RLS WAS enabled at some earlier point (probably via a manual dashboard click OR an old SQL file that was deleted) and the policies are active.~~ **CONFIRMED - this is the case.**
+- ~~RLS was NEVER enabled and the policies are decorative (don't enforce anything). Disaster scenario.~~ **RULED OUT 2026-05-20.**
 
 | Table | Severity if RLS off | Action |
 |---|---|---|
@@ -150,16 +152,11 @@ Use this to extract dashboard-only policies into SQL files for the Tier-2 fill-i
 
 Run Section 3 queries first. THEN:
 
-### Phase RL1: verify Tier-3 RLS state (Xero, ~15 min)
+### Phase RL1: verify Tier-3 RLS state (Xero) - DONE 2026-05-20
 
-Run Query 1. For each Tier-3 table where `rls_enabled = false`:
+Query 1 ran 2026-05-20. **All 10 Tier-3 tables returned `rls_enabled = true`.** No P0. No live exposure.
 
-1. **STOP if any Tier-3 table is RLS-off in prod.** This is a P0; close it before continuing the audit.
-2. Add `ALTER TABLE public.<table> ENABLE ROW LEVEL SECURITY;` to a new dated `sql/` file.
-3. Apply to live IMMEDIATELY.
-4. Re-test: any user can still read their own data; any user CAN'T read other users' data.
-
-For each Tier-3 table where `rls_enabled = true`: add the missing `ALTER TABLE` statement to repo for reproducibility (no live change).
+Remaining (downgraded to documentation, no urgency): add the missing `ALTER TABLE public.<table> ENABLE ROW LEVEL SECURITY;` statements to a dated `sql/` file for reproducibility, so a fresh DB rebuild reproduces the live RLS-on state. No live change (the statements are no-ops against prod where RLS is already on). Hunt-and-peck folds this into the canonical-DDL work for the 15 orphan tables (R12 / pre-launch audit) - same reverse-engineering pattern.
 
 ### Phase RL2: extract Tier-2 dashboard policies into `sql/` (~3-5 sessions)
 
