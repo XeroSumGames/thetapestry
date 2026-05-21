@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-21 12:08 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [473 passed, 24 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Stale-open todo (3rd flag):** `todo.md:54` L-3 KV rate-limiter + `todo.md:30` "Approve Upstash KV" both still `[ ]`. Shipped `dd1a452` 2026-05-20. Two prior pulses flagged; still unresolved.
+- HOPED-FOR (2026-05-19 batch): now 2 days old — below 3-day threshold. Will flag tomorrow morning (2026-05-22 ~09 UTC) if no playtest update. Drain target: 2026-05-25.
+
+**Action:** Close `todo.md` lines 54 + 30 (L-3 shipped; Upstash KV approved and live). Three pulses is enough signal.
+
+---
+
 ## 2026-05-21 09:11 UTC
 
 **Status:** DRIFT
