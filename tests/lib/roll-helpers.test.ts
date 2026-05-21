@@ -295,7 +295,7 @@ describe('compactRollSummary', () => {
 
   it('coord effort legacy Low Insight', () => {
     expect(compactRollSummary({ label: 'Coordinated Effort - Tactics*', character_name: 'Cree', outcome: 'Low Insight' }))
-      .toBe('Cree kicks off a Coordinated Effort with Tactics* and the plan falls apart but has a Moment of Insight as to why it went so badly')
+      .toBe('Cree kicks off a Coordinated Effort with Tactics* and the plan falls apart but Cree has a Moment of Insight as to why it went so badly')
   })
 
   // Stabilize narrative (canon locked 2026-05-19). STABILIZE prefix

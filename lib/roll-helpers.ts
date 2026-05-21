@@ -510,7 +510,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   const coordEffortMatch = suffix.match(/^Coordinated Effort\s+-\s+(.+)$/)
   if (coordEffortMatch) {
     const skill = coordEffortMatch[1].trim()
-    if (r.outcome === 'Low Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and the plan falls apart but has a Moment of Insight as to why it went so badly`
+    if (r.outcome === 'Low Insight') {
+      // First name in the Insight tail so "but <name> has a Moment..."
+      // isn't a dangling clause after "the plan falls apart" (Xero
+      // 2026-05-20). The lead's full name opens the sentence.
+      const first = r.character_name.split(/\s+/)[0]
+      return `${r.character_name} kicks off a Coordinated Effort with ${skill} and the plan falls apart but ${first} has a Moment of Insight as to why it went so badly`
+    }
     if (r.outcome === 'Dire Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but it goes badly for the team`
     if (r.outcome === 'Failure') return `${r.character_name} kicks off a Coordinated Effort with ${skill} but the team gets off to a rough start`
     if (r.outcome === 'High Insight') return `${r.character_name} kicks off a Coordinated Effort with ${skill} and has a Moment of Insight as to why it went so well`
