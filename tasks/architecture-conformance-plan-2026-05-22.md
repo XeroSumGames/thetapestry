@@ -1,5 +1,7 @@
 # Architecture + Conformance Plan (2026-05-22)
 
+> **SUPERSEDED 2026-05-22 by [tasks/grand-rearchitecture-2026-05-22.md](grand-rearchitecture-2026-05-22.md).** This doc was table-page-scoped; the grand plan expands to the whole platform (Q1-B), adds the honest audit + gap analysis, and is the single executable spine. Kept for history.
+
 **Authored puffer-fish. Answers Xero's two questions:** (1) if starting fresh, how would we architect/engineer this to get to the target, and (2) once done, how do we go back and ensure what we built matches that architecture. This is the executable spine; it supersedes the ordering in `tasks/table-rearchitecture-2026-05-21.md` from Step 3 onward and folds conformance in as a first-class deliverable rather than an afterthought.
 
 ---
