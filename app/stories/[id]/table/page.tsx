@@ -491,13 +491,8 @@ export default function TablePage() {
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   // Restore cluster (showRestorePicker/restoreNpcIds/restoring/restoreObjects)
   // now lives in useGmTools (re-arch Phase 3); destructured below.
-  // Reload - quick GM-Tools snapshot picker for "rewind the scene to a save point"
-  // without leaving the table. Picker fetches snapshots on open (small list,
-  // ~dozens per campaign, single .select). Restoring runs via the same
-  // restoreCampaignSnapshot helper used by the full Snapshots admin page.
-  const [showReloadPicker, setShowReloadPicker] = useState(false)
-  const [reloadSnapshots, setReloadSnapshots] = useState<{ id: string; name: string; description: string | null; includes_character_states: boolean; created_at: string; snapshot: CampaignSnapshot }[]>([])
-  const [reloadingSnapshotId, setReloadingSnapshotId] = useState<string | null>(null)
+  // Reload cluster (showReloadPicker/reloadSnapshots/reloadingSnapshotId)
+  // now lives in useGmTools (re-arch Phase 3); destructured below.
   const [showLootModal, setShowLootModal] = useState(false)
   const [lootItems, setLootItems] = useState<{ name: string; qty: number; notes: string }[]>([])
   const [lootRecipients, setLootRecipients] = useState<Set<string>>(new Set())
@@ -781,6 +776,9 @@ export default function TablePage() {
     restoreNpcIds, setRestoreNpcIds,
     restoring, setRestoring,
     restoreObjects, setRestoreObjects,
+    showReloadPicker, setShowReloadPicker,
+    reloadSnapshots, setReloadSnapshots,
+    reloadingSnapshotId, setReloadingSnapshotId,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,

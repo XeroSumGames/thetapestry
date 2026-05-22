@@ -35,6 +35,11 @@ export function useGmTools() {
   // every crate/barrel/vehicle.
   const [restoreObjects, setRestoreObjects] = useState<{ id: string; name: string; wp_max: number }[]>([])
 
+  // --- Reload cluster (GM-Tools snapshot picker: "rewind the scene to a save point") ---
+  const [showReloadPicker, setShowReloadPicker] = useState(false)
+  const [reloadSnapshots, setReloadSnapshots] = useState<{ id: string; name: string; description: string | null; includes_character_states: boolean; created_at: string; snapshot: CampaignSnapshot }[]>([])
+  const [reloadingSnapshotId, setReloadingSnapshotId] = useState<string | null>(null)
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -48,5 +53,8 @@ export function useGmTools() {
     restoreNpcIds, setRestoreNpcIds,
     restoring, setRestoring,
     restoreObjects, setRestoreObjects,
+    showReloadPicker, setShowReloadPicker,
+    reloadSnapshots, setReloadSnapshots,
+    reloadingSnapshotId, setReloadingSnapshotId,
   }
 }
