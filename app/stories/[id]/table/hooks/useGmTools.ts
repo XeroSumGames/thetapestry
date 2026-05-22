@@ -50,6 +50,12 @@ export function useGmTools() {
   const [cdpAmount, setCdpAmount] = useState(1)
   const [cdpRecipients, setCdpRecipients] = useState<Set<string>>(new Set())
 
+  // --- Populate cluster (GM Tools -> Populate: bulk-generate NPCs across the
+  // 1A:2F:3G:4B "triangle"; populateBusy gates the button during bulk insert) ---
+  const [showPopulateModal, setShowPopulateModal] = useState(false)
+  const [populateCount, setPopulateCount] = useState(5)
+  const [populateBusy, setPopulateBusy] = useState(false)
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -72,5 +78,8 @@ export function useGmTools() {
     showCdpModal, setShowCdpModal,
     cdpAmount, setCdpAmount,
     cdpRecipients, setCdpRecipients,
+    showPopulateModal, setShowPopulateModal,
+    populateCount, setPopulateCount,
+    populateBusy, setPopulateBusy,
   }
 }

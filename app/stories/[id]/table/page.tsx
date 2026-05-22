@@ -497,12 +497,8 @@ export default function TablePage() {
   // useGmTools (re-arch Phase 3); destructured below.
   // CDP cluster (showCdpModal/cdpAmount/cdpRecipients) now lives in
   // useGmTools (re-arch Phase 3); destructured below.
-  // GM Tools → Populate. Bulk-generate NPCs distributed across the
-  // 1A:2F:3G:4B "triangle" per spec on 2026-04-30. populateBusy
-  // gates the button while the bulk insert runs.
-  const [showPopulateModal, setShowPopulateModal] = useState(false)
-  const [populateCount, setPopulateCount] = useState(5)
-  const [populateBusy, setPopulateBusy] = useState(false)
+  // Populate cluster (showPopulateModal/populateCount/populateBusy) now lives
+  // in useGmTools (re-arch Phase 3); destructured below.
   // Advance Time (Encumbrance) - house-rule: -1 RP per hour for every
   // overencumbered PC + NPC until they rest or drop something. The
   // modal previews who's affected and applies the deduction in a
@@ -783,6 +779,9 @@ export default function TablePage() {
     showCdpModal, setShowCdpModal,
     cdpAmount, setCdpAmount,
     cdpRecipients, setCdpRecipients,
+    showPopulateModal, setShowPopulateModal,
+    populateCount, setPopulateCount,
+    populateBusy, setPopulateBusy,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,
