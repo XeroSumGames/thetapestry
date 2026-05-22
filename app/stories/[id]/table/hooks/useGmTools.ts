@@ -56,6 +56,12 @@ export function useGmTools() {
   const [populateCount, setPopulateCount] = useState(5)
   const [populateBusy, setPopulateBusy] = useState(false)
 
+  // --- Advance Time (Encumbrance) cluster - house-rule: -1 RP per hour for
+  // every overencumbered PC + NPC until they rest or drop something ---
+  const [showAdvanceTimeModal, setShowAdvanceTimeModal] = useState(false)
+  const [advanceTimeHours, setAdvanceTimeHours] = useState(1)
+  const [advanceTimeBusy, setAdvanceTimeBusy] = useState(false)
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -81,5 +87,8 @@ export function useGmTools() {
     showPopulateModal, setShowPopulateModal,
     populateCount, setPopulateCount,
     populateBusy, setPopulateBusy,
+    showAdvanceTimeModal, setShowAdvanceTimeModal,
+    advanceTimeHours, setAdvanceTimeHours,
+    advanceTimeBusy, setAdvanceTimeBusy,
   }
 }

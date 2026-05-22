@@ -499,13 +499,8 @@ export default function TablePage() {
   // useGmTools (re-arch Phase 3); destructured below.
   // Populate cluster (showPopulateModal/populateCount/populateBusy) now lives
   // in useGmTools (re-arch Phase 3); destructured below.
-  // Advance Time (Encumbrance) - house-rule: -1 RP per hour for every
-  // overencumbered PC + NPC until they rest or drop something. The
-  // modal previews who's affected and applies the deduction in a
-  // single batch on Apply.
-  const [showAdvanceTimeModal, setShowAdvanceTimeModal] = useState(false)
-  const [advanceTimeHours, setAdvanceTimeHours] = useState(1)
-  const [advanceTimeBusy, setAdvanceTimeBusy] = useState(false)
+  // Advance Time cluster (showAdvanceTimeModal/advanceTimeHours/advanceTimeBusy)
+  // now lives in useGmTools (re-arch Phase 3); destructured below.
   const [presenceCount, setPresenceCount] = useState(0)
   // Set of user_ids currently subscribed to the table page presence
   // channel. Driven by the same Realtime channel as presenceCount;
@@ -782,6 +777,9 @@ export default function TablePage() {
     showPopulateModal, setShowPopulateModal,
     populateCount, setPopulateCount,
     populateBusy, setPopulateBusy,
+    showAdvanceTimeModal, setShowAdvanceTimeModal,
+    advanceTimeHours, setAdvanceTimeHours,
+    advanceTimeBusy, setAdvanceTimeBusy,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,
