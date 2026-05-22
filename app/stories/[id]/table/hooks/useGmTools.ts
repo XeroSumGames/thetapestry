@@ -79,6 +79,14 @@ export function useGmTools() {
     setShowCommunityModal(true)
   }
 
+  // --- Quick Add modal cluster - all pin/community form state lives inside
+  // <QuickAddModal>; the table only tracks open/close + the pin-only flag +
+  // seed lat/lng. ---
+  const [showQuickAdd, setShowQuickAdd] = useState(false)
+  const [qaHideCommunity, setQaHideCommunity] = useState(false)
+  const [qaPinLat, setQaPinLat] = useState<string>('')
+  const [qaPinLng, setQaPinLng] = useState<string>('')
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -113,5 +121,9 @@ export function useGmTools() {
     communityModalMode, setCommunityModalMode,
     communityModalToken, setCommunityModalToken,
     openCommunityModal,
+    showQuickAdd, setShowQuickAdd,
+    qaHideCommunity, setQaHideCommunity,
+    qaPinLat, setQaPinLat,
+    qaPinLng, setQaPinLng,
   }
 }

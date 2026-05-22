@@ -515,16 +515,9 @@ export default function TablePage() {
   // End Session cluster (showEndSessionModal/submittedPlayerNotes) now lives
   // in useGmTools (re-arch Phase 3); destructured below.
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | 'coordinated_effort' | 'heal' | null>(null)
-  // Quick Add modal state - all pin/community form state now lives
-  // inside <QuickAddModal>. The table page only tracks open/close
-  // plus the pin-only flag + seed lat/lng.
-  const [showQuickAdd, setShowQuickAdd] = useState(false)
-  const [qaHideCommunity, setQaHideCommunity] = useState(false)
-  // Community Status modal cluster (showCommunityModal/communityModalMode/
-  // communityModalToken/openCommunityModal) now lives in useGmTools
-  // (re-arch Phase 3); destructured below.
-  const [qaPinLat, setQaPinLat] = useState<string>('')
-  const [qaPinLng, setQaPinLng] = useState<string>('')
+  // Quick Add modal cluster (showQuickAdd/qaHideCommunity/qaPinLat/qaPinLng)
+  // and the Community Status modal cluster now live in useGmTools
+  // (re-arch Phase 3); both destructured below.
 
   // Recruitment state lives separately from the Special Check modal
   // because its UI doesn't fit the 380px wrapper - multi-step wizard.
@@ -774,6 +767,10 @@ export default function TablePage() {
     communityModalMode, setCommunityModalMode,
     communityModalToken, setCommunityModalToken,
     openCommunityModal,
+    showQuickAdd, setShowQuickAdd,
+    qaHideCommunity, setQaHideCommunity,
+    qaPinLat, setQaPinLat,
+    qaPinLng, setQaPinLng,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,
