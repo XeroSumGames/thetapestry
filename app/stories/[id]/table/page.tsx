@@ -22,6 +22,7 @@ import { getCachedAuth } from '../../../../lib/auth-cache'
 import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
 import { reportSupabaseError } from '../../../../lib/supabase-errors'
 import { useHeaderMenus } from './hooks/useHeaderMenus'
+import { useGmTools } from './hooks/useGmTools'
 import { useRecorderToggle } from './hooks/useRecorderToggle'
 import {
   firstImpressionCmodDelta,
@@ -771,21 +772,22 @@ export default function TablePage() {
   // pending + the whole campaign's consumed history.
   const [advantages, setAdvantages] = useState<Advantage[]>([])
   // GM Grant Advantage modal state.
-  const [showGrantAdvantage, setShowGrantAdvantage] = useState(false)
-  const [grantPcId, setGrantPcId] = useState<string>('')
-  const [grantSkill, setGrantSkill] = useState<string>('')
-  const [grantCmod, setGrantCmod] = useState<number>(1)
-  const [grantDescription, setGrantDescription] = useState<string>('')
-  const [grantSubmitting, setGrantSubmitting] = useState(false)
-  const [grantError, setGrantError] = useState<string | null>(null)
+  // Grant Advantage modal state now lives in useGmTools (re-arch Phase 3).
+  // Destructured here so every existing call site is unchanged.
+  const {
+    showGrantAdvantage, setShowGrantAdvantage,
+    grantPcId, setGrantPcId,
+    grantSkill, setGrantSkill,
+    grantCmod, setGrantCmod,
+    grantDescription, setGrantDescription,
+    grantSubmitting, setGrantSubmitting,
+    grantError, setGrantError,
+    grantSourceRollLogId, setGrantSourceRollLogId,
+  } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,
   // null) guard, but the UI flicker is avoidable).
   const [useInFlight, setUseInFlight] = useState<Set<string>>(new Set())
-  // Phase 4: source_roll_log_id pre-fill when granting via the
-  // per-row "⭐ Award" button on the rolls feed. Null when granting
-  // from GM Tools → ⭐ Grant Advantage (free-form path A1).
-  const [grantSourceRollLogId, setGrantSourceRollLogId] = useState<string | null>(null)
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
