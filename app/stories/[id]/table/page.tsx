@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
+import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
 import { prepareUpload } from '../../../../lib/safe-upload'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
@@ -1193,7 +1194,7 @@ export default function TablePage() {
         loadEntries(id),
         rollsFeed.refetch(),
         loadInitiative(id),
-        supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
+        getCampaignNpcs(id),
         supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
         // Hydrate the "which NPCs already have a token in the active
         // scene?" set on initial load so the folder MAP/UNMAP button
@@ -1404,7 +1405,7 @@ export default function TablePage() {
             // Empty payload - refetch campaign_npcs so coalesced multi-
             // target events (grenades, etc.) propagate to every client
             // even though the sender didn't enumerate per-target patches.
-            const { data } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+            const { data } = await getCampaignNpcs(id)
             if (data) {
               setCampaignNpcs(data)
               setRosterNpcs(data.filter((n: any) => {
@@ -1513,7 +1514,7 @@ export default function TablePage() {
         // broadcast channel instead. Refetch cnpcs fresh so newly-added roster
         // NPCs aren't missed due to a stale closure.
         .on('broadcast', { event: 'npcs_revealed' }, wrapBroadcast('npcs_revealed', async () => {
-          const { data: fresh } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+          const { data: fresh } = await getCampaignNpcs(id)
           const freshList = fresh ?? []
           if (freshList.length > 0) {
             setCampaignNpcs(freshList)
@@ -1581,7 +1582,7 @@ export default function TablePage() {
           }
           // INSERT/DELETE: full refetch.
           void (async () => {
-            const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+            const { data: cnpcs } = await getCampaignNpcs(id)
             if (cnpcs) {
               setCampaignNpcs(cnpcs)
               setRosterNpcs(cnpcs.filter((n: any) => {
@@ -1662,7 +1663,7 @@ export default function TablePage() {
         rollsFeed.refetch()
         loadInitiative(id)
         loadPlayerNpcCommunityMap(id)
-        const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+        const { data: cnpcs } = await getCampaignNpcs(id)
         if (cnpcs) {
           setCampaignNpcs(cnpcs)
           setRosterNpcs(cnpcs.filter((n: any) => {
@@ -2107,7 +2108,7 @@ export default function TablePage() {
     // count.
     const pcCharIdsInInit = order.filter((e: any) => !e.is_npc && e.character_id).map((e: any) => e.character_id)
     const [{ data: freshNpcsForSkip }, { data: freshPcStatesForSkip }] = await Promise.all([
-      supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
+      getCampaignNpcs(id),
       pcCharIdsInInit.length > 0
         ? supabase.from('character_states').select('character_id, wp_current, rp_current').eq('campaign_id', id).in('character_id', pcCharIdsInInit)
         : Promise.resolve({ data: [] as any[] }),
@@ -2343,7 +2344,7 @@ export default function TablePage() {
       // Two parallel fetches - initiative_order + campaign_npcs (different tables).
       const [{ data: rerolled }, { data: freshNpcsForRound }] = await Promise.all([
         supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true }),
-        supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
+        getCampaignNpcs(id),
       ])
       const freshNpcMap = new Map<string, any>((freshNpcsForRound ?? []).map((n: any) => [n.id, n]))
       if (rerolled && rerolled.length > 0) {
@@ -12408,7 +12409,7 @@ export default function TablePage() {
                 // server's actual state in case the PC write succeeded
                 // but the target write failed.
                 void loadEntries(id)
-                const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+                const { data: cnpcs } = await getCampaignNpcs(id)
                 if (cnpcs) setCampaignNpcs(cnpcs)
               }
             }}

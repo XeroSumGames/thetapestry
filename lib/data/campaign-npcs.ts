@@ -1,38 +1,35 @@
-// Repository: campaign_npcs (grand re-architecture Phase 1b exemplar).
+// Repository: campaign_npcs (grand re-architecture Phase 1b/3 exemplar).
 //
 // One of the hottest tables (50+ inline .from across components today).
-// These functions are the typed seam consumers will call instead of
-// hand-rolling `supabase.from('campaign_npcs')...`. Queries here mirror
-// shapes that already exist in the codebase (e.g. the table page's
-// roster refetch + per-NPC health update), so migrating a call site is a
-// find-and-replace, not a behavior change. Grows as more call sites
-// migrate (Phase 3/5).
+// These functions are the typed seam consumers call instead of hand-
+// rolling `supabase.from('campaign_npcs')...`.
+//
+// CONVENTION (behavior-preserving migration): repos return the raw
+// Supabase `{ data, error }` result, just TYPED. So an existing call site
+// `const { data, error } = await supabase.from('campaign_npcs')...` becomes
+// a true drop-in `const { data, error } = await getCampaignNpcs(id)` - same
+// shape, same error handling, same Promise.all behavior, now with the table
+// name + columns centralised and the row typed. Error-handling improvements
+// (throw-on-error wrappers, etc.) are a separate, later concern; the seam's
+// first job is centralisation + typing without changing behavior.
 
 import { db, type Row, type Update } from './db'
 
 export type CampaignNpc = Row<'campaign_npcs'>
 
-/** All NPCs for a campaign. Mirrors the table page's roster refetch. */
-export async function getCampaignNpcs(campaignId: string): Promise<CampaignNpc[]> {
-  const { data, error } = await db()
-    .from('campaign_npcs')
-    .select('*')
-    .eq('campaign_id', campaignId)
-  if (error) throw error
-  return data ?? []
+/**
+ * All NPCs for a campaign. Drop-in for the ubiquitous
+ * `supabase.from('campaign_npcs').select('*').eq('campaign_id', id)`.
+ */
+export function getCampaignNpcs(campaignId: string) {
+  return db().from('campaign_npcs').select('*').eq('campaign_id', campaignId)
 }
 
 /**
- * Patch one NPC and return the updated row. Follows the project rule
- * (lessons.md): always `.select()` after `.update()` and surface the
- * error rather than fire-and-forget. Returns `{ data, error }` so callers
- * can keep their optimistic-state-then-reconcile flow.
+ * Patch one NPC. Drop-in for `supabase.from('campaign_npcs').update(p).eq('id', id)`.
+ * Pass `.select()` follow-up at the call site if it needs the row back; this
+ * mirrors the bare update shape most call sites use.
  */
-export async function updateCampaignNpc(id: string, patch: Update<'campaign_npcs'>) {
-  return db()
-    .from('campaign_npcs')
-    .update(patch)
-    .eq('id', id)
-    .select()
-    .maybeSingle()
+export function updateCampaignNpc(id: string, patch: Update<'campaign_npcs'>) {
+  return db().from('campaign_npcs').update(patch).eq('id', id)
 }

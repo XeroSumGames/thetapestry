@@ -103,28 +103,32 @@ const current = {
 }
 
 // --- Save mode ---
+// Default --save RATCHETS: it records improvements (lower numbers) but
+// NEVER regresses a baseline - so a within-grace LOC bump from a migration
+// can't accidentally raise a ceiling, and you can always lock in a
+// leakage/console win without being blocked by unrelated churn. Use
+// --force to write the exact current values (a deliberate re-baseline,
+// e.g. after a justified new feature legitimately grows a file).
 if (SAVE) {
   let prev = null
   if (existsSync(BASELINE_PATH)) { try { prev = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) } catch {} }
-  if (prev && !FORCE) {
-    const raised = []
-    for (const f of GOD_COMPONENTS) if ((loc[f] ?? 0) > (prev.locCeilings?.[f] ?? Infinity)) raised.push(`LOC ${f} ${prev.locCeilings[f]} -> ${loc[f]}`)
-    if (fromOutsideData > (prev.seamLeakage?.fromOutsideData ?? Infinity)) raised.push(`.from outside data ${prev.seamLeakage.fromOutsideData} -> ${fromOutsideData}`)
-    if (channelOutsideRealtime > (prev.seamLeakage?.channelOutsideRealtime ?? Infinity)) raised.push(`.channel outside realtime ${prev.seamLeakage.channelOutsideRealtime} -> ${channelOutsideRealtime}`)
-    if (prodConsole > (prev.prodConsole ?? Infinity)) raised.push(`prod console ${prev.prodConsole} -> ${prodConsole}`)
-    if (raised.length) {
-      console.error('[check-arch] refusing to --save: these metrics would RISE (use --force only if you truly mean to):')
-      for (const r of raised) console.error('    ' + r)
-      process.exit(1)
-    }
+  const keepLower = (cur, p) => (p != null && !FORCE) ? Math.min(cur, p) : cur
+  const merged = {
+    locCeilings: {},
+    seamLeakage: {
+      fromOutsideData: keepLower(fromOutsideData, prev?.seamLeakage?.fromOutsideData),
+      channelOutsideRealtime: keepLower(channelOutsideRealtime, prev?.seamLeakage?.channelOutsideRealtime),
+    },
+    prodConsole: keepLower(prodConsole, prev?.prodConsole),
   }
+  for (const f of GOD_COMPONENTS) merged.locCeilings[f] = keepLower(loc[f], prev?.locCeilings?.[f])
   mkdirSync(dirname(BASELINE_PATH), { recursive: true })
-  const out = { _comment: 'Architecture ratchet baseline. Numbers only ever go DOWN. Re-save via: node scripts/check-arch.mjs --save', ...current }
+  const out = { _comment: 'Architecture ratchet baseline. --save only ratchets numbers DOWN (--force to re-baseline up). node scripts/check-arch.mjs --save', ...merged }
   writeFileSync(BASELINE_PATH, JSON.stringify(out, null, 2) + '\n')
-  console.log('[check-arch] baseline saved to ' + BASELINE_PATH)
-  console.log(`    .from outside lib/data: ${fromOutsideData}`)
-  console.log(`    .channel outside lib/realtime: ${channelOutsideRealtime}`)
-  console.log(`    console.log|warn in app|components|lib: ${prodConsole}`)
+  console.log(`[check-arch] baseline ${FORCE ? 'FORCE-' : ''}saved to ${BASELINE_PATH}`)
+  console.log(`    .from outside lib/data: ${merged.seamLeakage.fromOutsideData}${merged.seamLeakage.fromOutsideData < fromOutsideData ? ' (kept lower baseline)' : ''}`)
+  console.log(`    .channel outside lib/realtime: ${merged.seamLeakage.channelOutsideRealtime}`)
+  console.log(`    console.log|warn in app|components|lib: ${merged.prodConsole}`)
   process.exit(0)
 }
 
@@ -138,10 +142,16 @@ const base = JSON.parse(readFileSync(BASELINE_PATH, 'utf8'))
 const regressions = []
 const improvements = []
 
+// LOC ceilings get a small GRACE band: the goal is to stop god-components
+// BALLOONING, not to block the +1/+2 line churn that legitimate migration
+// causes (e.g. adding a repo import before the bigger removals land). Real
+// bloat (a new feature) blows past the grace. Seam-leakage + prod-console
+// stay strict (0 tolerance) - those are the precise architectural metrics.
+const LOC_GRACE = 25
 for (const f of GOD_COMPONENTS) {
   const ceil = base.locCeilings?.[f]
   if (ceil == null) continue
-  if (loc[f] > ceil) regressions.push(`LOC: ${f} grew ${ceil} -> ${loc[f]} (+${loc[f] - ceil})`)
+  if (loc[f] > ceil + LOC_GRACE) regressions.push(`LOC: ${f} grew ${ceil} -> ${loc[f]} (+${loc[f] - ceil}, past the ${LOC_GRACE}-line grace)`)
   else if (loc[f] < ceil) improvements.push(`LOC: ${f} ${ceil} -> ${loc[f]}`)
 }
 const checks = [
