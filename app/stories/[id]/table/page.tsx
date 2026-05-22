@@ -2365,43 +2365,57 @@ export default function TablePage() {
       return
     }
 
-    // Deactivate current + activate next (nextIdx was computed above, before the
-    // new-round check, so we can detect the skip-walk wrap cleanly).
+    // ── Normal advance: deactivate current, activate next ──
+    // nextIdx was computed above (before the new-round check) so the skip-walk
+    // wrap is detectable.
     const currentEntry = order.find((e: any) => e.is_active)
     console.warn('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
-    // Defense: if the skip-walk landed on the same combatant we're trying to
-    // advance from (can happen if state is stale or every other combatant is
-    // dead), don't no-op advance - trigger a new round instead. Prevents an
-    // infinite "same combatant reactivates" loop.
+    // Defense: if the skip-walk landed on the same combatant we're advancing
+    // from (stale state, or every other combatant dead), trigger a new round
+    // rather than no-op reactivating - prevents an infinite reactivate loop.
     if (currentEntry && order[nextIdx] && currentEntry.id === order[nextIdx].id) {
       console.warn('[nextTurn] nextIdx resolves to self - no-op (finally will release lock)')
       return
     }
-    // Deactivate every row currently flagged active EXCEPT the one we're
-    // about to activate. Normally there's exactly one, but a race between
-    // two clients (or a missed realtime broadcast) can leave two rows with
-    // is_active=true, which then confuses findIndex and the turn walk.
-    // Broad-clearing here is idempotent and self-healing.
-    const { error: deactErr } = await supabase.from('initiative_order')
-      .update({ is_active: false, actions_remaining: 0, aim_bonus: 0 })
-      .eq('campaign_id', id)
-      .eq('is_active', true)
-      .neq('id', order[nextIdx].id)
+
+    const nextId = order[nextIdx].id
+    const activation = activateUpdate(order[nextIdx])
+    const deactivation = { is_active: false, actions_remaining: 0, aim_bonus: 0 }
+
+    // OPTIMISTIC TURN-FLIP: apply the post-write state to local initiative NOW
+    // so the turn changes instantly instead of waiting ~0.7-3.6s for two
+    // sequential DB writes + a reload (measured in the 2026-05-22 smoke). The
+    // patch mirrors the two writes below EXACTLY (activate nextId via the same
+    // `activation` object; clear is_active/actions/aim on every other currently
+    // active row via the same `deactivation` object), and `order` is the same
+    // select+sort `loadInitiative` produces - so the optimistic array is
+    // field-identical to the reload that follows (no flicker), and a write
+    // failure self-heals when the reload reads DB truth.
+    setInitiativeOrder(order.map((e: any) => {
+      if (e.id === nextId) return { ...e, ...activation }
+      if (e.is_active) return { ...e, ...deactivation }
+      return e
+    }))
+
+    // Persist: the two writes touch DISJOINT rows (deactivate excludes nextId
+    // via .neq; activate touches only nextId), so they run in ONE parallel wave
+    // instead of two sequential round-trips. Broad-clearing every is_active row
+    // except next is idempotent + self-healing if a race left two active.
+    const [{ error: deactErr }, { error: actErr }] = await Promise.all([
+      supabase.from('initiative_order')
+        .update(deactivation)
+        .eq('campaign_id', id)
+        .eq('is_active', true)
+        .neq('id', nextId),
+      supabase.from('initiative_order').update(activation).eq('id', nextId),
+    ])
     if (deactErr) console.warn('[nextTurn] bulk deactivate error:', deactErr.message)
-    const __tDeactivated = performance.now()
-    const { error: actErr } = await supabase.from('initiative_order').update(activateUpdate(order[nextIdx])).eq('id', order[nextIdx].id)
     if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
-    const __tActivated = performance.now()
+    // Reconcile local state with DB truth + refresh PC liveState, then notify peers.
     await Promise.all([loadInitiative(id), loadEntries(id)])
-    const __tReloaded = performance.now()
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-    const __tBroadcast = performance.now()
-    console.warn('[playtest-trace] [nextTurn] done', {
-      total_ms: Math.round(__tBroadcast - __t0),
-      deactivate_ms: Math.round(__tDeactivated - __t0),
-      activate_ms: Math.round(__tActivated - __tDeactivated),
-      reload_ms: Math.round(__tReloaded - __tActivated),
-      broadcast_ms: Math.round(__tBroadcast - __tReloaded),
+    console.warn('[playtest-trace] [nextTurn] done (optimistic flip + parallel writes)', {
+      settle_ms: Math.round(performance.now() - __t0),
       activated_name: order[nextIdx]?.character_name,
     })
     } finally {
