@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-22 21:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [513 passed, 27 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Confidence Ledger TESTED count stale:** ledger shows 502/26 files; live run shows 513/27. `8a4a371` added `tests/lib/initiative-actions.test.ts` (11 new tests). Run `node scripts/refresh-ledger.mjs` to drain.
+- **HOPED-FOR (2026-05-19 batch) day 3** - drain target 2026-05-25 (3 days). At threshold; no action before playtest.
+
+**Action:** `node scripts/refresh-ledger.mjs` to sync the Confidence Ledger test count.
+
+---
+
 ## 2026-05-22 18:09 UTC
 
 **Status:** DRIFT
