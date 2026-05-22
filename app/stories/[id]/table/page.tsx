@@ -493,9 +493,8 @@ export default function TablePage() {
   // now lives in useGmTools (re-arch Phase 3); destructured below.
   // Reload cluster (showReloadPicker/reloadSnapshots/reloadingSnapshotId)
   // now lives in useGmTools (re-arch Phase 3); destructured below.
-  const [showLootModal, setShowLootModal] = useState(false)
-  const [lootItems, setLootItems] = useState<{ name: string; qty: number; notes: string }[]>([])
-  const [lootRecipients, setLootRecipients] = useState<Set<string>>(new Set())
+  // Loot cluster (showLootModal/lootItems/lootRecipients) now lives in
+  // useGmTools (re-arch Phase 3); destructured below.
   const [showCdpModal, setShowCdpModal] = useState(false)
   // GM Tools → Populate. Bulk-generate NPCs distributed across the
   // 1A:2F:3G:4B "triangle" per spec on 2026-04-30. populateBusy
@@ -779,6 +778,9 @@ export default function TablePage() {
     showReloadPicker, setShowReloadPicker,
     reloadSnapshots, setReloadSnapshots,
     reloadingSnapshotId, setReloadingSnapshotId,
+    showLootModal, setShowLootModal,
+    lootItems, setLootItems,
+    lootRecipients, setLootRecipients,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,

@@ -40,6 +40,11 @@ export function useGmTools() {
   const [reloadSnapshots, setReloadSnapshots] = useState<{ id: string; name: string; description: string | null; includes_character_states: boolean; created_at: string; snapshot: CampaignSnapshot }[]>([])
   const [reloadingSnapshotId, setReloadingSnapshotId] = useState<string | null>(null)
 
+  // --- Loot cluster (GM Tools -> Loot: hand items to PCs) ---
+  const [showLootModal, setShowLootModal] = useState(false)
+  const [lootItems, setLootItems] = useState<{ name: string; qty: number; notes: string }[]>([])
+  const [lootRecipients, setLootRecipients] = useState<Set<string>>(new Set())
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -56,5 +61,8 @@ export function useGmTools() {
     showReloadPicker, setShowReloadPicker,
     reloadSnapshots, setReloadSnapshots,
     reloadingSnapshotId, setReloadingSnapshotId,
+    showLootModal, setShowLootModal,
+    lootItems, setLootItems,
+    lootRecipients, setLootRecipients,
   }
 }
