@@ -64,6 +64,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
+import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../lib/tactical-view'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
@@ -1329,18 +1330,22 @@ export default function TablePage() {
           }
         }))
         .on('broadcast', { event: 'combat_started' }, wrapBroadcast('combat_started', () => { loadInitiative(id); rollsFeed.refetch() }))
-        .on('broadcast', { event: 'tactical_shared' }, wrapBroadcast('tactical_shared', (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); setShowTacticalMap(msg.payload?.shared ?? false) }))
-        .on('broadcast', { event: 'tactical_unshared' }, wrapBroadcast('tactical_unshared', () => { setTacticalShared(false); setShowTacticalMap(false) }))
-        // GM force-push view: when a scene is activated AND the GM has
-        // tactical-sharing on, every player's pane opens (or re-opens)
-        // on the new scene so they automatically follow along. Without
-        // this, a player whose pane was closed during a prior scene
-        // wouldn't see the GM's switch - they'd only catch up if they
-        // re-opened the pane manually. Broadcast fires from the GM-side
-        // activateScene paths in TacticalMap, /scene-controls-popout,
-        // and the pin onOpenScene callback below.
+        // Share/unshare drives what PLAYERS see, not the GM's own pane: the
+        // GM (gmLike) can preview the campaign map while players follow the
+        // shared tactical scene. tacticalShared is set on every client (the GM
+        // needs it for button state); the view force only applies to players.
+        .on('broadcast', { event: 'tactical_shared' }, wrapBroadcast('tactical_shared', (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(msg.payload?.shared ?? false) }))
+        .on('broadcast', { event: 'tactical_unshared' }, wrapBroadcast('tactical_unshared', () => { setTacticalShared(false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(false) }))
+        // GM force-push view: when a scene is activated AND sharing is on,
+        // every PLAYER's pane opens (or re-opens) on the new scene so they
+        // automatically follow along. Without this, a player whose pane was
+        // closed during a prior scene wouldn't see the GM's switch - they'd
+        // only catch up if they re-opened the pane manually. The GM is NOT
+        // force-switched (they keep whatever view they're previewing).
+        // Broadcast fires from the GM-side activateScene paths in TacticalMap,
+        // /scene-controls-popout, and the pin onOpenScene callback below.
         .on('broadcast', { event: 'scene_activated' }, wrapBroadcast('scene_activated', () => {
-          if (tacticalSharedRef.current) setShowTacticalMap(true)
+          if (tacticalSharedRef.current && shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(true)
           setTokenRefreshKey(k => k + 1)
         }))
         // Gut Instinct resolved - GM/Thriver clients open a modal to
@@ -8360,8 +8365,10 @@ export default function TablePage() {
 
         {/* Center - Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
-          {/* Center map - tactical during combat or when toggled, campaign otherwise */}
-          {(combatActive || showTacticalMap || tacticalShared) ? (
+          {/* Center map - tactical during combat or when toggled, campaign otherwise.
+              The shared flag pins only non-GM clients: the GM can preview the
+              campaign map while players see the shared tactical scene. */}
+          {shouldRenderTactical({ combatActive, showTacticalMap, tacticalShared, gmLike }) ? (
             <TacticalMap
               campaignId={id}
               isGM={gmLike}
