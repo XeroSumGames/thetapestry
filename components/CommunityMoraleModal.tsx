@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { insertRollLog } from '../lib/data/roll-log'
 import { logEvent } from '../lib/events'
 import {
   classifyRoll,
@@ -805,7 +806,7 @@ export default function CommunityMoraleModal({
         created_at: retTime,
       })
     }
-    await supabase.from('roll_log').insert(rows)
+    await insertRollLog(rows)
 
     setRunning(false)
     onComplete()

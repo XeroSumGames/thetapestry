@@ -33,6 +33,7 @@ import { ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../lib/cdp-costs'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { OUTCOME } from '../lib/roll-outcomes'
+import { insertRollLog } from '../lib/data/roll-log'
 import { makeCharacterEvolutionSpend } from '../lib/damage-payload'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
@@ -335,7 +336,7 @@ export default function CharacterEvolution({
           const targetLabel = target === 'apprentice' && apprentice
             ? `${characterName}'s Apprentice (${apprentice.name})`
             : characterName
-          await supabase.from('roll_log').insert({
+          await insertRollLog({
             campaign_id: campaignId,
             user_id: user.id,
             character_name: targetLabel,

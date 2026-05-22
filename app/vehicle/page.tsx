@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { insertRollLog } from '../../lib/data/roll-log'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
@@ -1108,7 +1109,7 @@ export default function VehiclePage() {
       }
     }
 
-    await supabase.from('roll_log').insert({
+    await insertRollLog({
       campaign_id: campaignId,
       user_id: myUserId,
       character_name: member?.name ?? null,
@@ -1679,7 +1680,7 @@ export default function VehiclePage() {
                         // the source of truth.
                         if (campaignId && myUserId) {
                           const newCur = r.vehicle.brewing_supplies_current ?? 1
-                          await supabase.from('roll_log').insert({
+                          await insertRollLog({
                             campaign_id: campaignId,
                             user_id: myUserId,
                             character_name: null,

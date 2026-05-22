@@ -28,6 +28,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { insertRollLog } from '../lib/data/roll-log'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Community } from '../lib/types/community'
 import type { CampaignNpc } from './NpcRoster'
@@ -219,7 +220,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
     const logLabel = isSuccess
       ? `🤝 ${leader.name} recruited ${target.name} as a ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)} to ${community.name} (off-screen)`
       : `🤝 ${leader.name} tried to recruit ${target.name} (off-screen) - ${outcome}`
-    await supabase.from('roll_log').insert({
+    await insertRollLog({
       campaign_id: campaignId,
       user_id: userId,
       character_name: leader.name,

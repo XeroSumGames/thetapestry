@@ -16,6 +16,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
+import { insertRollLog } from '../../lib/data/roll-log'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { advance, readClock, queueStreamingHeal, cancelEvent, type ClockState } from '../../lib/campaign-clock'
 import { OUTCOME } from '../../lib/roll-outcomes'
@@ -144,7 +145,7 @@ export default function CampaignSheetPage() {
       supabase.from('character_states').update({ stress: newStress, updated_at: new Date().toISOString() }).eq('id', p.state_id),
     ])
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('roll_log').insert({
+    await insertRollLog({
       campaign_id: campaignId,
       user_id: user?.id ?? null,
       character_name: p.name,

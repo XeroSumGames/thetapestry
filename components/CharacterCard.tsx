@@ -3,6 +3,7 @@ import { memo, useState, useEffect, useRef } from 'react'
 import { ModalBackdrop } from '../lib/style-helpers'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
+import { insertRollLog } from '../lib/data/roll-log'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
@@ -1237,7 +1238,7 @@ function CharacterCardImpl({
               const { user } = await getCachedAuth()
               if (user) {
                 const labelSuffix = mode === 'at-max' ? 'Stress Check (at max)' : 'Stress Check'
-                await supabase.from('roll_log').insert({
+                await insertRollLog({
                   campaign_id: campaignIdProp,
                   user_id: user.id,
                   character_name: c.name,

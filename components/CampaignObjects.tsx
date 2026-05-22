@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { insertRollLog } from '../lib/data/roll-log'
 import { getCachedAuth } from '../lib/auth-cache'
 import { ALL_WEAPONS } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
@@ -620,7 +621,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                       const ce = entries.find(e => e.character.id === lootCharId)
                       if (!ce) return
                       const { data: { user } } = await supabase.auth.getUser()
-                      await supabase.from('roll_log').insert({
+                      await insertRollLog({
                         campaign_id: campaignId,
                         user_id: user?.id ?? null,
                         character_name: ce.character.name,
