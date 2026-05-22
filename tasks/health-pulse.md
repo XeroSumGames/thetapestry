@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-22 12:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [502 passed, 26 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift (unchanged from 09:08 — no new commits since last pulse):**
+- **Ledger test count still stale:** ledger says 476/24 files; actual 502/26. `node scripts/refresh-ledger.mjs` not yet run.
+- **HOPED-FOR (2026-05-19 batch) >3 days old.** Drain target: 2026-05-25 playtest.
+- **Upstash KV approval (todo:42) still `[ ]`** (9th flag). L-3 shipped; gate item needs close/annotate.
+
+**Action:** Same as 09:08 — (1) `node scripts/refresh-ledger.mjs`. (2) Close/annotate todo:42. (3) Await 2026-05-25 playtest to drain HOPED-FOR.
+
+---
+
 ## 2026-05-22 09:08 UTC
 
 **Status:** DRIFT
