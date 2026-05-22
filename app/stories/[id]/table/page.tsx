@@ -2916,8 +2916,8 @@ export default function TablePage() {
     const tokenColor = type === 'pc'
       ? '#7ab3d4'
       : getNpcTokenBorderColor({ disposition: npcRow?.disposition, npc_type: (npcRow as any)?.npc_type })
-    // Spawn under the top-right zoom slider (defaultSpawnCell) so the
-    // top-left day/night/fog toolbar doesn't hide the new token.
+    // Spawn top-left (1,1) via defaultSpawnCell - one cell in from the
+    // corner so the draggable day/night/fog toolbar doesn't hide it.
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
       name,
