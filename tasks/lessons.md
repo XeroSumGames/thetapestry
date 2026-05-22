@@ -539,6 +539,8 @@ Reference implementation: Coordinate-success (commit `<pending>`). Sprint is the
 - **`SECURITY DEFINER` on trigger functions**: Required for triggers that insert into tables with RLS (like notifications), since triggers run as the invoking user who may not have insert permissions.
 
 ## Conventions
+
+- **Terminology: the GM has no PCs (locked 2026-05-22).** A **PC** is a Player Character (player-controlled). An **NPC** is a Non-Player Character (GM-controlled). The GM controls NPCs only. NEVER write "GM's PC" or "GM PC" in docs, UI copy, or comments - it's a category error; the GM-controlled combatant is an NPC. Caveat: "**non-GM PC**" is CORRECT and stays - it means a PC controlled by a non-GM user (a player's character), used in RLS/permission contexts.
 - **"new window time?" = handoff prompt**: When the user asks `new window time?`, respond with a concise, self-contained prompt they can paste into a new chat to resume. Shape: `I want to <task>. Load <relevant spec files> first.` Should reference the project-surviving files (tasks/todo.md, tasks/spec-*.md, tasks/rules-extract-*.md, tasks/testplan.md, tasks/lessons.md) so fresh-me has everything needed without re-litigating the last session. Example: `I want to build Phase C Communities — weekly Morale Check, Fed/Clothed resource checks, Activity Blocks. Load tasks/spec-communities.md and tasks/rules-extract-communities.md first.` Don't include stuff only meaningful in the current session (recent commit hashes, "we just shipped X"); stick to things fresh-me can actually reload.
 
 ## Process

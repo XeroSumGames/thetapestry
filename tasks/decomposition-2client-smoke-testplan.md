@@ -47,9 +47,9 @@ One browser, as GM. No second client needed. After the leaf batches deploy, walk
 
 TWO browsers. The failure mode is "turn order desyncs between GM and player." ~5 min.
 
-- [ ] **Start combat.** GM clicks Start Combat. Add the GM PC + player PC + 1 NPC to initiative.
+- [ ] **Start combat.** GM clicks Start Combat. Add the player PC + 2 NPCs to initiative (the GM controls the NPCs - the GM has no PC).
   - **PASS:** both windows show the same initiative order, same active combatant.
-- [ ] **Take a turn (GM's PC active).** On Window 1, the GM PC takes an action (any attack or check).
+- [ ] **Take a turn (NPC active).** On Window 1, the GM has the active NPC take an action (any attack or check).
   - **PASS:** action count decrements on BOTH windows. Same combatant still active on both.
 - [ ] **Advance turn.** GM clicks next-turn (or the PC ends turn).
   - **PASS:** BOTH windows advance to the next combatant simultaneously. No window stuck on the old turn.
@@ -57,6 +57,7 @@ TWO browsers. The failure mode is "turn order desyncs between GM and player." ~5
   - **PASS:** both windows see it; action decrements on both.
 - [ ] **Aim.** Active combatant clicks Aim.
   - **PASS:** next attack shows +2 CMod. Aim doesn't double-consume the action.
+  - **KNOWN FAILURE (found 2026-05-22):** the +2 shows in the AIM box / CMod field but is NOT applied to the roll total or the feed-log breakdown (`[3+5] +1 = 9`, +2 dropped). Aim is currently a no-op on the actual roll. Logged in `tasks/todo.md`; to be fixed in the Phase 3 `useRollResolution` rebuild (NOT to be behavior-preserved). Re-verify here once Phase 3 lands.
 - [ ] **Sprint.** A combatant sprints.
   - **PASS:** 2 actions granted, Athletics roll fires, initiative re-order is consistent on both windows.
 - [ ] **End combat.** GM ends combat.

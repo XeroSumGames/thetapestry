@@ -52,7 +52,7 @@ economy → roll_log; durable life events → progression_log.
 ## Test cases
 
 ### Cuts (verify they no longer log)
-1. **Start a session** → open the GM's PC sheet → expand Progression Log → no
+1. **Start a session** → open a PC's sheet → expand Progression Log → no
    "Session N began" entry appended.
 2. **End a session** → same → no "Session N ended" entry.
 3. **Pre-roll 3d6 Insight Die** on any attack/skill roll → resolve → no

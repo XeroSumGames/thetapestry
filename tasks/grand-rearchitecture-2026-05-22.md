@@ -107,6 +107,7 @@ Bottom-up this time. Build the seams, prove them on the table page (the referenc
 - **3a.** Replace its 277 `.from(` with `lib/data` calls (seam-leakage counter falls).
 - **3b.** Replace its 11 channels / 44 events with `useCampaignChannel` + the typed registry (`[campaignId]` deps; kills the resubscribe bug).
 - **3c.** Extract trunk hooks on the seams: `useCampaignState`, `useTacticalSync`, `useInitiative` (ReadyWeapon rides here), `useGmTools` (absorbs the modal prop-threading + repays the loose-`any` debt), `useRollResolution` (on the tested roll core), `useTableRealtime`.
+  - **FIX-DO-NOT-PRESERVE list (known bugs that must NOT survive the behavior-preserving rebuild):** (1) **Aim's +2 CMod is dropped from the roll total + log** (found 2026-05-22; modal shows +2, roll computes only +1 AMod). The single-`RollContext` design must carry the Aim/CMod value end-to-end. Verify against the decomposition smoke Aim step. Add to this list as more smoke failures surface.
 - **3d.** Thin `page.tsx` to a < 400-line orchestrator. Strip its 72 console writes, fix/verify the recorder gate, resolve or wire the `alert()` placeholders.
 - **Gate per step:** tsc + suite. Realtime/roll steps get their 2-client validation at final acceptance (Phase 7).
 - **End:** run the reference checklist against the table page; it MUST pass.
