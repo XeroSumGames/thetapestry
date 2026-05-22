@@ -36,6 +36,7 @@ import { ReloadPickerModal } from './components/ReloadPickerModal'
 import { RestorePickerModal } from './components/RestorePickerModal'
 import { GrantAdvantageModal } from './components/GrantAdvantageModal'
 import { FeedColumn } from './components/FeedColumn'
+import { CommunityStatusModal } from './components/CommunityStatusModal'
 import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from '../../../../lib/npc-drag-drop'
 import {
   type Advantage,
@@ -52,7 +53,6 @@ const TacticalMap = dynamic(() => import('../../../../components/TacticalMap'), 
 // `loading: () => null` keeps the gate's outer container empty during the
 // chunk fetch instead of showing a Next.js default placeholder.
 const QuickAddModal = dynamic(() => import('../../../../components/QuickAddModal'), { ssr: false, loading: () => null })
-const CampaignCommunity = dynamic(() => import('../../../../components/CampaignCommunity'), { ssr: false, loading: () => null })
 const GmNotes = dynamic(() => import('../../../../components/GmNotes'), { ssr: false, loading: () => null })
 const PlayerNotes = dynamic(() => import('../../../../components/PlayerNotes'), { ssr: false, loading: () => null })
 const CampaignPins = dynamic(() => import('../../../../components/CampaignPins'), { ssr: false, loading: () => null })
@@ -10580,29 +10580,16 @@ export default function TablePage() {
           page so players can check pending requests / Apprentice links /
           role coverage without leaving their PC view. Click the backdrop
           or ✕ to close. */}
-      {showCommunityModal && (
-        <div onClick={() => setShowCommunityModal(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ background: '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '4px', width: '100%', maxWidth: '560px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: '14px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>Community</div>
-              <button onClick={() => setShowCommunityModal(false)}
-                style={{ background: 'none', border: 'none', color: '#d4cfc9', fontSize: '20px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}
-                title="Close">✕</button>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-              <CampaignCommunity
-                campaignId={id}
-                isGM={gmLike}
-                initialMode={communityModalMode}
-                initialModeToken={communityModalToken}
-                onOpenTradeWithCommunity={myEntry ? (communityId) => setTradeTarget({ kind: 'community', id: communityId }) : undefined}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <CommunityStatusModal
+        open={showCommunityModal}
+        onClose={() => setShowCommunityModal(false)}
+        campaignId={id}
+        isGM={gmLike}
+        communityModalMode={communityModalMode}
+        communityModalToken={communityModalToken}
+        myEntry={myEntry}
+        setTradeTarget={setTradeTarget}
+      />
 
       {/* Grapple Modal */}
       {showGrappleModal && (() => {
