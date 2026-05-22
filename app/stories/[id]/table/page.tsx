@@ -495,7 +495,8 @@ export default function TablePage() {
   // now lives in useGmTools (re-arch Phase 3); destructured below.
   // Loot cluster (showLootModal/lootItems/lootRecipients) now lives in
   // useGmTools (re-arch Phase 3); destructured below.
-  const [showCdpModal, setShowCdpModal] = useState(false)
+  // CDP cluster (showCdpModal/cdpAmount/cdpRecipients) now lives in
+  // useGmTools (re-arch Phase 3); destructured below.
   // GM Tools → Populate. Bulk-generate NPCs distributed across the
   // 1A:2F:3G:4B "triangle" per spec on 2026-04-30. populateBusy
   // gates the button while the bulk insert runs.
@@ -509,8 +510,6 @@ export default function TablePage() {
   const [showAdvanceTimeModal, setShowAdvanceTimeModal] = useState(false)
   const [advanceTimeHours, setAdvanceTimeHours] = useState(1)
   const [advanceTimeBusy, setAdvanceTimeBusy] = useState(false)
-  const [cdpAmount, setCdpAmount] = useState(1)
-  const [cdpRecipients, setCdpRecipients] = useState<Set<string>>(new Set())
   const [presenceCount, setPresenceCount] = useState(0)
   // Set of user_ids currently subscribed to the table page presence
   // channel. Driven by the same Realtime channel as presenceCount;
@@ -781,6 +780,9 @@ export default function TablePage() {
     showLootModal, setShowLootModal,
     lootItems, setLootItems,
     lootRecipients, setLootRecipients,
+    showCdpModal, setShowCdpModal,
+    cdpAmount, setCdpAmount,
+    cdpRecipients, setCdpRecipients,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,

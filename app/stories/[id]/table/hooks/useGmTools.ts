@@ -45,6 +45,11 @@ export function useGmTools() {
   const [lootItems, setLootItems] = useState<{ name: string; qty: number; notes: string }[]>([])
   const [lootRecipients, setLootRecipients] = useState<Set<string>>(new Set())
 
+  // --- CDP cluster (GM Tools -> award Character Development Points) ---
+  const [showCdpModal, setShowCdpModal] = useState(false)
+  const [cdpAmount, setCdpAmount] = useState(1)
+  const [cdpRecipients, setCdpRecipients] = useState<Set<string>>(new Set())
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -64,5 +69,8 @@ export function useGmTools() {
     showLootModal, setShowLootModal,
     lootItems, setLootItems,
     lootRecipients, setLootRecipients,
+    showCdpModal, setShowCdpModal,
+    cdpAmount, setCdpAmount,
+    cdpRecipients, setCdpRecipients,
   }
 }
