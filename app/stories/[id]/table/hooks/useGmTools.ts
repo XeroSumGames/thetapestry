@@ -10,6 +10,7 @@
 // (a missed name fails to resolve). Once all clusters are in, the modals can
 // take the returned object directly and the prop-threading drops away.
 import { useState } from 'react'
+import { type CampaignSnapshot } from '../../../../../lib/campaign-snapshot'
 
 export function useGmTools() {
   // --- Grant Advantage cluster (GM Tools -> Grant Advantage + the rolls-feed award button) ---
@@ -24,6 +25,16 @@ export function useGmTools() {
   // button on the rolls feed; null when granting free-form from GM Tools.
   const [grantSourceRollLogId, setGrantSourceRollLogId] = useState<string | null>(null)
 
+  // --- Restore cluster (GM Tools -> Restore to full health: NPCs + destructible objects) ---
+  const [showRestorePicker, setShowRestorePicker] = useState(false)
+  const [restoreNpcIds, setRestoreNpcIds] = useState<Set<string>>(new Set())
+  const [restoring, setRestoring] = useState(false)
+  // Snapshot of damaged destructible scene_tokens at the moment Restore opens.
+  // We can't rely on mapTokens because it's only populated while TacticalMap
+  // is mounted, so opening Restore from the campaign-map view silently lost
+  // every crate/barrel/vehicle.
+  const [restoreObjects, setRestoreObjects] = useState<{ id: string; name: string; wp_max: number }[]>([])
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -33,5 +44,9 @@ export function useGmTools() {
     grantSubmitting, setGrantSubmitting,
     grantError, setGrantError,
     grantSourceRollLogId, setGrantSourceRollLogId,
+    showRestorePicker, setShowRestorePicker,
+    restoreNpcIds, setRestoreNpcIds,
+    restoring, setRestoring,
+    restoreObjects, setRestoreObjects,
   }
 }

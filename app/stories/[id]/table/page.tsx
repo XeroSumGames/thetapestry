@@ -489,14 +489,8 @@ export default function TablePage() {
   }, [activeIdForReset])
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
-  const [showRestorePicker, setShowRestorePicker] = useState(false)
-  const [restoreNpcIds, setRestoreNpcIds] = useState<Set<string>>(new Set())
-  const [restoring, setRestoring] = useState(false)
-  // Snapshot of damaged destructible scene_tokens at the moment Restore opens.
-  // We can't rely on mapTokens because it's only populated while TacticalMap
-  // is mounted, so opening Restore from the campaign-map view silently lost
-  // every crate/barrel/vehicle.
-  const [restoreObjects, setRestoreObjects] = useState<{ id: string; name: string; wp_max: number }[]>([])
+  // Restore cluster (showRestorePicker/restoreNpcIds/restoring/restoreObjects)
+  // now lives in useGmTools (re-arch Phase 3); destructured below.
   // Reload - quick GM-Tools snapshot picker for "rewind the scene to a save point"
   // without leaving the table. Picker fetches snapshots on open (small list,
   // ~dozens per campaign, single .select). Restoring runs via the same
@@ -783,6 +777,10 @@ export default function TablePage() {
     grantSubmitting, setGrantSubmitting,
     grantError, setGrantError,
     grantSourceRollLogId, setGrantSourceRollLogId,
+    showRestorePicker, setShowRestorePicker,
+    restoreNpcIds, setRestoreNpcIds,
+    restoring, setRestoring,
+    restoreObjects, setRestoreObjects,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,
