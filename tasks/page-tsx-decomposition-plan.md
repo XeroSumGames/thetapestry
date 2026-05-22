@@ -2,10 +2,14 @@
 
 > Planning artifact for Phase 3 of the pre-launch audit (see [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05-17.md)). Produced 2026-05-17 by a Plan-subagent code-read of the 12,429-line file. This is the spec future sessions execute against. No code lands today.
 
-**Target:** `app/stories/[id]/table/page.tsx` (**13,565 lines** as of 2026-05-21 @ 5bdbf31; was 12,429 at plan-authoring 2026-05-17; **+1,136 in 4 days** from feature/fix accretion - the file is growing faster than it is being decomposed)
-**Decomposition landed so far:** `hooks/useHeaderMenus.ts`, `components/FirstImpressionModal.tsx`, `types.ts` (~720 LOC across the three siblings). The plan's leaf Batches A/B/C (the ~60% cut) have NOT been pulled. `executeRoll` is still the worst function (now at L5036, ~1850 LOC).
+**Target:** `app/stories/[id]/table/page.tsx` (**12,982 lines** as of 2026-05-21 @ e144513; peaked at 13,565 this session, was 12,429 at plan-authoring 2026-05-17). The dedicated re-architecture push (Xero mandate 2026-05-21) is now actively shrinking it - execution plan at [tasks/table-rearchitecture-2026-05-21.md](table-rearchitecture-2026-05-21.md), progress in the harness task list.
+**Decomposition landed so far (re-arch session 2026-05-21, 10 commits, zero breakage):**
+- Step 0a: `lib/database.types.ts` (generated, 60+ tables).
+- Step 1 (pure roll core + tests): `lib/table-roll-context.ts` (cellDistance / computeBlastSplash / mortalWoundCountdown, 14 tests) + `lib/range-profiles` tests (12). executeRoll rewired to call them; 10 duplicated death-countdown formulas collapsed to 1.
+- Step 2 leaf extractions (7): `hooks/useRecorderToggle.ts`; `components/{CdpModal,LootModal,PopulateModal,AdvanceTimeModal,EndSessionModal,ReloadPickerModal}.tsx`. (Plus pre-existing `hooks/useHeaderMenus.ts`, `components/FirstImpressionModal.tsx`, `types.ts`.)
+**Remaining:** RestorePicker (complex - fresh context); render regions (GM sidebar ~1,800 / main grid / initiative / tactical) = the big LOC collapse; `useGmTools` to absorb modal state currently threaded as props; trunk hooks 3a/3b (ReadyWeapon rides 3b - it calls consumeAction/clearAimIfActive) -> 3c/3d gated on a 2-client smoke. `executeRoll` still the worst function (~L5036, ~1850 LOC) until Step 3c.
 **End state of Phase 3:** thin orchestrator under 500 lines composing hooks + sub-components.
-**Branch baseline:** d2ba6b6 at authoring; current HEAD floats with the lane work. Pre-commit gates: tsc, **476 Vitest tests** (was 141 at authoring), guardrails.
+**Branch baseline:** d2ba6b6 at authoring; current HEAD floats with the lane work. Pre-commit gates: tsc, **502 Vitest tests** (was 141 at authoring), guardrails.
 
 ---
 
