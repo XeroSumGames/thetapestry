@@ -8,6 +8,7 @@
 // (which reloads entries + the feed).
 
 import { OUTCOME } from '../../../../../lib/roll-outcomes'
+import { insertRollLog } from '../../../../../lib/data/roll-log'
 
 interface CdpModalProps {
   open: boolean
@@ -75,7 +76,7 @@ export function CdpModal({
               names.push(entry.character.name)
             }
             const cdpNoun = cdpAmount === 1 ? 'Character Development Point' : 'Character Development Points'
-            await supabase.from('roll_log').insert({
+            await insertRollLog({
               campaign_id: campaignId, user_id: userId, character_name: 'System',
               label: `📚 +${cdpAmount} ${cdpNoun} awarded to ${names.join(', ')}`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.cdp,

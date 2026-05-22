@@ -9,6 +9,8 @@
 // optimistic-patch ordering, the per-table Promise.all waves, and the
 // background refetch.
 
+import { getCampaignNpcs } from '../../../../../lib/data/campaign-npcs'
+
 interface RestorePickerModalProps {
   open: boolean
   onClose: () => void
@@ -233,7 +235,7 @@ export function RestorePickerModal({
                 initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
               }
               const [{ data: freshNpcs }] = await Promise.all([
-                supabase.from('campaign_npcs').select('*').eq('campaign_id', campaignId),
+                getCampaignNpcs(campaignId),
                 loadEntries(campaignId),
               ])
               if (freshNpcs) {

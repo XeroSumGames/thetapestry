@@ -33,3 +33,12 @@ export function getCampaignNpcs(campaignId: string) {
 export function updateCampaignNpc(id: string, patch: Update<'campaign_npcs'>) {
   return db().from('campaign_npcs').update(patch).eq('id', id)
 }
+
+/**
+ * Insert one or many NPC rows. Drop-in for `supabase.from('campaign_npcs').insert(rows)`.
+ * Payload typed loosely during migration (rows are built dynamically by the
+ * NPC generator); tighten to Insert<'campaign_npcs'> in a later typing pass.
+ */
+export function insertCampaignNpcs(rows: any) {
+  return db().from('campaign_npcs').insert(rows)
+}

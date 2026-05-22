@@ -7,6 +7,7 @@
 // roll_log row, broadcast inventory_transfer, then onGiven() (reload + feed).
 
 import { OUTCOME } from '../../../../../lib/roll-outcomes'
+import { insertRollLog } from '../../../../../lib/data/roll-log'
 
 interface LootItem { name: string; qty: number; notes: string }
 
@@ -105,7 +106,7 @@ export function LootModal({
             // Log to feed
             const names = entries.filter(e => lootRecipients.has(e.character.id)).map(e => e.character.name).join(', ')
             const itemList = lootItems.map(i => `${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''}`).join(', ')
-            await supabase.from('roll_log').insert({
+            await insertRollLog({
               campaign_id: campaignId, user_id: userId, character_name: 'System',
               label: `🎒 Loot: ${itemList} → ${names}`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,

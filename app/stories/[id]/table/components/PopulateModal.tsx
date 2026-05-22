@@ -9,6 +9,7 @@
 
 import { triangleBreakdown } from '../../../../../lib/populate-triangle'
 import { generateRandomNpc } from '../../../../../lib/npc-generator'
+import { insertCampaignNpcs } from '../../../../../lib/data/campaign-npcs'
 
 interface PopulateModalProps {
   open: boolean
@@ -115,7 +116,7 @@ export function PopulateModal({
                 hidden_from_players: true,
               }
             })
-            const { error: insErr } = await supabase.from('campaign_npcs').insert(rows)
+            const { error: insErr } = await insertCampaignNpcs(rows)
             setBusy(false)
             if (insErr) {
               alert(`Populate failed: ${insErr.message}`)

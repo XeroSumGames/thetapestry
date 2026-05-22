@@ -12,6 +12,7 @@
 import { computeEncumbrance } from '../../../../../lib/encumbrance'
 import { advance as advanceCampaignClock } from '../../../../../lib/campaign-clock'
 import { OUTCOME } from '../../../../../lib/roll-outcomes'
+import { insertRollLog } from '../../../../../lib/data/roll-log'
 
 interface AdvanceTimeModalProps {
   open: boolean
@@ -145,7 +146,7 @@ export function AdvanceTimeModal({
             const summaryParts: string[] = []
             for (const p of affectedPcs) summaryParts.push(`${p.name} (${p.cur}→${p.next})`)
             for (const n of affectedNpcs) summaryParts.push(`${n.name} (${n.cur}→${n.next})`)
-            await supabase.from('roll_log').insert({
+            await insertRollLog({
               campaign_id: campaignId, user_id: userId, character_name: 'System',
               label: `⏳ Time advances ${hours}h · overencumbered: ${summaryParts.join(', ')}`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
