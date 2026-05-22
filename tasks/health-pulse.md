@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-22 15:09 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [502 passed, 26 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**New since 12:06:** `4cc4352` drained ledger stale (502/26 confirmed) - **ledger drift RESOLVED**. Rearch step 2 items 8-11 landed (RestorePickerModal, GrantAdvantageModal, FeedColumn, CommunityStatusModal extracted); `9568469` marks leaf phase complete.
+
+**Drift (remaining):**
+- **HOPED-FOR (2026-05-19 batch) day 4** - drain target 2026-05-25 (3 days). No action before playtest.
+- **Upstash KV approval `todo.md:42` still `[ ]`** (10th flag). L-3 shipped; this gate item is stale-open.
+
+**Action:** Close/annotate `todo.md:42` re Upstash retroactive approval. Await 2026-05-25 playtest for HOPED-FOR drain.
+
+---
+
 ## 2026-05-22 12:06 UTC
 
 **Status:** DRIFT
