@@ -168,16 +168,20 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-21 (combat smoke bug batch + morning ships)
+# Session state - 2026-05-22 (GRAND RE-ARCHITECTURE in flight - hook phase next)
+
+**The whole-platform re-architecture is the ONLY active work** (Xero mandate Q1-B: every god-component to the ideal layered architecture before the next playtest; no other work until resolved; break-things-OK; Xero 2-client-smokes everything at the end). The executable spine is **[tasks/grand-rearchitecture-2026-05-22.md](grand-rearchitecture-2026-05-22.md)** - read it first; this section is just the resume pointer.
 
 ## Current main HEAD
+Derive it: `git rev-parse --short HEAD` (was `6e01821` at handoff write). Verify line count + ratchets with `node scripts/check-arch.mjs` and `wc -l "app/stories/[id]/table/page.tsx"`.
 
-`7503179 fix(combat): smoke bug batch - self-blast turn-stall, coord-effort lead banner, faction-aware friendly-fire`
+## Where we are (Phase 3, hook phase)
+- DONE: Phase 1 (fitness harness `scripts/check-arch.mjs` + `lib/realtime/` seam + `lib/data/` seam), Phase 2 gating (initiative-actions tested), and the mechanical `.from` migration (seam-leakage 1324 -> 1266, roll_log fully migrated repo-wide, campaign_npcs reads, 5 GM modals seam-consistent).
+- IN FLIGHT: `app/stories/[id]/table/hooks/useGmTools.ts` exists with the Grant Advantage cluster extracted (the hook-extraction pattern is proven). Grow it one modal-cluster at a time (restore / reload / loot / cdp / populate / advance-time / end-session / community), page destructures everything (behavior-identical, tsc-verified).
+- NEXT (fresh context, in order): the four combat-critical hooks - `useTacticalSync` (3a, fixes GM-pinned-to-tactical) -> `useInitiative` (3b, fixes nextTurn perf) -> `useRollResolution` (3c, fixes CMod-dropped; rebuilds ~1,850-line executeRoll) -> `useTableRealtime` (3d, onto useCampaignChannel). Each fixes its smoke-found bug as **fix-do-NOT-preserve** (list: grand plan Phase 3 + tasks/todo.md). Each needs Xero's **2-client smoke** as the acceptance gate.
 
-(Plus this handoff commit on top.) One pre-staged branch still sitting unmerged:
-- `claude/phase4-prestage` at `3671c68` - retires the legacy executeRoll branches for Stabilize / Distract / Gut Instinct (-108/+12). **Do NOT merge before the Monday 2026-05-25 playtest verifies all three dedicated modals.** Merge command in `tasks/todo.md`.
-
-The `claude/combat-smoke` worktree is merged and safe to remove (`git worktree remove .claude/worktrees/combat-smoke`); keep it only if you want to flip the SMOKE-3 design (see below).
+## Still-relevant pre-existing item
+- `claude/phase4-prestage` at `3671c68` - retires legacy executeRoll branches (Stabilize/Distract/Gut Instinct, -108/+12). **Do NOT merge before a playtest verifies all three dedicated modals.** Note: the Phase 3c useRollResolution rebuild supersedes/absorbs this - reconcile when you get there. Merge command in `tasks/todo.md`.
 
 ## What shipped 2026-05-21
 
