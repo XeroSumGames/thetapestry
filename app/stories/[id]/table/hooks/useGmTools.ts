@@ -66,6 +66,19 @@ export function useGmTools() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
 
+  // --- Community Status modal cluster - opens the full CampaignCommunity
+  // management view as an overlay on the table. communityModalMode tells
+  // CampaignCommunity which panel to auto-expand (status -> first community
+  // unfolded; create -> the create form open). ---
+  const [showCommunityModal, setShowCommunityModal] = useState(false)
+  const [communityModalMode, setCommunityModalMode] = useState<'status' | 'create'>('status')
+  const [communityModalToken, setCommunityModalToken] = useState(0)
+  function openCommunityModal(mode: 'status' | 'create') {
+    setCommunityModalMode(mode)
+    setCommunityModalToken(t => t + 1)
+    setShowCommunityModal(true)
+  }
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -96,5 +109,9 @@ export function useGmTools() {
     advanceTimeBusy, setAdvanceTimeBusy,
     showEndSessionModal, setShowEndSessionModal,
     submittedPlayerNotes, setSubmittedPlayerNotes,
+    showCommunityModal, setShowCommunityModal,
+    communityModalMode, setCommunityModalMode,
+    communityModalToken, setCommunityModalToken,
+    openCommunityModal,
   }
 }

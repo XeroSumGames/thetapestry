@@ -520,21 +520,9 @@ export default function TablePage() {
   // plus the pin-only flag + seed lat/lng.
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [qaHideCommunity, setQaHideCommunity] = useState(false)
-  // Community Status modal - opens the full CampaignCommunity management
-  // view (pending requests, member roles, PC/NPC roster, founder flows)
-  // as an overlay on the table. Triggered via the Community ▾ → Status
-  // dropdown item so players don't have to leave /table to inspect the
-  // current state of their community. `communityModalMode` tells
-  // CampaignCommunity which panel to auto-expand on open (status →
-  // first community unfolded; create → the create form open).
-  const [showCommunityModal, setShowCommunityModal] = useState(false)
-  const [communityModalMode, setCommunityModalMode] = useState<'status' | 'create'>('status')
-  const [communityModalToken, setCommunityModalToken] = useState(0)
-  function openCommunityModal(mode: 'status' | 'create') {
-    setCommunityModalMode(mode)
-    setCommunityModalToken(t => t + 1)
-    setShowCommunityModal(true)
-  }
+  // Community Status modal cluster (showCommunityModal/communityModalMode/
+  // communityModalToken/openCommunityModal) now lives in useGmTools
+  // (re-arch Phase 3); destructured below.
   const [qaPinLat, setQaPinLat] = useState<string>('')
   const [qaPinLng, setQaPinLng] = useState<string>('')
 
@@ -782,6 +770,10 @@ export default function TablePage() {
     advanceTimeBusy, setAdvanceTimeBusy,
     showEndSessionModal, setShowEndSessionModal,
     submittedPlayerNotes, setSubmittedPlayerNotes,
+    showCommunityModal, setShowCommunityModal,
+    communityModalMode, setCommunityModalMode,
+    communityModalToken, setCommunityModalToken,
+    openCommunityModal,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,
