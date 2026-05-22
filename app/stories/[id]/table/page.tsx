@@ -75,6 +75,7 @@ import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../.
 import { distractActionDelta, distractNarrative } from '../../../../lib/distract-helpers'
 import { gutInstinctSmod } from '../../../../lib/gut-instinct-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
+import { computeBlastSplash, mortalWoundCountdown } from '../../../../lib/table-roll-context'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
@@ -4585,7 +4586,7 @@ export default function TablePage() {
     } else {
       // Apply full damage - WP=0 with death countdown + Stress pip on entry
       // to mortal-wound (rule: any mortal/incap transition fills one pip).
-      const deathCountdown = Math.max(1, 4 + phyAmod)
+      const deathCountdown = mortalWoundCountdown(phyAmod)
       const targetEntry = entries.find(e => e.stateId === stateId)
       const newStress = Math.min(5, (targetEntry?.liveState.stress ?? 0) + 1)
       await supabase.from('character_states').update({
@@ -5527,7 +5528,7 @@ export default function TablePage() {
           // would fire on the same hit, so only one pip per event.
           let stressReason: string | null = null
           if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
-            update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
+            update.death_countdown = mortalWoundCountdown(targetEntry.character.data?.rapid?.PHY ?? 0)
             update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
             stressReason = 'Mortally Wounded'
             await supabase.from('roll_log').insert({
@@ -5617,7 +5618,7 @@ export default function TablePage() {
         const npcUpdate: any = { wp_current: newWP, rp_current: newRP }
         // Mortal wound - NPC enters death countdown when WP first hits 0
         if (newWP === 0 && npcWP > 0) {
-          npcUpdate.death_countdown = Math.max(1, 4 + (targetNpc.physicality ?? 0))
+          npcUpdate.death_countdown = mortalWoundCountdown(targetNpc.physicality ?? 0)
           // Log the mortal wound to the game feed
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId,
@@ -5903,19 +5904,13 @@ export default function TablePage() {
             // primary target is skipped here because they take damage
             // through the named-attack path above.
             if (isPrimary) continue
-            const dist = Math.max(Math.abs(tok.grid_x - targetTok.grid_x), Math.abs(tok.grid_y - targetTok.grid_y))
-            const feet = dist * ft
-            // Per playtest 2026-04-27: drop the Medium 25% tier. Grenades
-            // stay dangerous to throwers but stop killing bystanders 50ft+
-            // away through walls. Engaged = full, Close = half, beyond
-            // Close = nothing.
-            if (feet > 30) continue
-            const scale = feet <= 5 ? 1.0 : 0.5
-            // Splash uses raw blast WP/RP - see CRB note where blastRawWP
-            // is computed. Splash victims don't inherit primary's mitigation.
-            const splashWP = Math.max(1, Math.floor(blastRawWP * scale))
-            const splashRP = Math.max(0, Math.floor(blastRawRP * scale))
-            const rangeBand = feet <= 5 ? 'Engaged' : feet <= 30 ? 'Close' : 'Far'
+            // Blast radius + scaled splash math lives in lib/table-roll-context
+            // (tested). Per playtest 2026-04-27: Engaged (<=5ft) full, Close
+            // (<=30ft) half, beyond Close nothing. Splash uses raw blast WP/RP -
+            // splash victims don't inherit the primary's mitigation.
+            const splash = computeBlastSplash(tok.grid_x, tok.grid_y, targetTok.grid_x, targetTok.grid_y, ft, blastRawWP, blastRawRP)
+            if (!splash) continue
+            const { splashWP, splashRP, band: rangeBand } = splash
             const splashPC = entries.find(e => e.character.id === tok.character_id)
             if (splashPC?.liveState) { jobs.push({ kind: 'pc', tok, pc: splashPC, splashWP, splashRP, rangeBand }); continue }
             const splashNpc = campaignNpcs.find((n: any) => n.id === tok.npc_id)
@@ -5960,7 +5955,7 @@ export default function TablePage() {
               const update: any = { wp_current: nWP, rp_current: nRP, updated_at: nowIso }
               let splashStressReason: string | null = null
               if (nWP === 0 && curWP > 0) {
-                update.death_countdown = Math.max(1, 4 + (job.pc.character.data?.rapid?.PHY ?? 0))
+                update.death_countdown = mortalWoundCountdown(job.pc.character.data?.rapid?.PHY ?? 0)
                 update.stress = Math.min(5, curStress + 1)
                 splashStressReason = 'Mortally Wounded'
               }
@@ -5988,7 +5983,7 @@ export default function TablePage() {
               const nWP = Math.max(0, curWP - job.splashWP)
               const nRP = Math.max(0, curRP - job.splashRP)
               const npcUpd: any = { wp_current: nWP, rp_current: nRP }
-              if (nWP === 0 && curWP > 0) npcUpd.death_countdown = Math.max(1, 4 + (job.npc.physicality ?? 0))
+              if (nWP === 0 && curWP > 0) npcUpd.death_countdown = mortalWoundCountdown(job.npc.physicality ?? 0)
               if (nRP === 0 && curRP > 0 && nWP > 0) npcUpd.incap_rounds = Math.max(1, 4 - (job.npc.physicality ?? 0))
               tableUpdates.push(supabase.from('campaign_npcs').update(npcUpd).eq('id', job.npc.id))
               npcLocalPatches.set(job.npc.id, npcUpd)
@@ -6150,7 +6145,7 @@ export default function TablePage() {
           const newWp = Math.max(0, (ts.wp_current ?? 0) - immediateDmg)
           const update: any = { wp_current: newWp, updated_at: new Date().toISOString() }
           if (newWp === 0 && (ts.wp_current ?? 0) > 0) {
-            update.death_countdown = Math.max(1, 4 + ((myEntry.character.data?.rapid?.PHY ?? 0)))
+            update.death_countdown = mortalWoundCountdown(myEntry.character.data?.rapid?.PHY ?? 0)
             update.stress = Math.min(5, (ts.stress ?? 0) + 1)
           }
           await supabase.from('character_states').update(update).eq('id', ts.id)
@@ -6224,7 +6219,7 @@ export default function TablePage() {
               const newWP = Math.max(0, myEntry.liveState.wp_current - 1)
               const upkeepUpdate: any = { wp_current: newWP }
               if (newWP === 0 && myEntry.liveState.wp_current > 0) {
-                upkeepUpdate.death_countdown = Math.max(1, 4 + (myEntry.character.data?.rapid?.PHY ?? 0))
+                upkeepUpdate.death_countdown = mortalWoundCountdown(myEntry.character.data?.rapid?.PHY ?? 0)
                 upkeepUpdate.stress = Math.min(5, (myEntry.liveState.stress ?? 0) + 1)
               }
               await supabase.from('character_states').update(upkeepUpdate).eq('id', myEntry.stateId)
@@ -6275,7 +6270,7 @@ export default function TablePage() {
               const newWP = Math.max(0, myEntry.liveState.wp_current - 1)
               const unjamUpdate: any = { wp_current: newWP }
               if (newWP === 0 && myEntry.liveState.wp_current > 0) {
-                unjamUpdate.death_countdown = Math.max(1, 4 + (myEntry.character.data?.rapid?.PHY ?? 0))
+                unjamUpdate.death_countdown = mortalWoundCountdown(myEntry.character.data?.rapid?.PHY ?? 0)
                 unjamUpdate.stress = Math.min(5, (myEntry.liveState.stress ?? 0) + 1)
               }
               await supabase.from('character_states').update(unjamUpdate).eq('id', myEntry.stateId)
@@ -6983,7 +6978,7 @@ export default function TablePage() {
         const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
         let rerollStressReason: string | null = null
         if (tNewWP === 0 && targetEntry.liveState.wp_current > 0) {
-          update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
+          update.death_countdown = mortalWoundCountdown(targetEntry.character.data?.rapid?.PHY ?? 0)
           update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
           rerollStressReason = 'Mortally Wounded'
         }
@@ -7009,7 +7004,7 @@ export default function TablePage() {
         const tNewWP = Math.max(0, tNpcWP - finalWP)
         const tNewRP = Math.max(0, tNpcRP - finalRP)
         const npcUpdate: any = { wp_current: tNewWP, rp_current: tNewRP }
-        if (tNewWP === 0 && tNpcWP > 0) npcUpdate.death_countdown = Math.max(1, 4 + (targetNpcObj.physicality ?? 0))
+        if (tNewWP === 0 && tNpcWP > 0) npcUpdate.death_countdown = mortalWoundCountdown(targetNpcObj.physicality ?? 0)
         if (tNewRP === 0 && tNpcRP > 0 && tNewWP > 0) npcUpdate.incap_rounds = Math.max(1, 4 - (targetNpcObj.physicality ?? 0))
         await supabase.from('campaign_npcs').update(npcUpdate).eq('id', targetNpcObj.id)
         const npcId = targetNpcObj.id
