@@ -16,6 +16,7 @@
 #   - check-role-literals.mjs (no inline role-string comparisons)
 #   - check-preview-sync.mjs (preview file kept in sync with narrative source)
 #   - check-em-dashes.mjs (no em-dash / en-dash in code, per project rule)
+#   - check-arch.mjs (architecture ratchets: LOC ceilings, seam leakage, prod console)
 #   - npm test (Vitest unit suite under tests/**/*.test.ts)
 #
 # To bypass for a single commit (not recommended): git commit --no-verify
@@ -38,6 +39,7 @@ node scripts/check-font-sizes.mjs
 node scripts/check-role-literals.mjs
 node scripts/check-preview-sync.mjs
 node scripts/check-em-dashes.mjs
+node scripts/check-arch.mjs
 npm test --silent
 EOF
 

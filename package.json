@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "arch:check": "node scripts/check-arch.mjs",
+    "arch:save": "node scripts/check-arch.mjs --save"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.51.0",
