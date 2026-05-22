@@ -23,6 +23,7 @@ import { getCachedAuth } from '../../../../lib/auth-cache'
 import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
 import { reportSupabaseError } from '../../../../lib/supabase-errors'
 import { useHeaderMenus } from './hooks/useHeaderMenus'
+import { useRecorderToggle } from './hooks/useRecorderToggle'
 import {
   firstImpressionCmodDelta,
   firstImpressionProgressionMessage,
@@ -60,7 +61,7 @@ import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
-import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, getRecorder, readCampaignEnabled, writeCampaignEnabled } from '../../../../lib/playtest-recorder'
+import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, writeCampaignEnabled } from '../../../../lib/playtest-recorder'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
@@ -144,69 +145,14 @@ export default function TablePage() {
   // decomposition). Behavior unchanged.
   const { openHeaderMenu, setOpenHeaderMenu, isMenuPinned, setIsMenuPinned } = useHeaderMenus()
 
+  // Tab-local playtest-recorder lifecycle (extracted -> hooks/useRecorderToggle).
+  // GM-cascaded: toggleRecorder broadcasts recorder_start/stop; the matching
+  // .on handlers in the realtime effect below call the setRecorderEnabled here.
+  const { recorderEnabled, recorderToggling, toggleRecorder, setRecorderEnabled } = useRecorderToggle(id, initChannelRef)
+
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
   // anything outside that closes the menu.
-  // Recorder state sync - TAB-LOCAL ONLY. Each browser controls its
-  // OWN recorder; no DB writes, no realtime subscription, no global
-  // gate (all of that was removed in e53211b along with the orphan
-  // /record admin page). Previous "shared playtest_recorder_config"
-  // shape flipped every connected client whenever any user clicked.
-  // Wrong for the playtester workflow: a player records THEIR
-  // session, independent of the GM.
-  //
-  // Mount: resume capture if a previous tab on this campaign persisted
-  // the enabled flag to localStorage (refresh / back-nav / GM-cascade
-  // start from another tab). Otherwise mirror the in-memory flag.
-  // Key: tapestry_recorder_enabled_<campaignId>. Written by the GM's
-  // toggleRecorder AND by every tab's recorder_start / recorder_stop
-  // broadcast handler, so this survives every nav path including the
-  // "Alex hit Stop without ever hitting Start" failure mode (the Stop
-  // button is now GM-only, see the button JSX below).
-  useEffect(() => {
-    const persisted = readCampaignEnabled(id)
-    if (persisted) {
-      recorderSetEnabled(true)
-      setRecorderEnabled(true)
-    } else {
-      const r = getRecorder()
-      if (r) setRecorderEnabled(!!r.enabled)
-    }
-  }, [id])
-
-  // Toggle the recorder ON/OFF from the table page - GM-CASCADED.
-  //
-  // GM owns the lifecycle. GM's click does the work locally AND
-  // broadcasts recorder_start / recorder_stop on initChannelRef so
-  // every connected player tab flips its capture flag in lockstep.
-  // The localStorage write (writeCampaignEnabled) survives refresh /
-  // back-nav / tab-close on every tab, so capture resumes on the
-  // next /table mount without user action.
-  //
-  // Supabase broadcasts do not loop back to the sender by default -
-  // this handler does the local actions explicitly (wipe / dump /
-  // setEnabled). The matching .on('broadcast', ...) handlers below
-  // run the same actions on every receiving tab.
-  async function toggleRecorder() {
-    if (recorderToggling) return
-    setRecorderToggling(true)
-    const next = !recorderEnabled
-    if (next) {
-      recorderWipeBuffer()
-      recorderSetEnabled(true)
-      writeCampaignEnabled(id, true)
-      initChannelRef.current?.send({ type: 'broadcast', event: 'recorder_start', payload: { campaignId: id } })
-    } else {
-      const filename = recorderDownloadDump()
-      if (filename) console.warn('[recorder] auto-downloaded:', filename)
-      recorderSetEnabled(false)
-      writeCampaignEnabled(id, false)
-      initChannelRef.current?.send({ type: 'broadcast', event: 'recorder_stop', payload: { campaignId: id } })
-    }
-    setRecorderEnabled(next)
-    setRecorderToggling(false)
-  }
-
   // outside-click + ESC handling for header menus now lives inside
   // useHeaderMenus (see import at top + hook call above).
   // Per-PC stress memory - used to detect the <5 → 5 transition at the
@@ -580,16 +526,6 @@ export default function TablePage() {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set())
   const presenceChannelRef = useRef<any>(null)
 
-  // Playtest recorder ON/OFF mirror - local state driven by the
-  // playtest_recorder_config row. Lives on the table page so the GM
-  // can flip ON / STOP without leaving the session tab (closing the
-  // session tab kills its localStorage-backed recorder buffer, so the
-  // GM controlling from /record in a separate tab risks losing
-  // everything when they close the session tab to end). The toggle
-  // writes to the DB; the existing Realtime subscription in
-  // PlaytestRecorder.tsx handles wipe-on-ON / auto-download-on-OFF.
-  const [recorderEnabled, setRecorderEnabled] = useState<boolean>(false)
-  const [recorderToggling, setRecorderToggling] = useState<boolean>(false)
 
   // Session
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
