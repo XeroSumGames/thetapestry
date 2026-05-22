@@ -95,6 +95,8 @@ TWO browsers. This is the riskiest extraction. The failure mode is "rolls comput
 
 **PASS all:** Trunk 2 is good. This was the scary one. Proceed to Trunk 3.
 
+**RESULT 2026-05-22 (baseline run on current/un-migrated code):** PASS overall ("seems good, if a little slow at times" - Xero). Two items logged, NOT blocking: (1) the CMod-stacking KNOWN FAILURE above (CMod dropped from total + breakdown); (2) PERF - `nextTurn` runs 656ms-3,638ms (sequential DB round-trips), flagged as a useInitiative Phase-3 batch/optimistic target. Both in `tasks/todo.md`.
+
 **FAIL:** note the exact action + what you saw vs expected. This is `executeRoll` - the highest-value revert. Roll back Trunk 2, re-do (and confirm the pure-helper safety-net step landed first).
 
 ---
