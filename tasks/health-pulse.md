@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-22 18:09 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [502 passed, 26 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**New since 15:09:** `a3294bc` docs(rearch) - architecture + conformance plan answering Xero's two questions. Leaf phase confirmed complete. No code changes.
+
+**Drift (unchanged):**
+- **HOPED-FOR (2026-05-19 batch) day 3** - drain target 2026-05-25 (3 days). No action before playtest.
+- **Upstash KV approval `todo.md:42` still `[ ]`** (11th flag). L-3 shipped; gate item needs close/annotate to stop recurring.
+
+**Action:** Annotate or close `todo.md:42` (Upstash retroactive approval) to silence this flag. Await 2026-05-25 playtest for HOPED-FOR drain.
+
+---
+
 ## 2026-05-22 15:09 UTC
 
 **Status:** DRIFT
