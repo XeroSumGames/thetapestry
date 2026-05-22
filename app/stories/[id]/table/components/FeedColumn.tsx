@@ -123,7 +123,7 @@ export function FeedColumn({
                         setGrantError(null)
                         setShowGrantAdvantage(true)
                       }}
-                      style={{ position: 'absolute', top: '4px', right: '4px', padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', opacity: 0.8 }}>
+                      style={{ position: 'absolute', bottom: '4px', right: '4px', padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', opacity: 0.8 }}>
                       ⭐
                     </button>
                   )}
@@ -180,7 +180,7 @@ export function FeedColumn({
                       setGrantError(null)
                       setShowGrantAdvantage(true)
                     }}
-                    style={{ position: 'absolute', top: '4px', right: '4px', padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', opacity: 0.8 }}>
+                    style={{ position: 'absolute', bottom: '4px', right: '4px', padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', opacity: 0.8 }}>
                     ⭐
                   </button>
                 )}
