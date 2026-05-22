@@ -115,6 +115,7 @@ TWO browsers. The failure mode is "one client stops seeing the other's changes" 
   - **PASS:** GM sees it within ~2s.
 - [ ] **Tactical share toggle.** GM toggles "share tactical view."
   - **PASS:** player's tactical pane opens/closes to match. (This is the `tacticalShared` open-state that breaks if the channel resubscribes - watch it.)
+  - **KNOWN FAILURE (found 2026-05-22):** sharing works, but while shared the GM cannot switch back to the Campaign map - `scene_activated`/`tactical_shared` handlers force `setShowTacticalMap(true)` whenever shared, overriding the GM's toggle. Unshare frees it. Logged in `tasks/todo.md` (needs a design confirm: GM-can-preview-campaign-while-sharing). Fix in the Phase 3 useTacticalSync/useTableRealtime rebuild (do NOT behavior-preserve).
 - [ ] **Logs cleared.** GM starts a new session (clears the feed).
   - **PASS:** both windows clear together. (NOTE: if Y11-e session-archive has shipped, the feed FILTERS rather than wipes - still both clear visually.)
 - [ ] **Background + return.** Background Window 2 for 30s (switch tabs), then return.
@@ -123,6 +124,17 @@ TWO browsers. The failure mode is "one client stops seeing the other's changes" 
   - **PASS:** no repeated "channel" / "subscription" warnings. (A resubscription loop spams the console - that's the R2 failure signature.)
 
 **PASS all:** Trunk 3 is good. The whole decomposition is verified. The orchestrator-compose final commit is trivial (just confirm the page still loads after dead-state pruning).
+
+**RESULT 2026-05-22 (baseline run on current/un-migrated code):** PASS overall ("otherwise good" - Xero) EXCEPT the tactical-share KNOWN FAILURE above (GM pinned to tactical while shared). No channel-resubscription spam observed in the dumps (clean single RECVs). Logged in `tasks/todo.md`; fix in the Phase 3 realtime rebuild.
+
+---
+
+## Whole-smoke result (2026-05-22 baseline, current code)
+Parts 0/1/2/3 all run. PASS overall. Open items, all logged in `tasks/todo.md` and flagged fix-do-NOT-preserve for the grand-rearch Phase 3 (so the rebuild fixes them rather than carrying them forward):
+1. **CMod dropped** from roll total + breakdown (all sources: aim/cover/range) - HIGH, correctness.
+2. **GM pinned to tactical** while sharing (can't return to campaign map) - needs a design confirm.
+3. **`nextTurn` perf** 656ms-3,638ms (sequential round-trips) - optimize via batch + optimistic.
+Plus the band-aid catalog from the architecture audit (118 prod console writes incl. the `playtest-trace`/`kickCheck` lines seen throughout these dumps, the TEMP-WIDENED recorder, `alert()` placeholders).
 
 **FAIL (signature):** a token/fog/initiative change on one window doesn't reach the other, OR the console shows repeated channel resubscriptions. This is `useTableRealtime` with the wrong deps array - it MUST be `[campaignId]` only. Revert Trunk 3, re-do with that constraint.
 
