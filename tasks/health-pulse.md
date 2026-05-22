@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-22 06:08 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [502 passed, 26 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **HOPED-FOR (2026-05-19 batch) now >3 days old.** ~50 commits unplaytested (Tier-2 Recruit, Vehicles Q4-c/d, Advantages P3 Q4-b, FI streamline, table refactor, RLS fix, Sentry, GM Share, NPC UX, playtest recorder, player-bar sort, Stress Check, narrative polish). Drain target: 2026-05-25 playtest per `tasks/pre-playtest-smoke-2026-05-25.md`.
+- **Ledger test count stale (again):** ledger says 476/24 files; actual is 502/26 files (+26 tests, +2 files from rearch step 1 `range-profiles` + blast/mortal-wound math). Run `node scripts/refresh-ledger.mjs` to sync.
+- **Stale-open todo (7th flag):** `todo.md:42` "Approve Upstash KV" still `[ ]`. L-3 shipped (`todo.md:66` is [x]). This decision-gate item likely needs Xero to formally close or note the retroactive approval.
+
+**Action:** (1) Run `node scripts/refresh-ledger.mjs`. (2) Close or annotate `todo.md:42` re Upstash approval. (3) No code action needed for HOPED-FOR — playtest on 2026-05-25 drains it.
+
+---
+
 ## 2026-05-21 21:04 UTC
 
 **Status:** DRIFT
