@@ -79,6 +79,7 @@ TWO browsers. This is the riskiest extraction. The failure mode is "rolls comput
   - **PASS:** the reroll resolves; the feed row updates; both windows agree.
 - [ ] **CMod stacking.** An attack with a CMod (cover, aim, range).
   - **PASS:** the CMod shows in the breakdown; total is correct.
+  - **KNOWN FAILURE (found 2026-05-22):** CMod from any source (cover/aim/range) is dropped from both the breakdown and the total - same root cause as the Aim step above. Logged in `tasks/todo.md`; fix in the Phase 3 `useRollResolution` rebuild (do NOT behavior-preserve). Re-verify here once Phase 3 lands.
 - [ ] **Burst / grenade.** A burst attack OR a grenade against a cell.
   - **PASS:** multi-target / blast resolves; affected combatants take damage; both windows see it.
 - [ ] **Grenade with friendlies in blast.** Throw a grenade where a friendly is in radius.
