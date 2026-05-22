@@ -62,6 +62,10 @@ export function useGmTools() {
   const [advanceTimeHours, setAdvanceTimeHours] = useState(1)
   const [advanceTimeBusy, setAdvanceTimeBusy] = useState(false)
 
+  // --- End Session cluster (GM Tools -> End Session: review submitted player notes) ---
+  const [showEndSessionModal, setShowEndSessionModal] = useState(false)
+  const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
+
   return {
     showGrantAdvantage, setShowGrantAdvantage,
     grantPcId, setGrantPcId,
@@ -90,5 +94,7 @@ export function useGmTools() {
     showAdvanceTimeModal, setShowAdvanceTimeModal,
     advanceTimeHours, setAdvanceTimeHours,
     advanceTimeBusy, setAdvanceTimeBusy,
+    showEndSessionModal, setShowEndSessionModal,
+    submittedPlayerNotes, setSubmittedPlayerNotes,
   }
 }

@@ -512,8 +512,8 @@ export default function TablePage() {
   // Session
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
   const [sessionCount, setSessionCount] = useState(0)
-  const [showEndSessionModal, setShowEndSessionModal] = useState(false)
-  const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
+  // End Session cluster (showEndSessionModal/submittedPlayerNotes) now lives
+  // in useGmTools (re-arch Phase 3); destructured below.
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | 'coordinated_effort' | 'heal' | null>(null)
   // Quick Add modal state - all pin/community form state now lives
   // inside <QuickAddModal>. The table page only tracks open/close
@@ -780,6 +780,8 @@ export default function TablePage() {
     showAdvanceTimeModal, setShowAdvanceTimeModal,
     advanceTimeHours, setAdvanceTimeHours,
     advanceTimeBusy, setAdvanceTimeBusy,
+    showEndSessionModal, setShowEndSessionModal,
+    submittedPlayerNotes, setSubmittedPlayerNotes,
   } = useGmTools()
   // Per-advantage "Use" submission lock so a double-click doesn't fire
   // consume twice (idempotent at the DB level via the .is(consumed_at,
