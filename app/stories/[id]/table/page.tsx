@@ -121,7 +121,6 @@ export default function TablePage() {
     setFeedScrollEl(el)
   }, [rollsFeed.rollFeedRef])
   const channelRef = useRef<any>(null)
-  const initChannelRef = useRef<any>(null)
   const membersChannelRef = useRef<any>(null)
   const npcsChannelRef = useRef<any>(null)
   const npcFetchInFlightRef = useRef(false)  // Suppress realtime callback during manual NPC re-fetch
@@ -152,9 +151,99 @@ export default function TablePage() {
   // decomposition). Behavior unchanged.
   const { openHeaderMenu, setOpenHeaderMenu, isMenuPinned, setIsMenuPinned } = useHeaderMenus()
 
+  // initiative channel (3d.2b) - migrated off the imperative load() setup onto
+  // useCampaignChannel. Gated on userId so the notifications postgres filter has
+  // the real id baked in at subscribe time (matches the old "subscribe after
+  // getUser" behavior). Handlers receive the typed PAYLOAD directly (the
+  // primitive unwraps msg.payload + auto-Sentry-wraps); bodies are otherwise
+  // unchanged and read companion refs (userIdRef/gmLikeRef/...) to stay fresh.
+  // initChannelRef aliases the handle's channelRef so every existing
+  // initChannelRef.current?.send(...) site + the useRollResolution hook are untouched.
+  const initChannel = useCampaignChannel(userId ? id : null, {
+    channelName: `initiative_${id}`,
+    postgres: [
+      { label: 'initiative_order:*', event: '*', table: 'initiative_order', filter: `campaign_id=eq.${id}`, handler: () => loadInitiative(id) },
+      { label: 'notifications:INSERT', event: 'INSERT', table: 'notifications', filter: `user_id=eq.${userId}`, handler: (payload: any) => {
+        if (payload.new?.type === 'session_kick') { alert('You have been removed from this session by the GM.'); window.location.href = `/stories/${id}` }
+      } },
+    ],
+    broadcasts: {
+      recorder_start: () => { recorderWipeBuffer(); recorderSetEnabled(true); writeCampaignEnabled(id, true); setRecorderEnabled(true) },
+      recorder_stop: () => { const filename = recorderDownloadDump(); if (filename) console.warn('[recorder] GM-stopped auto-download:', filename); recorderSetEnabled(false); writeCampaignEnabled(id, false); setRecorderEnabled(false) },
+      combat_ended: () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) },
+      player_kicked: (payload) => { if (payload?.userId === userIdRef.current) { alert('You have been removed from this session by the GM.'); window.location.href = `/stories/${id}` } },
+      combat_started: () => { loadInitiative(id); rollsFeed.refetch() },
+      tactical_shared: (payload) => { setTacticalShared(payload?.shared ?? false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(payload?.shared ?? false) },
+      tactical_unshared: () => { setTacticalShared(false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(false) },
+      scene_activated: () => { if (tacticalSharedRef.current && shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(true); setTokenRefreshKey(k => k + 1) },
+      gut_instinct_resolved: (payload) => {
+        if (!gmLikeRef.current) return
+        if (!payload) return
+        const { pcOwnerId, characterName, outcome } = payload
+        if (!pcOwnerId || !characterName || !outcome) return
+        if (pcOwnerId === userIdRef.current) return
+        setGutInstinctPrompt({ pcOwnerId, characterName, outcome })
+        setGutInstinctDetail('')
+      },
+      token_changed: () => { setTokenRefreshKey(k => k + 1) },
+      turn_changed: () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() },
+      turn_advance_requested: async () => { await nextTurn(); await loadInitiative(id) },
+      logs_cleared: () => { rollsFeed.clear(); chat.clear(); rollsFeed.refetch(); chat.refetch() },
+      npc_damaged: async (payload) => {
+        const { npcId, patch } = payload ?? {}
+        console.warn('[npc_damaged] RECV', { npcId, patch })
+        if (npcId && patch) {
+          setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+          setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+          setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
+        } else {
+          const { data } = await getCampaignNpcs(id)
+          if (data) {
+            setCampaignNpcs(data)
+            setRosterNpcs(data.filter((n: any) => { if (n.status !== 'active') return false; const wp = n.wp_current ?? n.wp_max ?? 10; return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }))
+            setViewingNpcs(prev => prev.map(vn => { const fresh = data.find((f: any) => f.id === vn.id); return fresh ? { ...fresh } as CampaignNpc : vn }))
+          }
+        }
+      },
+      pc_damaged: (payload) => {
+        const sid = payload?.stateId
+        const patch = payload?.patch
+        if (sid && patch) setEntries(prev => prev.map(e => e.stateId === sid ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
+        loadEntries(id)
+      },
+      inventory_transfer: () => { loadEntries(id) },
+      pc_mortal_wound: (payload) => { if (payload && (payload.targetUserId === userIdRef.current || gmLikeRef.current)) setInsightSavePrompt(payload) },
+      pc_mortal_wound_resolved: () => { setInsightSavePrompt(null); loadEntries(id) },
+      lasting_damage_check_request: (payload) => {
+        const data = payload
+        if (!data) return
+        if (data.isPc) { if (data.targetUserId !== userIdRef.current) return } else { if (!gmLikeRef.current) return }
+        let phyAmod = 0
+        if (data.isPc) { const pcEntry = entriesRef.current.find(e => e.character.name === data.name); phyAmod = pcEntry?.character.data?.rapid?.PHY ?? 0 }
+        else { const npcRow = campaignNpcsRef.current.find((n: any) => n.name === data.name); phyAmod = (npcRow as any)?.physicality ?? 0 }
+        handleRollRequest(`${data.name} - Lasting Damage Check`, phyAmod, 0)
+      },
+      infection_check_request: (payload) => {
+        const data = payload
+        if (!data || data.targetUserId !== userIdRef.current) return
+        handleRollRequest(`${data.name} - Infection Check (Wound)`, data.amod ?? 0, 0)
+      },
+      npcs_revealed: async () => {
+        const { data: fresh } = await getCampaignNpcs(id)
+        const freshList = fresh ?? []
+        if (freshList.length > 0) {
+          setCampaignNpcs(freshList)
+          setRosterNpcs(freshList.filter((n: any) => { if (n.status !== 'active') return false; const wp = n.wp_current ?? n.wp_max ?? 10; return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }))
+        }
+        loadRevealedNpcs(myCharIdRef.current, freshList)
+      },
+    },
+  })
+  const initChannelRef = initChannel.channelRef
+
   // Tab-local playtest-recorder lifecycle (extracted -> hooks/useRecorderToggle).
-  // GM-cascaded: toggleRecorder broadcasts recorder_start/stop; the matching
-  // .on handlers in the realtime effect below call the setRecorderEnabled here.
+  // GM-cascaded: toggleRecorder broadcasts recorder_start/stop; the recorder_start/
+  // recorder_stop handlers on the initiative channel above call setRecorderEnabled here.
   const { recorderEnabled, recorderToggling, toggleRecorder, setRecorderEnabled } = useRecorderToggle(id, initChannelRef)
 
   // Close any open header-bar dropdown on outside click or ESC. The
@@ -1252,238 +1341,9 @@ export default function TablePage() {
 
       // Chat realtime channel lives inside useChatPanel.
 
-      if (cancelled) return
-      initChannelRef.current = supabase.channel(`initiative_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, wrapDbChange('initiative_order:*', () => loadInitiative(id)))
-        .on('broadcast', { event: 'recorder_start' }, wrapBroadcast('recorder_start', () => {
-          // GM-cascade: a Record click on the GM's tab fans out to
-          // every player tab. Wipe so each player's buffer starts
-          // clean for this session, persist to localStorage so a
-          // refresh / back-nav resumes capture without user action.
-          recorderWipeBuffer()
-          recorderSetEnabled(true)
-          writeCampaignEnabled(id, true)
-          setRecorderEnabled(true)
-        }))
-        .on('broadcast', { event: 'recorder_stop' }, wrapBroadcast('recorder_stop', () => {
-          // GM-cascade Stop: every player tab auto-downloads its dump.
-          // Some browsers block auto-download on un-focused tabs;
-          // when that happens the dump stays accessible via Ctrl+Shift+L
-          // since the buffer + localStorage backup remain in place
-          // until the next recorder_start wipes.
-          const filename = recorderDownloadDump()
-          if (filename) console.warn('[recorder] GM-stopped auto-download:', filename)
-          recorderSetEnabled(false)
-          writeCampaignEnabled(id, false)
-          setRecorderEnabled(false)
-        }))
-        .on('broadcast', { event: 'combat_ended' }, wrapBroadcast('combat_ended', () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) }))
-        .on('broadcast', { event: 'player_kicked' }, wrapBroadcast('player_kicked', (msg: any) => {
-          if (msg.payload?.userId === user.id) {
-            alert('You have been removed from this session by the GM.')
-            window.location.href = `/stories/${id}`
-          }
-        }))
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, wrapDbChange('notifications:INSERT', (payload: any) => {
-          if (payload.new?.type === 'session_kick') {
-            alert('You have been removed from this session by the GM.')
-            window.location.href = `/stories/${id}`
-          }
-        }))
-        .on('broadcast', { event: 'combat_started' }, wrapBroadcast('combat_started', () => { loadInitiative(id); rollsFeed.refetch() }))
-        // Share/unshare drives what PLAYERS see, not the GM's own pane: the
-        // GM (gmLike) can preview the campaign map while players follow the
-        // shared tactical scene. tacticalShared is set on every client (the GM
-        // needs it for button state); the view force only applies to players.
-        .on('broadcast', { event: 'tactical_shared' }, wrapBroadcast('tactical_shared', (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(msg.payload?.shared ?? false) }))
-        .on('broadcast', { event: 'tactical_unshared' }, wrapBroadcast('tactical_unshared', () => { setTacticalShared(false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(false) }))
-        // GM force-push view: when a scene is activated AND sharing is on,
-        // every PLAYER's pane opens (or re-opens) on the new scene so they
-        // automatically follow along. Without this, a player whose pane was
-        // closed during a prior scene wouldn't see the GM's switch - they'd
-        // only catch up if they re-opened the pane manually. The GM is NOT
-        // force-switched (they keep whatever view they're previewing).
-        // Broadcast fires from the GM-side activateScene paths in TacticalMap,
-        // /scene-controls-popout, and the pin onOpenScene callback below.
-        .on('broadcast', { event: 'scene_activated' }, wrapBroadcast('scene_activated', () => {
-          if (tacticalSharedRef.current && shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(true)
-          setTokenRefreshKey(k => k + 1)
-        }))
-        // Gut Instinct resolved - GM/Thriver clients open a modal to
-        // whisper a private detail to the rolling player. Skipped if
-        // the rolling player IS the GM (self-roll for color). The
-        // standard narrative feed row already lands separately via
-        // saveRollToLog; this is the additional GM color cue.
-        .on('broadcast', { event: 'gut_instinct_resolved' }, wrapBroadcast('gut_instinct_resolved', (msg: any) => {
-          if (!gmLikeRef.current) return
-          const { pcOwnerId, characterName, outcome } = msg.payload ?? {}
-          if (!pcOwnerId || !characterName || !outcome) return
-          if (pcOwnerId === userIdRef.current) return
-          setGutInstinctPrompt({ pcOwnerId, characterName, outcome })
-          setGutInstinctDetail('')
-        }))
-        .on('broadcast', { event: 'token_changed' }, wrapBroadcast('token_changed', () => { setTokenRefreshKey(k => k + 1) }))
-        .on('broadcast', { event: 'turn_changed' }, wrapBroadcast('turn_changed', () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() }))
-        .on('broadcast', { event: 'turn_advance_requested' }, wrapBroadcast('turn_advance_requested', async () => {
-          // A remote page (e.g. /vehicle popout firing a mounted weapon)
-          // decremented an action and hit 0. We own the nextTurn state
-          // here, so run the full advance flow on its behalf. nextTurn
-          // already bails on empty initiative order, so it's safe to
-          // call unconditionally. BUG-3 from the 2026-05-04 playtest fix.
-          await nextTurn()
-          await loadInitiative(id)
-        }))
-        .on('broadcast', { event: 'logs_cleared' }, wrapBroadcast('logs_cleared', () => {
-          // GM started/ended a session - clear local chat + roll state, then
-          // refetch from DB so every client converges to the post-clear state.
-          rollsFeed.clear()
-          chat.clear()
-          rollsFeed.refetch()
-          chat.refetch()
-        }))
-        .on('broadcast', { event: 'npc_damaged' }, wrapBroadcast('npc_damaged', async (msg: any) => {
-          // Another client dealt damage to an NPC - apply the patch locally.
-          // Two payload shapes:
-          //   - { npcId, patch } - single-target attack (legacy, fast path)
-          //   - {} (empty)       - coalesced multi-target broadcast (e.g.
-          //                        grenade splash) where building per-target
-          //                        patches at the sender side adds bytes
-          //                        without value. In that case fall through
-          //                        to a full refetch so every recipient sees
-          //                        up-to-date NPC state. Mirrors the
-          //                        pc_damaged handler's always-refresh path.
-          const { npcId, patch } = msg.payload ?? {}
-          console.warn('[npc_damaged] RECV', { npcId, patch })
-          if (npcId && patch) {
-            setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
-            setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
-            setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
-          } else {
-            // Empty payload - refetch campaign_npcs so coalesced multi-
-            // target events (grenades, etc.) propagate to every client
-            // even though the sender didn't enumerate per-target patches.
-            const { data } = await getCampaignNpcs(id)
-            if (data) {
-              setCampaignNpcs(data)
-              setRosterNpcs(data.filter((n: any) => {
-                if (n.status !== 'active') return false
-                const wp = n.wp_current ?? n.wp_max ?? 10
-                return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-              }))
-              setViewingNpcs(prev => prev.map(vn => {
-                const fresh = data.find((f: any) => f.id === vn.id)
-                return fresh ? { ...fresh } as CampaignNpc : vn
-              }))
-            }
-          }
-        }))
-        .on('broadcast', { event: 'pc_damaged' }, wrapBroadcast('pc_damaged', (msg: any) => {
-          // Another client dealt damage to a PC - apply optimistic patch then refresh
-          const { stateId: sid, patch } = msg.payload ?? {}
-          if (sid && patch) {
-            setEntries(prev => prev.map(e => e.stateId === sid ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
-          }
-          loadEntries(id)
-        }))
-        .on('broadcast', { event: 'inventory_transfer' }, wrapBroadcast('inventory_transfer', () => {
-          // Another player gave an item - refresh entries to see updated inventory
-          loadEntries(id)
-        }))
-        .on('broadcast', { event: 'pc_mortal_wound' }, wrapBroadcast('pc_mortal_wound', (msg: any) => {
-          // Show insight save modal on the player's screen or GM's screen.
-          //
-          // Stale-closure fix (2026-05-20, audit-stale-closure-landmines.md):
-          // this handler is installed inside an effect that runs once at
-          // mount. `userId` + `gmLike` captured at that point are often
-          // null/false because auth has not resolved yet. The targeted PC's
-          // tab would then silently drop the broadcast and the Insight Save
-          // modal would never open. Read userIdRef.current + gmLikeRef.current
-          // instead - the refs always reflect the latest values. Same class
-          // of fix as 56c0534 (infection_check_request) + lasting_damage_check_request
-          // a few lines below.
-          const data = msg.payload
-          if (data && (data.targetUserId === userIdRef.current || gmLikeRef.current)) {
-            setInsightSavePrompt(data)
-          }
-        }))
-        .on('broadcast', { event: 'pc_mortal_wound_resolved' }, wrapBroadcast('pc_mortal_wound_resolved', () => {
-          // Another client resolved the insight save - close our modal and refresh
-          setInsightSavePrompt(null)
-          loadEntries(id)
-        }))
-        .on('broadcast', { event: 'lasting_damage_check_request' }, wrapBroadcast('lasting_damage_check_request', (msg: any) => {
-          // Day-0 Lasting Damage check (canon §06.lasting-damage). Fired
-          // by drainInfectionDays in lib/campaign-clock.ts when an
-          // infected character's days_left hits 0 with severity='check'.
-          // The targetUserId is the PC's owner; NPC sicknesses carry
-          // targetUserId=null and queue on the GM's tab.
-          //
-          // Outcome resolution lives in executeRoll's "Lasting Damage
-          // Check (" label branch and rolls 2d6 on Table 12 (Lasting
-          // Wounds) on Failure / Dire Failure.
-          //
-          // Uses userIdRef.current to dodge the stale-closure trap
-          // that bit infection_check_request earlier today (56c0534).
-          const data = msg.payload
-          if (!data) return
-          // PC: gate on user match. NPC (targetUserId null): GM only.
-          if (data.isPc) {
-            if (data.targetUserId !== userIdRef.current) return
-          } else {
-            // NPC path - only the GM opens the modal.
-            if (!gmLikeRef.current) return
-          }
-          // PHY check - AMod is the patient's PHY. For PCs we can read
-          // from entries[]. For NPCs the GM is rolling, so the GM-side
-          // dispatch reads it just like queueWoundInfectionChecks does.
-          let phyAmod = 0
-          if (data.isPc) {
-            const pcEntry = entriesRef.current.find(e => e.character.name === data.name)
-            phyAmod = pcEntry?.character.data?.rapid?.PHY ?? 0
-          } else {
-            const npcRow = campaignNpcsRef.current.find((n: any) => n.name === data.name)
-            phyAmod = (npcRow as any)?.physicality ?? 0
-          }
-          handleRollRequest(`${data.name} - Lasting Damage Check`, phyAmod, 0)
-        }))
-        .on('broadcast', { event: 'infection_check_request' }, wrapBroadcast('infection_check_request', (msg: any) => {
-          // End-of-combat Wound Infection check (canon §06). The GM's
-          // endCombat broadcasts this for every wounded PC, scoped to
-          // that PC's owning userId. The target's client opens the
-          // standard roll modal - patient rolls their own check with
-          // their CMod / Insight Dice. NPCs are rolled by the GM
-          // directly (separate queue, no broadcast).
-          //
-          // Stale-closure fix (2026-05-15): this handler was defined
-          // inside the [id]-deps useEffect, so the React state
-          // `userId` was captured at mount when it was still null
-          // (setUserId fires inside the same load() but only schedules
-          // a re-render - the closure keeps the null binding). Result:
-          // `null !== <actual-user-id>` was always true, dropping
-          // every broadcast on both tabs. Reading userIdRef.current
-          // gets the always-fresh id (synced via the L244 effect).
-          const data = msg.payload
-          if (!data || data.targetUserId !== userIdRef.current) return
-          handleRollRequest(`${data.name} - Infection Check (Wound)`, data.amod ?? 0, 0)
-        }))
-        // Players' postgres_changes subscription on npc_relationships is
-        // unreliable (RLS / publication), so mid-combat reveals go over this
-        // broadcast channel instead. Refetch cnpcs fresh so newly-added roster
-        // NPCs aren't missed due to a stale closure.
-        .on('broadcast', { event: 'npcs_revealed' }, wrapBroadcast('npcs_revealed', async () => {
-          const { data: fresh } = await getCampaignNpcs(id)
-          const freshList = fresh ?? []
-          if (freshList.length > 0) {
-            setCampaignNpcs(freshList)
-            setRosterNpcs(freshList.filter((n: any) => {
-              if (n.status !== 'active') return false
-              const wp = n.wp_current ?? n.wp_max ?? 10
-              return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-            }))
-          }
-          loadRevealedNpcs(myCharIdRef.current, freshList)
-        }))
-        .subscribe()
+      // initiative_${id} channel (postgres initiative_order + notifications +
+      // 21 broadcasts) migrated to useCampaignChannel (3d.2b) - see initChannel
+      // near useRecorderToggle. presence stays raw below.
 
       // campaign_ + campaign_npcs_ channels migrated to useCampaignChannel (3d.2a).
 
@@ -1516,11 +1376,11 @@ export default function TablePage() {
     load()
     return () => {
       cancelled = true
-      // table/members/campaign_npcs/campaign/reveals/community_members channels
-      // are now owned by useCampaignChannel (3d.2a) - they tear down themselves.
-      // chat teardown is handled by useChatPanel. initiative + presence remain
-      // here until 3d.2b migrates them.
-      if (initChannelRef.current) { supabase.removeChannel(initChannelRef.current); initChannelRef.current = null }
+      // table/members/campaign_npcs/campaign/reveals/community_members/initiative
+      // channels are now owned by useCampaignChannel (3d.2a + 3d.2b) - they tear
+      // down themselves (initChannelRef aliases the handle's ref, so don't
+      // removeChannel it here). chat teardown is in useChatPanel. Only the raw
+      // presence channel remains hand-managed.
       if (presenceChannelRef.current) { supabase.removeChannel(presenceChannelRef.current); presenceChannelRef.current = null }
     }
   }, [id])

@@ -37,15 +37,18 @@ export interface CampaignBroadcastPayloads {
   tactical_unshared: EmptyPayload
 
   // --- Health / damage ---
-  pc_damaged: EmptyPayload
-  npc_damaged: { npcId: string; patch: Record<string, unknown> }
-  pc_mortal_wound: EmptyPayload
+  // pc_damaged carries an optimistic patch; npc_damaged is EITHER {npcId,patch}
+  // (single-target fast path) OR {} (coalesced multi-target -> receiver refetches),
+  // so both fields are optional.
+  pc_damaged: { stateId: string; patch: Record<string, unknown> }
+  npc_damaged: { npcId?: string; patch?: Record<string, unknown> }
+  pc_mortal_wound: { stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number; targetUserId?: string | null }
   pc_mortal_wound_resolved: EmptyPayload
 
-  // --- Post-combat / checks (payloads TBD - tighten when send sites migrate) ---
-  infection_check_request: EmptyPayload
-  lasting_damage_check_request: EmptyPayload
-  gut_instinct_resolved: EmptyPayload
+  // --- Post-combat / checks (tightened 3d.2b as the init-channel handlers migrated) ---
+  infection_check_request: { targetUserId: string; name: string; amod: number }
+  lasting_damage_check_request: { isPc: boolean; targetUserId: string | null; name: string }
+  gut_instinct_resolved: { pcOwnerId: string; characterName: string; outcome: string }
 
   // --- Roster / inventory ---
   npcs_revealed: EmptyPayload
