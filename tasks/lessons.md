@@ -1,5 +1,19 @@
 # Lessons Learned
 
+## "The rulebook says X" needs a citation - verify canon against the actual rules page before asserting (2026-05-23)
+
+**Rule:** Before telling Xero "canon says X" (especially to justify a code change), open the actual `app/rules/*` page or the precedence-stack source and quote it. Do NOT assert canon from inference or memory. He WILL ask "where does it say this?" - and he should.
+
+**What it caught:** During 3c (CMod) I claimed target defense should "count once" (to-hit only, armor does damage) and proposed changing combat balance on that basis. Xero asked for the source. The actual canon (`app/rules/combat/damage/page.tsx:43-52` + `app/rules/character-overview/secondary-stats/page.tsx:52-53,62-65`) says the **opposite**: Defense Mods do **"double duty"** - MDM (PHY) / RDM (DEX) BOTH lower the attacker's to-hit AND mitigate damage, by design. So the code's double-application was correct; the real bug was an *asymmetry* (the to-hit half only fired for PC targets because the prefill only looked up PCs - NPC targets skipped it). Had I not been challenged, I'd have shipped a wrong balance change presented as a canon fix.
+
+**Detection:** any sentence of the form "canon/the rulebook/the SRD says ..." in chat must be backed by a `file:line` or PDF-page cite produced in the SAME turn. Inference about how a mechanic "should" work is a hypothesis, not canon. This is `feedback_accuracy_over_confidence` applied specifically to rules claims.
+
+## The arch ratchet (`scripts/check-arch.mjs --save`) is one-way - it never re-baselines a god-component UPWARD (2026-05-23)
+
+**Rule:** `check-arch --save` ratchets each metric to the BETTER value only. If `page.tsx` grew, `--save` keeps the old (lower) ceiling - it will NOT record the growth. So you cannot "re-baseline up" to land a god-component addition; the baseline stays put and the pre-commit hook keeps blocking.
+
+**Implication:** to add net lines to a god-component you have exactly two paths: (1) extract enough into a hook/lib that the file shrinks net (the intended path - the ratchet is *designed* to force extraction), or (2) `git commit --no-verify` (a bright-line action - get Xero's explicit OK; CLAUDE.md forbids bypassing hooks otherwise). CI does NOT run check-arch (only font/role/tsc/tests per `.github/workflows/test.yml`), so a `--no-verify` arch bypass stays green on CI - the ratchet is a local-hook discipline only. When you do bypass, run the other gates manually first so only the LOC ratchet is skipped, and re-tighten the ratchet in the very next structural commit.
+
 ## A new counter on a category that already flows through an old counter = check for double-counting (2026-05-21)
 
 **Rule:** When you add a new per-item counter (here: explosive `qty` on the weapon slot) for a category that ALREADY rides an existing counter system, audit the old system for an interaction before shipping the new one. Don't assume the new counter is the only thing tracking that item.
