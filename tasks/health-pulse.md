@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-23 00:11 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [524 passed, 29 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Confidence Ledger TESTED count stale (unfixed):** ledger still shows 502/26 files; previous pulse (21:05 UTC) flagged 513/27 and recommended `node scripts/refresh-ledger.mjs` - not yet run. Now at 524/29. Delta growing.
+- **HOPED-FOR (2026-05-19 batch) day 4** - drain target 2026-05-25 (2 days). On track; no action needed before playtest.
+
+**Action:** Run `node scripts/refresh-ledger.mjs` to sync the Confidence Ledger test count (502 → 524, +3 new test files since last update).
+
+---
+
 ## 2026-05-22 21:05 UTC
 
 **Status:** DRIFT
