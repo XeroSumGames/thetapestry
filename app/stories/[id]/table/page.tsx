@@ -81,7 +81,7 @@ import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../.
 import { distractActionDelta, distractNarrative } from '../../../../lib/distract-helpers'
 import { gutInstinctSmod } from '../../../../lib/gut-instinct-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
-import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, type CmodSources } from '../../../../lib/table-roll-context'
+import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../lib/table-roll-context'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
@@ -4536,54 +4536,17 @@ export default function TablePage() {
   // row's defense_bonus (Defend/Take Cover). Works for PC OR NPC targets
   // (Q1=b: NPCs used to skip this because the prefill only looked up PCs).
   // Mirrors the damage path's resolution (~L5309). Objects have no defense.
-  function resolveTargetDefense(targetName: string, isMelee: boolean): { value: number; label: string } {
-    // MDM = Melee Defense Mod (PHY), RDM = Ranged Defense Mod (DEX) - canon
-    // names (Xero 2026-05-23 smoke wants the breakdown to read MDM/RDM).
-    const label = isMelee ? 'Target MDM' : 'Target RDM'
-    const tEntry = entries.find(en => en.character.name === targetName)
-    const tNpc = !tEntry ? campaignNpcs.find((n: any) => n.name === targetName) : null
-    const isObject = !tEntry && !tNpc && mapTokens.some(t => t.token_type === 'object' && t.name === targetName)
-    if (isObject) return { value: 0, label }
-    const rapid: any = tEntry?.character.data?.rapid ?? (tNpc ? { PHY: tNpc.physicality ?? 0, DEX: tNpc.dexterity ?? 0 } : {})
-    const initEntry = initiativeOrder.find(ie => ie.character_name === targetName)
-    const defBonus = initEntry?.defense_bonus ?? 0
-    const base = isMelee ? (rapid.PHY ?? 0) : (rapid.DEX ?? 0)
-    return { value: base + defBonus, label }
-  }
+  // resolveTargetDefense + computeAttackCmod moved to lib/table-roll-context.ts
+  // (3c-B2, pure + unit-tested). The two call sites below pass the live
+  // collections as an AttackCmodCtx bundle via cmodCtx().
 
-  // Single source of truth for an attack roll's auto-computed CMod - used by
-  // both the prefill and the target-dropdown onChange so they can never drift
-  // (the old dropdown copy dropped Aim - 3c fix). Returns the itemized sources
-  // + the net for the field. Range/sick/insight are layered on in executeRoll.
-  function computeAttackCmod(targetName: string, weapon: WeaponContext): { net: number; sources: CmodSources } {
-    const activeEntry = initiativeOrder.find(e => e.is_active)
-    const aim = activeEntry?.aim_bonus ?? 0
-    const weaponCondition = weapon.conditionCmod ?? 0
-    let coordinatedEffort = 0
-    const cef = coordEffortRef.current
-    if (cef && !(pendingRoll?.label ?? '').startsWith('Group Check - ')) {
-      const myEntry = entries.find(e => e.userId === userId)
-      const myCharId = myEntry?.character.id
-      if (myCharId && cef.participantIds.includes(myCharId)) {
-        coordinatedEffort = (cef.totalParticipants - 1) + cef.leadCmod
-      }
+  // Assembles the AttackCmodCtx from current component state for the prefill
+  // and the target-dropdown onChange (the only two computeAttackCmod callers).
+  function cmodCtx(): AttackCmodCtx {
+    return {
+      entries, npcs: campaignNpcs, tokens: mapTokens, initiative: initiativeOrder,
+      userId, pendingLabel: pendingRoll?.label ?? '', coordEffort: coordEffortRef.current,
     }
-    const w = getWeaponByName(weapon.weaponName)
-    const isMelee = w?.category === 'melee'
-    const def = resolveTargetDefense(targetName, isMelee)
-    const myInitEntry = initiativeOrder.find(ie =>
-      (activeEntry?.character_id && ie.character_id === activeEntry.character_id) ||
-      (activeEntry?.npc_id && ie.npc_id === activeEntry.npc_id) ||
-      ie.character_name === activeEntry?.character_name
-    )
-    const coordinate = (myInitEntry?.coordinate_target === targetName) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
-    const sameTarget = (activeEntry?.last_attack_target === targetName) ? 1 : 0
-    const sources: CmodSources = {
-      weaponCondition, aim, coordinatedEffort, coordinate, sameTarget,
-      targetDefense: -def.value, targetDefenseLabel: def.label,
-    }
-    const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value
-    return { net, sources }
   }
 
   async function handleInsightSave(spend: boolean) {
@@ -4806,7 +4769,7 @@ export default function TablePage() {
       // Itemized CMod (incl. NPC-target defense on the to-hit roll, Q1=b) via
       // the shared computeAttackCmod so the prefill and the dropdown onChange
       // stay in lockstep.
-      const { net, sources } = computeAttackCmod(chosenTarget, weapon)
+      const { net, sources } = computeAttackCmod(chosenTarget, weapon, cmodCtx())
       cmodSourcesRef.current = sources
       setCmod(String(net))
       const autoRange = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, chosenTarget)
@@ -9905,7 +9868,7 @@ export default function TablePage() {
                       // incl. NPC, coord, same-target) via the shared helper -
                       // the old inline copy here dropped the Aim bonus (3c fix).
                       if (pendingRoll.weapon && e.target.value) {
-                        const { net, sources } = computeAttackCmod(e.target.value, pendingRoll.weapon)
+                        const { net, sources } = computeAttackCmod(e.target.value, pendingRoll.weapon, cmodCtx())
                         cmodSourcesRef.current = sources
                         setCmod(String(net))
                         // Auto-calculate range band from token positions

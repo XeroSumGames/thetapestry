@@ -2,7 +2,10 @@
 // (table re-arch Step 1). No React, no Supabase, no component state - just
 // the deterministic combat arithmetic, so it can be unit-tested and reused
 // without standing up the 13k-line table page. This is the safety net the
-// useRollResolution extraction (Step 3c) rides on.
+// useRollResolution extraction (Step 3c) rides on. The only import is the
+// pure weapon lookup (lib -> lib, no upward dependency).
+
+import { getWeaponByName } from './weapons'
 
 /**
  * Chebyshev (king-move) distance in grid cells. A diagonal step counts as 1,
@@ -125,4 +128,116 @@ export function buildCmodBreakdown(s: CmodSources): { terms: CmodTerm[]; total: 
   const terms = ordered.filter(t => t.value !== 0)
   const total = terms.reduce((acc, t) => acc + t.value, 0)
   return { terms, total }
+}
+
+// --- Attack CMod resolution (3c-B2) ------------------------------------------
+// resolveTargetDefense + computeAttackCmod were closure functions on the table
+// page; extracted here verbatim (behavior-preserving) so the prefill and the
+// target-dropdown onChange share ONE source of truth and the math is unit-
+// tested. Inputs are minimal structural shapes (only the fields actually read)
+// so lib never imports the app-side TableEntry / InitiativeEntry types upward;
+// the richer page types are structurally compatible.
+
+export interface CmodRapid { PHY?: number | null; DEX?: number | null }
+export interface CmodEntry {
+  userId: string
+  character: { id: string; name: string; data?: { rapid?: CmodRapid | null } | null }
+}
+export interface CmodNpc { name: string; physicality?: number | null; dexterity?: number | null }
+export interface CmodToken { token_type: string; name: string }
+export interface CmodInitEntry {
+  character_name: string
+  character_id?: string | null
+  npc_id?: string | null
+  is_active?: boolean
+  aim_bonus?: number | null
+  last_attack_target?: string | null
+  coordinate_target?: string | null
+  coordinate_bonus?: number | null
+  defense_bonus?: number | null
+}
+export interface CoordEffortState { participantIds: string[]; totalParticipants: number; leadCmod: number }
+
+export interface TargetLookupCtx {
+  entries: readonly CmodEntry[]
+  npcs: readonly CmodNpc[]
+  tokens: readonly CmodToken[]
+  initiative: readonly CmodInitEntry[]
+}
+
+export interface AttackCmodCtx extends TargetLookupCtx {
+  userId: string | null
+  // The pendingRoll label at call time (suppresses the coordinated-effort
+  // bonus on Group Checks). NOTE: the prefill caller passes the PREVIOUS
+  // pendingRoll's label (state lags the new roll within the same tick) - this
+  // is preserved as-was; the useRollResolution rebuild (3c-B3) is where the
+  // stale-closure read gets a real fix.
+  pendingLabel: string
+  coordEffort: CoordEffortState | null
+}
+
+/**
+ * The target's defensive contribution to an attacker's to-hit roll. MDM = Melee
+ * Defense Mod (PHY), RDM = Ranged Defense Mod (DEX) - canon names. Objects have
+ * no defense (0). Adds the target's initiative defense_bonus (Defend / Take
+ * Cover). Returns the POSITIVE defense magnitude + its label; the caller negates
+ * it when folding into the attacker's CMod (defense lowers the to-hit).
+ */
+export function resolveTargetDefense(
+  targetName: string,
+  isMelee: boolean,
+  ctx: TargetLookupCtx,
+): { value: number; label: string } {
+  const label = isMelee ? 'Target MDM' : 'Target RDM'
+  const tEntry = ctx.entries.find(en => en.character.name === targetName)
+  const tNpc = !tEntry ? ctx.npcs.find(n => n.name === targetName) : null
+  const isObject = !tEntry && !tNpc && ctx.tokens.some(t => t.token_type === 'object' && t.name === targetName)
+  if (isObject) return { value: 0, label }
+  const rapid: CmodRapid = tEntry?.character.data?.rapid ?? (tNpc ? { PHY: tNpc.physicality ?? 0, DEX: tNpc.dexterity ?? 0 } : {})
+  const initEntry = ctx.initiative.find(ie => ie.character_name === targetName)
+  const defBonus = initEntry?.defense_bonus ?? 0
+  const base = isMelee ? (rapid.PHY ?? 0) : (rapid.DEX ?? 0)
+  return { value: base + defBonus, label }
+}
+
+/**
+ * Auto-computed CMod for an attack roll - the single source of truth for both
+ * the modal prefill and the target-dropdown onChange (they used to drift; the
+ * old dropdown copy dropped Aim). Returns the itemized `sources` (fed to
+ * buildCmodBreakdown) plus the `net` for the modal's CMod field. Range / sick /
+ * insight are layered on later in executeRoll, not here.
+ */
+export function computeAttackCmod(
+  targetName: string,
+  weapon: { weaponName: string; conditionCmod?: number | null },
+  ctx: AttackCmodCtx,
+): { net: number; sources: CmodSources } {
+  const activeEntry = ctx.initiative.find(e => e.is_active)
+  const aim = activeEntry?.aim_bonus ?? 0
+  const weaponCondition = weapon.conditionCmod ?? 0
+  let coordinatedEffort = 0
+  const cef = ctx.coordEffort
+  if (cef && !ctx.pendingLabel.startsWith('Group Check - ')) {
+    const myEntry = ctx.entries.find(e => e.userId === ctx.userId)
+    const myCharId = myEntry?.character.id
+    if (myCharId && cef.participantIds.includes(myCharId)) {
+      coordinatedEffort = (cef.totalParticipants - 1) + cef.leadCmod
+    }
+  }
+  const w = getWeaponByName(weapon.weaponName)
+  const isMelee = w?.category === 'melee'
+  const def = resolveTargetDefense(targetName, isMelee, ctx)
+  const myInitEntry = ctx.initiative.find(ie =>
+    (activeEntry?.character_id && ie.character_id === activeEntry.character_id) ||
+    (activeEntry?.npc_id && ie.npc_id === activeEntry.npc_id) ||
+    ie.character_name === activeEntry?.character_name
+  )
+  const coordinate = (myInitEntry?.coordinate_target === targetName) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
+  const sameTarget = (activeEntry?.last_attack_target === targetName) ? 1 : 0
+  const sources: CmodSources = {
+    weaponCondition, aim, coordinatedEffort, coordinate, sameTarget,
+    targetDefense: -def.value, targetDefenseLabel: def.label,
+  }
+  const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value
+  return { net, sources }
 }

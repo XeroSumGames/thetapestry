@@ -4,6 +4,10 @@ import {
   computeBlastSplash,
   mortalWoundCountdown,
   buildCmodBreakdown,
+  resolveTargetDefense,
+  computeAttackCmod,
+  type TargetLookupCtx,
+  type AttackCmodCtx,
 } from '../../lib/table-roll-context'
 
 describe('cellDistance - Chebyshev grid distance', () => {
@@ -142,5 +146,113 @@ describe('buildCmodBreakdown - source-labeled CMod terms', () => {
     const b = buildCmodBreakdown({ aim: 2, manual: -1 })
     expect(b.terms).toContainEqual({ label: 'CMod', value: -1 })
     expect(b.total).toBe(1)
+  })
+})
+
+describe('resolveTargetDefense - target MDM/RDM on the to-hit roll', () => {
+  const pcCtx: TargetLookupCtx = {
+    entries: [{ userId: 'u1', character: { id: 'c1', name: 'Vera', data: { rapid: { PHY: 3, DEX: 1 } } } }],
+    npcs: [],
+    tokens: [],
+    initiative: [],
+  }
+
+  it('PC melee target uses PHY and labels Target MDM', () => {
+    expect(resolveTargetDefense('Vera', true, pcCtx)).toEqual({ value: 3, label: 'Target MDM' })
+  })
+  it('PC ranged target uses DEX and labels Target RDM', () => {
+    expect(resolveTargetDefense('Vera', false, pcCtx)).toEqual({ value: 1, label: 'Target RDM' })
+  })
+  it('NPC target falls back to the physicality/dexterity columns', () => {
+    const ctx: TargetLookupCtx = { entries: [], npcs: [{ name: 'Goon', physicality: 2, dexterity: 4 }], tokens: [], initiative: [] }
+    expect(resolveTargetDefense('Goon', true, ctx)).toEqual({ value: 2, label: 'Target MDM' })
+    expect(resolveTargetDefense('Goon', false, ctx)).toEqual({ value: 4, label: 'Target RDM' })
+  })
+  it('object target has no defense (0)', () => {
+    const ctx: TargetLookupCtx = { entries: [], npcs: [], tokens: [{ token_type: 'object', name: 'Barrel' }], initiative: [] }
+    expect(resolveTargetDefense('Barrel', true, ctx)).toEqual({ value: 0, label: 'Target MDM' })
+  })
+  it('adds the initiative defense_bonus (Defend / Take Cover)', () => {
+    const ctx: TargetLookupCtx = { ...pcCtx, initiative: [{ character_name: 'Vera', defense_bonus: 2 }] }
+    expect(resolveTargetDefense('Vera', true, ctx).value).toBe(5) // 3 PHY + 2 bonus
+  })
+  it('a PC entry wins over a same-named NPC (entries are checked first)', () => {
+    const ctx: TargetLookupCtx = {
+      entries: [{ userId: 'u1', character: { id: 'c1', name: 'Echo', data: { rapid: { PHY: 5, DEX: 5 } } } }],
+      npcs: [{ name: 'Echo', physicality: 0, dexterity: 0 }],
+      tokens: [], initiative: [],
+    }
+    expect(resolveTargetDefense('Echo', true, ctx).value).toBe(5)
+  })
+  it('an unknown non-object target defaults to a 0 base', () => {
+    expect(resolveTargetDefense('Nobody', true, { entries: [], npcs: [], tokens: [], initiative: [] }))
+      .toEqual({ value: 0, label: 'Target MDM' })
+  })
+})
+
+describe('computeAttackCmod - itemized auto CMod for the prefill + dropdown', () => {
+  const baseCtx: AttackCmodCtx = {
+    entries: [{ userId: 'u1', character: { id: 'c1', name: 'Attacker', data: { rapid: { PHY: 0, DEX: 0 } } } }],
+    npcs: [{ name: 'Goon', physicality: 2, dexterity: 3 }],
+    tokens: [],
+    initiative: [{ character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 0 }],
+    userId: 'u1',
+    pendingLabel: '',
+    coordEffort: null,
+  }
+  const rifle = { weaponName: 'Assault Rifle', conditionCmod: 0 } // ranged
+  const bat = { weaponName: 'Baseball Bat', conditionCmod: 0 }    // melee
+
+  it('subtracts ranged target defense (RDM) from the net and itemizes it', () => {
+    const { net, sources } = computeAttackCmod('Goon', rifle, baseCtx)
+    expect(sources.targetDefense).toBe(-3) // -DEX
+    expect(sources.targetDefenseLabel).toBe('Target RDM')
+    expect(net).toBe(-3)
+  })
+  it('a melee weapon resolves defense against the target MDM (PHY)', () => {
+    const { sources } = computeAttackCmod('Goon', bat, baseCtx)
+    expect(sources.targetDefense).toBe(-2) // -PHY
+    expect(sources.targetDefenseLabel).toBe('Target MDM')
+  })
+  it('Aim is carried as its own positive source and added to the net', () => {
+    const ctx: AttackCmodCtx = { ...baseCtx, initiative: [{ character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 2 }] }
+    const { net, sources } = computeAttackCmod('Goon', rifle, ctx)
+    expect(sources.aim).toBe(2)
+    expect(net).toBe(-1) // +2 aim - 3 RDM
+  })
+  it('weapon condition CMod flows through', () => {
+    const { net, sources } = computeAttackCmod('Goon', { weaponName: 'Assault Rifle', conditionCmod: -1 }, baseCtx)
+    expect(sources.weaponCondition).toBe(-1)
+    expect(net).toBe(-4) // -1 - 3
+  })
+  it('same-target bonus (+1) when the active combatant already hit this target', () => {
+    const ctx: AttackCmodCtx = { ...baseCtx, initiative: [{ character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 0, last_attack_target: 'Goon' }] }
+    expect(computeAttackCmod('Goon', rifle, ctx).sources.sameTarget).toBe(1)
+  })
+  it('coordinate bonus applies when the active entry coordinated on this target', () => {
+    const ctx: AttackCmodCtx = { ...baseCtx, initiative: [{ character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 0, coordinate_target: 'Goon', coordinate_bonus: 3 }] }
+    expect(computeAttackCmod('Goon', rifle, ctx).sources.coordinate).toBe(3)
+  })
+  it('coordinated-effort bonus applies for a chain participant', () => {
+    const ctx: AttackCmodCtx = { ...baseCtx, coordEffort: { participantIds: ['c1'], totalParticipants: 3, leadCmod: 1 } }
+    expect(computeAttackCmod('Goon', rifle, ctx).sources.coordinatedEffort).toBe(3) // (3-1) + 1
+  })
+  it('coordinated-effort is suppressed on a Group Check', () => {
+    const ctx: AttackCmodCtx = {
+      ...baseCtx,
+      pendingLabel: 'Group Check - Athletics (led by X)',
+      coordEffort: { participantIds: ['c1'], totalParticipants: 3, leadCmod: 1 },
+    }
+    expect(computeAttackCmod('Goon', rifle, ctx).sources.coordinatedEffort).toBe(0)
+  })
+  it('net always equals the sum of the itemized sources (reconciles to buildCmodBreakdown)', () => {
+    const ctx: AttackCmodCtx = {
+      ...baseCtx,
+      initiative: [{ character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 2, coordinate_target: 'Goon', coordinate_bonus: 1, last_attack_target: 'Goon' }],
+    }
+    const { net, sources } = computeAttackCmod('Goon', { weaponName: 'Assault Rifle', conditionCmod: -1 }, ctx)
+    const sum = (sources.weaponCondition ?? 0) + (sources.aim ?? 0) + (sources.coordinatedEffort ?? 0)
+      + (sources.coordinate ?? 0) + (sources.sameTarget ?? 0) + (sources.targetDefense ?? 0)
+    expect(net).toBe(sum)
   })
 })
