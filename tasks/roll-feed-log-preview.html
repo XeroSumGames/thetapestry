@@ -719,6 +719,21 @@
   <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:19 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson threw a Molotov at Avery Xavier</div></div>
   <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:19 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson threw a Grenade</div></div>
   <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson fired an RPG Launcher at Avery Xavier</div></div>
+  <div class="row red">
+    <div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:20 PM</span><span class="toggle">▾</span></div></div>
+    <div class="narrative">Wilson threw a Grenade</div>
+    <div class="expanded-details">
+      <div style="margin-top:6px;padding:6px 8px;background:#1a1010;border:1px solid #c0392b;border-radius:3px;color:#d4cfc9;">
+        <span style="color:#f5a89a;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;">Damage &rarr; Cell (26,18)</span>
+        <div style="margin-top:2px;">10+1d6 (4) <span style="color:#f5f2ee;font-weight:700;"> = 14 raw</span> <span style="color:#c0392b;"> &rarr; 14 WP</span> <span style="color:#7ab3d4;"> / 7 RP</span></div>
+      </div>
+      <div style="margin-top:6px;padding:6px 8px;background:#1a1010;border:1px solid #c0392b;border-radius:3px;color:#d4cfc9;">
+        <span style="color:#f5a89a;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;">&#128165; Blast hit</span>
+        <div style="margin-top:2px;">Avery Xavier (Engaged): 14 WP, 7 RP | Marla (Close): 7 WP, 3 RP | Barrel 1 (Close): 7 WP</div>
+      </div>
+    </div>
+  </div>
+  <p class="note">AoE blast now reports EVERY victim in one consolidated "Blast hit" line in the persistent feed (3c-A4), not just the thrower / target cell. Previously the per-victim splash only appeared in the transient result modal (traitNotes), so the log under-reported a grenade that hit five tokens. Source: <code>blastSummary</code> on <code>damage_json</code>, built from the Pass-3 blast loop in <code>executeRoll</code>; renders independent of the primary damage box so it shows even on a Dire-Failure fumble (primary skipped, blast resolves from the scatter cell).</p>
 
   <h3 id="multiword">Rapid Fire / Fire from Cover</h3>
   <div class="row green"><div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:21 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Cree Hask used their Assault Rifle Rapid Fire on Avery Xavier and was wildly successful</div></div>

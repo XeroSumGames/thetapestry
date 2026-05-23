@@ -5241,6 +5241,10 @@ export default function TablePage() {
     // Calculate and apply damage for successful weapon attacks
     let damageResult: DamageResult | undefined
     let traitNotes: string[] = []
+    // Consolidated per-victim blast line, hoisted out of the blast block so it
+    // can ride damage_json into the persistent feed (traitNotes only reaches
+    // the transient result modal, so AoE victims were under-reported - 3c-A4).
+    let blastFeedSummary: string | null = null
     // Auto-loot log rows are COLLECTED here during damage processing and
     // inserted AFTER saveRollToLog so the attack row ("used Unarmed Combat
     // on Crate 2") shows up in the feed BEFORE the loot row ("looked through
@@ -6069,7 +6073,8 @@ export default function TablePage() {
           }
 
           if (blastTargets.length > 0) {
-            traitNotes.push(`Blast hit: ${blastTargets.join(' | ')}`)
+            blastFeedSummary = blastTargets.join(' | ')
+            traitNotes.push(`Blast hit: ${blastFeedSummary}`)
           }
 
           // SMOKE-1: the active thrower just downed themselves in their own
@@ -6846,6 +6851,11 @@ export default function TablePage() {
       // of generic "suffered a Lasting Wound from infection".
       if (lastingDamageJson) {
         augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), ...lastingDamageJson }
+      }
+      // Carry the consolidated blast line into the feed (Q3a) so AoE victims
+      // show in the persistent log, not just the transient result modal.
+      if (blastFeedSummary) {
+        augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), blastSummary: blastFeedSummary }
       }
       await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3, cmodBreakdown)
       // Gut Instinct - LEGACY BRANCH (unreachable since 2026-05-20).

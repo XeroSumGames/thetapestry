@@ -1034,6 +1034,16 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               </div>
             </div>
           )}
+          {/* Consolidated AoE blast line (3c-A4) - one line listing every
+              victim + their splash damage, so a grenade's full effect shows in
+              the persistent feed (was modal-only). Independent of hasDamageBox
+              so it still renders on a fumble where no primary box exists. */}
+          {(r.damage_json as any)?.blastSummary && (
+            <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
+              <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>💥 Blast hit</span>
+              <div style={{ marginTop: '2px' }}>{(r.damage_json as any).blastSummary}</div>
+            </div>
+          )}
         </div>
       )}
     </div>
