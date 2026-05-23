@@ -184,7 +184,7 @@ Derive it: `git rev-parse --short HEAD` (was `e6919e5` at write; `wc -l "app/sto
   - Lessons captured: shadow-rebind footgun (`f8e8033`), the extraction technique. Ledger drained to 548/29.
 - **OPEN (classified, no action unless smoke contradicts):** GM-rolled NPC attack `+5 CMod` generic = manual GM entry (autoNet=0); NPC defense IS wired via prefill `computeAttackCmod`. No prefill change. Also: a preserved Group-Check stale-closure read (prefill passes the PREVIOUS roll's label) rode into the hook unchanged - the deeper pure/effect split is where it gets fixed, NOT done in B3.
 - **NEXT:**
-  - **Xero 2-client smoke of 3c-B** (combat math end-to-end: Aim/Cover/Range CMod, NPC defense, grenade blast + fumble, infection, lasting wounds, coordinated effort, insight dice 3d6/+3, mortal-wound + stress, auto-advance). B1/B2/B3 all fold into this ONE smoke (each behavior-preserving). If it passes, 3c is done.
+  - **Xero 2-client smoke of 3c-B** - testplan: [tasks/3c-b-executeroll-smoke-testplan-2026-05-23.md](3c-b-executeroll-smoke-testplan-2026-05-23.md) (combat math end-to-end: Aim/Cover/Range CMod, NPC defense, grenade blast + fumble, infection, lasting wounds, coordinated effort, insight dice 3d6/+3, mortal-wound + stress, auto-advance). B1/B2/B3 all fold into this ONE smoke (each behavior-preserving). If it passes, 3c is done.
   - **3d (separate FRESH window, own smoke)** - migrate the 11 channels / 23 events onto `lib/realtime/useCampaignChannel` (deps `[campaignId]`); then `useTacticalSync` + `useInitiative` carve off the now-owned `initiative_${id}` channel.
   - Then **Phase 4** (dep-cruiser lock) + **Phase 5** (the other 6 god-components, using the B3 extraction technique).
 
