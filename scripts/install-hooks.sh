@@ -17,6 +17,7 @@
 #   - check-preview-sync.mjs (preview file kept in sync with narrative source)
 #   - check-em-dashes.mjs (no em-dash / en-dash in code, per project rule)
 #   - check-arch.mjs (architecture ratchets: LOC ceilings, seam leakage, prod console)
+#   - arch:depcruise (dependency-direction lint via dependency-cruiser)
 #   - npm test (Vitest unit suite under tests/**/*.test.ts)
 #
 # To bypass for a single commit (not recommended): git commit --no-verify
@@ -40,6 +41,7 @@ node scripts/check-role-literals.mjs
 node scripts/check-preview-sync.mjs
 node scripts/check-em-dashes.mjs
 node scripts/check-arch.mjs
+npm run arch:depcruise --silent
 npm test --silent
 EOF
 

@@ -32,6 +32,18 @@ jobs:
       - name: Role-literal guardrail
         run: node scripts/check-role-literals.mjs
 
+      - name: Em-dash guardrail
+        run: node scripts/check-em-dashes.mjs
+
+      - name: Roll-feed preview-sync guardrail
+        run: node scripts/check-preview-sync.mjs
+
+      - name: Architecture ratchet (LOC ceilings / seam-leakage / prod-console)
+        run: npm run arch:check
+
+      - name: Dependency-direction lint (dependency-cruiser)
+        run: npm run arch:depcruise
+
       - name: TypeScript typecheck
         run: npx tsc --noEmit
 

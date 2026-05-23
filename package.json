@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "arch:check": "node scripts/check-arch.mjs",
-    "arch:save": "node scripts/check-arch.mjs --save"
+    "arch:save": "node scripts/check-arch.mjs --save",
+    "arch:depcruise": "depcruise lib components app --config .dependency-cruiser.cjs --output-type err"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.51.0",
@@ -35,6 +36,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/ui": "^4.1.6",
+    "dependency-cruiser": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "typescript": "^5",
