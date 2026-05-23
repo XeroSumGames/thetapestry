@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## Deleting a local var that shares a name with component state = silent rebind, not a compile error you'd expect (2026-05-23)
+
+**Rule:** Before deleting a `let`/`const` local, grep the enclosing function for an outer-scope binding of the SAME name. If one exists, every reference to the local silently rebinds to the outer one instead of erroring "undefined."
+
+**What it caught (3c-B1):** `executeRoll` had local `let distractResult = ''` / `let stabilizeResult = ''` (dead branches being removed), but the component ALSO has state vars `distractResult` / `stabilizeResult` (type `SharedRollResult | null`, for the dedicated modals). The `traitNotes` array spread `...(stabilizeResult ? [stabilizeResult] : [])` read the locals. Deleting just the branches (not the spreads) would have left the spreads compiling fine - but now reading the COMPONENT STATE objects and pushing `SharedRollResult` into a `string[]`. tsc would have flagged the array-type mismatch here, but a same-typed shadow (string local shadowing a string state) would NOT - it'd silently change runtime behavior with a green build. The phase4-prestage commit knew this and removed the spreads too; I verified and matched.
+
+**Detection:** when removing a local, search the whole component for the identifier. Adjacent surviving references to a now-removed local are a rebind risk, not a guaranteed compile failure. This is why behavior-preserving deletions need the grep, not just "tsc passed."
+
 ## "The rulebook says X" needs a citation - verify canon against the actual rules page before asserting (2026-05-23)
 
 **Rule:** Before telling Xero "canon says X" (especially to justify a code change), open the actual `app/rules/*` page or the precedence-stack source and quote it. Do NOT assert canon from inference or memory. He WILL ask "where does it say this?" - and he should.
