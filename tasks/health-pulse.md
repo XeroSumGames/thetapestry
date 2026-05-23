@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-23 21:11 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [532 passed, 29 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Confidence Ledger TESTED count stale (7th alert):** ledger 502/26 files; live is 532/29. Delta GROWING: +22 at alert 1, now +30. 8 new tests added since the 18:05 pulse (table-roll-context +8 + tactical-view +8 = net 8 new vs last run). Run `node scripts/refresh-ledger.mjs`.
+- **HOPED-FOR (2026-05-19 batch) day 4** - drain target 2026-05-25 (2 days). On track; no action needed before playtest.
+
+**Action:** run `node scripts/refresh-ledger.mjs` - delta growing and 2026-05-25 playtest is 2 days out; stale TESTED count will make the post-playtest ledger update harder.
+
+---
+
 ## 2026-05-23 18:05 UTC
 
 **Status:** DRIFT
