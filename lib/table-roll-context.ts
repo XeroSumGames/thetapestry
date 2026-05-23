@@ -60,3 +60,65 @@ export function computeBlastSplash(
 export function mortalWoundCountdown(phyMod: number): number {
   return Math.max(1, 4 + phyMod)
 }
+
+// --- CMod itemization (3c) ---------------------------------------------------
+// The roll modal used to collapse every CMod source into a single net number,
+// so a player who Aimed (+2) but fired at long range (-4) just saw "-2 CMod"
+// and could not tell their Aim had applied at all. Xero's ruling 2026-05-23:
+// itemize CMod by source - Aim is always its OWN positive term and must never
+// be silently netted away by target defense. Target defense gets its own term
+// too (canon "double duty", app/rules/combat/damage: a defender's MDM/RDM both
+// lowers the attacker's to-hit AND mitigates damage - this is the to-hit half).
+
+export interface CmodTerm {
+  label: string
+  value: number
+}
+
+/**
+ * Itemized CMod sources for a combat roll. Each is a signed contribution to
+ * the attacker's to-hit total; pass the value the way it affects the roll
+ * (Aim positive, Range/target-defense/sick negative). Omitted or zero fields
+ * drop out of the breakdown. `manual` is the GM's hand-entered adjustment
+ * (anything in the modal's CMod field beyond the auto-computed sources) so a
+ * manual tweak still shows rather than vanishing.
+ */
+export interface CmodSources {
+  weaponCondition?: number
+  aim?: number
+  coordinate?: number
+  coordinatedEffort?: number
+  sameTarget?: number
+  targetDefense?: number
+  targetDefenseLabel?: string
+  range?: number
+  sick?: number
+  insight?: number
+  manual?: number
+}
+
+/**
+ * Turn the itemized CMod sources into a render-ready, source-labeled term list
+ * plus the net total. Terms keep a fixed display order (weapon, aim,
+ * coordinate, coordinated-effort, same-target, target-defense, range, sick,
+ * insight, manual); zero-valued sources are dropped. `total` is the sum of the
+ * kept terms, so the breakdown the player sees always reconciles to the number
+ * that hit the roll.
+ */
+export function buildCmodBreakdown(s: CmodSources): { terms: CmodTerm[]; total: number } {
+  const ordered: CmodTerm[] = [
+    { label: 'Weapon', value: s.weaponCondition ?? 0 },
+    { label: 'Aim', value: s.aim ?? 0 },
+    { label: 'Coordinate', value: s.coordinate ?? 0 },
+    { label: 'Coordinated Effort', value: s.coordinatedEffort ?? 0 },
+    { label: 'Same target', value: s.sameTarget ?? 0 },
+    { label: s.targetDefenseLabel || 'Target defense', value: s.targetDefense ?? 0 },
+    { label: 'Range', value: s.range ?? 0 },
+    { label: 'Sick', value: s.sick ?? 0 },
+    { label: 'Insight', value: s.insight ?? 0 },
+    { label: 'CMod', value: s.manual ?? 0 },
+  ]
+  const terms = ordered.filter(t => t.value !== 0)
+  const total = terms.reduce((acc, t) => acc + t.value, 0)
+  return { terms, total }
+}

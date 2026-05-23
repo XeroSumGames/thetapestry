@@ -3,6 +3,7 @@ import {
   cellDistance,
   computeBlastSplash,
   mortalWoundCountdown,
+  buildCmodBreakdown,
 } from '../../lib/table-roll-context'
 
 describe('cellDistance - Chebyshev grid distance', () => {
@@ -82,5 +83,64 @@ describe('mortalWoundCountdown - 4 + PHY, floored at 1', () => {
   it('negative PHY never drops below 1 round', () => {
     expect(mortalWoundCountdown(-3)).toBe(1)
     expect(mortalWoundCountdown(-5)).toBe(1)
+  })
+})
+
+describe('buildCmodBreakdown - source-labeled CMod terms', () => {
+  it('empty input yields no terms and a 0 total', () => {
+    const b = buildCmodBreakdown({})
+    expect(b.terms).toEqual([])
+    expect(b.total).toBe(0)
+  })
+
+  it('drops zero-valued sources', () => {
+    const b = buildCmodBreakdown({ aim: 0, range: 0, sameTarget: 0 })
+    expect(b.terms).toEqual([])
+    expect(b.total).toBe(0)
+  })
+
+  it('keeps each non-zero source as its own signed term', () => {
+    const b = buildCmodBreakdown({ aim: 2, range: -4, sameTarget: 1 })
+    expect(b.terms).toEqual([
+      { label: 'Aim', value: 2 },
+      { label: 'Same target', value: 1 },
+      { label: 'Range', value: -4 },
+    ])
+    expect(b.total).toBe(-1)
+  })
+
+  it('Aim stays a positive term even when target defense pushes the net negative (Xero ruling)', () => {
+    // The whole point: Aim must never be silently netted away by defense.
+    const b = buildCmodBreakdown({ aim: 2, targetDefense: -4, targetDefenseLabel: 'Target DEX' })
+    expect(b.terms).toContainEqual({ label: 'Aim', value: 2 })
+    expect(b.terms).toContainEqual({ label: 'Target DEX', value: -4 })
+    expect(b.total).toBe(-2)
+  })
+
+  it('uses the supplied target-defense label, defaulting when absent', () => {
+    expect(buildCmodBreakdown({ targetDefense: -2, targetDefenseLabel: 'Target PHY' }).terms)
+      .toEqual([{ label: 'Target PHY', value: -2 }])
+    expect(buildCmodBreakdown({ targetDefense: -2 }).terms)
+      .toEqual([{ label: 'Target defense', value: -2 }])
+  })
+
+  it('preserves a fixed display order regardless of input key order', () => {
+    const b = buildCmodBreakdown({ insight: 3, weaponCondition: -1, aim: 2 })
+    expect(b.terms.map(t => t.label)).toEqual(['Weapon', 'Aim', 'Insight'])
+  })
+
+  it('total always equals the sum of kept terms', () => {
+    const b = buildCmodBreakdown({
+      weaponCondition: -1, aim: 2, coordinate: 2, coordinatedEffort: 1,
+      sameTarget: 1, targetDefense: -2, range: -4, sick: -2, insight: 3, manual: 1,
+    })
+    expect(b.total).toBe(b.terms.reduce((s, t) => s + t.value, 0))
+    expect(b.total).toBe(1)
+  })
+
+  it('keeps a manual GM adjustment as its own CMod term', () => {
+    const b = buildCmodBreakdown({ aim: 2, manual: -1 })
+    expect(b.terms).toContainEqual({ label: 'CMod', value: -1 })
+    expect(b.total).toBe(1)
   })
 })
