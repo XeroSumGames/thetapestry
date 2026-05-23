@@ -6346,95 +6346,11 @@ export default function TablePage() {
       }
     }
 
-    // Distract result - LEGACY PATH (unreachable since 2026-05-20).
-    // The in-combat Distract button now routes through the dedicated
-    // <RollModal> + runDistractCascade helper. Kept here for Phase 4
-    // retirement alongside the Stabilize legacy branch (delete after
-    // the 2026-05-25 playtest verifies both modals are clean).
-    let distractResult = ''
-    if (pendingRoll.label.endsWith(' - Distract')) {
-      const dtTargetName = targetName
-      const dtTargetEntry = dtTargetName ? initiativeOrder.find(e => e.character_name === dtTargetName) : null
-      if (dtTargetEntry) {
-        const cur = dtTargetEntry.actions_remaining ?? 0
-        let delta = 0
-        if (outcome === 'Wild Success' || outcome === 'High Insight') delta = -2
-        else if (outcome === 'Success') delta = -1
-        else if (outcome === 'Dire Failure') delta = 1
-        if (delta !== 0) {
-          const newActions = Math.max(0, cur + delta)
-          // .select() echo so we can detect a silent RLS rejection - same
-          // pattern as consumeAction. Without this, an RLS gap on
-          // initiative_order silently drops the update and Distract
-          // looks like it did nothing.
-          const { data: distractRows, error: distractErr } = await supabase
-            .from('initiative_order')
-            .update({ actions_remaining: newActions })
-            .eq('id', dtTargetEntry.id)
-            .select('id, actions_remaining')
-          if (distractErr) console.error('[distract] update error:', distractErr.message)
-          else if (!distractRows || distractRows.length === 0) console.warn('[distract] SILENT RLS FAIL - target actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
-          else {
-            // Broadcast turn_changed so all clients refresh immediately
-            // even if the postgres_changes UPDATE is delayed.
-            initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-            if (delta === -2) distractResult = `${dtTargetName} loses BOTH actions this turn.`
-            else if (delta === -1) distractResult = `${dtTargetName} loses 1 action.`
-            else distractResult = `${dtTargetName} shrugs it off and gains an action - Inspired!`
-          }
-        } else {
-          distractResult = `${dtTargetName} shrugged off the distraction.`
-        }
-      }
-    }
-
-    // Stabilize result - LEGACY PATH (unreachable since 2026-05-20).
-    // The 🩸 STABILIZE dropdown now routes through the dedicated
-    // <RollModal> + runStabilizeCascade helper at L4895+. The broken
-    // per-card Stabilize button on CharacterCard.tsx (which used the
-    // patient's own stats as the medic's) was removed in the same
-    // change, eliminating every caller of `handleRollRequest` with a
-    // "Stabilize " label. This branch is kept in place for Phase 4
-    // retirement (tasks/spec-stabilize-migration.md) - if Phase 1 ships
-    // clean through one playtest, delete this whole block.
-    let stabilizeResult = ''
-    if (pendingRoll.label.includes('Stabilize ')) {
-      const stTargetName = pendingRoll.label.split('Stabilize ')[1]
-      const targetEntry = entries.find(e => e.character.name === stTargetName)
-      const targetNpcStab = campaignNpcs.find((n: any) => n.name === stTargetName)
-      if (targetEntry?.liveState && targetEntry.liveState.wp_current === 0) {
-        // PC stabilization
-        if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
-          const phyAmod = targetEntry.character.data?.rapid?.PHY ?? 0
-          const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
-          const { data: stabRows, error: stabErr } = await supabase.from('character_states').update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select('id, death_countdown, incap_rounds')
-          if (stabErr) console.error('[stabilize] character_states update error:', stabErr.message)
-          else if (!stabRows || stabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - stabilize did not persist for', stTargetName, '- Run sql/character-states-rls-fix.sql.')
-          setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any } : e))
-          stabilizeResult = `${stTargetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
-          const medicName = pendingRoll.label.split(' - ')[0]
-          if (targetEntry.character?.id) void appendProgressionLog(targetEntry.character.id, 'wound', `🩸 Stabilized by ${medicName}.`)
-        } else {
-          stabilizeResult = `Failed to stabilize ${stTargetName}.`
-        }
-      } else if (targetNpcStab && (targetNpcStab.wp_current ?? targetNpcStab.wp_max ?? 10) === 0) {
-        // NPC stabilization
-        if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
-          const phyAmod = targetNpcStab.physicality ?? 0
-          const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
-          const { data: nstabRows, error: nstabErr } = await supabase.from('campaign_npcs').update({ death_countdown: null, incap_rounds: incapRounds }).eq('id', targetNpcStab.id).select('id, death_countdown, incap_rounds')
-          if (nstabErr) console.error('[stabilize] campaign_npcs update error:', nstabErr.message)
-          else if (!nstabRows || nstabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - NPC stabilize did not persist for', stTargetName)
-          const npcPatch = { death_countdown: null, incap_rounds: incapRounds }
-          setCampaignNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
-          setRosterNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
-          setViewingNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } as CampaignNpc : n))
-          stabilizeResult = `${stTargetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
-        } else {
-          stabilizeResult = `Failed to stabilize ${stTargetName}.`
-        }
-      }
-    }
+    // Distract + Stabilize legacy executeRoll branches retired 2026-05-23
+    // (3c-B1). Both migrated to dedicated <RollModal>s on 2026-05-20
+    // (runDistractCascade / runStabilizeCascade own the cascades). Verified
+    // unreachable: no handleRollRequest caller produces a ' - Distract' or
+    // 'Stabilize ' label, so pendingRoll never carries one.
 
     // Infection result - write infection_state, days_left, lasting_risk
     // based on the outcome. Two label shapes:
@@ -6860,24 +6776,9 @@ export default function TablePage() {
         augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), blastSummary: blastFeedSummary }
       }
       await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3, cmodBreakdown)
-      // Gut Instinct - LEGACY BRANCH (unreachable since 2026-05-20).
-      // Migrated to the dedicated <RollModal> + cascade broadcast at
-      // the bottom of this file. triggerGutInstinct now sets
-      // gutInstinctPending instead of calling handleRollRequest, so
-      // no pendingRoll ever carries a 'Gut Instinct' label. Kept here
-      // for Phase 4 retirement alongside Stabilize + Distract (delete
-      // after the 2026-05-25 playtest verifies all three modals are
-      // clean).
-      if (pendingRoll.label.includes('Gut Instinct')) {
-        const pcEntry = entries.find(e => e.character.name === characterName)
-        if (pcEntry?.userId && initChannelRef.current) {
-          initChannelRef.current.send({
-            type: 'broadcast',
-            event: 'gut_instinct_resolved',
-            payload: { pcOwnerId: pcEntry.userId, characterName, outcome }
-          })
-        }
-      }
+      // Gut Instinct legacy broadcast retired 2026-05-23 (3c-B1) - migrated
+      // to the dedicated <RollModal>'s onRoll on 2026-05-20; pendingRoll
+      // never carries a 'Gut Instinct' label anymore.
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack
@@ -6948,7 +6849,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
-      damage: damageResult, weaponJammed, traitNotes: [...(infectionSickCmodNote ? [infectionSickCmodNote] : []), ...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(infectionResult ? [infectionResult] : []), ...(lastingDamageResult ? [lastingDamageResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : []), ...(healResult ? [healResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...(infectionSickCmodNote ? [infectionSickCmodNote] : []), ...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(infectionResult ? [infectionResult] : []), ...(lastingDamageResult ? [lastingDamageResult] : []), ...(treatInfectionResult ? [treatInfectionResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : []), ...(healResult ? [healResult] : [])],
       diceRolled: insightDiceRolled,
     } as any)
 
