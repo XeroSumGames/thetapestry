@@ -168,10 +168,25 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - 3c-B smoke-passed; 3d IN PROGRESS, autonomous run to Phase 7 authorized)
+# Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - 3d + Phase 4 DONE; Phase 5 NEXT, autonomous run to Phase 7)
+
+## Current HEAD: derive (`git rev-parse --short HEAD`; was `be5b1d7`). page.tsx 10553; 548 tests; CI green (now runs the full fitness set). Ratchet baselines current.
 
 ## Autonomous run directive (Xero, 2026-05-23)
-"Keep going from 3d all the way to Phase 7. Stop ONLY if you absolutely need me to smoke-test something, and only for critical issues." So: drive 3d -> P4 -> P5 -> P6 -> P7, commit every verifiable step, keep this handoff current, **batch ALL 2-client smokes into the ONE Phase-7 acceptance**, do not stop between phases. Multi-window by nature (Phase 5 = 6 god-components) - progress lives in git + this handoff + the in-conversation task list (#1-#5).
+"Keep going from 3d all the way to Phase 7. Stop ONLY if you absolutely need me to smoke-test something, and only for critical issues." Drive P5 -> P6 -> P7, commit every verifiable step, keep this handoff current, **batch ALL 2-client smokes into the ONE Phase-7 acceptance**, do not stop between phases. Multi-window by nature - progress lives in git + this handoff + task list (#1-#5).
+
+## Xero's Phase 6 decisions (locked 2026-05-23) - apply when you reach Phase 6:
+- **Console stripping = option B (done right):** route telemetry OFF console - replace the diagnostic `console.warn('[playtest-trace] ...')` (and the useful debug lines) with an explicit `trace(label, data)` that pushes straight into the recorder buffer (console only in dev). Then strip ALL bare `console.*` from prod. Recorder workflow (GM starts -> player JSON dumps) is UNCHANGED; capture just gets explicit instead of monkey-patching console.warn. Convert the genuinely-useful lines ([damage]/[nextTurn]/[playtest-trace]) to trace(); delete pure noise ([kickCheck]/[crop]/one-offs).
+- **Recorder gate = LEAVE widened** (all signed-in users) until launch. Do NOT narrow to isThriver now.
+- **alert() placeholders = LEAVE** as "coming soon" stubs (Eat/Rest/Relax on campaign-sheet:395-405; Apprentice on CharacterCard.tsx:463 + page.tsx:5356). Don't remove, don't build. Revisit later.
+
+## Phase 4 DONE (`be5b1d7`) - architecture locked
+- CI gap closed: `.github/workflows/test.yml` now runs em-dash + preview-sync + `arch:check` + `arch:depcruise` (was font/role/tsc/tests only; ratchet had been local-hook-only).
+- dependency-cruiser added (dev dep) + `.dependency-cruiser.cjs`: no-circular, lib-no-upward (app/components), components-no-route-internals, no-test-imports - ALL green (293 modules), locked as error. `npm run arch:depcruise`; also in the pre-commit hook.
+- ADR: `tasks/architecture-target.md` (invariants -> fitness functions + the per-component reference checklist for Phase 5).
+
+## Phase 5 NEXT - the other 6 god-components (ascending difficulty)
+Order: `app/moderate/page.tsx` (1726, NO realtime - easiest) -> `components/MapView.tsx` (2041) -> `app/vehicle/page.tsx` (2110) -> `components/NpcRoster.tsx` (2301) -> `components/CampaignCommunity.tsx` (3158) -> `components/TacticalMap.tsx` (4314, hardest). Per component, behavior-preserving: `.from(` -> `lib/data/*`, `.channel(` -> `useCampaignChannel`, extract logic to hooks/lib, gut to dumb component / thin route. **Reuse the proven techniques:** the B3 byte-exact script-move + destructure-deps + tsc-convergence (lessons.md "God-component function extraction"), and the 3d channel->useCampaignChannel pattern (handlers take the payload arg directly; tighten event payload types in lib/realtime/events.ts so tsc verifies). Run the ADR reference checklist at the end of each. Ratchets enforce monotonic improvement; smokes batch to Phase 7. Each component is its own commit(s); --save the ratchet as numbers drop.
 
 ## 3c-B smoke result (2026-05-23, Xero, 2 clients): PASS
 All executeRoll paths clean (damage, mortal-wound, auto-advance, no errors; pasted console = expected [playtest-trace] noise). Extraction validated behavior-preserving. ONE failure logged PRE-EXISTING (not 3c-B): wound-infection check did not fire at end of combat (Xero confirmed player owned the wounded PC + watched + no modal). The infection_check_request rides the ad-hoc init channel -> likely the resubscribe bug class **3d fixes**. Bisect: did "<name> is wounded and may have to deal with infection" rows show in the feed during the fight? (todo has full write-up + sql/diag-wound-infection-2026-05-23.sql.)
