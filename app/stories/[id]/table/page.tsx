@@ -1235,64 +1235,22 @@ export default function TablePage() {
         }))
       if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
 
-      // Load revealed NPCs - GM sees all, players see their own
+      // Load revealed NPCs - GM sees all, players see their own. The
+      // npc_relationships realtime channel (+ table/members/community_members)
+      // is migrated to useCampaignChannel (3d.2a); only the INITIAL load stays here.
       if (camp.gm_user_id === user.id) {
         await loadRevealedNpcs(null, cnpcs)
         if (cancelled) return
-        revealChannelRef.current = supabase.channel(`reveals_${id}`)
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, wrapDbChange('npc_relationships:*', () => {
-            loadRevealedNpcs(null, cnpcs)
-          }))
-          .subscribe()
       } else {
         const myMember = (members ?? []).find((m: any) => m.user_id === user.id)
         if (myMember?.character_id) {
           myCharIdRef.current = myMember.character_id
           await loadRevealedNpcs(myMember.character_id, cnpcs)
           if (cancelled) return
-          revealChannelRef.current = supabase.channel(`reveals_${id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, wrapDbChange('npc_relationships:*', () => {
-              if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, cnpcs)
-            }))
-            .subscribe()
         }
       }
 
-      if (cancelled) return
-      // Keep the community map fresh - when an NPC is recruited, the
-      // player roster should immediately show the community bucket.
-      communityMembersChannelRef.current = supabase.channel(`community_members_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, wrapDbChange('community_members:*', () => {
-          loadPlayerNpcCommunityMap(id)
-        }))
-        .subscribe()
-
-      if (cancelled) return
-      channelRef.current = supabase.channel(`table_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, wrapDbChange('character_states:*', () => loadEntries(id)))
-        .subscribe()
-
-      if (cancelled) return
-      membersChannelRef.current = supabase.channel(`members_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members', filter: `campaign_id=eq.${id}` }, wrapDbChange('campaign_members:*', async () => {
-          // Refetch members with character data, ensure their character_state exists,
-          // then refresh entries. Without ensureCharacterStates here, a player who
-          // picks a character won't appear in the GM's table until they navigate to
-          // /table themselves and trigger state creation on their own browser.
-          const { data: refreshedMembers } = await supabase
-            .from('campaign_members')
-            .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
-            .eq('campaign_id', id)
-            .not('character_id', 'is', null)
-          if (refreshedMembers && refreshedMembers.length > 0) {
-            await ensureCharacterStates(id, refreshedMembers as any[])
-          }
-          await loadEntries(id)
-        }))
-        .subscribe()
-
-      // Chat realtime channel now lives inside useChatPanel - no
-      // separate subscription needed here.
+      // Chat realtime channel lives inside useChatPanel.
 
       if (cancelled) return
       initChannelRef.current = supabase.channel(`initiative_${id}`)
@@ -1527,72 +1485,7 @@ export default function TablePage() {
         }))
         .subscribe()
 
-      if (cancelled) return
-      campaignChannelRef.current = supabase.channel(`campaign_${id}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${id}` }, wrapDbChange('campaigns:UPDATE', (payload: any) => {
-          const row = payload.new
-          setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
-          setSessionCount(row.session_count ?? 0)
-          setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
-          // Sync the vehicles array too - the vehicle popout writes
-          // seat assignments here, and TacticalMap's aboard-token
-          // filter + passenger-count badge both read from this state.
-          // Without the sync, boarded tokens kept rendering on the
-          // canvas (and dragging along with the vehicle via
-          // syncVehiclePassengers, which DOES read DB directly), and
-          // the badge never appeared.
-          if (Array.isArray(row.vehicles)) {
-            setVehicles(row.vehicles)
-          }
-        }))
-        .subscribe()
-
-      if (cancelled) return
-      // NPC roster realtime - without this, damage applied to an NPC updates
-      // the DB but the GM (and players) keep seeing the old HP because
-      // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
-      npcsChannelRef.current = supabase.channel(`campaign_npcs_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, wrapDbChange('campaign_npcs:*', (payload: any) => {
-          // For UPDATEs, apply the row from the payload directly - no round trip,
-          // no race with the in-flight-ref guard. INSERT/DELETE fall through to
-          // a full refetch since payload.new may be incomplete/absent.
-          if (payload.eventType === 'UPDATE' && payload.new) {
-            const row = payload.new
-            // Upsert (not just patch) - when hidden_from_players flips false,
-            // a player's RLS now exposes a row their local state never had,
-            // and the UPDATE event is the only signal it exists. Plain
-            // .map() would silently drop it.
-            setCampaignNpcs(prev => prev.some(n => n.id === row.id)
-              ? prev.map(n => n.id === row.id ? { ...n, ...row } : n)
-              : [...prev, row])
-            setRosterNpcs(prev => {
-              const alive = (n: any) => {
-                const wp = n.wp_current ?? n.wp_max ?? 10
-                return n.status === 'active' && !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-              }
-              const merged = prev.some(n => n.id === row.id)
-                ? prev.map(n => n.id === row.id ? { ...n, ...row } : n)
-                : [...prev, row]
-              // Drop if the update killed them, or if the row is hidden.
-              return merged.filter(alive)
-            })
-            setViewingNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } as CampaignNpc : n))
-            return
-          }
-          // INSERT/DELETE: full refetch.
-          void (async () => {
-            const { data: cnpcs } = await getCampaignNpcs(id)
-            if (cnpcs) {
-              setCampaignNpcs(cnpcs)
-              setRosterNpcs(cnpcs.filter((n: any) => {
-                if (n.status !== 'active') return false
-                const wp = n.wp_current ?? n.wp_max ?? 10
-                return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-              }))
-            }
-          })()
-        }))
-        .subscribe()
+      // campaign_ + campaign_npcs_ channels migrated to useCampaignChannel (3d.2a).
 
       if (cancelled) return
       // Presence - track how many users are on this table page
@@ -1623,17 +1516,11 @@ export default function TablePage() {
     load()
     return () => {
       cancelled = true
-      // Null each ref after removeChannel so a stale load() that resumes
-      // after this cleanup can't observe an obsolete channel object via
-      // the ref and accidentally interact with it.
-      if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null }
-      if (membersChannelRef.current) { supabase.removeChannel(membersChannelRef.current); membersChannelRef.current = null }
-      if (npcsChannelRef.current) { supabase.removeChannel(npcsChannelRef.current); npcsChannelRef.current = null }
-      // chat channel teardown is handled by useChatPanel's own cleanup.
+      // table/members/campaign_npcs/campaign/reveals/community_members channels
+      // are now owned by useCampaignChannel (3d.2a) - they tear down themselves.
+      // chat teardown is handled by useChatPanel. initiative + presence remain
+      // here until 3d.2b migrates them.
       if (initChannelRef.current) { supabase.removeChannel(initChannelRef.current); initChannelRef.current = null }
-      if (campaignChannelRef.current) { supabase.removeChannel(campaignChannelRef.current); campaignChannelRef.current = null }
-      if (revealChannelRef.current) { supabase.removeChannel(revealChannelRef.current); revealChannelRef.current = null }
-      if (communityMembersChannelRef.current) { supabase.removeChannel(communityMembersChannelRef.current); communityMembersChannelRef.current = null }
       if (presenceChannelRef.current) { supabase.removeChannel(presenceChannelRef.current); presenceChannelRef.current = null }
     }
   }, [id])
@@ -1729,6 +1616,85 @@ export default function TablePage() {
     postgres: [{
       label: 'advantages:*', event: '*', table: 'advantages', filter: `campaign_id=eq.${id}`,
       handler: async () => { const { rows } = await listCampaignPendingAdvantages(supabase, id); setAdvantages(rows) },
+    }],
+  })
+
+  // --- Postgres-only table channels migrated out of the load() mount effect
+  // to useCampaignChannel (3d.2a). Stable [id] subscription (no churn on
+  // unrelated re-renders), auto-Sentry-wrapped, channel names preserved.
+  // Handlers read component state/refs at dispatch (closures stay fresh via
+  // the primitive's configRef mirror). The initiative channel (broadcasts) is
+  // migrated separately in 3d.2b; presence stays raw (no presence support).
+  useCampaignChannel(id, {
+    channelName: `table_${id}`,
+    postgres: [{ label: 'character_states:*', event: '*', table: 'character_states', filter: `campaign_id=eq.${id}`, handler: () => loadEntries(id) }],
+  })
+  useCampaignChannel(id, {
+    channelName: `members_${id}`,
+    postgres: [{
+      label: 'campaign_members:*', event: '*', table: 'campaign_members', filter: `campaign_id=eq.${id}`,
+      handler: async () => {
+        const { data: refreshedMembers } = await supabase
+          .from('campaign_members')
+          .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
+          .eq('campaign_id', id)
+          .not('character_id', 'is', null)
+        if (refreshedMembers && refreshedMembers.length > 0) await ensureCharacterStates(id, refreshedMembers as any[])
+        await loadEntries(id)
+      },
+    }],
+  })
+  useCampaignChannel(id, {
+    channelName: `campaign_${id}`,
+    postgres: [{
+      label: 'campaigns:UPDATE', event: 'UPDATE', table: 'campaigns', filter: `id=eq.${id}`,
+      handler: (payload: any) => {
+        const row = payload.new
+        setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
+        setSessionCount(row.session_count ?? 0)
+        setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
+        if (Array.isArray(row.vehicles)) setVehicles(row.vehicles)
+      },
+    }],
+  })
+  useCampaignChannel(id, {
+    channelName: `campaign_npcs_${id}`,
+    postgres: [{
+      label: 'campaign_npcs:*', event: '*', table: 'campaign_npcs', filter: `campaign_id=eq.${id}`,
+      handler: (payload: any) => {
+        if (payload.eventType === 'UPDATE' && payload.new) {
+          const row = payload.new
+          setCampaignNpcs(prev => prev.some(n => n.id === row.id) ? prev.map(n => n.id === row.id ? { ...n, ...row } : n) : [...prev, row])
+          setRosterNpcs(prev => {
+            const alive = (n: any) => { const wp = n.wp_current ?? n.wp_max ?? 10; return n.status === 'active' && !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }
+            const merged = prev.some(n => n.id === row.id) ? prev.map(n => n.id === row.id ? { ...n, ...row } : n) : [...prev, row]
+            return merged.filter(alive)
+          })
+          setViewingNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } as CampaignNpc : n))
+          return
+        }
+        void (async () => {
+          const { data: cnpcs } = await getCampaignNpcs(id)
+          if (cnpcs) {
+            setCampaignNpcs(cnpcs)
+            setRosterNpcs(cnpcs.filter((n: any) => { if (n.status !== 'active') return false; const wp = n.wp_current ?? n.wp_max ?? 10; return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }))
+          }
+        })()
+      },
+    }],
+  })
+  useCampaignChannel(id, {
+    channelName: `community_members_${id}`,
+    postgres: [{ label: 'community_members:*', event: '*', table: 'community_members', handler: () => loadPlayerNpcCommunityMap(id) }],
+  })
+  useCampaignChannel(id, {
+    channelName: `reveals_${id}`,
+    postgres: [{
+      label: 'npc_relationships:*', event: '*', table: 'npc_relationships',
+      handler: () => {
+        if (gmLikeRef.current) loadRevealedNpcs(null, campaignNpcs)
+        else if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
+      },
     }],
   })
 
