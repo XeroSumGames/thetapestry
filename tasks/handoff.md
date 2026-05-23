@@ -185,7 +185,15 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 - dependency-cruiser added (dev dep) + `.dependency-cruiser.cjs`: no-circular, lib-no-upward (app/components), components-no-route-internals, no-test-imports - ALL green (293 modules), locked as error. `npm run arch:depcruise`; also in the pre-commit hook.
 - ADR: `tasks/architecture-target.md` (invariants -> fitness functions + the per-component reference checklist for Phase 5).
 
-## Phase 5 NEXT - the other 6 god-components (ascending difficulty)
+## Phase 5 IN PROGRESS - moderate recon done (2026-05-23), execution queued
+**`app/moderate/page.tsx` (1726 LOC, 54 `.from`, 0 `.channel`, 3 console) - the approach (recon'd, not yet executed):**
+- It's a 9-section moderation dashboard (users/rumors/npcs/communities/modules/forums/warstories/lfg/bugs). Queries are VARIED + interleaved with orchestration, so: **repo extraction** into `lib/data/moderation.ts` (query -> repo fn, KEEP the Promise.all / conditional-hydration / optimistic-setState orchestration at the call site - standard seam pattern, behavior-preserving).
+- **Reusable helpers to build:** `usernamesByIds(ids)` (the `profiles.select('id,username').in('id',authorIds)` two-step hydration, repeated 4x), `campaignNamesByIds(ids)` (the `campaigns.select('id,name').in('id',campaignIds)`, repeated 4x). Plus `moderationPendingCounts()` (the 9-count Promise.all -> counts object), per-section loaders (`loadPendingWorldNpcs`, `loadBugReports`, etc.), and the actions (`setBugReportStatus`, `setWorldNpcStatus`, pin approve/reject, `deleteX`, suspend/role-change on profiles, notification inserts).
+- **ORDER: reads first** (counts + all loadX selects + hydration helpers = ~20 queries, NON-destructive, safe) as one commit; **then the write/delete/suspend actions** as a second careful commit (these touch user-content deletes + bans = bright-line-adjacent; preserve every `.eq` filter verbatim, review each).
+- **No test coverage on moderate** - nets are tsc + arch ratchet (.from drops) + dep-cruiser + the Phase-7 smoke. Do it with FRESH focus, not deep in a window.
+- Then `--save` the ratchet, run the ADR reference checklist.
+
+## Phase 5 remaining - the other 5 god-components (ascending difficulty)
 Order: `app/moderate/page.tsx` (1726, NO realtime - easiest) -> `components/MapView.tsx` (2041) -> `app/vehicle/page.tsx` (2110) -> `components/NpcRoster.tsx` (2301) -> `components/CampaignCommunity.tsx` (3158) -> `components/TacticalMap.tsx` (4314, hardest). Per component, behavior-preserving: `.from(` -> `lib/data/*`, `.channel(` -> `useCampaignChannel`, extract logic to hooks/lib, gut to dumb component / thin route. **Reuse the proven techniques:** the B3 byte-exact script-move + destructure-deps + tsc-convergence (lessons.md "God-component function extraction"), and the 3d channel->useCampaignChannel pattern (handlers take the payload arg directly; tighten event payload types in lib/realtime/events.ts so tsc verifies). Run the ADR reference checklist at the end of each. Ratchets enforce monotonic improvement; smokes batch to Phase 7. Each component is its own commit(s); --save the ratchet as numbers drop.
 
 ## 3c-B smoke result (2026-05-23, Xero, 2 clients): PASS
