@@ -81,7 +81,7 @@ import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../.
 import { distractActionDelta, distractNarrative } from '../../../../lib/distract-helpers'
 import { gutInstinctSmod } from '../../../../lib/gut-instinct-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
-import { computeBlastSplash, mortalWoundCountdown } from '../../../../lib/table-roll-context'
+import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, type CmodSources } from '../../../../lib/table-roll-context'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
@@ -245,6 +245,13 @@ export default function TablePage() {
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
+  // Itemized auto-computed CMod sources for the pending attack roll (aim,
+  // target-defense, coord, same-target, weapon condition). Set in
+  // handleRollRequest + the target-dropdown onChange via computeAttackCmod;
+  // read by executeRoll to render the source-labeled breakdown (3c). A ref
+  // (not state) so executeRoll's closure always reads the latest, never a
+  // stale snapshot - same reasoning as coordEffortRef.
+  const cmodSourcesRef = useRef<CmodSources>({})
   const [rolling, setRolling] = useState(false)
   const [targetName, setTargetName] = useState<string>('')
   // Grenade / thrown-explosive cell targeting. When the attacker clicks
@@ -4381,8 +4388,10 @@ export default function TablePage() {
     const kitLabel = healKit === 'doctors_bag' ? "Doctor's Bag" : healKit === 'first_aid' ? 'First Aid Kit' : 'naked'
     handleRollRequest(`${myEntry.character.name} - Heal ${target.character.name} (${kitLabel})`, amod, smod)
     if (kitCmod > 0) {
-      // Defer to next tick so handleRollRequest's setCmod fires first.
-      setTimeout(() => setCmod(String(kitCmod)), 0)
+      // Defer to next tick so handleRollRequest's setCmod fires first. Clear
+      // the itemized sources so the kit bonus reads as a plain CMod term in
+      // the breakdown, not a stale Aim term from the prefill.
+      setTimeout(() => { cmodSourcesRef.current = {}; setCmod(String(kitCmod)) }, 0)
     }
     setShowSpecialCheck(null)
     setHealTargetCharId('')
@@ -4522,6 +4531,59 @@ export default function TablePage() {
     return cmod ?? 0
   }
 
+  // Target's Defense Mod for an incoming attack (the to-hit half of canon's
+  // "double duty" - app/rules/combat/damage). MDM=PHY, RDM=DEX, + the init
+  // row's defense_bonus (Defend/Take Cover). Works for PC OR NPC targets
+  // (Q1=b: NPCs used to skip this because the prefill only looked up PCs).
+  // Mirrors the damage path's resolution (~L5309). Objects have no defense.
+  function resolveTargetDefense(targetName: string, isMelee: boolean): { value: number; label: string } {
+    const label = isMelee ? 'Target PHY' : 'Target DEX'
+    const tEntry = entries.find(en => en.character.name === targetName)
+    const tNpc = !tEntry ? campaignNpcs.find((n: any) => n.name === targetName) : null
+    const isObject = !tEntry && !tNpc && mapTokens.some(t => t.token_type === 'object' && t.name === targetName)
+    if (isObject) return { value: 0, label }
+    const rapid: any = tEntry?.character.data?.rapid ?? (tNpc ? { PHY: tNpc.physicality ?? 0, DEX: tNpc.dexterity ?? 0 } : {})
+    const initEntry = initiativeOrder.find(ie => ie.character_name === targetName)
+    const defBonus = initEntry?.defense_bonus ?? 0
+    const base = isMelee ? (rapid.PHY ?? 0) : (rapid.DEX ?? 0)
+    return { value: base + defBonus, label }
+  }
+
+  // Single source of truth for an attack roll's auto-computed CMod - used by
+  // both the prefill and the target-dropdown onChange so they can never drift
+  // (the old dropdown copy dropped Aim - 3c fix). Returns the itemized sources
+  // + the net for the field. Range/sick/insight are layered on in executeRoll.
+  function computeAttackCmod(targetName: string, weapon: WeaponContext): { net: number; sources: CmodSources } {
+    const activeEntry = initiativeOrder.find(e => e.is_active)
+    const aim = activeEntry?.aim_bonus ?? 0
+    const weaponCondition = weapon.conditionCmod ?? 0
+    let coordinatedEffort = 0
+    const cef = coordEffortRef.current
+    if (cef && !(pendingRoll?.label ?? '').startsWith('Group Check - ')) {
+      const myEntry = entries.find(e => e.userId === userId)
+      const myCharId = myEntry?.character.id
+      if (myCharId && cef.participantIds.includes(myCharId)) {
+        coordinatedEffort = (cef.totalParticipants - 1) + cef.leadCmod
+      }
+    }
+    const w = getWeaponByName(weapon.weaponName)
+    const isMelee = w?.category === 'melee'
+    const def = resolveTargetDefense(targetName, isMelee)
+    const myInitEntry = initiativeOrder.find(ie =>
+      (activeEntry?.character_id && ie.character_id === activeEntry.character_id) ||
+      (activeEntry?.npc_id && ie.npc_id === activeEntry.npc_id) ||
+      ie.character_name === activeEntry?.character_name
+    )
+    const coordinate = (myInitEntry?.coordinate_target === targetName) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
+    const sameTarget = (activeEntry?.last_attack_target === targetName) ? 1 : 0
+    const sources: CmodSources = {
+      weaponCondition, aim, coordinatedEffort, coordinate, sameTarget,
+      targetDefense: -def.value, targetDefenseLabel: def.label,
+    }
+    const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value
+    return { net, sources }
+  }
+
   async function handleInsightSave(spend: boolean) {
     if (!insightSavePrompt) return
     const { stateId, phyAmod, insightDice } = insightSavePrompt
@@ -4644,22 +4706,27 @@ export default function TablePage() {
     // Include aim bonus from Aim action or Tracking trait
     const activeEntry = combatActive ? initiativeOrder.find(e => e.is_active) : null
     const aimBonus = activeEntry?.aim_bonus ?? 0
-    let baseCmod = (weapon?.conditionCmod ?? 0) + aimBonus
+    const weaponConditionCmod = weapon?.conditionCmod ?? 0
     // Coordinated Effort auto-injection: if a chain is active (or its
     // lead roll is firing) AND the logged-in user's character is a
     // participant, add the coord bonus (+1 per OTHER participant) +
     // the leadCmod (0 for lead roll, ladder value once chain active).
     // Skipped for the Group Check label since that uses its own pooled
     // bonus path.
+    let coordEffortCmod = 0
     const cef = coordEffortRef.current
     if (cef && !label.startsWith('Group Check - ')) {
       const myEntry = entries.find(e => e.userId === userId)
       const myCharId = myEntry?.character.id
       if (myCharId && cef.participantIds.includes(myCharId)) {
-        const coordBonus = cef.totalParticipants - 1
-        baseCmod += coordBonus + cef.leadCmod
+        coordEffortCmod = (cef.totalParticipants - 1) + cef.leadCmod
       }
     }
+    let baseCmod = weaponConditionCmod + aimBonus + coordEffortCmod
+    // No-target / skill-roll sources (overwritten by computeAttackCmod below
+    // once a weapon target is chosen). Reset every prefill so a prior attack's
+    // Aim / defense terms never leak onto the next roll's breakdown.
+    cmodSourcesRef.current = { weaponCondition: weaponConditionCmod, aim: aimBonus, coordinatedEffort: coordEffortCmod }
     setCmod(baseCmod ? String(baseCmod) : '0')
     // Auto-populate target dropdown.  Priority:
     //   1) Token the attacker selected on the map (explicit user action)
@@ -4734,21 +4801,12 @@ export default function TablePage() {
       : (isNameValidLiveTarget(prevTarget) ? prevTarget : (isNameValidLiveTarget(autoClosest) ? autoClosest : null))
     if (chosenTarget && weapon && activeEntry) {
       setTargetName(chosenTarget)
-      const w = getWeaponByName(weapon.weaponName)
-      const isMelee = w?.category === 'melee'
-      const targetEntry = entries.find(en => en.character.name === chosenTarget)
-      const isObjectTarget = !targetEntry && !initiativeOrder.some(ie => ie.character_name === chosenTarget) && mapTokens.some(t => t.token_type === 'object' && t.name === chosenTarget)
-      const targetRapid = targetEntry?.character.data?.rapid ?? {}
-      const defensiveMod = isObjectTarget ? 0 : (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0))
-      const myInitEntry = initiativeOrder.find(ie =>
-        (activeEntry.character_id && ie.character_id === activeEntry.character_id) ||
-        (activeEntry.npc_id && ie.npc_id === activeEntry.npc_id) ||
-        ie.character_name === activeEntry.character_name
-      )
-      const coordBonus = (myInitEntry?.coordinate_target === chosenTarget) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
-      // +1 same-target bonus only when this matches last_attack_target
-      const sameTargetBonus = chosenTarget === prevTarget ? 1 : 0
-      setCmod(String(baseCmod - defensiveMod + sameTargetBonus + coordBonus))
+      // Itemized CMod (incl. NPC-target defense on the to-hit roll, Q1=b) via
+      // the shared computeAttackCmod so the prefill and the dropdown onChange
+      // stay in lockstep.
+      const { net, sources } = computeAttackCmod(chosenTarget, weapon)
+      cmodSourcesRef.current = sources
+      setCmod(String(net))
       const autoRange = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, chosenTarget)
       if (autoRange) setRangeBand(autoRange)
     } else {
@@ -4818,7 +4876,7 @@ export default function TablePage() {
     }
   }
 
-  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult, insightUsed: '3d6' | '+3cmod' | null = null, die3: number | null = null) {
+  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult, insightUsed: '3d6' | '+3cmod' | null = null, die3: number | null = null, cmodBreakdown: Array<{ label: string; value: number }> | null = null) {
     // NOTE on 3d6 Insight Die storage: existing convention packs d2+d3 into
     // die2 (so die1+die2+mods = d1+d2+d3+mods - correct total without a
     // schema change). die3 here is the RAW d3 value, stored separately in
@@ -4832,11 +4890,16 @@ export default function TablePage() {
     const npcTypeForLog = isNPC ? (rosterNpcs.find((n: any) => n.name === characterName)?.npc_type ?? campaignNpcs.find((n: any) => n.name === characterName)?.npc_type ?? '') : ''
     const insightAwarded = isHighLow && !(isNPC && npcTypeForLog !== 'antagonist')
 
-    // Merge die3 into damage_json (attack rolls already have one; skill rolls
-    // typically don't - then damage_json becomes {die3}).
-    const damageJsonOut = die3 != null
-      ? { ...(damageData || {}), die3 }
-      : (damageData || null)
+    // Merge die3 + the itemized CMod breakdown into damage_json (attack rolls
+    // already have a damageData; skill rolls typically don't - then damage_json
+    // becomes just {die3} / {cmodBreakdown}). null when there's nothing extra,
+    // preserving the prior shape.
+    const extraJson: Record<string, unknown> = {}
+    if (die3 != null) extraJson.die3 = die3
+    if (cmodBreakdown && cmodBreakdown.length > 0) extraJson.cmodBreakdown = cmodBreakdown
+    const damageJsonOut = (damageData || Object.keys(extraJson).length > 0)
+      ? { ...(damageData || {}), ...extraJson }
+      : null
 
     // Stamp the Coord Effort chain id on every roll that belongs to
     // the active chain. The withdraw-retcon handler queries roll_log
@@ -5009,9 +5072,12 @@ export default function TablePage() {
     const characterName = firstPartIsKnownName
       ? firstPart
       : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
-    let cmodVal = parseInt(cmod, 10) || 0
-    // Add range band CMod for weapon attacks
-    if (pendingRoll.weapon) cmodVal += getRangeCMod()
+    // CMod is itemized by source (3c). The modal field holds the auto-computed
+    // net (from computeAttackCmod) plus any manual GM tweak; range / sick /
+    // insight are layered on here. Each non-zero source becomes its own labeled
+    // term so Aim is never silently netted away by target defense.
+    const fieldCmod = parseInt(cmod, 10) || 0
+    const rangeCmod = pendingRoll.weapon ? getRangeCMod() : 0
     // Infection - sick characters take -2 CMod on physical checks
     // (Athletics / Melee Combat / Ranged Combat / Stealth / Survival
     // / Unarmed Combat) per locked canon. Detect by both:
@@ -5022,6 +5088,7 @@ export default function TablePage() {
     // Logged via infectionSickCmodNote so the player sees the -2
     // appear in the roll-feed traitNotes alongside the result.
     let infectionSickCmodNote = ''
+    let sickCmod = 0
     {
       const rollerEntry = entries.find(e => e.character.name === characterName)
       const rollerNpc = campaignNpcs.find((n: any) => n.name === characterName)
@@ -5030,7 +5097,7 @@ export default function TablePage() {
       if (rollerInfection) {
         const PHYSICAL_LABEL_RE = /\b(Athletics|Melee Combat|Ranged Combat|Stealth|Survival|Unarmed Combat|Attack|Charge|Subdue|Sprint|Grapple|Unarmed|Fire from Cover|Rapid Fire)\b/i
         if (PHYSICAL_LABEL_RE.test(pendingRoll.label)) {
-          cmodVal -= 2
+          sickCmod = -2
           infectionSickCmodNote = `🤒 Sick (${rollerInfection === 'wound' ? 'Wound Infection' : 'Sickness & Disease'}) - -2 CMod on physical check.`
         }
       }
@@ -5066,7 +5133,6 @@ export default function TablePage() {
     } else if (preRollInsight === '+3cmod' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
       die1 = rollD6()
       die2 = rollD6()
-      cmodVal += 3
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
       preRollSpent = true
@@ -5074,6 +5140,23 @@ export default function TablePage() {
       die1 = rollD6()
       die2 = rollD6()
     }
+
+    // Assemble the itemized CMod. autoNet = the target-dependent sources
+    // captured at prefill; whatever the field holds beyond that is a manual GM
+    // tweak (its own term). insight +3 only when a die was actually spent.
+    // cmodVal reconciles exactly to the old field + range + sick + insight sum.
+    const autoSources = cmodSourcesRef.current || {}
+    const autoNet = (autoSources.weaponCondition ?? 0) + (autoSources.aim ?? 0)
+      + (autoSources.coordinate ?? 0) + (autoSources.coordinatedEffort ?? 0)
+      + (autoSources.sameTarget ?? 0) + (autoSources.targetDefense ?? 0)
+    const insightCmod = (preRollInsight === '+3cmod' && preRollSpent) ? 3 : 0
+    const { terms: cmodBreakdown, total: cmodVal } = buildCmodBreakdown({
+      ...autoSources,
+      range: rangeCmod,
+      sick: sickCmod,
+      insight: insightCmod,
+      manual: fieldCmod - autoNet,
+    })
 
     const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
     const outcome = getOutcome(total, die1, die2, preRollInsight === '3d6' && preRollSpent)
@@ -6764,7 +6847,7 @@ export default function TablePage() {
       if (lastingDamageJson) {
         augmentedDamage = { ...(augmentedDamage ?? damageResult ?? {}), ...lastingDamageJson }
       }
-      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3)
+      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, augmentedDamage, insightUsedValue, insightDie3, cmodBreakdown)
       // Gut Instinct - LEGACY BRANCH (unreachable since 2026-05-20).
       // Migrated to the dedicated <RollModal> + cascade broadcast at
       // the bottom of this file. triggerGutInstinct now sets
@@ -9905,26 +9988,13 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Target</div>
                     <select value={targetName} onChange={e => {
                       setTargetName(e.target.value)
-                      // Auto-apply target's defensive modifier + same-target bonus
+                      // Re-apply the full itemized CMod (Aim, target defense
+                      // incl. NPC, coord, same-target) via the shared helper -
+                      // the old inline copy here dropped the Aim bonus (3c fix).
                       if (pendingRoll.weapon && e.target.value) {
-                        const w = getWeaponByName(pendingRoll.weapon.weaponName)
-                        const isMelee = w?.category === 'melee'
-                        const targetEntry = entries.find(en => en.character.name === e.target.value)
-                        const isObjectTarget = !targetEntry && !initiativeOrder.some(ie => ie.character_name === e.target.value) && mapTokens.some(t => t.token_type === 'object' && t.name === e.target.value)
-                        const targetRapid = targetEntry?.character.data?.rapid ?? {}
-                        const defensiveMod = isObjectTarget ? 0 : (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0))
-                        const baseCmod = pendingRoll.weapon.conditionCmod ?? 0
-                        // SRD: +1 CMod if attacking the same target as your last attack this turn
-                        const activeForBonus = initiativeOrder.find(ie => ie.is_active)
-                        const sameTargetBonus = (activeForBonus?.last_attack_target === e.target.value) ? 1 : 0
-                        // Coordinate bonus: +2 when attacking the coordinated target
-                        const myInitEntry = initiativeOrder.find(ie =>
-                          (activeForBonus?.character_id && ie.character_id === activeForBonus.character_id) ||
-                          (activeForBonus?.npc_id && ie.npc_id === activeForBonus.npc_id) ||
-                          ie.character_name === activeForBonus?.character_name
-                        )
-                        const coordBonus = (myInitEntry?.coordinate_target === e.target.value) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
-                        setCmod(String(baseCmod - defensiveMod + sameTargetBonus + coordBonus))
+                        const { net, sources } = computeAttackCmod(e.target.value, pendingRoll.weapon)
+                        cmodSourcesRef.current = sources
+                        setCmod(String(net))
                         // Auto-calculate range band from token positions
                         const active = initiativeOrder.find(ie => ie.is_active)
                         if (active) {
@@ -10086,6 +10156,9 @@ export default function TablePage() {
                       const { data: rel } = await supabase.from('npc_relationships').select('relationship_cmod').eq('npc_id', npcId).eq('character_id', myChar.character.id).maybeSingle()
                       if (rel) {
                         setSocialCmod({ npcName: npc?.name ?? '', cmod: rel.relationship_cmod })
+                        // Plain CMod term in the breakdown (relationship mod has
+                        // no itemized source slot); clear any prefill sources.
+                        cmodSourcesRef.current = {}
                         setCmod(String(rel.relationship_cmod))
                       } else {
                         setSocialCmod({ npcName: npc?.name ?? '', cmod: 0 })

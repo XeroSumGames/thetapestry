@@ -1001,7 +1001,14 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
                   : <>[{r.die1}+{r.die2}]</>}
               {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
               {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-              {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod{r.insight_used === '+3cmod' && <span style={{ color: '#7fc458', fontSize: '13px' }}> (insight die)</span>}</span>}
+              {/* CMod itemized by source (3c) when the breakdown is stored - so
+                  Aim shows as its own +2 even when target defense pushes the net
+                  negative. Falls back to the single net term for older rows. */}
+              {Array.isArray((r.damage_json as any)?.cmodBreakdown) && (r.damage_json as any).cmodBreakdown.length > 0
+                ? ((r.damage_json as any).cmodBreakdown as Array<{ label: string; value: number }>).map((t, i) => (
+                    <span key={i} style={{ color: t.value > 0 ? '#7ab3d4' : '#EF9F27' }}> {t.value > 0 ? '+' : ''}{t.value} {t.label}</span>
+                  ))
+                : (r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod{r.insight_used === '+3cmod' && <span style={{ color: '#7fc458', fontSize: '13px' }}> (insight die)</span>}</span>)}
               <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
               <span style={{ marginLeft: '8px', fontWeight: 700, color: outcomeColor(r.outcome), letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
             </div>

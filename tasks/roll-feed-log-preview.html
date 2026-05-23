@@ -313,6 +313,7 @@
     <li><a href="#social-actions">Cover Fire / Inspire</a></li>
     <li><strong>Combat attacks</strong></li>
     <li><a href="#attack-weapon">Weapon attack</a></li>
+    <li><a href="#attack-cmod-breakdown">Attack - itemized CMod breakdown</a></li>
     <li><a href="#charge">Charge</a></li>
     <li><a href="#subdue">Subdue</a></li>
     <li><a href="#unarmed">Unarmed</a></li>
@@ -672,6 +673,25 @@
   <div class="row green"><div class="row-head"><span class="name">Ivan Hayes</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Ivan Hayes' Hatchet attack was deflected by Cree Hask and was wildly successful</div></div>
   <div class="row green"><div class="row-head"><span class="name">Ivan Hayes</span><div class="right"><span class="time">2:13 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Ivan Hayes' Hatchet attack was deflected by Cree Hask and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
   <p class="note">Fires on any to-hit success (S/WS/HI) where the target's mitigation eats the entire damage pool (finalWP===0 &amp;&amp; finalRP===0). Reads as "deflected" so the table can tell Defend / armor / cover actually did something. Misses skip this branch and read "Unsuccessfully Attacked".</p>
+
+  <h3 id="attack-cmod-breakdown">Attack roll - itemized CMod breakdown (▸ expanded, 3c)</h3>
+  <div class="row amber">
+    <div class="row-head"><span class="name">Cree Hask</span><div class="right"><span class="time">2:10 PM</span><span class="toggle">▾</span></div></div>
+    <div class="narrative">Cree Hask Unsuccessfully Attacked Avery Xavier using a Carbine</div>
+    <div class="expanded-details">
+      <div class="dice-preview">
+        [<span class="die">6</span>+<span class="die">3</span>]
+        <span class="amod"> +1 AMod</span>
+        <span style="color:#7ab3d4;"> +2 Aim</span>
+        <span style="color:#EF9F27;"> -4 Range</span>
+        <span style="color:#7ab3d4;"> +1 Same target</span>
+        <span style="color:#EF9F27;"> -1 Target DEX</span>
+        <span class="total"> = 8</span>
+        <span class="out amber">Failure</span>
+      </div>
+    </div>
+  </div>
+  <p class="note">CMod is itemized by source (Xero ruling 2026-05-23): every contributor gets its own signed, labeled term so a player who Aimed sees <span style="color:#7ab3d4;">+2 Aim</span> even when Range / target defense push the net negative. Positive terms blue, negative amber. Target defense (PHY for melee, DEX for ranged) is its own term and now applies to NPC targets too (Q1=b, canon "double duty": a defender's MDM/RDM both lowers the attacker's to-hit AND mitigates damage). Older rows with no stored breakdown fall back to a single net <span class="cmod">CMod</span> term. Source: <code>buildCmodBreakdown</code> in <code>lib/table-roll-context.ts</code>; stored on <code>damage_json.cmodBreakdown</code>.</p>
 
   <h3 id="charge">Charge</h3>
   <div class="row blue"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully made a Pistol attack after Charge at Avery Xavier</div></div>
