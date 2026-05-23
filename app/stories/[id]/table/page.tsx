@@ -4537,7 +4537,9 @@ export default function TablePage() {
   // (Q1=b: NPCs used to skip this because the prefill only looked up PCs).
   // Mirrors the damage path's resolution (~L5309). Objects have no defense.
   function resolveTargetDefense(targetName: string, isMelee: boolean): { value: number; label: string } {
-    const label = isMelee ? 'Target PHY' : 'Target DEX'
+    // MDM = Melee Defense Mod (PHY), RDM = Ranged Defense Mod (DEX) - canon
+    // names (Xero 2026-05-23 smoke wants the breakdown to read MDM/RDM).
+    const label = isMelee ? 'Target MDM' : 'Target RDM'
     const tEntry = entries.find(en => en.character.name === targetName)
     const tNpc = !tEntry ? campaignNpcs.find((n: any) => n.name === targetName) : null
     const isObject = !tEntry && !tNpc && mapTokens.some(t => t.token_type === 'object' && t.name === targetName)

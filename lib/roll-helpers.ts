@@ -305,7 +305,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       // as "a Assault Rifle". Matches first letter against vowel set.
       const article = /^[aeiouAEIOU]/.test(weapon.trim()) ? 'an' : 'a'
       if (w?.category === 'explosive') {
-        const verb = /launcher/i.test(weapon) ? 'fired' : 'threw'
+        // A thrown explosive that misses (Failure / Dire Failure / Low
+        // Insight) FUMBLES - the grenade still detonates but scatters off
+        // target (or at the thrower's feet on Low Insight), so the narrative
+        // reads "fumbled throwing a Grenade" instead of "threw a Grenade"
+        // (Xero 2026-05-23). Launchers keep "fired".
+        const isLauncher = /launcher/i.test(weapon)
+        const verb = isLauncher ? 'fired' : (hit ? 'threw' : 'fumbled throwing')
         // Cell-only target: grenade was thrown at an empty cell, not a
         // combatant. The synthetic target name "Cell (x,y)" reads ugly in
         // the feed ("threw a Grenade at Cell (3,5)") - drop the "at ..."

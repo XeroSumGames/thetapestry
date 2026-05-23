@@ -103,30 +103,30 @@ describe('buildCmodBreakdown - source-labeled CMod terms', () => {
     const b = buildCmodBreakdown({ aim: 2, range: -4, sameTarget: 1 })
     expect(b.terms).toEqual([
       { label: 'Aim', value: 2 },
-      { label: 'Same target', value: 1 },
-      { label: 'Range', value: -4 },
+      { label: 'Same target CMod', value: 1 },
+      { label: 'Range CMod', value: -4 },
     ])
     expect(b.total).toBe(-1)
   })
 
   it('Aim stays a positive term even when target defense pushes the net negative (Xero ruling)', () => {
     // The whole point: Aim must never be silently netted away by defense.
-    const b = buildCmodBreakdown({ aim: 2, targetDefense: -4, targetDefenseLabel: 'Target DEX' })
+    const b = buildCmodBreakdown({ aim: 2, targetDefense: -4, targetDefenseLabel: 'Target RDM' })
     expect(b.terms).toContainEqual({ label: 'Aim', value: 2 })
-    expect(b.terms).toContainEqual({ label: 'Target DEX', value: -4 })
+    expect(b.terms).toContainEqual({ label: 'Target RDM', value: -4 })
     expect(b.total).toBe(-2)
   })
 
-  it('uses the supplied target-defense label, defaulting when absent', () => {
-    expect(buildCmodBreakdown({ targetDefense: -2, targetDefenseLabel: 'Target PHY' }).terms)
-      .toEqual([{ label: 'Target PHY', value: -2 }])
+  it('uses the supplied target-defense label (MDM melee / RDM ranged), defaulting when absent', () => {
+    expect(buildCmodBreakdown({ targetDefense: -2, targetDefenseLabel: 'Target MDM' }).terms)
+      .toEqual([{ label: 'Target MDM', value: -2 }])
     expect(buildCmodBreakdown({ targetDefense: -2 }).terms)
       .toEqual([{ label: 'Target defense', value: -2 }])
   })
 
   it('preserves a fixed display order regardless of input key order', () => {
     const b = buildCmodBreakdown({ insight: 3, weaponCondition: -1, aim: 2 })
-    expect(b.terms.map(t => t.label)).toEqual(['Weapon', 'Aim', 'Insight'])
+    expect(b.terms.map(t => t.label)).toEqual(['Weapon CMod', 'Aim', 'Insight CMod'])
   })
 
   it('total always equals the sum of kept terms', () => {

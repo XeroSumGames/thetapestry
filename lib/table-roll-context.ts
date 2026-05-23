@@ -106,16 +106,20 @@ export interface CmodSources {
  * that hit the roll.
  */
 export function buildCmodBreakdown(s: CmodSources): { terms: CmodTerm[]; total: number } {
+  // Label convention (Xero 2026-05-23 smoke): the headline Aim and the
+  // target Defense Mod (MDM/RDM - "Mod" is already in the name) read clean;
+  // every other situational source carries a "CMod" tag so the player can
+  // tell it's a Combat Modifier contribution.
   const ordered: CmodTerm[] = [
-    { label: 'Weapon', value: s.weaponCondition ?? 0 },
+    { label: 'Weapon CMod', value: s.weaponCondition ?? 0 },
     { label: 'Aim', value: s.aim ?? 0 },
-    { label: 'Coordinate', value: s.coordinate ?? 0 },
-    { label: 'Coordinated Effort', value: s.coordinatedEffort ?? 0 },
-    { label: 'Same target', value: s.sameTarget ?? 0 },
+    { label: 'Coordinate CMod', value: s.coordinate ?? 0 },
+    { label: 'Coordinated Effort CMod', value: s.coordinatedEffort ?? 0 },
+    { label: 'Same target CMod', value: s.sameTarget ?? 0 },
     { label: s.targetDefenseLabel || 'Target defense', value: s.targetDefense ?? 0 },
-    { label: 'Range', value: s.range ?? 0 },
-    { label: 'Sick', value: s.sick ?? 0 },
-    { label: 'Insight', value: s.insight ?? 0 },
+    { label: 'Range CMod', value: s.range ?? 0 },
+    { label: 'Sick CMod', value: s.sick ?? 0 },
+    { label: 'Insight CMod', value: s.insight ?? 0 },
     { label: 'CMod', value: s.manual ?? 0 },
   ]
   const terms = ordered.filter(t => t.value !== 0)

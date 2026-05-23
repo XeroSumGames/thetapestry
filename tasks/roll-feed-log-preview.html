@@ -683,15 +683,15 @@
         [<span class="die">6</span>+<span class="die">3</span>]
         <span class="amod"> +1 AMod</span>
         <span style="color:#7ab3d4;"> +2 Aim</span>
-        <span style="color:#EF9F27;"> -4 Range</span>
-        <span style="color:#7ab3d4;"> +1 Same target</span>
-        <span style="color:#EF9F27;"> -1 Target DEX</span>
+        <span style="color:#EF9F27;"> -4 Range CMod</span>
+        <span style="color:#7ab3d4;"> +1 Same target CMod</span>
+        <span style="color:#EF9F27;"> -1 Target RDM</span>
         <span class="total"> = 8</span>
         <span class="out amber">Failure</span>
       </div>
     </div>
   </div>
-  <p class="note">CMod is itemized by source (Xero ruling 2026-05-23): every contributor gets its own signed, labeled term so a player who Aimed sees <span style="color:#7ab3d4;">+2 Aim</span> even when Range / target defense push the net negative. Positive terms blue, negative amber. Target defense (PHY for melee, DEX for ranged) is its own term and now applies to NPC targets too (Q1=b, canon "double duty": a defender's MDM/RDM both lowers the attacker's to-hit AND mitigates damage). Older rows with no stored breakdown fall back to a single net <span class="cmod">CMod</span> term. Source: <code>buildCmodBreakdown</code> in <code>lib/table-roll-context.ts</code>; stored on <code>damage_json.cmodBreakdown</code>.</p>
+  <p class="note">CMod is itemized by source (Xero ruling 2026-05-23): every contributor gets its own signed, labeled term so a player who Aimed sees <span style="color:#7ab3d4;">+2 Aim</span> even when Range / target defense push the net negative. Positive terms blue, negative amber. Label convention: <strong>Aim</strong> and the target Defense Mod (<strong>Target MDM</strong> melee / <strong>Target RDM</strong> ranged - "Mod" is already in the name) read clean; the other situational sources carry a "CMod" tag (Range CMod, Same target CMod, Sick CMod, Weapon CMod, Coordinate CMod, Insight CMod). Target defense now applies to NPC targets too (Q1=b, canon "double duty": a defender's MDM/RDM both lowers the attacker's to-hit AND mitigates damage). Older rows with no stored breakdown fall back to a single net <span class="cmod">CMod</span> term. Source: <code>buildCmodBreakdown</code> in <code>lib/table-roll-context.ts</code>; stored on <code>damage_json.cmodBreakdown</code>.</p>
 
   <h3 id="charge">Charge</h3>
   <div class="row blue"><div class="row-head"><span class="name">Frankie</span><div class="right"><span class="time">2:14 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Frankie Successfully made a Pistol attack after Charge at Avery Xavier</div></div>
@@ -721,7 +721,7 @@
   <div class="row blue"><div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:20 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Wilson fired an RPG Launcher at Avery Xavier</div></div>
   <div class="row red">
     <div class="row-head"><span class="name">Wilson</span><div class="right"><span class="time">2:20 PM</span><span class="toggle">▾</span></div></div>
-    <div class="narrative">Wilson threw a Grenade</div>
+    <div class="narrative">Wilson fumbled throwing a Grenade</div>
     <div class="expanded-details">
       <div style="margin-top:6px;padding:6px 8px;background:#1a1010;border:1px solid #c0392b;border-radius:3px;color:#d4cfc9;">
         <span style="color:#f5a89a;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;">Damage &rarr; Cell (26,18)</span>
