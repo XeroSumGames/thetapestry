@@ -168,7 +168,21 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - 3c-B CODE-COMPLETE; needs Xero 2-client smoke, then 3d)
+# Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - 3c-B smoke-passed; 3d IN PROGRESS, autonomous run to Phase 7 authorized)
+
+## Autonomous run directive (Xero, 2026-05-23)
+"Keep going from 3d all the way to Phase 7. Stop ONLY if you absolutely need me to smoke-test something, and only for critical issues." So: drive 3d -> P4 -> P5 -> P6 -> P7, commit every verifiable step, keep this handoff current, **batch ALL 2-client smokes into the ONE Phase-7 acceptance**, do not stop between phases. Multi-window by nature (Phase 5 = 6 god-components) - progress lives in git + this handoff + the in-conversation task list (#1-#5).
+
+## 3c-B smoke result (2026-05-23, Xero, 2 clients): PASS
+All executeRoll paths clean (damage, mortal-wound, auto-advance, no errors; pasted console = expected [playtest-trace] noise). Extraction validated behavior-preserving. ONE failure logged PRE-EXISTING (not 3c-B): wound-infection check did not fire at end of combat (Xero confirmed player owned the wounded PC + watched + no modal). The infection_check_request rides the ad-hoc init channel -> likely the resubscribe bug class **3d fixes**. Bisect: did "<name> is wounded and may have to deal with infection" rows show in the feed during the fight? (todo has full write-up + sql/diag-wound-infection-2026-05-23.sql.)
+
+## 3d progress (migrate table realtime -> lib/realtime/useCampaignChannel)
+- **3d.1 SHIPPED (`efb8673`):** the 2 standalone postgres-only channels (init-scene-tags, advantages) -> useCampaignChannel. `.channel` 44->42. Pattern proven.
+- **3d.2 QUEUED (fresh window - the delicate part):** the 7 channels created imperatively inside the big `load()` effect (~page.tsx:1240-1645) + teardown (~1631-1642), migrated as ONE coherent change:
+  - postgres-only: `table_${id}` (character_states->loadEntries), `members_${id}` (campaign_members; async handler refetches members+ensureCharacterStates+loadEntries), `campaign_${id}` (campaigns), `campaign_npcs_${id}` (40-line handler ~1559-1600), `community_members_${id}` (loadPlayerNpcCommunityMap), `reveals_${id}` (CONDITIONAL GM-vs-player; handler uses cnpcs -> swap to `campaignNpcs` state + myCharIdRef/gmLikeRef).
+  - the big one: `initiative_${id}` (~1298-1527) = 2 postgres (initiative_order->loadInitiative; notifications filter `user_id=eq.<userId>`) + ~20 broadcasts. Restructure `.on('broadcast',{event:X},wrapBroadcast('X',h))` -> `broadcasts:{X:h}` (primitive auto-Sentry-wraps; STRIP the wrapBroadcast/wrapDbChange wrappers). Handler bodies UNCHANGED.
+  - **GOTCHAS:** (1) notifications sub needs userId -> gate the init useCampaignChannel on `userId ? id : null` (matches current behavior - load() runs after getUser). (2) **KEEP `initChannelRef` working for the many `.send()` sites + the useRollResolution hook**: alias `const initChannelRef = initChannel.channelRef` (the handle's escape-hatch ref) so every existing `initChannelRef.current?.send(...)` is untouched. (3) `presence_table_${id}` (~1611) uses the presence API - useCampaignChannel does NOT support presence; LEAVE it raw OR add a small usePresenceChannel primitive (Phase 4 dep-lint will need presence handled - decide then). (4) tighten `infection_check_request` payload in lib/realtime/events.ts to `{ targetUserId: string; name: string; amod: number }` when migrating its send (page.tsx:2655) - tsc will guide. (5) remove the migrated channels from load() + the teardown block; keep load()'s non-channel logic intact.
+  - After 3d.2: `node scripts/check-arch.mjs --save` (.channel drops toward ~1 [presence] + whatever else). The infection fix likely falls out of the stable init subscription - verify in P7 smoke.
 
 **The whole-platform re-architecture is the ONLY active work** (Xero mandate Q1-B: every god-component to the ideal layered architecture before the next playtest; break-things-OK; Xero 2-client-smokes everything at the end). Executable spine: **[tasks/grand-rearchitecture-2026-05-22.md](grand-rearchitecture-2026-05-22.md)** - read first.
 
