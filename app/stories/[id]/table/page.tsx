@@ -20,6 +20,7 @@ import { useChatPanel } from '../../../../components/TableChat'
 import { useRollsFeed } from '../../../../components/RollsFeed'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
+import { useCampaignChannel } from '../../../../lib/realtime/useCampaignChannel'
 import { reportSupabaseError } from '../../../../lib/supabase-errors'
 import { useHeaderMenus } from './hooks/useHeaderMenus'
 import { useGmTools } from './hooks/useGmTools'
@@ -422,21 +423,15 @@ export default function TablePage() {
   // and broadcasts token_changed; postgres_changes on scene_tokens
   // catches the row update directly here). Cheap - just flips a
   // counter that retriggers the scene-tags effect above.
-  useEffect(() => {
-    if (!id) return
-    const channel = supabase.channel(`init-scene-tags-${id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'scene_tokens' }, wrapDbChange('scene_tokens:UPDATE', () => {
-        setTokenScenesRefreshKey(k => k + 1)
-      }))
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scene_tokens' }, wrapDbChange('scene_tokens:INSERT', () => {
-        setTokenScenesRefreshKey(k => k + 1)
-      }))
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${id}` }, wrapDbChange('tactical_scenes:UPDATE', () => {
-        setTokenScenesRefreshKey(k => k + 1)
-      }))
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [id, supabase])
+  // Migrated to useCampaignChannel (3d): stable [id] subscription, sentry-wrapped.
+  useCampaignChannel(id, {
+    channelName: `init-scene-tags-${id}`,
+    postgres: [
+      { label: 'scene_tokens:UPDATE', event: 'UPDATE', table: 'scene_tokens', handler: () => setTokenScenesRefreshKey(k => k + 1) },
+      { label: 'scene_tokens:INSERT', event: 'INSERT', table: 'scene_tokens', handler: () => setTokenScenesRefreshKey(k => k + 1) },
+      { label: 'tactical_scenes:UPDATE', event: 'UPDATE', table: 'tactical_scenes', filter: `campaign_id=eq.${id}`, handler: () => setTokenScenesRefreshKey(k => k + 1) },
+    ],
+  })
 
   // Mode-aware sidebar tab default. Campaign map → Pins ("where are
   // we"); Tactical/Combat → NPCs ("who's on the field"). The flip only
@@ -1722,19 +1717,20 @@ export default function TablePage() {
   useEffect(() => {
     if (!id) return
     let cancelled = false
-    async function load() {
+    ;(async () => {
       const { rows } = await listCampaignPendingAdvantages(supabase, id)
       if (!cancelled) setAdvantages(rows)
-    }
-    void load()
-    const ch = supabase.channel(`advantages_${id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'advantages', filter: `campaign_id=eq.${id}` }, wrapDbChange('advantages:*', () => { void load() }))
-      .subscribe()
-    return () => {
-      cancelled = true
-      supabase.removeChannel(ch)
-    }
+    })()
+    return () => { cancelled = true }
   }, [id])
+  // Realtime migrated to useCampaignChannel (3d): refetch on any advantages change.
+  useCampaignChannel(id, {
+    channelName: `advantages_${id}`,
+    postgres: [{
+      label: 'advantages:*', event: '*', table: 'advantages', filter: `campaign_id=eq.${id}`,
+      handler: async () => { const { rows } = await listCampaignPendingAdvantages(supabase, id); setAdvantages(rows) },
+    }],
+  })
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
