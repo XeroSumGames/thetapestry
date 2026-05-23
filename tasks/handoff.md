@@ -168,24 +168,25 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - 3c-B1 + 3c-B2 done; 3c-B3 next, FRESH WINDOW)
+# Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - 3c-B CODE-COMPLETE; needs Xero 2-client smoke, then 3d)
 
 **The whole-platform re-architecture is the ONLY active work** (Xero mandate Q1-B: every god-component to the ideal layered architecture before the next playtest; break-things-OK; Xero 2-client-smokes everything at the end). Executable spine: **[tasks/grand-rearchitecture-2026-05-22.md](grand-rearchitecture-2026-05-22.md)** - read first.
 
 ## Current main HEAD
-Derive it: `git rev-parse --short HEAD` (was `6de30a8` at write; `wc -l "app/stories/[id]/table/page.tsx"` = 12527; 548 vitest green; CI green). **Arch LOC ratchet is GREEN again** - 3c-B1/B2 dropped page.tsx under the (now re-tightened) 12528 ceiling, so normal `git commit` works (no `--no-verify` needed; the relaxed-ratchet protocol is RETIRED). 3c-B3 drops it ~1800 more -> `node scripts/check-arch.mjs --save` again at the end of B3.
+Derive it: `git rev-parse --short HEAD` (was `e6919e5` at write; `wc -l "app/stories/[id]/table/page.tsx"` = 10730; 548 vitest green; CI green). **Arch LOC ratchet GREEN** (page ceiling re-baselined to 10731; `.from` 1263, console 115). Normal `git commit` works; the relaxed-ratchet protocol is RETIRED.
 
 ## Where we are (Phase 3)
 - DONE earlier: Phase 1 seams, Phase 2 gating, mechanical `.from` migration, `useGmTools` Part A, **3a** GM-view (`cde8003`) + **3b** nextTurn perf (`e3a9df0`), **3c-A** itemized-CMod + NPC-defense + blast-log batch (`c47cdca..d75ff75`) - ALL confirmed in the 2026-05-23 smoke.
-- **DONE THIS WINDOW - 3c-B steps 1 + 2 (behavior-preserving, NOT yet smoke-validated):**
-  - **3c-B1 (`35b72fe`)** - retired the 3 dead executeRoll branches (Distract/Stabilize/Gut-Instinct, unreachable since 2026-05-20) + 2 dangling traitNotes spreads. Applied `claude/phase4-prestage`'s INTENT directly; **that branch is now obsolete and can be deleted** (diffing it vs main showed 12,745 deletions of files that exist today - it branched off an ancient main and CANNOT be merged). page.tsx 12663->12564.
-  - **3c-B2 (`6de30a8`)** - moved `resolveTargetDefense` + `computeAttackCmod` to `lib/table-roll-context.ts` (pure, +16 tests, suite 532->548); 2 call sites pass an `AttackCmodCtx` via `cmodCtx()`. page.tsx 12564->12527; ratchet `--save` (LOC 12528, .from 1263, console 115).
-  - Lesson captured (`f8e8033`): deleting a local that shares a name with component state silently rebinds references (the traitNotes-spread footgun). Ledger drained 502/26->548/29... (refresh again at B3 end).
-- **OPEN from the 3c-A smoke (verify in B3, don't assume bug):** a GM-rolled NPC attack showed `+5 CMod` generic instead of `Target MDM`. Now classified read-only: NPC-attacker defense IS wired (prefill `page.tsx:4804` calls `computeAttackCmod`, which handles NPC targets); a `+5` GENERIC term is only producible by the `manual` source (autoNet=0 -> GM typed it / no target auto-selected). So evidence = manual entry = correct. Only change the prefill if a repro shows a target WAS auto-selected yet defense did not itemize.
-- **NEXT - 3c-B3 (FRESH CONTEXT, the big risky one):**
-  - **`useRollResolution`** - extract `executeRoll` (`page.tsx:5050-~6850`, ~1860 lines after B1/B2; verify range - it ends just before `spendInsightDie`) into `app/stories/[id]/table/hooks/useRollResolution.ts`, composed on the tested `lib/table-roll-context.ts`. **Behavior-preserving relocation behind a typed deps object** (the doc's "single RollContext instead of ~40 closure deps"). FIRST ACTION: enumerate executeRoll's external-identifier surface = the hook's deps interface. Do NOT also split pure-decision-from-side-effects in the same commit (a 2-client smoke failure must stay localizable). The CMod-itemization + NPC-defense + blast-log fixes already shipped surgically in 3c-A, so B3 changes NOTHING the player sees. After: `--save`, then Xero 2-client smoke.
-  - **3d** - migrate the 11 channels / 23 events onto `lib/realtime/useCampaignChannel` (deps `[campaignId]`); then `useTacticalSync` + `useInitiative` carve off the now-owned `initiative_${id}` channel. Separate window, own smoke.
-  - 3c-B3 + 3d each need Xero's **2-client smoke**. **Do the executeRoll work with FRESH CONTEXT - a silent combat-math slip is the worst outcome; do NOT start it deep in a window.**
+- **DONE THIS WINDOW - 3c-B COMPLETE (B1+B2+B3, all behavior-preserving, NOT yet smoke-validated):**
+  - **3c-B1 (`35b72fe`)** - retired the 3 dead executeRoll branches (Distract/Stabilize/Gut-Instinct) + 2 dangling traitNotes spreads. Applied `claude/phase4-prestage`'s INTENT directly; **that branch is obsolete, can be deleted**. page.tsx 12663->12564.
+  - **3c-B2 (`6de30a8`)** - `resolveTargetDefense` + `computeAttackCmod` to `lib/table-roll-context.ts` (pure, +16 tests, 532->548); call sites pass `AttackCmodCtx` via `cmodCtx()`. page.tsx 12564->12527.
+  - **3c-B3 (`e6919e5`)** - `executeRoll` (~1810 lines) extracted to `app/stories/[id]/table/hooks/useRollResolution.ts` behind a typed `RollResolutionDeps` (51 deps). Body relocated BYTE-FOR-BYTE (script-verified identical to git-HEAD's executeRoll); 2 call sites unchanged; `syncedSelectedEntry` hoisted to the call site (TDZ). page.tsx 12527->10730; ratchet `--save` (page ceiling 10731); `.from` 1263 + console 115 UNCHANGED (no seam regression). Extraction method in lessons.md ("God-component function extraction") - reuse for Phase 5.
+  - Lessons captured: shadow-rebind footgun (`f8e8033`), the extraction technique. Ledger drained to 548/29.
+- **OPEN (classified, no action unless smoke contradicts):** GM-rolled NPC attack `+5 CMod` generic = manual GM entry (autoNet=0); NPC defense IS wired via prefill `computeAttackCmod`. No prefill change. Also: a preserved Group-Check stale-closure read (prefill passes the PREVIOUS roll's label) rode into the hook unchanged - the deeper pure/effect split is where it gets fixed, NOT done in B3.
+- **NEXT:**
+  - **Xero 2-client smoke of 3c-B** (combat math end-to-end: Aim/Cover/Range CMod, NPC defense, grenade blast + fumble, infection, lasting wounds, coordinated effort, insight dice 3d6/+3, mortal-wound + stress, auto-advance). B1/B2/B3 all fold into this ONE smoke (each behavior-preserving). If it passes, 3c is done.
+  - **3d (separate FRESH window, own smoke)** - migrate the 11 channels / 23 events onto `lib/realtime/useCampaignChannel` (deps `[campaignId]`); then `useTacticalSync` + `useInitiative` carve off the now-owned `initiative_${id}` channel.
+  - Then **Phase 4** (dep-cruiser lock) + **Phase 5** (the other 6 god-components, using the B3 extraction technique).
 
 ## Two operator actions still owed by Xero (code shipped, infra pending)
 1. **Upstash KV** in the Vercel dashboard (L-3 rate limiter) - until done, prod `/api/auth/verify-turnstile` returns 503. See `tasks/l3-kv-ratelimiter-testplan-2026-05-20.md`.

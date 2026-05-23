@@ -1,5 +1,18 @@
 # Lessons Learned
 
+## God-component function extraction: byte-exact script move + destructure-deps + tsc convergence (2026-05-23)
+
+**Technique** for lifting a huge function (here: the ~1810-line `executeRoll`) out of a god-component into a hook/module WITHOUT risking a silent behavior change. Reused for every Phase 5 god-component extraction.
+
+1. **Find exact boundaries** (`grep -n` the function + its neighbor). Confirm the closing brace line.
+2. **Slice the body with a script** (node `readFileSync().split(eol).slice(start,end)`), do NOT retype it. Retyping 1800 lines from context WILL drift. **Detect CRLF vs LF** and split/join on the actual EOL - Windows files are `\r\n`, and `split('\n')` leaves a `\r` on every line that breaks all string matching.
+3. **Move the body VERBATIM** into `useX(deps) { const {...} = deps; <BODY>; return { fn } }`. Destructure every dependency at the top so the body text is unchanged (no `deps.` prefixing - that's 40+ error-prone edits). The page destructures the fn back out; call sites stay unchanged. Same pattern as `useGmTools`.
+4. **Derive the deps set mechanically, not by eye:** tokenize the body, intersect with the component's declared identifiers (useState/useRef/function/const at 2-space indent) = deps; intersect with the import block = needed imports. BUT the tokenizer also catches comment mentions and string-literal keys (e.g. `groupCheckParticipants:` as an object key, or a name in a `//` comment) - so **grep the body for each candidate's real CODE usage** before trusting it. Over-inclusion is safe (unused destructure, no `noUnusedLocals`); under-inclusion is caught by tsc.
+5. **tsc is the completeness oracle, both directions:** a missing dep -> "Cannot find name X" inside the hook; a spurious dep -> "Cannot find name X" at the call-site object. Iterate to clean. Watch for TDZ: any dep declared AFTER the extracted function must be hoisted to the call site (here: `syncedSelectedEntry`) - it was a hoisted `function` before (always available) but a hook CALL runs in place.
+6. **PROVE behavior preservation:** diff the extracted body against the git-HEAD original (`git show HEAD:file | slice`) after CRLF-normalizing - assert byte-identical. Then assert the hook file `.includes()` that body verbatim. Only then is "behavior-preserving" a fact, not a hope.
+7. **Type the deps interface from source:** copy inline state types verbatim (e.g. the `mapTokens` shape), refs as `MutableRefObject<T>`, setters as `Dispatch<SetStateAction<T>>`, `supabase` as `ReturnType<typeof createClient>`. If a function's real return type bites (saveRollToLog returns `{total,outcome,insightAwarded}` not void) and the body ignores it, type the return precisely or `any`-the-ignored-field. Note the dual `RollResult` (./types interface vs lib/roll-outcomes union) - disambiguate.
+8. **Do NOT also refactor** (pure/effect split, dedup, rename) in the same commit. Relocation-only keeps a 2-client / smoke failure localizable to "the move," not "the move plus 5 changes."
+
 ## Deleting a local var that shares a name with component state = silent rebind, not a compile error you'd expect (2026-05-23)
 
 **Rule:** Before deleting a `let`/`const` local, grep the enclosing function for an outer-scope binding of the SAME name. If one exists, every reference to the local silently rebinds to the outer one instead of erroring "undefined."
