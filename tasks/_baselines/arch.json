@@ -5,12 +5,12 @@
     "components/TacticalMap.tsx": 4315,
     "components/CampaignCommunity.tsx": 3159,
     "components/NpcRoster.tsx": 2302,
-    "app/vehicle/page.tsx": 2111,
+    "app/vehicle/page.tsx": 2076,
     "components/MapView.tsx": 2023,
     "app/moderate/page.tsx": 1674
   },
   "seamLeakage": {
-    "fromOutsideData": 1182,
+    "fromOutsideData": 1168,
     "channelOutsideRealtime": 32
   },
   "prodConsole": 115

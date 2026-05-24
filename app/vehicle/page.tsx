@@ -2,6 +2,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { insertRollLog } from '../../lib/data/roll-log'
+import {
+  getCampaignVehicles, getProfileRole, getMembership, campaignMembersWithCharacters,
+  campaignNpcsForCrew, activeSceneWithCellFeet, activeSceneId, sceneTokensForRange,
+  sceneTokensForDismount, sceneTokensForTargeting, npcNamesByIds, getNpcCombatState, updateNpcPools,
+} from '../../lib/data/vehicle'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
@@ -169,27 +174,22 @@ export default function VehiclePage() {
       const { user } = await getCachedAuth()
       if (!user) { setLoading(false); return }
       setMyUserId(user.id)
-      const { data: camp } = await supabase.from('campaigns').select('gm_user_id, vehicles').eq('id', campaignId).single()
+      const { data: camp } = await getCampaignVehicles(campaignId)
       if (!camp) { setLoading(false); return }
       // Thriver godmode: profile.role check widens GM affordances.
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      const { data: profile } = await getProfileRole(user.id)
       const isThriver = roleIsThriver(profile)
       setIsGM(camp.gm_user_id === user.id || isThriver)
       // Check if user is a campaign member or GM (or Thriver)
-      const { data: membership } = await supabase.from('campaign_members').select('id').eq('campaign_id', campaignId).eq('user_id', user.id).maybeSingle()
+      const { data: membership } = await getMembership(campaignId, user.id)
       setCanEdit(camp.gm_user_id === user.id || !!membership || isThriver)
-      const v = (camp.vehicles ?? []).find((v: Vehicle) => v.id === vehicleId)
+      const v = ((camp.vehicles ?? []) as unknown as Vehicle[]).find((v: Vehicle) => v.id === vehicleId)
       setVehicle(v ?? null)
 
       // ── Crew pool: PCs (campaign_members → characters) + NPCs ──
       const [memberRes, npcRes] = await Promise.all([
-        supabase.from('campaign_members')
-          .select('character_id, characters:character_id(id, name, data)')
-          .eq('campaign_id', campaignId)
-          .not('character_id', 'is', null),
-        supabase.from('campaign_npcs')
-          .select('id, name, reason, dexterity, physicality, influence, acumen, skills, status, wp_current, death_countdown')
-          .eq('campaign_id', campaignId),
+        campaignMembersWithCharacters(campaignId),
+        campaignNpcsForCrew(campaignId),
       ])
       // Surface partial failures. Pre-fix both .data fell through to
       // empty arrays on RLS denial / network blip, rendering as "no
@@ -294,23 +294,14 @@ export default function VehiclePage() {
     let cancelled = false
 
     async function loadTokens() {
-      const { data: scene } = await supabase
-        .from('tactical_scenes')
-        .select('id, cell_feet')
-        .eq('campaign_id', campaignId)
-        .eq('is_active', true)
-        .maybeSingle()
+      const { data: scene } = await activeSceneWithCellFeet(campaignId!)
       if (cancelled || !scene) {
         setSceneInfo(null); setVehicleTokenPos(null); setCharacterRangeFeet({})
         return
       }
       const sceneRow = scene as { id: string; cell_feet: number | null }
       const cellFeet = sceneRow.cell_feet ?? 3
-      const { data: tokens } = await supabase
-        .from('scene_tokens')
-        .select('name, token_type, character_id, npc_id, grid_x, grid_y, grid_w, grid_h')
-        .eq('scene_id', sceneRow.id)
-        .is('archived_at', null)
+      const { data: tokens } = await sceneTokensForRange(sceneRow.id)
       if (cancelled) return
       const all = (tokens ?? []) as any[]
       const vehTok = all.find(t => t.token_type === 'object' && t.name === vehicle!.name)
@@ -552,19 +543,10 @@ export default function VehiclePage() {
   // spot). GM can drag them in by hand.
   async function dismountToAdjacent(assigneeId: string) {
     if (!campaignId || !vehicle || !assigneeId) return
-    const { data: scene } = await supabase
-      .from('tactical_scenes')
-      .select('id')
-      .eq('campaign_id', campaignId)
-      .eq('is_active', true)
-      .maybeSingle()
+    const { data: scene } = await activeSceneId(campaignId)
     if (!scene) return
     const sceneId = (scene as any).id
-    const { data: tokens } = await supabase
-      .from('scene_tokens')
-      .select('grid_x, grid_y, grid_w, grid_h, character_id, npc_id, name, token_type')
-      .eq('scene_id', sceneId)
-      .is('archived_at', null)
+    const { data: tokens } = await sceneTokensForDismount(sceneId)
     const all = (tokens ?? []) as any[]
     const vehTok = all.find(t => t.token_type === 'object' && t.name === vehicle!.name)
     if (!vehTok) return
@@ -810,21 +792,12 @@ export default function VehiclePage() {
       const wDef = weapon ? getWeaponByName(weapon.name) : undefined
       const hasArc = !!weapon && typeof weapon.mount_angle === 'number' && typeof weapon.arc_degrees === 'number'
       if (campaignId) {
-        const { data: activeScene } = await supabase
-          .from('tactical_scenes')
-          .select('id, cell_feet')
-          .eq('campaign_id', campaignId)
-          .eq('is_active', true)
-          .maybeSingle()
+        const { data: activeScene } = await activeSceneWithCellFeet(campaignId)
         if (activeScene?.id) {
           // One fetch for every visible token on the scene - cheaper
           // than two filtered fetches and gives us the shooter row
           // (matched by name) + all NPC targets (matched by npc_id).
-          const { data: tokenRows } = await supabase
-            .from('scene_tokens')
-            .select('id, name, npc_id, grid_x, grid_y, grid_w, grid_h, rotation, token_type')
-            .eq('scene_id', activeScene.id)
-            .is('archived_at', null)
+          const { data: tokenRows } = await sceneTokensForTargeting(activeScene.id)
           const allTokens = (tokenRows ?? []) as any[]
           const shooterTok = allTokens.find(t => t.token_type === 'object' && t.name === vehicle.name) ?? null
           const cellFt = activeScene.cell_feet ?? 3
@@ -832,10 +805,7 @@ export default function VehiclePage() {
           const npcIds = Array.from(new Set(npcTokens.map(t => t.npc_id))).filter(Boolean)
           let nameMap: Record<string, string> = {}
           if (npcIds.length > 0) {
-            const { data: npcRows } = await supabase
-              .from('campaign_npcs')
-              .select('id, name')
-              .in('id', npcIds)
+            const { data: npcRows } = await npcNamesByIds(npcIds as string[])
             for (const n of (npcRows ?? []) as any[]) nameMap[n.id] = n.name
           }
           // Build targets, annotating each with in-arc / in-range
@@ -1078,11 +1048,7 @@ export default function VehiclePage() {
       const totalWP = totalBase + totalDice
       // Pull the target NPC's current state so we can compute their
       // DEX AMod (defensive mod for ranged) and apply the WP/RP delta.
-      const { data: tgtNpc } = await supabase
-        .from('campaign_npcs')
-        .select('id, dexterity, wp_current, rp_current, wp_max, rp_max')
-        .eq('id', check.targetNpcId)
-        .maybeSingle()
+      const { data: tgtNpc } = await getNpcCombatState(check.targetNpcId)
       const targetDex = (tgtNpc as any)?.dexterity ?? 0
       const { finalWP, finalRP, mitigated } = calculateDamage(totalWP, weaponDef.rpPercent, targetDex)
       // Apply the damage. Clamp at 0 - going negative would let a
@@ -1092,9 +1058,7 @@ export default function VehiclePage() {
       if (tgtNpc) {
         const newWp = Math.max(0, ((tgtNpc as any).wp_current ?? 0) - finalWP)
         const newRp = Math.max(0, ((tgtNpc as any).rp_current ?? 0) - finalRP)
-        await supabase.from('campaign_npcs')
-          .update({ wp_current: newWp, rp_current: newRp })
-          .eq('id', check.targetNpcId)
+        await updateNpcPools(check.targetNpcId, newWp, newRp)
       }
       damageJsonExtras = {
         base: totalBase,
