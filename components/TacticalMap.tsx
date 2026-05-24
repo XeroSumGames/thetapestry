@@ -4,6 +4,10 @@ import { createClient } from '../lib/supabase-browser'
 import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'
 import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-controls-bus'
+import {
+  campaignScenes, insertScene, updateScene, deactivateOtherScenes, deactivateAllScenes,
+  sceneTokens, updateToken, insertTokens, deleteToken, deleteTokensForScene, campaignVehiclesOnly,
+} from '../lib/data/tactical'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -534,7 +538,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     wallsPendingSaveRef.current = window.setTimeout(async () => {
       wallsPendingSaveRef.current = null
-      await supabase.from('tactical_scenes').update({ walls: wallsLocalRef.current }).eq('id', sceneId)
+      await updateScene(sceneId, { walls: wallsLocalRef.current as any })
     }, 200)
   }
 
@@ -620,7 +624,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // Strip any keys whose value is false so the column stays sparse.
       const sparse: Record<string, boolean> = {}
       for (const k of Object.keys(payload)) if (payload[k]) sparse[k] = true
-      await supabase.from('tactical_scenes').update({ fog_state: sparse }).eq('id', sceneId)
+      await updateScene(sceneId, { fog_state: sparse })
     }, 300)
   }
 
@@ -638,9 +642,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const lastSyncedSceneIdRef = useRef<string | null>(null)
 
   async function loadScenes() {
-    const { data } = await supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false })
-    setScenes(data ?? [])
-    const active = (data ?? []).find((s: Scene) => s.is_active)
+    const { data: sceneRows } = await campaignScenes(campaignId)
+    const data = (sceneRows ?? []) as unknown as Scene[]
+    setScenes(data)
+    const active = data.find((s: Scene) => s.is_active)
     if (active) {
       setScene(active)
       loadTokens(active.id)
@@ -693,7 +698,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     } else if (data && data.length > 0 && isGM) {
       // No active scene - auto-activate the most recent one
       const first = data[0]
-      await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', first.id)
+      await updateScene(first.id, { is_active: true })
       setScene(first)
       loadTokens(first.id)
       if (lastSyncedSceneIdRef.current !== first.id) {
@@ -714,8 +719,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   async function loadTokens(sceneId: string) {
     // Soft-deleted tokens (archived_at not null) preserve their position
     // for a future remap but render as if absent. Filter them out here.
-    const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', sceneId).is('archived_at', null)
-    setTokens(data ?? [])
+    const { data } = await sceneTokens(sceneId)
+    setTokens((data ?? []) as unknown as Token[])
   }
 
   // Init + Realtime
@@ -2559,11 +2564,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   function syncVehiclePassengers(tok: Token, tokenId: string, dx: number, dy: number) {
     if (tok.token_type !== 'object' || (dx === 0 && dy === 0)) return
     void (async () => {
-      const { data: camp } = await supabase
-        .from('campaigns')
-        .select('vehicles')
-        .eq('id', campaignId)
-        .maybeSingle()
+      const { data: camp } = await campaignVehiclesOnly(campaignId)
       const list = ((camp as any)?.vehicles ?? []) as any[]
       const veh = list.find(v => v?.name === tok.name)
       if (!veh) return
@@ -2600,9 +2601,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return isPassenger ? { ...t, grid_x: t.grid_x + dx, grid_y: t.grid_y + dy } : t
       }))
       await Promise.all(passengerToks.map(p =>
-        supabase.from('scene_tokens')
-          .update({ grid_x: p.grid_x + dx, grid_y: p.grid_y + dy })
-          .eq('id', p.id)
+        updateToken(p.id, { grid_x: p.grid_x + dx, grid_y: p.grid_y + dy })
       ))
       tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
     })()
@@ -2659,7 +2658,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (tok && (tok.is_door || tok.is_window)) {
           const nextOpen = !tok.door_open
           setTokens(prev => prev.map(x => x.id === tok.id ? { ...x, door_open: nextOpen } : x))
-          supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
+          updateToken(tok.id, { door_open: nextOpen }).then(() => {
             tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
           })
           return
@@ -3016,7 +3015,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             const dyMove = pos.gy - moveTok.grid_y
             tokenAnimRef.current.set(moveTok.id, { fromX, fromY, toX, toY, t: 0 })
             setTokens(prev => prev.map(t => t.id === moveTok.id ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
-            supabase.from('scene_tokens').update({ grid_x: pos.gx, grid_y: pos.gy }).eq('id', moveTok.id).then(() => {
+            updateToken(moveTok.id, { grid_x: pos.gx, grid_y: pos.gy }).then(() => {
               tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
               onMoveComplete?.()
             })
@@ -3061,7 +3060,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           if (!isGM && !isController) {
             const nextOpen = !tok.door_open
             setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, door_open: nextOpen } : t))
-            supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
+            updateToken(tok.id, { door_open: nextOpen }).then(() => {
               tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
             })
             // Token center for the floating label.
@@ -3401,7 +3400,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (tok && (tok.is_door || tok.is_window) && !moved) {
       const nextOpen = !tok.door_open
       setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, door_open: nextOpen } : t))
-      supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
+      updateToken(tok.id, { door_open: nextOpen }).then(() => {
         tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
       })
       const cx = tok.grid_x + (tok.grid_w ?? 1) / 2
@@ -3457,7 +3456,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const dx = newGx - tok!.grid_x
       const dy = newGy - tok!.grid_y
       setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: newGx, grid_y: newGy } : t))
-      supabase.from('scene_tokens').update({ grid_x: newGx, grid_y: newGy }).eq('id', tokenId).then(({ error }: any) => {
+      updateToken(tokenId, { grid_x: newGx, grid_y: newGy }).then(({ error }: any) => {
         if (error) console.warn('[TacticalMap] token move failed:', error)
         else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
       })
@@ -3502,22 +3501,22 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Scene management
   async function createScene() {
-    const { data, error } = await supabase.from('tactical_scenes').insert({
+    const { data, error } = await insertScene({
       campaign_id: campaignId, name: setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, cell_px: 35, is_active: true, has_grid: setupHasGrid,
     }).select().single()
     if (error) { console.error('[TacticalMap] createScene error:', error.message); alert('Failed to create scene: ' + error.message); return }
     if (data) {
       // Deactivate other scenes
-      await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', campaignId).neq('id', data.id)
-      setScene(data)
+      await deactivateOtherScenes(campaignId, data.id)
+      setScene(data as unknown as Scene)
       setShowSetup(false)
       await loadScenes()
     }
   }
 
   async function activateScene(sceneId: string) {
-    await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', campaignId)
-    await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
+    await deactivateAllScenes(campaignId)
+    await updateScene(sceneId, { is_active: true })
     await loadScenes()
     // Force-push the scene switch to every connected client. Even if the
     // postgres_changes UPDATE on tactical_scenes is delivered, the
@@ -3535,7 +3534,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   async function autoPopulateTokens() {
     if (!scene) return
     // Clear existing tokens
-    await supabase.from('scene_tokens').delete().eq('scene_id', scene.id)
+    await deleteTokensForScene(scene.id)
     // Add tokens from initiative order
     const newTokens = initiativeOrder.map((entry: any, i: number) => ({
       scene_id: scene.id,
@@ -3550,7 +3549,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       color: entry.is_npc ? '#c0392b' : '#7ab3d4',
     }))
     if (newTokens.length > 0) {
-      await supabase.from('scene_tokens').insert(newTokens)
+      await insertTokens(newTokens)
     }
     await loadTokens(scene.id)
   }
@@ -3574,7 +3573,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const newCols = Math.round(drawW / localCellPx)
     const newRows = Math.round(drawH / localCellPx)
     setScene(p => p ? { ...p, grid_cols: newCols, grid_rows: newRows } : p)
-    await supabase.from('tactical_scenes').update({ grid_cols: newCols, grid_rows: newRows }).eq('id', scene.id)
+    await updateScene(scene.id, { grid_cols: newCols, grid_rows: newRows })
   }
 
   function fitToScreen() {
@@ -3664,7 +3663,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   async function toggleTokenVisibility(tokenId: string) {
     const tok = tokens.find(t => t.id === tokenId)
     if (!tok) return
-    await supabase.from('scene_tokens').update({ is_visible: !tok.is_visible }).eq('id', tokenId)
+    await updateToken(tokenId, { is_visible: !tok.is_visible })
     setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, is_visible: !t.is_visible } : t))
     // Notify parent so it can broadcast token_changed - previously players had
     // to hard-refresh to see a Reveal. postgres_changes on scene_tokens may
@@ -3674,7 +3673,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   async function removeToken(tokenId: string) {
-    await supabase.from('scene_tokens').delete().eq('id', tokenId)
+    await deleteToken(tokenId)
     setTokens(prev => prev.filter(t => t.id !== tokenId))
   }
 
@@ -3794,7 +3793,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               return (
                 <button onClick={async () => {
                   const next = isDay ? 'night' : 'day'
-                  await supabase.from('tactical_scenes').update({ lighting_mode: next }).eq('id', scene.id)
+                  await updateScene(scene.id, { lighting_mode: next })
                   setScene(p => p ? { ...p, lighting_mode: next } : p)
                 }}
                   title={isDay ? 'Day - sight unbounded, only walls block. Click to switch to Night.' : 'Night - per-token sight radius governs, auto-fog beyond. Click to switch to Day.'}
@@ -4177,9 +4176,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                         // token doesn't end up off-grid when scenes
                         // have different dimensions. The GM can drag
                         // it into position on the target scene.
-                        await supabase.from('scene_tokens')
-                          .update({ scene_id: s.id, grid_x: 1, grid_y: 1 })
-                          .eq('id', tok.id)
+                        await updateToken(tok.id, { scene_id: s.id, grid_x: 1, grid_y: 1 })
                         setMovingTokenToScene(null)
                         setSelectedToken(null)
                         // Local mirror - strip from current scene
@@ -4210,7 +4207,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     onChange={async e => {
                       const v = parseFloat(e.target.value)
                       setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, scale: v } : t))
-                      await supabase.from('scene_tokens').update({ scale: v }).eq('id', tok.id)
+                      await updateToken(tok.id, { scale: v })
                     }}
                     style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{((tok.scale ?? 1) * 100).toFixed(0)}%</span>
@@ -4223,7 +4220,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     onChange={async e => {
                       const v = parseFloat(e.target.value)
                       setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, rotation: v } : t))
-                      await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tok.id)
+                      await updateToken(tok.id, { rotation: v })
                     }}
                     style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{(tok.rotation ?? 0).toFixed(0)}°</span>
@@ -4240,7 +4237,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                       onChange={async e => {
                         const v = Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1))
                         setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, grid_w: v } : t))
-                        await supabase.from('scene_tokens').update({ grid_w: v }).eq('id', tok.id)
+                        await updateToken(tok.id, { grid_w: v })
                       }}
                       style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
                     <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>×</span>
@@ -4249,7 +4246,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                       onChange={async e => {
                         const v = Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1))
                         setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, grid_h: v } : t))
-                        await supabase.from('scene_tokens').update({ grid_h: v }).eq('id', tok.id)
+                        await updateToken(tok.id, { grid_h: v })
                       }}
                       style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
                   </div>
@@ -4266,7 +4263,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                       onChange={async e => {
                         const v = parseInt(e.target.value, 10)
                         setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, sight_radius_cells: v } : t))
-                        await supabase.from('scene_tokens').update({ sight_radius_cells: v }).eq('id', tok.id)
+                        await updateToken(tok.id, { sight_radius_cells: v })
                       }}
                       title={`Vision radius - ${tok.sight_radius_cells ?? 30} cells`}
                       style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
