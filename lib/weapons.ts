@@ -167,6 +167,23 @@ export function getWeaponByName(name: string): Weapon | undefined {
   return ALL_WEAPONS.find(w => w.name === name)
 }
 
+// Wound infection only applies to wounds that break the skin - a cut (bladed
+// melee) or a shot / puncture / burn (ranged / explosive / heavy). Blunt
+// trauma (bats, clubs, fists / unarmed) leaves no open wound, so it never
+// triggers a Wound Infection check (Xero ruling 2026-05-24; canon: infection
+// is for open wounds - reconcile into the rules pages). Stun / 0-damage
+// weapons never reach the check anyway (they deal no WP). Unknown / custom
+// weapons default to true (assume an open wound). Bullwhip is the one
+// debatable melee call - classified blunt (welts, not a deep open wound).
+const BLUNT_MELEE_WEAPONS = new Set<string>([
+  'Baseball Bat', 'Brass Knuckles', 'Club', 'Makeshift Club',
+  'Sledgehammer', 'Staff', 'Tactical Baton', 'Bullwhip',
+])
+export function weaponCausesWoundInfection(weaponName: string | null | undefined): boolean {
+  if (!weaponName || weaponName === 'Unarmed') return false
+  return !BLUNT_MELEE_WEAPONS.has(weaponName)
+}
+
 export function conditionColor(condition: Condition): string {
   switch (condition) {
     case 'Pristine': return '#7fc458'

@@ -15,7 +15,7 @@ import { createClient } from '../../../../../lib/supabase-browser'
 import { useRollsFeed } from '../../../../../components/RollsFeed'
 import { OUTCOME } from '../../../../../lib/roll-outcomes'
 import { getOutcome, outcomeColor, compactRollSummary } from '../../../../../lib/roll-helpers'
-import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../../lib/weapons'
+import { getWeaponByName, getTraitValue, CONDITION_CMOD, weaponCausesWoundInfection } from '../../../../../lib/weapons'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../../lib/damage'
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../../lib/table-roll-context'
 import { insertRollLog } from '../../../../../lib/data/roll-log'
@@ -592,7 +592,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         // Queue a wound-infection warning. Drained AFTER saveRollToLog
         // so the warning row's created_at follows the attack row's,
         // keeping feed order: attack first, warning below.
-        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetEntry.character.name)
+        if (finalWP > 0 && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetEntry.character.name)
 
         if (newWP === 0 && currentWP > 0 && currentInsight > 0) {
           const { error: csErr, data: csData } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select()
@@ -708,7 +708,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         const newRP = Math.max(0, npcRP - finalRP)
         trace('damage', { npcTarget: targetNpc.name, id: targetNpc.id, wp: { from: npcWP, to: newWP }, rp: { from: npcRP, to: newRP } })
         // Queue a wound-infection warning. Drained after saveRollToLog.
-        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetNpc.name)
+        if (finalWP > 0 && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetNpc.name)
         const npcUpdate: any = { wp_current: newWP, rp_current: newRP }
         // Mortal wound - NPC enters death countdown when WP first hits 0
         if (newWP === 0 && npcWP > 0) {

@@ -77,7 +77,7 @@ import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/
 import { useStableCallback } from '../../../../lib/useStableCallback'
 import { appendProgressionEntry } from '../../../../lib/progression-log'
 import ApprenticeCreationWizard from '../../../../components/ApprenticeCreationWizard'
-import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
+import { getWeaponByName, getTraitValue, CONDITION_CMOD, weaponCausesWoundInfection } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary } from '../../../../lib/roll-helpers'
 import { OUTCOME } from '../../../../lib/roll-outcomes'
 import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../../../lib/stabilize-helpers'
@@ -4912,7 +4912,7 @@ export default function TablePage() {
 
       // Apply damage to target
       if (targetEntry?.liveState) {
-        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetEntry.character.name)
+        if (finalWP > 0 && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetEntry.character.name)
         const tNewWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const tNewRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
         const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
@@ -4938,7 +4938,7 @@ export default function TablePage() {
           })
         }
       } else if (targetNpcObj) {
-        if (finalWP > 0) pendingWoundInfectionRef.current.add(targetNpcObj.name)
+        if (finalWP > 0 && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetNpcObj.name)
         const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
         const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
         const tNewWP = Math.max(0, tNpcWP - finalWP)
