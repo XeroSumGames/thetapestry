@@ -632,13 +632,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           addMeasurePoint(pin.lat, pin.lng)
           return
         }
-        // Route mode: plain-click on a pin uses the pin's coords as the
-        // route waypoint. Pre-2026-05-19 this required alt+click, with
-        // plain click falling through to popup-open; playtest feedback
-        // (P1 #5) said that swallowed too many clicks meant for routing.
-        // Widened to plain-click. Alt+click in route mode still hits
-        // the ping branch below for parity with empty-map alt+click.
-        if (routeModeRef.current && !oe?.altKey) {
+        // Route mode: ANY click on a pin (plain OR alt) drops the route
+        // waypoint at the pin's exact coords. Matches the empty-map click
+        // handler (which routes on any click in route mode) and the cluster
+        // alt-click path, so a pin is a snappable start/end target however you
+        // click it. Earlier this excluded alt+click (it fell through to ping),
+        // which is exactly the gesture that felt broken - alt+click a pin now
+        // sets the waypoint instead of pinging.
+        if (routeModeRef.current) {
           void handleRouteClick(pin.lat, pin.lng)
           return
         }
