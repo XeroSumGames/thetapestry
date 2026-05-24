@@ -620,7 +620,6 @@ export default function TablePage() {
   const [recruitNpcId, setRecruitNpcId] = useState<string>('')
   const [recruitCommunityId, setRecruitCommunityId] = useState<string>('') // community.id, '__new__', or ''
   const [recruitNewCommunityName, setRecruitNewCommunityName] = useState('')
-  const [recruitNewCommunityPublic, setRecruitNewCommunityPublic] = useState(false)
   const [recruitApproach, setRecruitApproach] = useState<RecruitApproach>('cohort')
   const [recruitSkill, setRecruitSkill] = useState<string>('')
   const [recruitGmCmod, setRecruitGmCmod] = useState<number>(0)
@@ -3693,7 +3692,6 @@ export default function TablePage() {
     setRecruitNpcId(preselectedNpcId ?? '')
     setRecruitCommunityId('')
     setRecruitNewCommunityName('')
-    setRecruitNewCommunityPublic(false)
     setRecruitApproach('cohort')
     setRecruitSkill('')
     setRecruitGmCmod(0)
