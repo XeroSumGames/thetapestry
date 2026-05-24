@@ -266,8 +266,8 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       case 'Wild Success':  return `${name} distracts ${tgt} so badly they seem to become confused`
       case 'High Insight':  return `${name} distracts ${tgt} so badly they seem to become confused and has a Moment of Insight as to why it went so well`
       case 'Success':       return `${name} distracts ${tgt}, breaking their focus`
-      case 'Failure':       return `${name} tries to distract ${tgt}, who shrugs it off`
-      case 'Low Insight':   return `${name} tries to distract ${tgt}, who shrugs it off but has a Moment of Insight as to why it went so badly`
+      case 'Failure':       return `${name} tries to distract ${tgt}, who ignores them`
+      case 'Low Insight':   return `${name} tries to distract ${tgt}, who ignores them but has a Moment of Insight as to why it went so badly`
       case 'Dire Failure':  return `${name} tries to distract ${tgt} but only sharpens their focus`
       default:              return `${name} ${hit ? 'distracts' : 'tries to distract'} ${tgt}`
     }

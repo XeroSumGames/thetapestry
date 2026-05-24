@@ -252,12 +252,12 @@ describe('compactRollSummary', () => {
 
   it('distract Failure', () => {
     expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Failure' }))
-      .toBe('Cree tries to distract Goon, who shrugs it off')
+      .toBe('Cree tries to distract Goon, who ignores them')
   })
 
   it('distract Low Insight: F narrative + LI tail (no double-but stutter)', () => {
     expect(compactRollSummary({ label: 'Cree - Distract', character_name: 'Cree', target_name: 'Goon', outcome: 'Low Insight' }))
-      .toBe('Cree tries to distract Goon, who shrugs it off but has a Moment of Insight as to why it went so badly')
+      .toBe('Cree tries to distract Goon, who ignores them but has a Moment of Insight as to why it went so badly')
   })
 
   it('distract Dire Failure', () => {
