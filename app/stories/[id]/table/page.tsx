@@ -2,8 +2,9 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
-import { insertRollLog, deleteRollLog, setRollLogSession } from '../../../../lib/data/roll-log'
+import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
+import { buildSessionLogDigest } from '../../../../lib/session-log'
 import { prepareUpload } from '../../../../lib/safe-upload'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
@@ -3393,6 +3394,10 @@ export default function TablePage() {
     const now = new Date().toISOString()
     const bgWork = async () => {
       try {
+        // Y11-e RLA-S: capture this session's rolls into a text digest BEFORE
+        // the wipe below, so the session record keeps its log on session_log.
+        const { data: rollRows } = await rollLogForCampaign(id)
+        const sessionLog = buildSessionLogDigest((rollRows ?? []) as any)
         await Promise.all([
           supabase.from('campaigns').update({ session_status: 'idle', session_started_at: null }).eq('id', id),
           deleteRollLog().eq('campaign_id', id).then(({ error }: any) => {
@@ -3418,6 +3423,7 @@ export default function TablePage() {
             gm_summary: sessionSummary.trim() || null,
             next_session_notes: nextSessionNotes.trim() || null,
             cliffhanger: sessionCliffhanger.trim() || null,
+            session_log: sessionLog || null,  // Y11-e RLA-S: captured roll-log digest
           }).eq('id', sessionRow.id)
 
           if (filesToUpload.length > 0 && userId) {

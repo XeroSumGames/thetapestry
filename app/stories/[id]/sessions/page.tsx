@@ -13,6 +13,7 @@ interface Session {
   gm_summary: string | null
   cliffhanger: string | null
   next_session_notes: string | null
+  session_log: string | null
 }
 
 interface Attachment {
@@ -144,7 +145,7 @@ export default function SessionHistoryPage() {
           {sessions.map(s => {
             const isExpanded = expandedId === s.id
             const sessAttachments = attachments.filter(a => a.session_id === s.id)
-            const hasContent = s.gm_summary || s.cliffhanger || s.next_session_notes || sessAttachments.length > 0
+            const hasContent = s.gm_summary || s.cliffhanger || s.next_session_notes || s.session_log || sessAttachments.length > 0
             const isActive = !s.ended_at
 
             return (
@@ -217,6 +218,12 @@ export default function SessionHistoryPage() {
                       <div style={{ marginTop: '10px' }}>
                         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
                         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.next_session_notes}</div>
+                      </div>
+                    )}
+                    {s.session_log && (
+                      <div style={{ marginTop: '10px' }}>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Roll Log</div>
+                        <pre style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif', margin: 0, maxHeight: '300px', overflowY: 'auto', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>{s.session_log}</pre>
                       </div>
                     )}
                     {sessAttachments.length > 0 && (

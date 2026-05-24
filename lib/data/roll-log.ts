@@ -54,3 +54,15 @@ export function insertRollLog(rows: any) {
 export function deleteRollLog() {
   return db().from('roll_log').delete()
 }
+
+// Y11-e RLA-S: a campaign's rolls oldest-first, for the end-session log digest
+// (buildSessionLogDigest). Today roll_log holds only the active session's rolls
+// (it's wiped at session boundaries), so campaign_id == this session's rolls.
+// When RLA3's retain model lands, switch the caller to filter by session_id.
+export function rollLogForCampaign(campaignId: string) {
+  return db()
+    .from('roll_log')
+    .select('created_at, character_name, label, die1, die2, total, outcome')
+    .eq('campaign_id', campaignId)
+    .order('created_at', { ascending: true })
+}

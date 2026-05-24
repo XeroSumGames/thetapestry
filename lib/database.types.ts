@@ -2864,6 +2864,7 @@ export type Database = {
           gm_summary: string | null
           id: string
           next_session_notes: string | null
+          session_log: string | null
           session_number: number
           started_at: string
         }
@@ -2875,6 +2876,7 @@ export type Database = {
           gm_summary?: string | null
           id?: string
           next_session_notes?: string | null
+          session_log?: string | null
           session_number: number
           started_at?: string
         }
@@ -2886,6 +2888,7 @@ export type Database = {
           gm_summary?: string | null
           id?: string
           next_session_notes?: string | null
+          session_log?: string | null
           session_number?: number
           started_at?: string
         }
