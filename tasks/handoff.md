@@ -204,7 +204,7 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 - **Phase 7 close-out:** Section B (vehicle) at the 2026-05-25 Minnie playtest (2nd window). D/E re-test (deposit + pin propagation - publication fix is live, no deploy needed). When all green: demote Realtime YELLOW, promote re-arch HOPED-FOR -> PLAYTESTED, archive the decomposition sheet, log Phase 7 closed in decisions.md.
 - **The 5 architecture moves** (todo "Architecture review 2026-05-24"): #1 client-state layer is the next BIG initiative once Phase 7 closes.
 - **Handed to HUNT-AND-PECK:** the 5th status chip (🩹 Lasting Wound, feed-derived) + tooltip polish.
-- **Operator items owed by Xero** (carried, NOT re-arch): Upstash KV env vars in Vercel (prod verify-turnstile 503 until set); apply `sql/audit-log-table-2026-05-20.sql` to live.
+- **Operator items owed by Xero** (carried, NOT re-arch): Upstash KV env vars in Vercel (prod verify-turnstile 503 until set). [`sql/audit-log-table-2026-05-20.sql` is DONE - applied + verified live 2026-05-24: `audit_log` table present, RLS on, 2 SELECT policies, 5 indexes. Phase AL1 complete; AL2+ triggers still pending.]
 - **CLI now linked** this session (`npx supabase db query --linked -f sql/<file>.sql` works) - useful diag probes written: `sql/diag-arena-readiness-2026-05-24.sql`, `sql/diag-arena-smoke-results-2026-05-24.sql`.
 
 ---
@@ -295,9 +295,9 @@ Derive it: `git rev-parse --short HEAD` (was `e6919e5` at write; `wc -l "app/sto
   - **3d (separate FRESH window, own smoke)** - migrate the 11 channels / 23 events onto `lib/realtime/useCampaignChannel` (deps `[campaignId]`); then `useTacticalSync` + `useInitiative` carve off the now-owned `initiative_${id}` channel.
   - Then **Phase 4** (dep-cruiser lock) + **Phase 5** (the other 6 god-components, using the B3 extraction technique).
 
-## Two operator actions still owed by Xero (code shipped, infra pending)
-1. **Upstash KV** in the Vercel dashboard (L-3 rate limiter) - until done, prod `/api/auth/verify-turnstile` returns 503. See `tasks/l3-kv-ratelimiter-testplan-2026-05-20.md`.
-2. **Apply `sql/audit-log-table-2026-05-20.sql`** to live.
+## Operator actions owed by Xero (code shipped, infra pending)
+1. **Upstash KV** in the Vercel dashboard (L-3 rate limiter) - until done, prod `/api/auth/verify-turnstile` returns 503. See `tasks/l3-kv-ratelimiter-testplan-2026-05-20.md`. (STILL OWED - dashboard env vars, only Xero can set.)
+2. ~~**Apply `sql/audit-log-table-2026-05-20.sql`** to live.~~ **DONE 2026-05-24** - applied + verified (table + RLS + 2 policies + 5 indexes live). Phase AL1 complete.
 
 ## Other open threads (lower priority than the re-arch)
 - Modal visual consistency (all `<RollModal>` to the ATTACK ROLL shape); throw-time grenade auto-decrement; Xero soft-delete + invite rulings (Y11-a/e + invite-code SPEC-READY in `tasks/todo.md`, schema-touching = confirm first); Lost Eye + Crippled lasting-wound narrative overrides (awaiting Xero canon confirm).
