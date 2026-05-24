@@ -24,6 +24,13 @@ interface Props {
   mapCenterLng?: number | null
   revealedNpcIds?: Set<string>
   focusPin?: { id: string; lat: number; lng: number } | null
+  // Bumped by the parent whenever the sibling CampaignPins sidebar mutates a
+  // pin (reveal/hide/edit/delete/reorder). Same-client broadcast doesn't reach
+  // this map's channel (the sender's own socket is excluded), and
+  // postgres_changes on campaign_pins is laggy, so a GM's "Show" click wouldn't
+  // un-ghost the marker until a manual refresh. This deterministic key forces a
+  // reload. (Cross-client players still update via the broadcast/postgres path.)
+  pinRefreshKey?: number
   // Double-click on any empty map location fires this callback with
   // the clicked coords. Table page wires it to open the Quick Add
   // modal pre-seeded with the location. Null = feature off.
@@ -103,7 +110,7 @@ function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
-export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle, mapCenterLat, mapCenterLng, revealedNpcIds, focusPin, onMapDoubleClick }: Props) {
+export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle, mapCenterLat, mapCenterLng, revealedNpcIds, focusPin, pinRefreshKey, onMapDoubleClick }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
@@ -969,6 +976,15 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       if (marker) setTimeout(() => marker.openPopup(), 900)
     }
   }, [focusPin])
+
+  // Reload markers when the sibling CampaignPins sidebar mutates a pin. The
+  // parent bumps pinRefreshKey; same-client broadcast doesn't reach this map's
+  // channel, so without this a GM's "Show" wouldn't un-ghost the marker live.
+  useEffect(() => {
+    if (!pinRefreshKey) return  // 0 / undefined = initial, skip (loadPins already ran on mount)
+    void loadPins()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinRefreshKey])
 
   // Shared geometry/font for every control in the top-right toolbar row.
   // Locks height + font so the buttons, the <select>, the search input,

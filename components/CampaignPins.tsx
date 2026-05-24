@@ -52,9 +52,13 @@ interface Props {
   // to deletePin (which destroys the campaign_pin row entirely) when
   // showTacticalMap is false.
   onRemoveFromTacticalMap?: (pin: CampaignPin) => Promise<void>
+  // Fired on every pin mutation (reveal/hide/edit/delete/reorder) so the parent
+  // can refresh the sibling CampaignMap, which can't hear this client's own
+  // broadcast. See CampaignMap's pinRefreshKey prop.
+  onPinsChanged?: () => void
 }
 
-export default function CampaignPins({ campaignId, isGM, isThriver = false, showTacticalMap = false, onPinFocus, onOpenScene, onPlaceOnTacticalMap, onRemoveFromTacticalMap }: Props) {
+export default function CampaignPins({ campaignId, isGM, isThriver = false, showTacticalMap = false, onPinFocus, onOpenScene, onPlaceOnTacticalMap, onRemoveFromTacticalMap, onPinsChanged }: Props) {
   // "Can manage" = campaign GM OR app-level Thriver. Thrivers get
   // parity on pin edit/delete so they can relocate stray pins across
   // any campaign they don't GM (e.g. the "dis ho" cleanup scenario).
@@ -154,6 +158,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   const pinsChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   function broadcastPinsChanged() {
     pinsChannelRef.current?.send({ type: 'broadcast', event: 'pins_changed', payload: {} })
+    onPinsChanged?.()  // same-client signal to the parent -> refresh CampaignMap
   }
   useEffect(() => {
     loadPins(); loadScenes()

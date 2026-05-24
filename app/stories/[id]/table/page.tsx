@@ -546,6 +546,9 @@ export default function TablePage() {
   const tacticalSharedRef = useRef(false)
   useEffect(() => { tacticalSharedRef.current = tacticalShared }, [tacticalShared])
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
+  // Bumped by CampaignPins on any pin mutation so the sibling CampaignMap
+  // reloads (same-client broadcast doesn't reach the map's channel).
+  const [pinRefreshKey, setPinRefreshKey] = useState(0)
   const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null>(null)
   const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null; controlled_by_character_ids?: string[] | null; rotation?: number }[]>([])
   const [mapCellFeet, setMapCellFeet] = useState(3)
@@ -6476,7 +6479,7 @@ export default function TablePage() {
               onThrowCancel={handleMapThrowCancel}
             />
           ) : (
-            <CampaignMap campaignId={id} isGM={gmLike} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} onMapDoubleClick={(lat, lng) => openQuickAddPin(lat, lng)} />
+            <CampaignMap campaignId={id} isGM={gmLike} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} pinRefreshKey={pinRefreshKey} onMapDoubleClick={(lat, lng) => openQuickAddPin(lat, lng)} />
           )}
           {/* NPC Card(s) - grid overlay when out of combat, draggable inline when in combat */}
           {viewingNpcs.length > 0 && !combatActive && !showTacticalMap && (
@@ -7377,6 +7380,7 @@ export default function TablePage() {
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
                 <CampaignPins campaignId={id} isGM={isGM} isThriver={isThriver}
                   showTacticalMap={showTacticalMap}
+                  onPinsChanged={() => setPinRefreshKey(k => k + 1)}
                   onPinFocus={p => setFocusPin({ ...p })}
                   onOpenScene={async (sceneId: string) => {
                     await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
