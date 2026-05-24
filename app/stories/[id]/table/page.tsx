@@ -9777,6 +9777,7 @@ export default function TablePage() {
         open={!!recruitResult && showRecruit && recruitStep === 'result'}
         onClose={closeRecruitModal}
         title="Recruitment"
+        eyebrow="Recruit" accent="#b07cc6" dimBackdrop={false}
         subtitle={recruitResult ? `${recruitResult.rollerName} → ${recruitResult.npcName}${recruitResult.approach ? ` · ${recruitResult.approach.charAt(0).toUpperCase()}${recruitResult.approach.slice(1)}` : ''}` : undefined}
         rollFormula="2d6 + INF + Skill + CMod"
         amod={recruitResult?.amod ?? 0}
@@ -9924,6 +9925,7 @@ export default function TablePage() {
           setStabilizeCmod(0)
         }}
         title="Stabilize"
+        eyebrow="Stabilize" accent="#7fc458" dimBackdrop={false}
         subtitle={stabilizePending
           ? `${stabilizePending.medicName} stabilizes ${stabilizePending.targetName}`
           : undefined}
@@ -10013,6 +10015,7 @@ export default function TablePage() {
           setDistractTargetName('')
         }}
         title="Distract"
+        eyebrow="Distract" accent="#4aa3b5" dimBackdrop={false}
         subtitle={distractPending
           ? `${distractPending.rollerName} distracts ${distractTargetName || '...'}`
           : undefined}
@@ -10130,6 +10133,7 @@ export default function TablePage() {
           setGutInstinctCmod(0)
         }}
         title="Gut Instinct"
+        eyebrow="Gut Instinct" accent="#5aa0c0" dimBackdrop={false}
         subtitle={gutInstinctPending
           ? `${gutInstinctPending.characterName} reads the room`
           : undefined}

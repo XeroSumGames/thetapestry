@@ -1908,6 +1908,9 @@ export default function VehiclePage() {
             open={true}
             onClose={() => setCheck(null)}
             title={title}
+            eyebrow="Vehicle"
+            accent="#d4883a"
+            dimBackdrop={false}
             subtitle={subtitle}
             rollFormula="2d6 + AMOD + SMOD + CMOD"
             amod={check.amod}

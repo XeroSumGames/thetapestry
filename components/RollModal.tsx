@@ -1,26 +1,33 @@
 'use client'
-// Shared roll modal shell - the canonical Attack Roll shape extracted
-// for reuse. Drives the four outlier modals (Stress Check, Breaking
-// Point, Lasting Wound, Recruit) that previously had their own
-// bespoke layouts. The universal `pendingRoll` modal in
-// app/stories/[id]/table/page.tsx already implements this shape
-// directly; this component is for the non-tabletop surfaces and the
-// Recruit modal that didn't share that path.
+// Shared roll modal shell - the canonical ATTACK ROLL shape.
 //
-// Two distinct phases:
-//   - PRE-ROLL: title + roll formula breakdown + CMod input + Insight
-//     Dice pre-roll buttons (3d6 / +3 CMod) + warnings + Roll button.
-//   - POST-ROLL: dice display + outcome banner (or custom renderOutcome
-//     slot for table-lookup outcomes like Breaking Point) + optional
-//     damage block + post-roll Insight Die reroll buttons + Close.
+// Visual chrome matches the inline Attack Roll modal in
+// app/stories/[id]/table/page.tsx: 400px draggable panel, colored eyebrow
+// + uppercase title, "2d6 + AMod + SMod" formula line, 52px dice tiles,
+// outcome banner in the feed palette (lib/roll-helpers outcomeColor), green
+// Insight reroll buttons. Drives the non-tabletop + dedicated check modals
+// (Stress / Breaking Point / Lasting Wound / Recruit / Stabilize / Distract /
+// Gut Instinct / Vehicle). The inline ATTACK modal still implements this
+// shape directly; collapsing it onto this component is a deferred follow-up.
 //
-// Insight Dice integration is optional via `userInsightDice` -
-// when > 0, the pre-roll buttons render. Reroll handlers are
-// individually optional so callers can opt out (e.g. Lasting Wound
-// is permanent, no rerolls).
+// Per-roll accent (decision 2026-05-21): `accent` colors the eyebrow + the
+// primary Roll button. Structure is identical across every modal; only the
+// accent and the body content vary - that is the per-roll idiosyncrasy.
+//
+// Backdrop is CONTEXTUAL (decision 2026-05-21): `dimBackdrop` true (default)
+// renders a dimmed overlay for sheet-context modals; false renders a
+// see-through draggable panel for map-context modals so the tactical map
+// stays visible behind the roll.
+//
+// Two phases:
+//   - PRE-ROLL: eyebrow + title + formula + optional preRollExtras + CMod
+//     input + Insight pre-roll buttons + warnings + Roll / Cancel.
+//   - POST-ROLL: dice display + outcome banner (or custom renderOutcome) +
+//     optional damage block + Insight reroll buttons + Close.
 
 import React from 'react'
-import { ModalBackdrop } from '../lib/style-helpers'
+import { useDragPosition } from '../lib/use-drag-position'
+import { outcomeColor } from '../lib/roll-helpers'
 
 export interface RollResult {
   die1: number
@@ -48,11 +55,18 @@ export interface RollModalProps {
   onClose: () => void
 
   // ── Header ────────────────────────────────────────────────────
+  /** Big uppercase heading - the specific instance (e.g. "Cree stabilizes Donnie"). */
   title: string
+  /** Small colored eyebrow above the title - the roll TYPE (e.g. "Stabilize"). */
+  eyebrow?: string
+  /** Per-roll accent color (eyebrow + primary Roll button). Default neutral blue. */
+  accent?: string
   /** e.g. "2d6 + RSN + ACU + CMod" or "Roll Recruitment". */
   rollFormula: string
-  /** Subtitle line - typically the character or target context. */
+  /** Optional context line below the title. */
   subtitle?: string
+  /** true (default) = dimmed sheet overlay; false = see-through map panel. */
+  dimBackdrop?: boolean
 
   // ── Modifiers ─────────────────────────────────────────────────
   amod: number
@@ -74,9 +88,8 @@ export interface RollModalProps {
 
   // ── Optional warnings rendered above Roll button ──────────────
   warnings?: React.ReactNode
-  /** Optional content rendered between subtitle and the modifier
-   *  breakdown - used for context like target dropdown, weapon damage
-   *  preview, etc. */
+  /** Optional content rendered between title and the modifier line -
+   *  used for context like target dropdown, weapon damage preview, etc. */
   preRollExtras?: React.ReactNode
 
   // ── Roll trigger ──────────────────────────────────────────────
@@ -103,36 +116,35 @@ export interface RollModalProps {
   onRerollBoth?: () => void | Promise<void>
   rerollPending?: boolean
 
-  /** Post-roll close / advance label. Default: "Close". */
+  /** Post-roll close / advance label. Default: "Done". */
   postRollCloseLabel?: string
   onPostRollClose?: () => void
 }
 
-// Modal-only palette. Deliberately diverges from lib/roll-helpers.ts
-// outcomeColor (the canonical feed palette) on two outcomes:
-//   - Success: canonical = #7ab3d4 (blue); modal = #7fc458 (green) - the
-//     modal "celebrates" success more strongly than the neutral feed row.
-//   - Failure: canonical = #EF9F27 (amber); modal = #f5a89a (light red) -
-//     softer in-modal failure framing vs the feed's sharper amber.
-// Wild Success / Dire Failure / High Insight / Low Insight match canonical.
-// Renamed from `outcomeColor` 2026-05-19 to make the divergence explicit
-// instead of looking like a silent duplicate.
-const MODAL_OUTCOME_COLOR: Record<string, string> = {
-  'Wild Success': '#7fc458',
-  'High Insight': '#7fc458',
-  'Success': '#7fc458',
-  'Failure': '#f5a89a',
-  'Dire Failure': '#c0392b',
-  'Low Insight': '#c0392b',
+const DEFAULT_ACCENT = '#7ab3d4'
+
+function modPart(n: number) {
+  // AMod / SMod chip color: positive green, negative red (matches ATTACK).
+  return { color: n > 0 ? '#7fc458' : '#c0392b' }
 }
 
-function modalOutcomeColor(o: string): string {
-  return MODAL_OUTCOME_COLOR[o] ?? '#cce0f5'
+// Pick a readable text color for a filled accent button. ATTACK's red is dark
+// (white text); the lighter per-roll accents (green / amber / blue) need dark
+// text to stay legible. Luminance threshold, not a per-color lookup, so any
+// future accent works.
+function readableOn(hex: string): string {
+  const h = hex.replace('#', '')
+  if (h.length < 6) return '#fff'
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return lum > 0.6 ? '#1a1a1a' : '#fff'
 }
 
 export default function RollModal(props: RollModalProps) {
   const {
-    open, onClose, title, rollFormula, subtitle,
+    open, onClose, title, eyebrow, accent, rollFormula, subtitle, dimBackdrop = true,
     amod, smod, cmod, setCmod, cmodBreakdown,
     userInsightDice, preRollInsight, setPreRollInsight,
     warnings, preRollExtras,
@@ -142,194 +154,254 @@ export default function RollModal(props: RollModalProps) {
     postRollCloseLabel, onPostRollClose,
   } = props
 
+  const { pos, onHandleMouseDown } = useDragPosition()
+
   if (!open) return null
 
+  const ac = accent ?? DEFAULT_ACCENT
   const insightAvail = (userInsightDice ?? 0) > 0
   const insightSpentPre = result?.insightUsed === 'pre' || preRollInsight === '3d6' || preRollInsight === '+3cmod'
   const canRerollDie1 = !!onRerollDie1 && !insightSpentPre && (result?.insightUsed !== 'die1' && result?.insightUsed !== 'both')
   const canRerollDie2 = !!onRerollDie2 && !insightSpentPre && (result?.insightUsed !== 'die2' && result?.insightUsed !== 'both')
   const canRerollBoth = !!onRerollBoth && !insightSpentPre && !result?.insightUsed && insightAvail
 
-  return (
-    <ModalBackdrop onClose={result ? undefined : onClose} zIndex={11000} opacity={0.85} padding="1rem">
-      <div
-        style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', fontFamily: 'Carlito, sans-serif' }}>
+  // Primary (Roll / Done) button uses the per-roll accent fill; secondary
+  // (Cancel) stays neutral grey - matches the ATTACK modal exactly.
+  const primaryBtn = (disabled: boolean): React.CSSProperties => ({
+    flex: 1, padding: '10px', background: ac, border: `1px solid ${ac}`, borderRadius: '3px',
+    color: readableOn(ac), fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em',
+    textTransform: 'uppercase', fontWeight: 700, cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+  })
+  const secondaryBtn: React.CSSProperties = {
+    padding: '10px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px',
+    color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
+    textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer',
+  }
+  // Post-roll Done / Close - neutral grey full-width (matches ATTACK; only the
+  // pre-roll Roll button carries the accent).
+  const closeBtn: React.CSSProperties = {
+    width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px',
+    color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em',
+    textTransform: 'uppercase', cursor: 'pointer',
+  }
+  const rerollBtn: React.CSSProperties = {
+    padding: '6px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px',
+    color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
+    textTransform: 'uppercase', cursor: rerollPending ? 'wait' : 'pointer', opacity: rerollPending ? 0.5 : 1,
+  }
 
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
-          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+  return (
+    <>
+      {/* Contextual dim layer - sheet modals dim the screen; map modals
+          render see-through so the tactical map stays visible. Clicking the
+          dim layer cancels a pre-roll (matches the old ModalBackdrop). */}
+      {dimBackdrop && (
+        <div
+          onClick={result ? undefined : onClose}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10999 }}
+        />
+      )}
+
+      {/* Draggable panel */}
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'fixed',
+          left: pos?.x ?? '50%',
+          top: pos?.y ?? '50%',
+          transform: pos ? 'none' : 'translate(-50%, -50%)',
+          zIndex: 11000,
+          background: '#1a1a1a',
+          border: '1px solid #3a3a3a',
+          borderRadius: '4px',
+          width: '400px',
+          maxWidth: 'calc(100vw - 2rem)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+          fontFamily: 'Carlito, sans-serif',
+        }}
+      >
+        {/* Drag handle strip */}
+        <div
+          onMouseDown={onHandleMouseDown}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', borderBottom: '1px solid #3a3a3a', userSelect: 'none' }}
+        >
+          <div style={{ width: '40px', height: '3px', borderRadius: '2px', background: '#5a5a5a' }} />
+        </div>
+
+        <div style={{ padding: '1.5rem' }}>
+          {/* Header */}
+          {eyebrow && (
+            <div style={{ fontSize: '13px', color: ac, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
+              {eyebrow}
+            </div>
+          )}
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: subtitle ? '4px' : '1rem' }}>
             {result ? title : (rolling ? 'Rolling…' : title)}
           </div>
-          <button onClick={onClose} aria-label="Close"
-            style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '20px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
-        </div>
-        {subtitle && (
-          <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '12px' }}>{subtitle}</div>
-        )}
+          {subtitle && (
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>{subtitle}</div>
+          )}
 
-        {/* Pre-roll extras (target dropdown, weapon preview, etc.) */}
-        {!result && preRollExtras}
+          {!result && (
+            <>
+              {/* Pre-roll extras (target dropdown, weapon preview, etc.) */}
+              {preRollExtras}
 
-        {/* Roll formula breakdown */}
-        {!result && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px', padding: '10px 12px', background: '#0f0f0f', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
-            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase' }}>
-              {rollFormula}
-            </div>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
-              <span>AMod <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{amod >= 0 ? `+${amod}` : amod}</span></span>
-              {smod !== 0 && <span>SMod <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{smod >= 0 ? `+${smod}` : smod}</span></span>}
-              <span>CMod <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{cmod >= 0 ? `+${cmod}` : cmod}</span></span>
-            </div>
-          </div>
-        )}
-
-        {/* Optional itemized CMod breakdown */}
-        {!result && cmodBreakdown && cmodBreakdown.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '10px', padding: '6px 10px', background: '#0f0f0f', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
-            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>
-              CMod Stack
-            </div>
-            {cmodBreakdown.map((row, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9' }}>
-                <span>{row.label}</span>
-                <span style={{ color: row.value >= 0 ? '#7fc458' : '#f5a89a', fontWeight: 700 }}>{row.value >= 0 ? `+${row.value}` : row.value}</span>
+              {/* Formula line - "2d6 + AMod + SMod" (matches ATTACK) */}
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', flexWrap: 'wrap' }}>
+                <span>2d6</span>
+                {amod !== 0 && <span style={modPart(amod)}>{amod > 0 ? '+' : ''}{amod} AMod</span>}
+                {smod !== 0 && <span style={modPart(smod)}>{smod > 0 ? '+' : ''}{smod} SMod</span>}
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* CMod input */}
-        {!result && setCmod && (
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
-              Conditional Modifier
-            </label>
-            <input type="number" value={cmod}
-              onChange={e => setCmod(parseInt(e.target.value || '0', 10))}
-              style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
-          </div>
-        )}
-
-        {/* Insight Dice pre-roll buttons */}
-        {!result && insightAvail && setPreRollInsight && (
-          <div style={{ marginBottom: '10px' }}>
-            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
-              🎲 Insight Dice ({userInsightDice} available)
-            </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {(['none', '3d6', '+3cmod'] as PreRollChoice[]).map(c => {
-                const active = preRollInsight === c
-                const accent = c === 'none' ? '#cce0f5' : '#EF9F27'
-                const label = c === 'none' ? 'No spend' : c === '3d6' ? 'Roll 3d6' : '+3 CMod'
-                return (
-                  <button key={c} onClick={() => setPreRollInsight(c)}
-                    style={{ padding: '6px 12px', background: active ? '#2a2010' : 'transparent', border: `1px solid ${active ? accent : '#3a3a3a'}`, borderRadius: '3px', color: active ? accent : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: active ? 700 : 500 }}>
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Warnings */}
-        {!result && warnings && (
-          <div style={{ marginBottom: '10px' }}>{warnings}</div>
-        )}
-
-        {/* Roll button - only when the caller wired up onRoll. */}
-        {!result && onRoll && (
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button onClick={() => onRoll()} disabled={rolling || rollDisabled}
-              style={{ flex: 1, padding: '10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: (rolling || rollDisabled) ? 'not-allowed' : 'pointer', opacity: (rolling || rollDisabled) ? 0.5 : 1 }}>
-              {rolling ? '…' : (rollLabel ?? (preRollInsight === '3d6' ? 'Roll 3d6' : 'Roll'))}
-            </button>
-            <button onClick={onClose} disabled={rolling}
-              style={{ padding: '10px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer' }}>
-              Cancel
-            </button>
-          </div>
-        )}
-
-        {/* Post-roll display */}
-        {result && (
-          <>
-            {/* Dice display */}
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '10px' }}>
-              {(result.diceRolled ?? [result.die1, result.die2]).map((d, i) => (
-                <div key={i} style={{ width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '6px', fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, color: '#f5f2ee' }}>
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            {/* Outcome - custom renderer or default banner */}
-            {renderOutcome ? renderOutcome(result) : (
-              <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em' }}>
-                  {result.die1} + {result.die2} {result.amod !== 0 ? ` + ${result.amod} (AMod)` : ''}{result.smod !== 0 ? ` + ${result.smod} (SMod)` : ''}{result.cmod !== 0 ? ` ${result.cmod >= 0 ? '+' : ''}${result.cmod} (CMod)` : ''} = <span style={{ color: '#f5f2ee', fontWeight: 700, fontSize: '16px' }}>{result.total}</span>
-                </div>
-                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: modalOutcomeColor(result.outcome), marginTop: '6px' }}>
-                  {result.outcome}
-                </div>
-                {result.insightAwarded && (
-                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
-                    🎲 Insight Die awarded
+              {/* Optional itemized CMod breakdown */}
+              {cmodBreakdown && cmodBreakdown.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '10px', padding: '6px 10px', background: '#0f0f0f', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>
+                    CMod Stack
                   </div>
-                )}
-              </div>
-            )}
+                  {cmodBreakdown.map((row, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9' }}>
+                      <span>{row.label}</span>
+                      <span style={{ color: row.value >= 0 ? '#7fc458' : '#f5a89a', fontWeight: 700 }}>{row.value >= 0 ? `+${row.value}` : row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            {/* Damage block */}
-            {result.damage && result.damage.length > 0 && (
-              <div style={{ marginBottom: '12px', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                {result.damage.map((d, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
-                    <span>{d.label}</span>
-                    <span style={{ color: d.color ?? '#f5f2ee', fontWeight: 700 }}>{d.value}</span>
+              {/* CMod input */}
+              {setCmod && (
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    Conditional Modifier
+                  </label>
+                  <input type="number" value={cmod}
+                    onChange={e => setCmod(parseInt(e.target.value || '0', 10))}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                </div>
+              )}
+
+              {/* Insight Dice pre-roll buttons */}
+              {insightAvail && setPreRollInsight && (
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    🎲 Insight Dice ({userInsightDice} available)
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {(['none', '3d6', '+3cmod'] as PreRollChoice[]).map(c => {
+                      const active = preRollInsight === c
+                      const cAccent = c === 'none' ? '#cce0f5' : '#EF9F27'
+                      const label = c === 'none' ? 'No spend' : c === '3d6' ? 'Roll 3d6' : '+3 CMod'
+                      return (
+                        <button key={c} onClick={() => setPreRollInsight(c)}
+                          style={{ padding: '6px 12px', background: active ? '#2a2010' : 'transparent', border: `1px solid ${active ? cAccent : '#3a3a3a'}`, borderRadius: '3px', color: active ? cAccent : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: active ? 700 : 500 }}>
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Warnings */}
+              {warnings && (
+                <div style={{ marginBottom: '10px' }}>{warnings}</div>
+              )}
+
+              {/* Roll button - only when the caller wired up onRoll. */}
+              {onRoll && (
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={onClose} disabled={rolling} style={secondaryBtn}>
+                    Cancel
+                  </button>
+                  <button onClick={() => onRoll()} disabled={rolling || rollDisabled} style={primaryBtn(!!(rolling || rollDisabled))}>
+                    {rolling ? '…' : (rollLabel ?? (preRollInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll'))}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Post-roll display */}
+          {result && (
+            <>
+              {/* Dice display */}
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '1rem 0' }}>
+                {(result.diceRolled && result.diceRolled.length > 2 ? result.diceRolled : [result.die1, result.die2]).map((d, i) => (
+                  <div key={i} style={{ width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#242424', border: '2px solid #3a3a3a', borderRadius: '6px', fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, color: '#f5f2ee' }}>
+                    {d}
                   </div>
                 ))}
               </div>
-            )}
 
-            {/* Post-roll Insight Die rerolls */}
-            {(canRerollDie1 || canRerollDie2 || canRerollBoth) && (
-              <div style={{ marginBottom: '10px' }}>
-                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
-                  🎲 Spend Insight Die to reroll
-                </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {canRerollDie1 && (
-                    <button onClick={() => onRerollDie1?.()} disabled={rerollPending}
-                      style={{ padding: '6px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: rerollPending ? 'wait' : 'pointer', opacity: rerollPending ? 0.5 : 1 }}>
-                      Reroll Die 1
-                    </button>
-                  )}
-                  {canRerollDie2 && (
-                    <button onClick={() => onRerollDie2?.()} disabled={rerollPending}
-                      style={{ padding: '6px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: rerollPending ? 'wait' : 'pointer', opacity: rerollPending ? 0.5 : 1 }}>
-                      Reroll Die 2
-                    </button>
-                  )}
-                  {canRerollBoth && (
-                    <button onClick={() => onRerollBoth?.()} disabled={rerollPending}
-                      style={{ padding: '6px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: rerollPending ? 'wait' : 'pointer', opacity: rerollPending ? 0.5 : 1 }}>
-                      Reroll Both
-                    </button>
+              {/* Outcome - custom renderer or default banner */}
+              {renderOutcome ? renderOutcome(result) : (
+                <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#d4cfc9' }}>
+                    [{result.diceRolled && result.diceRolled.length > 2 ? result.diceRolled.join('+') : `${result.die1}+${result.die2}`}]
+                    {result.amod !== 0 && <span style={modPart(result.amod)}> {result.amod > 0 ? '+' : ''}{result.amod}</span>}
+                    {result.smod !== 0 && <span style={modPart(result.smod)}> {result.smod > 0 ? '+' : ''}{result.smod}</span>}
+                    {result.cmod !== 0 && <span style={{ color: result.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {result.cmod > 0 ? '+' : ''}{result.cmod}</span>}
+                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {result.total}</span>
+                  </div>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: outcomeColor(result.outcome), marginTop: '6px' }}>
+                    {result.outcome}
+                  </div>
+                  {result.insightAwarded && (
+                    <div style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '3px 8px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', display: 'inline-block', marginTop: '6px' }}>
+                      +1 Insight Die
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Close */}
-            <button onClick={() => (onPostRollClose ?? onClose)()}
-              style={{ width: '100%', padding: '10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}>
-              {postRollCloseLabel ?? 'Close'}
-            </button>
-          </>
-        )}
+              {/* Damage block */}
+              {result.damage && result.damage.length > 0 && (
+                <div style={{ marginBottom: '1rem', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                  {result.damage.map((d, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                      <span>{d.label}</span>
+                      <span style={{ color: d.color ?? '#f5f2ee', fontWeight: 700 }}>{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Post-roll Insight Die rerolls */}
+              {(canRerollDie1 || canRerollDie2 || canRerollBoth) && (
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#7fc458', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px', textAlign: 'center' }}>
+                    🎲 Spend Insight Die to reroll
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {canRerollDie1 && (
+                      <button onClick={() => onRerollDie1?.()} disabled={rerollPending} style={rerollBtn}>
+                        Re-roll Die 1
+                      </button>
+                    )}
+                    {canRerollDie2 && (
+                      <button onClick={() => onRerollDie2?.()} disabled={rerollPending} style={rerollBtn}>
+                        Re-roll Die 2
+                      </button>
+                    )}
+                    {canRerollBoth && (
+                      <button onClick={() => onRerollBoth?.()} disabled={rerollPending} style={rerollBtn}>
+                        Re-roll Both
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Close */}
+              <button onClick={() => (onPostRollClose ?? onClose)()} style={closeBtn}>
+                {postRollCloseLabel ?? 'Done'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
-    </ModalBackdrop>
+    </>
   )
 }

@@ -1166,6 +1166,9 @@ function CharacterCardImpl({
         open={stressCheckPending}
         onClose={() => { setStressCheckPending(false); setStressCheckResult(null); setStressCheckCmod(0); setStressCheckMode('at-max') }}
         title="Stress Check"
+        eyebrow="Stress Check"
+        accent="#EF9F27"
+        dimBackdrop={true}
         subtitle={stressCheckMode === 'at-max'
           ? `${c.name} - Stress at maximum`
           : `${c.name} - Stress Check`}
@@ -1281,6 +1284,9 @@ function CharacterCardImpl({
         open={breakingPointPending}
         onClose={() => { setBreakingPointPending(false); setBreakingPointResult(null); setBreakingPointCmod(0) }}
         title="Breaking Point"
+        eyebrow="Breaking Point"
+        accent="#c0392b"
+        dimBackdrop={true}
         subtitle={`${c.name} has broken`}
         rollFormula="2d6 + CMod (Table 13)"
         amod={0}
@@ -1341,6 +1347,9 @@ function CharacterCardImpl({
         open={lastingWoundPending}
         onClose={() => { setLastingWoundPending(false); setLastingWoundResult(null); setLastingWoundCmod(0) }}
         title="Lasting Wound Check"
+        eyebrow="Lasting Wound Check"
+        accent="#c0392b"
+        dimBackdrop={true}
         subtitle={`${c.name} - Physicality check failed`}
         rollFormula="2d6 + CMod (Table 12)"
         amod={0}
