@@ -89,6 +89,7 @@ If a fix balloons beyond one commit, STOP and re-plan. Don't keep digging.
 - `tasks/debug-handoff.md` - **diagnostic companion.** Risk register, tech debt ledger with interest rates, confidence ledger (TESTED / playtested / HOPED-FOR), triage playbook (Sec. 4, includes 15-min revert-first rule), pre-ship 5-question checklist (Sec. 5).
 - `tasks/slash-conventions.md` - quick reference for `/architect /security /qa /product /ops /business /ux` with when-to-reach-for + 4 example triggers + what-you-get per slash. Also documents `/stability-audit` (on-demand periodic review; output: dated audit doc at `tasks/stability-audit-YYYY-MM-DD.md`).
 - `tasks/stability-audit-YYYY-MM-DD.md` - dated stability audits. Read the most recent before quoting "current risk." Pattern + gotchas in `tasks/lessons.md` "Stability-audit pattern" entry. First was 2026-05-19.
+- `tasks/architecture-review-2026-05-24.md` - the north-star architecture verdict (would we design it this way again?). KEEP seams+ratchets+pure-domain+Supabase; the layering stops at data access. 5 designed-not-retrofitted moves (todo "Architecture review 2026-05-24"); #1 = client-state layer to dissolve the god-components. Read before any big structural proposal.
 - `tasks/workflow-guide.md` - how Xero uses the puffer-fish day to day. Daily flow, multi-chat coordination, habits, what to ignore, when to update the system.
 - `tasks/health-pulse.md` - **auto-maintained.** Health-pulse routine (trig_012SuKNa7cQZDLjAkLTBQdVA) prepends entries every 3 hours when RED or DRIFT.
 - `tasks/security-audit.md` - **auto-maintained.** Security audit routine (trig_01QsNg4GfAEcT31hSER4w9Pm) prepends entries weekly Tue 16:23 UTC when findings.
@@ -168,9 +169,34 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - Phase 5 IN PROGRESS 2/6; autonomous run to Phase 7)
+# Session state - 2026-05-24 (puffer-fish: stability audit + Phase 7 acceptance + post-smoke fixes + architecture review)
 
-## Current HEAD: derive (`git rev-parse --short HEAD`; was `a1e9f1e` after Phase 6 console sweep). page.tsx ~10543; 548 tests; CI green (full fitness set). Ratchet baselines current (`.from` 1039, `.channel` 22, **console 0**). **PHASE 5 COMPLETE. Phase 6 console cleanup COMPLETE.**
+## Current HEAD: derive (`git rev-parse --short HEAD`; was `da22595` at write). page.tsx 10,557 LOC; 548 vitest green + a growing Playwright E2E suite (the e2e/hunt lane shipped Tier-1 multi-context tests this session); arch ratchets at baseline (`.from` ~1037, `.channel` 22, console 0); depcruise clean. **Grand Re-Arch Phases 1-6 DONE; Phase 7 (acceptance) all-but-the-vehicle.** Detailed Phase 1-7 logs below are HISTORICAL record.
+
+## What this puffer-fish session did (2026-05-24)
+- **Stability audit** (`tasks/stability-audit-2026-05-24.md`, commit `667c100`): all gates green, no BLOCKERs. Risk Register: **Realtime channels GREEN-ish -> YELLOW** (re-arch invalidated the "stable old code" rationale; debug-handoff.md Sec 1). decisions.md gained the re-arch locked-calls entry. Reviewed all 16 exhaustive-deps suppressions (none were the feared stale-closures).
+- **Phase 7 acceptance** scaffolded: ONE runnable sheet `tasks/phase7-acceptance-2client-testplan.md` (Sections A-F; supersedes the table-only decomposition sheet). Run plan locked: A/C/D/E/F in THE ARENA (`35ed2133-...`, GM=Xero / player=MARV `02c22e46-...`), Section B (vehicle) rides the Minnie playtest (Arena has 0 vehicles). Cross-linked with the Playwright "final test" e2e suite (`tasks/e2e-final-test-handoff-2026-05-24.md`).
+- **Xero ran the 2-client smoke; 4 "failures" triaged to root cause, ZERO re-arch regressions:**
+  1. Stockpile/pins/membership realtime dead = **supabase_realtime publication gap** (6 subscribed tables never published; pre-existing). FIXED `0df7b81` (`sql/realtime-publication-fix-2026-05-24.sql`). HELD for triage: characters / war_story_replies / forum_thread_reactions (same gap).
+  2. Infection modal never fired = the no-stacking check read **stale in-memory `infection_state`** while reading warnings fresh from DB. FIXED `89fb256` (reads infection_state fresh per char) + a `trace('infection-queue',...)`. **CONFIRMED working** (Cree's modal fired on Marv's window).
+  3. Restore left conditions set = FIXED `be4740e` (Restore now clears stress + all 7 infection_* fields, PC + NPC).
+  4. Show Arc / MOVE HERE = test artifact (no vehicle in Arena).
+- **Player-bar status chips SHIPPED** (`4c90660` + `d31ca6c` tooltips): `app/stories/[id]/table/components/PlayerStatusChips.tsx` - 🦠 Infected/Sick, 💀 MW, 😵 Incap, 😰 Stressed, visible to everyone, hover tooltips with specifics. Extracted to a component (not inline) to keep the LOC ratchet green (the ratchet blocked the inline version - working as designed).
+- **Architecture review** (`tasks/architecture-review-2026-05-24.md`, `da22595`) answering Xero's north star: KEEP the bottom (seams + ratchets + pure-domain lib + Supabase); the layering stops at data access. 5 priority "designed-not-retrofitted" moves logged in todo, #1 = **client-state layer** (dissolves the god-components; do after Phase 7, with a design doc + human architect for the migration).
+
+## What's OPEN / next for puffer-fish
+- **Phase 7 close-out:** Section B (vehicle) at the 2026-05-25 Minnie playtest (2nd window). D/E re-test (deposit + pin propagation - publication fix is live, no deploy needed). When all green: demote Realtime YELLOW, promote re-arch HOPED-FOR -> PLAYTESTED, archive the decomposition sheet, log Phase 7 closed in decisions.md.
+- **The 5 architecture moves** (todo "Architecture review 2026-05-24"): #1 client-state layer is the next BIG initiative once Phase 7 closes.
+- **Handed to HUNT-AND-PECK:** the 5th status chip (🩹 Lasting Wound, feed-derived) + tooltip polish.
+- **Operator items owed by Xero** (carried, NOT re-arch): Upstash KV env vars in Vercel (prod verify-turnstile 503 until set); apply `sql/audit-log-table-2026-05-20.sql` to live.
+- **CLI now linked** this session (`npx supabase db query --linked -f sql/<file>.sql` works) - useful diag probes written: `sql/diag-arena-readiness-2026-05-24.sql`, `sql/diag-arena-smoke-results-2026-05-24.sql`.
+
+---
+
+## (HISTORICAL) Grand Re-Arch phase-by-phase log
+The sections below are the historical record of the re-arch (Phases 1-7), kept for reference. Current state is the summary above.
+
+# (historical) Session state - 2026-05-23 (GRAND RE-ARCHITECTURE)
 
 ## Phase 6 status (cross-cutting cleanup)
 - **console = DONE** (`730a172` + `bfc1529` + `a1e9f1e`, Xero's option B + decision (b) for error-surfacing). `trace(label, data)` in lib/playtest-recorder = the sanctioned console home (pushes a 'custom' recorder event; echo ONLY in NODE_ENV=development). All [playtest-trace] -> trace(); operational flow diagnostics -> trace(); error/SILENT-RLS surfacing -> console.error (visible in prod + recorder-captured); pure noise deleted. check-arch excludes lib/playtest-recorder (analogous to lib/data for .from). **console ratchet 115 -> 0.**
