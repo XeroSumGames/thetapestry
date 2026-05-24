@@ -30,37 +30,55 @@ Deno.serve(async (req) => {
       ?? req.headers.get('x-real-ip')
       ?? null
 
+    // Input validation - every body field is attacker-controlled (this
+    // function deploys --no-verify-jwt and its URL ships in the client
+    // bundle). Reject a non-UUID user_id and bound every string so the
+    // body cannot poison analytics or bloat rows.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const clip = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : null)
+    const vUserId = typeof user_id === 'string' && UUID_RE.test(user_id) ? user_id : null
+    const vSession = clip(session_id, 64)
+    const vPage = clip(page, 256)
+    const vReferrer = clip(referrer, 512)
+    const vCountry = clip(country_code, 8)
+    const vRegion = clip(region, 128)
+    const vCity = clip(city, 128)
+    const vLat = typeof latitude === 'number' ? latitude : null
+    const vLong = typeof longitude === 'number' ? longitude : null
+    const vIpHash = clip(ip_hash, 128)
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Count prior visits from this IP hash. visitNumber === 1 means
-    // we've never seen this hash before; that's the gate the email
-    // alert uses (see below). The per-session "first visit" check
-    // that used to live here was dropped 2026-05-08 - it sent on
-    // every new browser session, which spammed the inbox for repeat
-    // visitors.
+    // Email-gate visit count keys off the SERVER-observed IP (ip_address),
+    // NEVER a body field. Previously it counted the body-supplied ip_hash,
+    // so omitting ip_hash made every request read as visitNumber 1 and fire
+    // a "new visitor" email - an unauthenticated Resend-quota mailbomb. The
+    // real connecting IP can't be forged by the caller, so the gate is
+    // sound. (Analytics still stores the body ip_hash separately, below -
+    // that dedup column's semantics are intentionally unchanged.)
     let visitNumber = 1
-    if (ip_hash) {
+    if (ip) {
       const { count } = await supabase
         .from('visitor_logs')
         .select('*', { count: 'exact', head: true })
-        .eq('ip_hash', ip_hash)
+        .eq('ip_address', ip)
       visitNumber = (count ?? 0) + 1
     }
 
     // Insert the visit log
     await supabase.from('visitor_logs').insert({
-      session_id,
-      page,
-      referrer: referrer || null,
-      is_ghost: !user_id,
-      user_id: user_id || null,
+      session_id: vSession,
+      page: vPage,
+      referrer: vReferrer,
+      is_ghost: !vUserId,
+      user_id: vUserId,
       ip_address: ip,
-      ip_hash: ip_hash || null,
-      country_code: country_code || null,
-      region: region || null,
-      city: city || null,
-      latitude: latitude || null,
-      longitude: longitude || null,
+      ip_hash: vIpHash,
+      country_code: vCountry,
+      region: vRegion,
+      city: vCity,
+      latitude: vLat,
+      longitude: vLong,
     })
 
     // Build the response now and return immediately. Anything below uses
@@ -79,29 +97,27 @@ Deno.serve(async (req) => {
     // session-level retries, no signed-in/ghost split. Bot suppression
     // by city stays - ip_hash 1 from Ashburn is still a bot.
     const suppressedCities = ['san jose', 'ashburn', 'boardman', 'council bluffs']
-    const isSuppressedCity = city && suppressedCities.includes(city.toLowerCase())
+    const isSuppressedCity = vCity && suppressedCities.includes(vCity.toLowerCase())
     const isNewVisitor = visitNumber === 1
     if (isNewVisitor && RESEND_API_KEY && THRIVER_EMAIL && !isSuppressedCity) {
-      const isGhost = !user_id
-      const locationParts = [city, region, country_code].filter(Boolean)
+      const isGhost = !vUserId
+      const locationParts = [vCity, vRegion, vCountry].filter(Boolean)
       const location = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown'
 
       const subject = isGhost
-        ? `[The Tapestry] New Visitor${locationParts.length > 0 ? ' - ' + [city, country_code].filter(Boolean).join(', ') : ''}`
-        : `[The Tapestry] Survivor Active${locationParts.length > 0 ? ' - ' + [city, country_code].filter(Boolean).join(', ') : ''}`
+        ? `[The Tapestry] New Visitor${locationParts.length > 0 ? ' - ' + [vCity, vCountry].filter(Boolean).join(', ') : ''}`
+        : `[The Tapestry] Survivor Active${locationParts.length > 0 ? ' - ' + [vCity, vCountry].filter(Boolean).join(', ') : ''}`
 
       const now = new Date().toLocaleString('en-US', {
         weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
       })
 
-      const visitLine = ip_hash
-        ? `Visit number: This is their ${visitNumber}${visitNumber === 1 ? 'st' : visitNumber === 2 ? 'nd' : visitNumber === 3 ? 'rd' : 'th'} visit from this location.`
-        : ''
+      const visitLine = `Visit number: first visit from this IP.`
 
       const body = isGhost
-        ? `A visitor just arrived at The Tapestry.\n\nPage: ${page}\nLocation: ${location}\nTime: ${now}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
-        : `A survivor is active on The Tapestry.\n\nPage: ${page}\nLocation: ${location}\nTime: ${now}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
+        ? `A visitor just arrived at The Tapestry.\n\nPage: ${vPage}\nLocation: ${location}\nTime: ${now}\nReferrer: ${vReferrer || 'Direct'}\nSession: ${vSession?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
+        : `A survivor is active on The Tapestry.\n\nPage: ${vPage}\nLocation: ${location}\nTime: ${now}\nReferrer: ${vReferrer || 'Direct'}\nSession: ${vSession?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
 
       const sendEmail = async () => {
         try {
