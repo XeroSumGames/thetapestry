@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth, CAMPAIGN_ID } from './_fixtures'
-import { captureAnonKey, resolveCreds, restDelete, type SupaCreds } from './_teardown'
+import { captureAnonKey, resolveCreds, restDelete, SUPABASE_URL, type SupaCreds } from './_teardown'
 import { seedCommunity, seedStockpileItem } from './_seed'
 
 // SECTION D - stockpile deposit propagates GM -> player live (the highest-value
@@ -54,12 +54,19 @@ test.describe('Section D - stockpile deposit GM -> player', () => {
       // Gates the realtime assertion below as meaningful.
       await expect(pl.getByText('[E2E] Seed Item').first()).toBeVisible({ timeout: 10_000 })
 
-      // GM deposits a NEW item (an INSERT on community_stockpile_items).
+      // D-1: GM deposits a NEW item (INSERT) -> player sees it live, no reload.
       const newName = `[E2E] Live Deposit ${Date.now()}`
-      await seedStockpileItem(gm, creds!, communityId, newName)
-
-      // Player's panel shows it live, no reload (~2s; 8s headroom).
+      const itemId = await seedStockpileItem(gm, creds!, communityId, newName)
       await expect(pl.getByText(newName).first()).toBeVisible({ timeout: 8_000 })
+
+      // D-2: bump that item's qty (UPDATE) -> the player's row shows "x5" live
+      // (the panel renders qty as "×N" only when qty > 1; CampaignCommunity.tsx:2376).
+      const patch = await gm.request.patch(
+        `${SUPABASE_URL}/rest/v1/community_stockpile_items?id=eq.${itemId}`,
+        { headers: { apikey: creds!.anonKey, Authorization: `Bearer ${creds!.accessToken}`, 'Content-Type': 'application/json' }, data: { qty: 5 } },
+      )
+      expect(patch.ok(), 'qty PATCH failed').toBe(true)
+      await expect(pl.getByText('×5').first()).toBeVisible({ timeout: 8_000 })
     } finally {
       if (communityId && creds) await restDelete(gm, 'communities', communityId, creds).catch(() => {}) // cascades stockpile
       await gmCtx.close()
