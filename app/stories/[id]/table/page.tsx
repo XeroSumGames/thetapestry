@@ -33,6 +33,7 @@ import {
 } from '../../../../lib/first-impression-resolver'
 import FirstImpressionModal, { type FiPc, type FiNpc } from './components/FirstImpressionModal'
 import { CdpModal } from './components/CdpModal'
+import { PlayerStatusChips } from './components/PlayerStatusChips'
 import { LootModal } from './components/LootModal'
 import { PopulateModal } from './components/PopulateModal'
 import { AdvanceTimeModal } from './components/AdvanceTimeModal'
@@ -7732,6 +7733,7 @@ export default function TablePage() {
                 <div style={{ fontSize: nameSize, color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.character.name} <span style={{ color: '#cce0f5', fontWeight: 400 }}>({entry.username})</span>
                 </div>
+                <PlayerStatusChips liveState={entry.liveState} />
               </button>
             )
           })
