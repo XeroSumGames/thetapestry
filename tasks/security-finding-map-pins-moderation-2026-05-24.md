@@ -3,7 +3,7 @@
 **Found by:** Playwright E2E lane, while building `world-pin-to-queue.spec.ts` (Ch2.1).
 **Routed to:** puffer-fish lane (owns security / Risk Register / RLS + trigger changes).
 **Severity:** MEDIUM - content-moderation evasion on a shared public surface. Not a data breach or privilege escalation beyond content; no PII exposure. Same bug CLASS the campfire moderation trigger already closed (Y3 pre-launch audit).
-**Status:** flagged, NOT fixed. The fix is an RLS/trigger change against the live DB = a bright line; needs Xero's sign-off + careful design before applying.
+**Status:** **RESOLVED 2026-05-24 - fix APPLIED to live + verified (Xero-authorized).** `sql/map-pins-moderation-enforce-2026-05-24.sql` applied via the linked CLI; `trg_enforce_map_pin_moderation` (SECURITY DEFINER) confirmed present on `map_pins`, and a non-Thriver-context `gm`/`approved` insert was forced to `rumor`/`pending` (transactional test, zero rows persisted). Risk Register flipped RED -> GREEN. Remaining: E2E lane to add the "Survivor REST insert -> forced pending" regression assertion. Revert if ever needed: `DROP TRIGGER trg_enforce_map_pin_moderation ON public.map_pins`.
 
 ---
 
