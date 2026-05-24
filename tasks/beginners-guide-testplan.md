@@ -16,7 +16,7 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 ## Ch 1 - Navigating the Site
 1. [x] (DOM) Sidebar renders every nav destination; the global-route sweep loads each clean.
 2. [x] (DOM) Thriver sees the Tools section + Moderation Queue; Survivor does not. `role-nav.spec`
-3. [ ] (RT) "Survivors present: N" reflects how many accounts are online; Thriver hover-list shows who.
+3. [x] (RT) "Survivors present: N" reflects how many accounts are online; Thriver hover-list shows who. `presence.spec` (3 live sessions -> count `>= 3`; Thriver hover-list names marv + percy. Usernames resolved via the GM's Thriver creds: a player's REST self-read of profiles is empty under RLS.)
 4. [ ] (DOM) Full-width / popout / `-sheet` routes hide the sidebar.
 
 ## Ch 2 - Pins, Notifications, and Roles
@@ -121,11 +121,11 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 ---
 
 ## EXCLUDED (bright lines + genuinely fragile - never automated)
-- Account signup / login automation (Turnstile + passwords; sessions human-captured), payments/Stripe, email/password change on `/account`.
+- Account signup / login automation (Turnstile + passwords; sessions human-captured), payments/Stripe, email/password change on `/account`. (The REVERSIBLE half of `/account` IS covered by `account-settings.spec`: username change through the real form + an `avatar_url` round-trip both persist across reload. The avatar file-UPLOAD bytes path stays manual - storage upsert at a fixed path is irreversible on prod.)
 - Sending messages/emails to REAL users; any all-user broadcast.
 - Moderation ACTIONS at scale (ban/suspend/lock/hide); deleting pre-existing user content; bulk ops on real data.
 - `/campfire/forums2` voting (self-labelled experimental).
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.2, Ch2.1, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1, account-settings (Sys P, reversible half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.

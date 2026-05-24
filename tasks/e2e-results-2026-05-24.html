@@ -54,12 +54,12 @@
   <p class="sub">Playwright suite against <strong>production</strong> (thetapestry.distemperverse.com) &middot; The Arena + 4 disposable accounts &middot; generated 2026-05-24</p>
 
   <div class="banner">
-    <div class="big">111 / 111 certified &middot; +1 since</div>
-    <div class="meta">Last full-suite certification: 111/111 (retries:2, 6.9 min) = 4 auth-setup + 15 functional + 92-route sweep, all green. Since then <code>world-pin-to-queue</code> (+1) was added and verified green standalone -> 16 functional + 92 sweep + 4 setup. Retries absorb transient prod 500s (incl. the Sentry /monitoring tunnel) + realtime-timing flakes under load; a real regression fails every attempt (that is how section-c was caught + fixed this session). Next full re-cert will confirm 112.</div>
+    <div class="big">114 certified &middot; 18 functional</div>
+    <div class="meta">Last full-suite certification: 113 passed + 1 flaky (retries:2, 7.3 min) = 4 auth-setup + 18 functional + 92-route sweep. The lone flaky was <code>section-c-npc-reveal</code> (the known realtime-timing watch item: failed the first attempt at the count boundary, passed on retry). Added + green this batch: <code>presence</code> (Ch1.3) and <code>account-settings</code> (Sys P). Retries absorb transient prod 500s (incl. the Sentry /monitoring tunnel) + realtime-timing flakes under load; a real regression fails every attempt (that is how section-c was originally caught + fixed).</div>
   </div>
 
   <div class="cards">
-    <div class="card c-green"><div class="n">16</div><div class="l">Functional specs (green)</div></div>
+    <div class="card c-green"><div class="n">18</div><div class="l">Functional specs (green)</div></div>
     <div class="card c-green"><div class="n">92</div><div class="l">Routes swept clean</div></div>
     <div class="card c-blue"><div class="n">14</div><div class="l">Guide chapters mapped</div></div>
     <div class="card c-amber"><div class="n">3</div><div class="l">Manual-only (logged)</div></div>
@@ -88,6 +88,8 @@
       <tr><td class="sys">Story lifecycle</td><td><code>story-lifecycle.spec</code></td><td>GM creates a story (setting picker) &rarr; 6-char invite code &rarr; player joins by code &rarr; roster reflects on reload &rarr; player leaves. <span class="ch">[Ch6.1-6.3]</span></td><td><span class="pill p-green">GREEN</span></td></tr>
       <tr><td class="sys">Campfire / moderation</td><td><code>campfire-social.spec</code></td><td>Thriver creates a forum thread via the composer &rarr; auto-approves &rarr; reply persists; a Survivor's global post claiming "approved" is FORCED to pending by the DB trigger (cannot self-approve). (2 tests) <span class="ch">[Ch13.2, 13.4]</span></td><td><span class="pill p-green">GREEN</span></td></tr>
       <tr><td class="sys">World map / moderation</td><td><code>world-pin-to-queue.spec</code></td><td>A Survivor rumor pin (pending) is hidden from another player (RLS), visible to its author, and surfaced in the Thriver moderation Rumor Queue (read-only - never approved). <span class="ch">[Ch2.1]</span> <strong style="color:var(--amber)">NB:</strong> map_pins moderation is client-set only (no DB trigger) - flagged as a bypass risk.</td><td><span class="pill p-green">GREEN</span></td></tr>
+      <tr><td class="sys">Presence (realtime)</td><td><code>presence.spec</code></td><td>3 live sessions (gm + marv + percy) on a sidebar route &rarr; the GM's "Survivors present: N" reflects the live trio (asserted &ge; 3; prod users only inflate it) and the Thriver hover-list names marv + percy. <span class="ch">[Ch1.3]</span> <strong style="color:var(--amber)">NB:</strong> a player's REST self-read of <code>profiles</code> is empty under RLS, so usernames resolve via the GM's Thriver creds.</td><td><span class="pill p-green">GREEN</span></td></tr>
+      <tr><td class="sys">Account settings</td><td><code>account-settings.spec</code></td><td>Acts as pesky: username changed through the real Identity form &rarr; "Username updated." &rarr; reload persists; an <code>avatar_url</code> round-trip persists + renders on reload. Both restored in <code>finally</code>. <span class="ch">[Sys P]</span> <strong style="color:var(--amber)">NB:</strong> email/password EXCLUDED (bright lines); avatar file-upload bytes path stays manual (irreversible storage upsert).</td><td><span class="pill p-green">GREEN</span></td></tr>
       <tr><td class="sys">Combat (realtime)</td><td><code>section-a1-combat-start.spec</code></td><td>GM Start Combat &rarr; player sees "IN COMBAT" live (no reload). <span class="ch">[Ch9.1]</span></td><td><span class="pill p-green">GREEN</span></td></tr>
       <tr><td class="sys">Tactical map (realtime)</td><td><code>section-a3-token-move.spec</code></td><td>A token move triggers a <code>scene_tokens</code> refetch on the player context (realtime slice; canvas pixel-drag deferred). <span class="ch">[Ch8.2]</span></td><td><span class="pill p-green">GREEN</span></td></tr>
       <tr><td class="sys">NPCs (realtime)</td><td><code>section-c-npc-reveal.spec</code></td><td>GM reveal flips <code>hidden_from_players</code>; the player's NPC panel updates live. <span class="ch">[Ch10.2]</span></td><td><span class="pill p-green">GREEN</span></td></tr>
@@ -136,7 +138,7 @@
   <table class="matrix">
     <thead><tr><th>Chapter</th><th>Automated (green) coverage</th><th>Notable gaps / backlog</th></tr></thead>
     <tbody>
-      <tr><td class="ch">1 &middot; Navigating the Site</td><td>Route sweep loads every nav destination; Thriver-only Tools/Moderation gating.</td><td>Presence count ("Survivors present: N"); popout sidebar-hide.</td></tr>
+      <tr><td class="ch">1 &middot; Navigating the Site</td><td>Route sweep loads every nav destination; Thriver-only Tools/Moderation gating; <strong>presence count ("Survivors present: N") + Thriver hover-list.</strong></td><td>Popout sidebar-hide.</td></tr>
       <tr><td class="ch">2 &middot; Pins / Notifications / Roles</td><td>Role badges + per-feature GM/player gating; <strong>Survivor rumor pin &rarr; hidden from players + in the Thriver moderation queue</strong> (RLS visibility).</td><td>Notification fan-out. Flagged: map_pins moderation is client-only (bypass risk).</td></tr>
       <tr><td class="ch">3 &middot; The World Map</td><td>Map loads; <strong>campaign-pin reveal</strong> + <strong>whisper</strong> propagate live.</td><td>Categories/eye-toggle; pin&rarr;scene link; route planner.</td></tr>
       <tr><td class="ch">4 &middot; Creating a Character</td><td>Random Character create + persist + delete.</td><td>Quick (6-step), Paradigm, Backstory wizard, tracker persistence.</td></tr>

@@ -41,6 +41,18 @@ export function captureAnonKey(page: Page, timeoutMs = 12_000): Promise<string |
   })
 }
 
+// The user id (`sub`) baked into a Supabase access-token JWT. Lets a spec learn
+// the acting account's id without it being hardcoded in _fixtures (only gm/marv
+// carry an explicit userId there; pesky/percy do not).
+export function userIdFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString('utf8'))
+    return typeof payload.sub === 'string' ? payload.sub : null
+  } catch {
+    return null
+  }
+}
+
 export interface SupaCreds {
   accessToken: string
   anonKey: string

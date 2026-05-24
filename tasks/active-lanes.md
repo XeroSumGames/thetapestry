@@ -21,6 +21,6 @@ Format per lane: **focus** (what right now) / **touching** (files/area) /
 - **updated:** 2026-05-24, lane/puffer @ 932fb73 (commits push to main; rebases on non-ff).
 
 ## Playwright / E2E
-- **focus:** Full-suite build, Phase 1 (4/7 green: story-lifecycle, rules-deeplinks, campfire-social, world-pin-to-queue). Next: presence, account-settings. messages-dm parked on Xero's teardown call.
-- **touching:** `e2e/` (additive specs), `tasks/beginners-guide-testplan.md`, `tasks/e2e-results-2026-05-24.html`.
-- **updated:** 2026-05-24, working from HEAD 4f9b3aa.
+- **focus:** BATCH DONE. Phase 1 #5 `presence.spec.ts` (Ch1.3) + #6 `account-settings.spec.ts` (Sys P) shipped GREEN. Full re-cert: 113 passed + 1 flaky (section-c retry, known watch item) = 4 setup + 18 functional + 92 sweep. Phase 1 now 6/7; only messages-dm left (BLOCKED on Xero's teardown call). Next session: Phase 2 (char-create methods, sessions, combat flow, NPC CRUD, communities, inventory/trade, rumors publish->clone).
+- **touching:** nothing live now (committing). New: `e2e/presence.spec.ts`, `e2e/account-settings.spec.ts`; helper `e2e/_teardown.ts` (+`userIdFromToken`); docs `tasks/todo.md` / `beginners-guide-testplan.md` / `e2e-results-2026-05-24.html` / `lessons.md`.
+- **updated:** 2026-05-24, committed on top of HEAD 6660e49 (rebases on push).
