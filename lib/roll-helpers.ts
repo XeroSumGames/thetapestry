@@ -188,8 +188,8 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const first = r.character_name.split(/\s+/)[0]
     if (shrug) {
       return kind === 'Wound'
-        ? `${r.character_name} shrugged off the wound infection${outcomeTag}`
-        : `${r.character_name} shrugged off the sickness${outcomeTag}`
+        ? `${r.character_name}'s wound does not become infected${outcomeTag}`
+        : `${r.character_name} does not fall sick${outcomeTag}`
     }
     if (fail) {
       const daysText = days != null ? `${days} day${days === 1 ? '' : 's'}` : '1d3 days'
