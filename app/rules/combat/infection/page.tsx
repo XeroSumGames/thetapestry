@@ -56,7 +56,11 @@ export default function Page() {
           shot, stab, or cut wound during the fight makes a single{' '}
           <Term>Physicality check</Term> to see if their wounds
           become Infected. One check per character per combat -
-          regardless of how many hits they took.
+          regardless of how many hits they took. Only skin-breaking
+          wounds count: bladed melee, firearms, bows, or explosive
+          shrapnel. Blunt trauma and unarmed strikes (bats, clubs,
+          fists, batons) leave no open wound and never trigger an
+          Infection check.
         </P>
         <RuleTable>
           <thead>

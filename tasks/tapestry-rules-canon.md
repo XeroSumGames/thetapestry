@@ -1,8 +1,7 @@
-npm warn exec The following package was not found and will be installed: tsx@4.22.3
 # Tapestry Rules Canon - XSE SRD v1.1.17
 
 **Source of truth**: `lib/xse-schema.ts` and `app/rules/*` pages on TheTapestry platform.
-**Generated**: 2026-05-21.
+**Generated**: 2026-05-24.
 **Regenerate**: `npx tsx scripts/export-canon.ts > tasks/tapestry-rules-canon.md`
 
 This file is the platform's canonical reference for rules content. Every term, formula,
