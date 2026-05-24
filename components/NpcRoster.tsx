@@ -13,6 +13,17 @@ import PortraitBankPicker from './PortraitBankPicker'
 import { openPopout } from '../lib/popout'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from '../lib/npc-drag-drop'
+import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
+import { updateCampaignNpc, insertCampaignNpcs } from '../lib/data/campaign-npcs'
+import {
+  communityMembersForNpcs, npcsForRoster, maxNpcSortOrder, deleteCampaignNpc, setNpcsFolder, setNpcsHidden,
+  updateSceneTokenColorByNpc, deleteSceneTokensByNpc, setSceneTokensVisibleByNpcs, setSceneTokenVisibleByNpc,
+  deleteInitiativeByNpc, relationshipsForNpc, updateRelationship, insertRelationships,
+  revealedRelationshipNpcIds, existingRelationshipsByNpcs, revealRelationshipsByIds, hideRelationshipsByNpcs,
+  findRelationship, portraitBankByGender, portraitUsage, deletePortraitUsage, insertPortraitUsage,
+  publishedWorldNpcSourceIds, insertWorldNpc, approvedWorldNpcs, bumpWorldNpcImportCount,
+  uploadNpcPortrait, npcPortraitPublicUrl,
+} from '../lib/data/npc-roster'
 
 function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
@@ -326,12 +337,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       setCommunityMap({})
       return
     }
-    const { data: members } = await supabase
-      .from('community_members')
-      .select('npc_id, community_id, communities(name)')
-      .in('npc_id', npcIds)
-      .is('left_at', null)
-      .not('npc_id', 'is', null)
+    const { data: members } = await communityMembersForNpcs(npcIds)
     const map: Record<string, { communityId: string; communityName: string }> = {}
     ;(members ?? []).forEach((m: any) => {
       if (m.npc_id) map[m.npc_id] = { communityId: m.community_id, communityName: m.communities?.name ?? 'Community' }
@@ -340,23 +346,13 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   }
 
   async function loadNpcs() {
-    const { data } = await supabase
-      .from('campaign_npcs')
-      .select('*')
-      .eq('campaign_id', campaignId)
-      .order('sort_order', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: true })
-    setNpcs(data ?? [])
+    const { data } = await npcsForRoster(campaignId)
+    setNpcs((data ?? []) as CampaignNpc[])
 
     // Fetch community memberships for these NPCs.
     const npcIds = (data ?? []).map((n: any) => n.id)
     if (npcIds.length > 0) {
-      const { data: members } = await supabase
-        .from('community_members')
-        .select('npc_id, community_id, communities(name)')
-        .in('npc_id', npcIds)
-        .is('left_at', null)
-        .not('npc_id', 'is', null)
+      const { data: members } = await communityMembersForNpcs(npcIds)
       const map: Record<string, { communityId: string; communityName: string }> = {}
       ;(members ?? []).forEach((m: any) => {
         if (m.npc_id) map[m.npc_id] = { communityId: m.community_id, communityName: m.communities?.name ?? 'Community' }
@@ -410,20 +406,21 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     } else {
       loadNpcs()
     }
-
-    // Realtime subscription - refresh when any campaign_npcs row changes
-    // (e.g. damage applied from table page updates WP/RP in DB).
-    const channel = supabase.channel(`npc_roster_${campaignId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => {
-        loadNpcs()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
-        loadNpcs()
-      })
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
   }, [campaignId, isGM])
+
+  // Realtime - refresh the roster when any campaign_npcs row in this
+  // campaign changes (e.g. damage applied from the table page updates
+  // WP/RP in DB) or community membership changes. Behind the lib/realtime
+  // seam: both postgres subs ride one npc_roster_${campaignId} channel and
+  // refetch via loadNpcs (handlers stay fresh via the hook's config ref,
+  // so the channel only subscribes once per campaign).
+  useCampaignChannel(campaignId, {
+    channelName: campaignId ? `npc_roster_${campaignId}` : undefined,
+    postgres: [
+      { label: 'npc_roster:campaign_npcs', event: '*', table: 'campaign_npcs', filter: campaignId ? `campaign_id=eq.${campaignId}` : undefined, handler: () => { loadNpcs() } },
+      { label: 'npc_roster:community_members', event: '*', table: 'community_members', handler: () => { loadNpcs() } },
+    ],
+  })
 
   // Sync HP/status from parent's optimistic state so damage appears instantly
   useEffect(() => {
@@ -501,10 +498,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     setShowForm(true)
     setShowReveal(false)
     // Load relationships for this NPC
-    const { data: rels } = await supabase
-      .from('npc_relationships')
-      .select('*')
-      .eq('npc_id', npc.id)
+    const { data: rels } = await relationshipsForNpc(npc.id)
     setRelationships(rels ?? [])
   }
 
@@ -513,9 +507,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     const resized = await resizeImage(file, 256)
     const blob = await fetch(resized).then(r => r.blob())
     const path = `${campaignId}/${crypto.randomUUID()}.jpg`
-    const { error } = await supabase.storage.from('campaign-npcs').upload(path, blob, { contentType: 'image/jpeg' })
+    const { error } = await uploadNpcPortrait(path, blob)
     if (!error) {
-      const { data: urlData } = supabase.storage.from('campaign-npcs').getPublicUrl(path)
+      const { data: urlData } = npcPortraitPublicUrl(path)
       setForm(f => ({ ...f, portrait_url: urlData.publicUrl }))
     }
     setUploading(false)
@@ -551,7 +545,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       ...(!editingId ? { wp_current: 10 + form.physicality + form.dexterity, rp_current: 6 + form.physicality } : {}),
     }
     if (editingId) {
-      await supabase.from('campaign_npcs').update(row).eq('id', editingId)
+      await updateCampaignNpc(editingId, row as any)
       // Same token-color sync as quickSetDisposition - the full Edit
       // modal can change disposition or npc_type, and either flip
       // changes the ring color callsite (placeFolderOnMap /
@@ -559,12 +553,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       // existing tokens keep their old color until the GM unmaps + re-
       // places them.
       const newColor = getNpcTokenBorderColor({ disposition: row.disposition, npc_type: row.npc_type })
-      await supabase.from('scene_tokens').update({ color: newColor }).eq('npc_id', editingId)
+      await updateSceneTokenColorByNpc(editingId, newColor)
     } else {
       // Append new NPCs at the end of the existing sort order.
-      const { data: maxRow } = await supabase.from('campaign_npcs').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
+      const { data: maxRow } = await maxNpcSortOrder(campaignId)
       const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
-      await supabase.from('campaign_npcs').insert({ ...row, sort_order: nextSort })
+      await insertCampaignNpcs({ ...row, sort_order: nextSort })
     }
     setShowForm(false)
     setSaving(false)
@@ -578,11 +572,11 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     // the map / initiative list after the campaign_npcs row is gone. Delete
     // all three tables in the same click. Tokens first so realtime listeners
     // see the token vanish before the NPC row disappears (cleaner visual).
-    const tokenRes = await supabase.from('scene_tokens').delete().eq('npc_id', id)
+    const tokenRes = await deleteSceneTokensByNpc(id)
     if (tokenRes.error) console.warn('[handleDelete] scene_tokens delete error:', tokenRes.error.message)
-    const initRes = await supabase.from('initiative_order').delete().eq('npc_id', id)
+    const initRes = await deleteInitiativeByNpc(id)
     if (initRes.error) console.warn('[handleDelete] initiative_order delete error:', initRes.error.message)
-    await supabase.from('campaign_npcs').delete().eq('id', id)
+    await deleteCampaignNpc(id)
     await loadNpcs()
     // Tell the parent to refresh + broadcast - Supabase Realtime DELETE
     // events over postgres_changes sometimes drop when REPLICA IDENTITY
@@ -608,7 +602,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       .filter(n => (n.folder ?? 'Uncategorized') === oldName)
       .map(n => n.id)
     if (ids.length > 0) {
-      await supabase.from('campaign_npcs').update({ folder: trimmed }).in('id', ids)
+      await setNpcsFolder(ids, trimmed)
     }
     setFolderOrder(prev => {
       const next = prev.map(f => f === oldName ? trimmed : f)
@@ -654,10 +648,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     const below = npcs.filter(n => (n.sort_order ?? 0) > srcSort)
     if (below.length > 0) {
       await Promise.all(below.map(n =>
-        supabase.from('campaign_npcs').update({ sort_order: (n.sort_order ?? 0) + 1 }).eq('id', n.id)
+        updateCampaignNpc(n.id, { sort_order: (n.sort_order ?? 0) + 1 })
       ))
     }
-    await supabase.from('campaign_npcs').insert({
+    await insertCampaignNpcs({
       campaign_id: campaignId, name: cloneName, portrait_url: npc.portrait_url,
       reason: npc.reason, acumen: npc.acumen, physicality: npc.physicality,
       influence: npc.influence, dexterity: npc.dexterity, skills: npc.skills,
@@ -702,10 +696,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     if (!editingId) return
     const existing = relationships.find(r => r.character_id === characterId)
     if (existing) {
-      await supabase.from('npc_relationships').update({ relationship_cmod: cmod }).eq('id', existing.id)
+      await updateRelationship(existing.id, { relationship_cmod: cmod })
       setRelationships(prev => prev.map(r => r.id === existing.id ? { ...r, relationship_cmod: cmod } : r))
     } else {
-      const { data } = await supabase.from('npc_relationships').insert({
+      const { data } = await insertRelationships({
         npc_id: editingId, character_id: characterId, relationship_cmod: cmod,
       }).select().single()
       if (data) setRelationships(prev => [...prev, data])
@@ -719,15 +713,15 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       const isRevealed = revealIds.has(pc.characterId)
       const existing = relationships.find(r => r.character_id === pc.characterId)
       if (existing) {
-        await supabase.from('npc_relationships').update({ revealed: isRevealed, reveal_level: isRevealed ? revealLevel : null }).eq('id', existing.id)
+        await updateRelationship(existing.id, { revealed: isRevealed, reveal_level: isRevealed ? revealLevel : null })
       } else if (isRevealed) {
-        await supabase.from('npc_relationships').insert({
+        await insertRelationships({
           npc_id: editingId, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: revealLevel,
         })
       }
     }
     // Reload
-    const { data: rels } = await supabase.from('npc_relationships').select('*').eq('npc_id', editingId)
+    const { data: rels } = await relationshipsForNpc(editingId)
     setRelationships(rels ?? [])
     setShowReveal(false)
   }
@@ -753,8 +747,8 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     let portraitUrl: string | null = null
     try {
       const [allRes, usedRes] = await Promise.all([
-        supabase.from('portrait_bank').select('url_256').eq('gender', npc.gender),
-        supabase.from('campaign_portrait_usage').select('portrait_url').eq('campaign_id', campaignId).eq('gender', npc.gender),
+        portraitBankByGender(npc.gender),
+        portraitUsage(campaignId, npc.gender),
       ])
       const all = (allRes.data ?? []) as { url_256: string }[]
       if (all.length > 0) {
@@ -762,12 +756,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
         let unused = all.filter(p => !usedSet.has(p.url_256))
         if (unused.length === 0) {
           // Cycle exhausted - reset the log for this gender so we start fresh
-          await supabase.from('campaign_portrait_usage').delete().eq('campaign_id', campaignId).eq('gender', npc.gender)
+          await deletePortraitUsage(campaignId, npc.gender)
           unused = all
         }
         portraitUrl = unused[Math.floor(Math.random() * unused.length)].url_256
         // Log the assignment so we don't pick it again this cycle
-        await supabase.from('campaign_portrait_usage').insert({ campaign_id: campaignId, portrait_url: portraitUrl, gender: npc.gender })
+        await insertPortraitUsage(campaignId, portraitUrl, npc.gender)
       }
     } catch { /* bank unavailable - skip portrait */ }
     setForm(f => ({
@@ -802,7 +796,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       // campaigns this fanned out across all of them.
       const npcIds = npcs.map((n: any) => n.id)
       if (npcIds.length === 0) { setRevealedNpcIds(new Set()); return }
-      const { data } = await supabase.from('npc_relationships').select('npc_id').eq('revealed', true).in('npc_id', npcIds)
+      const { data } = await revealedRelationshipNpcIds(npcIds)
       if (data) setRevealedNpcIds(new Set(data.map((r: any) => r.npc_id)))
     }
     loadRevealed()
@@ -813,7 +807,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   // scene_tokens update logic lives in one place.
   async function revealNpcsByIds(npcIds: string[]) {
     if (!pcEntries || pcEntries.length === 0 || npcIds.length === 0) return
-    const { data: existing } = await supabase.from('npc_relationships').select('id, npc_id, character_id').in('npc_id', npcIds)
+    const { data: existing } = await existingRelationshipsByNpcs(npcIds)
     const seen = new Set<string>((existing ?? []).map((r: any) => `${r.npc_id}|${r.character_id}`))
     const updates = (existing ?? []).map((r: any) => r.id)
     const inserts: any[] = []
@@ -824,23 +818,23 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       }
     }
     if (updates.length > 0) {
-      await supabase.from('npc_relationships').update({ revealed: true, reveal_level: 'name_portrait' }).in('id', updates)
+      await revealRelationshipsByIds(updates)
     }
     if (inserts.length > 0) {
-      await supabase.from('npc_relationships').insert(inserts)
+      await insertRelationships(inserts)
     }
     setRevealedNpcIds(prev => {
       const next = new Set(prev)
       for (const id of npcIds) next.add(id)
       return next
     })
-    await supabase.from('scene_tokens').update({ is_visible: true }).in('npc_id', npcIds)
+    await setSceneTokensVisibleByNpcs(npcIds, true)
     void logEvent('npc_revealed', { count: npcIds.length, campaign_id: campaignId })
   }
 
   async function hideNpcsByIds(npcIds: string[]) {
     if (npcIds.length === 0) return
-    await supabase.from('npc_relationships').update({ revealed: false, reveal_level: null }).in('npc_id', npcIds)
+    await hideRelationshipsByNpcs(npcIds)
     setRevealedNpcIds(prev => {
       const next = new Set(prev)
       for (const id of npcIds) next.delete(id)
@@ -850,7 +844,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     // across Hide → Show. Realtime propagates this to players so they see
     // tokens vanish without refreshing; GMs continue to see hidden tokens
     // faded so they can keep working with the placement.
-    await supabase.from('scene_tokens').update({ is_visible: false }).in('npc_id', npcIds)
+    await setSceneTokensVisibleByNpcs(npcIds, false)
   }
 
   async function revealAllNpcs() {
@@ -860,7 +854,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     // per-NPC quickReveal already does this; without the same write
     // here, "Show All" left some NPCs invisible to players even after
     // their relationship row said revealed=true.
-    await supabase.from('campaign_npcs').update({ hidden_from_players: false }).in('id', allIds)
+    await setNpcsHidden(allIds, false)
     await revealNpcsByIds(allIds)
   }
 
@@ -868,7 +862,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     const allIds = npcs.map(n => n.id)
     // Mirror of revealAllNpcs - keep RLS gate in lockstep with the
     // per-PC reveal rows so the two surfaces never disagree.
-    await supabase.from('campaign_npcs').update({ hidden_from_players: true }).in('id', allIds)
+    await setNpcsHidden(allIds, true)
     await hideNpcsByIds(allIds)
   }
 
@@ -884,7 +878,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     const allIds = npcs.map(n => n.id)
     // RLS hard-hide first - if anything else fails, this still keeps
     // the NPCs invisible to players.
-    await supabase.from('campaign_npcs').update({ hidden_from_players: true }).in('id', allIds)
+    await setNpcsHidden(allIds, true)
     // Then the soft-reveal rows + scene tokens via the existing helper.
     await hideNpcsByIds(allIds)
   }
@@ -894,7 +888,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   // without opening the full Edit modal - fastest way to fix a
   // mis-set disposition in bulk.
   async function quickSetDisposition(npcId: string, value: 'friendly' | 'neutral' | 'hostile' | null) {
-    const { error } = await supabase.from('campaign_npcs').update({ disposition: value }).eq('id', npcId)
+    const { error } = await updateCampaignNpc(npcId, { disposition: value })
     if (error) { alert('Error: ' + error.message); return }
     // Keep any existing tactical-map tokens in sync - without this, a
     // token placed when the NPC was Foe (red) keeps the red ring even
@@ -903,7 +897,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     // mirroring the placeFolderOnMap / placeTokenOnMap logic.
     const npc = npcs.find(n => n.id === npcId)
     const newColor = getNpcTokenBorderColor({ disposition: value, npc_type: npc?.npc_type ?? null })
-    await supabase.from('scene_tokens').update({ color: newColor }).eq('npc_id', npcId)
+    await updateSceneTokenColorByNpc(npcId, newColor)
     setNpcs(prev => prev.map(n => n.id === npcId ? ({ ...n, disposition: value } as any) : n))
   }
 
@@ -915,13 +909,13 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     // sync with the per-PC npc_relationships reveal rows. Without this
     // the RLS would still hide the NPC from players even after they're
     // "revealed" via npc_relationships.
-    await supabase.from('campaign_npcs').update({ hidden_from_players: isRevealed }).eq('id', npcId)
+    await updateCampaignNpc(npcId, { hidden_from_players: isRevealed })
     for (const pc of pcEntries) {
-      const { data: existing } = await supabase.from('npc_relationships').select('id').eq('npc_id', npcId).eq('character_id', pc.characterId).maybeSingle()
+      const { data: existing } = await findRelationship(npcId, pc.characterId)
       if (existing) {
-        await supabase.from('npc_relationships').update({ revealed: !isRevealed, reveal_level: isRevealed ? null : 'name_portrait' }).eq('id', existing.id)
+        await updateRelationship(existing.id, { revealed: !isRevealed, reveal_level: isRevealed ? null : 'name_portrait' })
       } else if (!isRevealed) {
-        await supabase.from('npc_relationships').insert({ npc_id: npcId, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: 'name_portrait' })
+        await insertRelationships({ npc_id: npcId, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: 'name_portrait' })
       }
     }
     setRevealedNpcIds(prev => {
@@ -930,7 +924,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       return next
     })
     // Sync token visibility on the tactical map
-    await supabase.from('scene_tokens').update({ is_visible: !isRevealed }).eq('npc_id', npcId)
+    await setSceneTokenVisibleByNpc(npcId, !isRevealed)
   }
 
   // Publish to World
@@ -953,7 +947,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   useEffect(() => {
     // Check which NPCs have been published
     async function checkPublished() {
-      const { data } = await supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null)
+      const { data } = await publishedWorldNpcSourceIds()
       if (data) setPublishedNpcIds(new Set(data.map((d: any) => d.source_campaign_npc_id!)))
     }
     if (isGM) checkPublished()
@@ -966,7 +960,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     if (!npc) { setPublishing(false); return }
     const { user } = await getCachedAuth()
     if (!user) { setPublishing(false); return }
-    await supabase.from('world_npcs').insert({
+    await insertWorldNpc({
       source_campaign_npc_id: npc.id,
       created_by: user.id,
       name: npc.name,
@@ -988,14 +982,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   async function openLibrary() {
     setShowLibrary(true)
     setLibraryLoading(true)
-    const { data } = await supabase.from('world_npcs').select('*').eq('status', 'approved').order('import_count', { ascending: false })
+    const { data } = await approvedWorldNpcs()
     setLibraryNpcs(data ?? [])
     setLibraryLoading(false)
   }
 
   async function handleImport(worldNpc: any) {
     setImporting(worldNpc.id)
-    await supabase.from('campaign_npcs').insert({
+    await insertCampaignNpcs({
       campaign_id: campaignId,
       name: worldNpc.name,
       portrait_url: worldNpc.portrait_url,
@@ -1006,7 +1000,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       world_npc_id: worldNpc.id,
       status: 'active',
     })
-    await supabase.from('world_npcs').update({ import_count: (worldNpc.import_count ?? 0) + 1 }).eq('id', worldNpc.id)
+    await bumpWorldNpcImportCount(worldNpc.id, worldNpc.import_count ?? 0)
     setImporting(null)
     await loadNpcs()
   }
@@ -1027,7 +1021,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       entries: animal.skills.map(s => ({ name: s.name, level: s.level, specialized: s.specialized })),
       text: animal.skills.map(s => `${s.name} ${s.level}`).join(', '),
     }
-    await supabase.from('campaign_npcs').insert({
+    await insertCampaignNpcs({
       campaign_id: campaignId,
       name: finalName,
       reason: animal.rapid.RSN,

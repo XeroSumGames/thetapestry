@@ -4,14 +4,14 @@
     "app/stories/[id]/table/page.tsx": 10553,
     "components/TacticalMap.tsx": 4315,
     "components/CampaignCommunity.tsx": 3159,
-    "components/NpcRoster.tsx": 2302,
+    "components/NpcRoster.tsx": 2296,
     "app/vehicle/page.tsx": 2076,
     "components/MapView.tsx": 2023,
     "app/moderate/page.tsx": 1674
   },
   "seamLeakage": {
-    "fromOutsideData": 1168,
-    "channelOutsideRealtime": 26
+    "fromOutsideData": 1120,
+    "channelOutsideRealtime": 25
   },
   "prodConsole": 115
 }
