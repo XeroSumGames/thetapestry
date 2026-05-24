@@ -8,6 +8,7 @@ import {
   sceneTokens, updateToken, insertTokens, deleteToken, deleteTokensForScene, campaignVehiclesOnly,
 } from '../lib/data/tactical'
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
+import { trace } from '../lib/playtest-recorder'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -3121,7 +3122,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // No token or handle clicked - start panning (unless locked)
     setSelectedToken(null)
     onTokenSelect?.(null)
-    console.warn('[playtest-trace] [TacticalMap] plain mousedown fell-through to pan branch', {
+    trace('TacticalMap-mousedown-pan', {
       mapLocked,
       willStartPan: !mapLocked,
       button: e.button,

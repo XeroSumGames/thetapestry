@@ -1,6 +1,7 @@
 /**
  * Parse and roll XSE damage strings like "5+2d6", "3+1d3", "+1", "2", "1d3+PHY"
  */
+import { trace } from './playtest-recorder'
 
 function rollDice(count: number, sides: number): number {
   let total = 0
@@ -109,14 +110,12 @@ export function calculateDamage(
   // recorder dump for every damage call.
   // Prefix [playtest-trace] matches the rest of the 5/11 instrumentation
   // so all traces are greppable together in DevTools.
-  try {
-    console.warn('[playtest-trace] [damage] calculateDamage', {
-      rawWP, rpPercent, defensiveModifier,
-      armorDm, mitigated,
-      finalWP, finalRP,
-      rpFromRaw: !!options?.rpFromRaw,
-      attackerCategory: options?.attackerCategory ?? null,
-    })
-  } catch { /* SSR / no console */ }
+  trace('damage', {
+    rawWP, rpPercent, defensiveModifier,
+    armorDm, mitigated,
+    finalWP, finalRP,
+    rpFromRaw: !!options?.rpFromRaw,
+    attackerCategory: options?.attackerCategory ?? null,
+  })
   return { finalWP, finalRP, mitigated }
 }

@@ -70,7 +70,7 @@ import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../li
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
-import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, writeCampaignEnabled } from '../../../../lib/playtest-recorder'
+import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, writeCampaignEnabled, trace } from '../../../../lib/playtest-recorder'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
@@ -1847,14 +1847,14 @@ export default function TablePage() {
 
   async function nextTurn() {
     const __t0 = performance.now()
-    console.warn('[playtest-trace] [nextTurn] called at', new Date().toISOString())
+    trace('nextTurn', { at: new Date().toISOString() })
 
     // Re-entry guard: a rapid-fire consumeAction + realtime echo can fire two
     // nextTurn calls back-to-back. Without this guard, call #2 reads active
     // state that call #1 hasn't finished writing yet, then advances the turn
     // a second time - silently skipping whoever call #1 just activated.
     if (nextTurnInFlightRef.current) {
-      console.warn('[playtest-trace] [nextTurn] already in flight - bailing to avoid double-advance')
+      trace('nextTurn', { skipped: 'already in flight - bailing to avoid double-advance' })
       return
     }
     nextTurnInFlightRef.current = true
@@ -2244,7 +2244,8 @@ export default function TablePage() {
     // Reconcile local state with DB truth + refresh PC liveState, then notify peers.
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-    console.warn('[playtest-trace] [nextTurn] done (optimistic flip + parallel writes)', {
+    trace('nextTurn', {
+      done: 'optimistic flip + parallel writes',
       settle_ms: Math.round(performance.now() - __t0),
       activated_name: order[nextIdx]?.character_name,
     })
@@ -2277,7 +2278,8 @@ export default function TablePage() {
     const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
     if (freshErr) console.warn('[consumeAction] fetch error:', freshErr.message)
     const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
-    console.warn('[playtest-trace] [consumeAction] CALLED', {
+    trace('consumeAction', {
+      called: true,
       entryId,
       character: entry?.character_name,
       actions_before: entry?.actions_remaining,
@@ -2285,10 +2287,10 @@ export default function TablePage() {
       label: actionLabel,
       call_site_via_stack: new Error().stack?.split('\n').slice(2, 5).join(' | '),
     })
-    if (!entry) { console.warn('[playtest-trace] [consumeAction] no entry found, bailing'); return }
-    if ((entry.actions_remaining ?? 0) < cost) { console.warn('[playtest-trace] [consumeAction] actions_remaining', entry.actions_remaining, '< cost', cost, '- bailing'); return }
+    if (!entry) { trace('consumeAction', { skipped: 'no entry found, bailing' }); return }
+    if ((entry.actions_remaining ?? 0) < cost) { trace('consumeAction', { skipped: 'insufficient actions', actions_remaining: entry.actions_remaining, cost }); return }
     const newRemaining = (entry.actions_remaining ?? 0) - cost
-    console.warn('[playtest-trace] [consumeAction] WROTE actions_remaining:', entry.actions_remaining, '->', newRemaining)
+    trace('consumeAction', { wrote_actions_remaining: { from: entry.actions_remaining, to: newRemaining } })
 
     // Log the action to game feed
     if (actionLabel) {
@@ -5020,7 +5022,8 @@ export default function TablePage() {
     setPendingRoll(null)
     setRollResult(null)
 
-    console.warn('[playtest-trace] [closeRollModal] gate', {
+    trace('closeRollModal', {
+      gate: true,
       didRoll,
       combatActive,
       preConsumed,
@@ -5039,7 +5042,8 @@ export default function TablePage() {
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
       if (foErr) console.warn('[closeRollModal] active fetch error:', foErr.message)
       const activeEntry = freshOrder?.[0]
-      console.warn('[playtest-trace] [closeRollModal] activeEntry', {
+      trace('closeRollModal', {
+        activeEntry: true,
         name: activeEntry?.character_name,
         actions_remaining: activeEntry?.actions_remaining,
         user_id: activeEntry?.user_id,
@@ -5051,7 +5055,7 @@ export default function TablePage() {
         // Only consume if the roller is the active combatant. Out-of-turn
         // checks are free.
         const rollerIsActive = rollerInitId != null && rollerInitId === activeEntry.id
-        console.warn('[playtest-trace] [closeRollModal] rollerIsActive?', rollerIsActive, '(roller:', rollerInitId, 'active:', activeEntry.id, ')')
+        trace('closeRollModal', { rollerIsActive, roller: rollerInitId, active: activeEntry.id })
         if (rollerIsActive) {
           // Track last attack target for same-target +1 CMod bonus AND
           // for pre-selecting the same target on the next Attack modal

@@ -19,6 +19,7 @@ import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../../l
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../../lib/damage'
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../../lib/table-roll-context'
 import { insertRollLog } from '../../../../../lib/data/roll-log'
+import { trace } from '../../../../../lib/playtest-recorder'
 import { queuePendingHeal } from '../../../../../lib/campaign-clock'
 import { resolveFirstImpression } from '../../../../../lib/first-impression-resolver'
 import { ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../../lib/xse-schema'
@@ -484,7 +485,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         armor: armorPieces,
         attackerCategory,
       })
-      console.warn('[playtest-trace] [damage-calc]', {
+      trace('damage-calc', {
         weapon: weapon.weaponName,
         damageExpr: weapon.damage,
         totalBase,

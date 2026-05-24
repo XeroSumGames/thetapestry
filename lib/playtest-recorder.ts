@@ -200,6 +200,26 @@ export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown
   }
 }
 
+// Explicit diagnostic trace (grand re-architecture Phase 6, Xero's option B).
+//
+// Replaces the old pattern of `console.warn('[label] ...', data)` whose only
+// purpose was to (a) leak to every player's console and (b) get scooped into
+// the recorder buffer by the console monkey-patch. trace() captures the same
+// telemetry EXPLICITLY into the buffer (kind 'custom', tagged with `label`)
+// and echoes to the console ONLY in development - so prod consoles stay clean
+// while the recorder dump keeps the diagnostic timeline. record() already
+// no-ops unless THIS tab has the recorder enabled, so trace() is free when off.
+export function trace(label: string, data?: Record<string, unknown>) {
+  record('custom', { label, ...(data ?? {}) })
+  // Echo to the console ONLY in local dev - never in prod (clean player
+  // consoles) and never in test (no spam in the vitest run).
+  if (process.env.NODE_ENV === 'development' && typeof console !== 'undefined') {
+    // eslint-disable-next-line no-console
+    if (data !== undefined) console.log(`[${label}]`, data)
+    else console.log(`[${label}]`)
+  }
+}
+
 function dumpBuffer(): { meta: Record<string, unknown>; events: PlaytestEvent[] } | null {
   const r = getRecorder()
   if (!r) return null
