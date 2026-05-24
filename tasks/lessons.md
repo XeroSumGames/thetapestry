@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## Phase 6 console cleanup: a sanctioned "console seam" + level-as-signal (2026-05-23)
+
+Drove `console.log|warn` 115 -> 0 (Xero option B). The reusable shape:
+1. **One sanctioned console home, excluded from the fitness function.** `trace(label, data)` lives in `lib/playtest-recorder.ts`: pushes a `'custom'` recorder event AND echoes to console ONLY when `process.env.NODE_ENV === 'development'` (NOT `!== 'production'` - that would spam the vitest run, whose NODE_ENV is 'test'). check-arch's prod-console metric now skips `lib/playtest-recorder` exactly as it skips `lib/data` for `.from` - the telemetry tool is allowed to console; everywhere else routes THROUGH trace(). This is the principled way to hit 0 without a hacky `console['log']` regex-dodge.
+2. **Categorize by signal, not blanket-convert:** real failures (`error`/`failed`/`SILENT RLS`/`rejected`) -> `console.error` (NOT in the warn ratchet, stays visible in prod, still caught by the recorder's console.error monkey-patch - Xero's decision (b)); operational flow telemetry (state dumps, bail reasons) -> `trace()`; pure per-render/timing noise (`[crop]`, `[kickCheck]` per-load, `inserted N`) -> delete. A blanket `s/warn/error/` is only safe on files that contain ONLY error-surfacing warns (verify first) - then a per-file `sed` beats 25 Edits.
+3. **Watch the regex false-positives:** check-arch counts `console.log(` literally, so a `console.log(` INSIDE a comment counts. Reword the comment (or it's moot once the file is seam-excluded).
+4. **Deleting a debug log can orphan its setup** (`const t0 = performance.now()` feeding only a timing log) - remove those too or tsc/lint flags the unused local.
+
 ## God-component SEAM migration: drop-in builders + a primitive for the channel type useCampaignChannel doesn't cover (2026-05-23, MapView)
 
 The data+realtime seam migration (distinct from the function-extraction technique below) on `components/MapView.tsx` (36 `.from` -> 0, 2 `.channel` -> 0). Reusable for vehicle / NpcRoster / CampaignCommunity / TacticalMap:
