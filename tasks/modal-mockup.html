@@ -121,9 +121,9 @@
 </head>
 <body>
 <header class="page">
-  <h1>Tapestry - Modal Mockups <span style="color:#7fc458;font-size:15px">v8 - LOCKED</span></h1>
+  <h1>Tapestry - Modal Mockups <span style="color:#7fc458;font-size:15px">v9 - LOCKED</span></h1>
   <p>Design target after your 2026-05-24 notes. <b>Mockup only</b> - nothing shipped yet. Approve and I implement against the live components.</p>
-  <p class="rules"><b>Three-zone fixed length (matches Distract):</b> TOP = eyebrow + title + base-roll line (2d6 + mods + CMod) &middot; MIDDLE = variable strip, same reserved height even when blank (damage / dropdown / warning / nothing) &middot; BOTTOM = Insight Dice + buttons, pinned. 340px default; all modals use the ATTACK look except 4 bespoke.</p>
+  <p class="rules"><b>Three-zone fixed length (matches Distract):</b> TOP = eyebrow + title + base-roll line (2d6 + mods + CMod) &middot; MIDDLE = variable strip, same reserved height even when blank (damage / dropdown / warning / nothing) &middot; BOTTOM = Insight Dice + buttons, pinned. Insight shows on every roll EXCEPT Stress Check / Breaking Point / Lasting Wound (no insight - Xero, canon rewrite pending). 340px default; all modals use the ATTACK look except 4 bespoke.</p>
   <div class="legend">
     <span class="dimtag">Non-roll category accents:</span>
     <span><i class="sw" style="background:#c9a227"></i> GM Tools</span>
@@ -334,15 +334,11 @@
             <div class="rm-middle">
               <div class="rm-warn amber">Success &ge; 7 &rarr; drop to 4 stress &middot; Failure &rarr; Breaking Point</div>
             </div>
-            <div class="rm-insight">
-              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
-              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
-            </div>
             <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#EF9F27;border-color:#EF9F27;color:#1a1a1a">&#127922; Roll Stress Check</button></div>
           </div>
         </div>
       </div>
-      <div class="caption"><span class="nm">Stress Check</span> <span class="badge ok">middle = warning</span><br>accent amber &middot; <b>dimmed</b>.</div>
+      <div class="caption"><span class="nm">Stress Check</span> <span class="badge ok">middle = warning &middot; no insight</span><br>accent amber &middot; <b>dimmed</b>.</div>
     </div>
 
     <!-- Breaking Point (blank middle) -->
@@ -356,15 +352,11 @@
             <div class="rm-subtitle">Mike has broken - roll on Table 13</div>
             <div class="rm-formula"><span>2d6</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
             <div class="rm-middle"></div>
-            <div class="rm-insight">
-              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
-              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
-            </div>
             <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c0392b;border-color:#c0392b;color:#fff">&#127922; Roll on Table 13</button></div>
           </div>
         </div>
       </div>
-      <div class="caption"><span class="nm">Breaking Point</span> <span class="badge ok">check, blank middle</span><br>2d6 + CMod &rarr; Table 13.</div>
+      <div class="caption"><span class="nm">Breaking Point</span> <span class="badge ok">check, no insight</span><br>2d6 + CMod &rarr; Table 13.</div>
     </div>
 
     <!-- Lasting Wound (blank middle) -->
@@ -378,15 +370,11 @@
             <div class="rm-subtitle">Mike - Physicality check failed</div>
             <div class="rm-formula"><span>2d6</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
             <div class="rm-middle"></div>
-            <div class="rm-insight">
-              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
-              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
-            </div>
             <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c0392b;border-color:#c0392b;color:#fff">&#127922; Roll on Table 12</button></div>
           </div>
         </div>
       </div>
-      <div class="caption"><span class="nm">Lasting Wound</span> <span class="badge ok">check, blank middle</span><br>2d6 + CMod &rarr; Table 12.</div>
+      <div class="caption"><span class="nm">Lasting Wound</span> <span class="badge ok">check, no insight</span><br>2d6 + CMod &rarr; Table 12.</div>
     </div>
 
     <!-- Post-roll demo -->

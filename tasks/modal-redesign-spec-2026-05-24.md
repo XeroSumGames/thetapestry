@@ -39,13 +39,13 @@ This is mockup-approved DESIGN. Several items below are FUNCTIONAL changes (not 
 
 ---
 
-## ALWAYS-insight rule (FUNCTIONAL - Xero confirmed)
+## Insight rule (Xero, 2026-05-24)
 
-Every roll/check modal shows the Insight Dice option (No spend / Roll 3d6 / +3 CMod) unless Xero says otherwise. Confirmed to include Stress Check, Breaking Point, Lasting Wound (and they keep post-roll reroll too). **Build note:** these three did not previously offer insight - wiring it means the roll path must actually honor a 3d6 / +3 CMod spend and decrement the die. That is roll-engine work, not chrome.
+Every roll/check modal shows the Insight Dice option (No spend / Roll 3d6 / +3 CMod) EXCEPT **Stress Check, Breaking Point, Lasting Wound** - those three have NO insight option (Xero rethought 2026-05-24; he is rewriting canon to match). So "always-on insight" is the default; those three are the carve-out. No new insight wiring is needed on them (good - it was the riskiest functional bit and it's now off the table).
 
-## Functional changes flagged (confirm canon / Xero before building)
-1. **Gut Instinct sub-skill DROPDOWN.** Today it auto-uses best of Psychology/Streetwise/Tactics. The locked design lets the player PICK. That changes the mechanic - walk canon (precedence stack) and confirm before changing the resolution.
-2. **Recruit who/approach/skill in the modal.** Today recruiting has a separate pick step then a result modal. Locked design folds Recruit / Approach / Skill dropdowns into the roll modal. Flow change - reconcile with the recruit pick-step path before building.
+## Functional changes flagged
+1. **Gut Instinct sub-skill DROPDOWN - CONFIRMED (Xero 2026-05-24).** The player picks the sub-skill (Psychology / Streetwise / Tactics) and defines the narrative around it; the dropdown is the intended design (replaces today's auto-best-of). Build it.
+2. **Recruit who/approach/skill in the modal - DECISION PENDING.** Today recruiting is a two-phase flow: a rich PICK step ([page.tsx:9469](page.tsx)) - rolling-PC selector (GM-on-behalf), target-NPC dropdown (eligibility + "already in X"), community picker with new-group creation + naming + group/community explainer, approach selector with LOCK-GATES (Convert locks after an Intimidation failure), poaching-penalty warning (-3 CMod), skill, CMod breakdown - then the roll, then the result modal. The mockup's 3 dropdowns oversimplified this. RECOMMENDATION (pending Xero): do NOT clamp Recruit's pick step into the 340 three-zone shell; keep it a wider form (like Community Status 480) wearing the shell CHROME (eyebrow/title/buttons/drag/accent), and use the standard roll-result display for the result step. "Streamline the look, not the flow." See the lose/gain analysis Xero requested.
 3. **First Impression** moves from its bespoke 480px modal to the shell with NPC + skill dropdowns. Confirm the skill list + targeting matches the current resolver.
 4. **Base-roll line above the pickers** even where the pick changes the mods (Recruit / First Impression) - the displayed AMod must recompute live when the dropdown changes.
 
@@ -66,7 +66,7 @@ Every roll/check modal shows the Insight Dice option (No spend / Roll 3d6 / +3 C
 Phase A already shipped a FIRST cut of the shared `RollModal` (400px, drag, contextual backdrop, outcomeColor, accent) - the locked design revises it (340px, three-zone, inline CMod, always-insight), so Phase A2 reworks that component rather than starting fresh.
 
 - **A2 - rework `components/RollModal.tsx` to the locked shell.** 400 -> 340; add the three-zone layout (reserved-height middle); move CMod inline onto the base-roll line, remove the full-width block; make the Insight option always render; keep drag/backdrop/accent/outcomeColor. Update the 8 roll callers for the new prop shape. Pure-visual parts first; the per-caller functional additions (skill dropdowns, recruit dropdowns) come after their canon check.
-- **A3 - functional caller changes** (gated on the flags above): Gut Instinct skill picker, Recruit dropdowns-in-modal, always-insight wiring on Stress/Breaking Point/Lasting Wound.
+- **A3 - functional caller changes:** Gut Instinct skill picker (CONFIRMED, build it); Recruit pick-step treatment (pending Xero's lose/gain call); ensure Stress/Breaking Point/Lasting Wound render with NO insight option (carve-out above). Insight wiring is NOT needed anywhere new.
 - **B - First Impression** onto the shell (NPC + skill dropdowns, blue accent).
 - **C - reconcile inline ATTACK** (`page.tsx:7819`) onto the shared hook + 340 + three-zone so ATTACK and the component are pixel-identical.
 - **D - collapse inline ATTACK into `RollModal`** (DEFERRED, Xero-gated, post-playtest; load-bearing on combat).
