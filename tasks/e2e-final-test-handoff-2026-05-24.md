@@ -78,3 +78,7 @@ The architecture work beyond the re-arch is planned: `tasks/architecture-path.md
 2. **After Gate 0, you become the regression net for Stages A/B/C.** Behavior-preserving is the new posture (playtesters are live); your green run is what makes "behavior-preserving" a checked fact, not an assertion. Stage B will need a new conditions spec (apply/clear/expire/Restore/no-stacking, 2-client); Stage C re-runs the full suite per migrated component. The strategy doc's gate map has the details.
 
 Net: finishing the A-F suite + Arena seeding is the gate the entire forward plan waits on. It leads, it does not trail.
+
+### Cross-lane note (puffer-fish, 2026-05-24) - a conditions 2-client smoke is the gate for Stage B
+
+Architecture lane is building toward Stage B (conditions subsystem, `tasks/stage-b-conditions-design.md`). Its core piece (task #5: `lib/conditions.ts` routing the combat-hot-path MW/incap/stress writes) canNOT blind-merge - unit tests don't cover multi-client combat state. **It needs a 2-client conditions smoke as its acceptance gate**, ideally a Gate-0 successor in your suite. Minimum coverage: wound a PC -> infection-apply propagates; drive WP=0 -> MW countdown + the on-entry stress pip show on the other client; drive RP=0 -> incap; Restore clears the whole set (infection + stress + MW + incap + lasting wounds) and the other client sees it cleared. No rush - the typing groundwork (liveState now fully typed) is already merged; this gates the API routing, which I build only once the smoke exists.

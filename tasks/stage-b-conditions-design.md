@@ -36,3 +36,18 @@
 - **Gated (dry-run -> your confirm):** the lasting-wounds column move (+ backfill), and NPC stress IF canon wants it.
 
 The schema migrations get written and dry-run here; nothing touches live until you confirm.
+
+## `lib/conditions.ts` API surface (build-ready spec for task #5)
+
+Decided now so #5 can be built to spec. A `ConditionTarget` discriminates PC (`character_states` row + `characters.data` for lasting wounds) vs NPC (`campaign_npcs` row). Functions are thin writers over the existing columns + the pure canon math (some already exist: `mortalWoundCountdown(phy)`, the incap formula `max(1, 4-phy)`, stress cap 5):
+
+- `applyMortalWound(target, phy)` - sets `death_countdown = mortalWoundCountdown(phy)` + the on-entry stress pip (the WP=0 path).
+- `applyIncap(target, phy)` - sets `incap_rounds = max(1, 4-phy)` + the on-entry stress pip (the RP=0 path).
+- `addStress(target)` - +1, cap 5. (PC only until the NPC-stress canon call lands - task #6.)
+- `applyInfection(target, {state, daysLeft, lastingRisk, severity, infectedBy})` - the 7-field write + the RP-to-floor(max/2) cap.
+- `applyLastingWound(target, woundName)` - PC -> `characters.data.lastingWounds` (or the new column if #7 lands); NPC -> `campaign_npcs.lasting_wounds`.
+- `clearConditions(target, set?)` - the Restore reset; default clears ALL (incl. lasting wounds, fixing today's gap). Restore routes through this.
+
+**Two clocks stay separate (NOT one `tick`):** `tickCombatConditions` (round upkeep: MW + incap) stays in the table upkeep; `drainDayConditions` (infection) stays in `campaign-clock.ts`. The API unifies apply/clear/read, not expiry.
+
+**Merge gate for #5:** this routes ~9 combat-hot-path writes, and unit tests do not cover multi-client combat state, so #5 does NOT blind-merge to main. Its acceptance is a **2-client conditions smoke** (wound -> infection apply, MW/incap entry + stress pip, Restore clears the set, propagation to the other client). That smoke is owned by the Playwright lane (a Gate-0 successor) - coordinate before #5 lands. Build behind a worktree + tsc/tests/ratchets; merge only after the smoke is green. This respects the locked posture (validated-per-slice, no unvalidated combat code with playtesters live).
