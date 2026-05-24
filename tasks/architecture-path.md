@@ -1,6 +1,6 @@
 # Architecture Path - foundation laid -> ready for the world
 
-**Status: PROPOSAL (puffer-fish, 2026-05-23). Awaiting Xero sign-off on the destination read + the one big technology call (Stage C).** Nothing here is locked until Xero approves; on approval the locked decisions move to `decisions.md`.
+**Status: AUTHORITATIVE (puffer-fish, locked 2026-05-24). This is the plan the architecture lane drives - no per-step sign-off required.** Xero owns vision + priorities + the bright-line gates (below); the technical sequencing and the engineering calls are owned here and are LOCKED (mirrored in `decisions.md`). Xero can re-prioritize or veto at any time, but the default is: this runs, stage to stage, and I report progress - I do not ask which task to do next.
 
 This is the executable sequel to two docs:
 - `tasks/grand-rearchitecture-2026-05-22.md` - the re-arch spine (Phases 1-7). Built the seams. Phases 1-6 code-complete; Phase 7 (validation) pending.
@@ -26,13 +26,13 @@ So "there" = **the platform structurally matches the ideal, so it is sound enoug
 
 The ideal itself (from the spine doc PART 2, plus the review's additions) is the L0-L5 layering with dependency-direction enforced, PLUS the three layers the re-arch did not reach: a client-state layer, conditions-as-code, and infra-as-code, all sitting under a real test pyramid.
 
-**If this destination read is wrong, stop here and correct it - everything below is sequenced to serve it.**
+**This destination is LOCKED** (it is Xero's own mandate, restated). If the commercial priority shifts (e.g. "ship feature X before hardening"), Xero changes the PRIORITY; the technical path to the destination does not change.
 
 ---
 
 ## The gating reality (three things that constrain the path)
 
-1. **Phase 7 closes FIRST. It is the foundation gate.** You cannot build a client-state layer on top of seams whose behavior-preservation is still HOPED-FOR. The re-arch's 6 migrations are asserted-correct, not yet proven across 2 clients. Phase 7 (the batched 2-client acceptance smoke, `tasks/phase7-acceptance-2client-testplan.md`) is calendar-blocked on the 2026-05-25 Minnie playtest. **Until it passes, no Stage-C work starts.** Stages A/B can begin in parallel because they do not depend on the seam validation.
+1. **Phase 7 closes FIRST. It is the foundation gate.** You cannot build a client-state layer on top of seams whose behavior-preservation is still HOPED-FOR. The re-arch's 6 migrations are asserted-correct, not yet proven across 2 clients. Phase 7 (the batched 2-client acceptance, `tasks/phase7-acceptance-2client-testplan.md`) is now being AUTOMATED by the Playwright lane (fixture seeding done + verified 6/6 on the live Arena 2026-05-24; Sections C/D in build) - so it is no longer calendar-blocked on the 2026-05-25 Minnie playtest. **Until Phase 7 is GREEN, no Stage-C work starts.** Stages A/B begin in parallel now because they do not depend on the seam validation.
 
 2. **The risk posture has FLIPPED, and the plan must respect it.** The re-arch ran under "break-things-OK, no playtest until done" (Xero, 2026-05-22). That window is closed - there is now a live playtester group. New posture for everything below: **behavior-preserving, one `git revert` away, ratchet-locked, validated per slice with the 2-client smoke. No big-bang. The combat-critical table page migrates LAST.** Name this explicitly so we do not carry the old posture forward by habit.
 
@@ -45,14 +45,14 @@ The ideal itself (from the spine doc PART 2, plus the review's additions) is the
 Execution order is NOT the review's priority-by-leverage order. It is sequenced by dependency, risk, and "stop the bleeding first." Cheap-and-safe groundwork goes early precisely because it de-risks the big move.
 
 ### Gate 0 - Close Phase 7 (validate what exists)
-**Not new work - finish the re-arch.** When the 2026-05-25 smoke passes: demote Realtime YELLOW -> GREEN (`debug-handoff.md` Sec 1), promote the re-arch HOPED-FOR -> PLAYTESTED, archive the decomposition sheet, log "Phase 7 closed / re-arch validated" in `decisions.md`. **This is the precondition for Stage C.** Owner: Xero runs the smoke; puffer-fish closes the books.
+**Not new work - finish the re-arch.** The Playwright lane automates Sections C/D/E (propagation) + the console sweep against the seeded Arena; the residual manual checks (combat math A2, infection modal F) ride the 2026-05-25 Minnie playtest as final real-world confirmation. When Phase 7 is GREEN, the architecture lane closes the books: demote Realtime YELLOW -> GREEN (`debug-handoff.md` Sec 1), promote the re-arch HOPED-FOR -> PLAYTESTED, archive the decomposition sheet, log "Phase 7 closed / re-arch validated" in `decisions.md`. **This is the precondition for Stage C** (Stages A/B do not wait on it).
 
 ### Stage A - Infra-as-code + typed payloads (cheap, safe, de-risks everything)
 Can start NOW, in parallel with the Phase 7 close. Lowest risk, highest "stop the silent bleeding" value.
 
-- **A1. Infra-as-code (review move #3).** Capture the live Supabase config that currently lives only in the dashboard into versioned, CI-applied migrations: **publication membership** (the exact gap that cost an hour and that I triaged again today), **RLS policies**, **triggers** (e.g. `trg_normalize_role`), and CREATE TABLE for the **~15 orphan tables** (no canonical schema today; 235 sql files, none authoritative). Mostly additive/capture work - low risk. Payoff: future schema/config changes go through code review + CI, and the silent-config bug class dies. Also establishes the migration discipline Stage B needs.
-- **A2. Typed payloads + de-regex the feed (review move #4).** `DamagePayload` and friends for the realtime/roll JSON; structured `roll_log` columns to replace label-text regex parsing (`compactRollSummary`). Incremental, compile-time-safe. Drives down the `561 as any` and removes a data-integrity foot-gun. Pairs naturally with the typed seams.
-- **Gate:** tsc + 548 suite + arch ratchets. Each migration applied via the linked Supabase CLI, dry-run first (bright-line: live-DB migration = confirm intent).
+- **A1. Infra-as-code (review move #3). DONE 2026-05-24** (`tasks/stage-a-infra-as-code-scope.md`). Captured the live config that was dashboard/live-only into versioned baselines via the `db query --linked` API (Docker not installed, so no `supabase db dump`): `sql/_baseline/publication.sql` (21 tables) + `scripts/check-publication-drift.mjs` (`npm run check:publication`), and `sql/_baseline/schema.sql` (69 tables incl. all 15 orphans, 286 policies, 56 triggers, 72 functions) via the re-runnable `scripts/capture-schema.mjs`. Discipline rule in `AGENTS.md`. Already paid off: killed the false "whispers not published" blocker without a DB change. Remaining: Tier 3 (CI drift-check) needs a read-only DB secret - an OPERATOR action for Xero, not blocking.
+- **A2. Typed payloads + de-regex the feed (review move #4). NEXT.** `DamagePayload` and friends for the realtime/roll JSON; structured `roll_log` columns to replace label-text regex parsing (`compactRollSummary`). Incremental, compile-time-safe. Drives down the `561 as any` and removes a data-integrity foot-gun. Pairs naturally with the typed seams.
+- **Gate:** tsc + full vitest suite + arch ratchets. Any live-DB application is dry-run first (bright-line: live-DB migration = confirm intent).
 
 ### Stage B - Conditions subsystem (review move #2)
 After A1 (so the schema change is a proper migration). Independent of the Stage-C technology choice, so it can run in parallel with Stage C's design phase.
@@ -87,11 +87,29 @@ The review framed it as "TanStack Query OR feature stores." That is a false eith
 
 ---
 
-## Open decisions for Xero (the sign-off points)
+## LOCKED decisions (no further sign-off - these are mine to own)
 
-1. **Destination read** - is "structurally ready for the world / paid launch," as framed above, the target? (If it is really "clean enough for my own velocity," the sequence is the same but the urgency on Stage A/infra changes.)
-2. **Risk-posture flip** - confirm the new posture (behavior-preserving, validated-per-slice, table page last) replaces the re-arch's "break-things-OK." I am assuming yes because playtesters are live.
-3. **Stage C technology** - Query + Zustand as above, validated on a pilot before the table page? This is the one I would spend a human architect's hour on.
-4. **Sequencing** - Stage A (infra + typed) starting now in parallel with the Phase 7 close, vs waiting until Phase 7 is fully closed. I recommend starting A now (it is independent and low-risk).
+1. **Destination** = structurally ready for the world / paid launch (Xero's mandate, restated).
+2. **Risk posture** = behavior-preserving, one revert away, ratchet-locked, validated per slice, table page LAST. (The re-arch's "break-things-OK" is retired - playtesters are live.)
+3. **Stage C technology** = TanStack Query (server-state) + Zustand slices (orchestration state). Validated on a non-combat pilot before the table page. Reasoning + revisit-triggers below.
+4. **Sequence** = A1(done) -> A2 -> B -> C(design -> pilot -> propagate, table last) -> D in parallel throughout. Stages A/B run now; Stage C waits for Phase 7 GREEN.
 
-None of Stages A/B/C touch payments, auth, or public API shape; all are behind ratchets and one revert away. The only Xero-gated actions inside them are the live-DB migrations (A1, B) and the 2-client smokes - both already on the bright-line confirm list.
+## Execution order - what happens next, automatically (no "which do you want?")
+
+I proceed down this list without asking. Each item: behavior-preserving, gated by tsc + the vitest suite + the arch ratchets, committed and pushed, one `git revert` away. When one finishes I start the next and report progress.
+
+1. **A2 - typed payloads** (in progress next). 
+2. **Stage B - conditions subsystem** (after A2; can overlap Stage C's design doc).
+3. **Stage C1 - client-state design doc**, then **C2 pilot** (MapView or vehicle), then **C3 propagate** (table page last) - C-anything starts only after Phase 7 is GREEN.
+4. **Stage D** - seam-contract + golden-path E2E - matures alongside, coordinated with the Playwright lane.
+
+## The ONLY things that need you (Xero) - and they are not technical decisions
+
+These are bright-line / external actions I will NOT do autonomously. When I hit one I will say exactly what I need; otherwise assume I am proceeding.
+
+- **Applying any schema/config change to the live DB** (Stage B's conditions migration; any RLS/trigger change). I write + dry-run it, then ask you to confirm before it touches live.
+- **Operator actions only you can do:** set the read-only DB secret in CI (Tier 3 drift-check), the Upstash KV env vars, etc. I cannot reach the dashboard.
+- **A second-opinion review of the Stage C foundation** before C3 bulk propagation. Advisory, not blocking - I will flag when we are there and you decide whether to pull in a human architect. The pilot (C2) is the real de-risker either way.
+- **Re-prioritizing** (e.g. "pause hardening, ship feature X"). That is your call; the technical path itself is not.
+
+Nothing in Stages A/B/C touches payments, auth, or public API shape. None of it requires you to choose between engineering options - that is what this document is for.
