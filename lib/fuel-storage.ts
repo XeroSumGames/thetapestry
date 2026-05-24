@@ -92,6 +92,22 @@ export function installFuelDrum<V extends FuelStorageVehicle>(v: V): FuelStorage
   }
 }
 
+/** Consume one drum from cargo WITHOUT installing it - a failed install check
+ *  (the drum is damaged / cannot be fitted). fuel_max is unchanged. When
+ *  wasteOneTank is true (Dire Failure: "appears solid but comes off"), also
+ *  burns one tank of fuel (fuel_current -1, floored at 0). Error when no drum. */
+export function damageFuelDrum<V extends FuelStorageVehicle>(v: V, wasteOneTank: boolean): FuelStorageResult<V> {
+  const drumRow = v.cargo.find(c => c.name === FUEL_DRUM_NAME)
+  if (!drumRow || drumRow.qty < 1) {
+    return { vehicle: null, error: 'No 55-Gallon Drum in cargo.' }
+  }
+  const newCargo = drumRow.qty > 1
+    ? v.cargo.map(c => c === drumRow ? { ...c, qty: c.qty - 1 } : c)
+    : v.cargo.filter(c => c !== drumRow)
+  const fuel_current = wasteOneTank ? Math.max(0, v.fuel_current - 1) : v.fuel_current
+  return { vehicle: { ...v, cargo: newCargo, fuel_current }, error: null }
+}
+
 /** Uninstall one drum from the vehicle. Returns a new vehicle with
  *  fuel_max -1 (floored at fuel_max_base) and cargo incremented by 1
  *  drum (new row appended if none present). fuel_current is clamped
