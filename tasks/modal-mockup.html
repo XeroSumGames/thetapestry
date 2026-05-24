@@ -264,21 +264,26 @@
       <div class="caption"><span class="nm">Vehicle / Navigate</span> <span class="badge ok">blank middle</span><br>accent rust.</div>
     </div>
 
-    <!-- Recruitment (taller - 3 dropdowns in middle) -->
+    <!-- Recruitment - WIDE pick form (decision A: unify the look, keep the flow) -->
     <div>
       <div class="stage map">
-        <div class="rm-panel" style="width:340px">
+        <div class="rm-panel" style="width:480px">
           <div class="rm-drag"><div class="rm-grab"></div></div>
           <div class="rm-body">
             <div class="rm-eyebrow" style="color:#b07cc6">Recruit</div>
             <div class="rm-title">Recruitment</div>
-            <div class="rm-formula"><span>2d6</span><span class="pos">+2 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
-            <div class="rm-formnote">AMod updates with the skill pick</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+2 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="-3"></span></div>
+            <div class="rm-formnote">AMod updates with the rolling PC + skill; CMod stacks poaching / lock penalties</div>
             <div class="rm-middle">
-              <div class="rm-label">Recruit</div>
-              <select class="rm-select"><option>Donnie</option><option>Sara</option></select>
+              <div class="rm-label">Rolling PC</div>
+              <select class="rm-select"><option>Mike (INF 3)</option></select>
+              <div class="rm-label">Target NPC</div>
+              <select class="rm-select"><option>Donnie</option><option>Sara - already in The Vultures</option></select>
+              <div class="rm-warn amber">&#9888; Poaching: Sara is already in The Vultures (-3 CMod)</div>
+              <div class="rm-label">Community</div>
+              <select class="rm-select"><option>The Mongrels (4 members)</option><option>+ Start a new group</option></select>
               <div class="rm-label">Approach</div>
-              <select class="rm-select"><option>Cohort</option><option>Conscript</option><option>Convert</option></select>
+              <div class="rm-check"><span class="rm-checkitem" style="border-color:#b07cc6;color:#b07cc6">Cohort</span><span class="rm-checkitem">Conscript</span><span class="rm-checkitem" style="opacity:.45">Convert (locked)</span></div>
               <div class="rm-label">Skill</div>
               <select class="rm-select"><option>Manipulation</option><option>Streetwise</option><option>Command</option></select>
             </div>
@@ -290,7 +295,7 @@
           </div>
         </div>
       </div>
-      <div class="caption"><span class="nm">Recruitment</span> <span class="badge ok">runs longer (3 dropdowns)</span><br>accent purple.</div>
+      <div class="caption"><span class="nm">Recruitment (pick step)</span> <span class="badge ok">wide form + shell chrome (decision A)</span><br>accent purple, 480 like Community Status. Keeps the full pick flow - rolling-PC, target, community + new-group, approach lock-gates, poaching penalty, skill. Result step uses the standard roll-result display.</div>
     </div>
 
     <!-- First Impression (taller - 2 dropdowns) -->
