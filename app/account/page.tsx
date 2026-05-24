@@ -61,6 +61,25 @@ export default function AccountPage() {
   const [pwdSaving, setPwdSaving] = useState(false)
   const [pwdMessage, setPwdMessage] = useState<string>('')
 
+  // Password-reset mode banner (arrived via the reset link). MUST stay
+  // above the early `if (loading) return` below: a hook declared after a
+  // conditional return changes the hook count between renders (React #310).
+  const [resetMode, setResetMode] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    // When a moderator triggers a password reset (or the user uses the
+    // "Forgot password?" flow), the email link bounces them through
+    // /auth/callback?next=/account?reset=1. Surface a banner + auto-scroll
+    // to the Password card so it's obvious what to do next.
+    if (new URLSearchParams(window.location.search).get('reset') !== '1') return
+    setResetMode(true)
+    // Defer the scroll until the password card is in the DOM.
+    setTimeout(() => {
+      const el = document.getElementById('password-card')
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 200)
+  }, [])
+
   useEffect(() => {
     (async () => {
       const { user } = await getCachedAuth()
@@ -228,22 +247,6 @@ export default function AccountPage() {
     color: kind === 'ok' ? '#7fc458' : '#f5a89a',
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em',
   })
-
-  // When a moderator triggers a password reset (or the user uses the
-  // "Forgot password?" flow once it lands), the email link bounces them
-  // through /auth/callback?next=/account?reset=1. We surface a banner +
-  // auto-scroll to the Password card so it's obvious what to do next.
-  const [resetMode, setResetMode] = useState(false)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (new URLSearchParams(window.location.search).get('reset') !== '1') return
-    setResetMode(true)
-    // Defer the scroll until the password card is in the DOM.
-    setTimeout(() => {
-      const el = document.getElementById('password-card')
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 200)
-  }, [])
 
   return (
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#0f0f0f', color: '#d4cfc9' }}>
