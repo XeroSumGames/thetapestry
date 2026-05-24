@@ -1,7 +1,6 @@
 ﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
 import { getCachedAuth } from '../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../lib/auth/roles'
@@ -10,6 +9,16 @@ import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji, getCategory
 import QuickAddModal from './QuickAddModal'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE, LABEL_STYLE_LG, LABEL_STYLE_TIGHT, ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import {
+  loadWhispersFeed, profileUsernames, profilesWithRole, getProfileRole, gmCampaigns,
+  campaignNamesByIds, approvedCommunitiesForCampaigns, mySubscriptions, myCampaignMemberships,
+  revealedCampaignPins, allMapPins, approvedCommunitiesWithCoords, activeCommunityLinks,
+  findPendingEncounter, followCommunity, unfollowCommunity, insertCommunityLink,
+  insertCommunityEncounter, updateEncounterNarrative, insertWhisper, deleteWhisper as deleteWhisperRow,
+  insertMapPin, deleteMapPin, updateMapPinStatus, updateMapPin, updateMapPinType, bumpPinViewCount,
+  uploadPinAttachment, listPinAttachments, pinAttachmentPublicUrl, removePinAttachments,
+} from '../lib/data/map'
+import { usePostgresSubscription } from '../lib/realtime/usePostgresSubscription'
 
 type PinTier = 'landmark' | 'location' | 'event' | 'personal'
 
@@ -100,7 +109,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const markersRef = useRef<Record<string, any>>({})
   const clusterGroupRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
-  const channelRef = useRef<any>(null)
   const [pins, setPins] = useState<Pin[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'survivor' | 'thriver'>('survivor')
@@ -254,13 +262,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         const wasFollowing = subscribedIdsRef.current.has(wcid)
         ;(async () => {
           if (wasFollowing) {
-            const { error } = await supabase.from('community_subscriptions')
-              .delete().eq('user_id', userId).eq('world_community_id', wcid)
+            const { error } = await unfollowCommunity(userId, wcid)
             if (error) { alert(`Unfollow failed: ${error.message}`); return }
             setSubscribedIds(prev => { const n = new Set(prev); n.delete(wcid); return n })
           } else {
-            const { error } = await supabase.from('community_subscriptions')
-              .insert({ user_id: userId, world_community_id: wcid })
+            const { error } = await followCommunity(userId, wcid)
             if (error) { alert(`Follow failed: ${error.message}`); return }
             setSubscribedIds(prev => new Set(prev).add(wcid))
           }
@@ -312,7 +318,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // keys on community_a + community_b + link_type + status, so
     // ordering matters; sorting keeps it predictable.)
     const [a, b] = [linkFromId, linkTarget.worldCommunityId].sort()
-    const { error } = await supabase.from('world_community_links').insert({
+    const { error } = await insertCommunityLink({
       community_a_id: a,
       community_b_id: b,
       link_type: linkType,
@@ -342,7 +348,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     setEncounterSubmitting(true)
     const { user } = await getCachedAuth()
     const trimmedNarrative = encounterNarrative.trim()
-    const { error } = await supabase.from('community_encounters').insert({
+    const { error } = await insertCommunityEncounter({
       world_community_id: encounterTarget.worldCommunityId,
       encountering_campaign_id: encounterCampaignId,
       encountering_user_id: user?.id ?? null,
@@ -357,22 +363,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // accept/decline.
     if (error) {
       if (/duplicate|unique/i.test(error.message)) {
-        const { data: existing } = await supabase
-          .from('community_encounters')
-          .select('id, narrative')
-          .eq('world_community_id', encounterTarget.worldCommunityId)
-          .eq('encountering_campaign_id', encounterCampaignId)
-          .eq('status', 'pending')
-          .maybeSingle()
+        const { data: existing } = await findPendingEncounter(encounterTarget.worldCommunityId, encounterCampaignId)
         if (existing) {
           const appended = [
             (existing as any).narrative?.trim(),
             trimmedNarrative ? `- Follow-up: ${trimmedNarrative}` : '- Follow-up (no additional notes)',
           ].filter(Boolean).join('\n\n')
-          const { error: updErr } = await supabase
-            .from('community_encounters')
-            .update({ narrative: appended })
-            .eq('id', (existing as any).id)
+          const { error: updErr } = await updateEncounterNarrative((existing as any).id, appended)
           setEncounterSubmitting(false)
           if (updErr) { alert(`Follow-up failed: ${updErr.message}`); return }
           setEncounterTarget(null)
@@ -419,44 +416,43 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   // Load whispers when the tab is selected; subscribe to realtime so a
   // new post from another user shows up without a refresh. Cleanup
   // unsubscribes on tab switch / unmount.
+  const loadWhispersRef = useRef<(() => void) | null>(null)
   useEffect(() => {
-    if (sidebarTab !== 'whispers' || !userId) return
+    if (sidebarTab !== 'whispers' || !userId) { loadWhispersRef.current = null; return }
     let cancelled = false
     async function loadWhispers() {
-      const { data } = await supabase
-        .from('whispers')
-        .select('id, author_user_id, content, created_at')
-        .order('created_at', { ascending: false })
-        .limit(100)
+      const { data } = await loadWhispersFeed()
       if (cancelled || !data) return
       // Resolve author usernames for any ids not already cached.
       const missingIds = [...new Set(data.map((w: any) => w.author_user_id).filter((id: string) => !usernames[id]))]
       let nameMap = { ...usernames }
       if (missingIds.length > 0) {
-        const { data: profs } = await supabase.from('profiles').select('id, username').in('id', missingIds)
+        const { data: profs } = await profileUsernames(missingIds)
         for (const p of (profs ?? []) as any[]) nameMap[p.id] = p.username
         setUsernames(nameMap)
       }
       setWhispers(data.map((w: any) => ({ ...w, author_username: nameMap[w.author_user_id] })))
     }
+    loadWhispersRef.current = () => { void loadWhispers() }
     loadWhispers()
-    const ch = supabase.channel(`whispers_feed`).on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'whispers' },
-      () => { void loadWhispers() },
-    ).subscribe()
-    return () => { cancelled = true; supabase.removeChannel(ch) }
+    return () => { cancelled = true; loadWhispersRef.current = null }
   }, [sidebarTab, userId])
+
+  // Realtime: a new whisper from any client refreshes the feed while the
+  // whispers tab is open. The subscription lives behind the lib/realtime
+  // seam; the handler reads the freshest loader via the ref so it never
+  // goes stale and the channel only churns when the tab/user changes.
+  usePostgresSubscription(
+    sidebarTab === 'whispers' && userId ? 'whispers_feed' : null,
+    { label: 'whispers:*', table: 'whispers', handler: () => { loadWhispersRef.current?.() } },
+  )
 
   async function postWhisper() {
     if (!userId || postingWhisper) return
     const content = whisperDraft.trim()
     if (!content) return
     setPostingWhisper(true)
-    const { error } = await supabase.from('whispers').insert({
-      author_user_id: userId,
-      content,
-    })
+    const { error } = await insertWhisper(userId, content)
     if (error) {
       alert(`Whisper failed: ${error.message}`)
     } else {
@@ -470,7 +466,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function deleteWhisper(id: string) {
     if (deletingWhisperId) return
     setDeletingWhisperId(id)
-    const { error } = await supabase.from('whispers').delete().eq('id', id)
+    const { error } = await deleteWhisperRow(id)
     if (error) {
       alert(`Delete failed: ${error.message}`)
     } else {
@@ -490,41 +486,31 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const debounceRef = useRef<any>(null)
   const [searching, setSearching] = useState(false)
-  const supabase = createClient()
 
   useEffect(() => {
     async function init() {
       const { user } = await getCachedAuth()
       if (user) {
         setUserId(user.id)
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        const { data: profile } = await getProfileRole(user.id)
         if (profile) setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
         // Phase E Sprint 4a - preload the campaigns this user GMs
         // so the encounter modal's campaign picker is ready when
         // they click an encounter button on a published community.
-        const { data: gmCamps } = await supabase
-          .from('campaigns').select('id, name').eq('gm_user_id', user.id).order('name')
+        const { data: gmCamps } = await gmCampaigns(user.id)
         if (gmCamps) setMyGmCampaigns(gmCamps as { id: string; name: string }[])
         // Phase E Sprint 4b - preload the user's approved
         // world_communities so the link-propose modal can list
         // them as eligible "from" endpoints. Filter to approved
         // because pending/rejected communities aren't on the map.
         if (gmCamps && gmCamps.length > 0) {
-          const { data: myWc } = await supabase
-            .from('world_communities')
-            .select('id, name')
-            .eq('moderation_status', 'approved')
-            .in('source_campaign_id', gmCamps.map((c: any) => c.id))
-            .order('name')
+          const { data: myWc } = await approvedCommunitiesForCampaigns(gmCamps.map((c: any) => c.id))
           if (myWc) setMyPublishedCommunities(myWc as { id: string; name: string }[])
         }
         // Phase E Sprint 5 - preload the user's community
         // subscriptions so the world-community popup's Follow button
         // seeds in the right state on first paint.
-        const { data: subs } = await supabase
-          .from('community_subscriptions')
-          .select('world_community_id')
-          .eq('user_id', user.id)
+        const { data: subs } = await mySubscriptions(user.id)
         if (subs) setSubscribedIds(new Set((subs as any[]).map(r => r.world_community_id)))
       }
 
@@ -586,31 +572,33 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         }
       } catch {}
 
-      channelRef.current = supabase
-        .channel('map_pins_changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'map_pins' }, () => {
-          loadPins()
-        })
-        .subscribe()
     }
 
     init()
 
     return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null }
     }
   }, [])
 
+  // Realtime: any map_pins change refreshes the markers. Subscription lives
+  // behind the lib/realtime seam; keyed on a constant channel name so it
+  // subscribes once and never churns. loadPins is a no-op until the map
+  // instance exists, so an early event is harmless.
+  usePostgresSubscription(
+    'map_pins_changes',
+    { label: 'map_pins:*', table: 'map_pins', handler: () => { loadPins() } },
+  )
+
   async function loadCampaignPins() {
     if (!userId) return
     // Get campaigns the user is a member of
-    const { data: memberships } = await supabase.from('campaign_members').select('campaign_id, campaigns(name)').eq('user_id', userId)
+    const { data: memberships } = await myCampaignMemberships(userId)
     if (!memberships || memberships.length === 0) { setCampaignPins([]); return }
     const campaignIds = memberships.map((m: any) => m.campaign_id)
     const campaignNames = Object.fromEntries(memberships.map((m: any) => [m.campaign_id, (m.campaigns as any)?.name ?? 'Unknown']))
     // Get revealed pins from those campaigns
-    const { data: pins } = await supabase.from('campaign_pins').select('*').in('campaign_id', campaignIds).eq('revealed', true)
+    const { data: pins } = await revealedCampaignPins(campaignIds)
     setCampaignPins((pins ?? []).map((p: any) => ({ ...p, campaign_name: campaignNames[p.campaign_id] ?? 'Unknown' })))
   }
 
@@ -625,8 +613,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     await import('leaflet.markercluster/dist/MarkerCluster.css')
     await import('leaflet.markercluster/dist/MarkerCluster.Default.css')
 
-    const { data } = await supabase.from('map_pins').select('*').order('created_at', { ascending: false })
-    if (!data) return
+    const { data: pinRows } = await allMapPins()
+    if (!pinRows) return
+    const data = pinRows as unknown as Pin[]
     setPins(data)
 
     // Resolve usernames + author roles. Author role drives the CANON
@@ -637,7 +626,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     const uids = [...new Set(data.map((p: any) => p.user_id).filter(Boolean))]
     const thriverIds = new Set<string>()
     if (uids.length > 0) {
-      const { data: profiles } = await supabase.from('profiles').select('id, username, role').in('id', uids)
+      const { data: profiles } = await profilesWithRole(uids as string[])
       if (profiles) {
         setUsernames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
         for (const p of profiles as any[]) {
@@ -719,7 +708,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           </div>
         `)
       marker.on('popupopen', () => {
-        supabase.from('map_pins').update({ view_count: ((pin as any).view_count ?? 0) + 1 }).eq('id', pin.id)
+        bumpPinViewCount(pin.id, (pin as any).view_count ?? 0)
       })
       clusterGroup.addLayer(marker)
       markersRef.current[pin.id] = marker
@@ -736,20 +725,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // count stays accurate even when the layer is toggled off on the
     // map itself. Markers only render when 'world_community' isn't in
     // hiddenFolders.
-    const { data: wc } = await supabase
-      .from('world_communities')
-      .select('id, name, description, homestead_lat, homestead_lng, size_band, faction_label, community_status, source_campaign_id, last_public_update_at, subscriber_count')
-      .eq('moderation_status', 'approved')
-      .not('homestead_lat', 'is', null)
-      .not('homestead_lng', 'is', null)
+    const { data: wc } = await approvedCommunitiesWithCoords()
     const rows = (wc ?? []) as any[]
     // Batch-fetch source campaign names for attribution on the
     // popup. Falls back to "Unknown campaign" if RLS hides the
     // campaign row from the viewer.
     let campaignNames: Record<string, string> = {}
     if (rows.length > 0) {
-      const campIds = [...new Set(rows.map(r => r.source_campaign_id))]
-      const { data: camps } = await supabase.from('campaigns').select('id, name').in('id', campIds)
+      const campIds = [...new Set(rows.map(r => r.source_campaign_id))] as string[]
+      const { data: camps } = await campaignNamesByIds(campIds)
       for (const c of (camps ?? []) as any[]) campaignNames[c.id] = c.name
     }
     // Snapshot for the sidebar folder. Names/coords don't change
@@ -869,10 +853,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       // the polyline endpoints without re-fetching world_communities.
       const coordsById = new Map<string, [number, number]>()
       for (const r of rows) coordsById.set(r.id, [r.homestead_lat, r.homestead_lng])
-      const { data: links } = await supabase
-        .from('world_community_links')
-        .select('id, community_a_id, community_b_id, link_type, narrative')
-        .eq('status', 'active')
+      const { data: links } = await activeCommunityLinks()
       for (const link of ((links ?? []) as any[])) {
         const aPos = coordsById.get(link.community_a_id)
         const bPos = coordsById.get(link.community_b_id)
@@ -961,14 +942,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!userId) { alert('Not logged in'); return }
     setSaving(true)
     const isThriver = roleIsThriver(userRole)
-    const { error, data } = await supabase.from('map_pins').insert({
+    const { error, data } = await insertMapPin({
       user_id: userId, lat: form.lat, lng: form.lng,
       title: form.title, notes: form.notes,
       pin_type: isThriver ? 'gm' : 'rumor',
       status: isThriver ? 'approved' : 'pending',
       category: form.categories[0] ?? 'location',
       categories: form.categories,
-    }).select().single()
+    })
     if (error) { alert('Error: ' + error.message); setSaving(false); return }
     logFirstEvent('first_pin_placed', { pin_id: data.id, title: form.title })
 
@@ -978,7 +959,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         const check = prepareUpload('pin-attachments', file)
         if (!check.ok) { alert(check.reason); continue }
         const path = `${userId}/${data.id}/${check.filename}`
-        await supabase.storage.from('pin-attachments').upload(path, file, { contentType: check.contentType })
+        await uploadPinAttachment(path, file, { contentType: check.contentType })
       }
       setUploading(false)
     }
@@ -991,14 +972,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   async function handleDeletePin(id: string) {
   setDeletingId(id)
-  await supabase.from('map_pins').delete().eq('id', id)
+  await deleteMapPin(id)
   setDeletingId(null)
   await loadPins()
 }
 
   async function handleTogglePublic(pin: Pin) {
     const newStatus = pin.status === 'approved' ? 'active' : 'approved'
-    await supabase.from('map_pins').update({ status: newStatus }).eq('id', pin.id)
+    await updateMapPinStatus(pin.id, newStatus)
     await loadPins()
   }
 
@@ -1021,10 +1002,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   setEditAttachments([])
   setShowForm(false)
   // Load existing attachments
-  const { data: files } = await supabase.storage.from('pin-attachments').list(`${pin.user_id}/${pin.id}`)
+  const { data: files } = await listPinAttachments(`${pin.user_id}/${pin.id}`)
   if (files && files.length > 0) {
     setEditExistingFiles(files.map((f: any) => {
-      const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${pin.user_id}/${pin.id}/${f.name}`)
+      const { data: urlData } = pinAttachmentPublicUrl(`${pin.user_id}/${pin.id}/${f.name}`)
       return { name: f.name, url: urlData.publicUrl }
     }))
   } else {
@@ -1052,13 +1033,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     updatePayload.cmod_radius_km = radiusRaw === '' ? null : Math.max(1, parseInt(radiusRaw, 10) || 0)
     updatePayload.cmod_label = editForm.cmod_label.trim() || null
   }
-  const { error } = await supabase.from('map_pins').update(updatePayload).eq('id', editingPin.id)
+  const { error } = await updateMapPin(editingPin.id, updatePayload)
   if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
   // Upload new attachments
   for (const file of editAttachments) {
     const check = prepareUpload('pin-attachments', file)
     if (!check.ok) { alert(check.reason); continue }
-    await supabase.storage.from('pin-attachments').upload(`${editingPin.user_id}/${editingPin.id}/${check.filename}`, file, { contentType: check.contentType, upsert: true })
+    await uploadPinAttachment(`${editingPin.user_id}/${editingPin.id}/${check.filename}`, file, { contentType: check.contentType, upsert: true })
   }
   setEditUploading(false)
   setEditingPin(null)
@@ -1648,12 +1629,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                   if (isExpanded) { setExpandedPinId(null) }
                                   else {
                                     setExpandedPinId(p.id); flyToPin(p)
-                                    supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id)
+                                    bumpPinViewCount(p.id, (p as any).view_count ?? 0)
                                     if (!pinAttachments[p.id]) {
-                                      supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }: any) => {
+                                      listPinAttachments(`${p.user_id}/${p.id}`).then(({ data: files }: any) => {
                                         if (files && files.length > 0) {
                                           const atts = files.map((f: any) => {
-                                            const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
+                                            const { data: urlData } = pinAttachmentPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
                                             return { name: f.name, url: urlData.publicUrl }
                                           })
                                           setPinAttachments(prev => ({ ...prev, [p.id]: atts }))
@@ -1975,7 +1956,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         <div style={{ display: 'flex', gap: '4px' }}>
           {[['gm', 'GM'], ['rumor', 'Rumor'], ['private', 'Private']].map(([val, label]) => (
             <button key={val} onClick={() => {
-              supabase.from('map_pins').update({ pin_type: val }).eq('id', editingPin.id)
+              updateMapPinType(editingPin.id, val)
             }}
               style={{ flex: 1, padding: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editingPin.pin_type === val ? '#c0392b' : '#3a3a3a'}`, background: editingPin.pin_type === val ? '#2a1210' : '#242424', color: editingPin.pin_type === val ? '#f5a89a' : '#d4cfc9' }}>
               {label}
@@ -1995,7 +1976,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               {isImage && <img src={att.url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '2px' }} />}
               <a href={att.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.name}</a>
               <button onClick={async () => {
-                await supabase.storage.from('pin-attachments').remove([`${editingPin!.user_id}/${editingPin!.id}/${att.name}`])
+                await removePinAttachments([`${editingPin!.user_id}/${editingPin!.id}/${att.name}`])
                 setEditExistingFiles(prev => prev.filter(a => a.name !== att.name))
               }} style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 2px' }}>×</button>
             </div>
@@ -2007,7 +1988,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     <div style={{ marginBottom: '12px' }}>
       <label style={{ display: 'block', padding: '8px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
         {editAttachments.length > 0 ? <span style={{ color: '#7fc458' }}>{editAttachments.length} file{editAttachments.length > 1 ? 's' : ''} to upload</span> : '+ Add files'}
-        <input type="file" multiple hidden onChange={e => { if (e.target.files) setEditAttachments(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = '' }} />
+        <input type="file" multiple hidden onChange={e => { if (e.target.files) setEditAttachments(prev => [...prev, ...e.target.files!]); e.target.value = '' }} />
       </label>
       {editAttachments.map((f, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 6px', fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
