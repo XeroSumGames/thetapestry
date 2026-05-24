@@ -1,5 +1,15 @@
 # Lessons Learned
 
+## Two lanes in ONE working tree: a broad `git add` sweeps the other lane's staged files (2026-05-23)
+
+While the puffer-fish lane had Stage A1 files staged (after the pre-commit hook BLOCKED its commit on an unrelated arch-ratchet regression that the OTHER lane's in-flight `GlobalPresence.tsx` had introduced), the hunt-and-peck lane committed in the SAME working directory (`C:\TheTapestry`) with a broad `git add`. Result: all of puffer-fish's Stage A1 work (publication baseline, drift-detector, AGENTS section, package.json, scope/lessons/todo edits) was swept into the other lane's commit `74cfe82` ("fix(presence): ..."). Nothing was lost - it is committed + pushed + intact (verified: `check:publication` green, 21 tables) - but it is bundled under the wrong message. NOT rewritten: the commit is pushed + shared, and history rewrite on a shared branch is a bright line.
+
+**Two distinct failure modes, one root cause (shared tree):**
+1. The whole-tree `check-arch` ratchet fails MY commit because of ANOTHER lane's uncommitted regression on disk (the scanner reads the working tree, not the staged set).
+2. The other lane's broad `git add` / `commit -a` captures MY staged + modified files.
+
+**Rule:** when two lanes run concurrently, they MUST work in separate git worktrees (`.claude/worktrees/<name>` on `claude/<name>`, the pattern the e2e brief already prescribes) - NOT both in the main checkout. If you find yourself sharing the main checkout with another active lane: (a) stage explicit paths only, never `git add -A`/`-u`/`commit -a`; (b) commit fast to shrink the window; (c) if the pre-commit ratchet blocks you on a regression you did not introduce, do NOT `--save` (you would baseline another lane's change) and do NOT `--no-verify` - the regression is transient, it clears when the owning lane lands its fix (it did: their presence channel moved into the `lib/realtime` seam, ratchet back to baseline). Verify WHERE your work landed with `git log --oneline -1 -- <file>` before assuming it is lost.
+
 ## Infra-as-code Tier 1: a publication drift-detector beats a half-blocked full dump (2026-05-23)
 
 Stage A1 (infra-as-code capture) intended to start with a `supabase db dump --linked` schema baseline. It is **Docker-blocked in this env** - the Supabase CLI runs `pg_dump` inside a container, Docker Desktop was not running, and there is no native `pg_dump`/`psql` or direct DB connection string (only the `supabase db query --linked` API path, which returns JSON, not DDL). So the full schema baseline (esp. CREATE TABLE for the 15 orphan core tables) waits for a Docker-available moment.
