@@ -1,4 +1,4 @@
-import { readdirSync, statSync, existsSync } from 'node:fs'
+import { readdirSync, statSync, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Disposable test data - the ONLY game/accounts the suite is allowed to touch
@@ -28,6 +28,37 @@ export const AUTH = {
 
 export function hasAuth(role: AccountKey): boolean {
   return existsSync(AUTH[role])
+}
+
+// --- Credentials (for the auto-login setup project) -------------------------
+// Source order: env (E2E_<KEY>_EMAIL / E2E_<KEY>_PASSWORD, or a shared
+// E2E_PASSWORD) -> gitignored e2e/.auth/credentials.json. Known emails for
+// gm/marv come from ACCOUNTS; a top-level "password" in the json applies to any
+// key missing its own. NEVER commit real values - e2e/.auth/ is gitignored.
+export function loadCredential(key: AccountKey): { email: string; password: string } | null {
+  const up = key.toUpperCase()
+  const envEmail = process.env[`E2E_${up}_EMAIL`] ?? (ACCOUNTS[key] as { email?: string }).email
+  const envPw = process.env[`E2E_${up}_PASSWORD`] ?? process.env.E2E_PASSWORD
+  if (envEmail && envPw) return { email: envEmail, password: envPw }
+  try {
+    const raw = JSON.parse(readFileSync(join(process.cwd(), 'e2e', '.auth', 'credentials.json'), 'utf8'))
+    const entry = raw?.[key] ?? {}
+    const email = entry.email ?? (ACCOUNTS[key] as { email?: string }).email
+    const password = entry.password ?? raw?.password
+    if (email && password) return { email, password }
+  } catch { /* no credentials file */ }
+  return null
+}
+
+export function hasCredential(key: AccountKey): boolean {
+  return loadCredential(key) !== null
+}
+
+// A spec can use the account if a session file already exists OR we have creds
+// to mint one in the setup project (the file is created at run time, before
+// the dependent tests run).
+export function canAuth(key: AccountKey): boolean {
+  return hasAuth(key) || hasCredential(key)
 }
 
 // The three player keys, for fan-out realtime tests (GM acts -> all players see).

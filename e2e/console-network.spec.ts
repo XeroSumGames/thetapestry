@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { AUTH, hasAuth, STATIC_ROUTES, CAMPAIGN_ROUTES } from './_fixtures'
+import { AUTH, canAuth, STATIC_ROUTES, CAMPAIGN_ROUTES } from './_fixtures'
 import { watchPage, describeProblems } from './_console'
 
 // LAYER 1 (cheapest, highest value, lowest fragility): walk every route as the
@@ -7,11 +7,12 @@ import { watchPage, describeProblems } from './_console'
 // in the Phase 6 win (prod console is now silent) as a permanent regression
 // gate. Realtime/behavioral coverage lives in the other specs.
 
-// storageState is only attached when captured, so a fresh checkout / CI without
-// the session JSON still installs + typechecks; the tests below skip cleanly.
-test.use({ storageState: hasAuth('gm') ? AUTH.gm : undefined })
+// storageState is attached whenever we CAN authenticate (a session file exists,
+// or credentials exist so the setup project will mint one before this runs). A
+// fresh checkout with neither still installs + typechecks; the tests skip.
+test.use({ storageState: canAuth('gm') ? AUTH.gm : undefined })
 
-const CAPTURE_HINT = 'No GM session. Run:  node e2e/capture-auth.mjs gm'
+const CAPTURE_HINT = 'No GM session. Add creds to e2e/.auth/credentials.json (or run: node e2e/capture-auth.mjs gm)'
 
 async function sweep(route: string, page: import('@playwright/test').Page, baseURL?: string) {
   const problems = watchPage(page, baseURL)
@@ -31,7 +32,7 @@ async function sweep(route: string, page: import('@playwright/test').Page, baseU
 }
 
 test.describe('console + network sweep: static routes', () => {
-  test.skip(!hasAuth('gm'), CAPTURE_HINT)
+  test.skip(!canAuth('gm'), CAPTURE_HINT)
   for (const route of STATIC_ROUTES) {
     test(`clean: ${route}`, async ({ page, baseURL }) => {
       await sweep(route, page, baseURL)
@@ -40,7 +41,7 @@ test.describe('console + network sweep: static routes', () => {
 })
 
 test.describe('console + network sweep: disposable-campaign routes', () => {
-  test.skip(!hasAuth('gm'), CAPTURE_HINT)
+  test.skip(!canAuth('gm'), CAPTURE_HINT)
   for (const route of CAMPAIGN_ROUTES) {
     test(`clean: ${route}`, async ({ page, baseURL }) => {
       await sweep(route, page, baseURL)
