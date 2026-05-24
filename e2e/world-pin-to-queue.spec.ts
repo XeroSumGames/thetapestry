@@ -6,14 +6,16 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 // HIDDEN from other players (RLS), VISIBLE to its author, and SURFACED in the
 // Thriver moderation queue (we read it, we never approve/reject - bright line).
 //
-// FINDING (flagged to Xero, not asserted as correct): map_pins moderation is
-// CLIENT-set only (MapView.tsx:948 `status: isThriver ? 'approved' : 'pending'`)
-// - there is NO BEFORE INSERT trigger enforcing it the way campfire has
-// (sql/moderation-enforce-trigger-2026-05-17.sql covers forum_threads/war_stories
-// /lfg_posts but NOT map_pins). So a crafted REST insert can self-approve a world
-// pin - the same bypass class the campfire trigger was added (Y3) to close. This
-// test therefore mirrors the Survivor client's row shape (rumor/pending) to
-// exercise the QUEUE + RLS visibility; it does not (cannot) prove a server gate.
+// FINDING -> RESOLVED 2026-05-24: map_pins moderation was CLIENT-set only
+// (MapView.tsx:948 `status: isThriver ? 'approved' : 'pending'`) with NO BEFORE
+// INSERT trigger - a crafted REST insert could self-approve a world pin, the same
+// bypass class the campfire trigger closed (Y3). Puffer Fish then applied the
+// SECURITY DEFINER trigger `trg_enforce_map_pin_moderation` on prod (mirrors
+// sql/moderation-enforce-trigger-2026-05-17.sql). The FIRST test below exercises
+// the QUEUE + RLS visibility for a well-formed Survivor rumor pin; the SECOND
+// test is the regression net for the fix - it attempts the bypass (Survivor
+// inserts {pin_type:'gm', status:'approved'}) and asserts the trigger FORCED it
+// back to rumor/pending server-side. Routed to E2E by Puffer once the fix was live.
 //
 // Pin drop is a map-canvas interaction, so we insert via REST (same as
 // section-e-pins). Throwaway [E2E]-tagged pin; teardown deletes it (author owns
@@ -93,6 +95,66 @@ test.describe('Ch2 - World rumor pin: moderation queue + RLS visibility', () => 
         ).catch(() => {})
       }
       await gmCtx.close()
+      await marvCtx.close()
+      await percyCtx.close()
+    }
+  })
+
+  // Regression net for the moderation-bypass fix (trg_enforce_map_pin_moderation,
+  // live on prod 2026-05-24). Mirrors campfire-social's "Survivor cannot
+  // self-approve" assertion at the layer that ENFORCES it: a Survivor's own REST
+  // insert claiming {pin_type:'gm', status:'approved'} must come back rewritten by
+  // the SECURITY DEFINER trigger to rumor/pending - and stay hidden from another
+  // player (pending => not in their SELECT). This is the server gate the first
+  // test could not prove before the trigger existed.
+  test('the DB trigger forces a Survivor self-approved GM world pin to rumor/pending (bypass blocked)', async ({ browser }) => {
+    const marvCtx = await browser.newContext({ storageState: AUTH.marv })
+    const percyCtx = await browser.newContext({ storageState: AUTH.percy })
+    const marv = await marvCtx.newPage()
+    const percy = await percyCtx.newPage()
+    let pinId: string | null = null
+    let marvCreds: SupaCreds | null = null
+    try {
+      const marvAnon = captureAnonKey(marv)
+      const percyAnon = captureAnonKey(percy)
+      await marv.goto('/map', { waitUntil: 'domcontentloaded' })
+      await percy.goto('/map', { waitUntil: 'domcontentloaded' })
+      marvCreds = await resolveCreds(marv, marvAnon)
+      const percyCreds = await resolveCreds(percy, percyAnon)
+      expect(marvCreds, 'could not resolve marv creds').toBeTruthy()
+      expect(percyCreds, 'could not resolve percy creds').toBeTruthy()
+
+      // Deliberate bypass attempt: a Survivor crafts a self-approved GM world pin.
+      // return=representation reads back the STORED row, i.e. post-trigger values.
+      const title = `${RUN} Bypass Attempt`
+      const ins = await marv.request.post(`${SUPABASE_URL}/rest/v1/map_pins`, {
+        headers: {
+          apikey: marvCreds!.anonKey, Authorization: `Bearer ${marvCreds!.accessToken}`,
+          'Content-Type': 'application/json', Prefer: 'return=representation',
+        },
+        data: {
+          user_id: ACCOUNTS.marv.userId, lat: 39.0099, lng: -75.5099,
+          title, notes: `${RUN} automated bypass attempt, safe to remove.`,
+          pin_type: 'gm', status: 'approved', category: 'location',
+        },
+      })
+      expect(ins.ok(), `pin insert failed: ${ins.status()} ${await ins.text()}`).toBe(true)
+      const row = (await ins.json())[0]
+      pinId = row.id
+
+      // The trigger overwrote the client-supplied moderation/type fields.
+      expect(row.status, 'a non-Thriver self-approved pin must be forced to pending').toBe('pending')
+      expect(row.pin_type, 'a non-Thriver gm pin must be forced to rumor').toBe('rumor')
+
+      // Forced-pending => still hidden from another player (RLS SELECT keys on status).
+      expect(await pinVisibleTo(percy, percyCreds!, pinId!), 'the forced-pending pin must stay hidden from another player').toBe(false)
+    } finally {
+      if (pinId && marvCreds) {
+        await marv.request.delete(
+          `${SUPABASE_URL}/rest/v1/map_pins?id=eq.${pinId}`,
+          { headers: { apikey: marvCreds.anonKey, Authorization: `Bearer ${marvCreds.accessToken}` } },
+        ).catch(() => {})
+      }
       await marvCtx.close()
       await percyCtx.close()
     }
