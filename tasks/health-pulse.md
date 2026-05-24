@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-24 12:09 UTC
+
+**Status:** DRIFT (3rd consecutive flag — no new commits since 09:06 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [554 passed, 30 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- **Confidence Ledger TESTED stale (3rd flag):** ledger says 532/29, live is 554/30 (+22 tests, +1 file). `node scripts/refresh-ledger.mjs` is a 5-second fix; still unrun.
+- **`tasks/pre-playtest-smoke-2026-05-25.md` missing (3rd flag).** Playtest is tomorrow. Doc needed before session start; no progress since 00:11 UTC alert.
+- **HOPED-FOR (2026-05-19 batch) day 5.** Drain gate = tomorrow's Phase 7 2-client acceptance (`tasks/phase7-acceptance-2client-testplan.md`). On track if playtest runs as planned.
+
+**Action:** Pre-playtest doc is now the most time-sensitive item — playtest is <24 hours away. Then `node scripts/refresh-ledger.mjs`.
+
+---
+
 ## 2026-05-24 09:06 UTC
 
 **Status:** DRIFT
