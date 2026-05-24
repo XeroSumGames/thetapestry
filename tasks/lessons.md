@@ -263,6 +263,22 @@ The push "succeeded" without warning. Live code kept the em-dashes the commit cl
 - When reading any audit doc more than 24 hours old, re-locate the call sites before quoting line numbers in proposed fixes.
 - When closing health-pulse drift items, decide between "drain now" (run the action listed) and "automate the drain" (one-time script work). Do not let the same item land 3+ times.
 
+## After a behavior-preserving refactor of a load-bearing surface, Risk Register color goes UP, not down (2026-05-24)
+
+**Rule:** when a big refactor lands "behavior-preserving" with tsc + unit green, the instinct is to leave (or improve) the Risk Register color. Do the opposite for the refactored surface: the GREEN it held was *earned by verification that the refactor just invalidated*. A surface is only as green as its newest evidence, and a rewrite resets the evidence to zero regardless of how clean the diff looks.
+
+**Trigger:** the first post-Grand-Re-Arch stability audit (2026-05-24). Realtime channels were GREEN-ish on the rationale "older code, stable, hasn't been refactored in months." The re-arch rewrote *every* channel onto `lib/realtime/*` seams - so that exact rationale evaporated. Bumped GREEN-ish -> YELLOW until the batched 2-client acceptance re-earns it. tsc + 548 unit + one prod smoke (TacticalMap) were all green; none of that verifies the *other* migrated realtime surfaces across two clients, which is the only thing that catches a dropped-broadcast/resubscribe regression.
+
+**How to apply:** for each load-bearing surface a refactor touched, ask "what evidence earned its current color, and did this change invalidate that evidence?" If yes, bump the color and name the specific re-earn gate (here: the Phase 7 per-surface 2-client smoke). Behavior-preserving-by-construction + green unit tests is necessary, not sufficient, for a surface whose failure mode is multi-client desync. See `tasks/stability-audit-2026-05-24.md`.
+
+## "Latent stale-closure" suspicion on realtime hooks is usually inverted - the seam IS the fix (2026-05-24)
+
+**Rule:** an `eslint-disable react-hooks/exhaustive-deps` on a realtime-subscription effect is *not* prima facie a latent stale-closure. The canonical-correct pattern for a Supabase channel is: subscribe once keyed on identity (`[campaignId]` / `[channelName]`), mirror config into a ref every render (`configRef.current = config`), and re-read the handler through that ref inside the callback. That deliberately omits the handler from the deps - suppressing the lint is the whole point. Centralizing realtime on such a seam *removes* the stale-closure class; it doesn't add it.
+
+**Trigger:** the 2026-05-24 audit was asked to treat the 13 (actually 16) exhaustive-deps suppressions as "latent stale-closures now that realtime is centralized." Review found the opposite: the two seam primitives (`useCampaignChannel`, `usePostgresSubscription`) use the ref-freshness pattern correctly (justified by design); the migrated consumers were a UI one-shot + the scene-controls popout `BroadcastChannel` bus (the only genuine stale read - and not even the Supabase seam); the rest predated the re-arch as benign mount-once effects. Zero of the *realtime-seam* suppressions were bugs.
+
+**How to apply:** before flagging a suppressed realtime effect, check whether it (a) re-subscribes on identity change and (b) reads handlers/config through a ref. If both, it's correct - leave it. The real stale-closure smell is a handler that captures a value directly (not via ref) in an effect that doesn't re-run when that value changes - like `TacticalMap.tsx:3640`'s snapshot handler reading `zoom`/`cellPx` from the closure. Distinguish "raw `supabase.channel` not yet on the seam" (migration candidate) from "seam primitive suppression" (working as designed).
+
 ## Tab-local default-OFF UX fails when ONE user forgets to flip it (2026-05-19)
 
 **Rule:** When a feature requires N independent user actions to "all work" (every player hits Record), redesign so the N actions collapse to 1 (GM hits Record, broadcast cascades to N). Default-off + per-user opt-in is the wrong shape for any coordination problem where one missing user breaks the whole.

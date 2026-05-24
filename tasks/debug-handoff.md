@@ -46,11 +46,11 @@ Each entry: where it lives, what depends on it, current health, what a player se
 - **Why demoted from YELLOW:** `effective` fog cache + drag-end grab-offset fix both playtested green 2026-05-18. GM Share View (`6a4669b`, 2026-05-19) is additive read-only mirror, not a render-path change. Vehicle canvas redraw deps fix (`16e33d6`) shipped 2026-05-15 and survived the playtest. Three clean rounds of evidence; demote.
 - **First-place-to-look:** map-render bugs -> `TacticalMap.tsx:1401-1437` (effective fog cache), `:1356-1399` (visible cache).
 
-### Realtime channels (Supabase) - **GREEN-ish**
-- **What it is:** broadcast events for token moves, fog paint, initiative changes, chat messages, scene switches.
+### Realtime channels (Supabase) - **YELLOW (bumped 2026-05-24)**
+- **What it is:** broadcast events for token moves, fog paint, initiative changes, chat messages, scene switches. As of the Grand Re-Arch, all of these route through `lib/realtime/*` (`useCampaignChannel` / `usePostgresSubscription` / `broadcastOnce`).
 - **What players see if it breaks:** desync between clients. GM moves a token, player doesn't see it move. GM opens a door, player still sees fog.
-- **Why green-ish:** older code, stable, hasn't been refactored in months. But also: zero tests, and the failure mode is hard to detect without two clients.
-- **First-place-to-look:** desync between clients → look at the broadcast send + receive pair for the affected event.
+- **Why bumped from GREEN-ish (2026-05-24 stability audit):** the prior rationale was "older code, stable, hasn't been refactored in months." The re-arch (2026-05-22..24) just rewrote EVERY channel onto the seams - the largest realtime refactor in the app's history. Behavior-preserving by construction + tsc + unit green, but only TacticalMap token-move + combat-start + presence are 2-client-verified on prod. The rest (vehicle / communities / stockpile / MapView) are HOPED-FOR. Per-surface realtime regressions hide without two clients. Hold YELLOW until the batched Phase 7 2-client acceptance passes every surface (then demote). Still zero realtime integration tests.
+- **First-place-to-look:** desync between clients -> the seam handler for the affected event (`lib/realtime/events.ts` for the payload type, then the consuming component's `useCampaignChannel` config). Verify the channel re-subscribes when its key (`campaignId` / `channelName`) changes.
 
 ### Character creation wizard - **GREEN**
 - **What it is:** `components/wizard/*`. Multi-step character builder.

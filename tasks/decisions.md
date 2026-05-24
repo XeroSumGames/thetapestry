@@ -10,6 +10,27 @@ Newest first.
 
 ---
 
+## 2026-05-22..24: Grand Re-Architecture - the locked structural calls
+
+**Decision:** the whole-platform re-arch (Xero mandate: every god-component onto the ideal layered architecture before the next playtest) locked four structural calls, now load-bearing across the codebase:
+
+- **Layered seam + ratchet fitness functions.** All DB access goes through `lib/data/*` repos; all realtime through `lib/realtime/*`. Enforced by monotonic ratchets in `scripts/check-arch.mjs` (baseline `tasks/_baselines/arch.json`): `.from`-outside-`lib/data` (1039), `.channel`-outside-`lib/realtime` (22), prod-console (0), + per-file LOC ceilings. `--save` only ratchets DOWN. Runs on pre-commit + CI. dependency-cruiser (`.dependency-cruiser.cjs`) locks no-circular / lib-no-upward / components-no-route-internals / no-test-imports as errors.
+- **`trace()` / console-seam.** `trace(label, data)` in `lib/playtest-recorder` is the single sanctioned console home (pushes a recorder-buffer event; echoes to console ONLY in `NODE_ENV=development`). All bare `console.*` stripped from prod (115 -> 0); error/SILENT-RLS surfacing kept as `console.error` (prod-visible + recorder-captured). check-arch excludes `lib/playtest-recorder` for the console metric (analogous to `lib/data` for `.from`).
+- **Realtime primitives.** Three composable primitives replace hand-rolled channels: `useCampaignChannel` (campaign-scoped broadcast + `postgres[]` subscriptions, re-subscribes on `[campaignId]` only, handlers fresh via ref), `usePostgresSubscription` (global/dynamic single-table watch, re-subscribes on `[channelName]`), `broadcastOnce` (fire-and-forget typed send with `holdMs`). Event payloads typed in `lib/realtime/events.ts` so tsc verifies sends. The ref-freshness pattern is the deliberate fix for the stale-closure/resubscribe bug class - the exhaustive-deps suppressions in these hooks are by-design, not latent bugs.
+
+**Alternatives considered:**
+- A. Keep god-components as-is, fix bugs in place. (status quo)
+- B. Rewrite to a state-management lib (Redux/Zustand) + service layer.
+- C. Thin seams + fitness-function ratchets + incremental per-component migration (chosen).
+
+**Why C won:** A loses - the 12.5k-line table page was actively producing stale-closure combat bugs (CMod drop, infection-modal miss) that a seam eliminates structurally. B is a multi-month rewrite with its own risk surface and no incremental safety net. C gets the architecture wins (testable seams, observable realtime, enforced monotonic improvement) while staying behavior-preserving and shippable commit-by-commit; the ratchets make backsliding impossible without an explicit `--force`.
+
+**What would change our mind:** if the ratchets start blocking legitimate work more than they catch regressions, relax the LOC ceilings (the seam-leakage + console metrics earn their keep regardless). If a realtime surface fails the Phase 7 2-client acceptance in a way the seam caused, re-examine the primitive (but TacticalMap - the hardest - passed on prod).
+
+**Status (2026-05-24):** Phase 5 (all 6 god-components) + Phase 6 (console) COMPLETE. Phase 7 acceptance PARTIAL (TacticalMap token-move + combat-start + presence smoked on prod; vehicle/communities/stockpile/MapView owed). The whole re-arch is HOPED-FOR until the batched 2-client acceptance + the 2026-05-25 playtest. See `tasks/stability-audit-2026-05-24.md` (Realtime channels bumped GREEN-ish -> YELLOW for exactly this reason).
+
+---
+
 ## 2026-05-20: Soft-delete policy rulings (Y11) + invite-code gate + Pro/lawyer status
 
 **Decision:** Xero ruled on all five Y11 soft-delete questions + the invite-code gate + deferred two infra decisions.
