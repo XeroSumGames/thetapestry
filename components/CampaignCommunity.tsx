@@ -10,6 +10,17 @@ import { type InventoryItem } from '../lib/inventory'
 import { findEquipmentByName } from '../lib/xse-schema'
 import { LABEL_STYLE_LG, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import { advance as advanceCampaignClock } from '../lib/campaign-clock'
+import { usePostgresSubscription } from '../lib/realtime/usePostgresSubscription'
+import {
+  campaignCommunities, insertCommunity, updateCommunity, deleteCommunity,
+  activeMembersForCommunities, dissolvedMembersForCommunities, insertMembers, updateMember,
+  updateMembersByIds, deleteMember, stockpileItems, insertStockpileItem, updateStockpileItemQty,
+  deleteStockpileItem, moraleHistory, recentMoraleForCommunities, communityEventsForCommunities,
+  deleteCommunityEvent, insertMigrations, worldRowsForCommunities, approvedWorldCommunityTargets,
+  insertWorldCommunity, updateWorldCommunity, deleteWorldCommunity, campaignNpcOptions,
+  campaignMembersWithChars, myCharacterInCampaign, myFoundingCharacter, userIdForCharacter,
+  campaignPins, pinCoords, getCharacterData, updateCharacterData, eventAuthorUsernames, recruitRolls,
+} from '../lib/data/community'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
 import {
   logSchism,
@@ -398,43 +409,37 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // Phase 4F (inventory followup, 2026-05-01) - realtime sub on
   // community_stockpile_items. When player A deposits an item via
   // the InventoryPanel give modal, player B's open community panel
-  // sees the row appear without a manual reload. Filter by
-  // community_id IN (loaded set) to avoid background traffic for
-  // panels that haven't been expanded yet.
-  useEffect(() => {
-    if (communities.length === 0) return
-    const ids = communities.map(c => c.id)
-    const channel = supabase.channel(`stockpile-${campaignId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'community_stockpile_items',
-        filter: `community_id=in.(${ids.join(',')})`,
-      }, (payload: any) => {
+  // sees the row appear without a manual reload. Behind the lib/realtime
+  // seam: the channelName encodes the community-id SET so the IN-filter
+  // resubscribes whenever a community is added/removed (matching the old
+  // effect's `communities` dep); the handler reads the latest
+  // stockpileLoadedFor + loadStockpile via the hook's config ref, so it
+  // stays fresh without resubscribing on every panel expand.
+  usePostgresSubscription(
+    communities.length > 0 ? `stockpile-${campaignId}-${communities.map(c => c.id).join('_')}` : null,
+    {
+      label: 'community_stockpile_items:*',
+      event: '*',
+      table: 'community_stockpile_items',
+      filter: communities.length > 0 ? `community_id=in.(${communities.map(c => c.id).join(',')})` : undefined,
+      handler: (payload: any) => {
         const cid = (payload.new?.community_id ?? payload.old?.community_id) as string | undefined
         if (!cid) return
         // Only refresh if this community's panel has been opened.
-        // Otherwise the lazy-load on next expand will pick up the
-        // current state.
+        // Otherwise the lazy-load on next expand picks up current state.
         if (stockpileLoadedFor.has(cid)) {
           void loadStockpile(cid, true)
         }
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [communities, stockpileLoadedFor])
+      },
+    },
+  )
 
   // Stockpile lazy-load. Pulls community_stockpile_items for one
   // community on first expand of its panel. Subsequent reloads are
   // explicit via loadStockpile(communityId, true).
   async function loadStockpile(communityId: string, force: boolean = false) {
     if (!force && stockpileLoadedFor.has(communityId)) return
-    const { data, error } = await supabase
-      .from('community_stockpile_items')
-      .select('*')
-      .eq('community_id', communityId)
-      .order('name')
+    const { data, error } = await stockpileItems(communityId)
     if (error) {
       console.warn('[stockpile] load failed:', error.message)
       return
@@ -451,19 +456,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const existing = (stockpileByCommunity[communityId] ?? []).find(r => r.name === item.name && r.custom === item.custom)
     if (existing) {
       const newQty = existing.qty + item.qty
-      const { error } = await supabase
-        .from('community_stockpile_items')
-        .update({ qty: newQty })
-        .eq('id', existing.id)
+      const { error } = await updateStockpileItemQty(existing.id, newQty)
       if (error) { alert(`Stockpile add failed: ${error.message}`); return }
       setStockpileByCommunity(prev => ({
         ...prev,
         [communityId]: (prev[communityId] ?? []).map(r => r.id === existing.id ? { ...r, qty: newQty } : r),
       }))
     } else {
-      const { data, error } = await supabase
-        .from('community_stockpile_items')
-        .insert({
+      const { data, error } = await insertStockpileItem({
           community_id: communityId,
           name: item.name, qty: item.qty, enc: item.enc, rarity: item.rarity,
           notes: item.notes, custom: item.custom,
@@ -494,11 +494,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const row = (stockpileByCommunity[communityId] ?? []).find(r => r.id === rowId)
     if (!row) return
     // Read the PC's current inventory.
-    const { data: charRow, error: readErr } = await supabase
-      .from('characters')
-      .select('data')
-      .eq('id', myCharacterId)
-      .single()
+    const { data: charRow, error: readErr } = await getCharacterData(myCharacterId)
     if (readErr || !charRow) { alert(`Read failed: ${readErr?.message ?? 'unknown'}`); return }
     const charData: any = charRow.data ?? {}
     const inv: InventoryItem[] = Array.isArray(charData.inventory) ? [...charData.inventory] : []
@@ -508,10 +504,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     } else {
       inv.push({ name: row.name, enc: row.enc, rarity: row.rarity, notes: row.notes, qty: 1, custom: !!row.custom })
     }
-    const { error: writeErr } = await supabase
-      .from('characters')
-      .update({ data: { ...charData, inventory: inv } })
-      .eq('id', myCharacterId)
+    const { error: writeErr } = await updateCharacterData(myCharacterId, { ...charData, inventory: inv })
     if (writeErr) { alert(`Write failed: ${writeErr.message}`); return }
     // Decrement the stockpile via the existing helper. This handles
     // both the qty>1 update AND the qty=1 delete branches.
@@ -524,17 +517,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (!row) return
     if (row.qty > 1) {
       const newQty = row.qty - 1
-      const { error } = await supabase
-        .from('community_stockpile_items')
-        .update({ qty: newQty })
-        .eq('id', rowId)
+      const { error } = await updateStockpileItemQty(rowId, newQty)
       if (error) { alert(`Stockpile remove failed: ${error.message}`); return }
       setStockpileByCommunity(prev => ({
         ...prev,
         [communityId]: (prev[communityId] ?? []).map(r => r.id === rowId ? { ...r, qty: newQty } : r),
       }))
     } else {
-      const { error } = await supabase.from('community_stockpile_items').delete().eq('id', rowId)
+      const { error } = await deleteStockpileItem(rowId)
       if (error) { alert(`Stockpile remove failed: ${error.message}`); return }
       setStockpileByCommunity(prev => ({
         ...prev,
@@ -551,21 +541,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (dashboardLoading.has(communityId)) return
     setDashboardLoading(prev => { const n = new Set(prev); n.add(communityId); return n })
     const [moraleRes, recruitRes] = await Promise.all([
-      supabase
-        .from('community_morale_checks')
-        .select('week_number, outcome, members_before, members_after, role_snapshot, rolled_at')
-        .eq('community_id', communityId)
-        .order('week_number', { ascending: true }),
+      moraleHistory(communityId),
       // Recruit attempts target this campaign + this community via
       // damage_json.communityId. Pull all and filter client-side
       // (jsonb -> equality on a sub-key is awkward via .eq).
-      supabase
-        .from('roll_log')
-        .select('character_name, label, damage_json, created_at')
-        .eq('campaign_id', campaignId)
-        .eq('outcome', 'recruit')
-        .order('created_at', { ascending: false })
-        .limit(200),
+      recruitRolls(campaignId),
     ])
     if (moraleRes.error) console.error('[community-dashboard] morale fetch:', moraleRes.error.message)
     if (recruitRes.error) console.error('[community-dashboard] recruits fetch:', recruitRes.error.message)
@@ -613,13 +593,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   async function load() {
     setLoading(true)
     const [comsRes, npcsRes, charsRes, pinsRes] = await Promise.all([
-      supabase.from('communities').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
-      supabase.from('campaign_npcs').select('id, name, skills').eq('campaign_id', campaignId).order('name'),
-      supabase.from('campaign_members')
-        .select('character_id, user_id, characters:character_id(id, name)')
-        .eq('campaign_id', campaignId)
-        .not('character_id', 'is', null),
-      supabase.from('campaign_pins').select('id, name, lat, lng').eq('campaign_id', campaignId).order('name'),
+      campaignCommunities(campaignId),
+      campaignNpcOptions(campaignId),
+      campaignMembersWithChars(campaignId),
+      campaignPins(campaignId),
     ])
     // Surface any partial failures so silent RLS denials / network
     // blips don't read as "the campaign has no communities/NPCs/PCs/pins"
@@ -645,20 +622,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // so the roster shows confirmed members while the leader sees a
     // separate "Pending Requests" block to approve/reject.
     if (coms.length > 0) {
-      const res = await supabase
-        .from('community_members')
-        .select('*')
-        .in('community_id', coms.map(c => c.id))
-        .is('left_at', null)
+      const res = await activeMembersForCommunities(coms.map(c => c.id))
       // Parallel - recent Morale outcomes for each community. Small
       // window (6 rows per community) for the trend chip strip; we
       // DESC order them by week and slice to 5 on the client so we
       // have room to filter/adjust display later.
-      const moraleRes = await supabase
-        .from('community_morale_checks')
-        .select('community_id, week_number, outcome')
-        .in('community_id', coms.map(c => c.id))
-        .order('week_number', { ascending: false })
+      const moraleRes = await recentMoraleForCommunities(coms.map(c => c.id))
       const moraleByCom: Record<string, { week_number: number; outcome: string }[]> = {}
       for (const row of ((moraleRes.data ?? []) as any[])) {
         const cid = row.community_id as string
@@ -670,10 +639,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       // index by community_id. Read policies let campaign members see
       // their own pending rows, so this works for GMs mid-moderation
       // too.
-      const worldRes = await supabase
-        .from('world_communities')
-        .select('id, source_community_id, moderation_status, community_status, size_band, faction_label, last_public_update_at')
-        .in('source_community_id', coms.map(c => c.id))
+      const worldRes = await worldRowsForCommunities(coms.map(c => c.id))
       const worldByCom: typeof worldRows = {}
       for (const w of (worldRes.data ?? []) as any[]) {
         worldByCom[w.source_community_id] = {
@@ -690,11 +656,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       // per community in one batch (RLS scopes by campaign membership).
       // Hydrate author usernames in the same pass so the feed cards
       // can render "by <username>" without a per-card lookup.
-      const { data: eventRows } = await supabase
-        .from('community_events')
-        .select('id, community_id, event_type, payload, author_user_id, created_at')
-        .in('community_id', coms.map(c => c.id))
-        .order('created_at', { ascending: false })
+      const { data: eventRows } = await communityEventsForCommunities(coms.map(c => c.id))
       const eventsByCom: Record<string, CommunityEventRow[]> = {}
       const eventAuthorIds = new Set<string>()
       for (const row of ((eventRows ?? []) as CommunityEventRow[])) {
@@ -705,10 +667,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       }
       setCommunityEvents(eventsByCom)
       if (eventAuthorIds.size > 0) {
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('id, username')
-          .in('id', Array.from(eventAuthorIds))
+        const { data: profs } = await eventAuthorUsernames(Array.from(eventAuthorIds))
         const authMap: Record<string, string> = {}
         for (const p of ((profs ?? []) as any[])) {
           authMap[p.id] = p.username ?? ''
@@ -722,11 +681,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       // 'dissolved' are the eligible offer pool.
       const dissolvedComIds = coms.filter(c => c.status === 'dissolved').map(c => c.id)
       if (dissolvedComIds.length > 0) {
-        const { data: survivors } = await supabase
-          .from('community_members')
-          .select('*')
-          .in('community_id', dissolvedComIds)
-          .eq('left_reason', 'dissolved')
+        const { data: survivors } = await dissolvedMembersForCommunities(dissolvedComIds)
         const byCom: Record<string, Member[]> = {}
         for (const m of (survivors ?? []) as Member[]) {
           (byCom[m.community_id] ||= []).push(m)
@@ -738,11 +693,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       // Migration target picker - every approved world_community is
       // a potential destination. RLS already exposes approved rows
       // publicly so this query is unauthenticated-friendly.
-      const { data: targets } = await supabase
-        .from('world_communities')
-        .select('id, name, size_band, faction_label')
-        .eq('moderation_status', 'approved')
-        .order('name')
+      const { data: targets } = await approvedWorldCommunityTargets()
       setMigrationTargets((targets ?? []) as any[])
       const byCom: Record<string, Member[]> = {}
       const pendingByCom: Record<string, Member[]> = {}
@@ -796,7 +747,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       }
       if (autoUpdates.length > 0) {
         await Promise.all(autoUpdates.map(u =>
-          supabase.from('community_members').update({ role: u.role }).eq('id', u.id)
+          updateMember(u.id, { role: u.role })
         ))
         setMembers(prev => {
           const updated = { ...prev }
@@ -817,12 +768,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // Look up this user's PC in the current campaign so the member list
     // can show a "Leave" affordance on their own row.
     if (user?.id) {
-      const { data: myCm } = await supabase
-        .from('campaign_members')
-        .select('character_id')
-        .eq('campaign_id', campaignId)
-        .eq('user_id', user.id)
-        .maybeSingle()
+      const { data: myCm } = await myCharacterInCampaign(campaignId, user.id)
       setMyCharacterId((myCm as any)?.character_id ?? null)
     } else {
       setMyCharacterId(null)
@@ -855,7 +801,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       return
     }
     const results = await Promise.all(updates.map(u =>
-      supabase.from('community_members').update({ role: u.role }).eq('id', u.id)
+      updateMember(u.id, { role: u.role })
     ))
     const errors = results.map((r, i) => r.error ? `${updates[i].id}: ${r.error.message}` : null).filter(Boolean)
     if (errors.length > 0) {
@@ -952,7 +898,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       offered_by_user_id: user?.id ?? null,
       narrative: migrationNarrative.trim() || null,
     }))
-    const { error } = await supabase.from('community_migrations').insert(rows)
+    const { error } = await insertMigrations(rows as any)
     setMigrationSubmitting(false)
     if (error) { alert(`Migration offer failed: ${error.message}`); return }
     // Phase 4D - auto-post the migration to the source community's feed.
@@ -1019,9 +965,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     setSchismSubmitting(true)
     const now = new Date().toISOString()
     // 1) Create the new community.
-    const { data: newCommRow, error: cErr } = await supabase
-      .from('communities')
-      .insert({
+    const { data: newCommRow, error: cErr } = await insertCommunity({
         campaign_id: campaignId,
         name: schismName.trim(),
         description: schismDescription.trim() || `Splintered from ${original.name}.`,
@@ -1040,13 +984,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     //    yet on this DB, fall back to 'manual' so the schism still
     //    proceeds (the new rows in the new community are the source
     //    of truth either way).
-    let removeErr = (await supabase.from('community_members')
-      .update({ left_at: now, left_reason: 'schism' })
-      .in('id', Array.from(schismPickedIds))).error
+    let removeErr = (await updateMembersByIds(Array.from(schismPickedIds), { left_at: now, left_reason: 'schism' })).error
     if (removeErr) {
-      removeErr = (await supabase.from('community_members')
-        .update({ left_at: now, left_reason: 'manual' })
-        .in('id', Array.from(schismPickedIds))).error
+      removeErr = (await updateMembersByIds(Array.from(schismPickedIds), { left_at: now, left_reason: 'manual' })).error
     }
     if (removeErr) {
       setSchismSubmitting(false)
@@ -1069,7 +1009,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       status: 'active',
       joined_at: now,
     }))
-    const { error: insErr } = await supabase.from('community_members').insert(newMemberRows as any)
+    const { error: insErr } = await insertMembers(newMemberRows as any)
     if (insErr) {
       setSchismSubmitting(false)
       alert(`Schism partial: new community created + members removed but the new roster insert failed: ${insErr.message}. You may need to add the breakaway members manually.`)
@@ -1158,11 +1098,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     let lat: number | null = null
     let lng: number | null = null
     if (c.homestead_pin_id) {
-      const { data: pin } = await supabase
-        .from('campaign_pins')
-        .select('lat, lng')
-        .eq('id', c.homestead_pin_id)
-        .maybeSingle()
+      const { data: pin } = await pinCoords(c.homestead_pin_id)
       if (pin) { lat = (pin as any).lat ?? null; lng = (pin as any).lng ?? null }
     }
     const total = (members[c.id] ?? []).length
@@ -1177,8 +1113,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       // doesn't re-trigger Thriver moderation for now; major changes
       // could eventually flip it back to pending but we don't want
       // to block every tiny description tweak).
-      const { error } = await supabase.from('world_communities')
-        .update({
+      const { error } = await updateWorldCommunity(existing.id, {
           name: c.name,
           description: c.description,
           homestead_lat: lat,
@@ -1188,7 +1123,6 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           community_status: publicStatus,
           last_public_update_at: now,
         })
-        .eq('id', existing.id)
       if (error) { setPublishing(false); alert(`Publish update failed: ${error.message}`); return }
       setWorldRows(prev => ({
         ...prev,
@@ -1197,7 +1131,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     } else {
       // First publish. Insert the world row with status='pending' so
       // Thriver moderation gates visibility on the world map (sprint 2).
-      const { data, error } = await supabase.from('world_communities').insert({
+      const { data, error } = await insertWorldCommunity({
         source_community_id: c.id,
         source_campaign_id: campaignId,
         published_by: user?.id ?? null,
@@ -1214,13 +1148,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       if (error || !data) { setPublishing(false); alert(`Publish failed: ${error?.message ?? 'unknown'}`); return }
       // Back-link on the source community so the UI chip + future
       // cross-campaign lookups can find the world row cheaply.
-      await supabase.from('communities')
-        .update({
+      await updateCommunity(c.id, {
           world_visibility: 'published',
           world_community_id: (data as any).id,
           published_at: now,
         })
-        .eq('id', c.id)
       setCommunities(prev => prev.map(x => x.id === c.id
         ? { ...x, world_visibility: 'published' as const }
         : x))
@@ -1240,11 +1172,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const world = worldRows[communityId]
     if (!world) return
     if (!confirm('Remove this community from the Tapestry? It will disappear from the world map. Republishing later will go back through moderation.')) return
-    const { error } = await supabase.from('world_communities').delete().eq('id', world.id)
+    const { error } = await deleteWorldCommunity(world.id)
     if (error) { alert(`Unpublish failed: ${error.message}`); return }
-    await supabase.from('communities')
-      .update({ world_visibility: 'private', world_community_id: null, published_at: null })
-      .eq('id', communityId)
+    await updateCommunity(communityId, { world_visibility: 'private', world_community_id: null, published_at: null })
     setCommunities(prev => prev.map(x => x.id === communityId
       ? { ...x, world_visibility: 'private' as const }
       : x))
@@ -1265,9 +1195,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (c.status === 'dissolved') return
     const nextWeek = c.week_number + 1
     if (!confirm(`Skip week ${nextWeek} for ${c.name}? Week counter advances and the campaign clock ticks forward 7 days (rations consumed, subsistence damage for anyone already out, streaming heals drain). No rolls, no departures, no Mood change for the community itself.`)) return
-    const { error } = await supabase.from('communities')
-      .update({ week_number: nextWeek })
-      .eq('id', c.id)
+    const { error } = await updateCommunity(c.id, { week_number: nextWeek })
     if (error) { alert(`Skip week failed: ${error.message}`); return }
     setCommunities(prev => prev.map(x => x.id === c.id ? { ...x, week_number: nextWeek } : x))
     // Tick the canonical campaign clock 7 days. Best-effort: if this
@@ -1319,9 +1247,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
     // Null both leader fields first so an immediately-following
     // handleSetLeader writes a clean single-target update.
-    const { error } = await supabase.from('communities')
-      .update({ leader_user_id: null, leader_npc_id: null })
-      .eq('id', communityId)
+    const { error } = await updateCommunity(communityId, { leader_user_id: null, leader_npc_id: null })
     if (error) { alert(`Step down failed: ${error.message}`); return }
     setCommunities(prev => prev.map(x => x.id === communityId
       ? { ...x, leader_user_id: null, leader_npc_id: null }
@@ -1348,16 +1274,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
     if (choice.kind === 'pc' && member.character_id) {
       // Need the user_id for the PC; look it up from campaign_members.
-      const { data: cm } = await supabase.from('campaign_members')
-        .select('user_id')
-        .eq('campaign_id', campaignId)
-        .eq('character_id', member.character_id)
-        .maybeSingle()
+      const { data: cm } = await userIdForCharacter(campaignId, member.character_id)
       update.leader_user_id = (cm as any)?.user_id ?? null
     } else if (choice.kind === 'npc' && member.npc_id) {
       update.leader_npc_id = member.npc_id
     }
-    const { error } = await supabase.from('communities').update(update).eq('id', communityId)
+    const { error } = await updateCommunity(communityId, update)
     if (error) { alert(`Leader change failed: ${error.message}`); return }
     setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, ...update } : c))
     // Progression log on a new PC leader (NPC leaders skipped - no log).
@@ -1374,10 +1296,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // existing community body, GM-only. A null value removes the link
   // (community falls back to "unlocated" on publish).
   async function handleSetHomestead(communityId: string, pinId: string | null) {
-    const { error } = await supabase
-      .from('communities')
-      .update({ homestead_pin_id: pinId })
-      .eq('id', communityId)
+    const { error } = await updateCommunity(communityId, { homestead_pin_id: pinId })
     if (error) { alert(`Homestead change failed: ${error.message}`); return }
     setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, homestead_pin_id: pinId } : c))
   }
@@ -1386,7 +1305,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (!newName.trim()) return
     setCreating(true)
     const { user } = await getCachedAuth()
-    const { data, error } = await supabase.from('communities').insert({
+    const { data, error } = await insertCommunity({
       campaign_id: campaignId,
       name: newName.trim(),
       description: newDesc.trim() || null,
@@ -1401,18 +1320,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // Quietly skips if the creator doesn't have a PC in this campaign
     // (GM-only accounts, etc.).
     if (user?.id) {
-      const { data: myCm } = await supabase
-        .from('campaign_members')
-        .select('character_id')
-        .eq('campaign_id', campaignId)
-        .eq('user_id', user.id)
-        .not('character_id', 'is', null)
-        .maybeSingle()
+      const { data: myCm } = await myFoundingCharacter(campaignId, user.id)
       const myCharacterId = (myCm as any)?.character_id as string | undefined
       if (myCharacterId) {
         // status omitted - DB default 'active' covers new schema,
         // missing-column old schema ignores the unsent field.
-        const { data: founderRow, error: enrollErr } = await supabase.from('community_members').insert({
+        const { data: founderRow, error: enrollErr } = await insertMembers({
           community_id: newComm.id,
           character_id: myCharacterId,
           role: 'unassigned',
@@ -1436,10 +1349,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
 
   // ── Pending-request approve/reject (leader-only) ────────────────────
   async function handleApproveRequest(req: Member) {
-    const { error } = await supabase
-      .from('community_members')
-      .update({ status: 'active', joined_at: new Date().toISOString() })
-      .eq('id', req.id)
+    const { error } = await updateMember(req.id, { status: 'active', joined_at: new Date().toISOString() })
     if (error) { alert(`Approve failed: ${error.message}`); return }
     // Progression log on the joining PC.
     if (req.character_id) {
@@ -1460,7 +1370,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   }
   async function handleRejectRequest(req: Member) {
     if (!confirm('Reject this join request? The PC can try again later.')) return
-    const { error } = await supabase.from('community_members').delete().eq('id', req.id)
+    const { error } = await deleteMember(req.id)
     if (error) { alert(`Reject failed: ${error.message}`); return }
     setPendingByCommunity(prev => {
       const n = { ...prev }
@@ -1472,7 +1382,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
 
   async function handleDeleteCommunity(c: Community) {
     if (!confirm(`Delete "${c.name}"? Removes all members and history.`)) return
-    const { error } = await supabase.from('communities').delete().eq('id', c.id)
+    const { error } = await deleteCommunity(c.id)
     if (error) { alert(`Delete failed: ${error.message}`); return }
     setCommunities(prev => prev.filter(x => x.id !== c.id))
     setMembers(prev => { const n = { ...prev }; delete n[c.id]; return n })
@@ -1488,7 +1398,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       npc_id: addKind === 'npc' ? addSubjectId : null,
       character_id: addKind === 'pc' ? addSubjectId : null,
     }
-    const { data, error } = await supabase.from('community_members').insert(row).select().single()
+    const { data, error } = await insertMembers(row as any).select().single()
     if (error) { alert(`Add failed: ${error.message}`); return }
     if (data) {
       setMembers(prev => ({ ...prev, [communityId]: [...(prev[communityId] ?? []), data as Member] }))
@@ -1513,9 +1423,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // want a record). `left_reason` distinguishes a GM removal ('manual')
     // from a player self-eject ('self'); downstream dashboards can count
     // attrition vs. administrative cleanup.
-    const { error } = await supabase.from('community_members')
-      .update({ left_at: new Date().toISOString(), left_reason: isSelf ? 'self' : 'manual' })
-      .eq('id', m.id)
+    const { error } = await updateMember(m.id, { left_at: new Date().toISOString(), left_reason: isSelf ? 'self' : 'manual' })
     if (error) { alert(`${isSelf ? 'Leave' : 'Remove'} failed: ${error.message}`); return }
     // Progression log on the departing PC (NPCs don't have one).
     if (m.character_id) {
@@ -1539,9 +1447,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (wasLeader) {
       // Null both fields; pickAutoSuccessor now runs against the
       // reduced roster and hands over to handleSetLeader if possible.
-      await supabase.from('communities')
-        .update({ leader_user_id: null, leader_npc_id: null })
-        .eq('id', m.community_id)
+      await updateCommunity(m.community_id, { leader_user_id: null, leader_npc_id: null })
       setCommunities(prev => prev.map(x => x.id === m.community_id
         ? { ...x, leader_user_id: null, leader_npc_id: null }
         : x))
@@ -1562,9 +1468,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   async function handleSaveTask(m: Member) {
     const trimmed = taskDraft.trim()
     const value = trimmed === '' ? null : trimmed
-    const { error } = await supabase.from('community_members')
-      .update({ current_task: value })
-      .eq('id', m.id)
+    const { error } = await updateMember(m.id, { current_task: value })
     if (error) { alert(`Task save failed: ${error.message}`); return }
     setMembers(prev => ({
       ...prev,
@@ -1600,7 +1504,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       update.assignment_pc_id = null
       update.current_task = null
     }
-    const { error } = await supabase.from('community_members').update(update).eq('id', m.id)
+    const { error } = await updateMember(m.id, update as any)
     if (error) { alert(`Role change failed: ${error.message}`); return }
     setMembers(prev => ({
       ...prev,
@@ -1621,7 +1525,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       assignment_pc_id: assignmentPcDraft,
       current_task: task,
     }
-    const { error } = await supabase.from('community_members').update(update).eq('id', assigningMember.id)
+    const { error } = await updateMember(assigningMember.id, update as any)
     if (error) { alert(`Assignment failed: ${error.message}`); return }
     setMembers(prev => ({
       ...prev,
@@ -2283,7 +2187,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                                 {isGM && (
                                   <button onClick={async () => {
                                     if (!confirm('Remove this entry from the community feed? Auto-posts can be reposted by re-running the action; manual posts are permanent on delete.')) return
-                                    await supabase.from('community_events').delete().eq('id', ev.id)
+                                    await deleteCommunityEvent(ev.id)
                                     await load()
                                   }}
                                     title="Delete this event"
@@ -2605,10 +2509,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             <button onClick={async () => {
                               if (!confirm(`Fire ${memberLabel(m)}'s escape now? They'll be marked as departed (left_reason: manual).`)) return
                               const now = new Date().toISOString()
-                              const { error } = await supabase
-                                .from('community_members')
-                                .update({ left_at: now, left_reason: 'manual', escape_pending: false })
-                                .eq('id', m.id)
+                              const { error } = await updateMember(m.id, { left_at: now, left_reason: 'manual', escape_pending: false })
                               if (error) { alert('Failed to fire escape: ' + error.message); return }
                               // Local state patch so the row drops from the list without a full refetch.
                               setMembers(prev => {
