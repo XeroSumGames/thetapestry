@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
@@ -22,7 +22,7 @@ interface SharedNote {
   attachments: NoteAttachment[]
 }
 
-export default function PlayerNotes({ campaignId }: { campaignId: string }) {
+export default function PlayerNotes({ campaignId, header }: { campaignId: string; header?: ReactNode }) {
   const supabase = createClient()
   const [notes, setNotes] = useState<PlayerNote[]>([])
   const [sharedNotes, setSharedNotes] = useState<SharedNote[]>([])
@@ -128,6 +128,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
 
   return (
     <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', overflow: 'auto', flex: 1 }}>
+      {header}
       <button onClick={() => setShowAdd(!showAdd)}
         style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
         {showAdd ? 'Cancel' : '+ Add Note'}

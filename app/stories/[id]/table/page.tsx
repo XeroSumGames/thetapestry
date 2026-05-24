@@ -47,8 +47,10 @@ import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from 
 import {
   type Advantage,
   consumeAdvantage,
+  deleteAdvantage,
   listCampaignPendingAdvantages,
 } from '../../../../lib/advantages'
+import AdvantagesPanel from '../../../../components/AdvantagesPanel'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -1471,6 +1473,43 @@ export default function TablePage() {
       handler: async () => { const { rows } = await listCampaignPendingAdvantages(supabase, id); setAdvantages(rows) },
     }],
   })
+  // Advantage Use / Delete - data logic for <AdvantagesPanel> (rendered in the
+  // GM Advantages tab + folded into the player Notes tab). Consume records a
+  // shared-feed roll_log entry so the whole campaign sees the redemption;
+  // optimistic local removal, realtime reconciles. Delete is GM-only (mistakes).
+  async function handleUseAdvantage(a: Advantage) {
+    setUseInFlight(prev => new Set(prev).add(a.id))
+    const { error } = await consumeAdvantage(supabase, a.id, null)
+    if (error) {
+      alert(`Use failed: ${error}`)
+      setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
+      return
+    }
+    const sign = a.cmod_delta > 0 ? `+${a.cmod_delta}` : `${a.cmod_delta}`
+    const holder = entries.find(e => e.character.id === a.character_id)
+    const holderName = holder?.character.name ?? 'Unknown PC'
+    const holderUserId = holder?.userId ?? userId
+    try {
+      await insertRollLog({
+        campaign_id: id, user_id: holderUserId, character_name: holderName,
+        label: `${holderName} used their ${sign} ${a.skill_name} advantage (${a.description})`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'advantage_used',
+      })
+      void rollsFeed.refetch()
+    } catch (e) { console.error('[advantages] feed broadcast failed', e) }
+    setAdvantages(prev => prev.filter(x => x.id !== a.id))
+    setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
+  }
+  async function handleDeleteAdvantage(a: Advantage) {
+    const holder = entries.find(e => e.character.id === a.character_id)
+    const holderName = holder?.character.name ?? 'Unknown PC'
+    if (!confirm(`Delete advantage "+${a.cmod_delta} ${a.skill_name}" for ${holderName}? This is for mistakes - Use is the normal path.`)) return
+    const { error } = await deleteAdvantage(supabase, a.id)
+    if (error) { alert(`Delete failed: ${error}`); return }
+    setAdvantages(prev => prev.filter(x => x.id !== a.id))
+  }
+  // Holder-name + my-character-id helpers for <AdvantagesPanel>.
+  const advantageHolderNameFor = (characterId: string) => entries.find(e => e.character.id === characterId)?.character.name ?? 'Unknown PC'
 
   // --- Postgres-only table channels migrated out of the load() mount effect
   // to useCampaignChannel (3d.2a). Stable [id] subscription (no churn on
@@ -6982,7 +7021,7 @@ export default function TablePage() {
             NPCs (revealed only) and Assets (read-only). */}
         <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'advantages', 'notes'] as const : ['pins', 'npcs', 'assets', 'advantages', 'notes'] as const).map(tab => (
+            {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'advantages', 'notes'] as const : ['pins', 'npcs', 'assets', 'advantages', 'notes'] as const).filter(tab => tab !== 'advantages' || gmLike).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : tab === 'advantages' ? `⭐${advantages.length > 0 ? ` ${advantages.length}` : ''}` : gmLike ? 'GM Notes' : 'Notes'}
@@ -7518,110 +7557,34 @@ export default function TablePage() {
               </div>
             )}
             {gmTab === 'notes' && gmLike && <GmNotes campaignId={id} />}
-            {gmTab === 'notes' && !gmLike && <PlayerNotes campaignId={id} />}
-            {gmTab === 'advantages' && (() => {
-              // C3 visibility: RLS already scopes the rows. GM sees all
-              // pending in campaign; players see only their own pending.
-              // Consumed advantages don't appear here - they're recorded
-              // in the rolls feed via the consume flow (Phase 5).
-              const myCharIds = new Set(entries.filter(e => e.userId === userId).map(e => e.character.id))
-              const visible = gmLike
-                ? advantages
-                : advantages.filter(a => myCharIds.has(a.character_id))
-              if (visible.length === 0) {
-                return (
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                      No advantages pending
-                    </div>
-                    {gmLike && (
-                      <div style={{ textAlign: 'center', padding: '0 1rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', marginTop: '8px', fontStyle: 'italic' }}>
-                        Grant one via GM Tools → ⭐ Grant Advantage.
-                      </div>
-                    )}
-                  </div>
-                )
-              }
-              return (
-                <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                  {visible.map(a => {
-                    const holder = entries.find(e => e.character.id === a.character_id)
-                    const holderName = holder?.character.name ?? 'Unknown PC'
-                    const isMyOwn = myCharIds.has(a.character_id)
-                    const inFlight = useInFlight.has(a.id)
-                    return (
-                      <div key={a.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1a1a', border: '1px solid #2a2010', borderLeft: '3px solid #EF9F27', borderRadius: '3px' }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', marginBottom: '4px' }}>
-                          <div style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                            {a.cmod_delta > 0 ? `+${a.cmod_delta}` : a.cmod_delta} {a.skill_name}
-                          </div>
-                          {gmLike && !isMyOwn && (
-                            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', whiteSpace: 'nowrap' }}>{holderName}</div>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', lineHeight: 1.4 }}>
-                          {a.description}
-                        </div>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          {(isMyOwn || gmLike) && (
-                            <button type="button" disabled={inFlight}
-                              onClick={async () => {
-                                setUseInFlight(prev => new Set(prev).add(a.id))
-                                const { error } = await consumeAdvantage(supabase, a.id, null)
-                                if (error) {
-                                  alert(`Use failed: ${error}`)
-                                  setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
-                                  return
-                                }
-                                // Phase 5: C3 shared-narrative feed broadcast.
-                                // Insert a roll_log entry so the whole campaign
-                                // sees the redemption. Best-effort: a failed
-                                // log doesn't undo the consume.
-                                const sign = a.cmod_delta > 0 ? `+${a.cmod_delta}` : `${a.cmod_delta}`
-                                const holder2 = entries.find(e => e.character.id === a.character_id)
-                                const holderName2 = holder2?.character.name ?? 'Unknown PC'
-                                const holderUserId = holder2?.userId ?? userId
-                                try {
-                                  await insertRollLog({
-                                    campaign_id: id,
-                                    user_id: holderUserId,
-                                    character_name: holderName2,
-                                    label: `${holderName2} used their ${sign} ${a.skill_name} advantage (${a.description})`,
-                                    die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-                                    outcome: 'advantage_used',
-                                  })
-                                  void rollsFeed.refetch()
-                                } catch (e) {
-                                  console.error('[advantages] feed broadcast failed', e)
-                                }
-                                // Optimistic local update - realtime will reconcile too.
-                                setAdvantages(prev => prev.filter(x => x.id !== a.id))
-                                setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
-                              }}
-                              style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: inFlight ? 'not-allowed' : 'pointer', opacity: inFlight ? 0.5 : 1, fontWeight: 700 }}>
-                              {inFlight ? 'Using…' : '✓ Use'}
-                            </button>
-                          )}
-                          {gmLike && (
-                            <button type="button"
-                              onClick={async () => {
-                                if (!confirm(`Delete advantage "+${a.cmod_delta} ${a.skill_name}" for ${holderName}? This is for mistakes - Use is the normal path.`)) return
-                                const { deleteAdvantage } = await import('../../../../lib/advantages')
-                                const { error } = await deleteAdvantage(supabase, a.id)
-                                if (error) { alert(`Delete failed: ${error}`); return }
-                                setAdvantages(prev => prev.filter(x => x.id !== a.id))
-                              }}
-                              style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #5a1f1f', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })()}
+            {gmTab === 'notes' && !gmLike && (
+              <PlayerNotes campaignId={id} header={
+                <AdvantagesPanel
+                  advantages={advantages}
+                  gmLike={false}
+                  myCharacterIds={new Set(entries.filter(e => e.userId === userId).map(e => e.character.id))}
+                  holderNameFor={advantageHolderNameFor}
+                  useInFlight={useInFlight}
+                  onUse={handleUseAdvantage}
+                  onDelete={handleDeleteAdvantage}
+                  hideWhenEmpty
+                  heading="⭐ Advantages"
+                />
+              } />
+            )}
+            {gmTab === 'advantages' && (
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                <AdvantagesPanel
+                  advantages={advantages}
+                  gmLike={gmLike}
+                  myCharacterIds={new Set(entries.filter(e => e.userId === userId).map(e => e.character.id))}
+                  holderNameFor={advantageHolderNameFor}
+                  useInFlight={useInFlight}
+                  onUse={handleUseAdvantage}
+                  onDelete={handleDeleteAdvantage}
+                />
+              </div>
+            )}
           </div>
         </div>
 
