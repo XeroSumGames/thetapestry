@@ -441,10 +441,10 @@ export function useRollResolution(deps: RollResolutionDeps) {
       if (!targetEntry && !targetNpc && targetInitEntry?.is_npc && targetInitEntry.npc_id) {
         const { data: freshNpc, error: npcFetchErr } = await supabase
           .from('campaign_npcs').select('*').eq('id', targetInitEntry.npc_id).maybeSingle()
-        if (npcFetchErr) console.warn('[damage] NPC fallback fetch error:', npcFetchErr.message)
+        if (npcFetchErr) console.error('[damage] NPC fallback fetch error:', npcFetchErr.message)
         if (freshNpc) {
           targetNpc = freshNpc as any
-          console.warn('[damage] NPC resolved via server fallback (local cache missed - likely RLS):', freshNpc.name)
+          trace('damage', { npcResolvedViaServerFallback: freshNpc.name, note: 'local cache missed - likely RLS' })
         } else {
           console.error('[damage] NPC fallback fetch returned null - RLS is blocking server access too. Reveal the NPC or fix the campaign_npcs RLS policy.')
         }
@@ -573,12 +573,12 @@ export function useRollResolution(deps: RollResolutionDeps) {
       }
 
       // Auto-apply damage to target (PC or NPC)
-      console.warn('[damage] target lookup:', { targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
+      trace('damage', { targetLookup: true, targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
       if (isGrenadeFumble) {
         // Grenade fumbles skip the named-target damage path entirely -
         // there's no "primary" hit because the throw missed. Damage is
         // applied through the blast AoE below using blastCenterOverride.
-        console.warn('[damage] grenade fumble - primary skipped, blast AoE will resolve from override center', blastCenterOverride)
+        trace('damage', { note: 'grenade fumble - primary skipped, blast AoE will resolve from override center', blastCenterOverride })
       } else if (targetEntry?.liveState) {
         // PC target - use character_states
         // Re-fetch fresh HP from DB to avoid stale closure values
@@ -588,7 +588,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         const currentInsight = freshState?.insight_dice ?? targetEntry.liveState.insight_dice ?? 0
         const newWP = Math.max(0, currentWP - finalWP)
         const newRP = Math.max(0, currentRP - finalRP)
-        console.warn('[damage] PC target', targetEntry.character.name, 'WP:', currentWP, '→', newWP, 'RP:', currentRP, '→', newRP)
+        trace('damage', { pcTarget: targetEntry.character.name, wp: { from: currentWP, to: newWP }, rp: { from: currentRP, to: newRP } })
         // Queue a wound-infection warning. Drained AFTER saveRollToLog
         // so the warning row's created_at follows the attack row's,
         // keeping feed order: attack first, warning below.
@@ -597,7 +597,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         if (newWP === 0 && currentWP > 0 && currentInsight > 0) {
           const { error: csErr, data: csData } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select()
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
-          else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
+          else trace('damage', { pcCharacterStatesUpdateRows: csData?.length })
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
           initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: { rp_current: newRP } } })
           const insightData = {
@@ -675,7 +675,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
           }
           const { error: csErr, data: csData } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId).select()
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
-          else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
+          else trace('damage', { pcCharacterStatesUpdateRows: csData?.length })
           // Silent RLS failure pattern: no error, 0 rows affected. The
           // optimistic patch paints damage locally for a frame, then
           // loadEntries at the end of executeRoll re-fetches the DB's
@@ -706,7 +706,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         const npcRP = targetNpc.rp_current ?? targetNpc.rp_max ?? 6
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
-        console.warn('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
+        trace('damage', { npcTarget: targetNpc.name, id: targetNpc.id, wp: { from: npcWP, to: newWP }, rp: { from: npcRP, to: newRP } })
         // Queue a wound-infection warning. Drained after saveRollToLog.
         if (finalWP > 0) pendingWoundInfectionRef.current.add(targetNpc.name)
         const npcUpdate: any = { wp_current: newWP, rp_current: newRP }
@@ -741,7 +741,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
           .eq('id', targetNpc.id)
           .select()
         if (npcUpdErr) console.error('[damage] campaign_npcs update error:', npcUpdErr.message)
-        else console.warn('[damage] campaign_npcs update returned', npcUpdData?.length, 'rows')
+        else trace('damage', { campaignNpcsUpdateRows: npcUpdData?.length })
         // Direct state update for THIS client (the roller).
         const npcId = targetNpc.id
         const patch = { ...npcUpdate }
@@ -752,7 +752,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         setTimeout(() => { npcFetchInFlightRef.current = false }, 500)
         // Broadcast to OTHER clients (GM) so they re-fetch NPC data.
         // Without this, a player dealing damage only updates their own state.
-        console.warn('[npc_damaged] SEND primary', { npcId, patch, channel: initChannelRef.current ? 'ready' : 'null' })
+        trace('npc_damaged', { sendPrimary: true, npcId, patch, channel: initChannelRef.current ? 'ready' : 'null' })
         initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId, patch } })
         // Mortally wounded / incapacitated - zero their actions and auto-advance if active
         if (combatActive && (newWP === 0 || newRP === 0)) {
@@ -770,7 +770,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         // Object token - update scene_tokens.wp_current. No RP, no death countdown, no initiative update.
         const curWP = targetObject.wp_current ?? targetObject.wp_max ?? 0
         const newWP = Math.max(0, curWP - finalWP)
-        console.warn('[damage] object target', targetObject.name, 'id:', targetObject.id, 'WP:', curWP, '→', newWP)
+        trace('damage', { objectTarget: targetObject.name, id: targetObject.id, wp: { from: curWP, to: newWP } })
         // .select() so a silent RLS rejection (0 rows affected, no error) is
         // distinguishable from a real update. Without this, players attacking
         // object tokens used to see the dice roll succeed but the barrel/crate
@@ -815,21 +815,21 @@ export function useRollResolution(deps: RollResolutionDeps) {
             .from('campaigns')
             .update({ vehicles: next })
             .eq('id', id)
-          if (vehErr) console.warn('[damage] vehicle sync error:', vehErr.message)
+          if (vehErr) console.error('[damage] vehicle sync error:', vehErr.message)
         })()
 
         // Auto-loot: when object is destroyed, give its contents to the attacker (PC or NPC)
         if (newWP === 0 && curWP > 0) {
           const { data: fullToken } = await supabase.from('scene_tokens').select('contents').eq('id', targetObject.id).single()
           const contents: { type: string; name: string; quantity: number }[] = fullToken?.contents ?? []
-          console.warn('[auto-loot] crate destroyed', targetObject.name, 'contents:', contents.length)
+          trace('auto-loot', { crateDestroyed: targetObject.name, contents: contents.length })
           const active = initiativeOrder.find(ie => ie.is_active)
           const attackerEntry = (active ? entries.find(e => e.character.id === active.character_id) : null)
             ?? entries.find(e => e.userId === userId)
           const attackerNpc = active && !attackerEntry && active.npc_id
             ? (rosterNpcs.find(n => n.id === active.npc_id) ?? campaignNpcs.find((n: any) => n.id === active.npc_id))
             : null
-          console.warn('[auto-loot] attackerEntry:', attackerEntry?.character?.name, 'attackerNpc:', (attackerNpc as any)?.name)
+          trace('auto-loot', { attackerEntry: attackerEntry?.character?.name, attackerNpc: (attackerNpc as any)?.name })
           if (contents.length > 0) {
             if (attackerEntry) {
               const charData = attackerEntry.character.data ?? {}
@@ -920,9 +920,9 @@ export function useRollResolution(deps: RollResolutionDeps) {
         // the blast block below picks up the cell coords and splashes
         // everyone in range. Intentional that damageResult still shows
         // the rolled WP/RP so the UI's damage card reads correctly.
-        console.warn('[damage] cell-throw - primary damage skipped, blast AoE will handle tokens around', grenadeTargetCell)
+        trace('damage', { note: 'cell-throw - primary damage skipped, blast AoE will handle tokens', grenadeTargetCell })
       } else {
-        console.warn('[damage] no target resolved - damage NOT applied. targetName was:', targetName)
+        console.error('[damage] no target resolved - damage NOT applied. targetName was:', targetName)
       }
 
       // Blast Radius AoE - apply scaled damage to nearby tokens on the

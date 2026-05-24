@@ -169,7 +169,7 @@ export default function TablePage() {
     ],
     broadcasts: {
       recorder_start: () => { recorderWipeBuffer(); recorderSetEnabled(true); writeCampaignEnabled(id, true); setRecorderEnabled(true) },
-      recorder_stop: () => { const filename = recorderDownloadDump(); if (filename) console.warn('[recorder] GM-stopped auto-download:', filename); recorderSetEnabled(false); writeCampaignEnabled(id, false); setRecorderEnabled(false) },
+      recorder_stop: () => { recorderDownloadDump(); recorderSetEnabled(false); writeCampaignEnabled(id, false); setRecorderEnabled(false) },
       combat_ended: () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) },
       player_kicked: (payload) => { if (payload?.userId === userIdRef.current) { alert('You have been removed from this session by the GM.'); window.location.href = `/stories/${id}` } },
       combat_started: () => { loadInitiative(id); rollsFeed.refetch() },
@@ -191,7 +191,7 @@ export default function TablePage() {
       logs_cleared: () => { rollsFeed.clear(); chat.clear(); rollsFeed.refetch(); chat.refetch() },
       npc_damaged: async (payload) => {
         const { npcId, patch } = payload ?? {}
-        console.warn('[npc_damaged] RECV', { npcId, patch })
+        trace('npc_damaged', { recv: true, npcId, patch })
         if (npcId && patch) {
           setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
           setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
@@ -997,7 +997,7 @@ export default function TablePage() {
     const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
     const missingChars = charIds.filter((cid: string) => !(cid in charMap))
     if (missingChars.length > 0) {
-      console.warn('[loadEntries] missing chars for ids - likely RLS blocking cross-user reads:', missingChars, 'returned chars:', chars?.map((c: any) => c.id))
+      console.error('[loadEntries] missing chars for ids - likely RLS blocking cross-user reads:', missingChars, 'returned chars:', chars?.map((c: any) => c.id))
     }
 
     const newEntries: TableEntry[] = filteredStates.map((s: any) => ({
@@ -1166,7 +1166,7 @@ export default function TablePage() {
           setViewingNpcs([])
         } else if (gmLike) {
           // GM-or-Thriver telemetry. Player will see the modal on their own client.
-          console.warn(`[stress] ${e.character.name} hit 5 - Stress Check triggered for player`)
+          trace('stress', { character: e.character.name, note: 'hit 5 - Stress Check triggered for player' })
         }
         // Log to the affected PC's progression log. Fires once per transition.
         if (e.character?.id) void appendProgressionLog(e.character.id, 'stress', 'Stress reached 5 - Stress Check triggered')
@@ -1227,7 +1227,7 @@ export default function TablePage() {
       // most-recently-touched and surface "Last Run: <date>". Fire-and-
       // forget - failure here doesn't block the table view.
       supabase.from('campaigns').update({ last_accessed_at: new Date().toISOString() }).eq('id', id)
-        .then(({ error }: any) => { if (error) console.warn('[table] last_accessed_at bump failed:', error.message) })
+        .then(({ error }: any) => { if (error) console.error('[table] last_accessed_at bump failed:', error.message) })
       setVehicles(camp.vehicles ?? [])
       const amGM = camp.gm_user_id === user.id
       setIsGM(amGM)
@@ -1305,7 +1305,6 @@ export default function TablePage() {
       // that bit us before.
       if (!amGM) {
         const myState = (kickRes as any).data
-        console.warn('[kickCheck] myState:', myState)
         if (myState?.kicked) {
           alert('You have been removed from this session by the GM.')
           window.location.href = `/stories/${id}`
@@ -1370,7 +1369,7 @@ export default function TablePage() {
         })
         presenceChannelRef.current = presChannel
       } catch (e) {
-        console.warn('[presence] setup error:', e)
+        console.error('[presence] setup error:', e)
       }
     }
     load()
@@ -1903,15 +1902,15 @@ export default function TablePage() {
 
     // Fetch fresh initiative order from DB to avoid stale state
     const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true })
-    if (orderErr) console.warn('[nextTurn] order fetch error:', orderErr.message)
+    if (orderErr) console.error('[nextTurn] order fetch error:', orderErr.message)
     const order = freshOrder ?? initiativeOrder
-    if (order.length === 0) { console.warn('[nextTurn] empty order, bailing'); return }
+    if (order.length === 0) { trace('nextTurn', { skipped: 'empty order' }); return }
     const currentIdx = order.findIndex((e: any) => e.is_active)
-    console.warn('[nextTurn] currentIdx:', currentIdx, 'order length:', order.length, 'active name:', order[currentIdx]?.character_name)
+    trace('nextTurn', { currentIdx, orderLength: order.length, activeName: order[currentIdx]?.character_name })
 
     // Guard: if no active entry found, forcibly activate the first alive combatant
     if (currentIdx < 0) {
-      console.warn('[nextTurn] no active entry found - activating first combatant as fallback')
+      trace('nextTurn', { note: 'no active entry found - activating first combatant as fallback' })
       await supabase.from('initiative_order').update(activateUpdate(order[0])).eq('id', order[0].id)
       await loadInitiative(id)
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
@@ -1997,7 +1996,7 @@ export default function TablePage() {
     // Defer: mark the pending-transition and return. The Sprint block
     // in executeRoll will re-invoke nextTurn after its log entry lands.
     if (everyoneSkipped && sprintAthleticsPendingRef.current) {
-      console.warn('[nextTurn] new round deferred - Sprint Athletics roll still pending')
+      trace('nextTurn', { note: 'new round deferred - Sprint Athletics roll still pending' })
       sprintAthleticsRoundDeferredRef.current = true
       return
     }
@@ -2199,12 +2198,12 @@ export default function TablePage() {
     // nextIdx was computed above (before the new-round check) so the skip-walk
     // wrap is detectable.
     const currentEntry = order.find((e: any) => e.is_active)
-    console.warn('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
+    trace('nextTurn', { deactivating: currentEntry?.character_name, activating: order[nextIdx]?.character_name })
     // Defense: if the skip-walk landed on the same combatant we're advancing
     // from (stale state, or every other combatant dead), trigger a new round
     // rather than no-op reactivating - prevents an infinite reactivate loop.
     if (currentEntry && order[nextIdx] && currentEntry.id === order[nextIdx].id) {
-      console.warn('[nextTurn] nextIdx resolves to self - no-op (finally will release lock)')
+      trace('nextTurn', { note: 'nextIdx resolves to self - no-op (finally will release lock)' })
       return
     }
 
@@ -2239,8 +2238,8 @@ export default function TablePage() {
         .neq('id', nextId),
       supabase.from('initiative_order').update(activation).eq('id', nextId),
     ])
-    if (deactErr) console.warn('[nextTurn] bulk deactivate error:', deactErr.message)
-    if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
+    if (deactErr) console.error('[nextTurn] bulk deactivate error:', deactErr.message)
+    if (actErr) console.error('[nextTurn] activate error:', actErr.message)
     // Reconcile local state with DB truth + refresh PC liveState, then notify peers.
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
@@ -2269,14 +2268,14 @@ export default function TablePage() {
     // decrement - burning BOTH actions on a single click. The lock is
     // scoped per entryId so other combatants aren't blocked.
     if (consumeActionInFlightRef.current.has(entryId)) {
-      console.warn('[consumeAction] already in flight for', entryId, '- ignoring duplicate call')
+      trace('consumeAction', { skipped: 'already in flight - ignoring duplicate call', entryId })
       return
     }
     consumeActionInFlightRef.current.add(entryId)
     try {
     // Re-fetch from DB to avoid stale state
     const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
-    if (freshErr) console.warn('[consumeAction] fetch error:', freshErr.message)
+    if (freshErr) console.error('[consumeAction] fetch error:', freshErr.message)
     const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
     trace('consumeAction', {
       called: true,
@@ -2320,14 +2319,14 @@ export default function TablePage() {
       .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0, aim_active: false } : {}) })
       .eq('id', entryId)
       .select('id, actions_remaining')
-    console.warn('[consumeAction] update', { entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
-    if (updErr) console.warn('[consumeAction] update error:', updErr.message)
+    trace('consumeAction', { update: true, entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
+    if (updErr) console.error('[consumeAction] update error:', updErr.message)
     if (!updErr && (!updData || updData.length === 0)) {
-      console.warn('[consumeAction] SILENT RLS FAIL - 0 rows updated, no error. entryId:', entryId)
+      console.error('[consumeAction] SILENT RLS FAIL - 0 rows updated, no error. entryId:', entryId)
     }
 
     if (newRemaining <= 0) {
-      console.warn('[consumeAction] newRemaining<=0 → calling nextTurn')
+      trace('consumeAction', { note: 'newRemaining<=0 -> calling nextTurn' })
       await nextTurn()
       // Safety: ensure local state reflects the advance even if nextTurn's
       // internal loadInitiative raced with something else.
@@ -2680,7 +2679,6 @@ export default function TablePage() {
     }))
     const { error } = await supabase.from('scene_tokens').insert(rows)
     if (error) { console.error('[placeFolderOnMap] error:', error.message); alert('Failed to place tokens: ' + error.message); return }
-    console.log('[placeFolderOnMap] inserted', rows.length, 'tokens')
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
@@ -3104,7 +3102,8 @@ export default function TablePage() {
       : moveMode?.npcId
         ? initiativeOrder.find((e: any) => e.npc_id === moveMode.npcId)
         : null) ?? activeNow
-    console.warn('[move] onMoveComplete', {
+    trace('move', {
+      onMoveComplete: true,
       moveMode,
       activeName: activeNow?.character_name, activeId: activeNow?.id, activeActions: activeNow?.actions_remaining,
       moverName: mover?.character_name, moverId: mover?.id, moverActions: mover?.actions_remaining,
@@ -3113,7 +3112,7 @@ export default function TablePage() {
     const charge = pendingChargeRef.current
     if (charge) {
       if (mover && charge.activeId && charge.activeId !== mover.id) {
-        console.warn('[charge] active combatant changed - aborting charge')
+        trace('charge', { aborted: 'active combatant changed' })
         pendingChargeRef.current = null
         setMoveMode(null)
         return
@@ -3282,7 +3281,7 @@ export default function TablePage() {
     setSessionStatus('active')
     setSessionCount(newCount)
     logEvent('session_started', { campaign_id: id, session_number: newCount })
-    console.warn('[startSession] kick-preserve build - kicks persist across sessions')
+    trace('startSession', { note: 'kick-preserve build - kicks persist across sessions' })
     // Fire all four DB calls in parallel - none depend on each other.
     // Log delete errors explicitly so we notice if RLS silently blocks a cleanup.
     void Promise.all([
@@ -3297,10 +3296,10 @@ export default function TablePage() {
         started_at: startedAt,
       }),
       deleteRollLog().eq('campaign_id', id).then(({ error }: any) => {
-        if (error) console.warn('[startSession] roll_log delete failed:', error.message)
+        if (error) console.error('[startSession] roll_log delete failed:', error.message)
       }),
       supabase.from('chat_messages').delete().eq('campaign_id', id).then(({ error }: any) => {
-        if (error) console.warn('[startSession] chat_messages delete failed:', error.message)
+        if (error) console.error('[startSession] chat_messages delete failed:', error.message)
       }),
       // NOTE: no mass kicked=false reset - kick persists across sessions.
       // Kicked players must manually Rejoin from the story overview page.
@@ -3341,10 +3340,10 @@ export default function TablePage() {
         await Promise.all([
           supabase.from('campaigns').update({ session_status: 'idle', session_started_at: null }).eq('id', id),
           deleteRollLog().eq('campaign_id', id).then(({ error }: any) => {
-            if (error) console.warn('[endSession] roll_log delete failed:', error.message)
+            if (error) console.error('[endSession] roll_log delete failed:', error.message)
           }),
           supabase.from('chat_messages').delete().eq('campaign_id', id).then(({ error }: any) => {
-            if (error) console.warn('[endSession] chat_messages delete failed:', error.message)
+            if (error) console.error('[endSession] chat_messages delete failed:', error.message)
           }),
           combatActive ? Promise.all([
             insertRollLog({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action }),
@@ -3368,7 +3367,7 @@ export default function TablePage() {
           if (filesToUpload.length > 0 && userId) {
             for (const file of filesToUpload) {
               const check = prepareUpload('session-attachments', file)
-              if (!check.ok) { console.warn('[EndSession] upload rejected:', check.reason); continue }
+              if (!check.ok) { console.error('[EndSession] upload rejected:', check.reason); continue }
               const path = `${sessionRow.id}/${check.filename}`
               const { error: upErr } = await supabase.storage.from('session-attachments').upload(path, file, { contentType: check.contentType })
               if (!upErr) {
@@ -4419,7 +4418,7 @@ export default function TablePage() {
       const newBonus = (targetEntry.aim_bonus ?? 0) - 2
       const { data: cfRows, error: cfErr } = await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId).select('id, aim_bonus')
       if (cfErr) console.error('[applySocialAction] Cover Fire update error:', cfErr.message)
-      else if (!cfRows || cfRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL - Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
+      else if (!cfRows || cfRows.length === 0) console.error('[applySocialAction] SILENT RLS FAIL - Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
       else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       await consumeAction(activeEntry.id, `${activeEntry.character_name} - Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
     } else if (action === 'Inspire') {
@@ -4431,7 +4430,7 @@ export default function TablePage() {
       const newActions = (targetEntry.actions_remaining ?? 0) + 1
       const { data: insRows, error: insErr } = await supabase.from('initiative_order').update({ actions_remaining: newActions, inspired_this_round: true }).eq('id', targetEntryId).select('id, actions_remaining')
       if (insErr) console.error('[applySocialAction] Inspire update error:', insErr.message)
-      else if (!insRows || insRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL - Inspire actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
+      else if (!insRows || insRows.length === 0) console.error('[applySocialAction] SILENT RLS FAIL - Inspire actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
       else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       await consumeAction(activeEntry.id, `${activeEntry.character_name} - Inspire → ${targetEntry.character_name} (+1 action)`)
     }
@@ -4757,7 +4756,7 @@ export default function TablePage() {
         .eq('id', targetEntry.stateId)
         .select('id, death_countdown, incap_rounds')
       if (stabErr) console.error('[stabilize] character_states update error:', stabErr.message)
-      else if (!stabRows || stabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - stabilize did not persist for', targetName, '- Run sql/character-states-rls-fix.sql.')
+      else if (!stabRows || stabRows.length === 0) console.error('[stabilize] SILENT RLS FAIL - stabilize did not persist for', targetName, '- Run sql/character-states-rls-fix.sql.')
       setEntries(prev => prev.map(e =>
         e.stateId === targetEntry.stateId
           ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any }
@@ -4781,7 +4780,7 @@ export default function TablePage() {
       .eq('id', (targetNpc as any).id)
       .select('id, death_countdown, incap_rounds')
     if (nstabErr) console.error('[stabilize] campaign_npcs update error:', nstabErr.message)
-    else if (!nstabRows || nstabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL - NPC stabilize did not persist for', targetName)
+    else if (!nstabRows || nstabRows.length === 0) console.error('[stabilize] SILENT RLS FAIL - NPC stabilize did not persist for', targetName)
     const npcPatch = { death_countdown: null, incap_rounds: incapRounds }
     setCampaignNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } : n))
     setRosterNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } : n))
@@ -4826,7 +4825,7 @@ export default function TablePage() {
       return distractNarrative(targetName, 0, false)
     }
     if (!distractRows || distractRows.length === 0) {
-      console.warn('[distract] SILENT RLS FAIL - target actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
+      console.error('[distract] SILENT RLS FAIL - target actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
       return distractNarrative(targetName, 0, false)
     }
     // Broadcast turn_changed so all clients refresh immediately even
@@ -5040,7 +5039,7 @@ export default function TablePage() {
     if (didRoll && combatActive && !preConsumed) {
       // Re-fetch active entry from DB to avoid stale closure state
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
-      if (foErr) console.warn('[closeRollModal] active fetch error:', foErr.message)
+      if (foErr) console.error('[closeRollModal] active fetch error:', foErr.message)
       const activeEntry = freshOrder?.[0]
       trace('closeRollModal', {
         activeEntry: true,
@@ -5071,10 +5070,10 @@ export default function TablePage() {
           }
           await consumeAction(activeEntry.id, undefined, cost)
         } else {
-          console.warn('[closeRollModal] out-of-turn check - no action consumed (roller:', rollerInitId, 'active:', activeEntry.id, ')')
+          trace('closeRollModal', { note: 'out-of-turn check - no action consumed', roller: rollerInitId, active: activeEntry.id })
         }
       } else {
-        console.warn('[closeRollModal] no active entry found')
+        trace('closeRollModal', { note: 'no active entry found' })
       }
     }
     // Drain the wound-infection check queue (populated by endCombat).
@@ -6814,7 +6813,7 @@ export default function TablePage() {
                     .eq('campaign_id', id)
                     .eq('user_id', kickUserId)
                     .select('id')
-                  console.warn('[kick] rows updated:', kickData?.length ?? 0, 'error:', kickErr?.message ?? 'none')
+                  console.error('[kick] rows updated:', kickData?.length ?? 0, 'error:', kickErr?.message ?? 'none')
                   if (kickErr) {
                     alert(`Kick failed: ${kickErr.message}`)
                     return
@@ -7582,7 +7581,7 @@ export default function TablePage() {
                                   })
                                   void rollsFeed.refetch()
                                 } catch (e) {
-                                  console.warn('[advantages] feed broadcast failed', e)
+                                  console.error('[advantages] feed broadcast failed', e)
                                 }
                                 // Optimistic local update - realtime will reconcile too.
                                 setAdvantages(prev => prev.filter(x => x.id !== a.id))
@@ -8013,11 +8012,6 @@ export default function TablePage() {
                           Distract regardless.) */}
                       {(() => {
                         const objs = mapTokens.filter(t => t.token_type === 'object')
-                        if (objs.length > 0 && process.env.NODE_ENV !== 'production') {
-                          console.warn('[target-dropdown] objects on map:', objs.map(o => ({
-                            name: o.name, wp_max: o.wp_max, wp_current: o.wp_current,
-                          })))
-                        }
                         return objs
                           .filter(t => {
                             // Range filter (skip for Charge). An out-of-range

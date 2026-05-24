@@ -50,6 +50,8 @@ const GOD_COMPONENTS = [
 // Seams: the ONLY allowed homes for raw data/realtime access.
 const DATA_SEAM = 'lib/data/'
 const REALTIME_SEAM = 'lib/realtime/'
+// The sanctioned console home: trace()'s dev-only echo lives here.
+const CONSOLE_SEAM = 'lib/playtest-recorder'
 
 const args = process.argv.slice(2)
 const SAVE = args.includes('--save')
@@ -93,7 +95,11 @@ for (const f of files) {
   try { text = readFileSync(f, 'utf8') } catch { continue }
   if (!norm.includes(DATA_SEAM)) fromOutsideData += countMatches(text, /\.from\(/g)
   if (!norm.includes(REALTIME_SEAM)) channelOutsideRealtime += countMatches(text, /\.channel\(/g)
-  prodConsole += countMatches(text, /console\.(log|warn)\(/g)
+  // lib/playtest-recorder.ts is the ONE sanctioned console home: trace()'s
+  // diagnostic echo there is process.env.NODE_ENV==='development' gated, so it
+  // provably never runs in prod (analogous to lib/data being the only home for
+  // .from). Telemetry routes THROUGH trace(); everywhere else stays console-free.
+  if (!norm.includes(CONSOLE_SEAM)) prodConsole += countMatches(text, /console\.(log|warn)\(/g)
 }
 
 const current = {
