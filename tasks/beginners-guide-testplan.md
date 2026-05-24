@@ -49,7 +49,7 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 1. [x] (DOM) GM creates a story (setting picker -> Custom) -> appears in My Stories with a 6-char invite code. `story-lifecycle.spec`
 2. [x] (DOM) Player joins via code -> persists in `campaign_members` + GM roster reflects it ON RELOAD. `story-lifecycle.spec` (NB: roster is refetch-based, NOT realtime - app/stories/[id]/page.tsx:49; "GM notified on join" is a SEPARATE untested claim, no notification asserted.)
 3. [x] (DOM) Player leaves a story -> drops off `campaign_members`. `story-lifecycle.spec`
-4. [ ] (DOM) Start a story from a Rumor/module (clone) - see Ch 14.
+4. [x] (DOM) Start a story from a Rumor/module (clone) - see Ch 14. `rumors-publish-clone.spec`
 5. [ ] (DOM) Story-page actions render: Launch / Edit / Clone / Snapshots / Sessions / Publish.
 
 ## Ch 7 - The Table and Sessions
@@ -113,9 +113,9 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 
 ## Ch 14 - Rumors
 1. [x] (DOM) Browse / filter / sort the marketplace (sweep).
-2. [ ] (DOM) Publish a PRIVATE module from a story.
-3. [ ] (DOM) Create a story from that module (clone) -> content lands; teardown removes both.
-4. [ ] (DOM) Version history: "update available" button + "Your clone" chip + diff.
+2. [x] (DOM) Publish a PRIVATE module from a story. `rumors-publish-clone.spec`
+3. [x] (DOM) Create a story from that module (clone) -> content lands; teardown removes both. `rumors-publish-clone.spec` (seeds 1 NPC in the source, asserts it lands in the clone + a module_subscriptions link)
+4. [ ] (DOM) Version history: "update available" button + "Your clone" chip + diff. DEFERRED follow-up (the features ARE built: StoryActionBar update button, "Your clone" chip + diff on the versions page) - a 2nd test: publish v2 -> clone shows update-available + diff.
 5. [ ] (DOM) Ratings / reviews.
 
 ---
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1-4.4, Ch5.1-5.2, Ch6.1-6.3, Ch7.1 (partial: counter+dice-proxy)/7.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1, account-settings (Sys P, reversible half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1-4.4, Ch5.1-5.2, Ch6.1-6.3, Ch7.1 (partial: counter+dice-proxy)/7.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1-14.3, account-settings (Sys P, reversible half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
