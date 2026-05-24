@@ -186,57 +186,23 @@ export async function listAvailableModules(
   const { user } = await getCachedAuth()
   if (!user) return []
 
-  // RLS already restricts reads; we just need to include unlisted
-  // modules here when we add invite-link support later. For MVP we
-  // fetch everything SELECT-able and let RLS do the heavy lifting.
-  // Try with the subscriber_count column first (added in
-  // sql/modules-subscriber-count.sql). If the migration hasn't been
-  // applied on this database yet, PostgREST 400s on the missing
-  // column - retry without it instead of falling all the way through
-  // to the empty-state path. The marketplace card just shows "📥 0"
-  // for every module until the migration runs + the trigger backfills.
-  const fullSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, avg_rating, rating_count, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
-  const liteSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
-  let { data, error } = await supabase
-    .from('modules')
-    .select(fullSelect)
-    .not('latest_version_id', 'is', null)
-    .is('archived_at', null)
-    .order('sort_order', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: false })
-
-  if (error && /subscriber_count/.test(error.message ?? '')) {
-    // Migration not applied yet - retry without the column.
-    const retry = await supabase
-      .from('modules')
-      .select(liteSelect)
-      .not('latest_version_id', 'is', null)
-      .is('archived_at', null)
-      .order('sort_order', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: false })
-    data = retry.data as any
-    error = retry.error
-  }
-
-  if (error) {
-    // The FK-named join above may not match your schema's auto-named
-    // constraint. Fallback to a two-step fetch if the join errors out.
-    return listAvailableModulesFallback(supabase)
-  }
-
-  // Supabase returns the related row as an array even for 1:1 joins;
-  // normalize it down.
-  return (data ?? []).map((r: any) => ({
-    ...r,
-    latest_version: Array.isArray(r.latest_version) ? r.latest_version[0] ?? null : r.latest_version ?? null,
-  })) as ModuleListing[]
+  // We used to issue a single query with a PostgREST FK-embed
+  // (latest_version:module_versions!modules_latest_version_id_fkey). That
+  // 400s on prod (PGRST200): the modules <-> module_versions relationship
+  // can't be resolved by that hint - there are two FKs between the tables,
+  // so the hint has to match the exact constraint name and it doesn't. The
+  // browser logged the failed request on every /rumors + /campfire load even
+  // though we recovered. So skip the embed entirely and always do the
+  // reliable two-step fetch (modules, then hydrate latest_version separately).
+  return listAvailableModulesTwoStep(supabase)
 }
 
-async function listAvailableModulesFallback(
+async function listAvailableModulesTwoStep(
   supabase: SupabaseClient,
 ): Promise<ModuleListing[]> {
-  // Same migration-tolerant pattern as listAvailableModules: try with
-  // subscriber_count, retry without it if the column doesn't exist.
+  // The reliable path (no FK-embed - see listAvailableModules): select the
+  // module rows, then hydrate latest_version in a second query. Migration-
+  // tolerant on subscriber_count: retry without it if the column is absent.
   const fullCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, avg_rating, rating_count'
   const liteCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order'
   let { data: modules, error } = await supabase
