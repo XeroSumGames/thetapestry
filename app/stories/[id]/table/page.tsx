@@ -2,7 +2,8 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
-import { insertRollLog, deleteRollLog } from '../../../../lib/data/roll-log'
+import { insertRollLog, deleteRollLog, setRollLogSession } from '../../../../lib/data/roll-log'
+import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
 import { prepareUpload } from '../../../../lib/safe-upload'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
@@ -1229,6 +1230,7 @@ export default function TablePage() {
       setIsGM(amGM)
       setSessionStatus(camp.session_status === 'active' ? 'active' : 'idle')
       setSessionCount(camp.session_count ?? 0)
+      syncRollLogSession(camp.session_status)  // Y11-e: stamp rolls after a mid-session reload
       setLoading(false)
       // Seed the Quick Add pin lat/lng from the campaign's map center
       // so if the player opens Quick Add via some non-dblclick route
@@ -1544,6 +1546,7 @@ export default function TablePage() {
         const row = payload.new
         setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
         setSessionCount(row.session_count ?? 0)
+        syncRollLogSession(row.session_status)  // Y11-e
         setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
         if (Array.isArray(row.vehicles)) setVehicles(row.vehicles)
       },
@@ -3315,6 +3318,14 @@ export default function TablePage() {
 
   // ── Session functions ──
 
+  // Y11-e: keep the lib roll-log stamper synced to the active session so every
+  // roll written this session carries its session_id. Active -> look up the
+  // un-ended session id (recovers it after a mid-session reload); idle -> clear.
+  function syncRollLogSession(status: string | null | undefined) {
+    if (status === 'active') void activeSessionIdForCampaign(id).then(sid => setRollLogSession(sid))
+    else setRollLogSession(null)
+  }
+
   async function startSession() {
     if (!gmLike) return
     // UI updates instantly; DB writes fire in the background (mirrors endSession).
@@ -3334,11 +3345,11 @@ export default function TablePage() {
         session_count: newCount,
         session_started_at: startedAt,
       }).eq('id', id),
-      supabase.from('sessions').insert({
-        campaign_id: id,
-        session_number: newCount,
-        started_at: startedAt,
-      }),
+      insertSession({ campaign_id: id, session_number: newCount, started_at: startedAt })
+        .select('id').single().then(({ data, error }: any) => {
+          if (error) console.error('[startSession] sessions insert failed:', error.message)
+          else if (data) setRollLogSession(data.id)  // stamp rolls with this session
+        }),
       deleteRollLog().eq('campaign_id', id).then(({ error }: any) => {
         if (error) console.error('[startSession] roll_log delete failed:', error.message)
       }),
@@ -3366,6 +3377,7 @@ export default function TablePage() {
     rollsFeed.clear()
     chat.clear()
     setSessionStatus('idle')
+    setRollLogSession(null)  // Y11-e: stop stamping rolls once the session ends
     // Force-clear every other client's chat + log state immediately.
     initChannelRef.current?.send({ type: 'broadcast', event: 'logs_cleared', payload: {} })
     const endedCount = sessionCount

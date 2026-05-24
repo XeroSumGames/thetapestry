@@ -23,8 +23,31 @@ export type RollLogInsert = Insert<'roll_log'>
  * a separate tightening pass - done when this code is rebuilt into
  * useRollResolution (Phase 3). Tighten `rows` to `RollLogInsert | RollLogInsert[]` then.
  */
+// Y11-e: the active session id, set by the table page's session lifecycle
+// (setRollLogSession). insertRollLog stamps it onto every row that doesn't
+// already carry one, so the feed can be scoped to the current session without
+// wiping roll_log at session start. Module-level so all 20+ insert call sites
+// get the stamp for free (no per-site change, no missed-site risk).
+let _activeSessionId: string | null = null
+export function setRollLogSession(id: string | null) {
+  _activeSessionId = id
+}
+
+// Pure: inject session_id into a row (or each row of an array) when there's an
+// active session AND the row didn't already specify one. No session -> rows
+// pass through untouched (session_id stays NULL = "pre/outside-session" roll).
+// Extracted so the stamping rule is unit-testable without the DB.
+export function stampSessionId(rows: any, sessionId: string | null): any {
+  if (!sessionId) return rows
+  const stamp = (r: any) =>
+    r && typeof r === 'object' && !Array.isArray(r) && r.session_id === undefined
+      ? { ...r, session_id: sessionId }
+      : r
+  return Array.isArray(rows) ? rows.map(stamp) : stamp(rows)
+}
+
 export function insertRollLog(rows: any) {
-  return db().from('roll_log').insert(rows)
+  return db().from('roll_log').insert(stampSessionId(rows, _activeSessionId))
 }
 
 /** The bare roll_log delete builder, e.g. `deleteRollLog().eq('campaign_id', id)`. */
