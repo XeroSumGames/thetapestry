@@ -35,6 +35,7 @@ export type SceneControlsCommand =
   | 'fit_to_map'
   | 'fit_to_screen'
   | 'place_tokens'
+  | 'new_scene'      // popout "NEW MAP" -> main window creates + activates a fresh scene
 
 type Msg =
   | { kind: 'state'; key: SceneControlsStateKey; value: any }

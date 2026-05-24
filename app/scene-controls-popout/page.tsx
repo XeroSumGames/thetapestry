@@ -360,6 +360,15 @@ export default function SceneControlsPopoutPage() {
   return (
     <div style={{ background: '#0d0d0d', height: '100vh', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'auto', boxSizing: 'border-box' }}>
 
+      {/* NEW MAP - creates + switches to a fresh blank scene (then name it +
+          upload art below). Sends a bus command; the main TacticalMap window
+          owns scene creation. Closes the "can't add a 2nd map" gap. */}
+      <button onClick={() => busRef.current?.postCommand('new_scene')}
+        title="Create a new blank tactical map and switch to it - then set its name + upload art below"
+        style={{ width: '100%', height: '32px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '6px', boxSizing: 'border-box' }}>
+        + New Map
+      </button>
+
       <select value={scene.id} onChange={e => activateScene(e.target.value)}
         style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', marginBottom: '4px' }}>
         {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}

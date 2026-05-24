@@ -3490,9 +3490,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   // Scene management
-  async function createScene() {
+  async function createScene(nameOverride?: string) {
     const { data, error } = await insertScene({
-      campaign_id: campaignId, name: setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, cell_px: 35, is_active: true, has_grid: setupHasGrid,
+      campaign_id: campaignId, name: nameOverride ?? setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, cell_px: 35, is_active: true, has_grid: setupHasGrid,
     }).select().single()
     if (error) { console.error('[TacticalMap] createScene error:', error.message); alert('Failed to create scene: ' + error.message); return }
     if (data) {
@@ -3594,11 +3594,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     fit_to_map: () => {},
     fit_to_screen: () => {},
     place_tokens: () => {},
+    new_scene: () => {},
   })
   sceneControlsHandlersRef.current = {
     fit_to_map: () => { fitToMap() },
     fit_to_screen: () => { fitToScreen() },
     place_tokens: () => { autoPopulateTokens() },
+    // Popout "NEW MAP": create + activate a fresh blank scene; the GM then
+    // names it (SCENE NAME) + uploads art (UPLOAD MAP) in the popout. Default
+    // name so no cross-window modal is needed.
+    new_scene: () => { void createScene('New Map') },
   }
 
   useEffect(() => {
@@ -3683,7 +3688,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setShowSetup(false)}
                   style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                <button onClick={createScene}
+                <button onClick={() => createScene()}
                   style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
               </div>
             </div>
@@ -4279,7 +4284,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowSetup(false)}
                 style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={createScene}
+              <button onClick={() => createScene()}
                 style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
             </div>
           </div>
