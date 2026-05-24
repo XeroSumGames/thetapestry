@@ -1,5 +1,9 @@
 # Lessons Learned
 
+## Post-re-arch "dead inline dupe" can be a LIVE alternate path - verify before assuming (2026-05-24)
+
+Fixing the infection-only-from-cut/shot gate, the todo warned page.tsx:4915/4941 "still hold inline dupes - confirm dead before assuming the hook is the only path." Reading them showed they were NOT dead: they're the insight-die-reroll damage re-application (`rerollDamage`), a live branch that re-resolves damage after a spend. Gating only the extracted hook (useRollResolution) would have left rerolled attacks still mis-firing infection on unarmed/blunt. Lesson: after a big extraction (re-arch), a function that looks like a leftover dupe of the moved logic may actually be a DISTINCT live path (reroll, retry, optimistic, fallback). Read the enclosing function's purpose before deciding it's dead; gate/fix every live site, not just the "canonical" one. (Also reaffirmed: new realtime `.channel` must live in lib/realtime - check-arch blocked GlobalPresence's raw channel until I moved it into a `useGlobalPresence` seam.)
+
 ## Two lanes in ONE working tree: a broad `git add` sweeps the other lane's staged files (2026-05-23)
 
 While the puffer-fish lane had Stage A1 files staged (after the pre-commit hook BLOCKED its commit on an unrelated arch-ratchet regression that the OTHER lane's in-flight `GlobalPresence.tsx` had introduced), the hunt-and-peck lane committed in the SAME working directory (`C:\TheTapestry`) with a broad `git add`. Result: all of puffer-fish's Stage A1 work (publication baseline, drift-detector, AGENTS section, package.json, scope/lessons/todo edits) was swept into the other lane's commit `74cfe82` ("fix(presence): ..."). Nothing was lost - it is committed + pushed + intact (verified: `check:publication` green, 21 tables) - but it is bundled under the wrong message. NOT rewritten: the commit is pushed + shared, and history rewrite on a shared branch is a bright line.
