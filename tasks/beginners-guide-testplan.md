@@ -77,12 +77,12 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 7. [~] (RT) End Combat -> wound-infection modal fires on the wounded PC owner's window `[Gate 0: F]`.
 
 ## Ch 10 - NPCs and Recruitment
-1. [ ] (DOM) Create / Generate / Clone / Edit / Delete an NPC.
+1. [x] (DOM) Create / Clone / Edit / Delete an NPC. `npc-roster-crud.spec` (Generate covered in-form by the same insert path; clone auto-numbers "<base> #2" + full HP)
 2. [x] (RT) GM reveals a hidden NPC -> player's roster shows it live `[Gate 0: C]`. `section-c-npc-reveal.spec`
-3. [ ] (RT) Apply damage from the table -> roster WP/RP updates live for the player.
-4. [ ] (DOM) Populate generates a 1A:2F:3G:4B roster.
-5. [ ] (DOM) Publish an NPC to the World Library.
-6. [ ] (DOM) Recruit modal: Conscript shows the credible-threat gate; Apprentice unlocks ONLY on a double-6.
+3. [ ] (RT) Apply damage from the table -> roster WP/RP updates live for the player. DEFERRED: WP/RP dot-clicks live on the expanded NpcCard; overlaps combat-flow #10 damage propagation.
+4. [ ] (DOM) Populate generates a 1A:2F:3G:4B roster. DEFERRED (richer recruit/populate flow).
+5. [ ] (DOM) Publish an NPC to the World Library. DEFERRED.
+6. [ ] (DOM) Recruit modal: Conscript shows the credible-threat gate; Apprentice unlocks ONLY on a double-6. DEFERRED (Conscript = window.confirm verbal gate; Apprentice is DICE-GATED -> stays manual).
 
 ## Ch 11 - Vehicles
 1. [ ] (CANVAS/RT) Seat assign (Driver/Navigator/Brewer/Passenger) with the 30ft gate + MOVE HERE auto-confirm `[Gate 0: B]`.
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1-4.4, Ch5.1-5.2, Ch6.1-6.3, Ch7.1 (partial: counter+dice-proxy)/7.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1-14.3, account-settings (Sys P, reversible half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1-4.4, Ch5.1-5.2, Ch6.1-6.3, Ch7.1 (partial: counter+dice-proxy)/7.3, Ch10.1-10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1-14.3, account-settings (Sys P, reversible half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
