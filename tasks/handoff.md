@@ -170,7 +170,11 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 # Session state - 2026-05-23 (GRAND RE-ARCHITECTURE - Phase 5 IN PROGRESS 2/6; autonomous run to Phase 7)
 
-## Current HEAD: derive (`git rev-parse --short HEAD`; was `ad9c1c8` after TacticalMap realtime). page.tsx 10553; 548 tests; CI green (full fitness set). Ratchet baselines current (`.from` 1039, `.channel` 22, console 115). **PHASE 5 COMPLETE - all 6 god-components migrated onto the seams.** Next: Phase 6 (cross-cutting cleanup).
+## Current HEAD: derive (`git rev-parse --short HEAD`; was `730a172` after Phase 6 batch 1). page.tsx 10553; 548 tests; CI green (full fitness set). Ratchet baselines current (`.from` 1039, `.channel` 22, console 105). **PHASE 5 COMPLETE.** Phase 6 IN PROGRESS: trace() built + [playtest-trace] converted.
+
+## Phase 6 status (cross-cutting cleanup)
+- **DONE (`730a172`):** `trace(label, data)` added to lib/playtest-recorder (pushes a 'custom' recorder event; console echo ONLY in NODE_ENV=development). All 13 `console.warn('[playtest-trace]...')` -> trace(). console ratchet 115 -> 105.
+- **OPEN DECISION (asked Xero 2026-05-23):** the remaining ~100 console.log|warn are almost all error-surfacing (`console.warn('[x] failed:', err)`, SILENT RLS FAIL diagnostics) + a few `[crop]` timing/debug logs. Xero's locked option-B says "useful telemetry -> trace(), delete pure noise" but doesn't cleanly cover operational error-surfacing. Fork to confirm: (a) error-warns -> trace() (recorder-buffer + dev-console only, gone from prod); (b) -> console.error (stays visible in prod + Sentry-captured via the recorder monkey-patch, drops the warn ratchet, but is still a "bare console.*"); (c) real DB failures -> reportSupabaseError (Sentry). `[crop]`/timing debug logs = delete either way. Resolve, then sweep the remaining files (table page ~40, useRollResolution ~16, ~20 scattered components/libs) in batches.
 
 ## Autonomous run directive (Xero, 2026-05-23)
 "Keep going from 3d all the way to Phase 7. Stop ONLY if you absolutely need me to smoke-test something, and only for critical issues." Drive P5 -> P6 -> P7, commit every verifiable step, keep this handoff current, **batch ALL 2-client smokes into the ONE Phase-7 acceptance**, do not stop between phases. Multi-window by nature - progress lives in git + this handoff + task list (#1-#5).
