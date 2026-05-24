@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## E2E on a shared checkout + Supabase realtime/REST gotchas (2026-05-24)
+Building the Playwright suite in the checkout the puffer-fish lane also writes to surfaced three reusable lessons:
+- **Shared-index sweep:** staging files (`git add`) then having the other lane commit sweeps YOUR staged files into THEIR commit (it happened - my seeding spec landed under a "fix(presence)" commit). And their uncommitted raw `.channel` WIP trips the arch ratchet, blocking any commit. Fix: build/run in the main checkout but COMMIT additive E2E work from an isolated worktree off `origin/main` (clean tree -> ratchet green; separate index -> no sweep), push to main, prune.
+- **PostgREST boolean filters want `is.true` / `is.false`, NOT `eq.true`** - a `hidden_from_players=eq.true` filter silently returned 0 rows. Reading the value and restoring it (no boolean filter) is more robust anyway, and gives a reversible fixture.
+- **`CampaignCommunity` `initialOpenId` opens the panel but does NOT fire `loadStockpile`** (that only runs on the manual panel toggle, CampaignCommunity.tsx:1684). So a deep-linked `/communities/[id]` shows the stockpile empty AND the realtime handler won't refetch (it only refetches a `stockpileLoadedFor` community). A realtime stockpile test must toggle the panel to arm the load.
+
 ## Don't hand Xero a menu of engineering choices - own the technical sequencing (2026-05-24)
 
 Xero, sharply: *"you keep asking me like i might know. you need to put an authoritative plan in place for me. write that down. i can't do that part."* This came after I repeatedly closed turns with "A2 or Stage B - which do you want me on?" and an "Open decisions for Xero" section listing the Stage C tech call, the sequencing, etc. That is offloading the architect's job onto the visionary.
