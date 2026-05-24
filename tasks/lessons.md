@@ -6,6 +6,16 @@ Recruit-Group Phase 2: the spec (`tasks/spec-recruit-group-2026-05-24.md`) said 
 
 Second, smaller win in the same change: the card already had a derived `isCommunity = total >= 13`. The clean Phase 2 move was to REDEFINE that one flag (`!isGroupStage(c.stage)`) so every existing gate (label, morale, publish) flipped to the canonical signal at once - not thread a new parallel `isGroup` condition through each site. Redefining an existing load-bearing derived value in place beats adding a second one beside it.
 
+## Multi-lane push escape: cherry-pick into a detached worktree, then `reset --mixed` (2026-05-24, validated)
+
+When the main checkout is too cluttered with the OTHER lane's untracked files to `git pull --rebase` (rebase does a checkout and dies on "untracked working tree files would be overwritten" - e.g. a leftover untracked `e2e/*.spec.ts` the other lane has since committed), do NOT delete their files or `--no-verify`. The reliable escape (used successfully this session to land Phase 2):
+1. `git worktree add --detach .claude/worktrees/pushwt origin/main` (clean tree, no untracked junk -> ratchet green, no collision).
+2. In it: `git cherry-pick <your-local-sha>` then `git push origin HEAD:main`. (Cherry-pick is clean when your diff doesn't overlap the other lane's commit.)
+3. Back in the main checkout: `git fetch origin main` then `git reset --mixed origin/main` - moves the branch pointer to the new main WITHOUT touching the working tree, so the other lane's uncommitted work is preserved and your now-pushed files show as clean.
+4. Clean up: you must `cd` OUT of the worktree first (Windows holds a lock on the cwd -> "Permission denied"); then `git worktree remove ... --force`, `git worktree prune`, and `rm -rf` the dir if it lingers.
+
+Two gotchas hit this session: (a) the Bash tool's cwd PERSISTS across calls, so after `cd`-ing into the worktree, later relative paths resolve from there - use `git -C <abs-path>` instead of relative `cd`. (b) `git worktree remove` fails with Permission denied while your shell sits inside that worktree.
+
 ## E2E on a shared checkout + Supabase realtime/REST gotchas (2026-05-24)
 Building the Playwright suite in the checkout the puffer-fish lane also writes to surfaced three reusable lessons:
 - **Shared-index sweep:** staging files (`git add`) then having the other lane commit sweeps YOUR staged files into THEIR commit (it happened - my seeding spec landed under a "fix(presence)" commit). And their uncommitted raw `.channel` WIP trips the arch ratchet, blocking any commit. Fix: build/run in the main checkout but COMMIT additive E2E work from an isolated worktree off `origin/main` (clean tree -> ratchet green; separate index -> no sweep), push to main, prune.
