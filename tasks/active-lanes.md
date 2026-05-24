@@ -16,9 +16,9 @@ Format per lane: **focus** (what right now) / **touching** (files/area) /
 - **updated:** 2026-05-24, HEAD 0b440e2 (rebases on push).
 
 ## Puffer Fish
-- **focus:** BATCH DONE + RE-VERIFIED. Both routed items shipped in `6660e49`: (1) operating-mode.md 3-lane split; (2) map_pins moderation-bypass -> Risk Register RED/MEDIUM + fix SQL (`sql/map-pins-moderation-enforce-2026-05-24.sql`). Re-verified the trigger logic against `sql/_baseline/schema.sql` "View pins" SELECT policy: visibility keys on `status='approved'` only, so the non-Thriver private-pin clamp to `status='active'` (owner-only) and shared-pin force to `status='pending'` (queue) both close the bypass correctly. **STILL OPEN ON PROD** - the fix is written but NOT applied (bright line); one command owed to Xero: `npx supabase db query --linked -f sql/map-pins-moderation-enforce-2026-05-24.sql`. Now IDLE / available. Carried (not active): #5 phase-2 routing (needs the manual conditions smoke + an isolated worktree; the table page is Hunt&Peck's hot file); #7 lasting-wounds migration (held); Stage C design done (build gated on Phase 7).
-- **touching:** nothing live now (verification pass; only this `active-lanes.md` row edited). NO `app/` / `components/` / `lib/` / `e2e/` edits.
-- **updated:** 2026-05-24, working from HEAD 6660e49 (rebases on push).
+- **focus:** Session 2026-05-24 (lane/puffer @ 932fb73). Re-verified against the LIVE DB that the map_pins moderation fix is STILL UNAPPLIED (live `map_pins` has only `on_new_pin` + `on_pin_approved`; the enforce trigger is absent) - gap open, fix file ready, ONE command owed to Xero's go: `npx supabase db query --linked -f sql/map-pins-moderation-enforce-2026-05-24.sql`. Refreshed the stale Confidence Ledger (debug-handoff Sec 3: 532/29 -> 622/37). Now IDLE / available. Carried (gated, not active): #5 phase-2 conditions routing (needs the manual conditions smoke + an isolated worktree; table page is Hunt&Peck's hot file); #7 lasting-wounds migration (held); Stage C build (gated on Phase 7).
+- **touching:** `tasks/debug-handoff.md` (Confidence Ledger line), `tasks/active-lanes.md`. NO `app/` / `components/` / `lib/` / `e2e/` edits.
+- **updated:** 2026-05-24, lane/puffer @ 932fb73 (commits push to main; rebases on non-ff).
 
 ## Playwright / E2E
 - **focus:** Full-suite build, Phase 1 (4/7 green: story-lifecycle, rules-deeplinks, campfire-social, world-pin-to-queue). Next: presence, account-settings. messages-dm parked on Xero's teardown call.
