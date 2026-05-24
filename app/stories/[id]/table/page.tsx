@@ -3711,7 +3711,7 @@ export default function TablePage() {
         .is('left_at', null)
         .eq('communities.campaign_id', id),
     ])
-    const commRows = (comms ?? []) as { id: string; name: string }[]
+    const commRows = (comms ?? []) as { id: string; name: string | null }[]
     const mems = (memberships ?? []) as any[]
     const byCommId: Record<string, number> = {}
     const nextNpcMap: Record<string, { id: string; name: string; recruitment_type: string }> = {}
@@ -3720,13 +3720,13 @@ export default function TablePage() {
       if (m.community_id) byCommId[m.community_id] = (byCommId[m.community_id] ?? 0) + 1
       if (m.npc_id) {
         const npcName = campaignNpcs.find((n: any) => n.id === m.npc_id)?.name ?? '?'
-        nextNpcMap[m.npc_id] = { id: m.community_id, name: m.communities?.name ?? '?', recruitment_type: m.recruitment_type }
+        nextNpcMap[m.npc_id] = { id: m.community_id, name: m.communities?.name ?? 'Unnamed Group', recruitment_type: m.recruitment_type }
         if (m.recruitment_type === 'apprentice' && m.apprentice_of_character_id) {
           nextApprenticeMap[m.apprentice_of_character_id] = { id: m.id, npcName }
         }
       }
     }
-    setRecruitCommunityList(commRows.map(c => ({ ...c, member_count: byCommId[c.id] ?? 0 })))
+    setRecruitCommunityList(commRows.map(c => ({ id: c.id, name: c.name || 'Unnamed Group', member_count: byCommId[c.id] ?? 0 })))
     setNpcCommunityMap(nextNpcMap)
     setApprenticeByCharacter(nextApprenticeMap)
     // Auto-pick community if exactly one exists, else blank (user picks
@@ -3825,25 +3825,32 @@ export default function TablePage() {
     let finalCommunityId = recruitCommunityId
     let finalCommunityName = ''
     if (recruitCommunityId === '__new__') {
-      if (!recruitNewCommunityName.trim()) return
+      // Canon (tapestry-rules-canon.md:746): recruits start as a GROUP, not a
+      // Community. A Group has no required name and no public / Morale
+      // apparatus; it becomes a Community at 13+ combined members (stage flip
+      // + name prompt - Phase 3). So: name optional, no world_visibility.
+      // Store an auto-name ("<Roller>'s Group") rather than NULL - same UX
+      // (the user types nothing) but no null-name crash risk in the community
+      // panel; Phase 3 overwrites it with the real Community name at 13.
+      const groupName = recruitNewCommunityName.trim() || `${rollerEntry.character.name}'s Group`
       const { data: newComm, error: commErr } = await supabase
         .from('communities')
         .insert({
           campaign_id: id,
-          name: recruitNewCommunityName.trim(),
+          name: groupName,
+          stage: 'group',
           status: 'forming',
-          world_visibility: recruitNewCommunityPublic ? 'published' : 'private',
         })
         .select('id, name')
         .single()
       if (commErr || !newComm) {
-        alert(`Failed to create community: ${commErr?.message ?? 'unknown error'}`)
+        alert(`Failed to create group: ${commErr?.message ?? 'unknown error'}`)
         return
       }
       finalCommunityId = newComm.id
-      finalCommunityName = newComm.name
+      finalCommunityName = newComm.name ?? `${rollerEntry.character.name}'s Group`
     } else if (finalCommunityId) {
-      finalCommunityName = recruitCommunityList.find(c => c.id === finalCommunityId)?.name ?? ''
+      finalCommunityName = recruitCommunityList.find(c => c.id === finalCommunityId)?.name ?? 'Unnamed Group'
     } else {
       return // nothing to do
     }
@@ -9516,11 +9523,12 @@ export default function TablePage() {
         const currentApproachLocked = lockedApproaches.includes(recruitApproach)
         const hasAnyCommunity = recruitCommunityList.length > 0
         const resolvedCommunityName = recruitCommunityId === '__new__'
-          ? (recruitNewCommunityName.trim() || '- new community -')
+          ? (recruitNewCommunityName.trim() || 'a new group')
           : (recruitCommunityList.find(c => c.id === recruitCommunityId)?.name ?? '')
+        // A new group needs no name - recruiting into one is always allowed.
         const canRoll = !!rollerEntry && !!pickedNpc && !!recruitSkill && !currentApproachLocked && (
           recruitCommunityId === '__new__'
-            ? recruitNewCommunityName.trim().length > 0
+            ? true
             : !!recruitCommunityId
         )
         const poachingNpcCommunity = recruitNpcId ? npcCommunityMap[recruitNpcId] : null
@@ -9584,23 +9592,22 @@ export default function TablePage() {
                         {recruitCommunityList.map(c => (
                           <option key={c.id} value={c.id}>{c.name} ({c.member_count} member{c.member_count === 1 ? '' : 's'})</option>
                         ))}
-                        <option value="__new__">+ Found a new community</option>
+                        <option value="__new__">+ Start a new group</option>
                       </select>
                     ) : (
                       <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
-                        No communities yet - this recruit will found a new one.
+                        No group yet - this recruit starts one. Naming is optional; it becomes a named Community at 13 members.
                         {(() => { if (recruitCommunityId !== '__new__') setRecruitCommunityId('__new__'); return null })()}
                       </div>
                     )}
                     {recruitCommunityId === '__new__' && (
                       <div style={{ marginTop: '8px', padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
-                        <input value={recruitNewCommunityName} onChange={e => setRecruitNewCommunityName(e.target.value)} placeholder="e.g. The Greenhouse"
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Group name (optional)</div>
+                        <input value={recruitNewCommunityName} onChange={e => setRecruitNewCommunityName(e.target.value)} placeholder="Leave blank - it names at 13 members"
                           style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={recruitNewCommunityPublic} onChange={e => setRecruitNewCommunityPublic(e.target.checked)} />
-                          Make this community public (discoverable via LFG - coming soon)
-                        </label>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '6px', lineHeight: 1.4, fontStyle: 'italic' }}>
+                          A Group has no Morale Checks or public listing - those unlock when it grows into a Community at 13 members.
+                        </div>
                       </div>
                     )}
                   </div>

@@ -918,9 +918,10 @@ export type Database = {
           id: string
           leader_npc_id: string | null
           leader_user_id: string | null
-          name: string
+          name: string | null
           notified_community_milestone: boolean
           published_at: string | null
+          stage: string
           status: string
           week_number: number
           world_community_id: string | null
@@ -936,9 +937,10 @@ export type Database = {
           id?: string
           leader_npc_id?: string | null
           leader_user_id?: string | null
-          name: string
+          name?: string | null
           notified_community_milestone?: boolean
           published_at?: string | null
+          stage?: string
           status?: string
           week_number?: number
           world_community_id?: string | null
@@ -954,9 +956,10 @@ export type Database = {
           id?: string
           leader_npc_id?: string | null
           leader_user_id?: string | null
-          name?: string
+          name?: string | null
           notified_community_milestone?: boolean
           published_at?: string | null
+          stage?: string
           status?: string
           week_number?: number
           world_community_id?: string | null
