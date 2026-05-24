@@ -289,6 +289,22 @@ The push "succeeded" without warning. Live code kept the em-dashes the commit cl
 
 **How to apply:** before flagging a suppressed realtime effect, check whether it (a) re-subscribes on identity change and (b) reads handlers/config through a ref. If both, it's correct - leave it. The real stale-closure smell is a handler that captures a value directly (not via ref) in an effect that doesn't re-run when that value changes - like `TacticalMap.tsx:3640`'s snapshot handler reading `zoom`/`cellPx` from the closure. Distinguish "raw `supabase.channel` not yet on the seam" (migration candidate) from "seam primitive suppression" (working as designed).
 
+## A dead `postgres_changes` sub is usually an unpublished table, not a code bug (2026-05-24)
+
+**Rule:** when a Supabase `postgres_changes` subscription delivers NOTHING (writes persist, no client sees the change live), suspect the `supabase_realtime` publication BEFORE the code. postgres_changes is silently dead for any table not in that publication - no error, no warning, just no events. First diagnostic: `select tablename from pg_publication_tables where pubname='supabase_realtime'` and diff it against every `table: '...'` in the app's realtime subs.
+
+**Trigger:** the Phase 7 2-client smoke (2026-05-24) reported stockpile deposits not propagating. The `usePostgresSubscription` code was correct; `community_stockpile_items` was simply never in the publication. Cross-checking ALL subs found five more silently-dead tables: `map_pins`, `community_members`, `advantages`, `campaign_notes`, `campaign_events`. Pre-existing (the pre-re-arch code also used postgres_changes); behavior-preserving migration carried the gap forward unchanged - NOT a regression. Fixed via `sql/realtime-publication-fix-2026-05-24.sql` (`ALTER PUBLICATION ... ADD TABLE`; additive, RLS still governs reads, reversible with `DROP TABLE`).
+
+**How to apply:** (1) keep the publication membership in version control - a sub on an unpublished table is a config landmine that no test/tsc catches. (2) When adding a new `postgres_changes` sub, add the table to the publication in the SAME change. (3) Behavior-preserving refactors preserve latent bugs too - a clean migration of a never-working feature stays never-working; the 2-client smoke is what surfaces these, which is exactly why it earns its keep. (4) `broadcast` events do NOT need the publication (they ride the channel directly) - only `postgres_changes` does; mechanism matters when diagnosing.
+
+## Triage smoke failures to ROOT CAUSE before fixing - most aren't what the label says (2026-05-24)
+
+**Rule:** when a batch of smoke failures comes in, treat each as a hypothesis and resolve it to a fact (DB query / code read) before writing any fix. The label is the symptom, not the diagnosis, and the distribution is rarely "N real bugs."
+
+**Trigger:** the 2026-05-24 Phase 7 smoke reported 4 failures (Show Arc, MOVE HERE, stockpile deposit, infection modal). Fact-checking against the live DB resolved them to: 1 real config bug (publication gap - stockpile/pins/membership), 1 working-as-designed (infection modal skipped because the test characters already had `infection_state='wound'` - canon no-stacking, set by prior resolved checks), and 2 test artifacts (Show Arc + MOVE HERE need a vehicle; the Arena had 0). ZERO were re-arch regressions, and only one needed a code/DB change. Going straight to "fix the 4 bugs" would have meant chasing two non-bugs and mis-attributing a pre-existing config gap to the re-arch.
+
+**How to apply:** for each failure ask "what single fact confirms this is real?" then get that fact (a `select`, a publication check, an infection_state read, a fixture count) before touching code. Especially: recorder dumps from one surface (e.g. the table page) cannot confirm/deny failures on another (e.g. the vehicle popout) - know what your evidence can and cannot see. Cross-ref `[[feedback_locate_before_diagnose]]` + `[[feedback_accuracy_over_confidence]]`.
+
 ## Tab-local default-OFF UX fails when ONE user forgets to flip it (2026-05-19)
 
 **Rule:** When a feature requires N independent user actions to "all work" (every player hits Record), redesign so the N actions collapse to 1 (GM hits Record, broadcast cascades to N). Default-off + per-user opt-in is the wrong shape for any coordination problem where one missing user breaks the whole.
