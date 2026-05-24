@@ -44,8 +44,8 @@ The ideal itself (from the spine doc PART 2, plus the review's additions) is the
 
 Execution order is NOT the review's priority-by-leverage order. It is sequenced by dependency, risk, and "stop the bleeding first." Cheap-and-safe groundwork goes early precisely because it de-risks the big move.
 
-### Gate 0 - Close Phase 7 (validate what exists)
-**Not new work - finish the re-arch.** The Playwright lane automates Sections C/D/E (propagation) + the console sweep against the seeded Arena; the residual manual checks (combat math A2, infection modal F) ride the 2026-05-25 Minnie playtest as final real-world confirmation. When Phase 7 is GREEN, the architecture lane closes the books: demote Realtime YELLOW -> GREEN (`debug-handoff.md` Sec 1), promote the re-arch HOPED-FOR -> PLAYTESTED, archive the decomposition sheet, log "Phase 7 closed / re-arch validated" in `decisions.md`. **This is the precondition for Stage C** (Stages A/B do not wait on it).
+### Gate 0 - Close Phase 7 (validate what exists) - **CLOSED 2026-05-24**
+**Done.** The Playwright lane closed Gate 0: 10 automated specs green on prod (A1/A3/C/D/E + sweep/seeding/role-gating/lifecycle), B + A2/F logged manual-with-rationale (`tasks/phase7-acceptance-2client-testplan.md` Results block). Book-closing done by the architecture lane: Realtime channels YELLOW -> GREEN-ish + table page YELLOW -> GREEN-ish (`debug-handoff.md` Sec 1), re-arch added as VALIDATED to the Confidence Ledger (Sec 3), decomposition sheet archived, Phase 7-closed entry in `decisions.md`. **Residual (honest):** vehicle B + A2/F ride the 2026-05-25 playtest. **Stage C build is now unblocked.**
 
 ### Stage A - Infra-as-code + typed payloads (cheap, safe, de-risks everything)
 Can start NOW, in parallel with the Phase 7 close. Lowest risk, highest "stop the silent bleeding" value.

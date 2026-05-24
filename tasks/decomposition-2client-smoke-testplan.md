@@ -1,5 +1,7 @@
 # Decomposition 2-Client Smoke Testplan
 
+> **ARCHIVED 2026-05-24 - superseded by [tasks/phase7-acceptance-2client-testplan.md](phase7-acceptance-2client-testplan.md).** Its three former KNOWN-FAILUREs (CMod, tactical-share, nextTurn perf) are fixed and re-verified in that sheet's Section A, and the realtime core is now automated + green (10 Playwright specs on prod). Kept for history; do not run this - run the Phase 7 sheet.
+
 The hands-on test you run after each decomposition step. Built so you don't have to think - do the action, watch for the PASS condition. Per the aggressive sequencing in `tasks/page-tsx-decomposition-plan.md`.
 
 **Two parts:**

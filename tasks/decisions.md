@@ -24,6 +24,24 @@ Newest first.
 
 **What would change our mind:** if Xero wants promotion to require PCs to be explicitly enrolled in the group, or a per-group PC roster, switch to counting enrolled PC members instead of the whole party.
 
+## 2026-05-24: Phase 7 closed - the Grand Re-Architecture is validated
+
+**Decision:** the re-arch moves from HOPED-FOR to VALIDATED. The Playwright lane closed Gate 0 against the closure criteria (every Phase 7 section passes headless OR is logged manual-with-rationale; the 92-route console/network sweep is green; runs repeat via `npm run test:e2e`). 10 automated spec files are green on prod covering the realtime core: combat-start (A1), tactical token-move (A3, the hardest seam), NPC reveal (C), stockpile deposit/qty/resubscribe (D), whispers + map pins (E), plus seeding, role-gating, character lifecycle.
+
+**Book-closing actions taken (architecture lane):** Risk Register (`debug-handoff.md` Sec 1) - Realtime channels YELLOW -> GREEN-ish (vehicle-B caveat), table page YELLOW -> GREEN-ish (verified-behavior demote, still ~10.5k -> Stage C). Confidence Ledger (Sec 3) - added the re-arch as VALIDATED-BY-AUTOMATED-2-CLIENT-SUITE. Archived `tasks/decomposition-2client-smoke-testplan.md`.
+
+**What is NOT yet validated (honest residual):** Section B vehicle popout broadcasts (manual-only, rides the 2026-05-25 Minnie playtest) and A2/F combat-math + infection modal (the documented manual conditions smoke = the #5 gate). The 2026-05-25 playtest is the final real-world confirmation on top of the automated suite.
+
+**Alternatives considered:** (A) hold everything YELLOW until 100% including B + a live playtest; (B) demote on the automated-suite evidence with explicit residual caveats (chosen).
+
+**Why B won:** the automated 2-client suite is a stronger, repeatable evidence class than a single manual pass and it covers the hardest seams (canvas token-move, dynamic-IN resubscribe). Holding everything YELLOW for the one manual surface (B) would understate validated reality. The caveats keep it honest.
+
+**Impact:** Stage C (client-state layer) is unblocked to BUILD (its Phase-7 gate is met). The formal release call (paid signups, user-facing announcements) remains Xero's and is separate from this validation bookkeeping.
+
+**What would change our mind:** a Section B failure at the 2026-05-25 playtest re-opens the vehicle realtime surface (not the whole re-arch - the other 5 surfaces are independently validated).
+
+---
+
 ## 2026-05-24: NPC stress is narrative-only, not a tracked mechanic
 
 **Decision (Xero):** Stress is a PC-only mechanic. For NPCs it exists ONLY narratively (flavor), never as a tracked stat. `campaign_npcs` therefore gets NO `stress` column - the PC-has-stress / NPC-has-none asymmetry is intentional and correct.
