@@ -43,7 +43,7 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 
 ## Ch 5 - The Rules
 1. [x] (DOM) `/rules` + all sub-routes render clean (in the route sweep).
-2. [ ] (DOM) The 8 sections + 4 appendices are reachable; deep links (`/rules/combat`, `/rules/appendix-tables`) load.
+2. [x] (DOM) The 8 sections + 4 appendices each render their `<h1>` title (real content, not just an error-free shell); deep links (`/rules/combat/damage`, `/rules/equipment/item-traits`, `/rules/communities/activity-blocks`) render. `rules-deeplinks.spec`
 
 ## Ch 6 - Creating a Story
 1. [x] (DOM) GM creates a story (setting picker -> Custom) -> appears in My Stories with a 6-char invite code. `story-lifecycle.spec`
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.2, Ch3.1, Ch4.1, Ch5.1, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.2, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
