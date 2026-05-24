@@ -23,11 +23,11 @@ export function PlayerStatusChips({ liveState, lastingWounds }: PlayerStatusChip
     const kind = ls.infection_state === 'sickness' ? 'Sickness' : 'Wound infection'
     const days = ls.infection_days_left ? ` - ${ls.infection_days_left} day${ls.infection_days_left === 1 ? '' : 's'} left` : ''
     const sev = ls.infection_severity ? ` (${ls.infection_severity === 'auto' ? 'Lasting Damage on Day 0' : 'PHY check at Day 0'})` : ''
-    chips.push({ key: 'inf', label: `🦠 ${ls.infection_state === 'sickness' ? 'Sick' : 'Infected'}${ls.infection_days_left ? ` ${ls.infection_days_left}d` : ''}`, title: `${kind}${days}${sev}`, fg: '#d48bd4', bg: '#2e1a2e' })
+    chips.push({ key: 'inf', label: '🦠', title: `${kind}${days}${sev}`, fg: '#d48bd4', bg: '#2e1a2e' })
   }
-  if ((ls.death_countdown ?? 0) > 0) chips.push({ key: 'mw', label: `💀 MW ${ls.death_countdown}`, title: `Mortally wounded - dies in ${ls.death_countdown} round${ls.death_countdown === 1 ? '' : 's'} if not stabilized`, fg: '#f5a89a', bg: '#2a0f0f' })
-  if ((ls.incap_rounds ?? 0) > 0) chips.push({ key: 'incap', label: '😵 Incap', title: `Incapacitated for ${ls.incap_rounds} more round${ls.incap_rounds === 1 ? '' : 's'}`, fg: '#9aa8f5', bg: '#16162a' })
-  if ((ls.stress ?? 0) >= 5) chips.push({ key: 'stress', label: '😰 Stressed', title: `Stressed out (${ls.stress}/5) - at breaking point`, fg: '#EF9F27', bg: '#2a2010' })
+  if ((ls.death_countdown ?? 0) > 0) chips.push({ key: 'mw', label: '💀', title: `Mortally wounded - dies in ${ls.death_countdown} round${ls.death_countdown === 1 ? '' : 's'} if not stabilized`, fg: '#f5a89a', bg: '#2a0f0f' })
+  if ((ls.incap_rounds ?? 0) > 0) chips.push({ key: 'incap', label: '😵', title: `Incapacitated for ${ls.incap_rounds} more round${ls.incap_rounds === 1 ? '' : 's'}`, fg: '#9aa8f5', bg: '#16162a' })
+  if ((ls.stress ?? 0) >= 5) chips.push({ key: 'stress', label: '😰', title: `Stressed out (${ls.stress}/5) - at breaking point`, fg: '#EF9F27', bg: '#2a2010' })
   // Lasting wounds are not a character_states column - they live on
   // characters.data.lastingWounds (the same source the sheet chip strip
   // reads). One chip regardless of count; the tooltip lists each wound +
@@ -38,7 +38,7 @@ export function PlayerStatusChips({ liveState, lastingWounds }: PlayerStatusChip
       const def = Object.values(LASTING_WOUNDS).find(w => w.name === name)
       return def?.effect ? `${name} - ${def.effect}` : name
     }).join('; ')
-    chips.push({ key: 'wound', label: lw.length === 1 ? '🩸 Wounded' : `🩸 ${lw.length} Wounds`, title: `Lasting wound${lw.length === 1 ? '' : 's'}: ${detail}`, fg: '#f5a89a', bg: '#2a1210' })
+    chips.push({ key: 'wound', label: '🩸', title: `Lasting wound${lw.length === 1 ? '' : 's'}: ${detail}`, fg: '#f5a89a', bg: '#2a1210' })
   }
   if (chips.length === 0) return null
   return (
