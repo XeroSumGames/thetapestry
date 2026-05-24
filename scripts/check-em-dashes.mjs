@@ -43,7 +43,7 @@ const EXEMPT_PATHS = [
   'tasks/lessons.md',                          // historical notes referencing past em-dash bugs
   'tasks/handoff',                             // session handoff prose; archival
   'tasks/handoff-',                            // dated handoff variants
-  'sql/_baseline/',                            // GENERATED schema mirror of live; must reflect live verbatim (live function bodies contain em-dashes - see the live-em-dash finding in todo). Authoring rule does not apply to a faithful capture.
+  'sql/_baseline/',                            // GENERATED schema mirror of live; must reflect live verbatim. Live function/view bodies are enforced em-dash-free by scripts/check-db-emdashes.mjs (on-demand / pre-ship, needs the linked DB), so this faithful capture does not also need the authoring gate.
 ]
 
 // Substring patterns inside scanned files that are intentional em-dash

@@ -17,7 +17,8 @@
     "arch:check": "node scripts/check-arch.mjs",
     "arch:save": "node scripts/check-arch.mjs --save",
     "arch:depcruise": "depcruise lib components app --config .dependency-cruiser.cjs --output-type err",
-    "check:publication": "node scripts/check-publication-drift.mjs"
+    "check:publication": "node scripts/check-publication-drift.mjs",
+    "check:db-emdashes": "node scripts/check-db-emdashes.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.51.0",
