@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tapestry - Modal Mockups v5 (2026-05-24)</title>
+<style>
+  :root {
+    --bg: #0d0d0d; --panel: #1a1a1a; --panel2: #242424; --ink-low: #0f0f0f;
+    --border: #3a3a3a; --border2: #2e2e2e; --text: #f5f2ee; --text2: #d4cfc9;
+    --label: #cce0f5; --muted: #5a5550;
+    --cat-gm: #c9a227; --cat-comm: #6fae5a; --cat-mod: #9b7cc6; --cat-util: #7ab3d4;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text2); font-family: 'Carlito','Calibri',sans-serif; font-size: 15px; line-height: 1.5; }
+  header.page { position: sticky; top: 0; z-index: 50; background: #111; border-bottom: 1px solid var(--border); padding: 14px 24px; }
+  header.page h1 { margin: 0 0 4px; font-size: 22px; color: var(--text); letter-spacing: .04em; }
+  header.page p { margin: 0 0 4px; font-size: 14px; color: var(--text2); max-width: 1100px; }
+  header.page .rules { font-size: 13px; color: var(--label); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+  nav.jump { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  nav.jump a { font-size: 13px; color: var(--label); text-decoration: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 9px; }
+  nav.jump a:hover { background: var(--panel2); }
+  main { padding: 24px; max-width: 1500px; margin: 0 auto; }
+  section { margin-bottom: 40px; }
+  h2.sec { font-size: 18px; color: var(--text); letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 0 0 6px; }
+  .sec-note { font-size: 13px; color: var(--text2); margin: 0 0 18px; max-width: 1100px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+
+  .stage { position: relative; border-radius: 6px; overflow: hidden; padding: 28px; display: flex; justify-content: center; align-items: flex-start; min-width: 300px; }
+  .stage.map { background-color: #14201a; background-image: linear-gradient(rgba(120,160,140,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(120,160,140,0.18) 1px, transparent 1px); background-size: 26px 26px; }
+  .stage.sheet { background: #14201a; }
+  .stage.sheet::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(120,160,140,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(120,160,140,0.18) 1px, transparent 1px); background-size: 26px 26px; }
+  .stage.sheet::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.85); }
+  .stage > * { position: relative; z-index: 2; }
+
+  .caption { font-size: 13px; color: var(--text2); margin-top: 8px; max-width: 360px; }
+  .caption .nm { color: var(--text); font-weight: 700; }
+  .caption code { color: var(--label); font-size: 12px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
+  .badge.ok { background: #1a2e10; color: #7fc458; border: 1px solid #2d5a1b; }
+  .badge.ref { background: #2a1210; color: #f5a89a; border: 1px solid #c0392b; }
+  .badge.next { background: #2a2010; color: #EF9F27; border: 1px solid #5a4a1b; }
+  .badge.bespoke { background: #1a1a1a; color: #8a8580; border: 1px solid var(--border); }
+  .dimtag { color: #8a8580; }
+
+  /* ---------- Unified shell (the ATTACK shape) ---------- */
+  .rm-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.6); }
+  .rm-drag { display: flex; align-items: center; justify-content: center; padding: 4px; background: var(--panel2); border-bottom: 1px solid var(--border); border-radius: 4px 4px 0 0; cursor: grab; }
+  .rm-grab { width: 40px; height: 3px; border-radius: 2px; background: #5a5a5a; }
+  .rm-body { padding: 1.5rem; display: flex; flex-direction: column; }
+  .rm-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
+  .rm-title { font-size: 20px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text); margin-bottom: 1rem; }
+  .rm-title.sub { margin-bottom: 4px; }
+  .rm-subtitle { font-size: 13px; color: var(--label); margin-bottom: 1rem; }
+  .rm-formula { display: flex; gap: 10px; margin-bottom: 1rem; font-size: 15px; color: var(--text2); align-items: center; }
+  .pos { color: #7fc458; } .neg { color: #c0392b; } .cmodpos { color: #7ab3d4; } .cmodneg { color: #EF9F27; }
+  .rm-cmod-inline { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .rm-cmod-tag { font-size: 13px; color: var(--label); letter-spacing: .06em; text-transform: uppercase; }
+  .rm-cmod-box { width: 48px; padding: 5px 6px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); font-size: 14px; font-family: inherit; text-align: center; -moz-appearance: textfield; }
+  .rm-cmod-box::-webkit-outer-spin-button, .rm-cmod-box::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .rm-formnote { font-size: 12px; color: #8a8580; font-style: italic; margin-top: -6px; margin-bottom: 1rem; }
+  /* MIDDLE STRIP: variable per modal, reserves a consistent height so a blank
+     middle (Stabilize) is the same total length as a populated one (Distract).
+     Modals with more (Recruit's 3 dropdowns) grow past the min. */
+  .rm-middle { min-height: 70px; }
+  .rm-label { font-size: 13px; color: var(--label); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+  .rm-cmod { width: 100%; padding: 8px 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); font-size: 14px; font-family: inherit; margin-bottom: 10px; }
+  .rm-select { width: 100%; padding: 8px 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); font-size: 14px; font-family: inherit; margin-bottom: 10px; }
+  .rm-warn { font-size: 13px; color: var(--label); padding: 6px 10px; background: #0f1a1f; border: 1px solid #2e4a5a; border-radius: 3px; text-align: center; }
+  .rm-warn.amber { color: #EF9F27; background: #2a2010; border-color: #5a4a1b; }
+  .rm-dmg { font-size: 15px; color: var(--text2); padding: 6px 8px; background: var(--panel2); border: 1px solid var(--border2); border-radius: 3px; }
+  .rm-insight { margin-top: 4px; margin-bottom: 12px; padding: 8px 10px; border: 1px dashed #4a4530; border-radius: 3px; }
+  .rm-insight-lbl { font-size: 13px; color: var(--label); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+  .rm-insight-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ins { padding: 6px 12px; background: transparent; border: 1px solid var(--border); border-radius: 3px; color: var(--text2); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; font-family: inherit; cursor: pointer; }
+  .ins.active { background: #2a2010; border-color: #EF9F27; color: #EF9F27; font-weight: 700; }
+  .rm-buttons { display: flex; gap: 6px; }
+  .rm-secondary { padding: 10px 16px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--text2); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; font-family: inherit; cursor: pointer; }
+  .rm-primary { flex: 1; padding: 10px; border-radius: 3px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; font-family: inherit; cursor: pointer; border: 1px solid; }
+  .rm-dice { display: flex; gap: 8px; justify-content: center; margin: 1rem 0; }
+  .rm-die { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--panel2); border: 2px solid var(--border); border-radius: 6px; font-size: 28px; font-weight: 700; color: var(--text); }
+  .rm-math { font-size: 13px; color: var(--text2); text-align: center; }
+  .rm-math b { color: var(--text); }
+  .rm-outcome { font-size: 22px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-align: center; margin-top: 6px; margin-bottom: 1rem; }
+  .rm-pill { font-size: 13px; color: #7fc458; background: #1a2e10; border: 1px solid #2d5a1b; padding: 3px 8px; border-radius: 2px; display: inline-block; }
+  .center { text-align: center; }
+  .rm-reroll-lbl { font-size: 13px; color: #7fc458; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; text-align: center; }
+  .rm-reroll-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
+  .rm-reroll { padding: 6px 12px; background: #1a2e10; border: 1px solid #2d5a1b; border-radius: 3px; color: #7fc458; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; font-family: inherit; cursor: pointer; }
+  .rm-close { width: 100%; padding: 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--text2); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-family: inherit; cursor: pointer; }
+  .rm-card { padding: 12px; border-radius: 3px; font-size: 14px; color: var(--text2); margin-bottom: 1rem; line-height: 1.4; }
+  .rm-card.join { background: #0f1a0f; border: 1px solid #2d5a1b; }
+  .rm-card.fail { background: #2a1210; border: 1px solid #c0392b; }
+  .rm-list { } .rm-listitem { padding: 7px 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--text2); font-size: 13px; margin-bottom: 6px; }
+  .rm-check { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .rm-checkitem { font-size: 13px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 3px; color: var(--text2); background: var(--panel2); }
+  .rm-stepper { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .rm-stepbtn { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 3px; background: var(--panel2); color: var(--text); font-size: 16px; }
+  .rm-stepval { font-size: 18px; color: var(--text); font-weight: 700; min-width: 40px; text-align: center; }
+  .rm-thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .rm-thumb { width: 56px; height: 56px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; }
+  .rm-area { padding: 8px 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--muted); font-size: 13px; min-height: 48px; margin-bottom: 10px; }
+  .widenote { font-size: 12px; color: #8a8580; font-style: italic; margin-bottom: 8px; }
+  .rep-line { height: 10px; background: var(--panel2); border: 1px solid var(--border2); border-radius: 3px; margin-bottom: 8px; }
+  .rep-line.w70 { width: 70%; } .rep-line.w90 { width: 90%; }
+
+  /* bespoke (kept as-is, NOT unified) */
+  .rep { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+  .rep-head { display: flex; align-items: baseline; justify-content: space-between; padding: 14px 18px 0; }
+  .rep-title { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: .04em; }
+  .rep-x { color: var(--muted); font-size: 20px; }
+  .rep-body { padding: 12px 18px 18px; }
+  .rep-field { padding: 8px 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 3px; color: var(--label); font-size: 13px; margin-bottom: 8px; }
+  .rep-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .rep-btn { padding: 8px 14px; border-radius: 3px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: 1px solid; }
+  .rep-btn.grey { background: var(--panel2); border-color: var(--border); color: var(--text2); }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>Tapestry - Modal Mockups <span style="color:#7fc458;font-size:15px">v8 - LOCKED</span></h1>
+  <p>Design target after your 2026-05-24 notes. <b>Mockup only</b> - nothing shipped yet. Approve and I implement against the live components.</p>
+  <p class="rules"><b>Three-zone fixed length (matches Distract):</b> TOP = eyebrow + title + base-roll line (2d6 + mods + CMod) &middot; MIDDLE = variable strip, same reserved height even when blank (damage / dropdown / warning / nothing) &middot; BOTTOM = Insight Dice + buttons, pinned. 340px default; all modals use the ATTACK look except 4 bespoke.</p>
+  <div class="legend">
+    <span class="dimtag">Non-roll category accents:</span>
+    <span><i class="sw" style="background:#c9a227"></i> GM Tools</span>
+    <span><i class="sw" style="background:#6fae5a"></i> Community</span>
+    <span><i class="sw" style="background:#9b7cc6"></i> Module</span>
+    <span><i class="sw" style="background:#7ab3d4"></i> Player</span>
+  </div>
+  <nav class="jump">
+    <a href="#roll">Roll / check</a>
+    <a href="#unified">Unified (non-roll)</a>
+    <a href="#widthtrial">Width trial</a>
+    <a href="#bespoke">Bespoke (4)</a>
+  </nav>
+</header>
+<main>
+
+<!-- =================== ROLL / CHECK =================== -->
+<section id="roll">
+  <h2 class="sec">Roll / check modals</h2>
+  <p class="sec-note">v5: three-zone fixed length. The MIDDLE strip reserves the same height across modals so Stabilize (blank middle) is the same length as Distract (dropdown middle); Insight + buttons sit at the bottom. Recruit / First Impression have more middle content so they run longer. Map-context = see-through; Stress / Breaking Point / Lasting Wound = dimmed.</p>
+  <div class="grid">
+
+    <!-- ATTACK reference -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c0392b">Attack Roll</div>
+            <div class="rm-title sub">Mike fires Glock 18</div>
+            <div class="rm-subtitle">Close range &middot; vs Raider boss</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+4 AMod</span><span class="pos">+2 SMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle">
+              <div class="rm-dmg"><span style="color:#cce0f5">WP Damage:</span> <span style="color:#c0392b;font-weight:700">3</span> &nbsp; <span style="color:#cce0f5">RP:</span> <span style="color:#7ab3d4">60%</span></div>
+            </div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (2 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c0392b;border-color:#c0392b;color:#fff">&#127922; Roll</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">ATTACK Roll</span> <span class="badge ref">reference</span><br>middle = WP/RP damage.</div>
+    </div>
+
+    <!-- Stabilize (blank middle) -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7fc458">Stabilize</div>
+            <div class="rm-title sub">Stabilize</div>
+            <div class="rm-subtitle">Cree stabilizes Donnie</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+3 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle"></div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7fc458;border-color:#7fc458;color:#1a1a1a">&#127922; Roll Stabilize</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Stabilize</span> <span class="badge ok">blank middle = Distract length</span><br>accent green.</div>
+    </div>
+
+    <!-- Distract (dropdown middle - the length reference) -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#4aa3b5">Distract</div>
+            <div class="rm-title sub">Distract</div>
+            <div class="rm-subtitle">Jules distracts Raider</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+2 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle">
+              <div class="rm-label">Target (Close range, &le;30 ft)</div>
+              <select class="rm-select"><option>Raider (12 ft)</option></select>
+            </div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (2 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#4aa3b5;border-color:#4aa3b5;color:#fff">&#127922; Roll</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Distract</span> <span class="badge ok">the length reference</span><br>middle = target dropdown.</div>
+    </div>
+
+    <!-- Gut Instinct -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#5aa0c0">Gut Instinct</div>
+            <div class="rm-title sub">Gut Instinct</div>
+            <div class="rm-subtitle">Mike reads the room</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+3 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle">
+              <div class="rm-label">Sub-skill</div>
+              <select class="rm-select"><option>Psychology</option><option>Streetwise</option><option>Tactics</option></select>
+            </div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (2 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#5aa0c0;border-color:#5aa0c0;color:#fff">&#127922; Roll</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Gut Instinct</span> <span class="badge ok">middle = skill dropdown</span><br>accent cyan.</div>
+    </div>
+
+    <!-- Navigate (blank middle) -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#d4883a">Vehicle</div>
+            <div class="rm-title sub">Navigate</div>
+            <div class="rm-subtitle">Plot a course through the wreckage</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+2 AMod</span><span class="pos">+1 SMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle"></div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#d4883a;border-color:#d4883a;color:#fff">&#127922; Roll Navigate</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Vehicle / Navigate</span> <span class="badge ok">blank middle</span><br>accent rust.</div>
+    </div>
+
+    <!-- Recruitment (taller - 3 dropdowns in middle) -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#b07cc6">Recruit</div>
+            <div class="rm-title">Recruitment</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+2 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-formnote">AMod updates with the skill pick</div>
+            <div class="rm-middle">
+              <div class="rm-label">Recruit</div>
+              <select class="rm-select"><option>Donnie</option><option>Sara</option></select>
+              <div class="rm-label">Approach</div>
+              <select class="rm-select"><option>Cohort</option><option>Conscript</option><option>Convert</option></select>
+              <div class="rm-label">Skill</div>
+              <select class="rm-select"><option>Manipulation</option><option>Streetwise</option><option>Command</option></select>
+            </div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (2 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#b07cc6;border-color:#b07cc6;color:#fff">&#127922; Roll Recruitment</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Recruitment</span> <span class="badge ok">runs longer (3 dropdowns)</span><br>accent purple.</div>
+    </div>
+
+    <!-- First Impression (taller - 2 dropdowns) -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">First Impression</div>
+            <div class="rm-title sub">First Impression</div>
+            <div class="rm-subtitle">Mike sizes up the Raider boss</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+3 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-formnote">AMod updates with the skill pick</div>
+            <div class="rm-middle">
+              <div class="rm-label">Target NPC</div>
+              <select class="rm-select"><option>Raider boss</option></select>
+              <div class="rm-label">Skill</div>
+              <select class="rm-select"><option>Manipulation</option><option>Streetwise</option><option>Psychology</option></select>
+            </div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">&#127922; Roll</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">First Impression</span> <span class="badge next">ATTACK shell, blue</span><br>middle = NPC + skill dropdowns.</div>
+    </div>
+
+    <!-- Stress Check -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#EF9F27">Stress Check</div>
+            <div class="rm-title sub">Stress Check</div>
+            <div class="rm-subtitle">Mike - Stress at maximum</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+2 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle">
+              <div class="rm-warn amber">Success &ge; 7 &rarr; drop to 4 stress &middot; Failure &rarr; Breaking Point</div>
+            </div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#EF9F27;border-color:#EF9F27;color:#1a1a1a">&#127922; Roll Stress Check</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Stress Check</span> <span class="badge ok">middle = warning</span><br>accent amber &middot; <b>dimmed</b>.</div>
+    </div>
+
+    <!-- Breaking Point (blank middle) -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c0392b">Breaking Point</div>
+            <div class="rm-title sub">Breaking Point</div>
+            <div class="rm-subtitle">Mike has broken - roll on Table 13</div>
+            <div class="rm-formula"><span>2d6</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle"></div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c0392b;border-color:#c0392b;color:#fff">&#127922; Roll on Table 13</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Breaking Point</span> <span class="badge ok">check, blank middle</span><br>2d6 + CMod &rarr; Table 13.</div>
+    </div>
+
+    <!-- Lasting Wound (blank middle) -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c0392b">Lasting Wound Check</div>
+            <div class="rm-title sub">Lasting Wound Check</div>
+            <div class="rm-subtitle">Mike - Physicality check failed</div>
+            <div class="rm-formula"><span>2d6</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle"></div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c0392b;border-color:#c0392b;color:#fff">&#127922; Roll on Table 12</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Lasting Wound</span> <span class="badge ok">check, blank middle</span><br>2d6 + CMod &rarr; Table 12.</div>
+    </div>
+
+    <!-- Post-roll demo -->
+    <div>
+      <div class="stage map">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7fc458">Stabilize</div>
+            <div class="rm-title sub">Stabilize</div>
+            <div class="rm-subtitle">Cree stabilizes Donnie</div>
+            <div class="rm-dice"><div class="rm-die">6</div><div class="rm-die">6</div></div>
+            <div class="rm-math">[6+6] <span class="pos">+3 AMod</span> = <b>15</b></div>
+            <div class="rm-outcome" style="color:#7fc458">Wild Success</div>
+            <div class="center"><span class="rm-pill">+1 Insight Die</span></div>
+            <div style="height:12px"></div>
+            <div class="rm-reroll-lbl">&#127922; Spend Insight Die to reroll</div>
+            <div class="rm-reroll-row"><button class="rm-reroll">Re-roll Die 1</button><button class="rm-reroll">Re-roll Die 2</button><button class="rm-reroll">Re-roll Both</button></div>
+            <button class="rm-close">Done</button>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Post-roll (any modal)</span> <span class="badge ok">result state</span><br>Wild Success = green; plain Success = blue.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =================== UNIFIED NON-ROLL =================== -->
+<section id="unified">
+  <h2 class="sec">Everything else - ATTACK shell, accent by category</h2>
+  <p class="sec-note">Same chrome; eyebrow + primary button take the category color. These are not rolls (no base-roll line / CMod / insight), except Proxy Recruit which gets the full roll layout. The fixed-length rule above is for the roll modals; these size to their own content.</p>
+  <div class="grid">
+
+    <!-- Restore -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">Restore Health</div>
+            <div class="rm-check"><span class="rm-checkitem">Select all</span></div>
+            <div class="rm-listitem">Mike - WP 2/8, RP 30%, Stress 4</div>
+            <div class="rm-listitem">Cree - full</div>
+            <div class="rm-listitem">Object: Barricade 4/10</div>
+            <div class="rm-buttons" style="margin-top:12px"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">Restore</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Restore</span> <span class="badge ok">GM Tools</span><br><code>RestorePickerModal.tsx</code></div>
+    </div>
+
+    <!-- Reload -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">Reload State</div>
+            <div class="rm-listitem">Session 12 end &middot; 05-20 21:14</div>
+            <div class="rm-listitem">Pre-boss fight &middot; 05-19 19:40</div>
+            <div class="rm-buttons" style="margin-top:12px"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">Reload</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Reload</span> <span class="badge ok">GM Tools</span><br><code>ReloadPickerModal.tsx</code></div>
+    </div>
+
+    <!-- Portrait Bank -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:420px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Character</div>
+            <div class="rm-title">Choose Portrait</div>
+            <div class="widenote">Wider than 340 for the grid - same shell.</div>
+            <div class="rm-check"><span class="rm-checkitem">All</span><span class="rm-checkitem">Man</span><span class="rm-checkitem">Woman</span></div>
+            <div class="rm-thumbs"><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Use Portrait</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Portrait Bank</span> <span class="badge ok">Player (wider)</span></div>
+    </div>
+
+    <!-- Paradigm/Profession -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Apprentice</div>
+            <div class="rm-title">Pick Profession</div>
+            <div class="rm-listitem">Medic</div><div class="rm-listitem">Scrapper</div><div class="rm-listitem">Fixer</div>
+            <div class="rm-buttons" style="margin-top:12px"><button class="rm-secondary">Back</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Next</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Paradigm / Profession</span> <span class="badge ok">Player</span></div>
+    </div>
+
+    <!-- Trade -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Trade</div>
+            <div class="rm-title">Negotiation</div>
+            <div class="rm-label">You offer</div>
+            <div class="rm-listitem">Scrap x3</div>
+            <div class="rm-label">You want</div>
+            <div class="rm-listitem">Medkit</div>
+            <div class="rm-check"><span class="rm-checkitem">Fairness: even</span><span class="rm-checkitem">Barter (opposed roll)</span></div>
+            <div class="rm-buttons" style="margin-top:10px"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Apply Deal</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Trade Negotiation</span> <span class="badge ok">Player (340, stacked)</span></div>
+    </div>
+
+    <!-- Loot -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">Distribute Loot</div>
+            <div class="rm-label">Item</div>
+            <input class="rm-cmod" value="Scrap Rifle">
+            <div class="rm-check"><span class="rm-checkitem">&#9745; Mike</span><span class="rm-checkitem">&#9744; Cree</span><span class="rm-checkitem">&#9744; Jules</span></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">Apply</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Loot</span> <span class="badge ok">GM Tools</span></div>
+    </div>
+
+    <!-- Morale -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#6fae5a">Community</div>
+            <div class="rm-title">Weekly Morale</div>
+            <div class="rm-label">Leader</div>
+            <select class="rm-select"><option>Mike</option></select>
+            <div class="rm-check"><span class="rm-checkitem">Fed</span><span class="rm-checkitem">Clothed</span><span class="rm-checkitem">Morale roll</span></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#6fae5a;border-color:#6fae5a;color:#1a1a1a">Run Check</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Community Morale</span> <span class="badge ok">Community</span></div>
+    </div>
+
+    <!-- Community Status -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:480px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#6fae5a">Community</div>
+            <div class="rm-title">Status</div>
+            <div class="widenote">Embeds the full community panel - wider, same shell.</div>
+            <div class="rep-line w90"></div><div class="rep-line w70"></div><div class="rep-line w90"></div>
+            <div class="rm-buttons"><button class="rm-secondary">Close</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Community Status</span> <span class="badge ok">Community (wider)</span></div>
+    </div>
+
+    <!-- Proxy Recruit -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#b07cc6">Community</div>
+            <div class="rm-title">Off-screen Recruit</div>
+            <div class="rm-formula"><span>2d6</span><span class="pos">+2 AMod</span><span class="rm-cmod-inline"><span class="rm-cmod-tag">CMod</span><input class="rm-cmod-box" type="number" value="0"></span></div>
+            <div class="rm-middle">
+              <div class="rm-check"><span class="rm-checkitem" style="border-color:#b07cc6;color:#b07cc6">Cohort</span><span class="rm-checkitem">Conscript</span><span class="rm-checkitem">Convert</span></div>
+              <div class="rm-label">Target / skill</div>
+              <select class="rm-select"><option>Donnie / Manipulation</option></select>
+            </div>
+            <div class="rm-insight">
+              <div class="rm-insight-lbl">&#127922; Insight Dice (1 available)</div>
+              <div class="rm-insight-btns"><button class="ins active">No spend</button><button class="ins">Roll 3d6</button><button class="ins">+3 CMod</button></div>
+            </div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#b07cc6;border-color:#b07cc6;color:#fff">&#127922; Recruit</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Proxy Recruit</span> <span class="badge ok">roll modal</span><br>Purple recruit accent (roll accent beats category color).</div>
+    </div>
+
+    <!-- Publish -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#9b7cc6">Module</div>
+            <div class="rm-title">Publish</div>
+            <div class="rm-label">Name</div><input class="rm-cmod" value="The Mongrels">
+            <div class="rm-label">Tagline</div><input class="rm-cmod" value="">
+            <div class="rm-check"><span class="rm-checkitem">Public</span><span class="rm-checkitem">Bump v1.2.0</span></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#9b7cc6;border-color:#9b7cc6;color:#fff">Publish</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Module Publish</span> <span class="badge ok">Module</span></div>
+    </div>
+
+    <!-- Review -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#9b7cc6">Module</div>
+            <div class="rm-title">Review Update</div>
+            <div class="rm-listitem" style="color:#7fc458">+ ADDED: 2 pins</div>
+            <div class="rm-listitem" style="color:#EF9F27">~ CHANGED: 1 map &#9888;</div>
+            <div class="rm-listitem" style="color:#c0392b">- REMOVED: 1 NPC</div>
+            <div class="rm-buttons" style="margin-top:12px"><button class="rm-secondary">Later</button><button class="rm-primary" style="background:#9b7cc6;border-color:#9b7cc6;color:#fff">Apply Update</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Module Review</span> <span class="badge ok">Module</span></div>
+    </div>
+
+    <!-- CDP -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">Award CDP</div>
+            <div class="rm-stepper"><button class="rm-stepbtn">&minus;</button><span class="rm-stepval">3</span><button class="rm-stepbtn">+</button></div>
+            <div class="rm-check"><span class="rm-checkitem">&#9745; Mike</span><span class="rm-checkitem">&#9745; Cree</span></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">Award</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Award CDP</span> <span class="badge ok">GM Tools</span></div>
+    </div>
+
+    <!-- Advance Time -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">Advance Time</div>
+            <div class="rm-stepper"><button class="rm-stepbtn">&minus;</button><span class="rm-stepval">6h</span><button class="rm-stepbtn">+</button></div>
+            <div class="rm-listitem">Mike: RP 100% &rarr; 88% (encumbrance)</div>
+            <div class="rm-buttons" style="margin-top:10px"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">Apply</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Advance Time</span> <span class="badge ok">GM Tools</span></div>
+    </div>
+
+    <!-- Populate -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">Populate NPCs</div>
+            <div class="rm-stepper"><button class="rm-stepbtn">&minus;</button><span class="rm-stepval">8</span><button class="rm-stepbtn">+</button></div>
+            <div class="rm-listitem">2 antagonist &middot; 2 foe &middot; 3 goon &middot; 1 bystander</div>
+            <div class="rm-buttons" style="margin-top:10px"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">Generate</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Populate</span> <span class="badge ok">GM Tools</span></div>
+    </div>
+
+    <!-- Grant Advantage -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">Grant Advantage</div>
+            <div class="rm-label">PC / Skill</div>
+            <select class="rm-select"><option>Mike / Tactics</option></select>
+            <div class="rm-stepper"><button class="rm-stepbtn">&minus;</button><span class="rm-stepval">+2</span><button class="rm-stepbtn">+</button></div>
+            <div class="rm-buttons" style="margin-top:10px"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">Grant</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Grant Advantage</span> <span class="badge ok">GM Tools</span></div>
+    </div>
+
+    <!-- End Session -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">End Session</div>
+            <div class="rm-label">Summary</div><div class="rm-area"></div>
+            <div class="rm-label">Cliffhanger</div><div class="rm-area"></div>
+            <div class="rm-buttons"><button class="rm-secondary">Export</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">End Session</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">End Session</span> <span class="badge ok">GM Tools</span></div>
+    </div>
+
+    <!-- QuickAdd -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Map</div>
+            <div class="rm-title">Add Pin</div>
+            <div class="rm-label">Category</div>
+            <select class="rm-select"><option>Landmark</option><option>Danger</option></select>
+            <div class="rm-label">Search location</div><input class="rm-cmod" value="">
+            <div class="rm-buttons"><button class="rm-secondary">Start Community</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Save Pin</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">QuickAdd (map)</span> <span class="badge ok">Player</span></div>
+    </div>
+
+    <!-- Apprentice Wizard -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Apprentice</div>
+            <div class="rm-title">Take Apprentice</div>
+            <div class="rm-check"><span class="rm-checkitem" style="border-color:#7ab3d4;color:#7ab3d4">1 Identity</span><span class="rm-checkitem">2 Prof</span><span class="rm-checkitem">3 RAPID</span><span class="rm-checkitem">4 Skills</span><span class="rm-checkitem">5 Done</span></div>
+            <div class="rep-line w90"></div><div class="rep-line w70"></div>
+            <div class="rm-buttons" style="margin-top:10px"><button class="rm-secondary">Back</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Next</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Apprentice Wizard</span> <span class="badge ok">Player</span> &middot; 5-step.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =================== WIDTH TRIAL =================== -->
+<section id="widthtrial">
+  <h2 class="sec">Width trial - the 4 content-heavy modals: current vs clamped to 340</h2>
+  <p class="sec-note"><b>DECISION (locked 2026-05-24):</b> End Session + Trade clamped to 340 (now shown that way in the main section above); Portrait Bank (420) + Community Status (480) kept wide for the thumbnail grid / embedded panel. Pairs below are the comparison that drove the call.</p>
+  <div class="grid">
+
+    <!-- Portrait Bank current 420 -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:420px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Character</div>
+            <div class="rm-title">Choose Portrait</div>
+            <div class="rm-check"><span class="rm-checkitem">All</span><span class="rm-checkitem">Man</span><span class="rm-checkitem">Woman</span></div>
+            <div class="rm-thumbs"><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Use Portrait</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Portrait Bank</span> - current</div>
+    </div>
+    <!-- Portrait Bank 340 -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Character</div>
+            <div class="rm-title">Choose Portrait</div>
+            <div class="rm-check"><span class="rm-checkitem">All</span><span class="rm-checkitem">Man</span><span class="rm-checkitem">Woman</span></div>
+            <div class="rm-thumbs"><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div><div class="rm-thumb"></div></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Use Portrait</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Portrait Bank</span> - clamped 340 <span class="dimtag">(thumbnails wrap to fewer per row)</span></div>
+    </div>
+
+    <!-- End Session current 440 -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:440px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">End Session</div>
+            <div class="rm-label">Summary</div><div class="rm-area"></div>
+            <div class="rm-label">Cliffhanger</div><div class="rm-area"></div>
+            <div class="rm-buttons"><button class="rm-secondary">Export</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">End Session</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">End Session</span> - current</div>
+    </div>
+    <!-- End Session 340 -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#c9a227">GM Tools</div>
+            <div class="rm-title">End Session</div>
+            <div class="rm-label">Summary</div><div class="rm-area"></div>
+            <div class="rm-label">Cliffhanger</div><div class="rm-area"></div>
+            <div class="rm-buttons"><button class="rm-secondary">Export</button><button class="rm-primary" style="background:#c9a227;border-color:#c9a227;color:#1a1a1a">End Session</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">End Session</span> - clamped 340 <span class="dimtag">(textareas just get narrower)</span></div>
+    </div>
+
+    <!-- Trade current 460 -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:460px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Trade</div>
+            <div class="rm-title">Negotiation</div>
+            <div class="rm-buttons" style="margin-bottom:10px">
+              <div style="flex:1"><div class="rm-listitem">You offer: Scrap x3</div></div>
+              <div style="flex:1"><div class="rm-listitem">You want: Medkit</div></div>
+            </div>
+            <div class="rm-check"><span class="rm-checkitem">Fairness: even</span><span class="rm-checkitem">Barter (opposed roll)</span></div>
+            <div class="rm-buttons"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Apply Deal</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Trade</span> - current (two columns side by side)</div>
+    </div>
+    <!-- Trade 340 (columns stack) -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#7ab3d4">Trade</div>
+            <div class="rm-title">Negotiation</div>
+            <div class="rm-label">You offer</div>
+            <div class="rm-listitem">Scrap x3</div>
+            <div class="rm-label">You want</div>
+            <div class="rm-listitem">Medkit</div>
+            <div class="rm-check"><span class="rm-checkitem">Fairness: even</span><span class="rm-checkitem">Barter (opposed roll)</span></div>
+            <div class="rm-buttons" style="margin-top:10px"><button class="rm-secondary">Cancel</button><button class="rm-primary" style="background:#7ab3d4;border-color:#7ab3d4;color:#1a1a1a">Apply Deal</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Trade</span> - clamped 340 <span class="dimtag">(offer/want stack vertically instead of side by side)</span></div>
+    </div>
+
+    <!-- Community Status current 480 -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:480px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#6fae5a">Community</div>
+            <div class="rm-title">Status</div>
+            <div class="rep-line w90"></div><div class="rep-line w70"></div><div class="rep-line w90"></div>
+            <div class="rm-buttons"><button class="rm-secondary">Close</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Community Status</span> - current</div>
+    </div>
+    <!-- Community Status 340 -->
+    <div>
+      <div class="stage sheet">
+        <div class="rm-panel" style="width:340px">
+          <div class="rm-drag"><div class="rm-grab"></div></div>
+          <div class="rm-body">
+            <div class="rm-eyebrow" style="color:#6fae5a">Community</div>
+            <div class="rm-title">Status</div>
+            <div class="rep-line w90"></div><div class="rep-line w70"></div><div class="rep-line w90"></div>
+            <div class="rm-buttons"><button class="rm-secondary">Close</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Community Status</span> - clamped 340 <span class="dimtag">(embeds the whole community panel - tightest fit of the four)</span></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =================== BESPOKE =================== -->
+<section id="bespoke">
+  <h2 class="sec">Bespoke - stay as-is (your 4 exceptions)</h2>
+  <p class="sec-note">Keep their own look; not pulled into the ATTACK shell.</p>
+  <div class="grid">
+
+    <div>
+      <div class="stage sheet">
+        <div class="rep" style="width:480px">
+          <div class="rep-head"><div class="rep-title">Welcome to Tapestry</div><div class="rep-x">&times;</div></div>
+          <div class="rep-body"><div class="rep-line w90"></div><div class="rep-line w90"></div><div class="rep-line w70"></div><div class="rep-row"><button class="rep-btn grey">Get started</button></div></div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Welcome</span> <span class="badge bespoke">bespoke</span><br><code>WelcomeModal.tsx</code></div>
+    </div>
+
+    <div>
+      <div class="stage sheet">
+        <div class="rep" style="width:460px">
+          <div class="rep-head"><div class="rep-title">Crop Image</div><div class="rep-x">&times;</div></div>
+          <div class="rep-body"><div class="rep-line" style="width:100%;height:140px"></div><div class="rep-row"><button class="rep-btn grey">Crop &amp; Upload</button></div></div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Object Image Cropper</span> <span class="badge bespoke">bespoke</span><br><code>ObjectImageCropper.tsx</code></div>
+    </div>
+
+    <div>
+      <div class="stage sheet">
+        <div class="rep" style="width:420px">
+          <div class="rep-head"><div class="rep-title">Report a Bug</div><div class="rep-x">&times;</div></div>
+          <div class="rep-body"><div class="rep-field" style="height:60px">What went wrong?...</div><div class="rep-row"><button class="rep-btn grey">Submit</button></div></div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Bug Report</span> <span class="badge bespoke">bespoke</span><br><code>BugReportButton.tsx</code></div>
+    </div>
+
+    <div>
+      <div class="stage sheet">
+        <div class="rep" style="width:400px">
+          <div class="rep-head"><div class="rep-title" style="color:#f5a89a">Delete Campaign?</div><div class="rep-x">&times;</div></div>
+          <div class="rep-body"><div class="rep-field">Type "The Mongrels" to confirm</div><div class="rep-row"><button class="rep-btn grey">Cancel</button><button class="rep-btn" style="background:#2a1210;border-color:#c0392b;color:#f5a89a">Delete</button></div></div>
+        </div>
+      </div>
+      <div class="caption"><span class="nm">Delete (typed-name gate)</span> <span class="badge bespoke">bespoke</span><br>Destructive confirm &middot; commit 9de3aa7.</div>
+    </div>
+
+  </div>
+</section>
+
+<footer style="border-top:1px solid #3a3a3a;padding:18px 0;color:#8a8580;font-size:13px">
+  Mockup v8 - LOCKED 2026-05-24. Standard modal = 340px wide (read exact height off Distract's badge). Only 2 unified modals stay wider (Portrait Bank 420, Community Status 480) + the 4 bespoke exceptions. This is the design of record; implementation tracked in tasks/modal-redesign-spec-2026-05-24.md.
+</footer>
+</main>
+<script>
+  // Stamp each modal's real rendered size so the "standard" dimensions are visible, not guessed.
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.stage').forEach(stage => {
+      const panel = stage.querySelector('.rm-panel, .rep');
+      if (!panel) return;
+      const tag = document.createElement('div');
+      tag.textContent = panel.offsetWidth + ' x ' + panel.offsetHeight;
+      tag.style.cssText = 'position:absolute;top:6px;right:8px;font-size:12px;font-weight:700;color:#0d0d0d;background:#7fc458;padding:1px 6px;border-radius:3px;z-index:5;font-family:monospace';
+      stage.appendChild(tag);
+    });
+  });
+</script>
+</body>
+</html>
