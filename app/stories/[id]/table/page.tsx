@@ -2460,9 +2460,20 @@ export default function TablePage() {
       const pcEntry = entries.find(e => e.character.name === name)
       const npcRow = !pcEntry ? campaignNpcs.find((n: any) => n.name === name) : null
       if (!pcEntry && !npcRow) continue
-      const currentState = pcEntry
-        ? (pcEntry.liveState as any)?.infection_state
-        : (npcRow as any)?.infection_state
+      // Read infection_state FRESH from the DB, not in-memory liveState. A
+      // Restore/clear writes the DB but may not have refreshed the local
+      // entries cache, so the cached value goes stale 'wound' and the
+      // no-stacking gate silently skips a legitimate check. Same fresh-source
+      // principle the warning query above already follows.
+      let currentState: string | null = null
+      if (pcEntry) {
+        const { data: freshCs } = await supabase.from('character_states').select('infection_state').eq('id', pcEntry.stateId).maybeSingle()
+        currentState = (freshCs as any)?.infection_state ?? null
+      } else if (npcRow) {
+        const { data: freshNpc } = await supabase.from('campaign_npcs').select('infection_state').eq('id', (npcRow as any).id).maybeSingle()
+        currentState = (freshNpc as any)?.infection_state ?? null
+      }
+      trace('infection-queue', { name, isPc: !!pcEntry, currentState, userId: pcEntry?.userId ?? null, action: currentState ? 'skip-already-sick' : (pcEntry ? 'broadcast-pc' : 'queue-npc') })
       if (currentState) continue // already sick - canon: no stacking
       if (pcEntry) {
         const phyAmod = pcEntry.character.data?.rapid?.PHY ?? 0
