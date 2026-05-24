@@ -1,6 +1,5 @@
 'use client'
 import { memo, useEffect, useRef, useState } from 'react'
-import { createClient } from '../lib/supabase-browser'
 import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'
 import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-controls-bus'
@@ -8,6 +7,7 @@ import {
   campaignScenes, insertScene, updateScene, deactivateOtherScenes, deactivateAllScenes,
   sceneTokens, updateToken, insertTokens, deleteToken, deleteTokensForScene, campaignVehiclesOnly,
 } from '../lib/data/tactical'
+import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -188,7 +188,6 @@ interface Props {
 }
 
 function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove, onVehiclesNeedRefresh }: Props) {
-  const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   // Pan coalescing - multiple mousemove events per frame get merged into
@@ -264,8 +263,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [imgScale, setImgScale] = useState(1)
   const [gridColor, setGridColor] = useState('white')
   const [ping, setPing] = useState<{ gx: number; gy: number; t: number; color: string; count: number } | null>(null)
-  const pingChannelRef = useRef<any>(null)
-  const tacticalChannelRef = useRef<any>(null)
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
   const [cellPx, setCellPx] = useState(35)
@@ -723,44 +720,41 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     setTokens((data ?? []) as unknown as Token[])
   }
 
-  // Init + Realtime
+  // Init - load scenes on mount/campaign change. The render-loop's
+  // animation frame is cancelled here too (unrelated to realtime; just
+  // colocated with the old combined effect's teardown).
   useEffect(() => {
     loadScenes()
-    const channel = supabase.channel(`tactical_${campaignId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'scene_tokens' }, () => {
-        if (sceneRef.current) loadTokens(sceneRef.current.id)
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${campaignId}` }, () => {
-        loadScenes()
-      })
-      .on('broadcast', { event: 'token_moved' }, () => {
-        if (sceneRef.current) loadTokens(sceneRef.current.id)
-      })
-      // Vehicle popout fires this on every successful seat-write.
-      // The parent listens and refetches campaigns.vehicles, which
-      // refreshes the aboard-token filter and passenger-count badge.
-      // Belt-and-suspenders for the campaigns realtime UPDATE path,
-      // which has been flaky for jsonb columns.
-      .on('broadcast', { event: 'vehicle_updated' }, () => {
-        onVehiclesNeedRefresh?.()
-      })
-      .on('broadcast', { event: 'scene_activated' }, () => {
-        // GM activated a different tactical scene. Reload the scene
-        // list - loadScenes auto-picks the is_active=true row, so the
-        // player's view follows immediately whether their pane is
-        // open or closed.
-        loadScenes()
-      })
-      .on('broadcast', { event: 'firing_arc_toggle' }, (msg: any) => {
-        // Cross-window arc toggle. The /vehicle popout broadcasts
-        // { vehicleName, weaponIdx } when its 🎯 Show Arc button
-        // gets clicked; we resolve the vehicle name to all matching
-        // tokens on the active scene and flip each token+weapon
-        // entry in firingArcs. Same effect as clicking the in-map
-        // toggle, but it works from any window.
-        const p = msg?.payload ?? {}
-        const vehicleName: string | undefined = p.vehicleName
-        const weaponIdx: number | undefined = p.weaponIdx
+    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current) }
+  }, [campaignId])
+
+  // Realtime - the combat-critical tactical channel, behind the
+  // lib/realtime seam. 2 postgres subs (scene_tokens, this campaign's
+  // tactical_scenes) + 6 broadcasts; every handler auto-Sentry-wrapped.
+  // tacticalChannelRef aliases the handle's channelRef so the many
+  // `.send()` sites below are unchanged. Broadcast handlers take the
+  // typed payload directly (not msg.payload).
+  const tacticalChannel = useCampaignChannel(campaignId, {
+    channelName: `tactical_${campaignId}`,
+    postgres: [
+      { label: 'tactical:scene_tokens', event: '*', table: 'scene_tokens', handler: () => { if (sceneRef.current) loadTokens(sceneRef.current.id) } },
+      { label: 'tactical:tactical_scenes', event: '*', table: 'tactical_scenes', filter: `campaign_id=eq.${campaignId}`, handler: () => { loadScenes() } },
+    ],
+    broadcasts: {
+      token_moved: () => { if (sceneRef.current) loadTokens(sceneRef.current.id) },
+      // Vehicle popout fires this on every successful seat-write; the
+      // parent refetches campaigns.vehicles (aboard-token filter +
+      // passenger badge). Belt-and-suspenders for the flaky jsonb
+      // campaigns realtime UPDATE path.
+      vehicle_updated: () => { onVehiclesNeedRefresh?.() },
+      // GM activated a different scene - loadScenes auto-picks is_active.
+      scene_activated: () => { loadScenes() },
+      firing_arc_toggle: (p) => {
+        // Cross-window arc toggle from the /vehicle popout - resolve the
+        // vehicle name to all matching object tokens and flip each
+        // token+weapon entry in firingArcs.
+        const vehicleName = p?.vehicleName
+        const weaponIdx = p?.weaponIdx
         if (!vehicleName || typeof weaponIdx !== 'number') return
         setFiringArcs(prev => {
           const next = new Set(prev)
@@ -773,53 +767,49 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           }
           return next
         })
-      })
-      .on('broadcast', { event: 'tactical_zoom' }, (msg: any) => {
-        // GM zoom snaps players' view to match (playtest #27). Players
-        // can still zoom locally afterwards - the sync only fires when
-        // the GM actively changes zoom, so a player's later adjustment
-        // isn't clobbered until the GM zooms again.
+      },
+      tactical_zoom: (p) => {
+        // GM zoom snaps players' view to match (playtest #27). Players can
+        // still zoom locally afterwards - only re-syncs on the next GM zoom.
         if (!isGM) {
-          const nextZoom = msg?.payload?.zoom
+          const nextZoom = p?.zoom
           if (typeof nextZoom === 'number' && nextZoom > 0) setZoom(nextZoom)
         }
-      })
-      .on('broadcast', { event: 'tactical_view_share' }, (msg: any) => {
-        // GM Share View - one-shot deliberate push (sibling of the
-        // campaign-map "👁 Share View" button added 2026-05-11). GM
-        // snapshots their current scroll position + zoom + imgScale
-        // and pushes it to every player. Players' container smooth-
-        // scrolls to the location and matches the zoom/imgScale.
-        // Not a continuous follow - players can keep panning after.
+      },
+      tactical_view_share: (p) => {
+        // GM Share View - one-shot deliberate push of scroll + zoom +
+        // imgScale. Not a continuous follow; players can keep panning after.
         if (isGM) return
-        const p = msg?.payload ?? {}
-        if (typeof p.zoom === 'number' && p.zoom > 0) setZoom(p.zoom)
-        if (typeof p.imgScale === 'number' && p.imgScale > 0) setImgScale(p.imgScale)
-        // Defer the scroll write to the next frame so any zoom/imgScale
-        // change above has a chance to resize the canvas first - otherwise
-        // we'd scroll to coords inside the OLD canvas dimensions.
-        if (typeof p.scrollLeft === 'number' && typeof p.scrollTop === 'number') {
+        if (typeof p?.zoom === 'number' && p.zoom > 0) setZoom(p.zoom)
+        if (typeof p?.imgScale === 'number' && p.imgScale > 0) setImgScale(p.imgScale)
+        // Defer the scroll to next frame so a zoom/imgScale change above
+        // resizes the canvas first (else we scroll inside the OLD dims).
+        if (typeof p?.scrollLeft === 'number' && typeof p?.scrollTop === 'number') {
           requestAnimationFrame(() => {
             const container = containerRef.current
             if (!container) return
             container.scrollTo({ left: p.scrollLeft, top: p.scrollTop, behavior: 'smooth' })
           })
         }
-      })
-      .subscribe()
-    tacticalChannelRef.current = channel
-    const pingCh = supabase.channel(`ping_${campaignId}`)
-      .on('broadcast', { event: 'gm_ping' }, (msg: any) => {
-        const p = msg?.payload ?? {}
-        const gx = p.gx ?? p.payload?.gx
-        const gy = p.gy ?? p.payload?.gy
-        const color = p.color ?? p.payload?.color ?? '#EF9F27'
+      },
+    },
+  })
+  const tacticalChannelRef = tacticalChannel.channelRef
+
+  // The ping channel is separate (its own ping_${id} topic). gm_ping
+  // carries grid coords + color; players also fire it in green.
+  const pingChannel = useCampaignChannel(campaignId, {
+    channelName: `ping_${campaignId}`,
+    broadcasts: {
+      gm_ping: (p) => {
+        const gx = p?.gx ?? (p as any)?.payload?.gx
+        const gy = p?.gy ?? (p as any)?.payload?.gy
+        const color = p?.color ?? (p as any)?.payload?.color ?? '#EF9F27'
         if (gx != null && gy != null) setPing({ gx, gy, t: 0, color, count: 2 })
-      })
-      .subscribe()
-    pingChannelRef.current = pingCh
-    return () => { supabase.removeChannel(channel); supabase.removeChannel(pingCh); if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current) }
-  }, [campaignId])
+      },
+    },
+  })
+  const pingChannelRef = pingChannel.channelRef
 
   // Center the viewport on the middle of the current map content (image or
   // grid, whichever is larger). Only runs once per scene id so it doesn't

@@ -45,6 +45,11 @@ export interface CampaignBroadcastPayloads {
   // (board/disembark/damage), and the popout's mounted-weapon arc toggle.
   vehicle_updated: { vehicle_id: string }
   firing_arc_toggle: { vehicleName: string; weaponIdx: number }
+  // GM-driven view sync on the tactical map (zoom snap + one-shot Share View).
+  tactical_zoom: { zoom: number }
+  tactical_view_share: { scrollLeft: number; scrollTop: number; zoom: number; imgScale: number }
+  // GM ping marker (also fired by players in green); rides its own ping_${id} channel.
+  gm_ping: { gx: number; gy: number; color: string }
 
   // --- Health / damage ---
   // pc_damaged carries an optimistic patch; npc_damaged is EITHER {npcId,patch}
@@ -94,6 +99,9 @@ export const CAMPAIGN_BROADCAST_EVENTS = [
   'tactical_unshared',
   'vehicle_updated',
   'firing_arc_toggle',
+  'tactical_zoom',
+  'tactical_view_share',
+  'gm_ping',
   'pc_damaged',
   'npc_damaged',
   'pc_mortal_wound',
