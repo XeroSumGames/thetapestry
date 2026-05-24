@@ -46,9 +46,9 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 2. [ ] (DOM) The 8 sections + 4 appendices are reachable; deep links (`/rules/combat`, `/rules/appendix-tables`) load.
 
 ## Ch 6 - Creating a Story
-1. [ ] (DOM) GM creates a story (setting picker) -> appears in My Stories with an invite code.
-2. [ ] (RT) Player joins via code -> GM's roster updates live + GM notified.
-3. [ ] (DOM) Player leaves a story.
+1. [x] (DOM) GM creates a story (setting picker -> Custom) -> appears in My Stories with a 6-char invite code. `story-lifecycle.spec`
+2. [x] (DOM) Player joins via code -> persists in `campaign_members` + GM roster reflects it ON RELOAD. `story-lifecycle.spec` (NB: roster is refetch-based, NOT realtime - app/stories/[id]/page.tsx:49; "GM notified on join" is a SEPARATE untested claim, no notification asserted.)
+3. [x] (DOM) Player leaves a story -> drops off `campaign_members`. `story-lifecycle.spec`
 4. [ ] (DOM) Start a story from a Rumor/module (clone) - see Ch 14.
 5. [ ] (DOM) Story-page actions render: Launch / Edit / Clone / Snapshots / Sessions / Publish.
 
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.2, Ch3.1, Ch4.1, Ch5.1, Ch10.2, Ch12.4, Ch12.8, Ch13.1, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.2, Ch3.1, Ch4.1, Ch5.1, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
