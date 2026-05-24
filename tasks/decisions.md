@@ -10,6 +10,28 @@ Newest first.
 
 ---
 
+## 2026-05-23: Architecture path beyond the re-arch - sequence + Stage C state-layer call
+
+**Decision:** the re-arch built the foundation (seams); it stops one layer short (page.tsx still 10.5k - orchestration has nowhere to live but the route). The path to "structurally ready for the world / paid launch" (Xero's destination, confirmed by "start planning it all") is `tasks/architecture-path.md`, sequenced by dependency + risk, NOT by leverage:
+- **Gate 0:** close Phase 7 (validate the seams across 2 clients) - now automatable via the Playwright suite (no longer calendar-blocked on the Minnie playtest, because the suite can seed the vehicle/community fixtures into the Arena).
+- **Stage A** (parallel, now): infra-as-code (publication/RLS/triggers/orphan-tables into CI-applied migrations) + typed payloads. Cheap, safe, kills the silent-config + `561 as any` bug classes.
+- **Stage B:** conditions subsystem (one model/lifecycle/render/reset for infection+lasting-wound+stress+MW).
+- **Stage C** (the big one): client-state layer = **TanStack Query for server-state + Zustand slices for orchestration state** (NOT either/or - they solve different problems). Design doc -> PILOT on one non-combat god-component (MapView/vehicle) -> propagate -> **table page LAST**.
+- **Stage D** (parallel throughout): the Playwright test pyramid - the gate that lets B/C move behavior-preserving + validated-per-slice.
+
+**Risk-posture flip (load-bearing):** the re-arch's "break-things-OK, no playtest until done" is OVER - playtesters are live. New posture for everything above: behavior-preserving, one `git revert` away, ratchet-locked, validated per slice, table page last.
+
+**Alternatives considered:**
+- A. Stop at the seams (re-arch "done"); fix bugs in place. Leaves the god-components god-sized.
+- B. Single state tool (Query OR Zustand, per the arch review's framing).
+- C. Query + Zustand split, sequenced behind Phase 7 + a pilot (chosen).
+
+**Why C won:** A is what `018c423` ("re-arch done") could be misread as - but the review is explicit it is "the first move, not the last." B undersells it: the god-components conflate server-state (wants a cache + invalidation) and orchestration state (wants a store) - one tool is wrong for half the problem. C splits cleanly along that seam and de-risks via a pilot before touching combat code.
+
+**What would change our mind:** if the Stage C pilot shows orchestration state is thin enough that Query alone gets a component under the LOC ceiling, drop Zustand (stay single-tool). If realtime-as-cache-invalidation over-fetches on the combat hot path, keep targeted broadcasts there and use Query only for cold reads. This call is the one flagged for a human architect's review before the bulk Stage-C propagation (C3).
+
+---
+
 ## 2026-05-22..24: Grand Re-Architecture - the locked structural calls
 
 **Decision:** the whole-platform re-arch (Xero mandate: every god-component onto the ideal layered architecture before the next playtest) locked four structural calls, now load-bearing across the codebase:

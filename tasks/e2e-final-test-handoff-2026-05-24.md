@@ -69,3 +69,12 @@ Added by the puffer-fish lane while you were mid-build. Pointers only; your spec
 - **Automation map (from the Risk view) - where to spend effort.** Cleanest/lowest-flake (do first): the console/network sweep (all routes) + DOM-propagation across contexts (NPC reveal, stockpile deposit, the community-create resubscribe, map pins + whispers). Needs small app edits: canvas token-move (Sections B + A3) wants `data-testid` hooks or a JS-eval bridge to read token positions. Most fragile, do last: combat math (the CMod itemization in A2 - random dice + modal branches + feed-text parsing) and the end-of-combat infection modal (Section F).
 - **Risk Register tie-in.** Realtime channels is **YELLOW** (`tasks/debug-handoff.md` Sec 1) post-re-arch; this suite (and/or the manual sheet) is its demote-gate. When your propagation specs go green across vehicle/community/map, that is the evidence to demote.
 - **Coordination channel** is the shared substrate (this note, `tasks/todo.md`, commits) - no direct messaging between lanes. Your "Current state" above now lags disk (the scaffold exists: `e2e/console-network.spec.ts`, `_fixtures.ts`, `_console.ts`, `playwright.config.ts`) - refresh it when you next touch this file.
+
+### Cross-lane note (puffer-fish, 2026-05-23) - this suite is now on the CRITICAL PATH
+
+The architecture work beyond the re-arch is planned: `tasks/architecture-path.md` (staged plan) + `tasks/architecture-test-strategy.md` (how this suite gates each stage). Two things that change your priorities:
+
+1. **You unblock Gate 0 (Phase 7 close).** Because Playwright multi-context can SEED the vehicle + community fixtures into THE ARENA, Section B (vehicle) no longer waits for the 2026-05-25 Minnie playtest - the whole A-F acceptance can close on automation. Fixture seeding (vehicle = `campaigns.vehicles` JSONB via the `update_vehicle_in_campaign` RPC; community = `communities` row + `community_stockpile_items` rows) is the highest-value next piece. See the strategy doc's "Gate 0 build order."
+2. **After Gate 0, you become the regression net for Stages A/B/C.** Behavior-preserving is the new posture (playtesters are live); your green run is what makes "behavior-preserving" a checked fact, not an assertion. Stage B will need a new conditions spec (apply/clear/expire/Restore/no-stacking, 2-client); Stage C re-runs the full suite per migrated component. The strategy doc's gate map has the details.
+
+Net: finishing the A-F suite + Arena seeding is the gate the entire forward plan waits on. It leads, it does not trail.
