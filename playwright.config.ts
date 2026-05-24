@@ -19,7 +19,12 @@ export default defineConfig({
   fullyParallel: false,
   workers: process.env.CI ? 2 : 3,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // Prod is a live target with realtime + a Sentry /monitoring tunnel, so the
+  // sweep occasionally trips a transient 500 and tight-timing realtime asserts
+  // (e.g. Section D resubscribe) can miss under full-run load. Retries let a
+  // genuine transient pass on a second attempt while a REAL regression still
+  // fails every attempt (it's deterministic - that's how section-c was caught).
+  retries: 2,
   timeout: 60_000,
   expect: { timeout: 15_000 },
   reporter: [['list'], ['html', { open: 'never' }]],

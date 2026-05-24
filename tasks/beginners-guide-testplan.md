@@ -106,9 +106,9 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 
 ## Ch 13 - The Campfire
 1. [x] (DOM) Portal renders (Setting Hubs, Featured Module, Explore) (sweep).
-2. [ ] (DOM) New forum thread + reply (forums2 voting EXCLUDED - experimental).
+2. [x] (DOM) New forum thread (Thriver, via composer) + reply persists (forums2 voting EXCLUDED - experimental). `campfire-social.spec`
 3. [ ] (DOM) LFG post + "I'm Interested" from another context.
-4. [ ] (DOM) War-story post; Thriver-authored skips the pending queue, Survivor's doesn't.
+4. [x] (DOM) Moderation role-gate: a Thriver post auto-approves; a Survivor global/setting post is FORCED to `pending` by the DB trigger even if it claims `approved` (unbypassable). Covered for forum_threads (the trigger is shared across forum_threads/war_stories/lfg_posts, so it generalises; war-story + LFG composers themselves still untested). `campfire-social.spec`
 5. [ ] (DOM) Timestamps tool returns a Discord token.
 
 ## Ch 14 - Rumors
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.2, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.2, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.

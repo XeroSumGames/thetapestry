@@ -38,7 +38,7 @@ test.describe('Section C - NPC reveal GM -> player', () => {
       // visibility so teardown restores it exactly. (PostgREST boolean filters
       // want is.true not eq.true, so we don't filter - we read + restore.)
       const res = await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaign_npcs?campaign_id=eq.${CAMPAIGN_ID}&select=id,name,hidden_from_players&limit=1`,
+        `${SUPABASE_URL}/rest/v1/campaign_npcs?campaign_id=eq.${CAMPAIGN_ID}&select=id,name,hidden_from_players&order=id.asc&limit=1`,
         { headers: { apikey: creds!.anonKey, Authorization: `Bearer ${creds!.accessToken}` } },
       )
       const rows = await res.json().catch(() => [])
@@ -56,14 +56,26 @@ test.describe('Section C - NPC reveal GM -> player', () => {
       const npcsTab = pl.getByRole('button', { name: /^npcs/i }).first()
       if (await npcsTab.count()) await npcsTab.click().catch(() => {})
 
-      // While hidden, the NPC must NOT appear in the player's panel.
-      await expect(pl.getByText(npc.name, { exact: true })).toHaveCount(0)
+      // The player roster filters out hidden_from_players (page.tsx:6866), so a
+      // hidden NPC is absent from the ROSTER - but its name can still appear
+      // elsewhere on the table page (relationship lists on visible NPCs, etc.),
+      // so we assert on the DELTA, not an absolute count of 0. Record occurrences
+      // while hidden, then prove the reveal makes the roster card appear LIVE
+      // (count strictly increases). Robust to background references, and still
+      // catches a leak: if a hidden NPC were already shown in the roster, the
+      // reveal would add nothing and this assertion would fail.
+      const hiddenCount = await pl.getByText(npc.name, { exact: true }).count()
 
       // GM reveals (the same write the Show button performs).
       expect((await setHidden(gm, creds!, npc.id, false)).ok(), 'reveal PATCH failed').toBe(true)
 
-      // Player sees it appear live, no reload (~2s; allow 8s headroom).
-      await expect(pl.getByText(npc.name, { exact: true }).first()).toBeVisible({ timeout: 8_000 })
+      // The roster card appears live, no reload (~2s; allow 8s headroom).
+      await expect
+        .poll(() => pl.getByText(npc.name, { exact: true }).count(), {
+          timeout: 8_000,
+          message: 'revealed NPC did not appear in the player roster live',
+        })
+        .toBeGreaterThan(hiddenCount)
     } finally {
       if (npcId && creds) await setHidden(gm, creds, npcId, originalHidden).catch(() => {}) // restore original visibility
       await gmCtx.close()
