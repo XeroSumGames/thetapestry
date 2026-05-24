@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-24 21:08 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [622 passed, 37 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- **Ledger stale (5th flag): 532/29 → 622/37 (+90 tests, +8 files since ledger was last written).** `tasks/debug-handoff.md` line 113 still reads "532 unit tests across 29 files." Gap grew again (+47 since 18:05 UTC — `bc48fbe feat(conditions)` added conditions.test.ts). `scripts/refresh-ledger.mjs` exists; unrun.
+- **HOPED-FOR (2026-05-19 batch) day 5.** 50-commit batch: Tier-2 Recruit, Vehicles Q4-c/d, Advantages, FI streamline, narrative polish, etc. Drain target: 2026-05-25 playtest (tomorrow). `tasks/session-prep-2026-05-25.md` is the runsheet.
+
+**Action:** `node scripts/refresh-ledger.mjs` — clears the ledger stale. HOPED-FOR drains at tomorrow's playtest.
+
+---
+
 ## 2026-05-24 18:05 UTC
 
 **Status:** DRIFT
