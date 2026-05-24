@@ -49,16 +49,24 @@ export default function CharacterSheetPage() {
 
       // Load live state if in a campaign
       if (campaignId) {
-        const { data: state } = await supabase.from('character_states').select('id,wp_current,wp_max,rp_current,rp_max,stress,insight_dice,morality,cdp,death_countdown,incap_rounds').eq('campaign_id', campaignId).eq('character_id', characterId).maybeSingle()
+        const { data: state } = await supabase.from('character_states').select('id,wp_current,wp_max,rp_current,rp_max,stress,insight_dice,morality,cdp,death_countdown,incap_rounds,infection_state,infection_days_left,infection_lasting_risk,infection_started_at,infection_infected_by,infection_severity,infection_pending_lasting_check').eq('campaign_id', campaignId).eq('character_id', characterId).maybeSingle()
         if (state) {
           setStateId(state.id)
           setLiveState({
+            id: state.id,
             wp_current: state.wp_current, wp_max: state.wp_max,
             rp_current: state.rp_current, rp_max: state.rp_max,
             stress: state.stress, insight_dice: state.insight_dice,
             morality: state.morality, cdp: state.cdp ?? 0,
             death_countdown: state.death_countdown, incap_rounds: state.incap_rounds,
-          } as LiveState)
+            infection_state: state.infection_state ?? null,
+            infection_days_left: state.infection_days_left ?? null,
+            infection_lasting_risk: !!state.infection_lasting_risk,
+            infection_started_at: state.infection_started_at ?? null,
+            infection_infected_by: state.infection_infected_by ?? null,
+            infection_severity: state.infection_severity ?? null,
+            infection_pending_lasting_check: !!state.infection_pending_lasting_check,
+          })
         }
       }
       setLoading(false)
@@ -72,12 +80,20 @@ export default function CharacterSheetPage() {
         const s = payload.new
         if (s) {
           setLiveState({
+            id: s.id,
             wp_current: s.wp_current, wp_max: s.wp_max,
             rp_current: s.rp_current, rp_max: s.rp_max,
             stress: s.stress, insight_dice: s.insight_dice,
             morality: s.morality, cdp: s.cdp ?? 0,
             death_countdown: s.death_countdown, incap_rounds: s.incap_rounds,
-          } as LiveState)
+            infection_state: s.infection_state ?? null,
+            infection_days_left: s.infection_days_left ?? null,
+            infection_lasting_risk: !!s.infection_lasting_risk,
+            infection_started_at: s.infection_started_at ?? null,
+            infection_infected_by: s.infection_infected_by ?? null,
+            infection_severity: s.infection_severity ?? null,
+            infection_pending_lasting_check: !!s.infection_pending_lasting_check,
+          })
         }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${characterId}` }, (payload: any) => {
