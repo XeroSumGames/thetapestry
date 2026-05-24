@@ -100,8 +100,13 @@ test.describe('Ch14 - Rumors: publish a PRIVATE module + clone it (content lands
         if (m.length === 1) { moduleId = m[0].id }
         return m.length === 1 && m[0].visibility === 'private'
       }, { timeout: 15_000, message: 'a single PRIVATE module row should exist after publish' }).toBe(true)
-      const versions = await rows(gm, creds!, `module_versions?module_id=eq.${moduleId}&select=version`)
-      expect(versions.map(v => v.version), 'module should have a v1.0.0').toContain('1.0.0')
+      // publishModuleVersion inserts the modules row BEFORE the module_versions
+      // row, so the version lags the module - poll for it (a one-shot query here
+      // raced ahead and got [] under full-suite load).
+      await expect.poll(
+        async () => (await rows(gm, creds!, `module_versions?module_id=eq.${moduleId}&select=version`)).map(v => v.version),
+        { timeout: 15_000, message: 'module v1.0.0 should be published' },
+      ).toContain('1.0.0')
 
       // --- 5. The private module shows in the author's "start from module" list ---
       await gm.goto('/stories/new', { waitUntil: 'domcontentloaded' })
