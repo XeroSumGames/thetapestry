@@ -20,8 +20,8 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 4. [ ] (DOM) Full-width / popout / `-sheet` routes hide the sidebar.
 
 ## Ch 2 - Pins, Notifications, and Roles
-1. [ ] (RT) Survivor drops a world-map pin -> lands in the moderation queue as a Rumor (assert queued; do NOT approve).
-2. [ ] (DOM) Thriver world-pin goes live immediately (no queue).
+1. [x] (DOM) Survivor rumor pin (pin_type='rumor', status='pending') is hidden from other players (RLS), visible to its author, and surfaced in the Thriver moderation Rumor Queue (asserted queued; never approved). `world-pin-to-queue.spec` -- SECURITY NOTE: map_pins status is CLIENT-set only (no enforce trigger like campfire's), so this mirrors the Survivor client rather than proving a server gate. Flagged: a crafted REST insert can self-approve a world pin (same bypass campfire's trigger closes).
+2. [~] (DOM) Thriver world-pin goes live immediately - status is client-set ('approved'); covered indirectly (the queue test inserts the Survivor variant). No server enforcement to assert. See SECURITY NOTE on 2.1.
 3. [ ] (RT) Notifications fire + render: player joined, session opened, pin approved/rejected.
 4. [x] (DOM) Role badges + GM-vs-player gating (covered by 1.2 + per-feature reveal tests).
 
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.2, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.2, Ch2.1, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1 + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
