@@ -265,7 +265,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         const active = initiativeOrder.find(ie => ie.is_active)
         const throwerEntry = (active ? entries.find(e => e.character.id === active.character_id) : null)
           ?? entries.find(e => e.userId === userId)
-        const throwerNpc = active && !throwerEntry && active.npc_id
+        const throwerNpc: CampaignNpc | null = active && !throwerEntry && active.npc_id
           ? (rosterNpcs.find(n => n.id === active.npc_id) ?? campaignNpcs.find((n: any) => n.id === active.npc_id))
           : null
         const wname = pendingRoll.weapon.weaponName
@@ -282,14 +282,14 @@ export function useRollResolution(deps: RollResolutionDeps) {
             }
           }
         } else if (throwerNpc) {
-          const sk = (throwerNpc as any).skills ?? {}
+          const sk = throwerNpc.skills ?? {}
           for (const slot of ['weapon', 'weapon2'] as const) {
             if (sk[slot]?.weaponName === wname) {
               const cur = typeof sk[slot].qty === 'number' ? sk[slot].qty : 1
               const newSkills = { ...sk, [slot]: { ...sk[slot], qty: Math.max(0, cur - 1) } }
-              await supabase.from('campaign_npcs').update({ skills: newSkills }).eq('id', (throwerNpc as any).id)
-              setCampaignNpcs(prev => prev.map(n => n.id === (throwerNpc as any).id ? { ...n, skills: newSkills } : n))
-              setRosterNpcs(prev => prev.map(n => n.id === (throwerNpc as any).id ? { ...n, skills: newSkills } as any : n))
+              await supabase.from('campaign_npcs').update({ skills: newSkills }).eq('id', throwerNpc.id)
+              setCampaignNpcs(prev => prev.map(n => n.id === throwerNpc.id ? { ...n, skills: newSkills } : n))
+              setRosterNpcs(prev => prev.map(n => n.id === throwerNpc.id ? { ...n, skills: newSkills } as any : n))
               break
             }
           }
@@ -423,7 +423,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
       // Find target - could be PC (in entries), NPC (in initiativeOrder + rosterNpcs), a non-combat NPC on the map, or object token (mapTokens with WP)
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
-      let targetNpc = !targetEntry
+      let targetNpc: CampaignNpc | null = !targetEntry
         ? (targetInitEntry?.is_npc
             ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
             : (campaignNpcs.find((n: any) => n.name === targetName) ?? rosterNpcs.find(n => n.name === targetName)))
@@ -443,7 +443,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
           .from('campaign_npcs').select('*').eq('id', targetInitEntry.npc_id).maybeSingle()
         if (npcFetchErr) console.error('[damage] NPC fallback fetch error:', npcFetchErr.message)
         if (freshNpc) {
-          targetNpc = freshNpc as any
+          targetNpc = freshNpc as unknown as CampaignNpc
           trace('damage', { npcResolvedViaServerFallback: freshNpc.name, note: 'local cache missed - likely RLS' })
         } else {
           console.error('[damage] NPC fallback fetch returned null - RLS is blocking server access too. Reveal the NPC or fix the campaign_npcs RLS policy.')
@@ -464,7 +464,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
       if (!targetObject) {
         const defenderInv: any[] = targetEntry
           ? (targetEntry.character.data?.inventory ?? [])
-          : ((targetNpc as any)?.inventory ?? [])
+          : (targetNpc?.inventory ?? [])
         for (const inv of defenderInv) {
           if (!inv?.worn) continue
           const armorRow = ARMOR.find(a => a.name === inv.name)
@@ -826,10 +826,10 @@ export function useRollResolution(deps: RollResolutionDeps) {
           const active = initiativeOrder.find(ie => ie.is_active)
           const attackerEntry = (active ? entries.find(e => e.character.id === active.character_id) : null)
             ?? entries.find(e => e.userId === userId)
-          const attackerNpc = active && !attackerEntry && active.npc_id
+          const attackerNpc: CampaignNpc | null = active && !attackerEntry && active.npc_id
             ? (rosterNpcs.find(n => n.id === active.npc_id) ?? campaignNpcs.find((n: any) => n.id === active.npc_id))
             : null
-          trace('auto-loot', { attackerEntry: attackerEntry?.character?.name, attackerNpc: (attackerNpc as any)?.name })
+          trace('auto-loot', { attackerEntry: attackerEntry?.character?.name, attackerNpc: attackerNpc?.name })
           if (contents.length > 0) {
             if (attackerEntry) {
               const charData = attackerEntry.character.data ?? {}
@@ -878,7 +878,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
               initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
               traitNotes.push(`Destroyed ${targetObject.name} - looted: ${lootedNames.join(', ')}`)
             } else if (attackerNpc) {
-              const npcInv: InventoryItem[] = (attackerNpc as any).inventory ?? []
+              const npcInv: InventoryItem[] = (attackerNpc.inventory ?? []) as InventoryItem[]
               let newInv = [...npcInv]
               const lootedNames: string[] = []
               for (const item of contents) {
@@ -907,7 +907,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
           } else {
             // Container was empty - write a "found nothing" row so the feed
             // records the search even when there's nothing to take.
-            const searcher = attackerEntry?.character?.name ?? (attackerNpc as any)?.name ?? 'Someone'
+            const searcher = attackerEntry?.character?.name ?? attackerNpc?.name ?? 'Someone'
             pendingLootLogs.push({
               campaign_id: id, user_id: userId, character_name: searcher,
               label: `🎒 ${searcher} looked through the remains of ${targetObject.name} and found nothing`,
@@ -1262,7 +1262,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         //     end-of-combat case; if no modal is open right now, fire
         //     the first one immediately.
         const targetEntry = entries.find(e => e.character.id === hp.targetCharId)
-        const targetNpc = !targetEntry ? campaignNpcs.find((n: any) => n.name === hp.targetName) : null
+        const targetNpc: CampaignNpc | null = !targetEntry ? campaignNpcs.find((n: any) => n.name === hp.targetName) : null
         if (targetEntry) {
           const targetPhy = targetEntry.character.data?.rapid?.PHY ?? 0
           if (targetEntry.userId && targetEntry.userId !== userIdRef.current) {
@@ -1276,7 +1276,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
             handleRollRequest(`${hp.targetName} - Infection Check (Wound)`, targetPhy, 0)
           }
         } else if (targetNpc) {
-          const npcPhy = (targetNpc as any).physicality ?? 0
+          const npcPhy = targetNpc.physicality ?? 0
           // If the post-resolve flow has another modal still active
           // (rare - this branch runs at modal close), queue; otherwise
           // open the check modal now.
@@ -1521,7 +1521,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
       // Label shape is "<name> - Lasting Damage Check" so split on " - ".
       const ldPatientName = pendingRoll.label.split(' - ')[0]
       const ldTargetEntry = entries.find(e => e.character.name === ldPatientName)
-      const ldTargetNpc = !ldTargetEntry ? campaignNpcs.find((n: any) => n.name === ldPatientName) : null
+      const ldTargetNpc: CampaignNpc | null = !ldTargetEntry ? campaignNpcs.find((n: any) => n.name === ldPatientName) : null
       const ldShrug = outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight'
       if (ldShrug) {
         lastingDamageResult = `${ldPatientName} shrugged off the Lasting Damage.`
@@ -1544,16 +1544,16 @@ export function useRollResolution(deps: RollResolutionDeps) {
             : e))
         } else if (ldTargetNpc) {
           // NPC path - campaign_npcs.lasting_wounds added 2026-05-15.
-          const cur: string[] = Array.isArray((ldTargetNpc as any).lasting_wounds)
-            ? (ldTargetNpc as any).lasting_wounds
+          const cur: string[] = Array.isArray(ldTargetNpc.lasting_wounds)
+            ? ldTargetNpc.lasting_wounds
             : []
           const nextLW = [...cur, wound.name]
           const { error: lwNpcErr } = await supabase
             .from('campaign_npcs')
             .update({ lasting_wounds: nextLW })
-            .eq('id', (ldTargetNpc as any).id)
+            .eq('id', ldTargetNpc.id)
           if (lwNpcErr) console.error('[lasting-damage] NPC update error:', lwNpcErr.message)
-          setCampaignNpcs(prev => prev.map(n => n.id === (ldTargetNpc as any).id ? { ...n, lasting_wounds: nextLW } : n))
+          setCampaignNpcs(prev => prev.map(n => n.id === ldTargetNpc.id ? { ...n, lasting_wounds: nextLW } : n))
         }
         lastingDamageResult = `${ldPatientName} suffers a Lasting Wound: ${wound.name} [2d6=${ldSum}] (${wound.effect})`
         // Stash the wound on damage_json so future feed renders can
