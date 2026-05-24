@@ -120,12 +120,7 @@ export default function TablePage() {
     rollsFeed.rollFeedRef.current = el
     setFeedScrollEl(el)
   }, [rollsFeed.rollFeedRef])
-  const channelRef = useRef<any>(null)
-  const membersChannelRef = useRef<any>(null)
-  const npcsChannelRef = useRef<any>(null)
   const npcFetchInFlightRef = useRef(false)  // Suppress realtime callback during manual NPC re-fetch
-  const revealChannelRef = useRef<any>(null)
-  const communityMembersChannelRef = useRef<any>(null)
   const myCharIdRef = useRef<string | null>(null)
   // loadEntries sequence guard - see definition below.
   const loadEntriesSeqRef = useRef(0)
@@ -937,7 +932,6 @@ export default function TablePage() {
   // attacks don't keep snapping back over the map.
   const [rollModalPos, setRollModalPos] = useState<{ x: number; y: number } | null>(null)
   const rollModalDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
-  const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
     // Sequence guard - multiple realtime callbacks fire in quick succession
