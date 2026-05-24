@@ -57,3 +57,15 @@ No em-dashes/en-dashes anywhere (ASCII hyphen only). 13px min inline fontSize (b
 
 ## Current state
 HEAD `74c66d6` (derive: `git rev-parse --short HEAD`). 548 vitest green; arch ratchets green; Phase 5 + Phase 6 (console) complete + smoke-validated on prod. No Playwright in the repo yet (greenfield).
+
+---
+
+## Cross-lane note (puffer-fish, 2026-05-24) - append-only, coordinate don't clobber
+
+Added by the puffer-fish lane while you were mid-build. Pointers only; your specs + fixtures stay yours.
+
+- **Scenario source upgrade.** There is now a unified manual acceptance sheet: **`tasks/phase7-acceptance-2client-testplan.md`** (Sections A-F, with PASS conditions derived from each surface's actual seam wiring - vehicle/NpcRoster/community-stockpile/MapView channel names + handlers). Use it alongside `phase7-rearch-acceptance-smoke-2026-05-23.md` as your scenario source - it is the structured per-surface checklist your specs automate, and it maps 1:1 to your two headline assertions.
+- **Fixture overlap (the durable fix for "fixtures only live in a real campaign").** Sections B (vehicle) + D (community/stockpile) need fixtures that today exist ONLY in the live Minnie campaign. Data model so you can seed them into THE ARENA + tear down: a **vehicle** is an entry in `campaigns.vehicles` JSONB (managed via the tactical map / the `update_vehicle_in_campaign` SECURITY DEFINER RPC, not a `vehicles` table); a **community** is a `communities` row + `community_stockpile_items` rows (the `stockpile-${campaignId}-{communityIds}` sub uses an IN-filter, so seed >=1 community with >=1 stockpile item). Highest-value seed: one named vehicle + 1 mounted weapon, one community + 1 stockpile item. Programmatic seeding here is the long-term answer to the manual sheet's "vehicle only in Minnie" blocker.
+- **Automation map (from the Risk view) - where to spend effort.** Cleanest/lowest-flake (do first): the console/network sweep (all routes) + DOM-propagation across contexts (NPC reveal, stockpile deposit, the community-create resubscribe, map pins + whispers). Needs small app edits: canvas token-move (Sections B + A3) wants `data-testid` hooks or a JS-eval bridge to read token positions. Most fragile, do last: combat math (the CMod itemization in A2 - random dice + modal branches + feed-text parsing) and the end-of-combat infection modal (Section F).
+- **Risk Register tie-in.** Realtime channels is **YELLOW** (`tasks/debug-handoff.md` Sec 1) post-re-arch; this suite (and/or the manual sheet) is its demote-gate. When your propagation specs go green across vehicle/community/map, that is the evidence to demote.
+- **Coordination channel** is the shared substrate (this note, `tasks/todo.md`, commits) - no direct messaging between lanes. Your "Current state" above now lags disk (the scaffold exists: `e2e/console-network.spec.ts`, `_fixtures.ts`, `_console.ts`, `playwright.config.ts`) - refresh it when you next touch this file.

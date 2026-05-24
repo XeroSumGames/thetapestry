@@ -4,7 +4,18 @@ The single sheet that closes the Grand Re-Architecture. Run this in two browser 
 
 - **Derive HEAD before running:** `git rev-parse --short HEAD`. The re-arch is complete through Phase 6 at `667c100` / later.
 - **Supersedes** `tasks/decomposition-2client-smoke-testplan.md` (table-only, baseline-run 2026-05-22 on un-migrated code). The three KNOWN-FAILURE items in that file are now FIXED (CMod 3c-A `7350715`, tactical-share 3a `cde8003`, nextTurn perf 3b `e3a9df0`) and are re-verified in Section A below. Archive the old file once this passes.
-- **Why this exists:** the re-arch rewrote all six god-components + every realtime channel onto `lib/realtime/*`. tsc + 548 unit tests are green, but multi-client desync (a dropped broadcast, a channel that doesn't resubscribe) is invisible to any automated test. Two live clients are the only detector. TacticalMap (the hardest seam) already passed on prod 2026-05-23; this sheet covers the remaining five surfaces.
+- **Why this exists:** the re-arch rewrote all six god-components + every realtime channel onto `lib/realtime/*`. tsc + 548 unit tests are green, but multi-client desync (a dropped broadcast, a channel that doesn't resubscribe) is invisible to any unit test. Two live clients are the only detector. TacticalMap (the hardest seam) already passed on prod 2026-05-23; this sheet covers the remaining five surfaces.
+
+## Automating this: the Playwright E2E "final test" suite
+
+This manual sheet is the gate you run TODAY (no harness needed) and the sign-off for THIS release. The durable, automated version is the e2e "final test" suite (brief: `tasks/e2e-final-test-handoff-2026-05-24.md`) - multi-context (GM/player/Ghost) against THE ARENA (`35ed2133-498a-43d2-bbd6-21da05233af2`, MARV = player), seed + teardown, headless in CI. The two are complementary, not redundant:
+
+- **Automates cleanly (Playwright's strength):** the console/network sweep (every route) + DOM-propagation Sections **C** (NPC reveal), **D** (stockpile deposit + the community-create resubscribe), **E** (map pins + whispers). As each lands in the suite, drop it from this manual run.
+- **Needs small app edits:** token-move on the `<canvas>` (Sections **B** + **A3**) needs `data-testid` hooks or a JS-eval bridge to read token positions.
+- **Stays manual the longest:** combat math (**A2** - random dice + modal branches + feed-text parsing) and the end-of-combat infection modal (**F**) - the most stateful, multi-modal paths.
+- **Fixture overlap = the long-term answer to "the vehicle only exists in Minnie":** the suite can PROGRAMMATICALLY SEED the vehicle (`campaigns.vehicles` JSONB) + a community + stockpile rows into the Arena, then tear down. Until it does, set them up by hand or fold Sections B/D into the 2026-05-25 Minnie playtest.
+
+**Do NOT block Phase 7 sign-off on the suite being finished.** The manual sheet gates this release; Playwright is the permanent regression net for every future realtime-touching change.
 
 ---
 
