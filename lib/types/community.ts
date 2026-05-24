@@ -41,11 +41,22 @@ export type LeftReason =
 
 export type WorldVisibility = 'private' | 'published'
 
+// A collection of PCs + recruited NPCs starts as a 'group' (lightweight:
+// roster + recruit only) and is promoted to a 'community' at 13+ combined
+// members (canon tasks/tapestry-rules-canon.md:746). The persisted flag
+// lives on communities.stage (sql/recruit-group-stage-2026-05-24.sql);
+// existing rows defaulted to 'community'.
+export type CommunityStage = 'group' | 'community'
+
 // communities table - full DB shape (Phase A + Phase E columns).
 export interface Community {
   id: string
   campaign_id: string
+  // App invariant: every insert path sets a name (a Group auto-names
+  // "<Leader>'s Group"), so this is never null in practice even though
+  // the DB column is nullable for the pre-promotion design.
   name: string
+  stage: CommunityStage
   description: string | null
   homestead_pin_id: string | null
   status: CommunityStatus

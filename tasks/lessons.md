@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## When a multi-phase feature ships in parallel, audit what the PRIOR phase actually did vs what its spec said (2026-05-24)
+
+Recruit-Group Phase 2: the spec (`tasks/spec-recruit-group-2026-05-24.md`) said a Group has `name=NULL until promotion` and called nullable-name "the single biggest regression surface" - so I almost made `Community.name` nullable and threaded `?? "<Leader>'s Group"` fallbacks through every reader. But reading the SHIPPED Phase 1 code showed it stores an auto-name (`<Roller>'s Group`) at insert time, and all three `communities` INSERT paths set a name. So the app invariant is "name is never null." I kept `name: string` (added only `stage`), avoiding a nullable cascade across the codebase, and added one belt-and-suspenders fallback in the header. The spec described the *intended* design; the prior phase *deviated* for good reason. Lesson: a spec is a hypothesis about what got built - grep the actual insert/write paths before sizing a downstream change off the spec's stated invariants.
+
+Second, smaller win in the same change: the card already had a derived `isCommunity = total >= 13`. The clean Phase 2 move was to REDEFINE that one flag (`!isGroupStage(c.stage)`) so every existing gate (label, morale, publish) flipped to the canonical signal at once - not thread a new parallel `isGroup` condition through each site. Redefining an existing load-bearing derived value in place beats adding a second one beside it.
+
 ## E2E on a shared checkout + Supabase realtime/REST gotchas (2026-05-24)
 Building the Playwright suite in the checkout the puffer-fish lane also writes to surfaced three reusable lessons:
 - **Shared-index sweep:** staging files (`git add`) then having the other lane commit sweeps YOUR staged files into THEIR commit (it happened - my seeding spec landed under a "fix(presence)" commit). And their uncommitted raw `.channel` WIP trips the arch ratchet, blocking any commit. Fix: build/run in the main checkout but COMMIT additive E2E work from an isolated worktree off `origin/main` (clean tree -> ratchet green; separate index -> no sweep), push to main, prune.

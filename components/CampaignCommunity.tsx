@@ -22,6 +22,7 @@ import {
   campaignPins, pinCoords, getCharacterData, updateCharacterData, eventAuthorUsernames, recruitRolls,
 } from '../lib/data/community'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
+import { isGroupStage, communityDisplayName } from '../lib/community-stage'
 import {
   logSchism,
   logMigration,
@@ -1647,7 +1648,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const laborPool = npcMems.filter(m => m.role !== 'assigned')
         const laborTotal = laborPool.length
         const npcTotal = npcMems.length
-        const isCommunity = total >= 13
+        // Group vs Community is now stage-driven (persisted flag), not a raw
+        // member count. A 'group' stays simple (roster + recruit) until
+        // Phase 3 promotes it at 13+ members; an existing community keeps its
+        // full surface even if it dips below 13.
+        const isGroup = isGroupStage(c.stage)
+        const isCommunity = !isGroup
         const isOpen = openId === c.id
         const gatherPct = laborTotal > 0 ? Math.round(100 * laborPool.filter(m => m.role === 'gatherer').length / laborTotal) : 0
         const maintainPct = laborTotal > 0 ? Math.round(100 * laborPool.filter(m => m.role === 'maintainer').length / laborTotal) : 0
@@ -1657,6 +1663,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         // several PCs are marked founder; we display the first.
         const founderMember = mems.find(m => m.recruitment_type === 'founder')
         const founderName = founderMember ? memberLabel(founderMember) : null
+        // Belt-and-suspenders: groups carry an auto-name today, but never
+        // render an empty / "null" header if a name is ever missing.
+        const displayName = communityDisplayName(c.name, founderName)
         // Leader resolution. Precedence:
         //   1. Explicit NPC leader (leader_npc_id on the community)
         //   2. Explicit PC leader (leader_user_id) - matched back to
@@ -1686,7 +1695,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                  <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
                   <span style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : isCommunity ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : isCommunity ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     {c.status === 'dissolved' ? 'Dissolved' : isCommunity ? 'Community' : 'Group'}
                   </span>
@@ -1724,7 +1733,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                   {total} member{total === 1 ? '' : 's'}
                   {founderName && <> · <span style={{ color: '#EF9F27' }}>Founder:</span> <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{founderName}</span></>}
-                  {!isCommunity && total > 0 && ` · ${13 - total} more for Community`}
+                  {isGroup && total > 0 && total < 13 && ` · ${13 - total} more for Community`}
                 </div>
               </div>
               <span style={{ fontSize: '14px', color: '#5a5550' }}>{isOpen ? '▲' : '▼'}</span>
@@ -2303,7 +2312,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 {/* Role bars - percentages are over NPC workforce only.
                     PCs don't pull down role coverage since they aren't
                     assigned labor. The "Re-balance" button triggers
-                    the quota-aware allocator manually. */}
+                    the quota-aware allocator manually. Community-only:
+                    a Group has no labor-role coverage until promotion. */}
+                {isCommunity && (<>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ flex: 1, ...LABEL_STYLE_LG }}>Role Coverage</div>
                   <button onClick={() => handleRebalance(c.id)}
@@ -2335,6 +2346,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     )
                   })}
                 </div>
+                </>)}
 
                 {/* Stockpile - shared community resource pool. Maintainers
                     gather Supplies (Clothed Check) and PCs can deposit
@@ -2495,10 +2507,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             <span title="Temporary recruit (Success tier, not Wild Success). Drops automatically at next Morale Check."
                               style={{ fontSize: '13px', color: '#7ab3d4', background: '#0f1a2e', border: '1px solid #2e2e5a', padding: '1px 6px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>⏳ Temporary</span>
                           )}
+                          {isCommunity && (
                           <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
                             style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                           </select>
+                          )}
                           {m.character_id && pcUserMap[m.character_id] && pcUserMap[m.character_id] !== myUserId && (
                             <a href={`/messages?dm=${pcUserMap[m.character_id]}`} title="Send message"
                               style={{ padding: '2px 6px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '14px', textDecoration: 'none', lineHeight: 1.2 }}>
