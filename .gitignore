@@ -51,6 +51,16 @@ docs/Rules/
 # Sentry Config File
 .env.sentry-build-plugin
 
+# Playwright E2E ("final test" acceptance suite). Browser binaries live
+# in the system cache (npx playwright install). The captured auth sessions
+# are PROD login state - they MUST NOT be committed (they are credentials).
+# Reports + traces are run artifacts.
+/e2e/.auth/
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
 # Supabase CLI cache. The CLI writes supabase/.temp/cli-latest every
 # time it runs (version-check artifact). Was blocking pushes multiple
 # times per day. linked-project.json + pooler-url + the version files

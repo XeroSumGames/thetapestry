@@ -6,6 +6,15 @@
 
 ## 🎯 CURRENT OPEN - 2026-05-15
 
+### 🧪 E2E "final test" - Playwright acceptance suite (HUNT-AND-PECK; started 2026-05-23)
+**Layer 1 (console + network sweep) scaffolded + committed; first LIVE run blocked on auth capture by Xero.** Greenfield Playwright suite (`e2e/`, `playwright.config.ts`, `test:e2e`). Targets prod (no staging) against THE ARENA + test accounts only. Plan + run instructions: [tasks/e2e-final-test-testplan.md](e2e-final-test-testplan.md); brief: [tasks/e2e-final-test-handoff-2026-05-24.md](e2e-final-test-handoff-2026-05-24.md).
+- [x] Install @playwright/test + chromium; config; gitignore (.auth/report/results); `test:e2e` scripts. tsc/vitest/arch/depcruise all unaffected (e2e is outside every gate; verified). 91 tests discovered; **91 skipped / exit 0** with no auth (degrade-to-skip).
+- [x] storageState capture harness `node e2e/capture-auth.mjs gm|player` (human logs in; password never automated).
+- [x] Console-error + failed-network sweep `e2e/console-network.spec.ts`: 86 static routes (auto-discovered) + 5 ARENA routes; asserts zero console errors / uncaught errors / in-scope (our host + Supabase) failed requests / no /login bounce.
+- [ ] **NEXT (Xero): run `node e2e/capture-auth.mjs gm` then `node e2e/capture-auth.mjs player`, then `npm run test:e2e`.** First live run will reveal any real console/network offenders + tune the (near-empty) allowlists in `e2e/_console.ts`.
+- [ ] **Layer 2 realtime spec** (after Step 1 green): GM combat-start -> player "IN COMBAT" + initiative (text selectors, no app edits); then token-move on the `<canvas>` tactical map (needs a behavior-preserving `data-testid`/JS-eval bridge on TacticalMap - a god-component under LOC ratchet, so verify before pushing); fold in the still-unverified end-of-combat wound-infection MODAL for the wounded PC's owner.
+- [ ] **DECISION (Xero):** CI for e2e. Today the suite runs on-demand locally (sessions are captured by hand; prod is the only env). Full CI automation would need GM+player email/password as GitHub secrets + a global-setup that logs in through Turnstile each run, AND would run writes against prod on every push. Recommendation: keep it an on-demand local/pre-ship gate for now; revisit CI once there's a staging env or a dedicated bot account. Not blocking Layer 1/2.
+
 ### 🧊 TABLE FREEZE (2026-05-21) - puffer-fish owns the table re-architecture exclusively
 **HUNT-AND-PECK: do NOT touch `app/stories/[id]/table/**` (page.tsx, hooks/, components/) or the table's realtime/roll code until this lifts.** Per Xero 2026-05-21: all other work paused; puffer-fish is migrating the table page to the target architecture in one continuous push (12-24h, break-things-OK, critical-testing-only). Plan: [tasks/grand-rearchitecture-2026-05-22.md](grand-rearchitecture-2026-05-22.md) (supersedes the table-scoped `tasks/table-rearchitecture-2026-05-21.md`). Progress tracked in the harness task list + commits. Freeze lifts when Step 4 (thin orchestrator) lands + Monday playtest smoke.
 

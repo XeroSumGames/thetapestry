@@ -1,5 +1,15 @@
 # Lessons Learned
 
+## Playwright E2E ("final test") scaffold: keep it OUTSIDE every existing gate, degrade-to-skip without auth (2026-05-23)
+
+Stood up the greenfield E2E suite (`e2e/`, `playwright.config.ts`, `test:e2e`). The non-obvious bits that made it additive instead of disruptive:
+
+1. **`e2e/` is invisible to all existing gates - verify this before trusting it.** check-arch's `SCAN_ROOTS = ['app','components','lib']` and depcruise's `lib components app` both exclude `e2e/`, so the console-sweep spec can freely use `console`/`page.on('console')` without tripping the console-0 ratchet. vitest's `include` is `tests/**/*.test.ts(x)` so `e2e/*.spec.ts` is never run as a unit test. BUT tsconfig `include` is `**/*.ts` - so `tsc --noEmit` (a CI gate) DOES typecheck the specs + config. Net: specs must compile clean (they do, with @playwright/test types), but `.mjs` helpers (capture-auth.mjs) stay out of tsc (include lists `.mts` not `.mjs`). Confirmed all four: tsc exit 0, vitest unaffected, arch ratchet unaffected, depcruise unaffected.
+2. **Degrade-to-skip when the captured session is absent.** Prod is the only env and login needs a human (Turnstile + Xero's password - never automated). So storageState is captured once via `node e2e/capture-auth.mjs gm|player` into gitignored `e2e/.auth/*.json`. The specs do `test.use({ storageState: hasAuth('gm') ? AUTH.gm : undefined })` + `test.skip(!hasAuth('gm'), hint)`. Result: a fresh checkout / CI with no auth runs `npm run test:e2e` to a clean **91 skipped / exit 0** instead of a hard error - the suite is installable and typecheckable by anyone, and only actually exercises prod when a session exists. If you put the storageState path directly in config without the existence guard, Playwright throws at context-creation on every machine without the JSON.
+3. **Auto-discover routes from `app/**/page.tsx`, exclude by pattern, seed dynamic ids separately.** The static sweep globs the filesystem at module load (specs run in node) so new pages get covered with zero maintenance; exclude `[param]` routes, popouts that need query params, auth flows, and `/tools/*` (reseed/migrate/rescale MUTATE on load - bright-line). Dynamic campaign routes go in a SEPARATE describe keyed on THE ARENA id, so a bad id fails its own test instead of poisoning the static sweep.
+4. **Network asserts are scoped to our host + Supabase; third-party failures are recorded but never asserted.** Cloudflare/Sentry/analytics flakiness must not fail our gate. Allowlists (console + network) start near-empty and are the documented escape valve - grow only with a one-line reason, never to hide an app regression.
+5. **Don't push unverified app edits for test hooks.** The realtime/canvas spec needs `data-testid`s on TacticalMap (a god-component under the LOC ratchet). Those edits can't be VERIFIED without a live session, so they wait for the auth-captured slice rather than shipping blind to prod. Layer 1 (console sweep, zero app edits) ships first.
+
 ## Phase 6 console cleanup: a sanctioned "console seam" + level-as-signal (2026-05-23)
 
 Drove `console.log|warn` 115 -> 0 (Xero option B). The reusable shape:
