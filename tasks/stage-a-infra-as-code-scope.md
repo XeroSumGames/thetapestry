@@ -4,7 +4,7 @@
 
 **BUILT 2026-05-23:** publication baseline (`sql/_baseline/publication.sql`, 21 tables) + drift-detector (`scripts/check-publication-drift.mjs`, `npm run check:publication`) - tested green against live + negative-tested. The discipline rule is in `AGENTS.md` (## Database / infra-as-code). This is the bug-class killer half of Tier 1.
 
-**BLOCKED (Docker):** the full `supabase db dump` schema baseline (the 15 orphan tables' CREATE DDL, all RLS policies, all triggers, all functions). The Supabase CLI runs `pg_dump` in a container and Docker Desktop is not running; there is no native `pg_dump`/`psql` or direct DB URL here. **Unblock:** start Docker Desktop, then run `npx supabase db dump --linked --schema public -f sql/_baseline/schema.sql` (read-only) and commit. One command once Docker is up.
+**SCHEMA BASELINE BUILT 2026-05-23 via the no-Docker route** (Docker is not installed here; `supabase db dump` needs a containerized pg_dump). Captured instead through the `supabase db query --linked` API using Postgres's own DDL generators - `scripts/capture-schema.mjs` -> `sql/_baseline/schema.sql` (5,460 lines): 69 tables (incl. all 15 orphans), 292 constraints, 121 indexes, 69 RLS-enables, 286 policies, 56 triggers, 72 functions. functions/triggers/constraints/indexes are EXACT (Postgres-generated); TABLES + POLICIES are reconstructed and spot-checked faithful (characters renders correct; INSERT policies emit WITH CHECK + no USING, SELECT the reverse). The script is RE-RUNNABLE to refresh the baseline. This is a versioned record + drift reference, NOT a deploy artifact (never db-reset prod from it). Tier 1 is now COMPLETE.
 
 ---
 
