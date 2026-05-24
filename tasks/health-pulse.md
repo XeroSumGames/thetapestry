@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-24 09:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [554 passed, 30 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Confidence Ledger TESTED still stale (2nd flag):** ledger 532/29, live 554/30 (+22 tests, +1 file — `tests/lib/weapons.test.ts` added + `table-roll-context` 22→38). Flagged in the 00:11 pulse; not yet drained. Run `node scripts/refresh-ledger.mjs`.
+- **`tasks/pre-playtest-smoke-2026-05-25.md` still missing (2nd flag).** Flagged at 00:11 UTC; still absent. Playtest is tomorrow — plan doc needed before session start.
+- **HOPED-FOR (2026-05-19 batch) day 5, drain window closes tomorrow.** Realtime channels at YELLOW; only TacticalMap token-move + combat-start + presence 2-client-verified. Phase 7 2-client acceptance sheet (`tasks/phase7-acceptance-2client-testplan.md`) is the gate.
+
+**Action:** (1) `node scripts/refresh-ledger.mjs` — 5-second fix, unblocks drift detector. (2) Create `tasks/pre-playtest-smoke-2026-05-25.md` before tomorrow. (3) Run Phase 7 sheet during playtest to close Realtime YELLOW.
+
+---
+
 ## 2026-05-24 00:11 UTC
 
 **Status:** DRIFT
