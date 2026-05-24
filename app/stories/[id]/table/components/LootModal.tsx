@@ -86,6 +86,10 @@ export function LootModal({
             style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
           <button onClick={async () => {
             if (lootItems.length === 0 || lootRecipients.size === 0) return
+            // Guard blank/empty item names - they produce an ugly empty loot
+            // line ("🎒  → Name") and junk inventory rows.
+            const validItems = lootItems.filter(i => typeof i.name === 'string' && i.name.trim().length > 0)
+            if (validItems.length === 0) return
             // Give each item to each selected character
             for (const charId of lootRecipients) {
               const entry = entries.find(e => e.character.id === charId)
@@ -93,7 +97,7 @@ export function LootModal({
               const charData = entry.character.data ?? {}
               const inv: any[] = charData.inventory ?? []
               let newInv = [...inv]
-              for (const item of lootItems) {
+              for (const item of validItems) {
                 const existing = newInv.find(i => i.name === item.name)
                 if (existing) {
                   newInv = newInv.map(i => i === existing ? { ...i, qty: i.qty + item.qty } : i)
@@ -105,10 +109,10 @@ export function LootModal({
             }
             // Log to feed
             const names = entries.filter(e => lootRecipients.has(e.character.id)).map(e => e.character.name).join(', ')
-            const itemList = lootItems.map(i => `${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''}`).join(', ')
+            const itemList = validItems.map(i => `${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''}`).join(', ')
             await insertRollLog({
               campaign_id: campaignId, user_id: userId, character_name: 'System',
-              label: `🎒 Loot: ${itemList} → ${names}`,
+              label: `🎒 ${names} received ${itemList}`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.loot,
             })
             channelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
