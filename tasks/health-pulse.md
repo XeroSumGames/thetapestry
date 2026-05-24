@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-24 00:11 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [548 passed, 29 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Confidence Ledger TESTED count stale:** ledger 532/29, live 548/29 (+16). `table-roll-context` jumped 22→38 in 3c-B2 + 3c-A commits. Run `node scripts/refresh-ledger.mjs`.
+- **HOPED-FOR (2026-05-19 batch) day 5** - drain target 2026-05-25 (tomorrow). `tasks/pre-playtest-smoke-2026-05-25.md` does not exist yet; needed before playtest.
+- **page.tsx decomposition in progress:** 13,192 → 10,552 lines (~20% done). Phase 3c-B shipped (executeRoll→useRollResolution). Phase 3d shipped (realtime channels). Phase 4 locked. Phase 5 (moderation extraction) in progress per handoff.
+
+**Action:** (1) Create `tasks/pre-playtest-smoke-2026-05-25.md` before tomorrow's session. (2) Run `node scripts/refresh-ledger.mjs` to sync ledger to 548/29.
+
+---
+
 ## 2026-05-23 21:11 UTC
 
 **Status:** DRIFT
