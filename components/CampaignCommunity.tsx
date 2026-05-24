@@ -22,7 +22,8 @@ import {
   campaignPins, pinCoords, getCharacterData, updateCharacterData, eventAuthorUsernames, recruitRolls,
 } from '../lib/data/community'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
-import { isGroupStage, communityDisplayName } from '../lib/community-stage'
+import { isGroupStage, communityDisplayName, combinedMemberCount, shouldPromoteToCommunity, COMMUNITY_THRESHOLD } from '../lib/community-stage'
+import CommunityPromoteBanner from './CommunityPromoteBanner'
 import {
   logSchism,
   logMigration,
@@ -1654,6 +1655,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         // full surface even if it dips below 13.
         const isGroup = isGroupStage(c.stage)
         const isCommunity = !isGroup
+        // Canon combined size = party (campaign PCs, not enrolled by recruit) + group NPC members.
+        const combinedCount = combinedMemberCount(chars.length, npcMems.length)
+        const canPromote = shouldPromoteToCommunity(c.stage, combinedCount)
         const isOpen = openId === c.id
         const gatherPct = laborTotal > 0 ? Math.round(100 * laborPool.filter(m => m.role === 'gatherer').length / laborTotal) : 0
         const maintainPct = laborTotal > 0 ? Math.round(100 * laborPool.filter(m => m.role === 'maintainer').length / laborTotal) : 0
@@ -1731,9 +1735,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   })()}
                 </div>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
-                  {total} member{total === 1 ? '' : 's'}
+                  {isGroup ? <>{combinedCount} member{combinedCount === 1 ? '' : 's'} <span style={{ color: '#9aa5b0' }}>({chars.length} PC{chars.length === 1 ? '' : 's'} + {npcMems.length} NPC{npcMems.length === 1 ? '' : 's'})</span></> : <>{total} member{total === 1 ? '' : 's'}</>}
                   {founderName && <> · <span style={{ color: '#EF9F27' }}>Founder:</span> <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{founderName}</span></>}
-                  {isGroup && total > 0 && total < 13 && ` · ${13 - total} more for Community`}
+                  {isGroup && (combinedCount < COMMUNITY_THRESHOLD ? ` · ${COMMUNITY_THRESHOLD - combinedCount} more for Community` : <span style={{ color: '#7fc458', fontWeight: 600 }}> · ⬆ ready to become a Community</span>)}
                 </div>
               </div>
               <span style={{ fontSize: '14px', color: '#5a5550' }}>{isOpen ? '▲' : '▼'}</span>
@@ -1742,6 +1746,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
             {/* Body */}
             {isOpen && (
               <div style={{ padding: '0 18px 18px 18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Phase 3 - promote banner (own component; gated GM-or-leader, group-at-13). */}
+                {canPromote && (isGM || (!!myUserId && c.leader_user_id === myUserId)) && (
+                  <CommunityPromoteBanner communityId={c.id} campaignId={campaignId}
+                    pcCount={chars.length} npcCount={npcMems.length}
+                    founderCharacterId={founderMember?.character_id ?? null} onPromoted={load} />
+                )}
                 {c.description && (
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                 )}

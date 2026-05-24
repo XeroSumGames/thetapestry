@@ -10,6 +10,20 @@ Newest first.
 
 ---
 
+## 2026-05-24: Group->Community promotion counts party PCs + group NPCs (combined), not enrolled members
+
+**Decision:** the at-13 promotion threshold (recruit-into-a-Group Phase 3) is keyed off `combined = active campaign PCs (the party) + the group's recruited NPC members`, NOT the group's enrolled `community_members` count. Implemented as `combinedMemberCount(pcCount, npcCount)` / `shouldPromoteToCommunity()` in `lib/community-stage.ts`; the card sources PCs from the campaign roster (`chars.length`) and NPCs from the group's active members (`npcMems.length`).
+
+**Alternatives considered:**
+- A. Promote off the card's enrolled-member count (`total`). Simplest, matches the roster exactly.
+- B. Promote off combined party PCs + group NPCs (chosen).
+
+**Why B won:** canon (`tasks/tapestry-rules-canon.md:746`) is explicit - "a combined total of 13 or more PCs and NPCs." The recruit flow (`app/stories/[id]/table/page.tsx:3838`) does NOT enroll the roller PC as a member - it inserts only the recruited NPC - so for recruit-founded groups the enrolled count is NPC-only and option A would systematically undercount the party, contradicting canon ("PCs working together are a Group").
+
+**Known simplifications (MVP, revisit if they bite):** (1) `chars` = all active campaign PCs, so if a campaign ever has multiple groups they each count the full party; (2) a large party (>=13 PCs) makes a group promote-ready on its first recruit - canon-consistent (13+ people) but worth noting. The card shows the `(P PCs + N NPCs)` breakdown so the count is never opaque.
+
+**What would change our mind:** if Xero wants promotion to require PCs to be explicitly enrolled in the group, or a per-group PC roster, switch to counting enrolled PC members instead of the whole party.
+
 ## 2026-05-24: NPC stress is narrative-only, not a tracked mechanic
 
 **Decision (Xero):** Stress is a PC-only mechanic. For NPCs it exists ONLY narratively (flavor), never as a tracked stat. `campaign_npcs` therefore gets NO `stress` column - the PC-has-stress / NPC-has-none asymmetry is intentional and correct.
