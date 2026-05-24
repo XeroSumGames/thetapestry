@@ -44,17 +44,29 @@ duplicated a `todo.md` section this session.
 **Give each chat its own checkout** (a real git worktree off `main`):
 
 ```
-git worktree add C:\TheTapestry-e2e main
-git worktree add C:\TheTapestry-puffer main
-# Hunt & Peck keeps the primary C:\TheTapestry
+# Hunt & Peck keeps the primary C:\TheTapestry (stays on main).
+# The other two get their OWN branch off origin/main - git forbids checking out
+# `main` in two worktrees at once, so each lane works on its own branch and
+# rebase-pushes to main (git push origin HEAD:main).
+git worktree add -b lane/puffer C:\TheTapestry-puffer origin/main
+git worktree add -b lane/e2e    C:\TheTapestry-e2e    origin/main
 ```
 
-- Lanes then collide ONLY at push time (a normal `git pull --rebase`), never in
-  the working tree.
+- Lanes then collide ONLY at push time (a normal rebase: `git pull --rebase`, or
+  `git push origin HEAD:main` then rebase on non-ff), never in the working tree.
+- Each lane lives on its own branch (`lane/puffer`, `lane/e2e`) and pushes to
+  `main`; Hunt & Peck commits to `main` directly from the primary checkout.
 - All worktrees share one `.git`, so every commit/branch is visible across lanes
   immediately.
-- Run `npm install` once per worktree (node_modules is not shared by default).
-  The E2E worktree does not need a dev server (it targets prod); Hunt & Peck's
+- Run `npm install` once per worktree - **mandatory, not optional**: a SIBLING
+  worktree (e.g. `C:\TheTapestry-e2e`) has no `node_modules`, and module
+  resolution does NOT walk into the primary checkout's, so the pre-commit hook's
+  tools (depcruise, tsc, vitest) aren't found and EVERY commit fails until you
+  install. (Worktrees NESTED under `C:\TheTapestry\.claude\worktrees\` inherit
+  the primary's `node_modules` by parent-dir resolution - that is why the
+  ephemeral commit-worktrees work without install; siblings do not.) The E2E
+  worktree does not need a dev server (it targets prod); Playwright's chromium is
+  a shared system cache, so only `node_modules` needs installing. Hunt & Peck's
   primary checkout keeps the local dev server.
 
 If keeping a single shared checkout for now: each lane MUST commit via an
