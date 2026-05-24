@@ -21,6 +21,6 @@ Format per lane: **focus** (what right now) / **touching** (files/area) /
 - **updated:** 2026-05-24, lane/puffer (commits push to main; rebases on non-ff).
 
 ## Playwright / E2E
-- **focus:** BATCH DONE. Phase 1 #5 `presence.spec.ts` (Ch1.3) + #6 `account-settings.spec.ts` (Sys P) shipped GREEN. Full re-cert: 113 passed + 1 flaky (section-c retry, known watch item) = 4 setup + 18 functional + 92 sweep. Phase 1 now 6/7; only messages-dm left (BLOCKED on Xero's teardown call). Next session: Phase 2 (char-create methods, sessions, combat flow, NPC CRUD, communities, inventory/trade, rumors publish->clone).
-- **touching:** nothing live now (committing). New: `e2e/presence.spec.ts`, `e2e/account-settings.spec.ts`; helper `e2e/_teardown.ts` (+`userIdFromToken`); docs `tasks/todo.md` / `beginners-guide-testplan.md` / `e2e-results-2026-05-24.html` / `lessons.md`.
-- **updated:** 2026-05-24, committed on top of HEAD 6660e49 (rebases on push).
+- **focus:** Phase 2 IN PROGRESS. #8 `char-create-methods.spec.ts` (Ch4.2-4.4, 3 funnels) SHIPPED green standalone (committing now). NEXT: full-suite re-cert to confirm no cross-file interference + refresh the dashboard numbers, then build session-lifecycle (#9). Remaining: combat-flow, npc-roster-crud, communities-lifecycle, inventory-trade, rumors-publish-clone. Preference holds: assert persistence via REST refetch over app-edit testids; any unavoidable testid ships as its own minimal additive commit, flagged here first.
+- **touching:** `e2e/` (additive specs only - no app-code edits this batch). Docs: `tasks/todo.md`, `tasks/beginners-guide-testplan.md`, `tasks/lessons.md`, `tasks/e2e-results-2026-05-24.html`.
+- **updated:** 2026-05-24, working from HEAD daca54e (lane/e2e; rebases on push).

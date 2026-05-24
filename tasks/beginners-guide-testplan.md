@@ -35,10 +35,10 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 
 ## Ch 4 - Creating a Character
 1. [x] (DOM) Random Character creates + persists + owner can delete. `character-create.spec`
-2. [ ] (DOM) Quick Character (6-step) saves and appears in the list.
-3. [ ] (DOM) Paradigm pick -> final review -> save.
-4. [ ] (DOM) Backstory wizard (10 steps) -> save.
-5. [ ] (DOM) Health trackers (WP/RP/Stress) click -> value persists on reload.
+2. [x] (DOM) Quick Character (6-step) saves and appears in the list. `char-create-methods.spec`
+3. [x] (DOM) Paradigm pick -> final review -> save. `char-create-methods.spec`
+4. [x] (DOM) Backstory wizard (10 steps) -> save. `char-create-methods.spec`
+5. [ ] (DOM) Health trackers (WP/RP/Stress) click -> value persists on reload. DEFERRED out of char-create: trackers write to `character_states`, which only exists once a char is IN a campaign - a standalone newly-created char has none. Belongs with live-state/combat coverage (needs an in-campaign char + the character-sheet/table), not the creation funnels.
 6. [~] (RANDOM) 0-WP death countdown + Insight-trade modal (folded into combat).
 
 ## Ch 5 - The Rules
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1, account-settings (Sys P, reversible half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1-4.4, Ch5.1-5.2, Ch6.1-6.3, Ch10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1, account-settings (Sys P, reversible half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
