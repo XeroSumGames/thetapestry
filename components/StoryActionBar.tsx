@@ -32,6 +32,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { exportGmKit } from '../lib/gm-kit'
+import { confirmDeleteByName } from '../lib/confirm-delete'
 import { getModuleForCampaign, archiveModule, type ModuleForCampaign } from '../lib/modules'
 import { SETTINGS } from '../lib/settings'
 import ModulePublishModal from './ModulePublishModal'
@@ -154,17 +155,18 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
   }
 
   async function handleDelete() {
-    // Stronger confirm when this campaign is the source for a
-    // published module - deleting it disconnects the module from
-    // its source, so the GM can't push new versions without
-    // re-linking a fresh source campaign. Surfacing the module
-    // name in the prompt makes the consequence explicit instead
-    // of silent. Companion to the dashboard list-view treatment
-    // (blue bar + "Template of <module>") in app/stories/page.tsx.
-    const msg = existingModule
-      ? `⚠️ This is the template for "${existingModule.name}".\n\nDeleting it disconnects the published module from its source - you won't be able to push new versions of "${existingModule.name}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
-      : 'Permanently delete this story? This cannot be undone.'
-    if (!confirm(msg)) return
+    if (!campaign) return
+    // Type-to-confirm gate (confirmDeleteByName): the GM must type the story
+    // name exactly, so a stray click can't wipe a whole campaign. Stronger
+    // warning when this campaign is the source for a published module -
+    // deleting it disconnects the module from its source, so the GM can't push
+    // new versions without re-linking a fresh source campaign. Companion to the
+    // dashboard list-view treatment (blue bar + "Template of <module>") in
+    // app/stories/page.tsx.
+    const warning = existingModule
+      ? `WARNING: This is the template for "${existingModule.name}". Deleting it disconnects the published module from its source - you won't be able to push new versions of "${existingModule.name}" without re-linking a new source campaign.`
+      : undefined
+    if (!confirmDeleteByName(campaign.name, warning)) return
     await supabase.from('campaigns').delete().eq('id', campaignId)
     router.push('/stories')
   }

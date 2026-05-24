@@ -5,6 +5,7 @@ import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { SETTINGS } from '../../lib/settings'
+import { confirmDeleteByName } from '../../lib/confirm-delete'
 
 interface Campaign {
   id: string
@@ -274,10 +275,10 @@ export default function CampaignsPage() {
                   <a href={`/stories/${c.id}`} style={{ padding: '5px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>GM Tools</a>
                   <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join/${c.invite_code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
                   <button onClick={async () => {
-                    const msg = isTemplate
-                      ? `⚠️ This is the template for "${templateOf}".\n\nDeleting it disconnects the published module from its source - you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.\n\nAre you sure you want to delete?`
-                      : 'Delete this story?'
-                    if (!confirm(msg)) return
+                    const warning = isTemplate
+                      ? `WARNING: This is the template for "${templateOf}". Deleting it disconnects the published module from its source - you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.`
+                      : undefined
+                    if (!confirmDeleteByName(c.name, warning)) return
                     await supabase.from('campaigns').delete().eq('id', c.id)
                     setGmCampaigns(prev => prev.filter(x => x.id !== c.id))
                   }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
