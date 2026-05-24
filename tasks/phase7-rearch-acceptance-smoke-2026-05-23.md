@@ -75,6 +75,19 @@ see bare `console.log/warn` noise on the live site, that's a regression.
 
 ---
 
+## RESULTS - 2026-05-24 (Claude-driven, 2 real clients: Xero=GM / MARV=player, live Arena)
+
+Claude drove the player (MARV) + the GM (Xero) browser via the Chrome extension; Xero also did a GM turn-advance manually and dumped both recorders. **PASS on everything the re-arch touched:**
+
+- **Console SILENT on prod** (the Phase 6 payoff) - confirmed on `/table` (the heaviest page): a tracked reload produced ZERO `console.log`/`console.warn` and zero real errors; console stayed silent during live combat-start + token-move propagation too. (Verified tracking works by injecting a test log/warn/error - all captured - so the silence is real, not a tooling miss.)
+- **trace() telemetry captured to the recorder buffer, NOT console** - Xero's recorder dump shows the old `[playtest-trace] [nextTurn]` lines now arriving as `{kind:'custom', data:{label:'nextTurn', currentIdx, orderLength, activeName, ...}}`. Exactly option B's design: telemetry preserved, console clean.
+- **Realtime combat-start propagation (3d/Phase 5)** - GM started combat -> MARV's player view fully updated live: "IN COMBAT", the 14-combatant initiative order (active highlighted), the "IN COMBAT (14)" NPC panel, the feed ("Hugo Vale regained consciousness", ...).
+- **Realtime token-move propagation (TacticalMap - the HARDEST seam)** - Claude (as GM) dragged Ivan Hayes to a new cell -> the move replicated to MARV's player view at the same spot, console silent. The `scene_tokens` postgres + `token_moved` broadcast on `useCampaignChannel` works GM->player on prod.
+- **Presence** - "Survivors present: 2".
+- **Wound-infection WARNING rows** - confirmed appearing in the feed ("Ivan Hayes is wounded and may have to deal with infection"). Half of the open bisection question answered: the warnings DO fire.
+
+**STILL OWED (1 check, handed to Xero - needs a fresh PC wound + END COMBAT on the live session, which is fragile/consequential to automate):** does the end-of-combat infection **modal** fire for the wounded PC's owner? Manual repro: (1) attack a PC (e.g. Cree Blaine/MARV) to deal WP damage; (2) confirm the "<name> is wounded..." feed row; (3) click END COMBAT; (4) watch the PLAYER browser for the infection modal. 3d's stable init subscription should now deliver it (the last smoke missed it on the churning ad-hoc channel).
+
 ## Pass criteria
 All realtime cross-client updates land without refresh; combat math correct;
 **console silent on prod**; no regressions vs pre-re-arch behavior. Any failure
