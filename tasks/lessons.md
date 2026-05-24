@@ -305,6 +305,22 @@ The push "succeeded" without warning. Live code kept the em-dashes the commit cl
 
 **How to apply:** for each failure ask "what single fact confirms this is real?" then get that fact (a `select`, a publication check, an infection_state read, a fixture count) before touching code. Especially: recorder dumps from one surface (e.g. the table page) cannot confirm/deny failures on another (e.g. the vehicle popout) - know what your evidence can and cannot see. Cross-ref `[[feedback_locate_before_diagnose]]` + `[[feedback_accuracy_over_confidence]]`.
 
+## `updated_at` is not field provenance - a row timestamp does NOT prove which column changed (2026-05-24)
+
+**Rule:** when a column holds a suspicious value and its row's `updated_at` matches the moment of some event, that does NOT mean the event wrote that column. Any UPDATE to the row bumps `updated_at`. To know what set a field, find the actual write path in code, not the timestamp.
+
+**Trigger:** debugging the infection modal (2026-05-24), I saw Cree's `character_states.infection_state='wound'` with `updated_at` exactly at the Fire Axe wound moment and concluded the wound path was setting it - then had to correct myself. The wound write only touched `wp_current`/`rp_current` (which bumped `updated_at`); `infection_state` was leftover from a prior resolved check (the only writer is useRollResolution.ts:1473, the check-resolution block). The timestamp was a red herring that briefly flipped my diagnosis.
+
+**How to apply:** to attribute a field's value, `grep` for every write to that specific column and read the payload - never infer the writer from `updated_at`. If you need true per-field provenance, that requires column-level history (audit log / triggers), which row `updated_at` does not give you.
+
+## Reset/Restore operations must clear the FULL condition set, not just HP (2026-05-24)
+
+**Rule:** a "restore to full health" / reset action must wipe every transient condition (HP, stress, mortal-wound countdown, incap, infection, and any future status), not just the obvious HP bars. A partial reset leaves latent flags that silently gate OTHER systems.
+
+**Trigger:** `RestorePickerModal` restored `wp/rp/death_countdown/incap_rounds` but left `stress` + the 7 `infection_*` fields. Because infection persists until the day-clock runs it out (`lib/campaign-clock.ts:493`), a Restored character stayed `infection_state`-flagged forever, and the end-of-combat infection check skipped them via the no-stacking gate (page.tsx:2466). The GM had no way to reset a character for re-testing or in-game. Xero: "restore should get rid of every state." Fixed by spreading a `clearedInfection` block + `stress:0` into both restore payloads (PC `character_states` + NPC `campaign_npcs`; NPCs have no `stress` column) and the optimistic patches.
+
+**How to apply:** when adding a new per-character condition column, audit every reset/restore/revive path to include it - or the condition becomes un-clearable except by its own bespoke lifecycle. Keep the cleared-condition set in one object so reset sites stay in sync. When a "reset didn't work" bug appears, diff the reset payload against the full condition-column list (`information_schema.columns`).
+
 ## Tab-local default-OFF UX fails when ONE user forgets to flip it (2026-05-19)
 
 **Rule:** When a feature requires N independent user actions to "all work" (every player hits Record), redesign so the N actions collapse to 1 (GM hits Record, broadcast cascades to N). Default-off + per-user opt-in is the wrong shape for any coordination problem where one missing user breaks the whole.

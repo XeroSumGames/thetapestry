@@ -128,6 +128,19 @@ export function RestorePickerModal({
             setRestoring(true)
             const selected = Array.from(restoreNpcIds)
             const nowIso = new Date().toISOString()
+            // Full reset clears every condition, not just HP: stress (PC only),
+            // and the whole infection block. Without this an infected character
+            // stays infection_state-flagged forever (only the day-clock clears
+            // it), so the no-stacking gate skips their end-of-combat checks.
+            const clearedInfection = {
+              infection_state: null,
+              infection_days_left: 0,
+              infection_lasting_risk: false,
+              infection_severity: null,
+              infection_started_at: null,
+              infection_infected_by: null,
+              infection_pending_lasting_check: false,
+            }
             // Build per-row UPDATEs - each row needs its own wp_max/rp_max
             // (NPCs have stat-derived totals; PC entries carry their own;
             // objects have per-token wp_max). Different values per row =
@@ -154,7 +167,7 @@ export function RestorePickerModal({
                 const wpMax = npc?.wp_max ?? (10 + (npc?.physicality ?? 0) + (npc?.dexterity ?? 0))
                 const rpMax = npc?.rp_max ?? (6 + (npc?.physicality ?? 0))
                 npcKeyToWpRp.set(npcId, { wp: wpMax, rp: rpMax })
-                return supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npcId)
+                return supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null, ...clearedInfection }).eq('id', npcId)
               })
             const pcKeyToWpRp = new Map<string, { wp: number; rp: number }>()
             const pcUpdates = selected
@@ -164,7 +177,7 @@ export function RestorePickerModal({
                 const entry = entries.find(e => e.stateId === stateId)
                 if (!entry) return null
                 pcKeyToWpRp.set(stateId, { wp: entry.liveState.wp_max, rp: entry.liveState.rp_max })
-                return supabase.from('character_states').update({ wp_current: entry.liveState.wp_max, rp_current: entry.liveState.rp_max, death_countdown: null, incap_rounds: null, updated_at: nowIso }).eq('id', stateId)
+                return supabase.from('character_states').update({ wp_current: entry.liveState.wp_max, rp_current: entry.liveState.rp_max, death_countdown: null, incap_rounds: null, stress: 0, ...clearedInfection, updated_at: nowIso }).eq('id', stateId)
               })
               .filter(Boolean) as ReturnType<typeof supabase.from>[]
             // Restore map objects (crates, barrels, etc.) to full WP. Loot
@@ -191,15 +204,15 @@ export function RestorePickerModal({
             if (npcKeyToWpRp.size > 0) {
               setCampaignNpcs((prev: any[]) => prev.map((n: any) => {
                 const v = npcKeyToWpRp.get(n.id)
-                return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null } : n
+                return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null, ...clearedInfection } : n
               }))
               setRosterNpcs((prev: any[]) => prev.map((n: any) => {
                 const v = npcKeyToWpRp.get(n.id)
-                return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null } : n
+                return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null, ...clearedInfection } : n
               }))
               setViewingNpcs((prev: any[]) => prev.map((n: any) => {
                 const v = npcKeyToWpRp.get(n.id)
-                return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null } : n
+                return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null, ...clearedInfection } : n
               }))
             }
             if (objKeyToWp.size > 0) {
