@@ -11,7 +11,7 @@
   },
   "seamLeakage": {
     "fromOutsideData": 1168,
-    "channelOutsideRealtime": 32
+    "channelOutsideRealtime": 26
   },
   "prodConsole": 115
 }

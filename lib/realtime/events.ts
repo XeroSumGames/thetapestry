@@ -28,13 +28,23 @@ export interface CampaignBroadcastPayloads {
   combat_started: EmptyPayload
   combat_ended: EmptyPayload
   turn_changed: EmptyPayload
-  turn_advance_requested: EmptyPayload
+  // Sent by the vehicle popout when a mounted-weapon attack zeroes the
+  // actor's actions; the table page's handler ignores the payload and
+  // runs its full nextTurn() flow. entryId is carried but vestigial.
+  turn_advance_requested: { entryId?: string }
 
   // --- Tactical map ---
   token_changed: EmptyPayload
+  // token_moved: a token's grid position changed (TacticalMap drags, the
+  // vehicle popout's MOVE HERE snaps). Receivers refetch; payload empty.
+  token_moved: EmptyPayload
   scene_activated: EmptyPayload
   tactical_shared: { shared: boolean }
   tactical_unshared: EmptyPayload
+  // Vehicle popout -> TacticalMap: the campaigns.vehicles JSON changed
+  // (board/disembark/damage), and the popout's mounted-weapon arc toggle.
+  vehicle_updated: { vehicle_id: string }
+  firing_arc_toggle: { vehicleName: string; weaponIdx: number }
 
   // --- Health / damage ---
   // pc_damaged carries an optimistic patch; npc_damaged is EITHER {npcId,patch}
@@ -78,9 +88,12 @@ export const CAMPAIGN_BROADCAST_EVENTS = [
   'turn_changed',
   'turn_advance_requested',
   'token_changed',
+  'token_moved',
   'scene_activated',
   'tactical_shared',
   'tactical_unshared',
+  'vehicle_updated',
+  'firing_arc_toggle',
   'pc_damaged',
   'npc_damaged',
   'pc_mortal_wound',

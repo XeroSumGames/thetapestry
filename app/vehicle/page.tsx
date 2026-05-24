@@ -7,6 +7,9 @@ import {
   campaignNpcsForCrew, activeSceneWithCellFeet, activeSceneId, sceneTokensForRange,
   sceneTokensForDismount, sceneTokensForTargeting, npcNamesByIds, getNpcCombatState, updateNpcPools,
 } from '../../lib/data/vehicle'
+import { useCampaignChannel } from '../../lib/realtime/useCampaignChannel'
+import { usePostgresSubscription } from '../../lib/realtime/usePostgresSubscription'
+import { broadcastOnce } from '../../lib/realtime/broadcastOnce'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
@@ -161,12 +164,16 @@ export default function VehiclePage() {
   const [sceneInfo, setSceneInfo] = useState<{ id: string; cellFeet: number } | null>(null)
   const [vehicleTokenPos, setVehicleTokenPos] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const [characterRangeFeet, setCharacterRangeFeet] = useState<Record<string, number>>({})
-  // Long-lived tactical channel ref. The popout uses this for outbound
-  // broadcasts (vehicle_updated on board/disembark; token_moved on
-  // dismount placement). Sending through a long-lived channel avoids
-  // the subscribe/send/remove race where the teardown can drop the
-  // outbound message before the server fans it out.
-  const tacticalChannelRef = useRef<any>(null)
+  // The popout sends outbound broadcasts (vehicle_updated on
+  // board/disembark; token_moved on dismount placement) through the
+  // long-lived tactical channel - sending through a persistent channel
+  // avoids the subscribe/send/remove race where teardown can drop the
+  // outbound message before the server fans it out. That channel is now
+  // the `tacticalChannel` useCampaignChannel handle below; tacticalChannelRef
+  // is aliased to its channelRef so the existing `.send()` sites are
+  // unchanged. loadTokensRef exposes the latest range-gate loader to the
+  // channel's token_moved handler without resubscribing.
+  const loadTokensRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -269,18 +276,26 @@ export default function VehiclePage() {
       setLoading(false)
     }
     load()
+  }, [campaignId, vehicleId])
 
-    // Realtime sync - refresh when campaign.vehicles changes
-    if (!campaignId) return
-    const channel = supabase.channel(`vehicle_${campaignId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${campaignId}` }, (payload: any) => {
+  // Realtime sync - refresh when campaign.vehicles changes. Behind the
+  // lib/realtime seam (single-table postgres watch on the custom
+  // vehicle_${campaignId} channel); handler reads the latest vehicleId
+  // via the hook's config ref, so it never resubscribes on re-render.
+  usePostgresSubscription(
+    campaignId ? `vehicle_${campaignId}` : null,
+    {
+      label: 'vehicle:campaigns:UPDATE',
+      event: 'UPDATE',
+      table: 'campaigns',
+      filter: campaignId ? `id=eq.${campaignId}` : undefined,
+      handler: (payload: any) => {
         const vehicles = payload.new?.vehicles ?? []
         const v = vehicles.find((v: Vehicle) => v.id === vehicleId)
         if (v) setVehicle(v)
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [campaignId, vehicleId])
+      },
+    },
+  )
 
   // Range-gate token loader (2026-05-17). Loads the active scene's
   // vehicle token + every PC/NPC token, computes edge-to-edge distance
@@ -329,18 +344,26 @@ export default function VehiclePage() {
       setCharacterRangeFeet(distances)
     }
 
+    loadTokensRef.current = () => { loadTokens() }
     loadTokens()
-
-    const ch = supabase.channel(`tactical_${campaignId}`)
-      .on('broadcast', { event: 'token_moved' }, () => { loadTokens() })
-      .subscribe()
-    tacticalChannelRef.current = ch
-    return () => {
-      cancelled = true
-      tacticalChannelRef.current = null
-      supabase.removeChannel(ch)
-    }
+    return () => { cancelled = true; loadTokensRef.current = null }
   }, [campaignId, vehicle?.name])
+
+  // Long-lived tactical channel (behind the lib/realtime seam). Listens
+  // for token_moved -> recompute ranges; ALSO the outbound channel for
+  // vehicle_updated (tacticalChannelRef aliases its channelRef, so the
+  // existing `.send()` sites are unchanged). Mounted only while the
+  // vehicle has a name (matches the old effect's gate); the token_moved
+  // handler reads the freshest loader via loadTokensRef, so it never
+  // resubscribes when vehicle.name changes between two truthy values.
+  const tacticalChannel = useCampaignChannel(
+    campaignId && vehicle?.name ? campaignId : null,
+    {
+      channelName: campaignId ? `tactical_${campaignId}` : undefined,
+      broadcasts: { token_moved: () => { loadTokensRef.current?.() } },
+    },
+  )
+  const tacticalChannelRef = tacticalChannel.channelRef
 
   if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
   if (!vehicle) return <div style={{ background: '#0f0f0f', color: '#f5a89a', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Vehicle not found.</div>
@@ -399,13 +422,10 @@ export default function VehiclePage() {
         console.error('[vehicle-popout] vehicle_updated broadcast failed:', err)
       }
     } else {
-      const ch = supabase.channel(`tactical_${campaignId}`)
-      ch.subscribe(async (status: string) => {
-        if (status !== 'SUBSCRIBED') return
-        await ch.send({ type: 'broadcast', event: 'vehicle_updated', payload: { vehicle_id: updated.id } })
-        // Hold briefly so the server has time to fan out before tearing down.
-        setTimeout(() => { supabase.removeChannel(ch) }, 500)
-      })
+      // Fallback when the long-lived tactical channel isn't mounted
+      // (vehicle has no name yet): fire-and-forget through a throwaway
+      // channel, holding 500ms so the server fans out before teardown.
+      await broadcastOnce(`tactical_${campaignId}`, 'vehicle_updated', { vehicle_id: updated.id }, { holdMs: 500 })
     }
   }
 
@@ -604,12 +624,7 @@ export default function VehiclePage() {
       console.error('[vehicle-popout] dismount placement failed:', error.message)
       return
     }
-    const ch = supabase.channel(`tactical_${campaignId}`)
-    ch.subscribe(async (status: string) => {
-      if (status !== 'SUBSCRIBED') return
-      await ch.send({ type: 'broadcast', event: 'token_moved', payload: {} })
-      await supabase.removeChannel(ch)
-    })
+    await broadcastOnce(`tactical_${campaignId}`, 'token_moved', {})
   }
 
   // Confirm a pending slot change. Calls the existing setter
@@ -1134,12 +1149,9 @@ export default function VehiclePage() {
         userId: myUserId,
         actionLabel: undefined, // the roll_log entry above already covers this action's narrative
       })
-      if (dec.ok && dec.reachedZero) {
+      if (dec.ok && dec.reachedZero && campaignId) {
         try {
-          const ch = supabase.channel(`initiative_${campaignId}`)
-          await ch.subscribe()
-          await ch.send({ type: 'broadcast', event: 'turn_advance_requested', payload: { entryId: dec.entry?.id } })
-          await supabase.removeChannel(ch)
+          await broadcastOnce(`initiative_${campaignId}`, 'turn_advance_requested', { entryId: dec.entry?.id })
         } catch { /* swallow - the GM can advance manually */ }
       }
     }
@@ -1441,18 +1453,7 @@ export default function VehiclePage() {
                     {typeof w.mount_angle === 'number' && typeof w.arc_degrees === 'number' && (
                       <button onClick={() => {
                           if (!campaignId) return
-                          const ch = supabase.channel(`tactical_${campaignId}`)
-                          ch.subscribe(async (status: string) => {
-                            if (status !== 'SUBSCRIBED') return
-                            await ch.send({
-                              type: 'broadcast',
-                              event: 'firing_arc_toggle',
-                              payload: { vehicleName: vehicle.name, weaponIdx: i },
-                            })
-                            // Tear down right after - this popout
-                            // doesn't otherwise listen on this channel.
-                            await supabase.removeChannel(ch)
-                          })
+                          void broadcastOnce(`tactical_${campaignId}`, 'firing_arc_toggle', { vehicleName: vehicle.name, weaponIdx: i })
                         }}
                         title="Toggle the firing-arc cone on the tactical map"
                         style={{ padding: '6px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
