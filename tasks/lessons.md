@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## A handoff can misname the data source - verify the live READ site before coding the prescribed approach (2026-05-24)
+
+The puffer-fish handoff handed the Lasting-Wound chip with a specific approach: "lasting wounds are feed-derived (roll_log rows, parsed in CharacterCard.tsx:343), so derive a `Map<name, woundText[]>` from the feed." Following that literally would have built a feed scan + name-matching Map - more code, and fragile. Reading the actual code first showed the live source is `characters.data.lastingWounds` (a string[] already on the character object, written by `useRollResolution.ts:1536` + `campaign-clock.ts:508`, and already rendered by the CharacterCard sheet chip strip at `:697`). The cited `CharacterCard.tsx:343` was the PRINT path parsing `progression_log` - a third, different source. So three "sources" existed and the handoff named the wrong one for the live case.
+
+**Rule:** when a handoff/spec prescribes a data source + approach, grep for where that data is actually WRITTEN and where the equivalent UI already READS it before implementing. Mirror the existing live read site (here: the sheet's own chip strip) - it is the ground truth, and matching it keeps the new surface consistent for free. This is the "specs/handoffs are hypotheses" rule applied to data provenance specifically. Net result: 2-file additive change, no feed plumbing.
+
 ## The E2E console/network sweep caught 3 real prod bugs on its FIRST run - and the bug patterns are reusable (2026-05-23)
 
 The Layer-1 sweep (zero console errors + zero in-scope failed requests per route) found 9 failures = 3 distinct prod bugs the manual Phase-7 smoke missed. All fixed + re-verified 92/92 green on prod (commits `4e9c52c`/`448d6f0`/`ae0fe12`). The meta-lesson and the three patterns:
