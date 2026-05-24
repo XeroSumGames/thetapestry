@@ -73,4 +73,62 @@ test.describe('Section D - stockpile deposit GM -> player', () => {
       await plCtx.close()
     }
   })
+
+  test('D-3 resubscribe: deposit into a community created while the panel is open still propagates', async ({ browser }) => {
+    const gmCtx = await browser.newContext({ storageState: AUTH.gm })
+    const gm = await gmCtx.newPage()
+    let aId: string | null = null
+    let bId: string | null = null
+    let creds: SupaCreds | null = null
+    try {
+      const anonP = captureAnonKey(gm)
+      await gm.goto('/dashboard')
+      creds = await resolveCreds(gm, anonP)
+      expect(creds, 'could not resolve GM creds').toBeTruthy()
+
+      // Anchor community A so the panel + the stockpile channel are live.
+      aId = await seedCommunity(gm, creds!, CAMPAIGN_ID, '[E2E] Resub Anchor')
+      await gm.goto(`/communities/${aId}`, { waitUntil: 'domcontentloaded' })
+      await gm.waitForTimeout(1500)
+
+      // Create community B IN-APP. Growing the local communities list renames
+      // the stockpile channel (stockpile-${campaignId}-${ids}) so the sub
+      // resubscribes with the widened IN-filter. (The communities table isn't
+      // in the realtime publication, so only the in-app create updates the list.)
+      const bName = `[E2E] Resub New ${Date.now()}`
+      await gm.getByRole('button', { name: /new community/i }).first().click()
+      await gm.waitForTimeout(500)
+      await gm.getByRole('textbox').first().fill(bName)
+      await gm.getByRole('button', { name: /^create$/i }).first().click()
+      await gm.waitForTimeout(1500)
+
+      // Resolve B's id + open its panel so its stockpile loads (arms refetch).
+      const res = await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/communities?campaign_id=eq.${CAMPAIGN_ID}&name=eq.${encodeURIComponent(bName)}&select=id`,
+        { headers: { apikey: creds!.anonKey, Authorization: `Bearer ${creds!.accessToken}` } },
+      )
+      const rows = await res.json().catch(() => [])
+      expect(Array.isArray(rows) && rows.length === 1, 'community B was not created via the UI').toBe(true)
+      bId = rows[0].id
+      // Creating B auto-opens its panel but doesn't load the stockpile, so
+      // toggle it (close + re-open) to arm loadStockpile - same gotcha as D-1/D-2.
+      const bHeader = gm.getByText(bName, { exact: false }).first()
+      await bHeader.click().catch(() => {})
+      await gm.waitForTimeout(400)
+      await bHeader.click().catch(() => {})
+      await gm.waitForTimeout(1000)
+
+      // Deposit into B via REST. If the channel resubscribed to include B, this
+      // INSERT is delivered live and renders with no reload (the regression case).
+      const depName = `[E2E] Resub Item ${Date.now()}`
+      await seedStockpileItem(gm, creds!, bId!, depName)
+      await expect(gm.getByText(depName).first()).toBeVisible({ timeout: 8_000 })
+    } finally {
+      if (creds) {
+        if (bId) await restDelete(gm, 'communities', bId, creds).catch(() => {})
+        if (aId) await restDelete(gm, 'communities', aId, creds).catch(() => {})
+      }
+      await gmCtx.close()
+    }
+  })
 })
