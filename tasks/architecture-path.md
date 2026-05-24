@@ -51,7 +51,11 @@ Execution order is NOT the review's priority-by-leverage order. It is sequenced 
 Can start NOW, in parallel with the Phase 7 close. Lowest risk, highest "stop the silent bleeding" value.
 
 - **A1. Infra-as-code (review move #3). DONE 2026-05-24** (`tasks/stage-a-infra-as-code-scope.md`). Captured the live config that was dashboard/live-only into versioned baselines via the `db query --linked` API (Docker not installed, so no `supabase db dump`): `sql/_baseline/publication.sql` (21 tables) + `scripts/check-publication-drift.mjs` (`npm run check:publication`), and `sql/_baseline/schema.sql` (69 tables incl. all 15 orphans, 286 policies, 56 triggers, 72 functions) via the re-runnable `scripts/capture-schema.mjs`. Discipline rule in `AGENTS.md`. Already paid off: killed the false "whispers not published" blocker without a DB change. Remaining: Tier 3 (CI drift-check) needs a read-only DB secret - an OPERATOR action for Xero, not blocking.
-- **A2. Typed payloads + de-regex the feed (review move #4). NEXT.** `DamagePayload` and friends for the realtime/roll JSON; structured `roll_log` columns to replace label-text regex parsing (`compactRollSummary`). Incremental, compile-time-safe. Drives down the `561 as any` and removes a data-integrity foot-gun. Pairs naturally with the typed seams.
+- **A2. Typed payloads + de-regex the feed (review move #4). RE-SCOPED 2026-05-24 after verifying the code - it is NOT one cheap Stage-A item; it splits three ways:**
+  - **Payload TYPE: already DONE.** `lib/damage-payload.ts` is a full discriminated union (`DamagePayload`, 12 `kind`s + `make*` constructors, 40 tests). Nothing to build.
+  - **`as any` reduction: mostly ENTITY-typing, not payload-typing.** The 25 `as any` in the realtime/roll hotspots are mostly missing fields on the CampaignNpc entity (`skills`/`inventory`/`physicality`/`lasting_wounds`) and on `liveState` (`infection_state` etc.) - plus ~4 genuine `damage_json: {...} as any` inline constructions. The liveState/infection casts are CONDITIONS typing -> they ride **Stage B**. NPC-entity typing is a small standalone pass. The ~4 damage_json casts are a trivial opportunistic mop-up.
+  - **De-regex `compactRollSummary`: a LARGE separate refactor, NOT cheap Stage-A.** It is ~930 lines of outcome-branch + label-text + regex logic driving every feed row; replacing it with structured `roll_log` columns means a schema change + a backfill for old rows + a user-facing render rewrite. Reclassified as its own scoped item (see todo), LOWER priority than Stage B - the regex feed works today (a maintainability/data-integrity smell, not an active bug).
+  - **Net: A2 collapses.** The type exists; the conditions-typing folds into Stage B; the de-regex is parked. So **Stage B is the next build** (it also absorbs the liveState/infection `as any`).
 - **Gate:** tsc + full vitest suite + arch ratchets. Any live-DB application is dry-run first (bright-line: live-DB migration = confirm intent).
 
 ### Stage B - Conditions subsystem (review move #2)
@@ -98,10 +102,10 @@ The review framed it as "TanStack Query OR feature stores." That is a false eith
 
 I proceed down this list without asking. Each item: behavior-preserving, gated by tsc + the vitest suite + the arch ratchets, committed and pushed, one `git revert` away. When one finishes I start the next and report progress.
 
-1. **A2 - typed payloads** (in progress next). 
-2. **Stage B - conditions subsystem** (after A2; can overlap Stage C's design doc).
-3. **Stage C1 - client-state design doc**, then **C2 pilot** (MapView or vehicle), then **C3 propagate** (table page last) - C-anything starts only after Phase 7 is GREEN.
-4. **Stage D** - seam-contract + golden-path E2E - matures alongside, coordinated with the Playwright lane.
+1. **Stage B - conditions subsystem** (NEXT - A2 collapsed; B also absorbs the liveState/infection `as any`). Can overlap Stage C's design doc.
+2. **Stage C1 - client-state design doc**, then **C2 pilot** (MapView or vehicle), then **C3 propagate** (table page last) - C-anything starts only after Phase 7 is GREEN.
+3. **Stage D** - seam-contract + golden-path E2E - matures alongside, coordinated with the Playwright lane.
+4. **Parked / opportunistic** - de-regex `compactRollSummary` into structured `roll_log` columns (own scoped item, post-B), the standalone CampaignNpc entity-typing pass, and the ~4 `damage_json as any` mop-up.
 
 ## The ONLY things that need you (Xero) - and they are not technical decisions
 
