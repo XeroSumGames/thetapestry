@@ -16,9 +16,9 @@ Format per lane: **focus** (what right now) / **touching** (files/area) /
 - **updated:** 2026-05-24, HEAD 0b440e2 (rebases on push).
 
 ## Puffer Fish
-- **focus:** BATCH DONE. (1) operating-mode.md updated to the 3-lane split. (2) map_pins moderation-bypass triaged -> Risk Register RED/MEDIUM + fix SQL written (`sql/map-pins-moderation-enforce-2026-05-24.sql`, schema-verified, NOT applied - owed to Xero). Lesson captured (client-only moderation = bug class). Now IDLE / available. Carried (not active): #5 phase-2 routing (needs the manual conditions smoke + an isolated worktree; the table page is Hunt&Peck's hot file); #7 lasting-wounds migration (held); Stage C design done (build gated on Phase 7).
-- **touching:** nothing live now (batch committed). NO `app/` / `components/` / `lib/` / `e2e/` edits this batch - docs (`operating-mode`/`debug-handoff`/`todo`/`lessons`/`active-lanes`) + one new `sql/` file only.
-- **updated:** 2026-05-24, committed on top of HEAD 0b440e2 (rebases on push).
+- **focus:** BATCH DONE + RE-VERIFIED. Both routed items shipped in `6660e49`: (1) operating-mode.md 3-lane split; (2) map_pins moderation-bypass -> Risk Register RED/MEDIUM + fix SQL (`sql/map-pins-moderation-enforce-2026-05-24.sql`). Re-verified the trigger logic against `sql/_baseline/schema.sql` "View pins" SELECT policy: visibility keys on `status='approved'` only, so the non-Thriver private-pin clamp to `status='active'` (owner-only) and shared-pin force to `status='pending'` (queue) both close the bypass correctly. **STILL OPEN ON PROD** - the fix is written but NOT applied (bright line); one command owed to Xero: `npx supabase db query --linked -f sql/map-pins-moderation-enforce-2026-05-24.sql`. Now IDLE / available. Carried (not active): #5 phase-2 routing (needs the manual conditions smoke + an isolated worktree; the table page is Hunt&Peck's hot file); #7 lasting-wounds migration (held); Stage C design done (build gated on Phase 7).
+- **touching:** nothing live now (verification pass; only this `active-lanes.md` row edited). NO `app/` / `components/` / `lib/` / `e2e/` edits.
+- **updated:** 2026-05-24, working from HEAD 6660e49 (rebases on push).
 
 ## Playwright / E2E
 - **focus:** Full-suite build, Phase 1 (4/7 green: story-lifecycle, rules-deeplinks, campfire-social, world-pin-to-queue). Next: presence, account-settings. messages-dm parked on Xero's teardown call.
