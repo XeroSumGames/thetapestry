@@ -60,7 +60,7 @@ export default function SessionHistoryPage() {
           .from('session_attachments')
           .select('*')
           .in('session_id', sessIds)
-        console.log('[Sessions] attachments:', attData?.length, 'error:', attErr?.message)
+        if (attErr) console.error('[Sessions] attachments fetch error:', attErr.message)
         setAttachments(attData ?? [])
       }
 

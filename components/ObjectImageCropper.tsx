@@ -131,7 +131,6 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
         outH = Math.min(OUT_LONG_EDGE, Math.round(box.h))
         outW = Math.round(outH * aspect)
       }
-      console.log('[crop] encoding', { outW, outH, srcMime: file.type, srcSizeKB: Math.round(file.size / 1024) })
       const canvas = document.createElement('canvas')
       canvas.width = outW
       canvas.height = outH
@@ -167,7 +166,6 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
         }, outMime, outMime === 'image/png' ? undefined : jpegQuality)
       })
       const previewUrl = canvas.toDataURL(outMime, outMime === 'image/png' ? undefined : jpegQuality)
-      console.log('[crop] encoded', { blobKB: Math.round(blob.size / 1024), mime: outMime, hasTransparency, savedToJpeg: isPng && !hasTransparency })
       onCrop(blob, previewUrl, outMime)
     } catch (err: any) {
       console.error('[crop] encoding failed', err)

@@ -61,8 +61,7 @@ export function useRecorderToggle(
       writeCampaignEnabled(campaignId, true)
       channelRef.current?.send({ type: 'broadcast', event: 'recorder_start', payload: { campaignId } })
     } else {
-      const filename = recorderDownloadDump()
-      if (filename) console.warn('[recorder] auto-downloaded:', filename)
+      recorderDownloadDump()
       recorderSetEnabled(false)
       writeCampaignEnabled(campaignId, false)
       channelRef.current?.send({ type: 'broadcast', event: 'recorder_stop', payload: { campaignId } })

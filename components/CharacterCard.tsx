@@ -330,7 +330,7 @@ function CharacterCardImpl({
         cmod: r.relationship_cmod ?? 0,
       }))
     } catch (err) {
-      console.warn('[print] relationships fetch failed:', err)
+      console.error('[print] relationships fetch failed:', err)
     }
     // Wounds live in characters.data.progression_log entries with type='wound'.
     // The full log itself ships through too - printed at the bottom so a
@@ -1250,7 +1250,7 @@ function CharacterCardImpl({
                 })
               }
             } catch (e) {
-              console.warn('[stress-check] roll_log insert failed:', e)
+              console.error('[stress-check] roll_log insert failed:', e)
             }
           }
         }}

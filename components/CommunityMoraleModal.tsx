@@ -589,7 +589,7 @@ export default function CommunityMoraleModal({
         .eq('temporary_until_morale', true)
         .is('left_at', null)
       if (tempFetchErr) {
-        console.warn('[morale-tick] temporary-member fetch error:', tempFetchErr.message)
+        console.error('[morale-tick] temporary-member fetch error:', tempFetchErr.message)
       } else if (tempRows && tempRows.length > 0) {
         const tempIdsToDrain = tempRows
           .map((r: any) => r.id as string)
@@ -599,7 +599,7 @@ export default function CommunityMoraleModal({
             .from('community_members')
             .update({ left_at: now, left_reason: 'manual' })
             .in('id', tempIdsToDrain)
-          if (drainErr) console.warn('[morale-tick] temporary-drain error:', drainErr.message)
+          if (drainErr) console.error('[morale-tick] temporary-drain error:', drainErr.message)
         }
       }
     }

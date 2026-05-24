@@ -58,10 +58,7 @@ export default function CampaignsPage() {
       // sql/auto-end-stale-sessions.sql.
       void supabase.rpc('auto_end_stale_sessions', { stale_hours: 48 }).then(
         ({ data, error }: { data: any; error: any }) => {
-          if (error) console.warn('[auto_end_stale_sessions] error:', error.message)
-          else if (typeof data === 'number' && data > 0) {
-            console.warn(`[auto_end_stale_sessions] ended ${data} stale session${data === 1 ? '' : 's'}`)
-          }
+          if (error) console.error('[auto_end_stale_sessions] error:', error.message)
         }
       )
 

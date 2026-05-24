@@ -733,7 +733,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // Silent fail keeps the map usable, but logging surfaces the
       // root cause (rate-limit / network) when a user reports "search
       // didn't find my city".
-      console.warn('[mapSearch] nominatim lookup failed:', err)
+      console.error('[mapSearch] nominatim lookup failed:', err)
     }
     setSearching(false)
   }

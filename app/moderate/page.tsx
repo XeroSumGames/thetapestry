@@ -171,7 +171,7 @@ export default function ModerationPage() {
           body: truncated,
           metadata: { bug_id: bug.id, page_url: bug.page_url ?? null },
         })
-        if (notifErr) console.warn('[bug-response] notification insert:', notifErr.message)
+        if (notifErr) console.error('[bug-response] notification insert:', notifErr.message)
       }
       setBugs(prev => prev.map(b => b.id === bug.id ? { ...b, response_text: draft, responded_at: nowIso } : b))
       setBugResponseDraft(prev => { const { [bug.id]: _, ...rest } = prev; return rest })

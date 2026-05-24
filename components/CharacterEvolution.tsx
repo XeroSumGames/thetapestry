@@ -371,7 +371,7 @@ export default function CharacterEvolution({
           })
         }
       } catch (e: any) {
-        console.warn('[CharacterEvolution] roll_log insert failed:', e?.message ?? String(e))
+        console.error('[CharacterEvolution] roll_log insert failed:', e?.message ?? String(e))
       }
 
       onSaved()

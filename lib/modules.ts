@@ -321,7 +321,7 @@ export async function cloneModuleIntoCampaign(
     snapshot.pins.forEach((p: any, i: number) => {
       const resolvedName = p.name ?? p.title
       if (!resolvedName) {
-        console.warn('[cloneModuleIntoCampaign] pin row has no name/title - skipping:', p)
+        console.error('[cloneModuleIntoCampaign] pin row has no name/title - skipping:', p)
         return
       }
       pinRows.push({
@@ -367,7 +367,7 @@ export async function cloneModuleIntoCampaign(
   if (snapshot.npcs && snapshot.npcs.length > 0) {
     const filteredNpcs = (snapshot.npcs as any[]).filter((n: any) => {
       if (!n.name) {
-        console.warn('[cloneModuleIntoCampaign] npc has no name - skipping:', n)
+        console.error('[cloneModuleIntoCampaign] npc has no name - skipping:', n)
         return false
       }
       return true
@@ -435,7 +435,7 @@ export async function cloneModuleIntoCampaign(
       const flat = sceneRaw?.scene ? { ...sceneRaw.scene, tokens: sceneRaw.tokens } : sceneRaw
       const { tokens, _external_id: _unused, ...rest } = flat
       if (!rest.name) {
-        console.warn('[cloneModuleIntoCampaign] scene has no name - skipping:', sceneRaw)
+        console.error('[cloneModuleIntoCampaign] scene has no name - skipping:', sceneRaw)
         continue
       }
       scenesPrepared.push({ rest, tokens })

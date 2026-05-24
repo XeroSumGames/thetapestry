@@ -178,7 +178,7 @@ export function AdvanceTimeModal({
             // landed, so the encumbrance hit is correct even with a
             // clock drift.
             const ticked = await advanceCampaignClock(campaignId, hours)
-            if (!ticked) console.warn('[advance-time] campaign clock did not tick')
+            if (!ticked) console.error('[advance-time] campaign clock did not tick')
 
             setAdvanceTimeBusy(false)
             onClose()

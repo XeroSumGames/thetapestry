@@ -669,7 +669,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
       const data = await searchNominatimUSFirst(query)
       setResults(data)
     } catch (err: any) {
-      console.warn('[address-search] failed:', err?.message ?? err)
+      console.error('[address-search] failed:', err?.message ?? err)
       setResults([])
     } finally {
       setSearching(false)

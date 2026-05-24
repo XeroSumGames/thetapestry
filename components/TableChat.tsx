@@ -113,7 +113,7 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
       .limit(100)
-    if (error) { console.warn('[useChatPanel] fetch error:', error.message); return }
+    if (error) { console.error('[useChatPanel] fetch error:', error.message); return }
     // Drop stale results - a newer refetch already won. Has to come
     // after the await but before any setState so we don't clobber
     // fresher data the later refetch already wrote.

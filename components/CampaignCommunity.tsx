@@ -441,7 +441,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (!force && stockpileLoadedFor.has(communityId)) return
     const { data, error } = await stockpileItems(communityId)
     if (error) {
-      console.warn('[stockpile] load failed:', error.message)
+      console.error('[stockpile] load failed:', error.message)
       return
     }
     setStockpileByCommunity(prev => ({ ...prev, [communityId]: (data ?? []) as StockpileRow[] }))
@@ -1203,7 +1203,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // the GM can advance the clock manually from the campaign-sheet
     // popout.
     const ticked = await advanceCampaignClock(campaignId, 168)
-    if (!ticked) console.warn('[skip-week] campaign clock did not tick')
+    if (!ticked) console.error('[skip-week] campaign clock did not tick')
   }
 
   // Auto-successor picker per spec: next founder → longest-tenured
@@ -1332,7 +1332,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           recruitment_type: 'founder',
           joined_at: new Date().toISOString(),
         }).select().single()
-        if (enrollErr) console.warn('[campaign-community] founder auto-enroll failed:', enrollErr.message)
+        if (enrollErr) console.error('[campaign-community] founder auto-enroll failed:', enrollErr.message)
         if (founderRow) {
           setMembers(prev => ({ ...prev, [newComm.id]: [founderRow as Member] }))
           // Progression log: founding event + leader appointment in one entry.

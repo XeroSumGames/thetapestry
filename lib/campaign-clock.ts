@@ -126,7 +126,7 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     }
   } catch (e) {
     // Best-effort: a failed log insert never blocks the clock tick.
-    console.warn('[campaign-clock] roll_log insert failed:', e)
+    console.error('[campaign-clock] roll_log insert failed:', e)
   }
   // Realtime broadcast - every viewer's campaign sheet gets the new
   // clock state immediately, without waiting for postgres_changes to

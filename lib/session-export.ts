@@ -517,7 +517,7 @@ export async function exportSessionLog(args: {
   if (chatRes.error) {
     // Don't fail the export on chat-fetch error - the roll log is the
     // higher-signal payload. Log + continue without chat.
-    console.warn('[session-export] chat_messages fetch failed (continuing without chat):', chatRes.error.message)
+    console.error('[session-export] chat_messages fetch failed (continuing without chat):', chatRes.error.message)
   }
   const rows = (rollsRes.data ?? []) as RollLogRow[]
   const chat = (chatRes.data ?? []) as ChatMessageRow[]

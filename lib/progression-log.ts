@@ -27,6 +27,6 @@ export async function appendProgressionEntry(
       data: { ...base, progression_log: [entry, ...prev] },
     }).eq('id', characterId)
   } catch (err: any) {
-    console.warn('[progression_log] append failed:', err?.message ?? err)
+    console.error('[progression_log] append failed:', err?.message ?? err)
   }
 }

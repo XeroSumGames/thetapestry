@@ -73,7 +73,7 @@ export default function RootLayout({
                   }
                 }
                 // Drop bare-two-number window-dimension spam
-                // (e.g. console.log(window.outerWidth, window.outerHeight))
+                // (e.g. a logged window.outerWidth + window.outerHeight pair)
                 // from a browser extension. Heuristic: exactly two args,
                 // both integers between 100 and 10000. Real app logs of
                 // numeric pairs always include a label string as the first

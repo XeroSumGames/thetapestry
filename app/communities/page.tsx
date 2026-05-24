@@ -291,7 +291,7 @@ export default function CommunitiesIndexPage() {
           recruitment_type: 'founder',
           joined_at: new Date().toISOString(),
         })
-        if (enrollErr) console.warn('[communities] founder auto-enroll failed:', enrollErr.message)
+        if (enrollErr) console.error('[communities] founder auto-enroll failed:', enrollErr.message)
       }
     }
     setCreating(false)

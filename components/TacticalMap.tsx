@@ -3113,7 +3113,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ]
       for (const c of corners) {
         if (mx >= c.x && mx <= c.x + hs && my >= c.y && my <= c.y + hs) {
-          console.warn('[TacticalMap] resize start:', c.name, 'zoom:', zoom)
           setResizing({ corner: c.name, startX: e.clientX, startY: e.clientY, startZoom: imgScale })
           return
         }
@@ -3448,7 +3447,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const dy = newGy - tok!.grid_y
       setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: newGx, grid_y: newGy } : t))
       updateToken(tokenId, { grid_x: newGx, grid_y: newGy }).then(({ error }: any) => {
-        if (error) console.warn('[TacticalMap] token move failed:', error)
+        if (error) console.error('[TacticalMap] token move failed:', error)
         else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
       })
       // Vehicle passenger sync - drag path. Helper handles the

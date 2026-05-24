@@ -63,9 +63,9 @@ async function safeInsert(
 ): Promise<void> {
   try {
     const { error } = await supabase.from('community_events').insert(row)
-    if (error) console.warn('[community-events] insert failed:', error.message)
+    if (error) console.error('[community-events] insert failed:', error.message)
   } catch (e: any) {
-    console.warn('[community-events] insert threw:', e?.message ?? String(e))
+    console.error('[community-events] insert threw:', e?.message ?? String(e))
   }
 }
 

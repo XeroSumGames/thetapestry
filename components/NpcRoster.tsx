@@ -573,9 +573,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     // all three tables in the same click. Tokens first so realtime listeners
     // see the token vanish before the NPC row disappears (cleaner visual).
     const tokenRes = await deleteSceneTokensByNpc(id)
-    if (tokenRes.error) console.warn('[handleDelete] scene_tokens delete error:', tokenRes.error.message)
+    if (tokenRes.error) console.error('[handleDelete] scene_tokens delete error:', tokenRes.error.message)
     const initRes = await deleteInitiativeByNpc(id)
-    if (initRes.error) console.warn('[handleDelete] initiative_order delete error:', initRes.error.message)
+    if (initRes.error) console.error('[handleDelete] initiative_order delete error:', initRes.error.message)
     await deleteCampaignNpc(id)
     await loadNpcs()
     // Tell the parent to refresh + broadcast - Supabase Realtime DELETE

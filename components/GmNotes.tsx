@@ -155,7 +155,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
     for (const file of files) {
       const check = prepareUpload('note-attachments', file)
       if (!check.ok) {
-        console.warn('[GmNotes] upload rejected:', check.reason)
+        console.error('[GmNotes] upload rejected:', check.reason)
         errors.push(check.reason)
         continue
       }

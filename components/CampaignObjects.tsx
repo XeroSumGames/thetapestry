@@ -172,7 +172,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       image_url: imageUrl,
       uploaded_by: user.id,
     })
-    if (error) console.warn('[CampaignObjects] saveToLibrary:', error.message)
+    if (error) console.error('[CampaignObjects] saveToLibrary:', error.message)
     else loadLibrary()
   }
 
@@ -275,18 +275,16 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   async function uploadBlob(blob: Blob, ext = 'jpg'): Promise<string> {
     const path = `${campaignId}/${crypto.randomUUID()}.${ext}`
     const contentType = blob.type || (ext === 'png' ? 'image/png' : 'image/jpeg')
-    console.log('[crop] uploading', { path, sizeKB: Math.round(blob.size / 1024), contentType })
     const uploadPromise = supabase.storage.from('object-tokens').upload(path, blob, { contentType })
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Upload timed out after 30s. Check your connection and try again.')), 30000)
     )
     const { error } = await Promise.race([uploadPromise, timeoutPromise]) as { error: any }
     if (error) {
-      console.warn('[CampaignObjects] upload error:', error.message)
+      console.error('[CampaignObjects] upload error:', error.message)
       throw new Error(error.message || 'Upload failed.')
     }
     const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
-    console.log('[crop] upload done', urlData.publicUrl)
     return urlData.publicUrl
   }
 
@@ -298,11 +296,8 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     setUploading(true)
     setCropUploadError(null)
     const ext = mimeType === 'image/png' ? 'png' : 'jpg'
-    const t0 = performance.now()
     try {
       const url = await uploadBlob(blob, ext)
-      const tUpload = performance.now()
-      console.log(`[crop] upload phase took ${Math.round(tUpload - t0)}ms`)
       const defaultName = cropFile.file.name.replace(/\.[^.]+$/, '')
       if (cropFile.target === 'add') {
         setAddCustomUrl(url)
@@ -321,7 +316,6 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         const libName = `${(editName.trim() || editingObj.name || defaultName).slice(0, 74)} (broken)`
         await saveToLibrary(url, libName)
       }
-      console.log(`[crop] full upload+save took ${Math.round(performance.now() - t0)}ms`)
       setCropFile(null)
       setFileInputKey(k => k + 1)
     } catch (err: any) {

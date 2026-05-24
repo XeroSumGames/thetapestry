@@ -109,7 +109,7 @@ export default function QuickAddModal({
       const data = await searchNominatimUSFirst(q)
       setAddrResults(data)
     } catch (err) {
-      console.warn('[quick-add] address search failed:', err)
+      console.error('[quick-add] address search failed:', err)
       setAddrResults([])
     }
     setAddrSearching(false)
@@ -262,7 +262,7 @@ export default function QuickAddModal({
       for (const file of pinAttachments) {
         const path = `${scope}/${newPinId}/${file.name}`
         const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
-        if (upErr) console.warn('[quick-add] attachment upload failed:', file.name, upErr.message)
+        if (upErr) console.error('[quick-add] attachment upload failed:', file.name, upErr.message)
       }
     }
     setPinSaving(false)
@@ -360,7 +360,7 @@ export default function QuickAddModal({
         recruitment_type: 'founder',
         joined_at: new Date().toISOString(),
       })
-      if (enrollErr) console.warn('[quick-add] creator auto-enroll failed:', enrollErr.message)
+      if (enrollErr) console.error('[quick-add] creator auto-enroll failed:', enrollErr.message)
       else {
         void appendProgressionEntry(supabase, myPcId, 'community', `🏛️ Founded ${commName.trim()} (leader).`)
       }
@@ -369,7 +369,7 @@ export default function QuickAddModal({
       for (const file of commAttachments) {
         const path = `${campaignId}/community-${data.id}/${file.name}`
         const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
-        if (upErr) console.warn('[quick-add] community attachment upload failed:', file.name, upErr.message)
+        if (upErr) console.error('[quick-add] community attachment upload failed:', file.name, upErr.message)
       }
     }
     setCommSaving(false)
