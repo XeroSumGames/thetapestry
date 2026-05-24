@@ -7,10 +7,10 @@
     "components/NpcRoster.tsx": 2302,
     "app/vehicle/page.tsx": 2111,
     "components/MapView.tsx": 2042,
-    "app/moderate/page.tsx": 1727
+    "app/moderate/page.tsx": 1677
   },
   "seamLeakage": {
-    "fromOutsideData": 1263,
+    "fromOutsideData": 1237,
     "channelOutsideRealtime": 34
   },
   "prodConsole": 115

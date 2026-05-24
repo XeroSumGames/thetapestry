@@ -5,6 +5,12 @@ import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { SURVIVOR, THRIVER, isThriver as roleIsThriver } from '../../lib/auth/roles'
+import {
+  moderationPendingCounts, loadRumorPins, loadBugReports, loadPendingWorldNpcs,
+  loadWorldCommunitiesByStatus, loadModulesByStatus, loadForumThreadsByStatus,
+  loadWarStoriesByStatus, loadLfgPostsByStatus, getProfileRole,
+  usernamesByIds, campaignNamesByIds,
+} from '../../lib/data/moderation'
 
 interface Pin {
   id: string
@@ -117,38 +123,12 @@ export default function ModerationPage() {
   const supabase = createClient()
 
   async function loadPendingCounts() {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes, forumsRes, warstoriesRes, lfgRes, bugsRes] = await Promise.all([
-      supabase.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
-      supabase.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('world_communities').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
-      supabase.from('modules').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending').eq('visibility', 'listed'),
-      supabase.from('forum_threads').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
-      supabase.from('war_stories').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
-      supabase.from('lfg_posts').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
-      supabase.from('bug_reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-    ])
-    setPendingCounts({
-      rumors: rumorsRes.count ?? 0,
-      npcs: npcsRes.count ?? 0,
-      communities: commsRes.count ?? 0,
-      users: usersRes.count ?? 0,
-      modules: modulesRes.count ?? 0,
-      forums: forumsRes.count ?? 0,
-      warstories: warstoriesRes.count ?? 0,
-      lfg: lfgRes.count ?? 0,
-      bugs: bugsRes.count ?? 0,
-    })
+    setPendingCounts(await moderationPendingCounts())
   }
 
   async function loadBugs() {
     setBugsLoading(true)
-    const { data } = await supabase
-      .from('bug_reports')
-      .select('id, reporter_id, reporter_email, reporter_name, page_url, description, user_agent, status, thriver_notes, response_text, responded_at, created_at')
-      .order('created_at', { ascending: false })
-      .limit(100)
+    const { data } = await loadBugReports()
     setBugs(data ?? [])
     setBugsLoading(false)
   }
@@ -243,11 +223,7 @@ export default function ModerationPage() {
       // Cache role for the banner gate. Not a hard block - the page
       // still loads so the user can see the empty state alongside
       // the banner, but at least they know why.
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
+      const { data: prof } = await getProfileRole(user.id)
       setMyRole((prof as any)?.role ?? null)
       setRoleChecked(true)
       if (roleIsThriver(prof)) {
@@ -273,7 +249,7 @@ export default function ModerationPage() {
 
   async function loadWorldNpcs() {
     setNpcsLoading(true)
-    const { data } = await supabase.from('world_npcs').select('*, profiles:created_by(username)').eq('status', 'pending').order('created_at', { ascending: false })
+    const { data } = await loadPendingWorldNpcs()
     setWorldNpcs(data ?? [])
     setNpcsLoading(false)
   }
@@ -296,11 +272,7 @@ export default function ModerationPage() {
     // a "1" badge while the list stayed empty. Do a two-step
     // hydration instead - plain SELECT, then batched lookups for
     // publisher username + source campaign name.
-    const { data, error } = await supabase
-      .from('world_communities')
-      .select('*')
-      .eq('moderation_status', filter)
-      .order('created_at', { ascending: false })
+    const { data, error } = await loadWorldCommunitiesByStatus(filter)
     if (error) {
       console.error('[moderate/communities] load failed:', error)
       setWorldCommunities([])
@@ -308,14 +280,14 @@ export default function ModerationPage() {
       return
     }
     const rows = data ?? []
-    const userIds = Array.from(new Set(rows.map((r: any) => r.published_by).filter(Boolean)))
-    const campaignIds = Array.from(new Set(rows.map((r: any) => r.source_campaign_id).filter(Boolean)))
+    const userIds = Array.from(new Set(rows.map((r: any) => r.published_by).filter(Boolean))) as string[]
+    const campaignIds = Array.from(new Set(rows.map((r: any) => r.source_campaign_id).filter(Boolean))) as string[]
     const [profilesRes, campaignsRes] = await Promise.all([
       userIds.length > 0
-        ? supabase.from('profiles').select('id, username').in('id', userIds)
+        ? usernamesByIds(userIds)
         : Promise.resolve({ data: [] as any[], error: null as any }),
       campaignIds.length > 0
-        ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
+        ? campaignNamesByIds(campaignIds)
         : Promise.resolve({ data: [] as any[], error: null as any }),
     ])
     const userMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]))
@@ -354,18 +326,13 @@ export default function ModerationPage() {
 
   async function loadModules() {
     setModulesLoading(true)
-    const { data, error } = await supabase
-      .from('modules')
-      .select('*')
-      .eq('moderation_status', filter)
-      .eq('visibility', 'listed')
-      .order('created_at', { ascending: false })
+    const { data, error } = await loadModulesByStatus(filter)
     if (error) { setModulesLoading(false); return }
     // Hydrate author usernames via profiles
-    const authorIds = [...new Set((data ?? []).map((m: any) => m.author_user_id).filter(Boolean))]
+    const authorIds = [...new Set((data ?? []).map((m: any) => m.author_user_id).filter(Boolean))] as string[]
     let profileMap: Record<string, string> = {}
     if (authorIds.length > 0) {
-      const { data: profs } = await supabase.from('profiles').select('id, username').in('id', authorIds)
+      const { data: profs } = await usernamesByIds(authorIds)
       profileMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
     }
     setModules((data ?? []).map((m: any) => ({ ...m, author_username: profileMap[m.author_user_id] ?? 'unknown' })))
@@ -414,18 +381,14 @@ export default function ModerationPage() {
 
   async function loadForumThreads() {
     setForumsLoading(true)
-    const { data, error } = await supabase
-      .from('forum_threads')
-      .select('*')
-      .eq('moderation_status', filter)
-      .order('created_at', { ascending: false })
+    const { data, error } = await loadForumThreadsByStatus(filter)
     if (error) { setForumsLoading(false); setForumThreads([]); return }
     const rows = data ?? []
-    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean)))
-    const campaignIds = Array.from(new Set(rows.map((r: any) => r.campaign_id).filter(Boolean)))
+    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean))) as string[]
+    const campaignIds = Array.from(new Set(rows.map((r: any) => r.campaign_id).filter(Boolean))) as string[]
     const [profsRes, campsRes] = await Promise.all([
-      authorIds.length > 0 ? supabase.from('profiles').select('id, username').in('id', authorIds) : Promise.resolve({ data: [] }),
-      campaignIds.length > 0 ? supabase.from('campaigns').select('id, name').in('id', campaignIds) : Promise.resolve({ data: [] }),
+      authorIds.length > 0 ? usernamesByIds(authorIds) : Promise.resolve({ data: [] }),
+      campaignIds.length > 0 ? campaignNamesByIds(campaignIds) : Promise.resolve({ data: [] }),
     ])
     const profMap = new Map((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
     const campMap = new Map((campsRes.data ?? []).map((c: any) => [c.id, c.name]))
@@ -461,18 +424,14 @@ export default function ModerationPage() {
 
   async function loadWarStories() {
     setWarStoriesLoading(true)
-    const { data, error } = await supabase
-      .from('war_stories')
-      .select('*')
-      .eq('moderation_status', filter)
-      .order('created_at', { ascending: false })
+    const { data, error } = await loadWarStoriesByStatus(filter)
     if (error) { setWarStoriesLoading(false); setWarStories([]); return }
     const rows = data ?? []
-    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean)))
-    const campaignIds = Array.from(new Set(rows.map((r: any) => r.campaign_id).filter(Boolean)))
+    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean))) as string[]
+    const campaignIds = Array.from(new Set(rows.map((r: any) => r.campaign_id).filter(Boolean))) as string[]
     const [profsRes, campsRes] = await Promise.all([
-      authorIds.length > 0 ? supabase.from('profiles').select('id, username').in('id', authorIds) : Promise.resolve({ data: [] }),
-      campaignIds.length > 0 ? supabase.from('campaigns').select('id, name').in('id', campaignIds) : Promise.resolve({ data: [] }),
+      authorIds.length > 0 ? usernamesByIds(authorIds) : Promise.resolve({ data: [] }),
+      campaignIds.length > 0 ? campaignNamesByIds(campaignIds) : Promise.resolve({ data: [] }),
     ])
     const profMap = new Map((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
     const campMap = new Map((campsRes.data ?? []).map((c: any) => [c.id, c.name]))
@@ -508,16 +467,12 @@ export default function ModerationPage() {
 
   async function loadLfgPosts() {
     setLfgLoading(true)
-    const { data, error } = await supabase
-      .from('lfg_posts')
-      .select('*')
-      .eq('moderation_status', filter)
-      .order('created_at', { ascending: false })
+    const { data, error } = await loadLfgPostsByStatus(filter)
     if (error) { setLfgLoading(false); setLfgPosts([]); return }
     const rows = data ?? []
-    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean)))
+    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean))) as string[]
     const profsRes = authorIds.length > 0
-      ? await supabase.from('profiles').select('id, username').in('id', authorIds)
+      ? await usernamesByIds(authorIds)
       : { data: [] as any[] }
     const profMap = new Map((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
     setLfgPosts(rows.map((r: any) => ({
@@ -551,12 +506,7 @@ export default function ModerationPage() {
 
   async function load() {
     setLoading(true)
-    const { data: rawData } = await supabase
-      .from('map_pins')
-      .select('*, profiles!map_pins_user_id_fkey(username)')
-      .eq('pin_type', 'rumor')
-      .eq('status', filter)
-      .order('created_at', { ascending: false })
+    const { data: rawData } = await loadRumorPins(filter)
 
     const withAttachments = await Promise.all((rawData ?? []).map(async (pin: any) => {
       const { data: files } = await supabase.storage
