@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-24 15:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [561 passed, 31 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- **Confidence Ledger TESTED stale (4th flag):** ledger says 532/29, live is 561/31 (+29 tests, +2 files). Delta GREW +7 since last pulse (community-stage.test.ts, 7 tests, Phase 2 recruit ship `8406dd7`). Run `node scripts/refresh-ledger.mjs`.
+- **`pre-playtest-smoke-2026-05-25.md` RESOLVED:** file was never created under that name, but `tasks/session-prep-2026-05-25.md` IS the playtest prep doc (exists, covers all HOPED-FOR areas). Prior 3-pulse "missing" alert was a filename mismatch. No action needed.
+- **HOPED-FOR (2026-05-19 batch) day 5.** Drain gate = today's playtest. `tasks/session-prep-2026-05-25.md` is the runsheet.
+
+**Action:** `node scripts/refresh-ledger.mjs` - only unfixed drift item. Playtest prep doc exists; run the session.
+
+---
+
 ## 2026-05-24 12:09 UTC
 
 **Status:** DRIFT (3rd consecutive flag — no new commits since 09:06 UTC)
