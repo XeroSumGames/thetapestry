@@ -12,7 +12,7 @@ import { LABEL_STYLE_LG, ModalBackdrop, Z_INDEX, Button } from '../lib/style-hel
 import { advance as advanceCampaignClock } from '../lib/campaign-clock'
 import { usePostgresSubscription } from '../lib/realtime/usePostgresSubscription'
 import {
-  campaignCommunities, insertCommunity, updateCommunity, deleteCommunity,
+  campaignCommunities, insertCommunity, updateCommunity, deleteOrDissolveCommunity,
   activeMembersForCommunities, dissolvedMembersForCommunities, insertMembers, updateMember,
   updateMembersByIds, deleteMember, stockpileItems, insertStockpileItem, updateStockpileItemQty,
   deleteStockpileItem, moraleHistory, recentMoraleForCommunities, communityEventsForCommunities,
@@ -22,7 +22,7 @@ import {
   campaignPins, pinCoords, getCharacterData, updateCharacterData, eventAuthorUsernames, recruitRolls,
 } from '../lib/data/community'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
-import { isGroupStage, communityDisplayName, combinedMemberCount, shouldPromoteToCommunity, COMMUNITY_THRESHOLD } from '../lib/community-stage'
+import { isGroupStage, communityDisplayName, combinedMemberCount, shouldPromoteToCommunity, communityRemovalPrompt, COMMUNITY_THRESHOLD } from '../lib/community-stage'
 import CommunityPromoteBanner from './CommunityPromoteBanner'
 import {
   logSchism,
@@ -1382,13 +1382,23 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     })
   }
 
+  // Y11-c: empty -> hard-delete; with active members -> soft-dissolve. Re-fetches
+  // the LIVE active set; DB ops + prompt copy live in lib.
   async function handleDeleteCommunity(c: Community) {
-    if (!confirm(`Delete "${c.name}"? Removes all members and history.`)) return
-    const { error } = await deleteCommunity(c.id)
-    if (error) { alert(`Delete failed: ${error.message}`); return }
-    setCommunities(prev => prev.filter(x => x.id !== c.id))
-    setMembers(prev => { const n = { ...prev }; delete n[c.id]; return n })
+    const label = communityDisplayName(c.name, null)
+    const { data, error: fetchErr } = await activeMembersForCommunities([c.id])
+    if (fetchErr) { alert(`Could not check members for "${label}": ${fetchErr.message}`); return }
+    const ids = ((data ?? []) as Member[]).map(m => m.id)
+    if (!confirm(communityRemovalPrompt(label, ids.length, c.status === 'dissolved'))) return
+    const { mode, error } = await deleteOrDissolveCommunity(c.id, ids)
+    if (error) { alert(`${mode === 'deleted' ? 'Delete' : 'Dissolve'} failed: ${error}`); return }
     if (openId === c.id) setOpenId(null)
+    if (mode === 'deleted') {
+      setCommunities(prev => prev.filter(x => x.id !== c.id))
+      setMembers(prev => { const n = { ...prev }; delete n[c.id]; return n })
+    } else {
+      await load()
+    }
   }
 
   async function handleAddMember(communityId: string) {
@@ -1648,14 +1658,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const pcMems = mems.filter(m => !!m.character_id)
         const laborPool = npcMems.filter(m => m.role !== 'assigned')
         const laborTotal = laborPool.length
-        const npcTotal = npcMems.length
-        // Group vs Community is now stage-driven (persisted flag), not a raw
-        // member count. A 'group' stays simple (roster + recruit) until
-        // Phase 3 promotes it at 13+ members; an existing community keeps its
-        // full surface even if it dips below 13.
+        // Group vs Community is stage-driven (persisted flag), not a raw count.
         const isGroup = isGroupStage(c.stage)
         const isCommunity = !isGroup
-        // Canon combined size = party (campaign PCs, not enrolled by recruit) + group NPC members.
         const combinedCount = combinedMemberCount(chars.length, npcMems.length)
         const canPromote = shouldPromoteToCommunity(c.stage, combinedCount)
         const isOpen = openId === c.id
@@ -1667,8 +1672,6 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         // several PCs are marked founder; we display the first.
         const founderMember = mems.find(m => m.recruitment_type === 'founder')
         const founderName = founderMember ? memberLabel(founderMember) : null
-        // Belt-and-suspenders: groups carry an auto-name today, but never
-        // render an empty / "null" header if a name is ever missing.
         const displayName = communityDisplayName(c.name, founderName)
         // Leader resolution. Precedence:
         //   1. Explicit NPC leader (leader_npc_id on the community)
@@ -2319,11 +2322,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Role bars - percentages are over NPC workforce only.
-                    PCs don't pull down role coverage since they aren't
-                    assigned labor. The "Re-balance" button triggers
-                    the quota-aware allocator manually. Community-only:
-                    a Group has no labor-role coverage until promotion. */}
+                {/* Role bars - NPC workforce only. Community-only (a Group has
+                    no labor-role coverage until promotion); Re-balance runs the
+                    quota-aware allocator. */}
                 {isCommunity && (<>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ flex: 1, ...LABEL_STYLE_LG }}>Role Coverage</div>

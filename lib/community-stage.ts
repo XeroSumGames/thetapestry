@@ -33,6 +33,26 @@ export function shouldPromoteToCommunity(
   return isGroupStage(stage) && combined >= COMMUNITY_THRESHOLD
 }
 
+// Delete-vs-dissolve rule (Y11-c), mirroring the modules archive-vs-delete tree:
+// a collection with NO active members can be hard-deleted (nothing live to
+// lose); one WITH active members must be soft-dissolved instead (members leave,
+// history kept), never hard-wiped. Drives handleDeleteCommunity.
+export function canHardDeleteCommunity(activeMemberCount: number): boolean {
+  return activeMemberCount <= 0
+}
+
+// Confirm-dialog copy for the delete-vs-dissolve action. Empty -> permanent
+// delete (warns if it still carries dissolved history); populated -> the action
+// downgrades to a Dissolve. Pure so the wording is unit-testable.
+export function communityRemovalPrompt(label: string, activeMemberCount: number, isDissolved: boolean): string {
+  if (canHardDeleteCommunity(activeMemberCount)) {
+    const histNote = isDissolved ? ' Its dissolved history and surviving-NPC pool are removed too.' : ''
+    return `Permanently delete "${label}"? It has no active members.${histNote} This cannot be undone.`
+  }
+  const n = activeMemberCount
+  return `"${label}" has ${n} active member${n === 1 ? '' : 's'}, so it can't be hard-deleted. It will be DISSOLVED instead: members leave (history is kept) and surviving NPCs can be offered to nearby communities. Continue?`
+}
+
 // Display name for a community row. Groups carry an auto-name today, but
 // fall back to "<Leader>'s Group" if a name is ever missing so the UI
 // never renders an empty / "null" label.

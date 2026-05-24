@@ -29,6 +29,25 @@ export function updateCommunity(id: string, patch: Update<'communities'>) {
 export function deleteCommunity(id: string) {
   return db().from('communities').delete().eq('id', id)
 }
+// Y11-c: empty community -> hard-delete; community with active members ->
+// soft-dissolve (members leave with reason='dissolved', status flips), the same
+// end state the morale 3-failure dissolve produces, so history + survivor
+// migration are preserved. Caller passes the LIVE active member ids.
+export async function deleteOrDissolveCommunity(
+  id: string,
+  activeMemberIds: string[],
+): Promise<{ mode: 'deleted' | 'dissolved'; error?: string }> {
+  if (activeMemberIds.length === 0) {
+    const { error } = await deleteCommunity(id)
+    return { mode: 'deleted', error: error?.message }
+  }
+  const now = new Date().toISOString()
+  const { error: leftErr } = await db().from('community_members')
+    .update({ left_at: now, left_reason: 'dissolved' }).in('id', activeMemberIds)
+  if (leftErr) return { mode: 'dissolved', error: leftErr.message }
+  const { error } = await updateCommunity(id, { status: 'dissolved', dissolved_at: now })
+  return { mode: 'dissolved', error: error?.message }
+}
 
 // --- community_members ------------------------------------------------------
 

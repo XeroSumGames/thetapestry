@@ -4,6 +4,8 @@ import {
   communityDisplayName,
   combinedMemberCount,
   shouldPromoteToCommunity,
+  canHardDeleteCommunity,
+  communityRemovalPrompt,
   COMMUNITY_THRESHOLD,
 } from '../../lib/community-stage'
 
@@ -81,5 +83,40 @@ describe('shouldPromoteToCommunity', () => {
   it('does not promote on a missing / unknown stage', () => {
     expect(shouldPromoteToCommunity(null, 13)).toBe(false)
     expect(shouldPromoteToCommunity(undefined, 99)).toBe(false)
+  })
+})
+
+describe('canHardDeleteCommunity', () => {
+  it('allows hard-delete only when there are no active members', () => {
+    expect(canHardDeleteCommunity(0)).toBe(true)
+  })
+
+  it('blocks hard-delete when active members exist (soft-dissolve instead)', () => {
+    expect(canHardDeleteCommunity(1)).toBe(false)
+    expect(canHardDeleteCommunity(13)).toBe(false)
+  })
+
+  it('treats a negative/garbage count as empty (hard-delete OK)', () => {
+    expect(canHardDeleteCommunity(-1)).toBe(true)
+  })
+})
+
+describe('communityRemovalPrompt', () => {
+  it('offers a permanent delete when empty', () => {
+    const msg = communityRemovalPrompt('The Ashfall Collective', 0, false)
+    expect(msg).toContain('Permanently delete')
+    expect(msg).toContain('no active members')
+    expect(msg).not.toContain('DISSOLVED')
+  })
+
+  it('warns about lost history when deleting an empty but dissolved community', () => {
+    expect(communityRemovalPrompt('Dead Camp', 0, true)).toContain('dissolved history')
+  })
+
+  it('downgrades to a Dissolve when there are active members (singular/plural)', () => {
+    expect(communityRemovalPrompt('Riverside', 1, false)).toMatch(/1 active member\b/)
+    const many = communityRemovalPrompt('Riverside', 5, false)
+    expect(many).toContain('5 active members')
+    expect(many).toContain('DISSOLVED')
   })
 })
