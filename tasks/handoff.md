@@ -169,6 +169,22 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
+# Session state - 2026-05-24 (puffer-fish: routed-items verification + lane-board)
+
+## Current HEAD: derive (`git rev-parse --short HEAD`; was `291737a` at write). page.tsx 10,564 LOC. Test count is DRIFTING - ledger doc shows 548, the health-pulse flagged `622/37` (commit `7901cbb`, 5th stale flag); ~37 files in `tests/lib/`. Derive the real number via `npm test` before quoting it; the Confidence Ledger refresh (`scripts/refresh-ledger.mjs`) is owed.
+
+## What this puffer-fish session did (2026-05-24, short)
+- **Both routed items were ALREADY SHIPPED before I started** - prior puffer session committed them in `6660e49` (working copy was 3 commits behind on session start; FETCH + sync to origin/main first, always). I verified rather than redid:
+  1. **3-lane operating-mode** - [operating-mode.md](operating-mode.md) "Multi-chat lanes" now Hunt&Peck / Puffer Fish / Playwright-E2E (was 2-lane). Matches `tasks/lane-protocol.md`. CORRECT.
+  2. **map_pins moderation bypass** (E2E finding, `tasks/security-finding-map-pins-moderation-2026-05-24.md`) - triaged into the Risk Register ([debug-handoff.md](debug-handoff.md) Sec 1, **RED/MEDIUM**) + fix written: `sql/map-pins-moderation-enforce-2026-05-24.sql` (BEFORE INSERT trigger, SECURITY DEFINER, mirrors the campfire `enforce_moderation_on_insert`). I red-teamed the trigger vs the live `"View pins"` SELECT policy (`sql/_baseline/schema.sql:2581` - visibility keys on `status='approved'` ONLY): the non-Thriver private-pin clamp to `status='active'` (owner-only) and shared-pin force to `status='pending'` (queue) BOTH correctly close the bypass. Logic is sound.
+- **Lane-board row** updated + pushed (`291737a`) noting the re-verification.
+
+## What's OPEN / next for puffer-fish (this session's residual)
+- **>>> map_pins fix is STILL OPEN ON PROD. <<<** SQL is written + verified but NOT applied (bright line = live RLS/trigger change, needs Xero's go). One command owed to Xero: `npx supabase db query --linked -f sql/map-pins-moderation-enforce-2026-05-24.sql`. After it lands: E2E adds the "Survivor REST insert with status='approved' -> trigger forces pending" assertion (mirrors `campfire-social.spec.ts`); demote the Risk Register entry RED -> closed.
+- Everything in the 2026-05-24 (stability-audit) block below is STILL CURRENT background - Phase 7 close-out (vehicle Section B rides the 2026-05-25 Minnie playtest), the 5 architecture moves (#1 client-state layer), operator items owed by Xero (Upstash env vars; apply `sql/audit-log-table-2026-05-20.sql`).
+
+---
+
 # Session state - 2026-05-24 (puffer-fish: stability audit + Phase 7 acceptance + post-smoke fixes + architecture review)
 
 ## Current HEAD: derive (`git rev-parse --short HEAD`; was `da22595` at write). page.tsx 10,557 LOC; 548 vitest green + a growing Playwright E2E suite (the e2e/hunt lane shipped Tier-1 multi-context tests this session); arch ratchets at baseline (`.from` ~1037, `.channel` 22, console 0); depcruise clean. **Grand Re-Arch Phases 1-6 DONE; Phase 7 (acceptance) all-but-the-vehicle.** Detailed Phase 1-7 logs below are HISTORICAL record.
