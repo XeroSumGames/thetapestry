@@ -13,6 +13,8 @@ import { broadcastOnce } from '../../lib/realtime/broadcastOnce'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
+import VehicleDamageTable from '../../components/VehicleDamageTable'
+import { resolveVehicleDamageTable } from '../../lib/vehicle-damage'
 import { classifyRoll } from '../../lib/community-logic'
 import { getWeaponByName } from '../../lib/weapons'
 import { rollDamage, calculateDamage } from '../../lib/damage'
@@ -1511,6 +1513,13 @@ export default function VehiclePage() {
               <div style={{ height: '100%', width: `${wpPct * 100}%`, background: wpColor, borderRadius: '5px', transition: 'width 0.3s' }} />
             </div>
           </div>
+
+          {/* Damage table - vehicle-specific (Minnie). Apply WP loss above, then
+              roll 2d6 here to see which system took the hit. */}
+          {(() => {
+            const dt = resolveVehicleDamageTable(vehicle)
+            return dt ? <VehicleDamageTable table={dt} /> : null
+          })()}
 
           {/* Stress */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '12px' }}>
