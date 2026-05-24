@@ -88,6 +88,7 @@ import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../.
 import { distractActionDelta, distractNarrative } from '../../../../lib/distract-helpers'
 import { gutInstinctSmod } from '../../../../lib/gut-instinct-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
+import { targetOptionColor, closestHostileKey } from '../../../../lib/combat-targeting'
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../lib/table-roll-context'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS, ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../lib/xse-schema'
 import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
@@ -320,7 +321,8 @@ export default function TablePage() {
     rollerName: string
     amod: number                 // INF AMod
     smod: number                 // max of Intimidation / Inspiration / Psychology* / Tactics*
-    candidates: Array<{ entryId: string; name: string; distFeet: number | null }>
+    candidates: Array<{ entryId: string; name: string; distFeet: number | null; isNpc: boolean }>
+    rollerIsNpc: boolean
     preselectName: string | null
   } | null>(null)
   const [distractTargetName, setDistractTargetName] = useState<string>('')
@@ -5970,15 +5972,24 @@ export default function TablePage() {
                     alert('No valid Distract targets within Close range (30 ft).')
                     return
                   }
-                  // Pre-select: GM's map selection if it's in the
-                  // candidate list; otherwise the closest by distance.
-                  // Treat null distance (no map) as 0 for closest pick.
+                  // Pre-select: GM's map selection if it's in the candidate
+                  // list; otherwise the closest HOSTILE (relative to the
+                  // roller), falling back to the closest of anyone if there are
+                  // no hostiles in range. Treat null distance (no map) as
+                  // farthest for the closest pick.
+                  const distractRollerIsNpc = !!activeEntry.npc_id
                   let preselect: string | null = null
                   if (selectedMapTargetName && candidates.some(c => c.entry.character_name === selectedMapTargetName)) {
                     preselect = selectedMapTargetName
                   } else {
-                    const closest = [...candidates].sort((a, b) => (a.dist ?? 0) - (b.dist ?? 0))[0]
-                    preselect = closest?.entry.character_name ?? null
+                    preselect = closestHostileKey(
+                      candidates.map(c => ({ key: c.entry.character_name, isNpc: c.entry.is_npc, distFeet: c.dist })),
+                      distractRollerIsNpc,
+                    )
+                    if (!preselect) {
+                      const closest = [...candidates].sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity))[0]
+                      preselect = closest?.entry.character_name ?? null
+                    }
                   }
                   // Reset prior modal state then mount the new modal.
                   // Action NOT pre-consumed - the modal's onRoll runs
@@ -5997,7 +6008,9 @@ export default function TablePage() {
                       entryId: c.entry.id,
                       name: c.entry.character_name,
                       distFeet: c.dist,
+                      isNpc: c.entry.is_npc,
                     })),
+                    rollerIsNpc: distractRollerIsNpc,
                     preselectName: preselect,
                   })
                 }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
@@ -7950,7 +7963,7 @@ export default function TablePage() {
                           return true
                         })
                         .map(entry => (
-                        <option key={entry.id} value={entry.character_name} style={{ color: entry.is_npc ? '#7fc458' : '#c0392b' }}>
+                        <option key={entry.id} value={entry.character_name} style={{ color: targetOptionColor(entry.is_npc, !!initiativeOrder.find(ie => ie.is_active)?.is_npc) }}>
                           {entry.character_name}{entry.is_npc ? ' (NPC)' : ''}
                         </option>
                       ))}
@@ -7986,7 +7999,7 @@ export default function TablePage() {
                         .map(t => {
                           const isNpc = !!t.npc_id
                           return (
-                            <option key={`maptok-${t.id}`} value={t.name} style={{ color: isNpc ? '#7fc458' : '#c0392b' }}>
+                            <option key={`maptok-${t.id}`} value={t.name} style={{ color: targetOptionColor(isNpc, !!initiativeOrder.find(ie => ie.is_active)?.is_npc) }}>
                               {t.name}{isNpc ? ' (NPC)' : ''}
                             </option>
                           )
@@ -10016,7 +10029,7 @@ export default function TablePage() {
               style={{ width: '100%', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
               <option value="">-- Pick a target --</option>
               {distractPending.candidates.map(c => (
-                <option key={c.entryId} value={c.name}>
+                <option key={c.entryId} value={c.name} style={{ color: targetOptionColor(c.isNpc, distractPending.rollerIsNpc) }}>
                   {c.name}{c.distFeet !== null ? ` (${c.distFeet} ft)` : ''}
                 </option>
               ))}
