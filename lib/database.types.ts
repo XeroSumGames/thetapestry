@@ -2609,6 +2609,7 @@ export type Database = {
           insight_used: string | null
           label: string | null
           outcome: string | null
+          session_id: string | null
           smod: number | null
           target_name: string | null
           total: number | null
@@ -2629,6 +2630,7 @@ export type Database = {
           insight_used?: string | null
           label?: string | null
           outcome?: string | null
+          session_id?: string | null
           smod?: number | null
           target_name?: string | null
           total?: number | null
@@ -2649,6 +2651,7 @@ export type Database = {
           insight_used?: string | null
           label?: string | null
           outcome?: string | null
+          session_id?: string | null
           smod?: number | null
           target_name?: string | null
           total?: number | null
