@@ -142,14 +142,28 @@ Two operator items are owed by Xero but are NOT re-arch work - tracked so they a
 
 ---
 
-## Results (fill in as you run)
+## Results - Playwright lane, 2026-05-24 (Gate 0 meets closure criteria)
 
-- Date / HEAD:
-- Section A (table core):
-- Section B (vehicle):
-- Section C (npc roster):
-- Section D (community/stockpile):
-- Section E (map):
-- Section F (infection modal):
-- Console clean both windows (no resubscription spam):
-- Open items / failures:
+Run headless: `npm run test:e2e` (auto-login mints all 4 sessions first). All specs on `origin/main`.
+
+**AUTOMATED + GREEN on prod (10 spec files):**
+- **Console/network sweep** (`console-network.spec.ts`) - 92 routes, zero console errors + zero in-scope failed requests. Re-verified green twice.
+- **Infra:** `auth.setup.ts` (auto-login x4), `seed-smoke.spec.ts` (vehicle RPC + community/stockpile seed+teardown), `role-nav.spec.ts` (Thriver-vs-Survivor gating), `character-create.spec.ts` (create->persist->owner-delete).
+- **Section A1** (`section-a1-combat-start.spec.ts`) - GM Start Session+Combat -> player sees IN COMBAT live.
+- **Section A3** (`section-a3-token-move.spec.ts`) - tactical token move -> player `scene_tokens` refetch (the hardest seam; no canvas bridge).
+- **Section C** (`section-c-npc-reveal.spec.ts`) - GM reveals NPC -> player roster updates live.
+- **Section D** (`section-d-stockpile.spec.ts`) - deposit (INSERT) + qty (UPDATE) + community-create resubscribe.
+- **Section E** (`section-e-whispers.spec.ts` + `section-e-pins.spec.ts`) - whisper feed + map-pin refetch.
+
+**MANUAL-ONLY (logged with rationale; per the "pass headless OR logged manual" criterion):**
+- **Section B (vehicle):** broadcast-driven (`vehicle_updated`/`firing_arc_toggle` from the popout) + canvas-rendered + needs the popout window + the puffer-fish lane's active fix area. Shared token seam covered by A3.
+- **Section A2 (roll engine) + F (infection modal) = the conditions smoke (#5 gate):** the apply-logic (`useRollResolution.ts:623-673`) only fires on an attack that zeroes WP/RP - inherently **dice-gated** (an attack can miss) + session/turn/multi-combatant gated. The brief designates this "stays manual the longest." **Documented manual 2-client procedure (Arena, GM + MARV), to the locked baseline (gate0 `1623c88`):**
+  1. GM Start Session + Combat (automated in A1).
+  2. Attack a PC to WP=0. PASS: "<name> mortally wounded" feed row on BOTH windows; the wounded PC owner's window shows the mortal-wound/Insight prompt; `death_countdown` + a Stress pip set. Drive RP=0 -> incap + Stress pip.
+  3. Wound a PC (WP>0, cut/shot weapon) -> "is wounded and may have to deal with infection" feed row; **End Combat -> infection MODAL on the wounded owner's window.**
+  4. GM Restore -> infection + stress + MW + incap clear (the 4). At HEAD lasting wounds do NOT clear; AFTER #5 lands they do (that one assertion belongs to #5's acceptance, not the HEAD baseline).
+  This is #5's acceptance gate - run before #5 merges.
+
+**Open items / failures:** none. Everything automated is green on prod. A2/F is the documented manual smoke (above); B is manual-only.
+
+**Net - Gate 0 meets the closure criteria:** every section A-F either passes headless or is logged manual-only with rationale; the console/network sweep is green on every route; runs are repeatable (`npm run test:e2e`). Recommend demoting the Realtime-channels Risk Register entry from YELLOW and promoting the re-arch HOPED-FOR -> PLAYTESTED. **Releasing Stage C is the puffer-fish lane's / Xero's call** - this is the evidence. The 2026-05-25 playtest is the final real-world confirmation on top of this.
