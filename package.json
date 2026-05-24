@@ -16,7 +16,8 @@
     "e2e:auth": "node e2e/capture-auth.mjs",
     "arch:check": "node scripts/check-arch.mjs",
     "arch:save": "node scripts/check-arch.mjs --save",
-    "arch:depcruise": "depcruise lib components app --config .dependency-cruiser.cjs --output-type err"
+    "arch:depcruise": "depcruise lib components app --config .dependency-cruiser.cjs --output-type err",
+    "check:publication": "node scripts/check-publication-drift.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.51.0",

@@ -5,6 +5,7 @@ import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { installDebugLog, setDebugContext } from '../lib/debug-log'
 import Sidebar from './Sidebar'
+import GlobalPresence from './GlobalPresence'
 
 // Pages that ghosts (unauthenticated users) can view
 const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random', '/campfire', '/publiclanding', '/press']
@@ -197,7 +198,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname) || FULL_WIDTH_PATTERN.test(pathname)
 
   if (hideSidebar) {
-    return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner />{children}</div>
+    return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner /><GlobalPresence />{children}</div>
   }
 
   return (

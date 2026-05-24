@@ -1,6 +1,10 @@
 # Stage A1 - Infra-as-code: scope + approach
 
-**Status: SCOPE (puffer-fish, 2026-05-23). Read-only discovery done; no DB or schema change made.** Part of `tasks/architecture-path.md` Stage A. Goal: get the Supabase config that today lives ONLY in the live DB (+ the dashboard) into versioned artifacts, so the silent-config bug class dies (the publication gap that cost an hour, and that I triaged again this session, is the poster child).
+**Status: Tier 1 PARTIALLY BUILT (puffer-fish, 2026-05-23). No DB or schema change made (capture + guardrail only).** Part of `tasks/architecture-path.md` Stage A. Goal: get the Supabase config that today lives ONLY in the live DB (+ the dashboard) into versioned artifacts, so the silent-config bug class dies (the publication gap that cost an hour, and that I triaged again this session, is the poster child).
+
+**BUILT 2026-05-23:** publication baseline (`sql/_baseline/publication.sql`, 21 tables) + drift-detector (`scripts/check-publication-drift.mjs`, `npm run check:publication`) - tested green against live + negative-tested. The discipline rule is in `AGENTS.md` (## Database / infra-as-code). This is the bug-class killer half of Tier 1.
+
+**BLOCKED (Docker):** the full `supabase db dump` schema baseline (the 15 orphan tables' CREATE DDL, all RLS policies, all triggers, all functions). The Supabase CLI runs `pg_dump` in a container and Docker Desktop is not running; there is no native `pg_dump`/`psql` or direct DB URL here. **Unblock:** start Docker Desktop, then run `npx supabase db dump --linked --schema public -f sql/_baseline/schema.sql` (read-only) and commit. One command once Docker is up.
 
 ---
 
