@@ -65,6 +65,14 @@ function stressColor(level: number): string {
   return '#c0392b'
 }
 
+// In-memory per-entry live state, built from a `character_states` row in
+// the table page's loadEntries (and patched by mid-session stat writes).
+// Field types mirror the `character_states` Row in lib/database.types.ts.
+// Some fields are marked optional because not every construction/spread
+// site populates them (e.g. loadEntries omits infection_started_at /
+// infection_infected_by / kicked - they are written via onStatUpdate, not
+// read off liveState). Optionality here matches what is actually present,
+// so the type does not lie about the in-memory shape.
 export interface LiveState {
   id: string
   wp_current: number
@@ -77,6 +85,17 @@ export interface LiveState {
   cdp: number
   death_countdown?: number | null
   incap_rounds?: number | null
+  // Infection (canon: /rules/combat/infection). DB columns are typed in
+  // database.types.ts; infection_state / infection_severity are free-text
+  // string | null in the schema ('wound' | 'sickness', 'auto' | manual).
+  infection_state?: string | null
+  infection_days_left?: number | null
+  infection_lasting_risk?: boolean
+  infection_started_at?: string | null
+  infection_infected_by?: string | null
+  infection_severity?: string | null
+  infection_pending_lasting_check?: boolean
+  kicked?: boolean
 }
 
 interface Props {
@@ -512,7 +531,7 @@ function CharacterCardImpl({
                       Day or Resolve. See /rules/combat/infection. */}
                   <button onClick={() => {
                     if (!localState) return
-                    const ls = localState as any
+                    const ls = localState
                     const phyAmod = c.data?.rapid?.PHY ?? 0
                     if (ls.infection_state) {
                       const days = ls.infection_days_left ?? 0
@@ -1096,7 +1115,7 @@ function CharacterCardImpl({
             {(() => {
               const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
               const totalDays = totalHours / 24
-              const wasMortal = localState.wp_current === 0 || (localState as any).death_countdown != null
+              const wasMortal = localState.wp_current === 0 || localState.death_countdown != null
               const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
               const rpHeal = totalHours
               return totalHours > 0 ? (
@@ -1112,7 +1131,7 @@ function CharacterCardImpl({
               <button onClick={() => {
                 const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
                 const totalDays = totalHours / 24
-                const wasMortal = localState.wp_current === 0 || (localState as any).death_countdown != null
+                const wasMortal = localState.wp_current === 0 || localState.death_countdown != null
                 const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
                 const rpHeal = totalHours
                 const newWP = Math.min(localState.wp_max, localState.wp_current + wpHeal)

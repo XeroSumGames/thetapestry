@@ -5,15 +5,16 @@
 // (roll_log rows parsed in CharacterCard), not a character_states column.
 
 import { LASTING_WOUNDS } from '../../../../../lib/xse-schema'
+import type { LiveState } from '../../../../../components/CharacterCard'
 
 interface PlayerStatusChipsProps {
-  liveState: any
+  liveState: LiveState | null | undefined
   /** PC lasting wounds (characters.data.lastingWounds) - feed/sheet source. */
   lastingWounds?: string[]
 }
 
 export function PlayerStatusChips({ liveState, lastingWounds }: PlayerStatusChipsProps) {
-  const ls: any = liveState ?? {}
+  const ls: Partial<LiveState> = liveState ?? {}
   // Each chip carries a `title` so hovering shows the specifics (e.g. which
   // infection + days left), not just the icon. Same pattern the lasting-wound
   // chip will follow (hover -> the actual wound).

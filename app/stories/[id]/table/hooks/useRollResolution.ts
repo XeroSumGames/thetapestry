@@ -151,7 +151,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
     {
       const rollerEntry = entries.find(e => e.character.name === characterName)
       const rollerNpc = campaignNpcs.find((n: any) => n.name === characterName)
-      const rollerInfection = (rollerEntry?.liveState as any)?.infection_state
+      const rollerInfection = rollerEntry?.liveState?.infection_state
         ?? (rollerNpc as any)?.infection_state
       if (rollerInfection) {
         const PHYSICAL_LABEL_RE = /\b(Athletics|Melee Combat|Ranged Combat|Stealth|Survival|Unarmed Combat|Attack|Charge|Subdue|Sprint|Grapple|Unarmed|Fire from Cover|Rapid Fire)\b/i

@@ -1022,7 +1022,7 @@ export default function TablePage() {
         infection_lasting_risk: !!s.infection_lasting_risk,
         infection_severity: s.infection_severity ?? null,
         infection_pending_lasting_check: !!s.infection_pending_lasting_check,
-      } as any,
+      },
     }))
 
     if (!isLatest()) return
@@ -2011,7 +2011,7 @@ export default function TablePage() {
       // PC death countdown + incapacitation + RP recovery
       for (const e of entries) {
         if (!e.liveState) continue
-        const ls = e.liveState as any
+        const ls = e.liveState
         const updates: any = {}
         // Death countdown
         if (ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown > 0) {
@@ -2036,7 +2036,7 @@ export default function TablePage() {
             // be incapacitated, no stabilize roll required (Warren bug
             // 2026-04-27).
             updates.rp_current = Math.max(1, ls.rp_current)
-            const dcActive = (ls as any).death_countdown != null && (ls as any).death_countdown > 0
+            const dcActive = ls.death_countdown != null && ls.death_countdown > 0
             if (ls.wp_current === 0 && !dcActive) updates.wp_current = 1
             updates.incap_rounds = null
             // Log the revival - paired with the "Lights out" Incapacitated
@@ -2176,7 +2176,7 @@ export default function TablePage() {
             if (npc) return (npc.wp_current ?? npc.wp_max ?? 10) > 0 && (npc.rp_current ?? npc.rp_max ?? 6) > 0 && npc.status !== 'dead'
           } else {
             const ce = entries.find((c: any) => e.character_id ? c.character.id === e.character_id : c.character.name === e.character_name)
-            if (ce?.liveState) return (ce.liveState as any).wp_current > 0 && (ce.liveState as any).rp_current > 0
+            if (ce?.liveState) return ce.liveState.wp_current > 0 && ce.liveState.rp_current > 0
           }
           return true
         })
@@ -3425,7 +3425,7 @@ export default function TablePage() {
     if (pendingRoll) return       // one modal at a time
     if (!userId) return
     for (const e of entries) {
-      const ls: any = e.liveState
+      const ls = e.liveState
       if (!ls?.infection_pending_lasting_check) continue
       if (e.userId !== userId) continue
       if (firedLastingChecksRef.current.has(e.stateId)) continue
@@ -4397,7 +4397,7 @@ export default function TablePage() {
       await supabase.from('character_states').update({
         wp_current: 0, death_countdown: deathCountdown, stress: newStress, updated_at: new Date().toISOString(),
       }).eq('id', stateId)
-      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 0, death_countdown: deathCountdown, stress: newStress } as any } : e))
+      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 0, death_countdown: deathCountdown, stress: newStress } } : e))
       if (targetEntry) {
         await insertRollLog({
           campaign_id: id, user_id: userId, character_name: 'System',
@@ -4765,7 +4765,7 @@ export default function TablePage() {
       else if (!stabRows || stabRows.length === 0) console.error('[stabilize] SILENT RLS FAIL - stabilize did not persist for', targetName, '- Run sql/character-states-rls-fix.sql.')
       setEntries(prev => prev.map(e =>
         e.stateId === targetEntry.stateId
-          ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any }
+          ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } }
           : e,
       ))
       if (targetEntry.character?.id) void appendProgressionLog(targetEntry.character.id, 'wound', `🩸 Stabilized by ${medicName}.`)
@@ -5538,7 +5538,7 @@ export default function TablePage() {
       {!gmLike && combatActive && (() => {
         const myEntry = entries.find(e => e.userId === userId)
         if (!myEntry?.liveState) return null
-        const ls = myEntry.liveState as any
+        const ls = myEntry.liveState
         const isDead = ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown <= 0
         const isMortal = ls.wp_current === 0 && !isDead
         const isUnconscious = ls.rp_current === 0 && ls.wp_current > 0
@@ -6195,7 +6195,7 @@ export default function TablePage() {
                   for (const e of entries) {
                     if (!e.liveState) continue
                     const wp = e.liveState.wp_current
-                    const dc = (e.liveState as any).death_countdown
+                    const dc = e.liveState.death_countdown
                     if (wp === 0 && (dc == null || dc > 0)) {
                       targets.push({ kind: 'pc', name: e.character.name, charId: e.character.id, distFeet: getDistFeet(e.character.id, undefined) })
                     }
@@ -6280,7 +6280,7 @@ export default function TablePage() {
                   const targets: TreatTarget[] = []
                   for (const e of entries) {
                     if (!e.liveState) continue
-                    const ls = e.liveState as any
+                    const ls = e.liveState
                     if (ls.infection_state && (ls.infection_days_left ?? 0) > 0) {
                       targets.push({ kind: 'pc', name: e.character.name, charId: e.character.id, distFeet: getDistFeet(e.character.id, undefined) })
                     }
