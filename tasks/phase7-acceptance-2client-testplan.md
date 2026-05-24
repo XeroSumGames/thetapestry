@@ -21,11 +21,18 @@ This manual sheet is the gate you run TODAY (no harness needed) and the sign-off
 
 ## Setup (do once)
 
-**Two clients, side by side:**
-- **Window 1 (GM):** normal browser, logged in as a GM account, in a test campaign.
-- **Window 2 (Player):** incognito/private window OR a second browser, logged in as a DIFFERENT account that is a player in the same campaign.
+**Locked plan (2026-05-24):**
+- **Sandbox = THE ARENA** (`35ed2133-498a-43d2-bbd6-21da05233af2`; GM = Xero, player = MARV). The designated disposable test campaign; accounts already wired. Do NOT run any of this in Minnie - it is a real campaign and these sections write rolls / combat / content.
+- **Run Sections A, C, E, F in the Arena BEFORE the 2026-05-25 playtest** - the high-risk, controllable surfaces (roll engine, table realtime, NPC roster, map, the infection modal).
+- **Sections B (vehicle) + D (community/stockpile) are FOLDED INTO the 2026-05-25 Minnie playtest** - verified live with a second window open, not hand-seeded. Rationale: the vehicle + community fixtures only exist in Minnie today; hand-seeding them into the Arena is throwaway work the Playwright suite is being built to seed programmatically; both are behavior-preserving migrations and the vehicle's hardest counterpart (TacticalMap) already passed on prod, so verifying them in their natural habitat is the proportionate call. (To gate them earlier instead, the Arena fixtures must be created first - see the e2e brief's seed data model.)
 
-**Test campaign needs:** 1 GM + 1 player PC, at least 1 NPC, 1 tactical scene with 2+ tokens, 1 vehicle with a name + a mounted weapon, 1 community with a stockpile, a couple of map pins.
+**Readiness check before you start (10s):** run `npx supabase db query --linked -f sql/diag-arena-readiness-2026-05-24.sql`. It reports whether the Arena has a player PC + NPC + tactical scene with tokens + map pins. If any are missing, they are 2-minute GM setups (add an NPC, activate a scene, drop 2 tokens, drop a pin) - unlike the vehicle, which is the involved one and is why B/D fold into Minnie.
+
+**Two clients, side by side:**
+- **Window 1 (GM):** normal browser, logged in as Xero (GM), in THE ARENA.
+- **Window 2 (Player):** incognito/private window OR a second browser, logged in as MARV (player in the Arena).
+
+**Arena needs for the A/C/E/F run:** 1 player PC (MARV's), at least 1 NPC, 1 tactical scene with 2+ tokens, a couple of map pins. (Vehicle + community NOT needed for this run - they ride the Minnie playtest.)
 
 **Both windows:** hard-refresh (Ctrl+Shift+R) after the deploy lands on Vercel. Keep DevTools Console open in BOTH (F12 -> Console). A resubscription loop spams "channel"/"subscription" warnings - that is the canonical re-arch failure signature, watch for it the whole time.
 
@@ -59,6 +66,8 @@ TWO browsers. This is the condensed re-run of the old decomposition smoke. The t
 
 ## SECTION B - Vehicle realtime (app/vehicle/page.tsx)
 
+> **RUN DURING THE 2026-05-25 MINNIE PLAYTEST** (second window open), not in the Arena pre-run - the named vehicle fixture only exists in Minnie. See the locked plan in Setup.
+
 TWO browsers. Window 1 = GM with the **tactical map open** (it is the receiver). Window 2 = the vehicle popout (open the vehicle's controls). The seam moved 6 channels behind `usePostgresSubscription` + `useCampaignChannel` + `broadcastOnce`; the localStorage/BroadcastChannel belt-and-suspenders fallbacks are preserved.
 
 - [ ] **Board / disembark a crew member** in the vehicle popout. PASS: the OTHER window's tactical map updates (the `vehicle_updated` broadcast; also exercises the localStorage/BroadcastChannel fallbacks).
@@ -81,6 +90,8 @@ TWO browsers, both with the NPC roster panel visible (GM sidebar -> NPCs; player
 ---
 
 ## SECTION D - Community + stockpile realtime (components/CampaignCommunity.tsx)
+
+> **RUN DURING THE 2026-05-25 MINNIE PLAYTEST** (second window open), not in the Arena pre-run - unless you seed a community + stockpile into the Arena first. See the locked plan in Setup.
 
 TWO browsers, both with the SAME community's panel open. Channel: `stockpile-${campaignId}-{communityIds}` watching `community_stockpile_items` with an IN-filter keyed on the community-id set (so it must resubscribe when communities are added/removed).
 
