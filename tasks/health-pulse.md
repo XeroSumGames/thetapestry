@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-24 18:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [575 passed]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not authenticated — skipped
+
+**Drift:**
+- **Ledger stale (4th flag): 532 → 575 (+43, 29 → 32 test files).** `tasks/debug-handoff.md` Confidence Ledger TESTED row still reads "532 unit tests across 29 files." Run `npx tsx scripts/refresh-ledger.mjs` to sync.
+- **HOPED-FOR batch day 6** (2026-05-19 post-playtest ships). Drain target: 2026-05-25 playtest (tomorrow). `tasks/session-prep-2026-05-25.md` exists; `tasks/pre-playtest-smoke-2026-05-25.md` still missing (but session-prep may cover it).
+
+**Action:** Run `npx tsx scripts/refresh-ledger.mjs` to clear the ledger drift; HOPED-FOR drains at tomorrow's playtest.
+
+---
+
 ## 2026-05-24 15:06 UTC
 
 **Status:** DRIFT
