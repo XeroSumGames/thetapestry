@@ -23,16 +23,16 @@ This manual sheet is the gate you run TODAY (no harness needed) and the sign-off
 
 **Locked plan (2026-05-24):**
 - **Sandbox = THE ARENA** (`35ed2133-498a-43d2-bbd6-21da05233af2`; GM = Xero, player = MARV). The designated disposable test campaign; accounts already wired. Do NOT run any of this in Minnie - it is a real campaign and these sections write rolls / combat / content.
-- **Run Sections A, C, E, F in the Arena BEFORE the 2026-05-25 playtest** - the high-risk, controllable surfaces (roll engine, table realtime, NPC roster, map, the infection modal).
-- **Sections B (vehicle) + D (community/stockpile) are FOLDED INTO the 2026-05-25 Minnie playtest** - verified live with a second window open, not hand-seeded. Rationale: the vehicle + community fixtures only exist in Minnie today; hand-seeding them into the Arena is throwaway work the Playwright suite is being built to seed programmatically; both are behavior-preserving migrations and the vehicle's hardest counterpart (TacticalMap) already passed on prod, so verifying them in their natural habitat is the proportionate call. (To gate them earlier instead, the Arena fixtures must be created first - see the e2e brief's seed data model.)
+- **Run Sections A, C, D, E, F in the Arena BEFORE the 2026-05-25 playtest** - the high-risk, controllable surfaces (roll engine, table realtime, NPC roster, community/stockpile, map, the infection modal). The Arena has a community already, so D runs here (the deposit step creates its own stockpile item).
+- **Only Section B (vehicle) is FOLDED INTO the 2026-05-25 Minnie playtest** - the Arena has 0 vehicles and a named vehicle is the one involved fixture to hand-build; the Playwright suite is being built to seed it programmatically. The vehicle migration is behavior-preserving and its hardest counterpart (TacticalMap) already passed on prod, so verifying it live in Minnie with a second window is the proportionate call. (To gate B earlier instead, create one named vehicle + mounted weapon in the Arena via the tactical map first.)
 
-**Readiness check before you start (10s):** run `npx supabase db query --linked -f sql/diag-arena-readiness-2026-05-24.sql`. It reports whether the Arena has a player PC + NPC + tactical scene with tokens + map pins. If any are missing, they are 2-minute GM setups (add an NPC, activate a scene, drop 2 tokens, drop a pin) - unlike the vehicle, which is the involved one and is why B/D fold into Minnie.
+**Arena readiness CONFIRMED 2026-05-24** (via `sql/diag-arena-readiness-2026-05-24.sql`): 7 player PCs, 14 NPCs, 1 tactical scene, 22 scene tokens, 30 GM map pins, 1 community, 0 vehicles. Everything A/C/D/E/F needs is present; only the vehicle (B) is absent. Re-run that probe if the Arena state may have drifted.
 
 **Two clients, side by side:**
 - **Window 1 (GM):** normal browser, logged in as Xero (GM), in THE ARENA.
 - **Window 2 (Player):** incognito/private window OR a second browser, logged in as MARV (player in the Arena).
 
-**Arena needs for the A/C/E/F run:** 1 player PC (MARV's), at least 1 NPC, 1 tactical scene with 2+ tokens, a couple of map pins. (Vehicle + community NOT needed for this run - they ride the Minnie playtest.)
+**Arena needs for the A/C/D/E/F run:** confirmed present (7 PCs, 14 NPCs, 1 scene, 22 tokens, 1 community, 30 GM pins). Only the vehicle (Section B) is absent and rides the Minnie playtest.
 
 **Both windows:** hard-refresh (Ctrl+Shift+R) after the deploy lands on Vercel. Keep DevTools Console open in BOTH (F12 -> Console). A resubscription loop spams "channel"/"subscription" warnings - that is the canonical re-arch failure signature, watch for it the whole time.
 
@@ -91,7 +91,7 @@ TWO browsers, both with the NPC roster panel visible (GM sidebar -> NPCs; player
 
 ## SECTION D - Community + stockpile realtime (components/CampaignCommunity.tsx)
 
-> **RUN DURING THE 2026-05-25 MINNIE PLAYTEST** (second window open), not in the Arena pre-run - unless you seed a community + stockpile into the Arena first. See the locked plan in Setup.
+> **RUNNABLE IN THE ARENA** - it has 1 community already; the deposit step below creates its own stockpile item, so no seeding needed.
 
 TWO browsers, both with the SAME community's panel open. Channel: `stockpile-${campaignId}-{communityIds}` watching `community_stockpile_items` with an IN-filter keyed on the community-id set (so it must resubscribe when communities are added/removed).
 
