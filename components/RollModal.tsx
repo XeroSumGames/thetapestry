@@ -2,8 +2,10 @@
 // Shared roll modal shell - the canonical ATTACK ROLL shape.
 //
 // Visual chrome matches the inline Attack Roll modal in
-// app/stories/[id]/table/page.tsx: 400px draggable panel, colored eyebrow
-// + uppercase title, "2d6 + AMod + SMod" formula line, 52px dice tiles,
+// app/stories/[id]/table/page.tsx: 340px draggable panel, colored eyebrow
+// + uppercase title, three-zone fixed length (top = title + base-roll line
+// with an inline CMod box; variable middle strip; pinned insight + buttons),
+// 52px dice tiles,
 // outcome banner in the feed palette (lib/roll-helpers outcomeColor), green
 // Insight reroll buttons. Drives the non-tabletop + dedicated check modals
 // (Stress / Breaking Point / Lasting Wound / Recruit / Stabilize / Distract /
@@ -20,8 +22,8 @@
 // stays visible behind the roll.
 //
 // Two phases:
-//   - PRE-ROLL: eyebrow + title + formula + optional preRollExtras + CMod
-//     input + Insight pre-roll buttons + warnings + Roll / Cancel.
+//   - PRE-ROLL: eyebrow + title + base-roll line (2d6 + mods + inline CMod box)
+//     + variable middle (preRollExtras / warnings) + Insight buttons + Roll / Cancel.
 //   - POST-ROLL: dice display + outcome banner (or custom renderOutcome) +
 //     optional damage block + Insight reroll buttons + Close.
 
@@ -215,7 +217,7 @@ export default function RollModal(props: RollModalProps) {
           background: '#1a1a1a',
           border: '1px solid #3a3a3a',
           borderRadius: '4px',
-          width: '400px',
+          width: '340px',
           maxWidth: 'calc(100vw - 2rem)',
           boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
           fontFamily: 'Carlito, sans-serif',
@@ -245,42 +247,52 @@ export default function RollModal(props: RollModalProps) {
 
           {!result && (
             <>
-              {/* Pre-roll extras (target dropdown, weapon preview, etc.) */}
-              {preRollExtras}
-
-              {/* Formula line - "2d6 + AMod + SMod" (matches ATTACK) */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', flexWrap: 'wrap' }}>
+              {/* Base-roll line - 2d6 + AMod + SMod + compact inline CMod box,
+                  all on one row (locked design 2026-05-24). The CMod box is
+                  pushed right; the old full-width "Conditional Modifier" block
+                  is gone. */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem', fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', alignItems: 'center' }}>
                 <span>2d6</span>
                 {amod !== 0 && <span style={modPart(amod)}>{amod > 0 ? '+' : ''}{amod} AMod</span>}
                 {smod !== 0 && <span style={modPart(smod)}>{smod > 0 ? '+' : ''}{smod} SMod</span>}
+                {setCmod && (
+                  <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase' }}>CMod</span>
+                    <input type="number" value={cmod}
+                      onChange={e => setCmod(parseInt(e.target.value || '0', 10))}
+                      style={{ width: '54px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+                  </span>
+                )}
               </div>
 
-              {/* Optional itemized CMod breakdown */}
-              {cmodBreakdown && cmodBreakdown.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '10px', padding: '6px 10px', background: '#0f0f0f', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
-                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>
-                    CMod Stack
-                  </div>
-                  {cmodBreakdown.map((row, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9' }}>
-                      <span>{row.label}</span>
-                      <span style={{ color: row.value >= 0 ? '#7fc458' : '#f5a89a', fontWeight: 700 }}>{row.value >= 0 ? `+${row.value}` : row.value}</span>
+              {/* MIDDLE strip - variable per modal (CMod breakdown, caller
+                  preRollExtras, warnings). Reserves a consistent height so a
+                  blank middle (e.g. Stabilize) is the same length as a populated
+                  one (e.g. Distract) - the three-zone fixed length. */}
+              <div style={{ minHeight: '70px' }}>
+                {cmodBreakdown && cmodBreakdown.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '10px', padding: '6px 10px', background: '#0f0f0f', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
+                    <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>
+                      CMod Stack
                     </div>
-                  ))}
-                </div>
-              )}
+                    {cmodBreakdown.map((row, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9' }}>
+                        <span>{row.label}</span>
+                        <span style={{ color: row.value >= 0 ? '#7fc458' : '#f5a89a', fontWeight: 700 }}>{row.value >= 0 ? `+${row.value}` : row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-              {/* CMod input */}
-              {setCmod && (
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ display: 'block', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    Conditional Modifier
-                  </label>
-                  <input type="number" value={cmod}
-                    onChange={e => setCmod(parseInt(e.target.value || '0', 10))}
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
-                </div>
-              )}
+                {/* Pre-roll extras (target dropdown, weapon preview, etc.) -
+                    now BELOW the base-roll line per the locked order. */}
+                {preRollExtras}
+
+                {/* Warnings */}
+                {warnings && (
+                  <div style={{ marginBottom: '10px' }}>{warnings}</div>
+                )}
+              </div>
 
               {/* Insight Dice pre-roll buttons */}
               {insightAvail && setPreRollInsight && (
@@ -302,11 +314,6 @@ export default function RollModal(props: RollModalProps) {
                     })}
                   </div>
                 </div>
-              )}
-
-              {/* Warnings */}
-              {warnings && (
-                <div style={{ marginBottom: '10px' }}>{warnings}</div>
               )}
 
               {/* Roll button - only when the caller wired up onRoll. */}
