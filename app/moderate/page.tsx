@@ -10,6 +10,10 @@ import {
   loadWorldCommunitiesByStatus, loadModulesByStatus, loadForumThreadsByStatus,
   loadWarStoriesByStatus, loadLfgPostsByStatus, getProfileRole,
   usernamesByIds, campaignNamesByIds,
+  updateBugReport, insertNotification, updateWorldNpc, updateWorldCommunity,
+  deleteWorldCommunity, updateModule, lockModuleVersions, updateForumThread,
+  deleteForumThread, updateWarStory, deleteWarStory, updateLfgPost, deleteLfgPost,
+  updateProfile, updateRumorPin, deleteRumorPin,
 } from '../../lib/data/moderation'
 
 interface Pin {
@@ -134,7 +138,7 @@ export default function ModerationPage() {
   }
 
   async function setBugStatus(bugId: string, nextStatus: 'open' | 'triaged' | 'fixed' | 'wontfix') {
-    await supabase.from('bug_reports').update({ status: nextStatus }).eq('id', bugId)
+    await updateBugReport(bugId, { status: nextStatus })
     setBugs(prev => prev.map(b => b.id === bugId ? { ...b, status: nextStatus } : b))
     void loadPendingCounts()
   }
@@ -152,10 +156,7 @@ export default function ModerationPage() {
     try {
       const { user } = await getCachedAuth()
       const nowIso = new Date().toISOString()
-      const { error: updErr } = await supabase
-        .from('bug_reports')
-        .update({ response_text: draft, responded_at: nowIso, responded_by: user?.id ?? null })
-        .eq('id', bug.id)
+      const { error: updErr } = await updateBugReport(bug.id, { response_text: draft, responded_at: nowIso, responded_by: user?.id ?? null })
       if (updErr) {
         console.error('[bug-response] update failed:', updErr.message)
         alert('Could not save response: ' + updErr.message)
@@ -163,7 +164,7 @@ export default function ModerationPage() {
       }
       if (bug.reporter_id) {
         const truncated = draft.length > 140 ? draft.slice(0, 140) + '...' : draft
-        const { error: notifErr } = await supabase.from('notifications').insert({
+        const { error: notifErr } = await insertNotification({
           user_id: bug.reporter_id,
           type: 'bug_report_response',
           title: 'Thriver replied to your bug report',
@@ -257,7 +258,7 @@ export default function ModerationPage() {
   async function handleNpcAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
     const { user } = await getCachedAuth()
-    await supabase.from('world_npcs').update({ status, approved_by: user?.id ?? null, approved_at: new Date().toISOString() }).eq('id', id)
+    await updateWorldNpc(id, { status, approved_by: user?.id ?? null, approved_at: new Date().toISOString() })
     setWorldNpcs(prev => prev.filter(n => n.id !== id))
     setActing(null)
   }
@@ -303,11 +304,11 @@ export default function ModerationPage() {
   async function handleCommunityAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
     const { user } = await getCachedAuth()
-    const { error } = await supabase.from('world_communities').update({
+    const { error } = await updateWorldCommunity(id, {
       moderation_status: status,
       approved_by: user?.id ?? null,
       approved_at: new Date().toISOString(),
-    }).eq('id', id)
+    })
     if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
     // Match the NPC pattern - drop the row from this filter's list so
     // the queue shortens immediately. Switching filter tabs re-fetches.
@@ -318,7 +319,7 @@ export default function ModerationPage() {
   async function handleCommunityDelete(id: string) {
     if (!confirm('Permanently delete this world_communities row? The source campaign community stays intact. Use this to force an unpublish.')) return
     setActing(id)
-    const { error } = await supabase.from('world_communities').delete().eq('id', id)
+    const { error } = await deleteWorldCommunity(id)
     if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
     setWorldCommunities(prev => prev.filter(c => c.id !== id))
     setActing(null)
@@ -343,23 +344,19 @@ export default function ModerationPage() {
     setActing(id)
     const { user } = await getCachedAuth()
     const mod = modules.find(m => m.id === id)
-    const { error } = await supabase.from('modules').update({
+    const { error } = await updateModule(id, {
       moderation_status: status,
       approved_by: user?.id ?? null,
       approved_at: new Date().toISOString(),
-    }).eq('id', id)
+    })
     if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
     // Lock all versions as a platform copy when approving.
     if (status === 'approved') {
-      await supabase
-        .from('module_versions')
-        .update({ platform_locked_at: new Date().toISOString() })
-        .eq('module_id', id)
-        .is('platform_locked_at', null)
+      await lockModuleVersions(id)
     }
     // Notify the author
     if (mod?.author_user_id) {
-      await supabase.from('notifications').insert({
+      await insertNotification({
         user_id: mod.author_user_id,
         type: status === 'approved' ? 'module_approved' : 'module_rejected',
         title: status === 'approved' ? 'Module approved' : 'Module rejected',
@@ -403,11 +400,11 @@ export default function ModerationPage() {
   async function handleForumAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
     const { user } = await getCachedAuth()
-    const { error } = await supabase.from('forum_threads').update({
+    const { error } = await updateForumThread(id, {
       moderation_status: status,
       approved_by: user?.id ?? null,
       approved_at: new Date().toISOString(),
-    }).eq('id', id)
+    })
     if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
     setForumThreads(prev => prev.filter(t => t.id !== id))
     setActing(null)
@@ -416,7 +413,7 @@ export default function ModerationPage() {
   async function handleForumDelete(id: string) {
     if (!confirm('Permanently delete this thread? This also removes all replies.')) return
     setActing(id)
-    const { error } = await supabase.from('forum_threads').delete().eq('id', id)
+    const { error } = await deleteForumThread(id)
     if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
     setForumThreads(prev => prev.filter(t => t.id !== id))
     setActing(null)
@@ -446,11 +443,11 @@ export default function ModerationPage() {
   async function handleWarStoryAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
     const { user } = await getCachedAuth()
-    const { error } = await supabase.from('war_stories').update({
+    const { error } = await updateWarStory(id, {
       moderation_status: status,
       approved_by: user?.id ?? null,
       approved_at: new Date().toISOString(),
-    }).eq('id', id)
+    })
     if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
     setWarStories(prev => prev.filter(s => s.id !== id))
     setActing(null)
@@ -459,7 +456,7 @@ export default function ModerationPage() {
   async function handleWarStoryDelete(id: string) {
     if (!confirm('Permanently delete this story? Attachments are NOT auto-cleaned (manual S3 cleanup if needed).')) return
     setActing(id)
-    const { error } = await supabase.from('war_stories').delete().eq('id', id)
+    const { error } = await deleteWarStory(id)
     if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
     setWarStories(prev => prev.filter(s => s.id !== id))
     setActing(null)
@@ -485,11 +482,11 @@ export default function ModerationPage() {
   async function handleLfgAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
     const { user } = await getCachedAuth()
-    const { error } = await supabase.from('lfg_posts').update({
+    const { error } = await updateLfgPost(id, {
       moderation_status: status,
       approved_by: user?.id ?? null,
       approved_at: new Date().toISOString(),
-    }).eq('id', id)
+    })
     if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
     setLfgPosts(prev => prev.filter(p => p.id !== id))
     setActing(null)
@@ -498,7 +495,7 @@ export default function ModerationPage() {
   async function handleLfgDelete(id: string) {
     if (!confirm('Permanently delete this LFG post? Attached interest rows go too.')) return
     setActing(id)
-    const { error } = await supabase.from('lfg_posts').delete().eq('id', id)
+    const { error } = await deleteLfgPost(id)
     if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
     setLfgPosts(prev => prev.filter(p => p.id !== id))
     setActing(null)
@@ -557,7 +554,7 @@ export default function ModerationPage() {
 
   async function handleRoleChange(id: string, newRole: typeof SURVIVOR | typeof THRIVER) {
     setActing(id)
-    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', id)
+    const { error } = await updateProfile(id, { role: newRole })
     if (error) {
       alert(`Failed to update role: ${error.message}`)
     } else {
@@ -580,7 +577,7 @@ export default function ModerationPage() {
     }
     const patch: Record<string, any> = { suspended_until }
     if (reason !== undefined) patch.suspended_reason = reason || null
-    const { error } = await supabase.from('profiles').update(patch).eq('id', id)
+    const { error } = await updateProfile(id, patch)
     if (error) {
       alert(`Suspension update failed: ${error.message}`)
     } else {
@@ -690,14 +687,14 @@ export default function ModerationPage() {
 
   async function handleAction(id: string, action: 'approved' | 'rejected') {
     setActing(id)
-    await supabase.from('map_pins').update({ status: action }).eq('id', id)
+    await updateRumorPin(id, { status: action })
     setPins(prev => prev.filter(p => p.id !== id))
     setActing(null)
   }
 
   async function handleDelete(id: string) {
     setActing(id)
-    await supabase.from('map_pins').delete().eq('id', id)
+    await deleteRumorPin(id)
     setPins(prev => prev.filter(p => p.id !== id))
     setActing(null)
   }
