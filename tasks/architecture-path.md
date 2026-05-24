@@ -66,12 +66,14 @@ After A1 (so the schema change is a proper migration). Independent of the Stage-
 - **Gate:** tsc + suite + a focused 2-client conditions smoke.
 
 ### Stage C - Client-state layer (review move #1 - THE big one)
-The structural dissolution. This is what actually shrinks `page.tsx` (still 10,557 LOC) and the other god-components, because it gives orchestration state a home OTHER than the route component. Starts only after Gate 0.
+The structural dissolution. This is what actually shrinks `page.tsx` (still ~10.5k LOC) and the other god-components, because it gives orchestration state a home OTHER than the route component. Starts only after Gate 0. **DESIGN DONE 2026-05-24 (grounded in a verified audit): [tasks/stage-c-client-state-design.md](stage-c-client-state-design.md).**
 
-- **C1. Design doc + technology decision** (puffer-fish drafts; the one place a human architect's review is worth buying before the bulk work). My recommended call, with reasoning, is in the next section.
-- **C2. Pilot on ONE already-seamed, NON-combat-critical god-component** - `MapView` (2,022) or `vehicle` (2,076), NOT the table page. Migrate it fully onto the chosen state layer as the reference implementation. Validate (2-client + the E2E net from Stage D). This proves the pattern on a small surface before it touches anything load-bearing.
-- **C3. Propagate** to the remaining god-components in ascending risk, **table page LAST** (combat-critical, 10.5k LOC, the hardest and the one a regression hurts most). Each migration: behavior-preserving, ratchet-locked (the LOC ceilings finally ratchet DOWN toward the <400 target instead of just holding), one revert away, smoke-validated.
-- **Gate per component:** tsc + suite + arch ratchet drop + 2-client smoke + E2E where the suite covers it.
+- **C1. Design (done) + a human-architect second opinion** on the two calls below before C3 bulk.
+- **C2. Pilot = `vehicle/page.tsx`** (CONFIRMED over MapView by the audit: smallest at 2,079, zero combat-criticality, only fully-seamed component, 22 useState). Then **MapView** as the multi-query second pilot. Neither touches combat.
+- **C3. Combat-coupled trio** (NpcRoster -> TacticalMap -> CampaignCommunity), then **table page LAST** for its full dissolution.
+- **The sequencing refinement the audit forced:** "table page last" holds for its FULL dissolution, but the **shared combat/initiative slice canNOT wait** - `page.tsx` holds `combatActive`/`initiativeOrder` in local `useState` and PROP-DRILLS them into NpcRoster + TacticalMap (verified). If a child moves to a Zustand combat slice while the page still prop-drills, you get TWO sources of truth for combat order -> mid-combat desync. So the combat slice is LIFTED into the shared store with the FIRST child migration that touches it, and the page is repointed to read it then (decoupled from, and earlier than, the page's full migration). Also lift a shared session/campaign slice early (dedupes the per-component `getUser`+campaign refetch).
+- **Tool split (confirmed by the ~22% server / ~78% orchestration ratio):** TanStack Query for server-state (repos -> queries; realtime -> `invalidateQueries`), Zustand slices for orchestration. Zustand is the bigger lever here.
+- **Gate per component:** tsc + suite + arch ratchet DROP + 2-client smoke + E2E where the suite covers it.
 
 ### Stage D - Test pyramid (review move #5) - runs PARALLEL throughout
 Not a final phase - the automated net that lets Stages B/C move safely. The Playwright "final test" suite is already in motion (`tasks/e2e-final-test-handoff-2026-05-24.md`). Mature it alongside the migrations: **seam-contract tests** (repo function shape, channel payload shape) as each layer stabilizes, and **E2E coverage of the golden combat path** (the desync class no unit test can catch). Goal: replace "a human with two browser windows" as the detector. Each Stage-C component should have an automated net before its migration, not after.
