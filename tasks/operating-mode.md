@@ -157,18 +157,17 @@ Honest about the limits so we don't fool ourselves:
 
 ## Multi-chat lanes
 
-Tapestry runs across two Claude chats by deliberate split (per Xero 2026-05-20):
+Tapestry runs across THREE always-on Claude chats by deliberate split (2026-05-24; was a two-lane split through 2026-05-23):
 
-- **Puffer-fish chat** - architecture, risk, audit, observability, scaffolding. Owns: stability audits, slash-convention scaffolding, operating-mode + debug-handoff + handoff maintenance, Risk Register triage, ops runbooks (Y11 / Y12 / R4 / R10), pre-launch audit follow-ups, lessons + decisions infrastructure. Read-only or doc-first work fits this lane; load-bearing refactors only when explicitly assigned.
-- **Hunt-and-peck chat** - tactical bug fixes, feature ships, narrative tweaks, modal migrations, day-to-day shipping. Owns: Stabilize / Distract / FI migrations, mounted-weapon narrative upgrades, Brew Check rework, playtest-bug triage, anything "one specific fix to a specific user-facing thing."
+- **Hunt & Peck** - tactical bug fixes, feature ships, narrative tweaks, modal migrations, day-to-day shipping. The only lane that edits app code (`app/`, `components/`, `lib/`, incl. the table page).
+- **Puffer Fish** - architecture, risk, audit, security, observability, scaffolding. Owns stability/security audits, the operating docs (operating-mode / debug-handoff / handoff), Risk Register triage, SQL/RLS/trigger changes, lessons + decisions infrastructure. Doc-first; load-bearing refactors only when explicitly assigned.
+- **Playwright / E2E** - the automated acceptance suite and its plans (`e2e/`, `playwright.config.ts`, coverage map, test plans, results dashboard). Almost purely additive; reads app code, rarely edits it; runs against prod. Surfaces regressions + findings and ROUTES them to the owning lane rather than fixing cross-lane.
 
-Coordination is via the shared substrate (commits, lessons.md, todo.md, debug-handoff.md, the handoff file). Neither chat sees the other's in-flight thinking; they see each other's commits + doc updates. Rebase conflicts happen and are accepted as the cost of parallel work; both chats handle their own rebases without coordination.
+Coordination is via the shared substrate (commits, `todo.md`, `lessons.md`, `debug-handoff.md`, `handoff.md`, and the live board `active-lanes.md`) - never direct messages; no chat sees another's in-flight thinking. Setup + conventions live in `tasks/lane-protocol.md` (worktree-per-lane, shared-doc discipline, tiebreaker, the E2E safety net). Rebase conflicts on push are the accepted cost of parallel work; each lane handles its own rebase. Both the Handoff accuracy contract and `scripts/start-session.sh` staleness reporting still apply.
 
-Because the two lanes ship in parallel, any handoff or resume-pointer prose one lane writes goes stale the moment the other lane commits. Both lanes follow the **Handoff accuracy contract** (`tasks/handoff.md`): on write, derive every factual claim (HEAD, test count, what shipped, what's next) from git/disk in the same turn, never from memory; on read, treat Session-State as hypothesis and spot-verify before acting. `sh scripts/start-session.sh` now reports how many commits behind main each state file is, so cross-lane drift is visible at session start.
+**Tiebreaker when unsure which lane owns a request:** test/coverage -> E2E; structure/risk/security/SQL/operating-docs -> Puffer Fish; specific user-facing fix/feature -> Hunt & Peck; if it belongs to another lane, write a `todo.md` line and let that lane pick it up rather than cross-editing its hot files.
 
-**When in doubt about which lane a request belongs to**, the puffer-fish chat (this one) defaults to "is this a structural / observability / doc / risk question?" If yes, work it here. If it's "fix this specific bug" or "ship this specific feature," redirect to the hunt-and-peck chat.
-
-The earlier MEMORY.md entry `process_multi_chat_tracks` lists three tracks (tactical / infrastructure / organize-thoughts); the canonical model is now this two-lane split. Memory entry to be refreshed accordingly.
+The earlier MEMORY.md entry `process_multi_chat_tracks` (and the prior two-lane prose here) are superseded by this three-lane split. Memory entry to be refreshed accordingly.
 
 ---
 

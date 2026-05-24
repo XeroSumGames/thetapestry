@@ -16,9 +16,9 @@ Format per lane: **focus** (what right now) / **touching** (files/area) /
 - **updated:** 2026-05-24, HEAD 0b440e2 (rebases on push).
 
 ## Puffer Fish
-- **focus:** (1) applying the 3-lane operating-mode update; (2) triaging the map_pins moderation-bypass finding into the Risk Register + writing the fix SQL (apply gated on Xero). Background: Stage B #5 phase-1 shipped; #5 phase-2 routing pending the manual conditions smoke.
-- **touching:** `tasks/operating-mode.md`, `tasks/debug-handoff.md`, `tasks/active-lanes.md`, `tasks/todo.md` (Puffer section), `sql/` (new map_pins trigger file). NO `app/` / `components/` / `lib/` / `e2e/` edits.
-- **updated:** 2026-05-24, HEAD 0b440e2.
+- **focus:** BATCH DONE. (1) operating-mode.md updated to the 3-lane split. (2) map_pins moderation-bypass triaged -> Risk Register RED/MEDIUM + fix SQL written (`sql/map-pins-moderation-enforce-2026-05-24.sql`, schema-verified, NOT applied - owed to Xero). Lesson captured (client-only moderation = bug class). Now IDLE / available. Carried (not active): #5 phase-2 routing (needs the manual conditions smoke + an isolated worktree; the table page is Hunt&Peck's hot file); #7 lasting-wounds migration (held); Stage C design done (build gated on Phase 7).
+- **touching:** nothing live now (batch committed). NO `app/` / `components/` / `lib/` / `e2e/` edits this batch - docs (`operating-mode`/`debug-handoff`/`todo`/`lessons`/`active-lanes`) + one new `sql/` file only.
+- **updated:** 2026-05-24, committed on top of HEAD 0b440e2 (rebases on push).
 
 ## Playwright / E2E
 - **focus:** Full-suite build, Phase 1 (4/7 green: story-lifecycle, rules-deeplinks, campfire-social, world-pin-to-queue). Next: presence, account-settings. messages-dm parked on Xero's teardown call.

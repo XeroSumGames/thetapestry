@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## Client-only moderation/authorization is a BUG CLASS - when you harden one surface, audit ALL siblings the same turn (2026-05-24)
+
+The E2E lane found `map_pins` world-pin moderation enforced ONLY in the browser (`MapView.tsx:948` sets `status: isThriver ? 'approved' : 'pending'`) with no `BEFORE INSERT` trigger - so a non-Thriver can craft a REST insert (public anon key + own session token) with `pin_type='gm', status='approved'` and publish a world-visible "GM" pin, no review. This is the EXACT class the Y3 pre-launch audit closed for the campfire tables (`enforce_moderation_on_insert`, 2026-05-17) - `map_pins` was just never included in that sweep. Second time the same hole bit.
+
+**Rule:** any rule that gates writes by role/scope must be enforced SERVER-SIDE (RLS or a SECURITY DEFINER `BEFORE INSERT` trigger that overwrites client-supplied moderation/role columns off the real `auth.uid()`), because the anon key + a user's own token make any client check bypassable. And when you add such a trigger to ONE table, immediately grep for every sibling table with the same client-set pattern (`status:`/`moderation_status:`/`role`-gated inserts) and harden them in the same change - a partial sweep leaves a landmine that resurfaces months later. Diagnostic grep: client literals like `isThriver ? 'approved' : 'pending'` across `components/` + `app/`, cross-checked against which tables actually have an enforce trigger. Fix mirror: `sql/map-pins-moderation-enforce-2026-05-24.sql` <- `sql/moderation-enforce-trigger-2026-05-17.sql`.
+
 ## On Vercel Hobby + rapid multi-lane pushes, production can sit behind HEAD - verify the DEPLOYED commit before trusting (or doubting) a live change (2026-05-24)
 
 Xero eyeballed the A2 modal change on the live site and it looked unchanged (old full-width CMod). The code was correct and pushed - the problem was the DEPLOY: production was stuck on a commit several behind HEAD. With three lanes pushing in quick succession on the Hobby plan, Vercel cancels the in-between builds in favor of the latest, and if that latest stalls/errors, production stays frozen on the last good deploy. Diagnosis steps that worked:
