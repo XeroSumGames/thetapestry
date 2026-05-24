@@ -175,3 +175,27 @@ Everything else I drive autonomously: build tier by tier, run against prod with 
 
 ## 8. CI
 E2E stays a separate, on-demand/pre-ship gate (not bolted to the fast push gate). Full-CI automation is still gated on the secrets/Turnstile decision in `tasks/todo.md`.
+
+---
+
+## 9. RECONCILIATION vs the newer 14-chapter guide (2026-05-24)
+
+Sections 1-8 above were built from `docs/beginners-guide.txt` (12 chapters, Apr 30). The canonical source is now `docs/Beginners-Guide/` (14 split chapters, May 20). Diffed both; deltas to fold in:
+
+**NEW (plan didn't cover / under-specified):**
+- **R. The Rules (`/rules`)** - NEW Tier-1 read surface (Ch 05): 8 SRD sections + 4 appendices, deep-linkable (`/rules/combat`, `/rules/appendix-tables`, `/rules/equipment/item-traits`). ALREADY swept at Layer 1 (all `/rules/*` are in the 92-route sweep); add explicit deep-link/render assertions.
+- **F. Fog of War** (Ch 08) - was one line; it's a full subsystem behind the canvas bridge: paint / rectangle / erase + Fog All / Clear All; **each PC token clears a 6-cell circle that travels with the player and respects walls (block) / open doors+windows (pass)**; fog persists across reload/reconnect/session; door toggle changes vision RT; terrain objects (walls block move+vision, doors toggle, windows block-move/pass-vision); range circles Engaged 5ft / Move 9ft / Weapon (GM sees all, player sees own); Map Setup is a separate popout; 3 ft/cell drives range (Chebyshev). Read `docs/tactical-map-guide.txt` before writing these.
+- **L. Vehicles** (Ch 11) - was one line; full matrix: seat model (Driver req'd to move + rolls Drive / Navigator / Brewer / Passengers); board via 30ft Close gate + MOVE HERE auto-confirm (RT tokens); disembark; aboard-count badge; fuel tank + 55gal drums (install/transfer/refill); GATHER MATERIALS -> brew banner; shared co-edited cargo (RT); vehicle WP/RP damage + Lasting Wounds chip; Driver DRIVE / Navigate combat actions + passengers fire from windows; vehicle bubble on campaign map.
+
+**CHANGED (sharpen these):**
+- **K (world map/pins):** 16 categories (8x2 grid) + folders (private/GM-shared); Route Planner (GM, OSM routes + waypoints); pin->scene link (double-click opens); promote-to-world (-> moderation).
+- **D (Table/sessions):** Checks dropdown (Perception/Gut Instinct/First Impression/Group/Opposed/Recruit/Stress); **Advantages** (GM grant via tab or Award-on-roll; player Use broadcasts) - RT, untested; Restore (heal all); GM Notes / Player Notes tabs.
+- **H (Communities):** 13-member Group->Community chip (green/amber/red); Re-balance Roles; Skip Week; Retention Check on 3rd failure; at-a-glance 5-chip block; Community Feed surfaced via Campfire (cross-link N).
+- **G/I (NPC/recruit):** Populate (1A:2F:3G:4B); panic-hide; Publish to World Library; Apprentice unlocks ONLY on double-6 (Wild Success doesn't count).
+- **N (Campfire):** now a portal (Setting Hubs District Zero + Kings Crossroads, Featured Module, Explore, Timestamps tool). Forums confirmed mid-redesign -> keep `forums2` excluded.
+- **M (Rumors):** version diff / "update available" purple button / "Your clone" chip + ratings on the publish->clone net.
+- **C (Story setup):** setting list = Custom / District Zero / Chased / Mongrels / The Arena / Empty + start-from-Rumor (mutually exclusive); story page is inline GM tools (no separate edit page) + Pregens / Snapshots / Clone.
+
+**Confirmed UNCHANGED / already covered:** A (nav/roles/presence), B (4 creation methods + trackers + 0-WP Insight-trade), E (combat flow/initiative/infection/lasting-wounds/malfunction), O (Messages DM), P (account), Q (moderation read).
+
+**Gate 0 (phase7 A-F) is unaffected** - it's the realtime/combat critical-path subset and remains the priority; this reconciliation widens the BROADER coverage backlog (Tiers beyond Gate 0).
