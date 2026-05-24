@@ -3290,7 +3290,7 @@ BEGIN
   -- there's nothing left to clone. Leave status=accepted so the
   -- offerer's notification still fires, but skip the copy.
   IF NEW.source_npc_id IS NULL THEN
-    RAISE NOTICE 'community_migration % accepted but source_npc_id is NULL — skipping auto-copy', NEW.id;
+    RAISE NOTICE 'community_migration % accepted but source_npc_id is NULL - skipping auto-copy', NEW.id;
     RETURN NEW;
   END IF;
 
@@ -3338,7 +3338,7 @@ BEGIN
     RETURNING id INTO v_new_npc_id;
 
     IF v_new_npc_id IS NULL THEN
-      RAISE NOTICE 'community_migration % — source NPC % no longer exists', NEW.id, NEW.source_npc_id;
+      RAISE NOTICE 'community_migration % - source NPC % no longer exists', NEW.id, NEW.source_npc_id;
       RETURN NEW;
     END IF;
 
@@ -3805,7 +3805,7 @@ AS $function$
   -- profiles.role is auto-lowercased by trg_normalize_role (see
   -- tasks/lessons.md), so compare against 'thriver' (lowercase).
   -- The original 'Thriver' check silently no-op'd every godmode
-  -- policy — fixed by sql/thriver-role-case-fix.sql.
+  -- policy - fixed by sql/thriver-role-case-fix.sql.
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid() AND role = 'thriver'
@@ -3904,7 +3904,7 @@ begin
 
   -- 1. Fetch NPC (RLS already restricts to the user's campaigns
   --    via "Campaign members can read campaign npcs", but we're in
-  --    SECURITY DEFINER so we bypass it — the campaign-membership
+  --    SECURITY DEFINER so we bypass it - the campaign-membership
   --    check at step 3 is the real gate).
   select * into v_npc from public.campaign_npcs where id = p_npc_id;
   if not found then
@@ -4000,7 +4000,7 @@ begin
       to_jsonb(coalesce((v_pc_existing->>'qty')::int, 1) + v_take)
     );
   else
-    -- Append a fresh entry — keep the source item's metadata
+    -- Append a fresh entry - keep the source item's metadata
     -- (enc / rarity / notes) but force qty to v_take.
     v_new_item := jsonb_strip_nulls(
       jsonb_build_object(
@@ -4511,7 +4511,7 @@ BEGIN
       v_leader_user_id,
       'community_milestone',
       'Your group is now a Community',
-      COALESCE(v_community_name, 'Your group') || ' has grown to ' || v_count || ' members — it''s officially a Community now.',
+      COALESCE(v_community_name, 'Your group') || ' has grown to ' || v_count || ' members - it''s officially a Community now.',
       '/communities'
     );
 
@@ -4953,7 +4953,7 @@ BEGIN
     'world_community_deleted',
     '🗑 Community unpublished',
     'A Thriver removed your published community "' || OLD.name
-    || '" from the Distemperverse. The source campaign community is untouched — '
+    || '" from the Distemperverse. The source campaign community is untouched - '
     || 'you can re-publish from the Community ▾ → Status panel if you want it back on the world map.',
     '/communities/' || OLD.source_community_id::text,
     jsonb_build_object(
@@ -5029,7 +5029,7 @@ DECLARE
   v_editor_username text;
   v_field_changes text[] := ARRAY[]::text[];
 BEGIN
-  -- Don't fire on moderation transitions — the moderation notifier
+  -- Don't fire on moderation transitions - the moderation notifier
   -- handles those. A moderation flip also usually lands at the same
   -- instant as approved_by/approved_at; suppress those too.
   IF NEW.moderation_status IS DISTINCT FROM OLD.moderation_status THEN
