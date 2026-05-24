@@ -35,3 +35,13 @@ Zero data-testids in source (all 20 hits are planning docs). Use text/role: "Sta
 
 ## RLS identity per seed
 communities INSERT/DELETE = GM token; stockpile = any member; whispers insert = author's own token; map_pins = author's own user_id; vehicle RPC = GM (or member).
+
+---
+
+## CORRECTION (puffer-fish, 2026-05-23): `whispers` IS published - Section E is unblocked
+
+The flagged "whispers not in supabase_realtime" blocker is a FALSE ALARM. Verified against the LIVE DB this turn: `whispers` IS in the publication (alongside map_pins + community_stockpile_items), and `npm run check:publication` is green. The inference came from grepping `sql/` for `ALTER PUBLICATION ADD TABLE whispers` and finding none - but publication membership was never in version control until this session (whispers was published live-only). Do NOT run `ALTER PUBLICATION ... ADD TABLE whispers` - it would error (already a member).
+
+**Authoritative source going forward:** `sql/_baseline/publication.sql` (21 tables, committed) + `npm run check:publication`, NOT a grep of ad-hoc `sql/` files. This confusion is exactly the bug class infra-as-code Stage A1 just closed.
+
+So Section E whispers is good on the publication front. If a whispers propagation test still fails, the cause is elsewhere (note the Phase 7 sheet: the whispers sub only mounts when the whispers tab is active - confirm the tab is open in both contexts) - triage to evidence, not a publication fix.
