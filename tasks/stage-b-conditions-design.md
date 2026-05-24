@@ -27,7 +27,7 @@
 
 ## FLAGGED for Xero (genuine product/canon calls, NOT engineering)
 
-1. **Does the game want NPC stress?** `campaign_npcs` has no `stress` column, so an NPC can never be "stressed out" - every NPC apply path silently omits it. Adding the column is trivial; whether the *mechanic* exists for NPCs is a canon call. If no -> the asymmetry is intended, I document it and move on. If yes -> it's a one-column additive migration (dry-run, your confirm).
+1. **NPC stress - RESOLVED (Xero 2026-05-24): NO, narrative only.** Stress is a PC-only mechanic; for NPCs it is purely narrative flavor, never a tracked stat. So: do NOT add a `campaign_npcs.stress` column - the PC/NPC asymmetry is INTENTIONAL and correct. `addStress` in the conditions API stays PC-only (no NPC branch). No migration. (Locked in `decisions.md`.)
 2. **(Engineering call, mine, but schema-gated to apply):** move PC lasting wounds from `characters.data.lastingWounds` (jsonb-in-data, no realtime) to a real `characters.lasting_wounds` column to match NPCs + get realtime parity. This is a schema change + a one-time backfill. I'll write + dry-run it; applying it is the bright-line confirm.
 
 ## Sequencing within Stage B

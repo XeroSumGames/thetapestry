@@ -10,6 +10,22 @@ Newest first.
 
 ---
 
+## 2026-05-24: NPC stress is narrative-only, not a tracked mechanic
+
+**Decision (Xero):** Stress is a PC-only mechanic. For NPCs it exists ONLY narratively (flavor), never as a tracked stat. `campaign_npcs` therefore gets NO `stress` column - the PC-has-stress / NPC-has-none asymmetry is intentional and correct.
+
+**Alternatives considered:**
+- A. Add `campaign_npcs.stress` for PC/NPC symmetry (the conditions audit flagged the asymmetry as a possible gap).
+- B. Leave NPCs without a stress stat; stress stays PC-only (chosen).
+
+**Why B won:** the audit surfaced "an NPC can never be stressed out" as an inconsistency, but it is by design - the game does not model NPC stress mechanically. Adding the column would invite mechanic creep with no canon backing.
+
+**Impact:** Stage B conditions API `addStress` stays PC-only (no NPC branch); no migration. Documented in `tasks/stage-b-conditions-design.md`.
+
+**What would change our mind:** if canon later introduces an NPC stress mechanic, it becomes a one-column additive migration.
+
+---
+
 ## 2026-05-23: Architecture path beyond the re-arch - sequence + Stage C state-layer call
 
 **Decision:** the re-arch built the foundation (seams); it stops one layer short (page.tsx still 10.5k - orchestration has nowhere to live but the route). The path to "structurally ready for the world / paid launch" (Xero's destination, confirmed by "start planning it all") is `tasks/architecture-path.md`, sequenced by dependency + risk, NOT by leverage:
