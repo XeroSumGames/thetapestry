@@ -1,12 +1,14 @@
-// Capture a Playwright storageState for one role by having a HUMAN log in.
+// Capture a Playwright storageState for one account by having a HUMAN log in.
 // Passwords are never automated. Xero runs this, logs in in the window that
 // opens, and the session JSON is saved (auto on reaching /dashboard, or press
 // Enter in this terminal to save immediately).
 //
-//   node e2e/capture-auth.mjs gm       (logs in as Xero  - xerosumgames@gmail.com)
-//   node e2e/capture-auth.mjs player   (logs in as MARV  - tony_bushell@hotmail.com)
+//   node e2e/capture-auth.mjs gm       (Xero - the GM)
+//   node e2e/capture-auth.mjs marv     (Marv  - player 1)
+//   node e2e/capture-auth.mjs pesky    (Pesky Larue - player 2)
+//   node e2e/capture-auth.mjs percy    (Percy Bent  - player 3)
 //
-// Output: e2e/.auth/<role>.json  (gitignored - it is live credentials).
+// Output: e2e/.auth/<key>.json  (gitignored - it is live credentials).
 // Supabase sessions expire; re-run when the console-sweep reports a /login
 // bounce.
 
@@ -15,15 +17,22 @@ import { mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import readline from 'node:readline'
 
+const WHO = {
+  gm: 'Xero - the GM account (xerosumgames@gmail.com)',
+  marv: 'Marv - player 1 (tony_bushell@hotmail.com)',
+  pesky: 'Pesky Larue - player 2',
+  percy: 'Percy Bent - player 3',
+}
+
 const role = process.argv[2]
-if (role !== 'gm' && role !== 'player') {
-  console.error('Usage: node e2e/capture-auth.mjs <gm|player>')
+if (!role || !/^[a-z0-9_-]+$/i.test(role)) {
+  console.error('Usage: node e2e/capture-auth.mjs <key>   (gm | marv | pesky | percy)')
   process.exit(1)
 }
 
 const BASE = process.env.E2E_BASE_URL ?? 'https://thetapestry.distemperverse.com'
 const outPath = join(process.cwd(), 'e2e', '.auth', `${role}.json`)
-const who = role === 'gm' ? 'Xero (xerosumgames@gmail.com)' : 'MARV (tony_bushell@hotmail.com)'
+const who = WHO[role] ?? `the "${role}" account`
 
 mkdirSync(dirname(outPath), { recursive: true })
 

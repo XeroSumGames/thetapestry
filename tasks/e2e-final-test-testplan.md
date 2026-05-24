@@ -20,6 +20,20 @@ Runs SEPARATELY from the 548 vitest unit tests. `npm test` is unchanged.
 
 ---
 
+## Step 0 - install the browser binary (once per machine)
+
+Playwright needs a chromium build downloaded into THIS machine's cache. Run it
+once from `C:\TheTapestry`:
+
+    npx playwright install chromium
+
+(If you skip this you get: `browserType.launch: Executable doesn't exist at
+...ms-playwright\chromium-XXXX\chrome.exe`. The fix is just this command. Note:
+the browser cache is per-shell-environment, so installing it elsewhere does not
+satisfy your own terminal - run it in the PowerShell you actually use.)
+
+---
+
 ## Step 1 - capture login sessions (YOU log in; passwords never automated)
 
 A browser window opens; log in; the session saves automatically when you
