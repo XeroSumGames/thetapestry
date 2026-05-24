@@ -6221,7 +6221,7 @@ export default function TablePage() {
                           style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '12px' }}>
                           <option value="">Select target...</option>
                           {allTargets.map(t => (
-                            <option key={t.id} value={t.character_name}>{t.character_name}{t.is_npc ? ' (NPC)' : ''}</option>
+                            <option key={t.id} value={t.character_name} style={{ color: targetOptionColor(t.is_npc, !!activeEntry.is_npc) }}>{t.character_name}{t.is_npc ? ' (NPC)' : ''}</option>
                           ))}
                         </select>
                         <div style={{ display: 'flex', gap: '8px' }}>
