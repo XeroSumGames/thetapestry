@@ -3779,24 +3779,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             toggle button); expands into paint/erase + bulk controls
             when in edit mode. Hidden entirely from players. */}
         {isGM && scene && (
-          <div ref={setFogBarRef} style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
-            {/* Drag handle. ⠿ braille dots are universal "grippy" UX
-                - same icon GmNotes / NpcRoster / CampaignPins all use
-                for drag-to-reorder. mousedown starts the drag, doc-
-                level listeners track move + up so the cursor doesn't
-                have to stay on the handle. The drag is clamped to the
-                canvas wrapper bounds so the bar can never be parked
-                off-screen. */}
-            <div onMouseDown={startFogBarDrag}
-              title="Drag to reposition the fog/lighting toolbar"
-              style={{ cursor: 'move', color: '#5a5550', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 4px', flexShrink: 0 }}>⠿</div>
-            {/* Reset - only shown once moved off the computed center;
-                snaps back to the top-center default. */}
-            {fogBarMoved && (
-              <button onClick={resetFogBarPos}
-                title="Reset toolbar to default position (top-center)"
-                style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', lineHeight: 1, cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}>↺</button>
-            )}
+          <div ref={setFogBarRef} style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '208px' }}>
+            {/* Header row (full width): drag handle ⠿ + reset ↺. The bar is a
+                2-column grid; single-item rows span both columns. */}
+            <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div onMouseDown={startFogBarDrag}
+                title="Drag to reposition the fog/lighting toolbar"
+                style={{ cursor: 'move', color: '#5a5550', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 4px' }}>⠿</div>
+              {fogBarMoved && (
+                <button onClick={resetFogBarPos}
+                  title="Reset toolbar to default position (top-center)"
+                  style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', lineHeight: 1, cursor: 'pointer', padding: '0 4px' }}>↺</button>
+              )}
+            </div>
             {/* Day / Night toggle - outdoor scenes default 'day' (PCs
                 see for miles, only walls block). Indoor/dark scenes
                 flip to 'night' (per-token sight_radius governs;
@@ -3816,19 +3811,24 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                 </button>
               )
             })()}
-            {!fogEditMode && (
-              <button onClick={() => setFogEditMode('paint')}
-                title="Paint fog over cells the players shouldn't see. Drag to fog regions, switch to erase to clear."
-                style={{ padding: '4px 10px', background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
-                🌫️ Edit Fog
-              </button>
-            )}
+            {/* Edit Fog: persistent toggle (row 1, col 2). Open -> reveals the
+                tool grid below; click again (or Done) to collapse. */}
+            <button onClick={() => setFogEditMode(fogEditMode ? null : 'paint')}
+              title={fogEditMode ? 'Close the fog + structure tools' : 'Open the fog + structure tools'}
+              style={{ padding: '4px 10px', background: fogEditMode ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode ? '#c4a7f0' : '#5a2e5a'}`, borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+              🌫️ Edit Fog
+            </button>
             {fogEditMode && (
               <>
                 <button onClick={() => setFogEditMode('paint')}
                   title="Drag to fog cells one at a time"
                   style={{ padding: '4px 10px', background: fogEditMode === 'paint' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'paint' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'paint' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   Paint
+                </button>
+                <button onClick={() => setFogEditMode('erase')}
+                  title="Drag to clear fog cells one at a time"
+                  style={{ padding: '4px 10px', background: fogEditMode === 'erase' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'erase' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'erase' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  Erase
                 </button>
                 <button onClick={() => setFogEditMode('rect')}
                   title="Drag a rectangle to fog every cell inside on release"
@@ -3840,30 +3840,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   style={{ padding: '4px 10px', background: fogEditMode === 'rect-erase' ? '#2a1210' : '#1a1a1a', border: `1px solid ${fogEditMode === 'rect-erase' ? '#f5a89a' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'rect-erase' ? '#f5a89a' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   Rect-Erase
                 </button>
-                <button onClick={() => setFogEditMode('erase')}
-                  title="Drag to clear fog cells one at a time"
-                  style={{ padding: '4px 10px', background: fogEditMode === 'erase' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'erase' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'erase' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
-                  Erase
-                </button>
-                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
-                {/* Select cursor - click any wall/door/window segment
-                    to highlight it. The action panel below the toolbar
-                    exposes delete + open/close + kind conversion. Same
-                    half-cell hit threshold as the right-click delete
-                    so the gestures feel consistent. */}
                 <button onClick={() => setFogEditMode('select')}
                   title="Click a wall/door/window to select it. Action panel below shows delete + open/close + convert."
-                  style={{ padding: '4px 10px', background: fogEditMode === 'select' ? '#1f1f2e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'select' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'select' ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  style={{ gridColumn: '1 / -1', padding: '4px 10px', background: fogEditMode === 'select' ? '#1f1f2e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'select' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'select' ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   ↖ Select
                 </button>
-                {/* Wrap to line 2 here: structure + bulk tools below, fog/select above (too busy on one line). */}
-                <div style={{ flexBasis: '100%', height: 0 }} />
-                {/* Structure tools - author thin wall/door/window
-                    segments on cell edges. Click two intersections to
-                    place a segment; segments chain (the second click
-                    becomes the next segment's start) so an L-shaped
-                    wall is two clicks. ESC or pick a different tool
-                    to stop. Right-click any segment to delete it. */}
                 <button onClick={() => { setFogEditMode('wall'); setWallDrawStart(null) }}
                   title="Draw walls - click intersection-to-intersection. Right-click a segment to delete."
                   style={{ padding: '4px 10px', background: fogEditMode === 'wall' ? '#2a2010' : '#1a1a1a', border: `1px solid ${fogEditMode === 'wall' ? '#a08e75' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'wall' ? '#a08e75' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
@@ -3884,7 +3865,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   style={{ padding: '4px 10px', background: fogEditMode === 'window' ? '#0f1a2e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'window' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'window' ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   🪟 Window
                 </button>
-                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
                 <button onClick={() => {
                     if (!scene) return
                     const all: Record<string, boolean> = {}
@@ -3894,24 +3874,20 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     setFogLocal(all); fogLocalRef.current = all; scheduleFogPersist()
                   }}
                   title="Fog the whole scene"
-                  style={{ padding: '4px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ gridColumn: '1 / -1', padding: '4px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Fog All
                 </button>
                 <button onClick={() => {
                     setFogLocal({}); fogLocalRef.current = {}; scheduleFogPersist()
                   }}
                   title="Clear all fog"
-                  style={{ padding: '4px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ gridColumn: '1 / -1', padding: '4px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Clear All
                 </button>
-                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
-                {/* Hint banner - shown only in structure-edit modes
-                    so the GM knows right-click + clear-walls exist
-                    without digging through tooltips. */}
                 {(fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') && (
                   <>
                     <span title="Right-click any segment to delete it"
-                      style={{ padding: '4px 8px', background: 'transparent', border: '1px dashed #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4px 8px', background: 'transparent', border: '1px dashed #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                       ⌫ Right-click to delete
                     </span>
                     <button onClick={() => {
@@ -3921,15 +3897,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                         scheduleWallsPersist()
                       }}
                       title="Wipe all wall/door/window segments on this scene"
-                      style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ gridColumn: '1 / -1', padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Clear Walls
                     </button>
-                    <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
                   </>
                 )}
                 <button onClick={() => setFogEditMode(null)}
                   title="Exit fog editing - players see fog as-painted"
-                  style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  style={{ gridColumn: '1 / -1', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   Done
                 </button>
               </>
