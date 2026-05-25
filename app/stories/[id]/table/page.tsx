@@ -71,6 +71,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
+import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../lib/tactical-view'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
@@ -7696,6 +7697,7 @@ export default function TablePage() {
                     return (
                       <div onClick={async e => {
                         e.stopPropagation()
+                        if (!claimToggleLock(entry.character.id)) return // ignore re-clicks until the place/remove + refresh settle (else a 2nd click toggles it back off)
                         if (onMap) {
                           // Remove from map - find and delete the token
                           const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
