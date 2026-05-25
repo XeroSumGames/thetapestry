@@ -343,6 +343,8 @@
     <li><a href="#driving">Drive</a></li>
     <li><a href="#brew">Brew</a></li>
     <li><a href="#navigate">Navigate</a></li>
+    <li><a href="#vehicle-install">Install Fuel Drum</a></li>
+    <li><a href="#vehicle-gather">Gather Materials (check)</a></li>
     <li><strong>System / out-of-combat</strong></li>
     <li><a href="#wound-infection-warning">Wound Infection warning</a></li>
     <li><a href="#weapon-malfunction">Weapon malfunction</a></li>
@@ -1022,8 +1024,26 @@
   <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake misfires Minnie's Mounted MG catastrophically</div></div>
   <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake fires Minnie's Mounted MG and the shot goes wide but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
-  <h3 id="gather-materials">Gather Materials (event row, Q4-d 2026-05-19)</h3>
-  <p class="note">Passive 1-day action — clicking "+ Gather Materials" on the vehicle's Brewing Supplies panel bumps <code>brewing_supplies_current</code> by 1 and inserts a system row in the feed. No dice, no failure mode. <code>outcome='gather_materials'</code>; label rendered verbatim by <code>compactRollSummary</code>. Brew check is BLOCKED when supplies = 0; every Brew attempt consumes 1 day of supplies (success or fail).</p>
+  <h3 id="vehicle-install">Install Fuel Drum (INSTALL prefix, dice-gated 2026-05-24)</h3>
+  <p class="note">Vehicle fuel-drum install check (Mechanic* or Tinkerer; roller picked from the whole crew). Label: <code>&lt;name&gt; - Install - &lt;vehicle&gt; (&lt;skill&gt;)</code>. Outcome-keyed narrative; the precise effect (capacity +1 / drum damaged + lost / drum lost + a tank of fuel wasted) also shows as a badge in the popout modal. Rulings + resolution in <code>lib/vehicle-checks.ts</code> (<code>applyInstallOutcome</code>).</p>
+  <div class="row green"><div class="row-head"><span class="name">Mac</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">INSTALL Mac fits a fuel drum to Minnie flawlessly - +1 day of storage</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Mac</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">INSTALL Mac fits a fuel drum to Minnie - +1 day of storage, and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Mac</span><div class="right"><span class="time">2:55 PM</span><span class="toggle">▸</span></div></div><div class="narrative">INSTALL Mac fits a fuel drum to Minnie - +1 day of storage</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Mac</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">INSTALL Mac botches the fitting - the drum is damaged and lost</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Mac</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">INSTALL Mac loses the drum and wastes a tank of Minnie's fuel</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Mac</span><div class="right"><span class="time">2:56 PM</span><span class="toggle">▸</span></div></div><div class="narrative">INSTALL Mac botches the fitting - the drum is lost, but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h3 id="vehicle-gather">Gather Materials - skill check (GATHER prefix, dice-gated 2026-05-24)</h3>
+  <p class="note">Vehicle brewing-materials scavenge check (Scavenging; roller picked from the whole crew). Label: <code>&lt;name&gt; - Gather - &lt;vehicle&gt; (Scavenging)</code>. Wild = +2 days, Success/HI = +1, Failure/Low/Dire = nothing (Dire adds a GM-narrative note). Day count shows as a badge in the popout modal. Resolution in <code>lib/vehicle-checks.ts</code> (<code>applyGatherOutcome</code>). Supersedes the passive no-dice event row below (kept for historical rows).</p>
+  <div class="row green"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:58 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree scavenges a haul of brewing materials for Minnie - 2 days</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:58 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree scavenges brewing materials for Minnie - 1 day, and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:58 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree scavenges brewing materials for Minnie - 1 day</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:59 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree finds no usable brewing materials</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:59 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree comes back empty-handed and the worse for it</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:59 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree finds nothing, but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h3 id="gather-materials">Gather Materials (passive event row, Q4-d 2026-05-19 - SUPERSEDED by the dice check above; kept for historical rows)</h3>
+  <p class="note">The original passive 1-day action - clicking "+ Gather Materials" bumped <code>brewing_supplies_current</code> by 1 and inserted a system row with no dice. As of 2026-05-24 that button opens the Scavenging check above instead, but old rows with <code>outcome='gather_materials'</code> still render verbatim via <code>compactRollSummary</code>. Brew check is BLOCKED when supplies = 0; every Brew attempt consumes 1 day of supplies (success or fail).</p>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">11:00 AM</span></div></div><div class="narrative">Minnie stockpile updated - gathered 1 day of brewing materials (now 1/2)</div></div>
   <div class="row" style="border-left-color: var(--text);"><div class="row-head"><span class="name">System</span><div class="right"><span class="time">12:00 PM</span></div></div><div class="narrative">Minnie stockpile updated - gathered 1 day of brewing materials (now 2/2)</div></div>
 

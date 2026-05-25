@@ -876,6 +876,45 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       default:              return `NAVIGATE ${name} ${hit ? 'charts the route for' : 'loses the route for'} ${veh}`
     }
   }
+  // Install - "<name> - Install - <vehicle> (<skill>)". Vehicle fuel-drum
+  // install check (Mechanic* / Tinkerer). INSTALL prefix mirrors DRIVE /
+  // BREW / NAVIGATE. Outcome-keyed; the precise effect (capacity +1 /
+  // drum damaged + lost / drum lost + a tank wasted) also shows in the
+  // popout modal - the feed line is the flavor narrative.
+  const installMatch = suffix.match(/^Install\s+-\s+(.+?)\s+\((.+?)\)$/)
+  if (installMatch) {
+    const veh = installMatch[1].trim()
+    const name = r.character_name
+    switch (r.outcome) {
+      case 'Wild Success':  return `INSTALL ${name} fits a fuel drum to ${veh} flawlessly - +1 day of storage`
+      case 'High Insight':  return `INSTALL ${name} fits a fuel drum to ${veh} - +1 day of storage, and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `INSTALL ${name} fits a fuel drum to ${veh} - +1 day of storage`
+      case 'Failure':       return `INSTALL ${name} botches the fitting - the drum is damaged and lost`
+      case 'Dire Failure':  return `INSTALL ${name} loses the drum and wastes a tank of ${veh}'s fuel`
+      case 'Low Insight':   return `INSTALL ${name} botches the fitting - the drum is lost, but has a Moment of Insight as to why it went so badly`
+      default:              return `INSTALL ${name} works on ${veh}'s fuel storage`
+    }
+  }
+  // Gather - "<name> - Gather - <vehicle> (Scavenging)". Vehicle brewing-
+  // materials scavenge check. GATHER prefix mirrors DRIVE / BREW /
+  // NAVIGATE. Outcome-keyed (Wild = 2 days, Success/HI = 1, the rest
+  // nothing); the day count also shows in the popout modal. (Distinct
+  // from the passive no-dice "stockpile updated" event row, which is
+  // still rendered verbatim for historical rows.)
+  const gatherVehicleMatch = suffix.match(/^Gather\s+-\s+(.+?)\s+\((.+?)\)$/)
+  if (gatherVehicleMatch) {
+    const veh = gatherVehicleMatch[1].trim()
+    const name = r.character_name
+    switch (r.outcome) {
+      case 'Wild Success':  return `GATHER ${name} scavenges a haul of brewing materials for ${veh} - 2 days`
+      case 'High Insight':  return `GATHER ${name} scavenges brewing materials for ${veh} - 1 day, and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `GATHER ${name} scavenges brewing materials for ${veh} - 1 day`
+      case 'Failure':       return `GATHER ${name} finds no usable brewing materials`
+      case 'Dire Failure':  return `GATHER ${name} comes back empty-handed and the worse for it`
+      case 'Low Insight':   return `GATHER ${name} finds nothing, but has a Moment of Insight as to why it went so badly`
+      default:              return `GATHER ${name} scavenges for brewing materials`
+    }
+  }
   // Loot - label "🎒 <name> looted <items> from <container>". Narrative
   // compact banner hides WHAT was looted (keeps players reading the log
   // without spoiling everyone's hauls); ▸ expand reveals the full list.

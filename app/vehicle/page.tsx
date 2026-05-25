@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
-import { insertRollLog } from '../../lib/data/roll-log'
 import {
   getCampaignVehicles, getProfileRole, getMembership, campaignMembersWithCharacters,
   campaignNpcsForCrew, activeSceneWithCellFeet, activeSceneId, sceneTokensForRange,
@@ -21,11 +20,11 @@ import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT, findEquipmentByName } from '../../lib/xse-schema'
 import {
-  installFuelDrum, removeFuelDrum, effectiveFuelMaxBase,
+  removeFuelDrum, effectiveFuelMaxBase,
   installedDrumCount, remainingDrumCapacity, drumsInCargo,
 } from '../../lib/fuel-storage'
 import {
-  canGatherMaterials, gatherMaterials,
+  canGatherMaterials,
   effectiveBrewingMax, currentBrewingSupplies,
 } from '../../lib/brewing-supplies'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
@@ -1102,17 +1101,9 @@ export default function VehiclePage() {
                       title={installedDrumCount(vehicle) === 0 ? 'No drums installed' : 'Uninstall one drum (returns to cargo)'}
                       style={{ padding: '2px 8px', background: installedDrumCount(vehicle) > 0 ? '#2a1210' : '#1a1a1a', border: `1px solid ${installedDrumCount(vehicle) > 0 ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: installedDrumCount(vehicle) > 0 ? '#f5a89a' : '#3a3a3a', fontSize: '13px', cursor: installedDrumCount(vehicle) > 0 ? 'pointer' : 'not-allowed', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>− Uninstall</button>
                     <button
-                      onClick={() => {
-                        const r = installFuelDrum(vehicle)
-                        if (r.error || !r.vehicle) {
-                          setFuelStorageError(r.error ?? 'Unknown error')
-                          return
-                        }
-                        setFuelStorageError(null)
-                        updateVehicle(r.vehicle)
-                      }}
+                      onClick={() => openCheck('install')}
                       disabled={remainingDrumCapacity(vehicle) === 0 || drumsInCargo(vehicle.cargo) === 0}
-                      title={remainingDrumCapacity(vehicle) === 0 ? 'At cap' : drumsInCargo(vehicle.cargo) === 0 ? 'No 55-Gallon Drum in cargo' : 'Install one drum (+1 day of fuel storage)'}
+                      title={remainingDrumCapacity(vehicle) === 0 ? 'At cap' : drumsInCargo(vehicle.cargo) === 0 ? 'No 55-Gallon Drum in cargo' : 'Roll a Mechanic*/Tinkerer check to install a drum (+1 day of fuel storage)'}
                       style={{ padding: '2px 8px', background: (remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${(remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: (remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? '#7fc458' : '#3a3a3a', fontSize: '13px', cursor: (remainingDrumCapacity(vehicle) > 0 && drumsInCargo(vehicle.cargo) > 0) ? 'pointer' : 'not-allowed', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>+ Install</button>
                   </div>
                 )}
@@ -1132,8 +1123,9 @@ export default function VehiclePage() {
               produces 2 days of fuel. The stockpile lets the party gather
               ahead so they can brew on consecutive days. Brew check is
               blocked when current = 0 (per Q4-d spec - see rollCheck).
-              [Gather] is a passive 1-day action, no dice (per Q4-d 2a):
-              clicking just bumps current by 1 and logs a feed event. */}
+              [Gather] opens a Scavenging skill-check (2026-05-24): Wild = +2
+              days, Success/HI = +1, Failure/Low/Dire = nothing. Resolution +
+              rulings live in lib/vehicle-checks.ts via the useVehicleCheck hook. */}
           {effectiveBrewingMax(vehicle) > 0 && (
             <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginTop: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -1144,33 +1136,9 @@ export default function VehiclePage() {
                 {canEdit && (
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
                     <button
-                      onClick={async () => {
-                        const r = gatherMaterials(vehicle)
-                        if (r.error || !r.vehicle) {
-                          setBrewingSuppliesError(r.error ?? 'Unknown error')
-                          return
-                        }
-                        setBrewingSuppliesError(null)
-                        await updateVehicle(r.vehicle)
-                        // Feed broadcast (gather_materials event tag).
-                        // Verbatim renderer in lib/roll-helpers.ts returns
-                        // the label as-is. Best-effort: a failed insert
-                        // doesn't undo the gather; supplies counter is
-                        // the source of truth.
-                        if (campaignId && myUserId) {
-                          const newCur = r.vehicle.brewing_supplies_current ?? 1
-                          await insertRollLog({
-                            campaign_id: campaignId,
-                            user_id: myUserId,
-                            character_name: null,
-                            label: `${vehicle.name} stockpile updated - gathered 1 day of brewing materials (now ${newCur}/${effectiveBrewingMax(vehicle)})`,
-                            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-                            outcome: 'gather_materials',
-                          })
-                        }
-                      }}
+                      onClick={() => openCheck('gather')}
                       disabled={!canGatherMaterials(vehicle)}
-                      title={!canGatherMaterials(vehicle) ? 'Stockpile is full' : 'Spend 1 day gathering raw materials (+1 supply)'}
+                      title={!canGatherMaterials(vehicle) ? 'Stockpile is full' : 'Roll a Scavenging check to gather brewing materials'}
                       style={{ padding: '2px 8px', background: canGatherMaterials(vehicle) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${canGatherMaterials(vehicle) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: canGatherMaterials(vehicle) ? '#7fc458' : '#3a3a3a', fontSize: '13px', cursor: canGatherMaterials(vehicle) ? 'pointer' : 'not-allowed', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>+ Gather Materials</button>
                   </div>
                 )}

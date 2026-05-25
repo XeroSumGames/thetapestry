@@ -24,6 +24,7 @@ import RollModal, { type RollResult as SharedRollResult } from '../../components
 import { outcomeColor as feedOutcomeColor } from '../../lib/roll-helpers'
 import { SKILLS } from '../../lib/xse-schema'
 import { canBrew, consumeBrewingSupplies, effectiveBrewingMax } from '../../lib/brewing-supplies'
+import { applyInstallOutcome, applyGatherOutcome } from '../../lib/vehicle-checks'
 
 // Eligible driver / brewer - a campaign PC or campaign NPC. Stats are
 // pulled at load time so the Driving / Brew check modal can prefill
@@ -46,7 +47,7 @@ export interface CrewMember {
   skillByName: Record<string, number>  // 'Navigation' | 'Survival' | ... -> level
 }
 
-export type CheckKind = 'driving' | 'brew' | 'attack' | 'navigate'
+export type CheckKind = 'driving' | 'brew' | 'attack' | 'navigate' | 'install' | 'gather'
 type BrewSkill = 'mechanic' | 'tinkerer'
 
 // Mirrors the table in components/TacticalMap.tsx - a weapon's primary
@@ -88,7 +89,9 @@ interface CheckState {
   targetNpcId?: string          // for kind='attack': which NPC is being shot at
   targets?: AttackTarget[]     // for kind='attack': dropdown options (NPCs on active scene)
   rolling: boolean
-  result: { die1: number; die2: number; total: number; outcome: string } | null
+  // message: install/gather only - the precise effect text from
+  // applyInstallOutcome/applyGatherOutcome, shown as a badge in the modal.
+  result: { die1: number; die2: number; total: number; outcome: string; message?: string } | null
 }
 
 // Render a signed integer for display: '+2' / '-3' / '0'. Used in the
@@ -130,6 +133,40 @@ export function useVehicleCheck({
 
   async function openCheck(kind: CheckKind, weaponIdx?: number) {
     if (!vehicle) return
+    // Install / gather maintenance checks have NO assigned vehicle slot -
+    // anyone in the crew can run them. Default the roller to the first
+    // crew member; the modal's roller dropdown lets the GM pick someone
+    // else (recomputes AMod/SMod via switchRoller).
+    if (kind === 'install' || kind === 'gather') {
+      if (crew.length === 0) { alert('Add a crew member to run this check.'); return }
+      const member = crew[0]
+      if (kind === 'install') {
+        // Mechanic* (RSN) vs Tinkerer (DEX) - auto-pick the higher (ties
+        // -> Mechanic*), GM can flip in the modal. Mirrors brew.
+        const useTinkerer = member.tinkererLevel > member.mechanicLevel
+        setCheck({
+          kind, crewId: member.id,
+          amod: useTinkerer ? member.dex : member.rsn,
+          smod: useTinkerer ? member.tinkererLevel : member.mechanicLevel,
+          cmod: 0,
+          brewSkill: useTinkerer ? 'tinkerer' : 'mechanic',
+          rolling: false, result: null,
+        })
+      } else {
+        // gather - Scavenging (ACU).
+        const skillDef = SKILLS.find(s => s.name === 'Scavenging')
+        const attr = skillDef?.attribute ?? 'ACU'
+        setCheck({
+          kind, crewId: member.id,
+          amod: member.attributes[attr] ?? 0,
+          smod: member.skillByName['Scavenging'] ?? 0,
+          cmod: 0,
+          brewSkill: 'mechanic',
+          rolling: false, result: null,
+        })
+      }
+      return
+    }
     let crewId: string | null | undefined
     if (kind === 'driving') crewId = vehicle.driver_character_id
     else if (kind === 'brew') crewId = vehicle.brewer_character_id
@@ -287,10 +324,11 @@ export function useVehicleCheck({
     }
   }
 
-  // Switch brew skill within the modal - also rewires AMOD/SMOD to the
-  // chosen attribute/skill so the GM doesn't have to re-enter them.
+  // Switch Mechanic* / Tinkerer within the modal - also rewires AMOD/SMOD
+  // to the chosen attribute/skill so the GM doesn't have to re-enter them.
+  // Used by both the brew check and the install check (same dual-skill).
   function switchBrewSkill(next: BrewSkill) {
-    if (!check || check.kind !== 'brew') return
+    if (!check || (check.kind !== 'brew' && check.kind !== 'install')) return
     const member = crew.find(c => c.id === check.crewId)
     if (!member) return
     setCheck({
@@ -299,6 +337,35 @@ export function useVehicleCheck({
       amod: next === 'tinkerer' ? member.dex : member.rsn,
       smod: next === 'tinkerer' ? member.tinkererLevel : member.mechanicLevel,
     })
+  }
+
+  // Switch the roller for an install / gather check (these have no fixed
+  // crew slot - any crew member can do them). Recomputes AMOD/SMOD for the
+  // new person: install re-picks Mechanic*/Tinkerer (higher wins), gather
+  // reads their Scavenging.
+  function switchRoller(nextCrewId: string) {
+    if (!check || (check.kind !== 'install' && check.kind !== 'gather')) return
+    const member = crew.find(c => c.id === nextCrewId)
+    if (!member) return
+    if (check.kind === 'install') {
+      const useTinkerer = member.tinkererLevel > member.mechanicLevel
+      setCheck({
+        ...check,
+        crewId: nextCrewId,
+        brewSkill: useTinkerer ? 'tinkerer' : 'mechanic',
+        amod: useTinkerer ? member.dex : member.rsn,
+        smod: useTinkerer ? member.tinkererLevel : member.mechanicLevel,
+      })
+    } else {
+      const skillDef = SKILLS.find(s => s.name === 'Scavenging')
+      const attr = skillDef?.attribute ?? 'ACU'
+      setCheck({
+        ...check,
+        crewId: nextCrewId,
+        amod: member.attributes[attr] ?? 0,
+        smod: member.skillByName['Scavenging'] ?? 0,
+      })
+    }
   }
 
   // Navigate check skill swap. Default is Navigation (ACU); the picker
@@ -345,6 +412,43 @@ export function useVehicleCheck({
     const total = die1 + die2 + check.amod + check.smod + check.cmod
     const outcome = classifyRoll(total, die1, die2)
     const member = crew.find(c => c.id === check.crewId)
+
+    // Maintenance checks (install fuel drum / gather brewing materials).
+    // Own resolution path: apply the locked outcome mechanics from
+    // lib/vehicle-checks, log a roll, persist the vehicle. No fuel-brew /
+    // attack-damage / initiative logic applies to these.
+    if (check.kind === 'install' || check.kind === 'gather') {
+      const res = check.kind === 'install'
+        ? applyInstallOutcome(vehicle, outcome)
+        : applyGatherOutcome(vehicle, outcome)
+      const skillName = check.kind === 'install'
+        ? (check.brewSkill === 'tinkerer' ? 'Tinkerer' : 'Mechanic*')
+        : 'Scavenging'
+      const verb = check.kind === 'install' ? 'Install' : 'Gather'
+      const label = `${member?.name ?? '-'} - ${verb} - ${vehicle.name} (${skillName})`
+      await insertRollLog({
+        campaign_id: campaignId,
+        user_id: myUserId,
+        character_name: member?.name ?? null,
+        label,
+        die1, die2,
+        amod: check.amod, smod: check.smod, cmod: check.cmod, total,
+        outcome,
+        damage_json: {
+          vehicleId: vehicle.id,
+          vehicleName: vehicle.name,
+          checkKind: check.kind,
+          skillLabel: skillName,
+          crewId: check.crewId,
+          crewKind: member?.kind ?? null,
+          effectMessage: res.message,
+        },
+      })
+      if (res.vehicle) await updateVehicle(res.vehicle)
+      setCheck({ ...check, rolling: false, result: { die1, die2, total, outcome, message: res.message } })
+      return
+    }
+
     const weapon = check.kind === 'attack' && check.weaponIndex != null
       ? vehicle.mounted_weapons?.[check.weaponIndex]
       : undefined
@@ -568,7 +672,11 @@ export function useVehicleCheck({
         ? 'Brew Check'
         : check.kind === 'navigate'
           ? 'Navigate Check'
-          : `${modalWeapon?.name ?? 'Mounted Weapon'} Attack`
+          : check.kind === 'install'
+            ? 'Install Fuel Drum'
+            : check.kind === 'gather'
+              ? 'Gather Materials'
+              : `${modalWeapon?.name ?? 'Mounted Weapon'} Attack`
     const subtitle = `${member?.name ?? '-'} · ${vehicle.name}`
     const sharedResult: SharedRollResult | null = check.result ? {
       die1: check.result.die1,
@@ -650,6 +758,26 @@ export function useVehicleCheck({
               </div>
             )}
 
+            {/* Roller picker - install / gather have no fixed seat, so the
+                GM picks who does it from the whole crew. AMod/SMod recompute
+                via switchRoller (install re-picks Mechanic or Tinkerer;
+                gather reads Scavenging). */}
+            {(check.kind === 'install' || check.kind === 'gather') && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={lbl}>Who&apos;s doing it</div>
+                <select value={check.crewId}
+                  onChange={e => switchRoller(e.target.value)}
+                  style={{ width: '100%', padding: '6px 8px', marginTop: '4px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}>
+                  {crew.map(c => {
+                    const suffix = check.kind === 'install'
+                      ? ` (M* ${signed(c.mechanicLevel)} / Tink ${signed(c.tinkererLevel)})`
+                      : ` (Scavenging ${signed(c.skillByName['Scavenging'] ?? 0)})`
+                    return <option key={c.id} value={c.id}>{c.name}{suffix}</option>
+                  })}
+                </select>
+              </div>
+            )}
+
             {/* Navigate skill picker - default Navigation (ACU),
                 swappable; AMod/SMod auto-recompute via
                 switchNavigateSkill. */}
@@ -678,8 +806,8 @@ export function useVehicleCheck({
               )
             })()}
 
-            {/* Brew skill toggle - Mechanic* (RSN) vs Tinkerer (DEX) */}
-            {check.kind === 'brew' && (
+            {/* Mechanic* (RSN) vs Tinkerer (DEX) toggle - brew + install */}
+            {(check.kind === 'brew' || check.kind === 'install') && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={lbl}>Skill</div>
                 <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
@@ -718,6 +846,14 @@ export function useVehicleCheck({
             {check.kind === 'brew' && (r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight') && (
               <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
                 ⛽ +1 day fuel produced
+              </div>
+            )}
+            {/* Install / gather: the precise effect text from
+                applyInstallOutcome/applyGatherOutcome. Bordered by the
+                outcome color so success/cost reads at a glance. */}
+            {(check.kind === 'install' || check.kind === 'gather') && check.result?.message && (
+              <div style={{ padding: '8px 10px', background: '#161616', border: `1px solid ${feedOutcomeColor(r.outcome)}`, borderRadius: '3px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', textAlign: 'center' }}>
+                {check.result.message}
               </div>
             )}
             {/* Attack hit: weapon damage stat reminder for the GM */}
