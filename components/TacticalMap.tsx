@@ -398,6 +398,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const prevTokenIdsRef = useRef<Set<string>>(new Set())
   const tokenScrollSceneRef = useRef<string | null>(null)
   const loadTokensSeqRef = useRef(0)
+  // Same guard for loadScenes: it fires from mount + the tactical_scenes
+  // postgres sub (any scene-row update) + the scene_activated broadcast +
+  // createScene, so concurrent fetches can resolve out of order and a stale
+  // earlier one would clobber the fresh scene list / active scene (and push
+  // stale fog/walls into the local mirror via the scene-reconcile effects).
+  const loadScenesSeqRef = useRef(0)
   const sceneRef = useRef<Scene | null>(null)
   // invalidated when mover position, range, grid size, or occupied-cell set changes; key checked inline in draw()
   const moveZoneCacheRef = useRef<{ key: string; cells: Array<{gx: number; gy: number}> } | null>(null)
@@ -630,7 +636,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const creatingSceneRef = useRef(false)
 
   async function loadScenes() {
+    const seq = ++loadScenesSeqRef.current
     const { data: sceneRows } = await campaignScenes(campaignId)
+    if (seq !== loadScenesSeqRef.current) return // superseded by a newer load - don't overwrite (or re-activate) with stale data
     const data = (sceneRows ?? []) as unknown as Scene[]
     setScenes(data)
     const active = data.find((s: Scene) => s.is_active)

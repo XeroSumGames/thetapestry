@@ -132,6 +132,11 @@ export default function TablePage() {
   // loadEntries sequence guard - see definition below.
   const loadEntriesSeqRef = useRef(0)
   const loadInitSeqRef = useRef(0)
+  // Same guard for the two loaders that also fire from a realtime sub PLUS
+  // mount/manual paths (community_members + npc_relationships subs), so
+  // concurrent out-of-order resolves can't clobber fresh state with stale.
+  const loadPlayerNpcCommunityMapSeqRef = useRef(0)
+  const loadRevealedNpcsSeqRef = useRef(0)
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -1063,11 +1068,13 @@ export default function TablePage() {
   // via `chat.refetch()` and the <ChatComposer>'s internal send.
 
   async function loadPlayerNpcCommunityMap(campaignId: string) {
+    const seq = ++loadPlayerNpcCommunityMapSeqRef.current
     const { data } = await supabase
       .from('community_members')
       .select('id, character_id, npc_id, recruitment_type, apprentice_of_character_id, apprentice_meta, communities!inner(id, name, campaign_id)')
       .is('left_at', null)
       .eq('communities.campaign_id', campaignId)
+    if (seq !== loadPlayerNpcCommunityMapSeqRef.current) return // stale - a newer call is in flight
     const map: Record<string, string> = {}
     // Apprentice bonds keyed by npc_id - fuels the "Set Up Apprentice"
     // button on NpcCard. setup_complete=true means the wizard already
@@ -1104,12 +1111,14 @@ export default function TablePage() {
     // the visible set, but the query still scanned all rows the user
     // could see across every campaign they GM/play). For a GM with
     // many campaigns this was a heavy fetch on every mount.
+    const seq = ++loadRevealedNpcsSeqRef.current
     const cnpcIds = cnpcs.map(n => n.id)
     if (cnpcIds.length === 0) { setRevealedNpcs([]); return }
     const query = characterId
       ? supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true).in('npc_id', cnpcIds)
       : supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('revealed', true).in('npc_id', cnpcIds)
     const { data: rels } = await query
+    if (seq !== loadRevealedNpcsSeqRef.current) return // stale - a newer call is in flight
     if (rels && rels.length > 0 && cnpcs.length > 0) {
       const seen = new Set<string>()
       const revealed = rels.map((r: any) => {
