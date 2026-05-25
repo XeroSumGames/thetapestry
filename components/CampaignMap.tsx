@@ -1052,7 +1052,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
             title={isGM ? 'Drop a pin on the campaign map' : 'Suggest a pin - GM will review and reveal it'}
             style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
-            {placing ? '✕ Cancel' : isGM ? '+ Pin' : '+ Suggest Pin'}
+            {placing ? '✕ Cancel' : '+ Pin'}
           </button>
           {/* Measure tool - toggle on, click two (or more) points to
               get total distance in mi/km. Esc or button-toggle clears.
