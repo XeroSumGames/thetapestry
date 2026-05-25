@@ -27,19 +27,21 @@ describe('defaultSpawnCell', () => {
     expect(defaultSpawnCell(20, 15, [])).toEqual({ grid_x: 1, grid_y: 1 })
   })
 
-  it('steps to the nearest free cell when the anchor is occupied', () => {
-    // (1,1) taken -> first free perimeter cell of ring 1 scanning
-    // top-to-bottom, left-to-right is (0,0).
-    expect(defaultSpawnCell(20, 15, [{ grid_x: 1, grid_y: 1 }])).toEqual({ grid_x: 0, grid_y: 0 })
+  it('steps to a free cell down-right of the anchor when (1,1) is taken (never into row 0 / col 0)', () => {
+    // (1,1) taken -> nearest free cell staying at x>=1,y>=1 is (2,1).
+    // Must NOT be (0,0): that sits under the day/fog toolbar (hidden token).
+    expect(defaultSpawnCell(20, 15, [{ grid_x: 1, grid_y: 1 }])).toEqual({ grid_x: 2, grid_y: 1 })
   })
 
-  it('keeps stepping outward as cells fill, never stacking', () => {
+  it('keeps stepping outward as cells fill, never stacking and never into row 0 / col 0', () => {
     const taken: { grid_x: number; grid_y: number }[] = []
     const seen = new Set<string>()
     for (let i = 0; i < 12; i++) {
       const cell = defaultSpawnCell(20, 15, taken)
       const k = `${cell.grid_x},${cell.grid_y}`
       expect(seen.has(k)).toBe(false) // each placement is a distinct cell
+      expect(cell.grid_x).toBeGreaterThanOrEqual(1) // clear of the toolbar col
+      expect(cell.grid_y).toBeGreaterThanOrEqual(1) // clear of the toolbar row
       seen.add(k)
       taken.push(cell)
     }

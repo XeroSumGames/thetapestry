@@ -42,13 +42,17 @@ export function defaultSpawnCell(
 
   // Spiral outward in expanding square rings (Chebyshev distance r) from
   // the anchor, scanning each ring's perimeter, and return the first free
-  // in-bounds cell - keeps spawns clustered near the top-left.
+  // in-bounds cell - keeps spawns clustered near the top-left. Stay at or
+  // below the anchor (x >= baseX, y >= baseY): row 0 / col 0 sit under the
+  // draggable day/fog toolbar in the top-left corner, so a token spilled
+  // there is hidden (playtest 2026-05-25: a 2nd PC landed on (0,0) and
+  // looked un-added). The anchor itself is already one cell in.
   const maxR = Math.max(gridCols, gridRows)
   for (let r = 1; r <= maxR; r++) {
-    for (let y = baseY - r; y <= baseY + r; y++) {
-      for (let x = baseX - r; x <= baseX + r; x++) {
+    for (let y = baseY; y <= baseY + r; y++) {
+      for (let x = baseX; x <= baseX + r; x++) {
         if (Math.max(Math.abs(x - baseX), Math.abs(y - baseY)) !== r) continue
-        if (x < 0 || y < 0 || x >= gridCols || y >= gridRows) continue
+        if (x >= gridCols || y >= gridRows) continue
         if (!taken.has(key(x, y))) return { grid_x: x, grid_y: y }
       }
     }
