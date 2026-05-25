@@ -49,11 +49,33 @@ commit, behaviour-preserving, so reverting is invisible to players).
 
 ---
 
-## Phase 2 - install/gather (build AFTER the Phase 1 smoke passes)
+## Phase 2 - install/gather (SHIPPED 2026-05-24)
 
-Will get its own section here once built. Expected checks: the `+ Install` button
-opens an install skill-check (Mechanic*/Tinkerer toggle, all-crew roller dropdown);
-the `+ Gather Materials` button opens a gather check (Scavenging); resolutions apply
-the locked rulings (install Success/Wild/HI = +1 drum capacity; Failure/Low = drum
-damaged + consumed; Dire = drum lost + 1 tank wasted. gather Wild = +2 days;
-Success/HI = +1; Failure/Low/Dire = nothing, Dire adds a GM-narrative note).
+Automated proof: `tsc` clean, 639 unit tests pass (the rulings live in
+`lib/vehicle-checks.ts` with 17 tests via `applyInstallOutcome`/`applyGatherOutcome`),
+preview-sync green (feed parsers + preview HTML in lockstep). Browser eyeball owed
+on the deploy - the dice outcomes can't be forced headless.
+
+On Minnie (has both fuel storage + a still) in The Arena, as a campaign member:
+
+1. **Install.** Ensure a 55-Gallon Drum is in cargo and capacity isn't at cap (else
+   the `+ Install` button is correctly disabled). Click `+ Install`.
+   - Modal "Install Fuel Drum" opens with a **roller dropdown listing the whole crew**
+     (each shows `M* x / Tink y`) and a **Mechanic\*/Tinkerer toggle** that swaps AMOD/SMOD.
+     Switching the roller recomputes both.
+   - Roll a Success/Wild/HI: badge "Drum installed - +1 day of fuel storage", the Fuel
+     Storage row shows one more drum installed, feed line `INSTALL <name> fits a fuel drum...`.
+   - Roll a Failure/Low: badge "drum is damaged ... (lost)", drum count in cargo drops by
+     one, no capacity gain.
+   - Roll a Dire Failure: badge "drum is lost and a tank of methanol is wasted", `fuel_current`
+     drops by 1 as well.
+2. **Gather.** Ensure the stockpile isn't full (else `+ Gather Materials` is disabled).
+   Click it.
+   - Modal "Gather Materials" opens with the crew roller dropdown (each shows
+     `Scavenging x`); no skill toggle (Scavenging only).
+   - Roll Wild: badge "Gathered 2 days...", supplies +2 (capped). Success/HI: +1.
+   - Roll Failure/Low: badge "nothing gathered". Dire: badge "nothing ... lost something or
+     hurt themselves (GM adjudicates)", supplies unchanged.
+   - Feed line `GATHER <name> scavenges...` per outcome.
+
+Revert if wrong: the Phase 2 feature commit reverts cleanly; Phase 1's extraction stays.
