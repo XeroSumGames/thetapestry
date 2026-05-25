@@ -827,7 +827,7 @@ export default function TablePage() {
   // useEffect below only intervenes when the user is on the OTHER
   // mode's default - explicit picks like Assets or Notes survive
   // mode switches.
-  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'advantages' | 'notes'>('pins')
+  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('pins')
 
   // Advantage feature (post-playtest task #11). Pending advantages for
   // the campaign, refreshed on load + realtime postgres_changes. RLS
@@ -7068,10 +7068,10 @@ export default function TablePage() {
             NPCs (revealed only) and Assets (read-only). */}
         <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'advantages', 'notes'] as const : ['pins', 'npcs', 'assets', 'advantages', 'notes'] as const).filter(tab => tab !== 'advantages' || gmLike).map(tab => (
+            {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'notes'] as const : ['pins', 'npcs', 'assets', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : tab === 'advantages' ? `⭐${advantages.length > 0 ? ` ${advantages.length}` : ''}` : gmLike ? 'GM Notes' : 'Notes'}
+                {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : gmLike ? 'GM Notes' : 'Notes'}
               </button>
             ))}
           </div>
@@ -7610,19 +7610,6 @@ export default function TablePage() {
                   heading="⭐ Advantages"
                 />
               } />
-            )}
-            {gmTab === 'advantages' && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                <AdvantagesPanel
-                  advantages={advantages}
-                  gmLike={gmLike}
-                  myCharacterIds={new Set(entries.filter(e => e.userId === userId).map(e => e.character.id))}
-                  holderNameFor={advantageHolderNameFor}
-                  useInFlight={useInFlight}
-                  onUse={handleUseAdvantage}
-                  onDelete={handleDeleteAdvantage}
-                />
-              </div>
             )}
           </div>
         </div>
