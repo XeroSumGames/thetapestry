@@ -7674,10 +7674,14 @@ export default function TablePage() {
                         e.stopPropagation()
                         if (!claimToggleLock(entry.character.id)) return // ignore re-clicks until the place/remove + refresh settle (else a 2nd click toggles it back off)
                         if (onMap) {
-                          // Remove from map - find and delete the token
+                          // Remove from THIS scene only - ARCHIVE (not hard-delete)
+                          // so the per-scene position persists; re-adding un-archives
+                          // it in place. Each scene keeps its own independent token,
+                          // so a PC can be on as many scenes as you like (mirrors the
+                          // NPC/folder archive behaviour - hard-delete lost positions).
                           const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
                           if (activeScene) {
-                            await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', entry.character.name)
+                            await supabase.from('scene_tokens').update({ archived_at: new Date().toISOString() }).eq('scene_id', activeScene.id).eq('name', entry.character.name).is('archived_at', null)
                             setTokenRefreshKey(k => k + 1)
                             initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
                           }
