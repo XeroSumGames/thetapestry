@@ -2,11 +2,8 @@
 // EndSessionModal - GM "End Session" summary dialog. Extracted from page.tsx
 // verbatim (table re-arch Step 2). Presentational; the summary / cliffhanger /
 // next-notes / file state + the endSession action are threaded as props (the
-// state migrates to useGmTools later). exportSessionLog is a pure lib call
-// imported directly. Behavior unchanged: append player submissions, fill the
-// three summary fields, attach files, Export Log or End Session.
-
-import { exportSessionLog } from '../../../../../lib/session-export'
+// state migrates to useGmTools later). Fill the three summary fields, attach
+// files, then End Session - or open the session log via the Append Log link.
 
 interface EndSessionModalProps {
   open: boolean
@@ -134,13 +131,18 @@ export function EndSessionModal({
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onClose} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-          <button onClick={() => exportSessionLog({ campaignId, campaignName, sessionNumber: sessionCount })}
-            style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Export Log
-          </button>
           <button onClick={endSession} disabled={sessionActing} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
             {sessionActing ? 'Ending...' : 'End Session'}
           </button>
+        </div>
+        {/* Append Log: opens the campaign's session log (new tab, so the
+            in-progress summary above isn't lost). Replaces the old
+            download-export button (Xero 2026-05-25). */}
+        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+          <a href={`/stories/${campaignId}/sessions`} target="_blank" rel="noopener noreferrer"
+            style={{ color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textDecoration: 'underline' }}>
+            Append Log →
+          </a>
         </div>
       </div>
     </div>
