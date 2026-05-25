@@ -394,11 +394,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Which scene we've already auto-centered the scroll for - prevents
   // stealing the user's scroll after they've moved around.
   const centeredSceneIdRef = useRef<string | null>(null)
-  // Token-ids last seen per scene, so loadTokens can detect a token that
-  // just APPEARED (live placement / un-archive) and scroll it into view -
-  // tokens spawn at the locked top-left and would otherwise be off-screen.
+  // Token-ids last seen per scene, so loadTokens can scroll a just-APPEARED
+  // token (placement / un-archive) into view.
   const prevTokenIdsRef = useRef<Set<string>>(new Set())
   const tokenScrollSceneRef = useRef<string | null>(null)
+  // Seq guard: out-of-order loadTokens fetches must not overwrite with a
+  // stale snapshot ("only 2 of 4 tokens show"). Mirrors loadEntries.
+  const loadTokensSeqRef = useRef(0)
   const sceneRef = useRef<Scene | null>(null)
   // invalidated when mover position, range, grid size, or occupied-cell set changes; key checked inline in draw()
   const moveZoneCacheRef = useRef<{ key: string; cells: Array<{gx: number; gy: number}> } | null>(null)
@@ -708,12 +710,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   async function loadTokens(sceneId: string) {
     // Soft-deleted tokens (archived_at not null) preserve their position
     // for a future remap but render as if absent. Filter them out here.
+    const seq = ++loadTokensSeqRef.current
     const { data } = await sceneTokens(sceneId)
+    if (seq !== loadTokensSeqRef.current) return // superseded by a newer load - don't overwrite with stale data
     const toks = (data ?? []) as unknown as Token[]
     setTokens(toks)
-    // Scroll a token that JUST appeared into view (placement / un-archive).
-    // First load per scene only seeds ids (scene-open framing is
-    // centerViewport's job); moves/removes add no new id, so never scroll.
+    // Scroll a just-appeared token into view; first load per scene only seeds ids.
     if (tokenScrollSceneRef.current === sceneId) {
       const appeared = toks.filter(t => (isGM || t.is_visible) && !prevTokenIdsRef.current.has(t.id))
       const target = appeared.find(t => t.token_type === 'pc') ?? appeared[0]
@@ -816,11 +818,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   })
   const pingChannelRef = pingChannel.channelRef
 
-  // Frame the viewport on scene open. Prefer the PARTY (PC tokens) so the
-  // players are always in view - framing on ALL tokens let spread-out NPCs
-  // drag the center to the empty middle ("characters aren't on the map").
-  // Falls back to any visible token, else map middle. Once per scene id so
-  // it doesn't steal the user's scroll. Runs after draw() sizes the canvas.
+  // Frame on scene open: prefer the PARTY (PC tokens) so players are in view
+  // (framing on ALL tokens let spread NPCs drag the center to the empty
+  // middle). Fallback: any visible token, else map middle. Once per scene id.
   function centerViewport() {
     const container = containerRef.current
     const canvas = canvasRef.current
