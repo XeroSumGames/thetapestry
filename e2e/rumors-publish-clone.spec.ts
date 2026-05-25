@@ -144,4 +144,106 @@ test.describe('Ch14 - Rumors: publish a PRIVATE module + clone it (content lands
       await gmCtx.close()
     }
   })
+
+  // Ch14.4 - the version-UPDATE half: publish v1 -> clone -> publish v2 from the
+  // source -> the subscriber campaign's StoryActionBar surfaces the "update
+  // available" notice (`📦 v<latest> ↑`, StoryActionBar.tsx:282) and links to the
+  // version-history page. Own full setup + teardown (NOT bolted onto test 1, so a
+  // flake here can't redden the certified publish/clone coverage). No NPC seed -
+  // the update detection is version-only (subscription.current_version_id !=
+  // modules.latest_version_id, scoped `.eq('campaign_id', campaignId)` so the live
+  // gm account's OTHER real subscriptions can't pollute the assertion). Assertions
+  // are semver-AGNOSTIC: module_versions count >= 2 + the version-independent
+  // "has a newer version" title, not a hardcoded "1.1.0".
+  test('GM publishes v2 of a module; the subscriber campaign surfaces the update + links to version history', async ({ browser }) => {
+    const gmCtx = await browser.newContext({ storageState: AUTH.gm })
+    const gm = await gmCtx.newPage()
+    gm.on('dialog', d => d.accept().catch(() => {})) // publish success alert()
+    let srcId: string | null = null
+    let cloneId: string | null = null
+    let moduleId: string | null = null
+    let creds: SupaCreds | null = null
+    const moduleName = `${RUN} V2Module`
+    try {
+      const anonP = captureAnonKey(gm)
+
+      // --- 1. Source story + publish v1.0.0 (no content needed - update
+      //     detection is version-only) ---
+      await gm.goto('/stories/new', { waitUntil: 'domcontentloaded' })
+      creds = await resolveCreds(gm, anonP)
+      expect(creds, 'could not resolve GM creds').toBeTruthy()
+      await gm.getByPlaceholder('e.g. The Kansas City Survivors').fill(`${RUN} V2Src`)
+      await gm.getByRole('button', { name: /custom setting/i }).first().click().catch(() => {})
+      await gm.getByRole('button', { name: /^create story$/i }).click()
+      await gm.waitForURL(/\/stories\/[0-9a-f-]{36}$/i, { timeout: 30_000 })
+      srcId = gm.url().split('/stories/')[1]
+      expect(srcId, 'no source campaign id').toBeTruthy()
+
+      await gm.goto(`/stories/${srcId}`, { waitUntil: 'domcontentloaded' })
+      await gm.getByRole('button', { name: 'Publish', exact: true }).click()
+      const nameField = gm.getByPlaceholder('e.g. The Arena')
+      await expect(nameField, 'publish modal should open').toBeVisible({ timeout: 15_000 })
+      await nameField.fill(moduleName)
+      await gm.getByRole('button', { name: /Private/i }).click()
+      await gm.getByRole('button', { name: /Publish v/i }).click()
+      await expect.poll(async () => {
+        const m = await rows(gm, creds!, `modules?source_campaign_id=eq.${srcId}&select=id`)
+        if (m.length === 1) moduleId = m[0].id
+        return m.length
+      }, { timeout: 15_000, message: 'module row after v1 publish' }).toBe(1)
+      await expect.poll(
+        async () => (await rows(gm, creds!, `module_versions?module_id=eq.${moduleId}&select=version`)).length,
+        { timeout: 15_000, message: 'v1 should be published' },
+      ).toBe(1)
+
+      // --- 2. Clone it (creates the module_subscriptions row pinned to v1) ---
+      await gm.goto('/stories/new', { waitUntil: 'domcontentloaded' })
+      await gm.getByText(moduleName, { exact: false }).first().click()
+      await gm.getByPlaceholder('e.g. The Kansas City Survivors').fill(`${RUN} V2Clone`)
+      await gm.getByRole('button', { name: /^create story$/i }).click()
+      await gm.waitForURL(/\/stories\/[0-9a-f-]{36}$/i, { timeout: 30_000 })
+      cloneId = gm.url().split('/stories/')[1]
+      expect(cloneId && cloneId !== srcId, 'clone should be a distinct campaign').toBeTruthy()
+      await expect.poll(
+        async () => (await rows(gm, creds!, `module_subscriptions?campaign_id=eq.${cloneId}&module_id=eq.${moduleId}&select=id`)).length,
+        { timeout: 15_000, message: 'clone should be subscribed to the module' },
+      ).toBe(1)
+
+      // --- 3. Publish v2 from the SOURCE hub. After v1 the bar's Publish button
+      //     re-labels to "Module v1.0.0" (StoryActionBar.tsx:267) and opens the
+      //     re-publish modal; default minor bump, just click Publish. ---
+      await gm.goto(`/stories/${srcId}`, { waitUntil: 'domcontentloaded' })
+      await gm.getByRole('button', { name: /^Module v/i }).click()
+      await expect(gm.getByText(/Publish New Version/i), 're-publish modal should open').toBeVisible({ timeout: 15_000 })
+      await gm.getByRole('button', { name: /Publish v/i }).click()
+      // Two versions now exist (the trigger advances modules.latest_version_id).
+      await expect.poll(
+        async () => (await rows(gm, creds!, `module_versions?module_id=eq.${moduleId}&select=version`)).length,
+        { timeout: 15_000, message: 'a second version should be published' },
+      ).toBe(2)
+
+      // --- 4. The subscriber (clone) hub surfaces the update notice. The check
+      //     is scoped to this campaign, so the title is the stable, version-
+      //     independent assertion. ---
+      await gm.goto(`/stories/${cloneId}`, { waitUntil: 'domcontentloaded' })
+      const updateLink = gm.getByTitle(/has a newer version/i)
+      await expect(updateLink, 'clone bar should show the module-update notice').toBeVisible({ timeout: 20_000 })
+
+      // --- 5. It links to the version-history page (both versions listed) ---
+      await updateLink.click()
+      await gm.waitForURL(new RegExp(`/stories/${cloneId}/modules/[0-9a-f-]{36}/versions`), { timeout: 30_000 })
+      await expect(gm.getByText(/Version History/i), 'version-history page should render').toBeVisible({ timeout: 15_000 })
+    } finally {
+      const del = async (q: string) => {
+        if (!creds) return
+        await gm.request.delete(`${SUPABASE_URL}/rest/v1/${q}`, {
+          headers: { apikey: creds.anonKey, Authorization: `Bearer ${creds.accessToken}` },
+        }).catch(() => {})
+      }
+      if (moduleId) await del(`modules?id=eq.${moduleId}`)
+      if (cloneId) await del(`campaigns?id=eq.${cloneId}`)
+      if (srcId) await del(`campaigns?id=eq.${srcId}`)
+      await gmCtx.close()
+    }
+  })
 })
