@@ -5289,9 +5289,9 @@ export default function TablePage() {
             buttons + 8px*2 padding + 1px border) on both the campaign and
             tactical views (Xero 2026-05-25). */}
         <div style={{ minWidth: 0 }}>
-          <div title={`${campaign.name}${sessionStatus === 'active' ? ` (Session ${sessionCount})` : ''}`}
+          <div title={`${campaign.name}${sessionCount > 0 ? ` (Session ${sessionCount})` : ''}`}
             style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {campaign.name}{sessionStatus === 'active' ? <span style={{ fontSize: '15px' }}> (Session {sessionCount})</span> : ''}
+            {campaign.name}{sessionCount > 0 ? <span style={{ fontSize: '15px', color: sessionStatus === 'active' ? '#7fc458' : '#c0392b' }}> (Session {sessionCount})</span> : ''}
           </div>
         </div>
         {gmLike && sessionStatus === 'idle' && (

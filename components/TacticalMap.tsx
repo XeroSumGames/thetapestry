@@ -3816,7 +3816,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             <button onClick={() => setFogEditMode(fogEditMode ? null : 'paint')}
               title={fogEditMode ? 'Close the fog + structure tools' : 'Open the fog + structure tools'}
               style={{ padding: '4px 10px', background: fogEditMode ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode ? '#c4a7f0' : '#5a2e5a'}`, borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
-              🌫️ Edit Fog
+              🌫️ Fog
             </button>
             {fogEditMode && (
               <>
