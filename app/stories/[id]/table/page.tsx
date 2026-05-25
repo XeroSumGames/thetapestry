@@ -54,7 +54,6 @@ import {
 } from '../../../../lib/advantages'
 import AdvantagesPanel from '../../../../components/AdvantagesPanel'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
-import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
 const TacticalMap = dynamic(() => import('../../../../components/TacticalMap'), { ssr: false })
@@ -5281,11 +5280,8 @@ export default function TablePage() {
       {/* Header */}
       <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: '#0f0f0f', position: 'relative', zIndex: 10001 }}>
         <div>
-          <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
-            {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'GM View' : 'Player View'}
-          </div>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
-            {campaign.name}
+            {campaign.name}{sessionStatus === 'active' ? ` (Session ${sessionCount})` : ''}
           </div>
         </div>
         {gmLike && sessionStatus === 'idle' && (
@@ -5317,7 +5313,7 @@ export default function TablePage() {
             className="hdr-btn"
             title={recorderEnabled ? 'Stop recording - every connected player tab auto-downloads its buffer' : 'Start recording - every connected player tab wipes its buffer and captures fresh'}
             style={{ ...hdrBtn(recorderEnabled ? '#2a1210' : '#242424', recorderEnabled ? '#f5a89a' : '#d4cfc9', recorderEnabled ? '#c0392b' : '#3a3a3a'), opacity: recorderToggling ? 0.5 : 1, cursor: recorderToggling ? 'not-allowed' : 'pointer' }}>
-            {recorderToggling ? '...' : recorderEnabled ? '⏺ Stop Recording' : '⏺ Record'}
+            {recorderToggling ? '...' : '⏺'}
           </button>
         )}
         {gmLike && sessionStatus === 'active' && (
@@ -5345,16 +5341,15 @@ export default function TablePage() {
             End Session
           </button>
         )}
-        {sessionStatus === 'active' && (
-          <div style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
-            Session {sessionCount}
-          </div>
-        )}
         {gmLike && !combatActive && (
           <>
             {/* Campaign Map button + Tactical Map scene-picker dropdown (echoes Checks/Community: New Scene + every scene, active in green) */}
             <button onClick={() => setShowTacticalMap(false)} className={`hdr-btn${!showTacticalMap ? ' hdr-btn--active' : ''}`} style={hdrBtn(!showTacticalMap ? '#2a1210' : '#242424', !showTacticalMap ? '#f5a89a' : '#d4cfc9', !showTacticalMap ? '#c0392b' : '#3a3a3a')}>Campaign Map</button>
             {renderHeaderMenu('tacticalmap', 'Tactical Map', [
+              // Map Setup pops out the scene-controls panel into its own
+              // window (was a standalone header button; folded in here so
+              // the dropdown reads Map Setup -> New Scene -> scenes).
+              { label: 'Map Setup', onClick: () => openPopout(`/scene-controls-popout?c=${id}`, `scene-controls-${id}`, { w: 250, h: 600 }) },
               { label: 'New Scene', onClick: () => createNewScene() },
               ...sceneList.map(s => ({ label: s.name, color: s.is_active ? '#7fc458' : undefined, onClick: () => openScene(s.id) })),
             ], hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a'))}
@@ -5376,19 +5371,6 @@ export default function TablePage() {
             className={`hdr-btn${tacticalShared ? ' hdr-btn--active' : ''}`}
             style={hdrBtn(tacticalShared ? '#1a2e10' : '#242424', tacticalShared ? '#7fc458' : '#d4cfc9', tacticalShared ? '#2d5a1b' : '#3a3a3a')}>
             {tacticalShared ? 'Unshare Map' : 'Share Map'}
-          </button>
-        )}
-        {gmLike && showTacticalMap && (
-          // Map Setup - replaces the old inline 130px scene-controls
-          // sidebar. Pops out the controls panel into its own browser
-          // window so the GM can park it on a 2nd monitor and let the
-          // tactical map fill the full table-page width. State syncs
-          // between popout and main window via BroadcastChannel -
-          // see lib/scene-controls-bus.ts.
-          <button onClick={() => openPopout(`/scene-controls-popout?c=${id}`, `scene-controls-${id}`, { w: 250, h: 600 })}
-            className="hdr-btn"
-            style={hdrBtn('#2a1a3e', '#c4a7f0', '#5a2e5a')}>
-            Map Setup
           </button>
         )}
         {gmLike && sessionStatus === 'active' && !combatActive && (
