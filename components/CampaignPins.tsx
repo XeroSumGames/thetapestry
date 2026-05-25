@@ -614,10 +614,11 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
                     {canManage && (
                       <>
+                        {/* Visibility radio: GREEN = shown to players, RED = hidden. Click toggles. */}
                         <button onClick={() => toggleReveal(pin)}
-                          style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: pin.revealed ? '#2a1210' : '#1a2e10', border: `1px solid ${pin.revealed ? '#c0392b' : '#2d5a1b'}`, color: pin.revealed ? '#f5a89a' : '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          {pin.revealed ? 'Hide' : 'Show'}
-                        </button>
+                          title={pin.revealed ? 'Visible to players - click to hide' : 'Hidden from players - click to reveal'}
+                          aria-label={pin.revealed ? 'Hide pin from players' : 'Reveal pin to players'}
+                          style={{ width: '15px', height: '15px', borderRadius: '50%', padding: 0, flexShrink: 0, cursor: 'pointer', background: pin.revealed ? '#7fc458' : '#c0392b', border: `1px solid ${pin.revealed ? '#2d5a1b' : '#7a1f16'}`, boxShadow: pin.revealed ? '0 0 4px rgba(127,196,88,.6)' : 'none' }} />
                         <div style={{ display: 'flex', gap: '2px' }}>
                           {pin.reader_mode === 'comic' && (
                             <button
