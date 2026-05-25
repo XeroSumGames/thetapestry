@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-25 21:09 UTC
+
+**Status:** DRIFT (continuing — HOPED-FOR still unconfirmed post-playtest)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [669 passed, 40 files — +11 since 18:11]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 18:11 (13 commits):**
+- `fix(table)`: archive PC token on Map-toggle-off (was hard-delete — behaviour fix)
+- `feat(table)`: streamline session header titlebar
+- `fix(tactical)`: fog toolbar reposition (center default) + wrap expanded row
+- `fix(tactical)`: scroll viewport to newly-placed tokens; space auto-placed tokens 2 cells apart; re-assert grid coverage on dim revert
+- `fix(table)`: jump to tactical map on player Map-add; session title single-line header
+- `feat(stories)`: Story Page button on Live Now cards
+
+**Drift (continuing):**
+- **HOPED-FOR (2026-05-19 batch, 6 days old):** Tier-2 Recruit, Advantages, FI streamline, Vehicle Q4-c/d, narrative polish — drain gate was today's playtest; not confirmed
+- **HOPED-FOR (2026-05-24):** vehicle popout broadcasts (Section B) + combat-math/infection modal (A2/F) — same gate
+- **Stale-as-open todo:** "COORDINATION - formalize 3-lane model" still `- [ ]`; all three artefacts (`operating-mode.md`, `lane-protocol.md`, `active-lanes.md`) already exist and reflect the 3-lane split
+
+**Action:** Confirm playtest outcome → drain HOPED-FOR entries; tick the 3-lane coordination todo; run `node scripts/refresh-ledger.mjs` (ledger shows 658, actual 669).
+
+---
+
 ## 2026-05-25 18:11 UTC
 
 **Status:** DRIFT — active ship batch landed; HOPED-FOR still awaiting playtest
