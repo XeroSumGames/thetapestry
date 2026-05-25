@@ -72,6 +72,7 @@ import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
+import { useSceneNav } from './useSceneNav'
 import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../lib/tactical-view'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
@@ -547,6 +548,11 @@ export default function TablePage() {
   const tacticalSharedRef = useRef(false)
   useEffect(() => { tacticalSharedRef.current = tacticalShared }, [tacticalShared])
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
+  // Header "Tactical Map" scene-picker dropdown: list + activate/create.
+  const { sceneList, openScene, createNewScene } = useSceneNav({
+    campaignId: id, supabase, refreshKey: tokenScenesRefreshKey,
+    setShowTacticalMap, setTokenRefreshKey, refreshMapTokenIds, initChannelRef,
+  })
   // Bumped by CampaignPins on any pin mutation so the sibling CampaignMap
   // reloads (same-client broadcast doesn't reach the map's channel).
   const [pinRefreshKey, setPinRefreshKey] = useState(0)
@@ -5345,11 +5351,14 @@ export default function TablePage() {
           </div>
         )}
         {gmLike && !combatActive && (
-          <button onClick={() => { setShowTacticalMap(prev => !prev); refreshMapTokenIds() }}
-            className={`hdr-btn${showTacticalMap ? ' hdr-btn--active' : ''}`}
-            style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
-            {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
-          </button>
+          <>
+            {/* Campaign Map button + Tactical Map scene-picker dropdown (echoes Checks/Community: New Scene + every scene, active in green) */}
+            <button onClick={() => setShowTacticalMap(false)} className={`hdr-btn${!showTacticalMap ? ' hdr-btn--active' : ''}`} style={hdrBtn(!showTacticalMap ? '#2a1210' : '#242424', !showTacticalMap ? '#f5a89a' : '#d4cfc9', !showTacticalMap ? '#c0392b' : '#3a3a3a')}>Campaign Map</button>
+            {renderHeaderMenu('tacticalmap', 'Tactical Map', [
+              { label: 'New Scene', onClick: () => createNewScene() },
+              ...sceneList.map(s => ({ label: s.name, color: s.is_active ? '#7fc458' : undefined, onClick: () => openScene(s.id) })),
+            ], hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a'))}
+          </>
         )}
         {!gmLike && !combatActive && (
           <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }}
@@ -7386,16 +7395,7 @@ export default function TablePage() {
                   showTacticalMap={showTacticalMap}
                   onPinsChanged={() => setPinRefreshKey(k => k + 1)}
                   onPinFocus={p => setFocusPin({ ...p })}
-                  onOpenScene={async (sceneId: string) => {
-                    await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
-                    await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
-                    setShowTacticalMap(true)
-                    setTokenRefreshKey(k => k + 1)
-                    // Force-push the scene switch so every player whose
-                    // pane is open (or who has tacticalShared on) lands
-                    // on the new scene without a manual refresh.
-                    initChannelRef.current?.send({ type: 'broadcast', event: 'scene_activated', payload: { sceneId } })
-                  }}
+                  onOpenScene={openScene}
                   onPlaceOnTacticalMap={async (pin) => {
                     // Drop the pin onto the active scene as a minimal
                     // marker - token_type='pin' is rendered by
