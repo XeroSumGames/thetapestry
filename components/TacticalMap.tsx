@@ -9,6 +9,7 @@ import {
 } from '../lib/data/tactical'
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
+import { gridToCoverMap, coverGrowGrid } from '../lib/tactical-grid'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -267,6 +268,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
   const [cellPx, setCellPx] = useState(35)
+  const [bgLoadTick, setBgLoadTick] = useState(0) // bumped on bg image load -> retriggers auto-grow-grid
   // Share View button feedback - flashes green for 1.5s after the GM
   // pushes their view to players. Sibling of CampaignMap's shareFlash
   // (added 2026-05-11). Tactical map ships the same pattern 2026-05-19.
@@ -869,6 +871,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         // Only override if natural is much wider than container (avoid touching existing manual scales)
         if (img.naturalWidth > cw * 1.1) setImgScale(fit)
       }
+      setBgLoadTick(t => t + 1)
       draw()
       // Center once per scene. After the image loads, canvas dimensions are
       // final - this is the right moment to scroll to the middle.
@@ -879,6 +882,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     img.src = scene.background_url
   }, [scene?.background_url])
+
+  // Grow-only auto-fit: keep the grid covering the map on image load /
+  // cell_px / resize (FIT TO MAP is the exact snap). Xero 2026-05-25.
+  useEffect(() => {
+    const img = bgImageRef.current, s = sceneRef.current
+    if (!isGM || !img || !s) return
+    const g = coverGrowGrid(s.grid_cols, s.grid_rows, img.naturalWidth, img.naturalHeight, imgScale, cellPx)
+    if (g) { setScene(p => p ? { ...p, ...g } : p); updateScene(s.id, g) }
+  }, [bgLoadTick, cellPx, imgScale, isGM])
 
   // Refresh tokens when parent signals a change
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
@@ -3563,19 +3575,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // can't run them itself - it sends a 'fit_to_map' / 'fit_to_screen'
   // command and we run it here.
   async function fitToMap() {
-    if (!bgImageRef.current || !containerRef.current || !scene) return
+    // Exact snap to cover the map at the current cell size (can also shrink).
     const img = bgImageRef.current
-    const cw = containerRef.current.clientWidth
-    const ch = containerRef.current.clientHeight
-    const imgAspect = img.naturalWidth / img.naturalHeight
-    let drawW: number, drawH: number
-    if (imgAspect > cw / ch) { drawW = cw; drawH = cw / imgAspect }
-    else { drawH = ch; drawW = ch * imgAspect }
-    const localCellPx = Math.max(20, drawW / 30)
-    const newCols = Math.round(drawW / localCellPx)
-    const newRows = Math.round(drawH / localCellPx)
-    setScene(p => p ? { ...p, grid_cols: newCols, grid_rows: newRows } : p)
-    await updateScene(scene.id, { grid_cols: newCols, grid_rows: newRows })
+    if (!img || !scene) return
+    const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, imgScale, cellPx)
+    if (!cols) return
+    setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p)
+    await updateScene(scene.id, { grid_cols: cols, grid_rows: rows })
   }
 
   function fitToScreen() {
