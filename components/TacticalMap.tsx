@@ -10,6 +10,7 @@ import {
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap, coverGrowGrid } from '../lib/tactical-grid'
+import { useFogBarPosition } from '../lib/use-fog-bar-position'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -293,36 +294,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const selectedSegmentIdRef = useRef<string | null>(null)
   useEffect(() => { selectedSegmentIdRef.current = selectedSegmentId }, [selectedSegmentId])
   useEffect(() => { if (fogEditMode !== 'select') setSelectedSegmentId(null) }, [fogEditMode])
-  // GM fog/lighting toolbar position. Defaults to top-left (8,8) but
-  // the GM can drag the ⠿ handle to reposition it - useful when the
-  // toolbar is covering content the GM needs to interact with (e.g. a
-  // token in the corner). Per-campaign localStorage so each GM's
-  // preferred placement persists across sessions.
-  const [fogBarPos, setFogBarPos] = useState<{ x: number; y: number }>(() => {
-    if (typeof window === 'undefined') return { x: 8, y: 8 }
-    try {
-      const saved = localStorage.getItem(`fog_bar_pos_${campaignId}`)
-      if (saved) {
-        const v = JSON.parse(saved)
-        if (typeof v?.x === 'number' && typeof v?.y === 'number') return v
-      }
-    } catch {}
-    return { x: 8, y: 8 }
-  })
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    try { localStorage.setItem(`fog_bar_pos_${campaignId}`, JSON.stringify(fogBarPos)) } catch {}
-  }, [fogBarPos, campaignId])
+  // GM fog/lighting toolbar position - state, top-center default,
+  // per-campaign persistence and reset all live in the hook.
+  // setFogBarRef centers it on mount; fogBarRef is the measured node
+  // (reused by the drag handler below).
+  const {
+    pos: fogBarPos, setPos: setFogBarPos, setRef: setFogBarRef,
+    nodeRef: fogBarRef, reset: resetFogBarPos, isMoved: fogBarMoved,
+  } = useFogBarPosition(campaignId)
   const fogBarDragRef = useRef<{
     startX: number; startY: number; origX: number; origY: number
     barWidth: number; barHeight: number
     containerWidth: number; containerHeight: number
   } | null>(null)
-  // The toolbar element ref - measured at drag-start so we know its
-  // current width/height (the bar grows when Edit Fog expands the
-  // paint/erase/rect controls). Used to clamp the drag target so the
-  // toolbar can't be dragged past any edge of the canvas wrapper.
-  const fogBarRef = useRef<HTMLDivElement | null>(null)
   function startFogBarDrag(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
@@ -365,9 +349,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mouseup', onUp)
-  }
-  function resetFogBarPos() {
-    setFogBarPos({ x: 8, y: 8 })
   }
   const fogPaintingRef = useRef(false)
   const fogPendingSaveRef = useRef<number | null>(null)
@@ -3778,7 +3759,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             toggle button); expands into paint/erase + bulk controls
             when in edit mode. Hidden entirely from players. */}
         {isGM && scene && (
-          <div ref={fogBarRef} style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div ref={setFogBarRef} style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
             {/* Drag handle. ⠿ braille dots are universal "grippy" UX
                 - same icon GmNotes / NpcRoster / CampaignPins all use
                 for drag-to-reorder. mousedown starts the drag, doc-
@@ -3789,12 +3770,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             <div onMouseDown={startFogBarDrag}
               title="Drag to reposition the fog/lighting toolbar"
               style={{ cursor: 'move', color: '#5a5550', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 4px', flexShrink: 0 }}>⠿</div>
-            {/* Reset to default position. Only shown when the bar has
-                actually been moved - clean default state has no
-                visible reset affordance. Click → snap back to top-left. */}
-            {(fogBarPos.x !== 8 || fogBarPos.y !== 8) && (
+            {/* Reset - only shown once moved off the computed center;
+                snaps back to the top-center default. */}
+            {fogBarMoved && (
               <button onClick={resetFogBarPos}
-                title="Reset toolbar to default position (top-left)"
+                title="Reset toolbar to default position (top-center)"
                 style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', lineHeight: 1, cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}>↺</button>
             )}
             {/* Day / Night toggle - outdoor scenes default 'day' (PCs

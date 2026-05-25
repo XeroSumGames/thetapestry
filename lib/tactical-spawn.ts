@@ -61,3 +61,34 @@ export function defaultSpawnCell(
   }
   return { grid_x: baseX, grid_y: baseY }
 }
+
+// Default LEFT (x) for the GM fog/lighting toolbar - the other half of
+// the spawn-vs-chrome problem above. The toolbar is a left-anchored
+// absolute element that used to default to the top-left corner (8,8),
+// where it sat on top of the locked (1,1) spawn and hid the PCs' tokens
+// behind it (playtest 2026-05-25). Rather than move the locked spawn
+// AGAIN, we move the chrome: center the (collapsed) bar across the
+// canvas. A hardcoded "center" pixel only looks centered on one screen
+// width, so the caller measures the live container + bar and passes
+// them here.
+//
+//   containerWidth - canvas wrapper width (px)
+//   barWidth       - the collapsed toolbar's own width (px)
+//   rightReserve   - keep this much clear on the right for the pinned
+//                    zoom + Share-View cluster; the centered bar only
+//                    shifts left of true-center on a narrow canvas.
+//
+// Floored at 8 so the bar never leaves the left edge. The fog-edit
+// controls expand the bar rightward beyond this and can overflow toward
+// the right cluster on a narrow canvas, but that is a transient edit
+// state and the bar stays draggable.
+export function centeredToolbarX(
+  containerWidth: number,
+  barWidth: number,
+  rightReserve: number,
+): number {
+  let x = (containerWidth - barWidth) / 2
+  const safeMax = containerWidth - barWidth - rightReserve
+  if (x > safeMax) x = safeMax
+  return Math.max(8, Math.round(x))
+}
