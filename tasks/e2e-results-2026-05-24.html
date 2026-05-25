@@ -55,7 +55,7 @@
 
   <div class="banner">
     <div class="big">114 certified &middot; 18 functional</div>
-    <div class="meta">Phase 2 shipped this batch (all green on prod, ZERO app-code edits): <code>char-create-methods</code> (Ch4.2-4.4), <code>session-lifecycle</code> (Ch7), <code>rumors-publish-clone</code> (Ch14.2-3), <code>npc-roster-crud</code> (Ch10.1), <code>inventory-trade</code> (Sys J), <code>communities-lifecycle</code> (Ch12.1/12.3), plus the <code>world-pin-to-queue</code> map_pins bypass-regression. Re-certs ran 117 -> 121 passed across the batch. The latest full re-cert (121 passed) had ONE failure - <code>section-a1-combat-start</code>, an EXISTING spec, NOT a regression: it passes standalone in ~36s but under full-run load The Arena combat channel is thrashed by concurrent start/end churn and the IN-COMBAT broadcast outran its too-tight 10s timeout. HARDENED to 25s (the suite RT norm) + char-create now waits for the wizard form before filling (its lone flaky, same load class); both verified standalone, final re-cert running. Two prod bugs FOUND + ROUTED: map_pins moderation bypass (CLOSED - Puffer applied the trigger; E2E added the regression net) and PC&rarr;PC trade data-loss (own-row RLS; trade test.fixme'd, finding routed). Retries:2 absorb prod 500s + realtime-timing flakes; a real regression fails every attempt.</div>
+    <div class="meta">Phase 2 shipped this batch (all green on prod, ZERO app-code edits): <code>char-create-methods</code> (Ch4.2-4.4), <code>session-lifecycle</code> (Ch7), <code>rumors-publish-clone</code> (Ch14.2-3), <code>npc-roster-crud</code> (Ch10.1), <code>inventory-trade</code> (Sys J), <code>communities-lifecycle</code> (Ch12.1/12.3), plus the <code>world-pin-to-queue</code> map_pins bypass-regression. Re-certs ran 117 -> 121 passed across the batch. The latest full re-cert (121 passed) had ONE failure - <code>section-a1-combat-start</code>, an EXISTING spec, NOT a regression: it passes standalone in ~36s but under full-run load The Arena combat channel is thrashed by concurrent start/end churn and the IN-COMBAT broadcast outran its too-tight 10s timeout. HARDENED to 25s (the suite RT norm) + char-create now waits for the wizard form before filling (its lone flaky, same load class) - the capstone re-cert then came back CLEAN: <strong>123 passed / 0 failed / 0 flaky / 1 skipped</strong> (the PC-trade fixme), 9.1 min. Two prod bugs FOUND + ROUTED: map_pins moderation bypass (CLOSED - Puffer applied the trigger; E2E added the regression net) and PC&rarr;PC trade data-loss (own-row RLS; trade test.fixme'd, finding routed). Retries:2 absorb prod 500s + realtime-timing flakes; a real regression fails every attempt.</div>
   </div>
 
   <div class="cards">
@@ -164,7 +164,7 @@
   <footer>
     Run: <code>npm run test:e2e</code> (auto-login mints sessions first). &nbsp; Source of truth tracked in
     <code>tasks/beginners-guide-testplan.md</code> (chapter map), <code>tasks/e2e-full-suite-build-plan-2026-05-24.md</code> (build plan), and <code>tasks/todo.md</code> (phase progress).
-    <br>This dashboard is a point-in-time snapshot generated 2026-05-24 from a live full-suite run (117 passed / 0 failed / 2 flaky-passed-on-retry).
+    <br>This dashboard is a point-in-time snapshot generated 2026-05-24 from a live full-suite run (123 passed / 0 failed / 0 flaky / 1 skipped - the PC-trade fixme).
   </footer>
 
 </div>
