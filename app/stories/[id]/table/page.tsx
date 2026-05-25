@@ -7694,6 +7694,7 @@ export default function TablePage() {
                             initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
                           }
                         } else {
+                          setShowTacticalMap(true) // jump to the tactical map so the freshly-placed token is actually visible (it lands on the tactical scene, not the campaign/Leaflet view)
                           placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined)
                         }
                       }}
