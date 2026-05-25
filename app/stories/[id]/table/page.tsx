@@ -1263,9 +1263,12 @@ export default function TablePage() {
       // pays for the unused fetches before being redirected, but
       // kick is a rare path - accepting that cost for the common-path
       // win.
+      // All of the player's states (a character-switcher has several; kick
+      // flags them all). maybeSingle() would error on >1 row -> null -> a
+      // kicked player slips past the gate, so read the full set.
       const kickCheckPromise = amGM
-        ? Promise.resolve({ data: null as { kicked: boolean | null } | null })
-        : supabase.from('character_states').select('kicked').eq('campaign_id', id).eq('user_id', user.id).maybeSingle()
+        ? Promise.resolve({ data: [] as { kicked: boolean | null }[] })
+        : supabase.from('character_states').select('kicked').eq('campaign_id', id).eq('user_id', user.id)
 
       const [
         myProfileRes,
@@ -1315,8 +1318,8 @@ export default function TablePage() {
       // waterfall. Diagnostic log preserved for the silent-RLS pattern
       // that bit us before.
       if (!amGM) {
-        const myState = (kickRes as any).data
-        if (myState?.kicked) {
+        const myStates = ((kickRes as any).data ?? []) as { kicked: boolean | null }[]
+        if (myStates.some(s => s.kicked)) {
           alert('You have been removed from this session by the GM.')
           window.location.href = `/stories/${id}`
           return

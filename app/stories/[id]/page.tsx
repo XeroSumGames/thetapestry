@@ -154,15 +154,17 @@ export default function CampaignPage() {
       // <StoryActionBar> - that component fetches its own module
       // context. Hub no longer needs the duplicate query.
 
-      // Check if this player was kicked from the current session
+      // Check if this player was kicked. A player who has switched characters
+      // has MULTIPLE character_states rows, so .maybeSingle() would error on
+      // >1 row -> null -> Rejoin button never shows and they're stuck kicked.
+      // Read all their states; kicked if ANY is flagged (Rejoin clears all).
       if (camp.gm_user_id !== user.id) {
-        const { data: myState } = await supabase
+        const { data: myStates } = await supabase
           .from('character_states')
           .select('kicked')
           .eq('campaign_id', id)
           .eq('user_id', user.id)
-          .maybeSingle()
-        setAmKicked(!!myState?.kicked)
+        setAmKicked((myStates ?? []).some((s: any) => s.kicked))
       }
 
       setLoading(false)
