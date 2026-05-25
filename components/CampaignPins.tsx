@@ -7,6 +7,7 @@ import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel, getCategoryFilter }
 import { openPopout } from '../lib/popout'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE_TIGHT } from '../lib/style-helpers'
+import { useHiddenPins } from '../lib/use-hidden-pins'
 
 interface CampaignPin {
   id: string
@@ -63,6 +64,8 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   // parity on pin edit/delete so they can relocate stray pins across
   // any campaign they don't GM (e.g. the "dis ho" cleanup scenario).
   const canManage = isGM || isThriver
+  // Per-user local "hide on my map" set (players). Doesn't touch the GM's reveal.
+  const { isHidden: isPinHiddenLocally, toggle: toggleLocalHide } = useHiddenPins(campaignId)
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
   const [loading, setLoading] = useState(true)
@@ -612,6 +615,17 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                     )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
+                    {!canManage && (() => {
+                      // Player radio: GREEN = on my map, RED = hidden on MY map
+                      // (local declutter only; never touches the GM's reveal).
+                      const shown = !isPinHiddenLocally(pin.id)
+                      return (
+                        <button onClick={() => toggleLocalHide(pin.id)}
+                          title={shown ? 'Showing on your map - click to hide it from your map' : 'Hidden on your map - click to show it'}
+                          aria-label={shown ? 'Hide pin on my map' : 'Show pin on my map'}
+                          style={{ width: '15px', height: '15px', borderRadius: '50%', padding: 0, flexShrink: 0, cursor: 'pointer', background: shown ? '#7fc458' : '#c0392b', border: `1px solid ${shown ? '#2d5a1b' : '#7a1f16'}`, boxShadow: shown ? '0 0 4px rgba(127,196,88,.6)' : 'none' }} />
+                      )
+                    })()}
                     {canManage && (
                       <>
                         {/* Visibility radio: GREEN = shown to players, RED = hidden. Click toggles. */}

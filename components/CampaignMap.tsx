@@ -4,6 +4,7 @@ import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
+import { useHiddenPins } from '../lib/use-hidden-pins'
 
 interface CampaignPin {
   id: string
@@ -190,6 +191,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   useEffect(() => { dblClickRef.current = onMapDoubleClick }, [onMapDoubleClick])
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
+  // Per-user "hidden on my map" pins (local declutter; never the GM's reveal).
+  // Skipped when rendering markers; re-render when the set changes.
+  const { hidden: locallyHiddenPins } = useHiddenPins(campaignId)
+  const locallyHiddenPinsRef = useRef(locallyHiddenPins)
+  useEffect(() => {
+    locallyHiddenPinsRef.current = locallyHiddenPins
+    if (mapInstanceRef.current) void loadPins()
+  }, [locallyHiddenPins])
   // Last view + tile layer persist to localStorage per campaign so a
   // refresh lands back where you were instead of snapping to the
   // setting default or world fallback. Keys: tapestry:campaignMap:view
@@ -621,6 +630,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     })
 
     visible.forEach((pin: any) => {
+      if (locallyHiddenPinsRef.current.has(pin.id)) return // player decluttered this pin off their own map
       const emoji = getCategoryEmoji(pin.category)
       // Group silhouette emoji disappears against the dark pin chrome;
       // see lib/pin-categories.ts for the white-filter rationale.
@@ -1033,7 +1043,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           geometry + font so heights match and the row never wraps,
           regardless of how many conditional buttons are showing
           (measure-mode travel-picker, GM-only Share View, etc.). */}
-      <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+      <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '4px' }}>
         <form onSubmit={handleSearch} style={{ display: 'flex', flexWrap: 'nowrap', gap: '4px' }}>
           {/* + Pin opens to all campaign members, not just the GM. RLS
               already permits members to INSERT into campaign_pins; the
