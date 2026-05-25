@@ -4,10 +4,11 @@
 // the raw queries live in lib/data/scenes.
 import { useCallback, useEffect, useState, type MutableRefObject } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { listCampaignScenes, activateCampaignScene, createCampaignScene } from '../../../../lib/data/scenes'
+import { listCampaignScenes, activateCampaignScene, createCampaignScene, ensurePartyOnScene as ensurePartyOnSceneData, type PartyPc } from '../../../../lib/data/scenes'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 
 export interface SceneOption { id: string; name: string; is_active: boolean }
+export type { PartyPc }
 
 interface Params {
   campaignId: string
@@ -17,9 +18,13 @@ interface Params {
   setTokenRefreshKey: (fn: (k: number) => number) => void
   refreshMapTokenIds: () => void
   initChannelRef: MutableRefObject<{ send: (m: any) => void } | null>
+  // Current party PCs - opening a scene auto-ensures each has a live token
+  // on it (Xero 2026-05-25: "don't make me place them each time; a char can
+  // be in as many scenes as the campaign has"). Read fresh on each open.
+  getParty: () => PartyPc[]
 }
 
-export function useSceneNav({ campaignId, supabase, refreshKey, setShowTacticalMap, setTokenRefreshKey, refreshMapTokenIds, initChannelRef }: Params) {
+export function useSceneNav({ campaignId, supabase, refreshKey, setShowTacticalMap, setTokenRefreshKey, refreshMapTokenIds, initChannelRef, getParty }: Params) {
   const [sceneList, setSceneList] = useState<SceneOption[]>([])
 
   const reload = useCallback(async () => {
@@ -39,16 +44,23 @@ export function useSceneNav({ campaignId, supabase, refreshKey, setShowTacticalM
     void reload()
   }, [setShowTacticalMap, setTokenRefreshKey, refreshMapTokenIds, initChannelRef, reload])
 
+  // Best-effort auto-populate the party on a scene when it's opened
+  // (logic + raw queries live in lib/data/scenes per the seam rule).
+  const ensurePartyOnScene = useCallback(async (sceneId: string) => {
+    try { await ensurePartyOnSceneData(supabase, sceneId, getParty()) } catch { /* never blocks activation */ }
+  }, [supabase, getParty])
+
   const openScene = useCallback(async (sceneId: string) => {
     await activateCampaignScene(supabase, campaignId, sceneId)
+    await ensurePartyOnScene(sceneId)
     onActivate(sceneId)
-  }, [supabase, campaignId, onActivate])
+  }, [supabase, campaignId, onActivate, ensurePartyOnScene])
 
   const createNewScene = useCallback(async () => {
     if (!claimToggleLock(`new-scene:${campaignId}`)) return // guard double-click
     const sid = await createCampaignScene(supabase, campaignId, 'New Scene')
-    if (sid) onActivate(sid)
-  }, [supabase, campaignId, onActivate])
+    if (sid) { await ensurePartyOnScene(sid); onActivate(sid) }
+  }, [supabase, campaignId, onActivate, ensurePartyOnScene])
 
   return { sceneList, openScene, createNewScene }
 }

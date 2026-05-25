@@ -551,6 +551,7 @@ export default function TablePage() {
   const { sceneList, openScene, createNewScene } = useSceneNav({
     campaignId: id, supabase, refreshKey: tokenScenesRefreshKey,
     setShowTacticalMap, setTokenRefreshKey, refreshMapTokenIds, initChannelRef,
+    getParty: () => entriesRef.current.map(e => ({ characterId: e.character.id, name: e.character.name, portraitUrl: getCharPhoto(e) })),
   })
   // Bumped by CampaignPins on any pin mutation so the sibling CampaignMap
   // reloads (same-client broadcast doesn't reach the map's channel).
@@ -5287,7 +5288,7 @@ export default function TablePage() {
         <div style={{ minWidth: 0 }}>
           <div title={`${campaign.name}${sessionStatus === 'active' ? ` (Session ${sessionCount})` : ''}`}
             style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {campaign.name}{sessionStatus === 'active' ? ` (Session ${sessionCount})` : ''}
+            {campaign.name}{sessionStatus === 'active' ? <span style={{ fontSize: '15px' }}> (Session {sessionCount})</span> : ''}
           </div>
         </div>
         {gmLike && sessionStatus === 'idle' && (
