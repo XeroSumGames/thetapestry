@@ -1,4 +1,4 @@
--- Player joins campaign (INSERT) — no character yet, say "joined"
+-- Player joins campaign (INSERT) - no character yet, say "joined"
 CREATE OR REPLACE FUNCTION notify_player_joined()
 RETURNS trigger AS $$
 DECLARE
@@ -16,7 +16,7 @@ BEGIN
   INSERT INTO notifications (user_id, type, title, body, link)
   SELECT cm.user_id, 'player_joined', 'New Player',
     COALESCE(v_username, 'Someone') || ' joined ' || COALESCE(v_campaign_name, 'a campaign'),
-    '/campaigns/' || NEW.campaign_id
+    '/stories/' || NEW.campaign_id
   FROM campaign_members cm
   WHERE cm.campaign_id = NEW.campaign_id
     AND cm.user_id != NEW.user_id;
@@ -25,7 +25,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Player assigns or changes character (UPDATE) — say "joined as" or "is now playing as"
+-- Player assigns or changes character (UPDATE) - say "joined as" or "is now playing as"
 CREATE OR REPLACE FUNCTION notify_character_changed()
 RETURNS trigger AS $$
 DECLARE
@@ -45,7 +45,7 @@ BEGIN
     INSERT INTO notifications (user_id, type, title, body, link)
     SELECT cm.user_id, 'player_joined', 'New Player',
       COALESCE(v_username, 'Someone') || ' joined ' || COALESCE(v_campaign_name, 'a campaign') || ' as ' || COALESCE(v_char_name, 'a character'),
-      '/campaigns/' || NEW.campaign_id
+      '/stories/' || NEW.campaign_id
     FROM campaign_members cm
     WHERE cm.campaign_id = NEW.campaign_id
       AND cm.user_id != NEW.user_id;
@@ -53,7 +53,7 @@ BEGIN
     INSERT INTO notifications (user_id, type, title, body, link)
     SELECT cm.user_id, 'player_joined', 'Character Change',
       COALESCE(v_username, 'Someone') || ' is now playing as ' || COALESCE(v_char_name, 'a new character') || ' in ' || COALESCE(v_campaign_name, 'a campaign'),
-      '/campaigns/' || NEW.campaign_id
+      '/stories/' || NEW.campaign_id
     FROM campaign_members cm
     WHERE cm.campaign_id = NEW.campaign_id
       AND cm.user_id != NEW.user_id;

@@ -15,7 +15,7 @@ BEGIN
   INSERT INTO notifications (user_id, type, title, body, link)
   SELECT cm.user_id, 'player_left', 'Player Left',
     COALESCE(v_username, 'Someone') || ' has left ' || COALESCE(v_campaign_name, 'the campaign'),
-    '/campaigns/' || OLD.campaign_id
+    '/stories/' || OLD.campaign_id
   FROM campaign_members cm
   WHERE cm.campaign_id = OLD.campaign_id
     AND cm.user_id != OLD.user_id;

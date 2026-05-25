@@ -1,5 +1,5 @@
 -- ============================================
--- Logging & Notifications — Pass 2
+-- Logging & Notifications - Pass 2
 -- Automated notification triggers
 -- Run this in Supabase SQL Editor
 -- ============================================
@@ -91,7 +91,7 @@ BEGIN
     INSERT INTO notifications (user_id, type, title, body, link)
     SELECT cm.user_id, 'session_opened', 'Session Started',
       'Your GM has opened Session ' || NEW.session_count || ' in ' || NEW.name,
-      '/campaigns/' || NEW.id || '/table'
+      '/stories/' || NEW.id || '/table'
     FROM campaign_members cm
     WHERE cm.campaign_id = NEW.id
       AND cm.user_id != NEW.gm_user_id;
@@ -128,7 +128,7 @@ BEGIN
     'player_joined',
     'New Player',
     COALESCE(v_username, 'Someone') || ' joined ' || COALESCE(v_campaign_name, 'your campaign'),
-    '/campaigns/' || NEW.campaign_id
+    '/stories/' || NEW.campaign_id
   );
   RETURN NEW;
 END;
