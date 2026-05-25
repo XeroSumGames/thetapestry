@@ -214,6 +214,10 @@ export default function CampaignsPage() {
                       Session in progress · {c.gm_user_id === userId ? 'You\'re GMing' : `GM: ${gmNames[c.gm_user_id] ?? '-'}`}
                     </div>
                   </div>
+                  <button onClick={() => router.push(`/stories/${c.id}`)}
+                    style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700, flexShrink: 0 }}>
+                    Story Page
+                  </button>
                   <button onClick={() => router.push(`/stories/${c.id}/table`)}
                     style={{ padding: '8px 18px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700, flexShrink: 0 }}>
                     Resume →
