@@ -2,7 +2,7 @@
 
 **Found by:** puffer-fish sibling-RLS audit (kicked off after the E2E lane's PC-trade data-loss finding; this is that bug's broader CLASS).
 **Severity:** HIGH for the beta - silent DATA LOSS across the GM loot/award/ration loop + PC-PC trade. Not a breach/PII/priv-escalation; it's lost writes + desync. **Latent today, bites at the 500-user beta.**
-**Status:** flagged + fix WRITTEN (`sql/characters-gm-write-rls-2026-05-24.sql`), NOT applied (bright line = Xero go). Verified live 2026-05-24.
+**Status:** **GM-half FIXED + verified live 2026-05-24** (Xero applied `sql/characters-gm-write-rls-2026-05-24.sql`; the "GM can update characters in their campaigns" UPDATE policy is present on `characters`). Flows 2-8 resolved. **Remaining: flow 1 (PC-to-PC trade)** - peer-to-peer, not covered by the GM policy; decision pending (disable for beta OR inventory-only RPC). Risk Register YELLOW until trade is resolved.
 
 ---
 
