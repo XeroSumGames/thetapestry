@@ -1163,7 +1163,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
           </div>
         </div>
       )}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '1rem', color: '#cce0f5', fontSize: '13px' }}>Loading...</div>
           ) : npcs.length === 0 ? (
