@@ -5279,8 +5279,14 @@ export default function TablePage() {
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: '#0f0f0f', position: 'relative', zIndex: 10001 }}>
-        <div>
-          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
+        {/* minWidth:0 lets the title shrink (and ellipsize) instead of
+            wrapping to a 2nd line when the tactical view's extra buttons
+            squeeze it - so the header bar is the SAME height (45px: 28px
+            buttons + 8px*2 padding + 1px border) on both the campaign and
+            tactical views (Xero 2026-05-25). */}
+        <div style={{ minWidth: 0 }}>
+          <div title={`${campaign.name}${sessionStatus === 'active' ? ` (Session ${sessionCount})` : ''}`}
+            style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {campaign.name}{sessionStatus === 'active' ? ` (Session ${sessionCount})` : ''}
           </div>
         </div>
