@@ -884,13 +884,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }, [scene?.background_url])
 
   // Grow-only auto-fit: keep the grid covering the map on image load /
-  // cell_px / resize (FIT TO MAP is the exact snap). Xero 2026-05-25.
+  // cell_px / resize, and re-assert if the grid dims ever revert small
+  // (e.g. a grid-color change snapped it back to the top-left, 2026-05-25).
   useEffect(() => {
     const img = bgImageRef.current, s = sceneRef.current
     if (!isGM || !img || !s) return
     const g = coverGrowGrid(s.grid_cols, s.grid_rows, img.naturalWidth, img.naturalHeight, imgScale, cellPx)
     if (g) { setScene(p => p ? { ...p, ...g } : p); updateScene(s.id, g) }
-  }, [bgLoadTick, cellPx, imgScale, isGM])
+  }, [bgLoadTick, cellPx, imgScale, isGM, scene?.grid_cols, scene?.grid_rows])
 
   // Refresh tokens when parent signals a change
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
