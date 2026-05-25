@@ -1,5 +1,5 @@
 'use client'
-import { memo, useState, useEffect } from 'react'
+import { memo, useState, useEffect, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
@@ -299,6 +299,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
+  // Seq guard: loadNpcs fires from 2 postgres subs + several manual actions
+  // (drop/clone/delete/rename/disposition/hide), so overlapping fetches can
+  // resolve out of order; drop a stale earlier resolve.
+  const loadNpcsSeqRef = useRef(0)
   const [showForm, setShowForm] = useState(false)
   const [npcSearch, setNpcSearch] = useState('')
   const [npcTypeFilter, setNpcTypeFilter] = useState<string | null>(null)
@@ -346,13 +350,16 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   }
 
   async function loadNpcs() {
+    const seq = ++loadNpcsSeqRef.current
     const { data } = await npcsForRoster(campaignId)
+    if (seq !== loadNpcsSeqRef.current) return // superseded by a newer load
     setNpcs((data ?? []) as CampaignNpc[])
 
     // Fetch community memberships for these NPCs.
     const npcIds = (data ?? []).map((n: any) => n.id)
     if (npcIds.length > 0) {
       const { data: members } = await communityMembersForNpcs(npcIds)
+      if (seq !== loadNpcsSeqRef.current) return // superseded by a newer load
       const map: Record<string, { communityId: string; communityName: string }> = {}
       ;(members ?? []).forEach((m: any) => {
         if (m.npc_id) map[m.npc_id] = { communityId: m.community_id, communityName: m.communities?.name ?? 'Community' }

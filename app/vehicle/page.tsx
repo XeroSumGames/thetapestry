@@ -100,6 +100,9 @@ export default function VehiclePage() {
   // unchanged. loadTokensRef exposes the latest range-gate loader to the
   // channel's token_moved handler without resubscribing.
   const loadTokensRef = useRef<(() => void) | null>(null)
+  // Seq guard: loadTokens fires from mount AND the token_moved broadcast,
+  // so rapid drags can overlap fetches; drop a stale earlier resolve.
+  const loadVehTokSeqRef = useRef(0)
 
   useEffect(() => {
     async function load() {
@@ -235,7 +238,9 @@ export default function VehiclePage() {
     let cancelled = false
 
     async function loadTokens() {
+      const seq = ++loadVehTokSeqRef.current
       const { data: scene } = await activeSceneWithCellFeet(campaignId!)
+      if (seq !== loadVehTokSeqRef.current) return // superseded by a newer load
       if (cancelled || !scene) {
         setSceneInfo(null); setVehicleTokenPos(null); setCharacterRangeFeet({})
         return
@@ -243,6 +248,7 @@ export default function VehiclePage() {
       const sceneRow = scene as { id: string; cell_feet: number | null }
       const cellFeet = sceneRow.cell_feet ?? 3
       const { data: tokens } = await sceneTokensForRange(sceneRow.id)
+      if (seq !== loadVehTokSeqRef.current) return // superseded by a newer load
       if (cancelled) return
       const all = (tokens ?? []) as any[]
       const vehTok = all.find(t => t.token_type === 'object' && t.name === vehicle!.name)
