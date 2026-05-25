@@ -638,6 +638,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // "enlarge" or "shrink" whenever you nudge cols/rows. Only sync from
   // DB when the active scene ID actually changes.
   const lastSyncedSceneIdRef = useRef<string | null>(null)
+  // Guards createScene against rapid double-fire (see createScene).
+  const creatingSceneRef = useRef(false)
 
   async function loadScenes() {
     const { data: sceneRows } = await campaignScenes(campaignId)
@@ -3491,16 +3493,26 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Scene management
   async function createScene(nameOverride?: string) {
-    const { data, error } = await insertScene({
-      campaign_id: campaignId, name: nameOverride ?? setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, cell_px: 35, is_active: true, has_grid: setupHasGrid,
-    }).select().single()
-    if (error) { console.error('[TacticalMap] createScene error:', error.message); alert('Failed to create scene: ' + error.message); return }
-    if (data) {
-      // Deactivate other scenes
-      await deactivateOtherScenes(campaignId, data.id)
-      setScene(data as unknown as Scene)
-      setShowSetup(false)
-      await loadScenes()
+    // One create at a time. The popout "+ New Map" button gives no in-flight
+    // feedback in its own window, so it could be mashed - which once spawned
+    // 4 blank "New Map" scenes in ~1s and stole the active scene (playtest
+    // 2026-05-24). The ref drops re-entrant calls while a create is running.
+    if (creatingSceneRef.current) return
+    creatingSceneRef.current = true
+    try {
+      const { data, error } = await insertScene({
+        campaign_id: campaignId, name: nameOverride ?? setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, cell_px: 35, is_active: true, has_grid: setupHasGrid,
+      }).select().single()
+      if (error) { console.error('[TacticalMap] createScene error:', error.message); alert('Failed to create scene: ' + error.message); return }
+      if (data) {
+        // Deactivate other scenes
+        await deactivateOtherScenes(campaignId, data.id)
+        setScene(data as unknown as Scene)
+        setShowSetup(false)
+        await loadScenes()
+      }
+    } finally {
+      creatingSceneRef.current = false
     }
   }
 
