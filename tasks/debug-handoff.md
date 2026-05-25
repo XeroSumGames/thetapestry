@@ -65,6 +65,13 @@ Each entry: where it lives, what depends on it, current health, what a player se
 - **Residual (NOT Puffer):** E2E lane adds the "Survivor REST insert -> forced pending" regression assertion (routed in `todo.md`).
 - **First-place-to-look:** if a non-Thriver pin ever appears world-visible / styled as GM, confirm this trigger is still present + the `map_pins` "View pins" SELECT policy in `sql/_baseline/schema.sql`.
 
+### `characters` cross-user writes (GM loot/award + PC trade) - **RED (open data-loss class, HIGH for beta - flagged 2026-05-24, fix written, apply gated)**
+- **What it is:** `characters` UPDATE RLS is owner-only (`auth.uid() = user_id`) + a Thriver bypass (`is_thriver()`). A GM is NOT a Thriver, so any client write to ANOTHER player's `characters` row silently no-ops (RLS returns 0 rows, no error). Verified live 2026-05-24.
+- **What players see if it bites:** items "given" by the GM (loot, NPC drops, object loot) or by another player (PC-PC trade) **vanish** - removed from the source, never land on the target. Rations not decremented (but stress applied = desync). Lasting wounds never persist on the victim's sheet. 8 flows total (`tasks/finding-characters-rls-cross-user-writes-2026-05-24.md`).
+- **Why RED + why latent:** silent data loss across the whole GM loot/award/ration loop. It does NOT show in playtest because dev GMs are also Thrivers (the bypass covers them). At the 500-user beta, GMs are ordinary Survivors -> it breaks for real. **COMBAT IS SAFE** - HP/RP/stress/conditions write to `character_states`, which already has a member/GM policy; only `characters.data` writes (inventory/rations/lasting-wounds/log) hit the gap.
+- **Fix (written, apply gated = Xero):** `sql/characters-gm-write-rls-2026-05-24.sql` adds a GM-of-campaign UPDATE policy on `characters` (scoped, mirrors `character_states`; resolves flows 2-8). PC-PC trade (flow 1, peer-to-peer) routes separately through a SECURITY DEFINER inventory-only RPC [PF writes] + client rewire [HP], OR is disabled for the beta. NOT a blanket member-write policy (that would let any peer rewrite a teammate's whole sheet).
+- **First-place-to-look:** "I gave/looted an item and it disappeared" -> this gap; check `characters` has the GM UPDATE policy + that the flow uses it (or the trade RPC), not a raw owner-gated `.update`.
+
 ---
 
 ## 2. Tech Debt Ledger - shortcuts taken, with their interest rate
