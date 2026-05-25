@@ -167,14 +167,23 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
     else onGiveToVehicle!(item, target.id, qty)
     // Decrement sender against the latest inventory (read via ref so a
     // realtime update mid-modal can't be clobbered by a stale snapshot).
-    const current = inventoryRef.current
-    const idx = current.findIndex(i => i === item || (i.name === item.name && i.custom === item.custom))
-    if (idx >= 0) {
-      const remaining = current[idx].qty - qty
-      if (remaining <= 0) {
-        onUpdate(current.filter((_, j) => j !== idx))
-      } else {
-        onUpdate(current.map((i, j) => j === idx ? { ...i, qty: remaining } : i))
+    //
+    // PC -> PC is the exception: the give_item_to_character RPC moves BOTH
+    // sides atomically (it locks + decrements the giver itself), so a client
+    // giver-write here would race the RPC's SELECT ... FOR UPDATE and could
+    // double-decrement the giver. The PC handler reloads the giver's inventory
+    // after the RPC instead. NPC / community / vehicle gives still decrement
+    // here (those receiver-writes don't touch the giver's row).
+    if (target.kind !== 'pc') {
+      const current = inventoryRef.current
+      const idx = current.findIndex(i => i === item || (i.name === item.name && i.custom === item.custom))
+      if (idx >= 0) {
+        const remaining = current[idx].qty - qty
+        if (remaining <= 0) {
+          onUpdate(current.filter((_, j) => j !== idx))
+        } else {
+          onUpdate(current.map((i, j) => j === idx ? { ...i, qty: remaining } : i))
+        }
       }
     }
     setGivingItem(null)

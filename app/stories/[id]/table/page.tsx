@@ -6919,20 +6919,23 @@ export default function TablePage() {
                 inline={true}
                 otherCharacters={entries.filter(e => e.character.id !== syncedSelectedEntry.character.id).map(e => ({ id: e.character.id, name: e.character.name }))}
                 onGiveItem={async (item: InventoryItem, targetCharId: string, qty: number) => {
-                  const targetEntry = entries.find(e => e.character.id === targetCharId)
-                  if (!targetEntry) return
-                  const targetData = targetEntry.character.data ?? {}
-                  const targetInv: InventoryItem[] = targetData.inventory ?? []
-                  const existing = targetInv.find((i: InventoryItem) => i.name === item.name && i.custom === item.custom)
-                  const newTargetInv = existing
-                    ? targetInv.map((i: InventoryItem) => i === existing ? { ...i, qty: i.qty + qty } : i)
-                    : [...targetInv, { ...item, qty }]
-                  await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
+                  // PC->PC trade via the give_item_to_character RPC (atomic both-sides;
+                  // a raw cross-user .update here silently no-ops under owner-only RLS
+                  // -> data loss). The giver decrement is skipped in confirmGive for PC.
+                  const { error } = await supabase.rpc('give_item_to_character', {
+                    p_giver_id: syncedSelectedEntry.character.id,
+                    p_target_id: targetCharId,
+                    p_item_name: item.name,
+                    p_item_custom: item.custom ?? false,
+                    p_qty: qty,
+                  })
+                  if (error) {
+                    alert(`Couldn't give that item: ${error.message}`)
+                    return
+                  }
+                  // Refresh the giver's own entries (a broadcast doesn't echo to its sender).
+                  await loadEntries(id)
                   initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: { targetCharId } })
-                  // Cross-user notification - RPC bypasses notifications
-                  // RLS via SECURITY DEFINER. from_label is the giver's
-                  // character name so the receiver sees who handed it
-                  // over without parsing the body.
                   await supabase.rpc('notify_inventory_received', {
                     target_character_id: targetCharId,
                     item_name: item.name,
