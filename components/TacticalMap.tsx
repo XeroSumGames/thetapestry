@@ -711,11 +711,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const { data } = await sceneTokens(sceneId)
     const toks = (data ?? []) as unknown as Token[]
     setTokens(toks)
-    // Scroll a token that JUST appeared into view (live placement via the
-    // player-bar Map button, or un-archive). On the first load for a scene
-    // we only seed the id set - scene-open framing is centerViewport's job
-    // (it waits for the canvas to be sized). Same-scene reloads that only
-    // MOVE or REMOVE tokens add no new id, so they never steal scroll.
+    // Scroll a token that JUST appeared into view (placement / un-archive).
+    // First load per scene only seeds ids (scene-open framing is
+    // centerViewport's job); moves/removes add no new id, so never scroll.
     if (tokenScrollSceneRef.current === sceneId) {
       const appeared = toks.filter(t => (isGM || t.is_visible) && !prevTokenIdsRef.current.has(t.id))
       const target = appeared.find(t => t.token_type === 'pc') ?? appeared[0]
@@ -3780,7 +3778,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             toggle button); expands into paint/erase + bulk controls
             when in edit mode. Hidden entirely from players. */}
         {isGM && scene && (
-          <div ref={setFogBarRef} style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div ref={setFogBarRef} style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
             {/* Drag handle. ⠿ braille dots are universal "grippy" UX
                 - same icon GmNotes / NpcRoster / CampaignPins all use
                 for drag-to-reorder. mousedown starts the drag, doc-
@@ -3857,7 +3855,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   style={{ padding: '4px 10px', background: fogEditMode === 'select' ? '#1f1f2e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'select' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'select' ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   ↖ Select
                 </button>
-                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
+                {/* Wrap to line 2 here: structure + bulk tools below, fog/select above (too busy on one line). */}
+                <div style={{ flexBasis: '100%', height: 0 }} />
                 {/* Structure tools - author thin wall/door/window
                     segments on cell edges. Click two intersections to
                     place a segment; segments chain (the second click
@@ -3954,7 +3953,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const isOpen = seg.door_open ?? kindDefault
           const stateLabel = seg.kind === 'wall' ? null : (isOpen ? 'open' : 'closed')
           return (
-            <div style={{ position: 'absolute', top: `${fogBarPos.y + 48}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.95)', border: '1px solid #7ab3d4', borderRadius: '3px', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+            <div style={{ position: 'absolute', top: `${fogBarPos.y + 72}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.95)', border: '1px solid #7ab3d4', borderRadius: '3px', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
               <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 Selected: {kindLabel}{stateLabel ? ` (${stateLabel})` : ''}
               </span>
