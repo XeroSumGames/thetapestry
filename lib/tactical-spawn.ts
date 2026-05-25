@@ -19,13 +19,40 @@
 // Coordinates are 0-indexed to match the renderer's
 // `tok.grid_x * cellSize` math in components/TacticalMap.tsx.
 // Clamps for tiny grids: spawn never falls outside the scene.
+//
+// Occupancy (added 2026-05-25): pass the cells already taken on the
+// scene and the spawn steps to the NEAREST free cell, spiralling out
+// from the (1,1) anchor. Without this every token landed on (1,1) and
+// stacked - placing 3 PCs looked like only one appeared (playtest
+// 2026-05-25). Omitting `occupied` keeps the original (1,1) behaviour.
 
 export function defaultSpawnCell(
   gridCols: number,
   gridRows: number,
+  occupied?: Iterable<{ grid_x: number; grid_y: number }>,
 ): { grid_x: number; grid_y: number } {
-  return {
-    grid_x: Math.min(1, Math.max(0, gridCols - 1)),
-    grid_y: Math.min(1, Math.max(0, gridRows - 1)),
+  const baseX = Math.min(1, Math.max(0, gridCols - 1))
+  const baseY = Math.min(1, Math.max(0, gridRows - 1))
+  if (!occupied) return { grid_x: baseX, grid_y: baseY }
+
+  const key = (x: number, y: number) => `${x},${y}`
+  const taken = new Set<string>()
+  for (const t of occupied) taken.add(key(t.grid_x, t.grid_y))
+  if (!taken.has(key(baseX, baseY))) return { grid_x: baseX, grid_y: baseY }
+
+  // Spiral outward in expanding square rings (Chebyshev distance r) from
+  // the anchor, scanning each ring's perimeter, and return the first free
+  // in-bounds cell - keeps spawns clustered near the top-left.
+  const maxR = Math.max(gridCols, gridRows)
+  for (let r = 1; r <= maxR; r++) {
+    for (let y = baseY - r; y <= baseY + r; y++) {
+      for (let x = baseX - r; x <= baseX + r; x++) {
+        if (Math.max(Math.abs(x - baseX), Math.abs(y - baseY)) !== r) continue
+        if (x < 0 || y < 0 || x >= gridCols || y >= gridRows) continue
+        if (!taken.has(key(x, y))) return { grid_x: x, grid_y: y }
+      }
+    }
   }
+  // Grid fully occupied - fall back to the anchor (stack as last resort).
+  return { grid_x: baseX, grid_y: baseY }
 }

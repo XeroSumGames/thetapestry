@@ -2779,7 +2779,6 @@ export default function TablePage() {
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
-    const spawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
     // Three-way toggle: live → archive (off-map, position preserved);
     // archived → un-archive (back on map at original cell);
     // no row → insert fresh at (0,0). Hard-delete used to be the off
@@ -2818,8 +2817,9 @@ export default function TablePage() {
     const tokenColor = type === 'pc'
       ? '#7ab3d4'
       : getNpcTokenBorderColor({ disposition: npcRow?.disposition, npc_type: (npcRow as any)?.npc_type })
-    // Spawn top-left (1,1) via defaultSpawnCell - one cell in from the
-    // corner so the draggable day/night/fog toolbar doesn't hide it.
+    // Step to the nearest FREE cell, not always (1,1), so placed tokens don't stack (playtest 2026-05-25: 3 PCs all landed on (1,1)).
+    const { data: occ } = await supabase.from('scene_tokens').select('grid_x, grid_y').eq('scene_id', activeScene.id).is('archived_at', null)
+    const spawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15, (occ ?? []) as { grid_x: number; grid_y: number }[])
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
       name,
