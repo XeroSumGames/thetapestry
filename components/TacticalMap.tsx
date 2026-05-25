@@ -11,7 +11,7 @@ import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap, coverGrowGrid } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
-import { frameViewportOnTokens, scrollCellIntoView } from '../lib/tactical-view'
+import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken } from '../lib/tactical-view'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -394,12 +394,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Which scene we've already auto-centered the scroll for - prevents
   // stealing the user's scroll after they've moved around.
   const centeredSceneIdRef = useRef<string | null>(null)
-  // Token-ids last seen per scene, so loadTokens can scroll a just-APPEARED
-  // token (placement / un-archive) into view.
+  // loadTokens: prev ids scroll a new token into view; seq guard drops stale out-of-order fetches.
   const prevTokenIdsRef = useRef<Set<string>>(new Set())
   const tokenScrollSceneRef = useRef<string | null>(null)
-  // Seq guard: out-of-order loadTokens fetches must not overwrite with a
-  // stale snapshot ("only 2 of 4 tokens show"). Mirrors loadEntries.
   const loadTokensSeqRef = useRef(0)
   const sceneRef = useRef<Scene | null>(null)
   // invalidated when mover position, range, grid size, or occupied-cell set changes; key checked inline in draw()
@@ -715,7 +712,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (seq !== loadTokensSeqRef.current) return // superseded by a newer load - don't overwrite with stale data
     const toks = (data ?? []) as unknown as Token[]
     setTokens(toks)
-    // Scroll a just-appeared token into view; first load per scene only seeds ids.
     if (tokenScrollSceneRef.current === sceneId) {
       const appeared = toks.filter(t => (isGM || t.is_visible) && !prevTokenIdsRef.current.has(t.id))
       const target = appeared.find(t => t.token_type === 'pc') ?? appeared[0]
@@ -818,9 +814,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   })
   const pingChannelRef = pingChannel.channelRef
 
-  // Frame on scene open: prefer the PARTY (PC tokens) so players are in view
-  // (framing on ALL tokens let spread NPCs drag the center to the empty
-  // middle). Fallback: any visible token, else map middle. Once per scene id.
+  // Frame on scene open: prefer PC tokens (players in view, not the empty middle).
   function centerViewport() {
     const container = containerRef.current
     const canvas = canvasRef.current
@@ -1621,6 +1615,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
     let hasActiveAnim = false
     toks.forEach(t => {
+     try {
       if (!t.is_visible && !isGM) return
       // Multi-cell footprint (objects only - defaults to 1×1). The
       // anchor cell stays (grid_x, grid_y); the visual is centered on
@@ -1709,7 +1704,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       } else if (t.character_id && entries) {
         const entry = entries.find((e: any) => e.character.id === t.character_id)
         if (entry) {
-          const wp = entry.liveState.wp_current ?? entry.liveState.wp_max ?? 10
+          const wp = entry.liveState?.wp_current ?? entry.liveState?.wp_max ?? 10
           tokenDead = wp === 0
           tokenMortal = wp === 0
         }
@@ -2066,7 +2061,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (npc) { wpCur = npc.wp_current ?? npc.wp_max ?? 10; wpMax = npc.wp_max ?? 10 }
       } else if (t.character_id && entries) {
         const entry = entries.find((e: any) => e.character.id === t.character_id)
-        if (entry) { wpCur = entry.liveState.wp_current ?? entry.liveState.wp_max ?? 10; wpMax = entry.liveState.wp_max ?? 10 }
+        if (entry) { wpCur = entry.liveState?.wp_current ?? entry.liveState?.wp_max ?? 10; wpMax = entry.liveState?.wp_max ?? 10 }
       } else if (t.token_type === 'object' && (t as any).wp_max != null) {
         wpMax = (t as any).wp_max ?? 0; wpCur = (t as any).wp_current ?? wpMax
       }
@@ -2136,6 +2131,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
 
       ctx.globalAlpha = 1
+     } catch {
+       // A bad token must never abort the loop + blank the rest - reset ctx, fallback-draw.
+       ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; try { ctx.setLineDash([]) } catch {}
+       if ((t?.rotation ?? 0) !== 0) { try { ctx.restore() } catch {} }
+       drawFallbackToken(ctx, t, cellSize, offsetX, offsetY)
+     }
     })
 
     // Ping - double pulsing ring that fades out (GM=orange, player=green)

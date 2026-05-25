@@ -95,6 +95,27 @@ export function frameViewportOnTokens(
   container.scrollTop = Math.max(0, (canvas.height - container.clientHeight) / 2)
 }
 
+// Minimal token render used as a fallback when a token's full draw throws -
+// guarantees the token still SHOWS (circle + initials) rather than vanishing
+// (and, worse, aborting the whole token loop and blanking the ones after it).
+export function drawFallbackToken(
+  ctx: CanvasRenderingContext2D,
+  t: { grid_x: number; grid_y: number; grid_w?: number | null; grid_h?: number | null; name?: string; color?: string | null },
+  cellSize: number, offsetX: number, offsetY: number,
+): void {
+  try {
+    const fr = cellSize * 0.4
+    const cx = offsetX + (t.grid_x + (t.grid_w ?? 1) / 2) * cellSize
+    const cy = offsetY + (t.grid_y + (t.grid_h ?? 1) / 2) * cellSize
+    ctx.beginPath(); ctx.arc(cx, cy, fr, 0, Math.PI * 2)
+    ctx.fillStyle = t.color || '#7ab3d4'; ctx.fill()
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke()
+    ctx.fillStyle = '#f5f2ee'; ctx.font = `bold ${Math.max(10, fr * 0.8)}px Carlito`
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillText((t.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2), cx, cy)
+  } catch { /* even the fallback failing must not break the loop */ }
+}
+
 /** Smooth-scroll a single grid cell to viewport center (live placement). */
 export function scrollCellIntoView(
   container: HTMLElement, canvas: HTMLCanvasElement,
