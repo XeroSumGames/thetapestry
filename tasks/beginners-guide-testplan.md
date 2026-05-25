@@ -95,9 +95,9 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 8. [~] (RANDOM) Driver DRIVE / Navigate combat actions; passengers fire from windows.
 
 ## Ch 12 - Communities
-1. [ ] (DOM) Create a community; the Group->Community 13-member threshold chip (green/amber/red).
-2. [ ] (DOM) Add/remove members; assign roles (Gatherer/Maintainer/Safety).
-3. [~] (RANDOM) Run Weekly Check (Fed -> Clothed -> Morale); GM slot overrides make outcomes assertable.
+1. [x] (DOM) Create a community; the Group->Community 13-member threshold chip (green/amber/red). `communities-lifecycle.spec` (create via Community ▾ -> New Community; populate to 13 -> "13 members" chip)
+2. [~] (DOM) Add/remove members; assign roles (Gatherer/Maintainer/Safety). `communities-lifecycle.spec` seeds 13 active members with roles via REST (the GM owns the campaign); the add/remove/role-change UI buttons themselves are not yet driven - partial.
+3. [x] (RANDOM) Run Weekly Check (Fed -> Clothed -> Morale); GM slot overrides make outcomes assertable. `communities-lifecycle.spec` - opens the modal (eligible at 13), Run -> Finalize, asserts the STRUCTURE it always writes (a community_morale_checks row + fed/clothed community_resource_checks + week_number 0->1); dice values not asserted (roll2d6 is random).
 4. [x] (RT) Stockpile deposit shows live in the other open panel `[Gate 0: D-1]`. `section-d-stockpile.spec`
 5. [~] (RT) Stockpile qty update propagates `[Gate 0: D-2]`.
 6. [~] (RT) Create a community while the panel's open -> a deposit into it still propagates (resubscribe) `[Gate 0: D-3]`.
@@ -128,4 +128,4 @@ Items tagged **[Gate 0: X]** are the phase7 A-F critical-path subset.
 - Exact dice values (the 548 vitest unit tests own the math; E2E asserts flow/outcome-class).
 
 ## Coverage snapshot (2026-05-24)
-Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1-4.4, Ch5.1-5.2, Ch6.1-6.3, Ch7.1 (partial: counter+dice-proxy)/7.3, Ch10.1-10.2, Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1-14.3, account-settings (Sys P, reversible half), inventory add/encumbrance/persist (Sys J, own-character half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). BLOCKED-on-bug: PC<->PC item trade (Sys J) is a prod data-loss bug (own-row RLS) - test.fixme'd, finding routed. The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
+Green on main: Ch1.1-1.3, Ch2.1, Ch3.1, Ch4.1-4.4, Ch5.1-5.2, Ch6.1-6.3, Ch7.1 (partial: counter+dice-proxy)/7.3, Ch10.1-10.2, Ch12.1/12.3 (+12.2 partial), Ch12.4, Ch12.8, Ch13.1-13.2, Ch13.4, Ch14.1-14.3, account-settings (Sys P, reversible half), inventory add/encumbrance/persist (Sys J, own-character half) + the infra (sweep, auto-login, seeding, role-nav). In flight: Ch12.5-12.6 (D-2/D-3). BLOCKED-on-bug: PC<->PC item trade (Sys J) is a prod data-loss bug (own-row RLS) - test.fixme'd, finding routed. The Gate-0 critical path is Ch7.1-7.4, Ch8.2-8.5, Ch9 (all), Ch11.1-11.3, Ch12.4-12.6, Ch3.2-3.3, Ch10.2 - i.e. the [Gate 0] tags above.
