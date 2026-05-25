@@ -51,6 +51,14 @@ export default function SceneControlsPopoutPage() {
 
   const [scene, setScene] = useState<Scene | null>(null)
   const [scenes, setScenes] = useState<Scene[]>([])
+  // Local draft for the Scene Name field. The input edits this, NOT
+  // scene.name directly: writing scene.name on every keystroke fired a
+  // tactical_scenes UPDATE -> realtime echo -> load() -> setScene, which
+  // reset the field to the just-committed (lagging) value mid-typing and
+  // mangled fast input ("Storage" -> "Strorg e"). Draft commits once on
+  // blur / Enter; it re-syncs only when the active scene id changes (see
+  // the effect below), so echoes never clobber in-flight typing.
+  const [nameDraft, setNameDraft] = useState('')
   const [error, setError] = useState<string>('')
   const [uploading, setUploading] = useState(false)
   // In-app confirm state. Native confirm() in this popout truncates
@@ -126,6 +134,11 @@ export default function SceneControlsPopoutPage() {
       .subscribe()
     return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [supabase, campaignId])
+
+  // Re-seed the Scene Name draft only when the ACTIVE SCENE changes (id),
+  // not on every realtime echo - so a postgres_changes refresh mid-typing
+  // can't reset the field. Switching scenes (or first load) updates it.
+  useEffect(() => { setNameDraft(scene?.name ?? '') }, [scene?.id])
 
   // Reuse-map library: any scene the GM has uploaded a background to,
   // across ALL their campaigns. Lets them re-skin the current scene
@@ -376,7 +389,10 @@ export default function SceneControlsPopoutPage() {
 
       <div style={{ marginBottom: '4px' }}>
         <div style={lbl}>Scene Name</div>
-        <input value={scene.name} onChange={e => updateSceneField('name', e.target.value)}
+        <input value={nameDraft}
+          onChange={e => setNameDraft(e.target.value)}
+          onBlur={() => { const v = nameDraft.trim(); if (v && v !== scene.name) updateSceneField('name', v) }}
+          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
           style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
       </div>
 
