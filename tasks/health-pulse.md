@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-25 12:11 UTC
+
+**Status:** DRIFT (same as 09:12 — no commits since, nothing resolved)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [643 passed, 38 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift (continuing from 09:12):**
+- **Ledger stale:** 622/37 in `debug-handoff.md` vs 643/38 actual. `scripts/refresh-ledger.mjs` still unrun.
+- **HOPED-FOR (2026-05-19 batch, 7 days old):** Tier-2 Recruit, Advantages, FI streamline, Vehicle Q4-c/d, narrative polish. Drain gate = 2026-05-25 playtest (today, ~6am Denver now — not yet confirmed).
+- **HOPED-FOR (2026-05-24):** vehicle popout broadcasts (Section B) + combat-math/infection modal (A2/F). Same drain gate.
+- **Stale-as-open todo:** "COORDINATION - formalize 3-lane model" still `- [ ]`; `operating-mode.md` + `lane-protocol.md` + `active-lanes.md` all exist — shipped.
+
+**Action:** Same as 09:12. After today's playtest, drain HOPED-FOR + refresh ledger + tick the 3-lane todo.
+
+---
+
 ## 2026-05-25 09:12 UTC
 
 **Status:** DRIFT
