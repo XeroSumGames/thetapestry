@@ -71,6 +71,14 @@ const TILE_LAYERS: Record<string, { url: string; attr: string; maxZoom: number }
   humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '© HOT', maxZoom: 19 },
 }
 
+// Base-layer picker options [id, label]. Rendered as ONE dropdown (echoing
+// the header Community menu) instead of 7 splayed buttons (Xero 2026-05-25).
+const LAYER_OPTIONS: [string, string][] = [
+  ['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'],
+  ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'],
+  ['positron', 'Positron'], ['dark', 'Dark'],
+]
+
 // Travel-mode lookup for the measure tool. mph drives time conversion;
 // emoji is the inline chip glyph; label shows in the dropdown. Add
 // modes here (horseback, boat, etc.) as the campaign evolves.
@@ -201,6 +209,15 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // re-subscribing on every layer switch.
   const mapLayerRef = useRef<string>(mapLayer)
   useEffect(() => { mapLayerRef.current = mapLayer }, [mapLayer])
+  // Base-layer dropdown (replaces the 7 splayed layer buttons).
+  const [layerMenuOpen, setLayerMenuOpen] = useState(false)
+  const layerMenuRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!layerMenuOpen) return
+    const onDoc = (e: MouseEvent) => { if (layerMenuRef.current && !layerMenuRef.current.contains(e.target as Node)) setLayerMenuOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [layerMenuOpen])
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
@@ -1163,12 +1180,31 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             {searching ? '...' : 'Go'}
           </button>
         </form>
-        {[['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['positron', 'Positron'], ['dark', 'Dark']].map(([layer, label]) => (
-          <button key={layer} onClick={() => switchLayer(layer)}
-            style={{ padding: '3px 0', width: '100px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
-            {label}
+        {/* Base-layer picker - one dropdown echoing the header Community
+            menu (trigger + cascading hdr-btn--child list) instead of 7
+            splayed buttons (Xero 2026-05-25 "too much"). */}
+        <div ref={layerMenuRef} style={{ position: 'relative' }}>
+          <button type="button" onClick={() => setLayerMenuOpen(o => !o)}
+            className={`hdr-btn${layerMenuOpen ? ' hdr-btn--active' : ''}`}
+            style={{ ...toolbarCtrl, width: '120px', justifyContent: 'space-between', textTransform: 'uppercase', border: '1px solid #3a3a3a', background: 'rgba(15,15,15,.85)', color: '#d4cfc9' }}>
+            <span>{LAYER_OPTIONS.find(l => l[0] === mapLayer)?.[1] ?? 'Map'}</span>
+            <span style={{ marginLeft: 6 }}>▾</span>
           </button>
-        ))}
+          {layerMenuOpen && (
+            <div style={{ position: 'absolute', top: '100%', right: 0, paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 1001 }}>
+              {LAYER_OPTIONS.map(([layer, label], i) => {
+                const active = mapLayer === layer
+                return (
+                  <button key={layer} type="button" onClick={() => { switchLayer(layer); setLayerMenuOpen(false) }}
+                    className="hdr-btn hdr-btn--child"
+                    style={{ ...toolbarCtrl, width: '120px', justifyContent: 'flex-start', textTransform: 'uppercase', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#151515', color: active ? '#f5a89a' : '#d4cfc9', animationDelay: `${i * 0.03}s` }}>
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Placing mode banner */}
