@@ -6,6 +6,32 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-25 18:11 UTC
+
+**Status:** DRIFT — active ship batch landed; HOPED-FOR still awaiting playtest
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [658 passed, 40 files — up from 643/38]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 15:06 (11 commits):**
+- `fix(inventory)`: PC->PC trade via `give_item_to_character` RPC — first of the 8 RLS-write flows from #2 BLOCKER; partial progress
+- `feat(table)`: Tactical Map header scene-picker dropdown — removes the stated blocker on blank-map-default todo
+- `fix(table)`: GM-only Advantages (star) tab removed
+- Tactical map batch: grid auto-grow, token spawn spread, Map toggle guard, Scene Name fast-typing fix, New Map double-fire guard
+
+**Drift (continuing):**
+- **HOPED-FOR (2026-05-19 batch, 6 days old):** Tier-2 Recruit, Advantages, FI streamline, Vehicle Q4-c/d, narrative polish — drain gate = 2026-05-25 playtest, not confirmed yet
+- **HOPED-FOR (2026-05-24):** vehicle popout broadcasts (Section B) + combat-math/infection modal (A2/F) — same playtest gate
+- **Ledger stale:** debug-handoff.md says 622/37; actual 658/40 — 36-test drift, `scripts/refresh-ledger.mjs` still unrun
+- **Stale-as-open todo:** "COORDINATION - formalize 3-lane model" still `- [ ]`; `operating-mode.md` + `lane-protocol.md` + `active-lanes.md` all exist
+
+**Action:** After today's playtest, drain HOPED-FOR + tick 3-lane todo + run `node scripts/refresh-ledger.mjs`. Also verify #2 BLOCKER RLS-write status (7 of 8 flows still unpatched).
+
+---
+
 ## 2026-05-25 15:06 UTC
 
 **Status:** DRIFT (same as 12:11 — no commits since, nothing resolved)
