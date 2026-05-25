@@ -7718,11 +7718,14 @@ export default function TablePage() {
                       Popout
                     </div>
                   )}
-                  <PlayerStatusChips liveState={entry.liveState} lastingWounds={(entry.character.data as any)?.lastingWounds} />
                 </div>
                 <div style={{ fontSize: nameSize, color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.character.name} <span style={{ color: '#cce0f5', fontWeight: 400 }}>({entry.username})</span>
                 </div>
+                {/* State chips on their OWN row below the name so they never
+                    widen the Map/avatar/Popout row and knock it off-center
+                    (Xero 2026-05-25: keep that row symmetric). */}
+                <PlayerStatusChips liveState={entry.liveState} lastingWounds={(entry.character.data as any)?.lastingWounds} />
               </button>
             )
           })
