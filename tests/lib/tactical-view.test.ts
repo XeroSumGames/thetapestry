@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldFollowSharedTactical, shouldRenderTactical } from '../../lib/tactical-view'
+import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell } from '../../lib/tactical-view'
 
 // Invariant (Xero 2026-05-22): sharing drives what PLAYERS see, not the GM's
 // own pane. The GM can preview the campaign map while players see the shared
@@ -42,5 +42,50 @@ describe('shouldRenderTactical', () => {
   it('nobody sharing, nobody in combat, toggle off = campaign for all', () => {
     expect(shouldRenderTactical({ ...base, gmLike: true })).toBe(false)
     expect(shouldRenderTactical({ ...base, gmLike: false })).toBe(false)
+  })
+})
+
+// Viewport framing (2026-05-25 "tokens won't appear on the map" P1): tokens
+// spawn at the locked top-left (1,1); the canvas can dwarf the viewport, so a
+// just-placed token must be scrolled into view or it's lost off-screen.
+describe('tokenCentroidCell', () => {
+  it('returns null for no tokens', () => {
+    expect(tokenCentroidCell([])).toBeNull()
+  })
+  it('gives the cell-center of a single token', () => {
+    expect(tokenCentroidCell([{ grid_x: 1, grid_y: 1 }])).toEqual({ cellX: 1.5, cellY: 1.5 })
+  })
+  it('averages cell-centers of multiple tokens', () => {
+    // top-row PC cluster (1,1)(3,1)(5,1) -> centroid x = (1.5+3.5+5.5)/3 = 3.5
+    expect(tokenCentroidCell([
+      { grid_x: 1, grid_y: 1 }, { grid_x: 3, grid_y: 1 }, { grid_x: 5, grid_y: 1 },
+    ])).toEqual({ cellX: 3.5, cellY: 1.5 })
+  })
+})
+
+describe('centerScrollOnCell', () => {
+  const geo = { cellPx: 25, zoom: 1, canvasW: 1425, canvasH: 1075, viewW: 900, viewH: 600 }
+
+  it('clamps a top-left token to scroll origin (it would center past 0)', () => {
+    // token (1,1): cellX 1.5 -> px 37.5; 37.5 - 450 < 0 -> clamp to 0
+    expect(centerScrollOnCell({ ...geo, cellX: 1.5, cellY: 1.5 })).toEqual({ left: 0, top: 0 })
+  })
+
+  it('centers a mid-map token in the viewport', () => {
+    // cell (32,22) center (32.5,22.5) -> px (812.5,562.5); minus half-view
+    expect(centerScrollOnCell({ ...geo, cellX: 32.5, cellY: 22.5 }))
+      .toEqual({ left: 812.5 - 450, top: 562.5 - 300 })
+  })
+
+  it('clamps to the far scroll bound for a bottom-right token', () => {
+    // huge cell coords -> px beyond canvas; clamp to canvasW-viewW / canvasH-viewH
+    expect(centerScrollOnCell({ ...geo, cellX: 999, cellY: 999 }))
+      .toEqual({ left: 1425 - 900, top: 1075 - 600 })
+  })
+
+  it('accounts for zoom (canvas pixels scale with zoom)', () => {
+    // zoom 2 doubles the pixel position of the same cell
+    expect(centerScrollOnCell({ ...geo, zoom: 2, canvasW: 2850, canvasH: 2150, cellX: 32.5, cellY: 22.5 }))
+      .toEqual({ left: 32.5 * 25 * 2 - 450, top: 22.5 * 25 * 2 - 300 })
   })
 })

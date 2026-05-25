@@ -11,6 +11,7 @@ import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap, coverGrowGrid } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
+import { frameViewportOnTokens, scrollCellIntoView } from '../lib/tactical-view'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -393,6 +394,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Which scene we've already auto-centered the scroll for - prevents
   // stealing the user's scroll after they've moved around.
   const centeredSceneIdRef = useRef<string | null>(null)
+  // Token-ids last seen per scene, so loadTokens can detect a token that
+  // just APPEARED (live placement / un-archive) and scroll it into view -
+  // tokens spawn at the locked top-left and would otherwise be off-screen.
+  const prevTokenIdsRef = useRef<Set<string>>(new Set())
+  const tokenScrollSceneRef = useRef<string | null>(null)
   const sceneRef = useRef<Scene | null>(null)
   // invalidated when mover position, range, grid size, or occupied-cell set changes; key checked inline in draw()
   const moveZoneCacheRef = useRef<{ key: string; cells: Array<{gx: number; gy: number}> } | null>(null)
@@ -703,7 +709,22 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // Soft-deleted tokens (archived_at not null) preserve their position
     // for a future remap but render as if absent. Filter them out here.
     const { data } = await sceneTokens(sceneId)
-    setTokens((data ?? []) as unknown as Token[])
+    const toks = (data ?? []) as unknown as Token[]
+    setTokens(toks)
+    // Scroll a token that JUST appeared into view (live placement via the
+    // player-bar Map button, or un-archive). On the first load for a scene
+    // we only seed the id set - scene-open framing is centerViewport's job
+    // (it waits for the canvas to be sized). Same-scene reloads that only
+    // MOVE or REMOVE tokens add no new id, so they never steal scroll.
+    if (tokenScrollSceneRef.current === sceneId) {
+      const appeared = toks.filter(t => (isGM || t.is_visible) && !prevTokenIdsRef.current.has(t.id))
+      const target = appeared.find(t => t.token_type === 'pc') ?? appeared[0]
+      const container = containerRef.current, canvas = canvasRef.current
+      if (target && container && canvas) scrollCellIntoView(container, canvas, target.grid_x, target.grid_y, getCellSize(), zoom)
+    } else {
+      tokenScrollSceneRef.current = sceneId
+    }
+    prevTokenIdsRef.current = new Set(toks.map(t => t.id))
   }
 
   // Init - load scenes on mount/campaign change. The render-loop's
@@ -797,22 +818,22 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   })
   const pingChannelRef = pingChannel.channelRef
 
-  // Center the viewport on the middle of the current map content (image or
-  // grid, whichever is larger). Only runs once per scene id so it doesn't
-  // steal the user's scroll after they've panned around. Called after draw()
-  // has sized the canvas.
+  // Frame the viewport on scene open. If the scene has tokens, center on
+  // their centroid (they spawn at the locked top-left, which the bare map
+  // middle would leave off-screen - the "tokens won't appear" P1); else
+  // center on the middle of the map content. Only runs once per scene id so
+  // it doesn't steal the user's scroll after they've panned. Called after
+  // draw() has sized the canvas.
   function centerViewport() {
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
-    // Use setTimeout(0) so the canvas dimensions written inside draw() have
+    // setTimeout(0) so the canvas dimensions written inside draw() have
     // settled into the DOM before we read scroll dimensions.
     setTimeout(() => {
-      if (!container || !canvas) return
-      const scrollX = Math.max(0, (canvas.width - container.clientWidth) / 2)
-      const scrollY = Math.max(0, (canvas.height - container.clientHeight) / 2)
-      container.scrollLeft = scrollX
-      container.scrollTop = scrollY
+      if (container && canvas) {
+        frameViewportOnTokens(container, canvas, tokensRef.current.filter(t => isGM || t.is_visible), getCellSize(), zoom)
+      }
     }, 0)
   }
 
