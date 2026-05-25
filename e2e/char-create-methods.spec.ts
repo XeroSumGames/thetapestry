@@ -50,6 +50,10 @@ async function charIdByName(page: Page, creds: SupaCreds, userId: string, name: 
 async function runWizard(page: Page, route: string, finalDot: string, name: string): Promise<void> {
   await page.goto(route, { waitUntil: 'domcontentloaded' })
   const nameInput = page.getByPlaceholder('Full name')
+  // Wait for the concept-step form to render before filling: under full-run load
+  // the wizard page can take >15s (the action timeout) to hydrate, which flaked
+  // the bare fill once. An explicit longer visibility wait absorbs that.
+  await expect(nameInput, 'concept-step name field should render').toBeVisible({ timeout: 30_000 })
   await nameInput.fill(name)
   await expect(nameInput, 'name input should hold the value we typed').toHaveValue(name)
   // Numbered progress dot for the final step (quick:"5", backstory:"9"); the
