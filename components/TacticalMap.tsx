@@ -816,12 +816,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   })
   const pingChannelRef = pingChannel.channelRef
 
-  // Frame the viewport on scene open. If the scene has tokens, center on
-  // their centroid (they spawn at the locked top-left, which the bare map
-  // middle would leave off-screen - the "tokens won't appear" P1); else
-  // center on the middle of the map content. Only runs once per scene id so
-  // it doesn't steal the user's scroll after they've panned. Called after
-  // draw() has sized the canvas.
+  // Frame the viewport on scene open. Prefer the PARTY (PC tokens) so the
+  // players are always in view - framing on ALL tokens let spread-out NPCs
+  // drag the center to the empty middle ("characters aren't on the map").
+  // Falls back to any visible token, else map middle. Once per scene id so
+  // it doesn't steal the user's scroll. Runs after draw() sizes the canvas.
   function centerViewport() {
     const container = containerRef.current
     const canvas = canvasRef.current
@@ -829,9 +828,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // setTimeout(0) so the canvas dimensions written inside draw() have
     // settled into the DOM before we read scroll dimensions.
     setTimeout(() => {
-      if (container && canvas) {
-        frameViewportOnTokens(container, canvas, tokensRef.current.filter(t => isGM || t.is_visible), getCellSize(), zoom)
-      }
+      if (!container || !canvas) return
+      const visible = tokensRef.current.filter(t => isGM || t.is_visible)
+      const pcs = visible.filter(t => t.token_type === 'pc')
+      frameViewportOnTokens(container, canvas, pcs.length ? pcs : visible, getCellSize(), zoom)
     }, 0)
   }
 

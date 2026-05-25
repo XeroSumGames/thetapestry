@@ -7691,8 +7691,9 @@ export default function TablePage() {
                           placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined)
                         }
                       }}
-                        style={{ padding: '3px 8px', background: onMap ? '#1a2e10' : '#2a2010', border: `1px solid ${onMap ? '#2d5a1b' : '#5a4a1b'}`, borderRadius: '3px', color: onMap ? '#7fc458' : '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
-                        Map
+                        title={onMap ? 'On the map - click to REMOVE from the map' : 'Click to ADD to the tactical map'}
+                        style={{ padding: '3px 8px', background: onMap ? '#1a2e10' : '#2a2010', border: `1px solid ${onMap ? '#2d5a1b' : '#5a4a1b'}`, borderRadius: '3px', color: onMap ? '#7fc458' : '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                        {onMap ? '✓ Map' : '+ Map'}
                       </div>
                     )
                   })()}
