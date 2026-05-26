@@ -816,7 +816,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const gx = p?.gx ?? (p as any)?.payload?.gx
         const gy = p?.gy ?? (p as any)?.payload?.gy
         const color = p?.color ?? (p as any)?.payload?.color ?? '#EF9F27'
-        if (gx != null && gy != null) setPing({ gx, gy, t: 0, color, count: 2 })
+        if (gx != null && gy != null) setPing({ gx, gy, t: 0, color, count: 3 })
       },
     },
   })
@@ -2147,23 +2147,26 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
      }
     })
 
-    // Ping - double pulsing ring that fades out (GM=orange, player=green)
+    // Ping - 3 pulsing rings that fade out, cycling red/green/red to match
+    // the campaign map's ping (role color intentionally ignored - alternating
+    // hue catches the eye peripherally). count runs 3 -> 2 -> 1.
     if (ping) {
       const pingCx = offsetX + ping.gx * cellSize + cellSize / 2
       const pingCy = offsetY + ping.gy * cellSize + cellSize / 2
+      const pulseColor = ping.count === 2 ? '#39ff14' : '#ff3a1d'
       const pingProgress = Math.min(1, ping.t)
       const pingRadius = cellSize * 0.5 + cellSize * 1.5 * pingProgress
       const pingAlpha = 1 - pingProgress
       ctx.beginPath()
       ctx.arc(pingCx, pingCy, pingRadius, 0, Math.PI * 2)
-      ctx.strokeStyle = ping.color
+      ctx.strokeStyle = pulseColor
       ctx.lineWidth = 3
       ctx.globalAlpha = pingAlpha
       ctx.stroke()
       if (pingProgress < 0.3) {
         ctx.beginPath()
         ctx.arc(pingCx, pingCy, cellSize * 0.2, 0, Math.PI * 2)
-        ctx.fillStyle = ping.color
+        ctx.fillStyle = pulseColor
         ctx.globalAlpha = pingAlpha
         ctx.fill()
       }
@@ -3056,7 +3059,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // location, which is the most common case.
     if (pos && e.altKey) {
       const color = isGM ? '#EF9F27' : '#7fc458'
-      setPing({ gx: pos.gx, gy: pos.gy, t: 0, color, count: 2 })
+      setPing({ gx: pos.gx, gy: pos.gy, t: 0, color, count: 3 })
       pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy, color } })
       return
     }
