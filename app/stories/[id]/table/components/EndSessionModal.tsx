@@ -136,11 +136,12 @@ export function EndSessionModal({
           </button>
         </div>
         {/* The roll log is captured onto the session AUTOMATICALLY when you
-            End Session (endSession -> buildSessionLogDigest -> sessions.session_log),
-            so there's no manual "append" step. This footer just says so and
-            links to where you read it back (new tab, so the in-progress
-            summary above isn't lost). Replaced the misleading "Append Log"
-            link that implied a manual attach (Xero 2026-05-26). */}
+            End Session (endSession snapshots the rolls as JSON -> sessions.session_log,
+            re-rendered with the live feed's RollEntry on /sessions), so there's
+            no manual "append" step. This footer just says so and links to where
+            you read it back (new tab, so the in-progress summary above isn't
+            lost). Replaced the misleading "Append Log" link that implied a
+            manual attach (Xero 2026-05-26). */}
         <div style={{ marginTop: '10px', textAlign: 'center' }}>
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
             This session's full roll log is saved automatically.

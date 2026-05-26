@@ -4,6 +4,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import StoryActionBar from '../../../../components/StoryActionBar'
+import { RollEntry, collapseCoordEffortChains } from '../../../../components/RollsFeed'
 
 interface Session {
   id: string
@@ -22,6 +23,33 @@ interface Attachment {
   file_url: string
   file_name: string
   file_type: string
+}
+
+// Renders a session's archived roll log. New sessions (>= 2026-05-26) store
+// the rolls as a JSON array, re-rendered with the live feed's RollEntry for
+// the rich feed look (incl. the Coordinated-Effort chain collapse). Sessions
+// ended before that stored a plain-text digest, shown verbatim as a fallback.
+function SessionRollLog({ raw }: { raw: string }) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const toggle = (rid: string) => setExpanded(prev => {
+    const next = new Set(prev)
+    if (next.has(rid)) next.delete(rid); else next.add(rid)
+    return next
+  })
+  let rows: any[] | null = null
+  try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) rows = parsed } catch { /* legacy plain-text digest */ }
+  if (!rows || rows.length === 0) {
+    return (
+      <pre style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif', margin: 0, maxHeight: '400px', overflowY: 'auto', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>{raw}</pre>
+    )
+  }
+  return (
+    <div style={{ maxHeight: '400px', overflowY: 'auto', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>
+      {collapseCoordEffortChains(rows as any).map((r: any) => (
+        <RollEntry key={r.id} r={r} expandedRollIds={expanded} toggleExpanded={toggle} simple={false} />
+      ))}
+    </div>
+  )
 }
 
 export default function SessionHistoryPage() {
@@ -223,7 +251,7 @@ export default function SessionHistoryPage() {
                     {s.session_log && (
                       <div style={{ marginTop: '10px' }}>
                         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Roll Log</div>
-                        <pre style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif', margin: 0, maxHeight: '300px', overflowY: 'auto', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>{s.session_log}</pre>
+                        <SessionRollLog raw={s.session_log} />
                       </div>
                     )}
                     {sessAttachments.length > 0 && (
