@@ -473,7 +473,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     return (
       <div style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-          <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Initiative</span>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Initiative{(r.damage_json as any).round ? ` (Round ${(r.damage_json as any).round})` : ''}</span>
           <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
         </div>
         {((r.damage_json as any).initiative as any[]).map((e: any, i: number) => {

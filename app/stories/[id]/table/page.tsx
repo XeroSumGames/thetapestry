@@ -1868,7 +1868,7 @@ export default function TablePage() {
             damage_json: { combatants } as any, created_at: new Date(now).toISOString() },
           { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.initiative,
-            damage_json: { initiative: sorted } as any, created_at: new Date(now + 1).toISOString() },
+            damage_json: { initiative: sorted, round: 1 } as any, created_at: new Date(now + 1).toISOString() },
         ]),
       ])
       if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
@@ -1953,7 +1953,7 @@ export default function TablePage() {
       await insertRollLog({
         campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.initiative,
-        damage_json: { initiative: sortedReroll } as any,
+        damage_json: { initiative: sortedReroll, round: 1 } as any,
       })
 
       await Promise.all([loadInitiative(id), rollsFeed.refetch()])
@@ -2208,7 +2208,9 @@ export default function TablePage() {
       const newRoundLogInsert = insertRollLog({
         campaign_id: id, user_id: userId, character_name: 'System', label: 'New Round - Initiative',
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.initiative,
-        damage_json: { initiative: sortedReroll } as any,
+        // combatRound still holds the round just ENDED here (setCombatRound
+        // runs below, after this insert), so the new round is +1.
+        damage_json: { initiative: sortedReroll, round: combatRound + 1 } as any,
       })
       const deathLogInsert = deathLogRows.length > 0
         ? insertRollLog(deathLogRows)

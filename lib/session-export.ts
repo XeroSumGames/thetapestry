@@ -118,8 +118,9 @@ function renderBespokeBanner(r: RollLogRow): string | null {
   <span style="margin-left:auto;font-size:14px;font-weight:700;color:#EF9F27">${e.total}</span>
 </div>`
     }).join('')
+    const round = (r.damage_json as any).round
     return `<div class="banner banner-initiative">
-  <div class="banner-head"><span class="banner-title">⚔️ Initiative</span><span class="time">${esc(time)}</span></div>
+  <div class="banner-head"><span class="banner-title">⚔️ Initiative${round ? ` (Round ${esc(String(round))})` : ''}</span><span class="time">${esc(time)}</span></div>
   ${rows}
 </div>`
   }
