@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-26 18:05 UTC
+
+**Status:** DRIFT (continuing from 06:07 — no new gate failures; drift unresolved)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [675 passed, 39 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 06:07 UTC (2 commits):**
+- `d6ad118` weekly security audit committed (`tasks/security-audit.md`) — findings are all moderate/advisory; top action: `app/scene-controls-popout/page.tsx:316` upload missing `prepareUpload` guard (GM-only page, bounded exposure)
+- `57442c5` todo: post-1.0 platform-migration pointer added (not a live issue)
+
+**Drift (unchanged from 06:07 — no action yet):**
+- HOPED-FOR (2026-05-19 batch + re-arch vehicle/combat items): debug-handoff.md not drained post-2026-05-26 playtest
+- 3 stale `- [ ]` todos: initiative round (f10d0ff), tactical ping (02d7389), img_scale (6ef34ce) — all shipped
+- Confidence Ledger: shows 622/37; actual 675/39 (+53 tests); `scripts/refresh-ledger.mjs` unrun
+
+**Action:** Puffer Fish — action items same as 06:07 entry; security audit adds: wire `prepareUpload` on `scene-controls-popout` upload (`app/scene-controls-popout/page.tsx:316`) + register `tactical-maps` in `lib/safe-upload.ts`.
+
+---
+
 ## 2026-05-26 06:07 UTC
 
 **Status:** DRIFT
