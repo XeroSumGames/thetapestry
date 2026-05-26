@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
-import { osrmCoordsParam, waypointLabel } from '../lib/campaign-route'
+import { osrmCoordsParam, waypointLabel, parseLatLng } from '../lib/campaign-route'
 import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import { useHiddenPins } from '../lib/use-hidden-pins'
 
@@ -233,6 +233,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
+  // Feedback when a search finds nothing (was silent - "isn't going anywhere").
+  const [searchMsg, setSearchMsg] = useState('')
   const [placing, setPlacing] = useState(false)
   const [newPin, setNewPin] = useState<{ lat: number; lng: number } | null>(null)
   const [pinForm, setPinForm] = useState({ name: '', notes: '', category: 'location' })
@@ -768,15 +770,31 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     if (!searchQuery.trim()) return
     setSearching(true)
     setSuggestions([])
+    setSearchMsg('')
+    // Coordinate paste: "lat, lng" from Google Maps ("copy coordinates")
+    // flies straight there - the reliable escape hatch for addresses our
+    // OSM geocoder can't resolve (rural / Forest-Service roads).
+    const coords = parseLatLng(searchQuery)
+    if (coords) {
+      mapInstanceRef.current?.flyTo([coords.lat, coords.lng], 15)
+      setSearching(false)
+      return
+    }
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`)
-      const data = await res.json()
-      if (data[0]) mapInstanceRef.current?.flyTo([parseFloat(data[0].lat), parseFloat(data[0].lon)], 14)
+      // Same US-first geocoder the typed suggestions use (Enter used to do a
+      // separate global query, so Enter could land somewhere other than the
+      // dropdown showed).
+      const data = await searchNominatimUSFirst(searchQuery, { limit: 1 })
+      if (data[0]) {
+        mapInstanceRef.current?.flyTo([parseFloat(data[0].lat), parseFloat(data[0].lon)], 14)
+      } else {
+        // OSM has no match (common for exact rural addresses Google has).
+        // Tell the user instead of silently doing nothing.
+        setSearchMsg('No match. Our map uses OpenStreetMap - try a city or ZIP, or paste coordinates (in Google Maps, right-click the spot then Copy coordinates).')
+      }
     } catch (err) {
-      // Silent fail keeps the map usable, but logging surfaces the
-      // root cause (rate-limit / network) when a user reports "search
-      // didn't find my city".
       console.error('[mapSearch] nominatim lookup failed:', err)
+      setSearchMsg('Search failed - check your connection and try again.')
     }
     setSearching(false)
   }
@@ -1166,15 +1184,17 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           <div style={{ position: 'relative' }}>
             <input value={searchQuery} onChange={e => {
               setSearchQuery(e.target.value)
+              setSearchMsg('')
               if (debounceRef.current) clearTimeout(debounceRef.current)
-              if (e.target.value.length >= 3) {
+              // Don't fire the name geocoder while typing a coordinate paste.
+              if (e.target.value.length >= 3 && !parseLatLng(e.target.value)) {
                 debounceRef.current = setTimeout(async () => {
                   try {
                     setSuggestions(await searchNominatimUSFirst(e.target.value))
                   } catch { setSuggestions([]) }
                 }, 300)
               } else { setSuggestions([]) }
-            }} placeholder="Search address..."
+            }} placeholder="Search address or paste lat, lng..."
               style={{ ...toolbarCtrl, justifyContent: 'flex-start', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', color: '#f5f2ee', width: '175px', outline: 'none', cursor: 'text', textTransform: 'none', letterSpacing: 'normal' }} />
             {suggestions.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 1001 }}>
@@ -1190,6 +1210,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                     {s.display_name.length > 60 ? s.display_name.slice(0, 60) + '...' : s.display_name}
                   </div>
                 ))}
+              </div>
+            )}
+            {searchMsg && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', padding: '6px 10px', fontSize: '13px', color: '#cce0f5', lineHeight: 1.4, zIndex: 1001 }}>
+                {searchMsg}
               </div>
             )}
           </div>

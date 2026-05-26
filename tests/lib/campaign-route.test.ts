@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { osrmCoordsParam, waypointLabel } from '../../lib/campaign-route'
+import { osrmCoordsParam, waypointLabel, parseLatLng } from '../../lib/campaign-route'
 
 describe('osrmCoordsParam', () => {
   it('emits lon,lat pairs (NOT lat,lon) in click order, joined by ;', () => {
@@ -29,5 +29,28 @@ describe('waypointLabel', () => {
   })
   it('falls back to a number past Z', () => {
     expect(waypointLabel(26)).toBe('27')
+  })
+})
+
+describe('parseLatLng', () => {
+  it('parses a Google "copy coordinates" paste (comma + space)', () => {
+    expect(parseLatLng('35.1987522, -111.6518220')).toEqual({ lat: 35.1987522, lng: -111.651822 })
+  })
+  it('accepts comma-only and space-only separators', () => {
+    expect(parseLatLng('35.19,-111.65')).toEqual({ lat: 35.19, lng: -111.65 })
+    expect(parseLatLng('35.19 -111.65')).toEqual({ lat: 35.19, lng: -111.65 })
+  })
+  it('trims surrounding whitespace', () => {
+    expect(parseLatLng('  40.7128, -74.0060  ')).toEqual({ lat: 40.7128, lng: -74.006 })
+  })
+  it('rejects out-of-range values', () => {
+    expect(parseLatLng('200, 50')).toBeNull()   // lat > 90
+    expect(parseLatLng('40, 500')).toBeNull()   // lng > 180
+  })
+  it('returns null for place-name searches (so they hit the geocoder)', () => {
+    expect(parseLatLng('Flagstaff, AZ 86004')).toBeNull()
+    expect(parseLatLng('2000 Forest Service 128 Road')).toBeNull()
+    expect(parseLatLng('')).toBeNull()
+    expect(parseLatLng('35.19')).toBeNull() // single number, not a pair
   })
 })
