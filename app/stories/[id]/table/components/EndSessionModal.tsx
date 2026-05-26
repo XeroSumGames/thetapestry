@@ -135,13 +135,19 @@ export function EndSessionModal({
             {sessionActing ? 'Ending...' : 'End Session'}
           </button>
         </div>
-        {/* Append Log: opens the campaign's session log (new tab, so the
-            in-progress summary above isn't lost). Replaces the old
-            download-export button (Xero 2026-05-25). */}
+        {/* The roll log is captured onto the session AUTOMATICALLY when you
+            End Session (endSession -> buildSessionLogDigest -> sessions.session_log),
+            so there's no manual "append" step. This footer just says so and
+            links to where you read it back (new tab, so the in-progress
+            summary above isn't lost). Replaced the misleading "Append Log"
+            link that implied a manual attach (Xero 2026-05-26). */}
         <div style={{ marginTop: '10px', textAlign: 'center' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
+            This session's full roll log is saved automatically.
+          </div>
           <a href={`/stories/${campaignId}/sessions`} target="_blank" rel="noopener noreferrer"
             style={{ color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textDecoration: 'underline' }}>
-            Append Log →
+            View Session History →
           </a>
         </div>
       </div>
