@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-26 06:07 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [675 passed, 39 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 00:07 UTC (25 commits):** P0 img_scale fix shipped (`6ef34ce` — shared authoritative bg + scale-sentinel DB migration applied live); tactical ping 3-pulse (`02d7389`); initiative Round N feed (`f10d0ff`); session roll-log archive rich view (`31e7e58`); roll-feed no-roll combat actions (`0c41e9a`); realtime broadcast investigation done (pins = fire-and-forget gap, fix routed to HP); 12 playtest-triage docs commits.
+
+**Drift:**
+- **HOPED-FOR (2026-05-19 batch, now 7 days):** drain target was 2026-05-25/26 playtest; playtest happened but debug-handoff.md not updated — Puffer to drain or hold with explicit reason
+- **HOPED-FOR (2026-05-24 re-arch):** vehicle popout broadcasts (Section B) + combat-math/infection modal (A2/F) — same drain gate; still listed HOPED-FOR
+- **3 stale-as-open todos (shipped, still `- [ ]`):**
+  - L64: Initiative (Round N) → `f10d0ff` 2026-05-25
+  - L66: Tactical ping red/green/red → `02d7389` 2026-05-25
+  - L62+63: img_scale divergence + center-race → `6ef34ce` 2026-05-26 (both items addressed)
+- **Ledger test count stale:** debug-handoff shows 622/37; actual 675/39 (+53 tests, +2 files); `scripts/refresh-ledger.mjs` still unrun
+
+**Action:** Puffer Fish — (1) drain 2026-05-26 playtest in debug-handoff HOPED-FOR; (2) mark 3 stale todos shipped (L64/66/62-63); (3) run `node scripts/refresh-ledger.mjs`; (4) P0 img_scale fix needs Hunt & Peck browser eyeball before calling closed.
+
+---
+
 ## 2026-05-26 00:07 UTC
 
 **Status:** DRIFT (continuing — no new commits since 21:09; new stale-todo findings)
