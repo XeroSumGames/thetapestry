@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-26 21:05 UTC
+
+**Status:** DRIFT (continuing — 4th flag; same items unresolved since 00:07 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [685 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 18:05 UTC (2 commits):**
+- `c3858d9` fix(map): coordinate-paste search + no-result feedback (not a drift item)
+- `2c869dc` docs(roadmap): road-to-1.0.md added (not a drift item)
+
+**Drift (unchanged — Puffer Fish action still pending):**
+- HOPED-FOR (2026-05-19 batch + re-arch vehicle/combat items): debug-handoff.md not drained post-2026-05-26 playtest
+- 3 stale `- [ ]` todos (all shipped): L67 initiative round (f10d0ff), L69 tactical ping (02d7389), L66 img_scale (6ef34ce)
+- Ledger test count stale: debug-handoff shows 622/37; actual 685/40 (+63 tests, +3 files — gap grew +10 since 18:05)
+
+**Action:** Puffer Fish — (1) drain HOPED-FOR in debug-handoff post-playtest; (2) close 3 stale todos; (3) run `node scripts/refresh-ledger.mjs` to update ledger count.
+
+---
+
 ## 2026-05-26 18:05 UTC
 
 **Status:** DRIFT (continuing from 06:07 — no new gate failures; drift unresolved)
