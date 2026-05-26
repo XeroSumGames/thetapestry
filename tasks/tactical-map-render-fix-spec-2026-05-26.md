@@ -56,7 +56,7 @@ Stop treating `img_scale === 1` as "auto-fit me". Options (HP/Xero pick - see Op
 - Acceptance: with the map locked, a player who opens the scene is auto-centered on their PC and can re-center on demand; they are never looking at empty space they can't leave.
 
 ## 5. Concrete change checklist (HP)
-- [x] Schema: WRITTEN (Puffer) - `sql/tactical-scenes-scale-sentinel-2026-05-26.sql`: `img_scale` made nullable (NULL = unset sentinel), literal-`1` backfilled to NULL, + `natural_w`/`natural_h` columns. Backward-compatible (current client treats NULL == 1), safe to land before the client change. **PENDING live apply - Xero's go (bright line).**
+- [x] Schema: WRITTEN (Puffer) - `sql/tactical-scenes-scale-sentinel-2026-05-26.sql`: `img_scale` made nullable (NULL = unset sentinel), literal-`1` backfilled to NULL, + `natural_w`/`natural_h` columns. Backward-compatible (current client treats NULL == 1), safe to land before the client change. **APPLIED to live 2026-05-26** (15 scenes -> NULL sentinel, 6 kept explicit scale, natural_w/h added empty). No app behavior change until the HP renderer ships.
 - [ ] `TacticalMap.tsx`: remove per-client bg auto-fit (862-867); render bg at the shared stored scale always.
 - [ ] First-load compute+persist of the fit-to-grid scale for unset scenes (GM client writes it once).
 - [ ] Scene-open initial fit via `zoom` (4.3), local only.
