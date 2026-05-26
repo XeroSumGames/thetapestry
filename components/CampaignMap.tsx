@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
+import { osrmCoordsParam, waypointLabel } from '../lib/campaign-route'
 import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import { useHiddenPins } from '../lib/use-hidden-pins'
 
@@ -167,12 +168,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   useEffect(() => { travelModeRef.current = travelMode }, [travelMode])
   useEffect(() => { measureModeRef.current = measureMode }, [measureMode])
 
-  // Route planner - click two points, OSRM road routing draws the
-  // real-world driving path. Distinct from Measure (which is straight-
-  // line, multi-waypoint). Route is exactly two points: start +
-  // destination. Esc/toggle clears. Local-only just like Measure.
+  // Route planner - OSRM road routing draws the real-world driving path
+  // through one or more waypoints. Click a start (A), then click the
+  // destination to plot A->B; hold SHIFT while clicking to drop extra
+  // waypoints (C, D, E ...) the route must pass through, and a plain
+  // click finishes. Distinct from Measure (straight-line). Esc/toggle
+  // clears. Local-only just like Measure.
   const routeModeRef = useRef(false)
-  const routeStartRef = useRef<{ lat: number; lng: number } | null>(null)
+  const routeWaypointsRef = useRef<{ lat: number; lng: number }[]>([])
   const routeMarkersRef = useRef<any[]>([])
   const routeLineRef = useRef<any>(null)
   const [routeMode, setRouteMode] = useState(false)
@@ -270,7 +273,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const hasRouteState = routeModeRef.current
         || !!routeLineRef.current
         || routeMarkersRef.current.length > 0
-        || !!routeStartRef.current
+        || routeWaypointsRef.current.length > 0
       if (hasRouteState) {
         clearRoute()
         setRouteMode(false)
@@ -397,57 +400,64 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     routeMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
     routeMarkersRef.current = []
     if (routeLineRef.current) { try { map?.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
-    routeStartRef.current = null
+    routeWaypointsRef.current = []
     setRouteStatus('')
     setRouteLoading(false)
     setRouteDistanceMeters(null)
     setRouteIsFallback(false)
   }
 
-  // Handle a click while route mode is active. First click drops the
-  // start marker and waits. Second click drops the end marker, fires
-  // an OSRM request for road-following geometry, and renders the
-  // result. OSRM demo server (router.project-osrm.org) is free + no-
-  // auth; rate-limited to ~1 req/sec which is fine for tabletop pace.
-  // On API failure, falls back to a dashed straight line so the user
-  // still gets visual feedback.
-  async function handleRouteClick(lat: number, lng: number) {
+  // Handle a click while route mode is active. The FIRST click drops the
+  // start marker (A). After that: a SHIFT-click drops an intermediate
+  // waypoint (B, C, D ...) and keeps waiting; a PLAIN click drops the
+  // destination and plots the road route through EVERY waypoint via OSRM.
+  // OSRM demo server (router.project-osrm.org) is free + no-auth; fine for
+  // tabletop pace. On API failure, falls back to a dashed straight line
+  // through the waypoints so the user still gets visual feedback.
+  async function handleRouteClick(lat: number, lng: number, addWaypoint: boolean) {
     const L = (window as any).L
     const map = mapInstanceRef.current
     if (!L || !map) return
-    // First click: drop start marker, wait for the second.
-    if (!routeStartRef.current) {
-      // If a previous route is still visible (line + markers from a
-      // completed route), wipe it before starting fresh. Pre-2026-05-19
-      // this was missing: the third click of the cycle would land in
-      // the "second click" branch (because routeStartRef was never
-      // cleared after a successful route) and OSRM would draw a new
-      // line from the OLD start to the new click, stacking routes
-      // visually. Now: completed routes get wiped on the next first-
-      // click, and routeStartRef is nulled after every successful
-      // OSRM round-trip below.
-      if (routeLineRef.current || routeMarkersRef.current.length > 0) {
-        clearRoute()
-      }
-      routeStartRef.current = { lat, lng }
-      const startHtml = `<div style="width:20px;height:20px;border-radius:50%;background:#7fc458;border:2px solid #f5f2ee;box-shadow:0 0 8px rgba(127,196,88,.9);display:flex;align-items:center;justify-content:center;color:#0f1a0f;font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">A</div>`
-      const startIcon = L.divIcon({ html: startHtml, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
-      const mk = L.marker([lat, lng], { icon: startIcon, interactive: false, keyboard: false, zIndexOffset: 9100 }).addTo(map)
-      routeMarkersRef.current.push(mk)
-      setRouteStatus('Click destination…')
+    // Starting a fresh route: if a COMPLETED route is still on the map
+    // (markers/line present but no waypoints buffered), wipe it first so
+    // we don't stack a new route on the old one.
+    if (routeWaypointsRef.current.length === 0 && (routeLineRef.current || routeMarkersRef.current.length > 0)) {
+      clearRoute()
+    }
+    const idx = routeWaypointsRef.current.length
+    routeWaypointsRef.current.push({ lat, lng })
+    const isFirst = idx === 0
+    // Shift-click on the 2nd+ point is an intermediate waypoint; a plain
+    // click there is the destination. The first click is always the start.
+    const isFinal = !isFirst && !addWaypoint
+    const letter = waypointLabel(idx)
+    // A = green (start), final = red (destination), intermediate = amber.
+    const bg = isFirst ? '#7fc458' : isFinal ? '#c0392b' : '#EF9F27'
+    const fg = isFirst ? '#0f1a0f' : isFinal ? '#2a0f0a' : '#1a1205'
+    const html = `<div style="width:20px;height:20px;border-radius:50%;background:${bg};border:2px solid #f5f2ee;box-shadow:0 0 8px ${bg}e6;display:flex;align-items:center;justify-content:center;color:${fg};font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">${letter}</div>`
+    const icon = L.divIcon({ html, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
+    routeMarkersRef.current.push(L.marker([lat, lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9100 }).addTo(map))
+
+    if (isFirst) {
+      setRouteStatus('Click destination - Shift-click to add a waypoint')
       return
     }
-    // Second click: drop end marker, call OSRM.
-    const start = routeStartRef.current
-    const end = { lat, lng }
-    const endHtml = `<div style="width:20px;height:20px;border-radius:50%;background:#c0392b;border:2px solid #f5f2ee;box-shadow:0 0 8px rgba(192,57,43,.9);display:flex;align-items:center;justify-content:center;color:#2a0f0a;font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">B</div>`
-    const endIcon = L.divIcon({ html: endHtml, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
-    const mk = L.marker([end.lat, end.lng], { icon: endIcon, interactive: false, keyboard: false, zIndexOffset: 9100 }).addTo(map)
-    routeMarkersRef.current.push(mk)
+    if (!isFinal) {
+      // Intermediate waypoint: show a provisional straight line through the
+      // points so far, then keep waiting for more (or the finishing click).
+      if (routeLineRef.current) { try { map.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
+      const provisional = routeWaypointsRef.current.map(p => [p.lat, p.lng]) as [number, number][]
+      routeLineRef.current = L.polyline(provisional, { color: '#EF9F27', weight: 2, opacity: 0.6, dashArray: '4,6' }).addTo(map)
+      setRouteStatus(`Waypoint ${letter} added - click to finish, Shift-click to add more`)
+      return
+    }
+    // Final click: plot the road route through every waypoint in order.
+    const points = routeWaypointsRef.current
+    if (routeLineRef.current) { try { map.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
     setRouteLoading(true)
     setRouteStatus('Plotting…')
     try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`
+      const url = `https://router.project-osrm.org/route/v1/driving/${osrmCoordsParam(points)}?overview=full&geometries=geojson`
       const res = await fetch(url)
       if (!res.ok) throw new Error(`OSRM returned ${res.status}`)
       const json = await res.json()
@@ -463,21 +473,19 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       setRouteStatus(`${formatDistance(meters)} via roads · ${mode.emoji} ${formatTravelTime(meters, mode.mph)}`)
     } catch (err) {
       console.error('[campaign-map] OSRM route failed:', err)
-      // Fallback: dashed straight line so the user still sees something.
-      const latlngs: [number, number][] = [[start.lat, start.lng], [end.lat, end.lng]]
+      // Fallback: dashed straight line through the waypoints.
+      const latlngs = points.map(p => [p.lat, p.lng]) as [number, number][]
       routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 3, opacity: 0.7, dashArray: '6,6' }).addTo(map)
-      const meters = haversineMeters(start, end)
+      const meters = totalMeters(points)
       const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
       setRouteDistanceMeters(meters)
       setRouteIsFallback(true)
       setRouteStatus(`Routing unavailable - straight line (${formatDistance(meters)} · ${mode.emoji} ${formatTravelTime(meters, mode.mph)})`)
     } finally {
       setRouteLoading(false)
-      // Reset routeStartRef so the next click is treated as the FIRST
-      // click of a new route (which will also call clearRoute via the
-      // wipe-stale guard above). Without this, every odd-numbered click
-      // after the first would stack a new line onto the old start point.
-      routeStartRef.current = null
+      // Reset so the next click starts a fresh route (the wipe-stale guard
+      // above clears the finished line/markers on that first click).
+      routeWaypointsRef.current = []
     }
   }
 
@@ -674,7 +682,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         // which is exactly the gesture that felt broken - alt+click a pin now
         // sets the waypoint instead of pinging.
         if (routeModeRef.current) {
-          void handleRouteClick(pin.lat, pin.lng)
+          void handleRouteClick(pin.lat, pin.lng, !!oe?.shiftKey)
           return
         }
         if (oe?.altKey) {
@@ -712,7 +720,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // as a route waypoint. Plain click still zooms to the cluster
       // so the player can pick a specific pin underneath.
       if (routeModeRef.current && oe?.altKey) {
-        void handleRouteClick(center.lat, center.lng)
+        void handleRouteClick(center.lat, center.lng, !!oe?.shiftKey)
         return
       }
       if (oe?.altKey) {
@@ -874,7 +882,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           return
         }
         if (routeModeRef.current) {
-          void handleRouteClick(e.latlng.lat, e.latlng.lng)
+          void handleRouteClick(e.latlng.lat, e.latlng.lng, !!e?.originalEvent?.shiftKey)
           return
         }
         if (e?.originalEvent?.altKey) {
@@ -1255,7 +1263,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           final distance + ETA). */}
       {routeMode && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(42,32,16,0.95)', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px' }}>
-          <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point... (Alt+click a pin to snap)')}</span>
+          <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point... (Shift-click to add waypoints; Alt+click a pin to snap)')}</span>
           <span style={{ marginLeft: 'auto', color: '#EF9F27', fontSize: '13px' }}>Esc to clear</span>
         </div>
       )}
