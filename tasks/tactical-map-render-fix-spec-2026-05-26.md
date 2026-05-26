@@ -56,7 +56,7 @@ Stop treating `img_scale === 1` as "auto-fit me". Options (HP/Xero pick - see Op
 - Acceptance: with the map locked, a player who opens the scene is auto-centered on their PC and can re-center on demand; they are never looking at empty space they can't leave.
 
 ## 5. Concrete change checklist (HP)
-- [ ] Schema: nullable scale column (or `scale_set` flag) - 4.1. Coordinate the SQL with Puffer (this lane owns schema/migrations).
+- [x] Schema: WRITTEN (Puffer) - `sql/tactical-scenes-scale-sentinel-2026-05-26.sql`: `img_scale` made nullable (NULL = unset sentinel), literal-`1` backfilled to NULL, + `natural_w`/`natural_h` columns. Backward-compatible (current client treats NULL == 1), safe to land before the client change. **PENDING live apply - Xero's go (bright line).**
 - [ ] `TacticalMap.tsx`: remove per-client bg auto-fit (862-867); render bg at the shared stored scale always.
 - [ ] First-load compute+persist of the fit-to-grid scale for unset scenes (GM client writes it once).
 - [ ] Scene-open initial fit via `zoom` (4.3), local only.
@@ -65,7 +65,7 @@ Stop treating `img_scale === 1` as "auto-fit me". Options (HP/Xero pick - see Op
 - [ ] Keep Share View / `tactical_zoom` working (they push zoom+scroll, which is now the correct per-client knob).
 
 ## 6. Migration for existing scenes (Puffer owns the SQL)
-Every existing scene currently has `img_scale = 1` (overloaded "unset"). Migration:
+**Migration is WRITTEN: `sql/tactical-scenes-scale-sentinel-2026-05-26.sql` (nullable approach + natural dims). Pending Xero's apply.** Every existing scene currently has `img_scale = 1` (overloaded "unset"). Migration:
 - If going nullable: set scale `= NULL` for scenes that still have the literal default `1` so they recompute-and-persist on next GM load. (Scenes with a deliberate non-1 value from the rescale tool keep it.)
 - OR backfill the computed `grid_cols*cellPx / naturalWidth` per scene - requires each background's natural dimensions. Storing `natural_w`/`natural_h` on the scene at upload/first-load makes rendering fully deterministic and is worth considering (avoids fetching the image to know its size).
 - Spring Valley (`0c2ddae8`) reference value = 0.6958; do NOT hand-set per scene - the first-load compute should handle all of them once the code lands.
