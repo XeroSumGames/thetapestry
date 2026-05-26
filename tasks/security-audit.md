@@ -8,6 +8,39 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-05-26 16:23 UTC - weekly audit
+
+**Sections with findings:** npm audit, file uploads, dependency drift
+
+**Closed since last audit (2026-05-19):**
+- `session-attachments` upload now uses `prepareUpload` (filename + size + type) - FIXED
+- `war-stories` upload now uses `prepareUpload` - FIXED
+- `rumors` upload now uses `prepareUpload` - FIXED
+- `verify-turnstile` now has Upstash distributed rate-limit (30 req/min sliding window) - FIXED
+- `brace-expansion` + `ws` moderates cleared from npm audit - FIXED
+- `dashboard/page.tsx` raw `.role` state variable removed; now routes through `roleIsThriver(profile)` - FIXED
+
+### npm audit (moderate+)
+
+- `postcss` <8.5.10 — moderate — CVSS 6.1 — "XSS via unescaped `</style>` in CSS stringify output" — transitive via `next` — fix: breaking (downgrade next to 9.3.3, not viable) — **carry-over, low runtime risk** (build-time CSS only; app does not process user-supplied CSS at runtime)
+- `next` 9.3.4-canary.0 - 16.3.0-canary.5 — moderate — via postcss — isDirect: true — fix: breaking major downgrade — hold
+- `@sentry/nextjs` >=6.3.6 — moderate — via next — isDirect: true — fix: breaking (6.3.5 downgrade) — hold
+
+### File uploads
+
+- `app/scene-controls-popout/page.tsx:316` — `uploadBackground` — tactical-maps bucket: **no size limit, no content-type check** — filename sanitized via regex but any file type accepted — `tactical-maps` bucket not registered in `lib/safe-upload.ts` BUCKETS whitelist — carry-over from 2026-05-19; GM-only page (auth-gated by `gm_user_id === user.id`) so exposure is bounded but inconsistent with `prepareUpload` pattern used everywhere else
+
+### Dependency drift
+
+- `@supabase/ssr` — installed 0.9.0 → latest 0.10.3 (minor; Supabase client API updates) — advisory, no known CVEs
+
+**Top 3 priorities:**
+1. `app/scene-controls-popout/page.tsx:316` — add `prepareUpload('tactical-maps', file)` guard + register `tactical-maps` in `lib/safe-upload.ts` with appropriate size/ext limits. Same pattern as war-stories and session-attachments.
+2. `postcss` / `next` / `@sentry/nextjs` moderates — no action until next.js has a non-breaking fix path; re-check weekly.
+3. `@supabase/ssr` 0.9.0 → 0.10.3 — evaluate changelog before minor bump; low urgency.
+
+---
+
 ## 2026-05-19 16:23 UTC - weekly audit
 
 **Sections with findings:** npm audit, file uploads, auth/role gates, rate-limit / DoS
