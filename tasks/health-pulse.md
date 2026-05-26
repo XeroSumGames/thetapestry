@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-26 00:07 UTC
+
+**Status:** DRIFT (continuing — no new commits since 21:09; new stale-todo findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [669 passed, 40 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- **HOPED-FOR (2026-05-19 batch, 7 days old):** Tier-2 Recruit, Advantages, FI streamline, Vehicle Q4-c/d, narrative polish — drain gate was 2026-05-25 playtest; debug-handoff not updated post-playtest
+- **HOPED-FOR (2026-05-24):** vehicle popout broadcasts (Section B) + combat-math/infection modal (A2/F) — same drain gate
+- **NEW stale-todo:** `rewire onGiveItem` + `un-fixme PC-trade assertion` (todo.md ~L16-17) still `- [ ]`; debug-handoff "characters cross-user writes" marks all 8 flows **GREEN** (e866d0 shipped RPC + pc-trade test un-fixme'd and green). Prior pulses called this "partial" but it's now fully closed.
+- **Ledger stale:** debug-handoff shows 622/37; actual 669/40 (47-test gap); `scripts/refresh-ledger.mjs` still unrun
+
+**Action:** Puffer Fish — (1) confirm/drain 2026-05-25 playtest outcome in debug-handoff; (2) close 2 stale todo items (~L16-17); (3) run `node scripts/refresh-ledger.mjs`.
+
+---
+
 ## 2026-05-25 21:09 UTC
 
 **Status:** DRIFT (continuing — HOPED-FOR still unconfirmed post-playtest)
