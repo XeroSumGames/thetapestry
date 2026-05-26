@@ -219,9 +219,10 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   }
   // Ready Weapon family - all come through as outcome='action' with a
   // 0+0 dice payload that's pointless to show (no roll happened, just
-  // an action consumed). Compact narrativizes; the expand toggle is
-  // suppressed in the renderer for outcome='action' rows since there's
-  // nothing meaningful to expand to. Variants:
+  // an action consumed). Compact narrativizes; the renderer shows an
+  // expand toggle on an action row only when actionDetail() returns a
+  // mechanical note (Take Cover / Defend / Reposition / Aim) - the Ready
+  // family has none, so it stays toggle-free. Variants:
   //   "Ready Weapon"                - generic ready (e.g. Tracking +N)
   //   "Ready <weaponName>"          - equipping from inventory
   //   "Ready <weaponName> (Secondary)" - equipping to secondary slot
@@ -1058,6 +1059,35 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     return firstLine.replace(/\s+\+1 Insight Die\b.*$/, '')
   }
   return null
+}
+
+// Mechanical-effect note for the no-roll combat actions whose compact
+// banner trims the detail off (Take Cover, Defend, Reposition, Aim). The
+// banner reads "X takes Cover"; this returns the trimmed-off note ("+2
+// Defensive Modifier, all attacks this round") so the feed's expander can
+// show what the action actually did. Single source of truth: the note is
+// authored once in the action handler's log label, so this never drifts.
+// Returns null for action rows with no meaningful note (Ready / Reload /
+// Move / Unequip) and for every non-action row, so the renderer only
+// shows an expand pip when there is something to reveal.
+export function actionDetail(r: { label: string; character_name: string; outcome: string }): string | null {
+  if (r.outcome !== 'action') return null
+  // Mirror compactRollSummary's prefix-strip so we read the same bare suffix.
+  let suffix = r.label
+  const namePrefix = r.character_name + ' '
+  if (r.label.startsWith(namePrefix + '- ')) suffix = r.label.slice(namePrefix.length + 2)
+  else if (r.label.startsWith(namePrefix + '— ')) suffix = r.label.slice(namePrefix.length + 2)
+  const m = suffix.match(/^(Take Cover|Defend|Reposition|Aim)\b\s*(.+)$/)
+  if (!m) return null
+  let detail = m[2].trim()
+  // Strip a single fully-wrapping paren pair ("(+2 Defensive Modifier, all
+  // attacks this round)" -> "+2 Defensive Modifier, all attacks this round")
+  // but leave notes with trailing prose intact (Aim's "(+2 CMod). Must
+  // Attack next or Aim is lost." keeps its parens since the ) is not last).
+  if (detail.startsWith('(') && detail.endsWith(')') && detail.indexOf(')') === detail.length - 1) {
+    detail = detail.slice(1, -1).trim()
+  }
+  return detail || null
 }
 
 

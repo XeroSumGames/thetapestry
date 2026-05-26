@@ -27,7 +27,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
-import { compactRollSummary, outcomeColor, formatTime } from '../lib/roll-helpers'
+import { compactRollSummary, actionDetail, outcomeColor, formatTime } from '../lib/roll-helpers'
 
 export interface DamageResult {
   rollWP: number
@@ -962,7 +962,10 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
   // rows (CDP, Encumbrance) with no dice and no extras don't get a pip.
   const hasInsightSpend = r.insight_used === '3d6' || r.insight_used === '+3cmod' || (!r.insight_used && r.die2 > 6)
   const hasDamageBox = r.damage_json && (r.damage_json as any).targetName && (r.damage_json as any).totalWP != null
-  const showExpandPip = hasRealDice || hasInsightSpend || hasDamageBox
+  // No-roll combat actions (Take Cover / Defend / Reposition / Aim) carry a
+  // mechanical note the compact banner trims off; surface it via the expander.
+  const actionExtra = actionDetail(r)
+  const showExpandPip = hasRealDice || hasInsightSpend || hasDamageBox || !!actionExtra
   return (
     <div style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
@@ -986,6 +989,9 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
       </div>
       {isExpanded && (
         <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a' }}>
+          {actionExtra && (
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{actionExtra}</div>
+          )}
           {hasRealDice && (
             <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>
               {/* Three render branches for the dice slot:

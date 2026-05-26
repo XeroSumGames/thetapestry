@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getOutcome, outcomeColor, compactRollSummary } from '../../lib/roll-helpers'
+import { getOutcome, outcomeColor, compactRollSummary, actionDetail } from '../../lib/roll-helpers'
 
 describe('getOutcome', () => {
   it('returns Low Insight on snake-eyes (1+1) regardless of total', () => {
@@ -710,5 +710,73 @@ describe('compactRollSummary', () => {
       label: 'Cree Hask - First Impression (Avery Xavier)',
       character_name: 'Cree Hask', outcome: 'Low Insight',
     })).toBe('Cree Hask makes a terrible First Impression on Avery Xavier, but has a Moment of Insight as to what went wrong')
+  })
+
+  // Baseline for the no-roll combat-action banners (compact trims the note).
+  it('Take Cover banner trims the mechanical note', () => {
+    expect(compactRollSummary({
+      label: 'Shimmy Paint - Take Cover (+2 Defensive Modifier, all attacks this round)',
+      character_name: 'Shimmy Paint', outcome: 'action',
+    })).toBe('Shimmy Paint takes Cover')
+  })
+
+  it('Defend banner trims the mechanical note', () => {
+    expect(compactRollSummary({
+      label: 'Cree Hask - Defend (+2 Defensive Modifier, next attack only)',
+      character_name: 'Cree Hask', outcome: 'action',
+    })).toBe('Cree Hask prepares to Defend')
+  })
+})
+
+describe('actionDetail', () => {
+  it('Take Cover: returns the note with the wrapping parens stripped', () => {
+    expect(actionDetail({
+      label: 'Shimmy Paint - Take Cover (+2 Defensive Modifier, all attacks this round)',
+      character_name: 'Shimmy Paint', outcome: 'action',
+    })).toBe('+2 Defensive Modifier, all attacks this round')
+  })
+
+  it('Defend: returns the note with the wrapping parens stripped', () => {
+    expect(actionDetail({
+      label: 'Cree Hask - Defend (+2 Defensive Modifier, next attack only)',
+      character_name: 'Cree Hask', outcome: 'action',
+    })).toBe('+2 Defensive Modifier, next attack only')
+  })
+
+  it('Reposition: returns the note with the wrapping parens stripped', () => {
+    expect(actionDetail({
+      label: 'Cree Hask - Reposition (Resolution phase)',
+      character_name: 'Cree Hask', outcome: 'action',
+    })).toBe('Resolution phase')
+  })
+
+  it('Aim: keeps the parens since the note has trailing prose (not fully wrapped)', () => {
+    expect(actionDetail({
+      label: 'Cree Hask - Aim (+2 CMod). Must Attack next or Aim is lost.',
+      character_name: 'Cree Hask', outcome: 'action',
+    })).toBe('(+2 CMod). Must Attack next or Aim is lost.')
+  })
+
+  it('handles the em-dash legacy prefix', () => {
+    // Build the legacy em-dash separator at runtime so the source file
+    // carries no literal em-dash (the no-em-dash guardrail scans bytes).
+    const emDash = String.fromCharCode(0x2014)
+    expect(actionDetail({
+      label: `Cree Hask ${emDash} Take Cover (+2 Defensive Modifier, all attacks this round)`,
+      character_name: 'Cree Hask', outcome: 'action',
+    })).toBe('+2 Defensive Modifier, all attacks this round')
+  })
+
+  it('returns null for Ready/Reload/Move (no meaningful note)', () => {
+    expect(actionDetail({ label: 'Cree Hask - Move', character_name: 'Cree Hask', outcome: 'action' })).toBeNull()
+    expect(actionDetail({ label: 'Cree Hask - Reload Pistol', character_name: 'Cree Hask', outcome: 'action' })).toBeNull()
+    expect(actionDetail({ label: 'Cree Hask - Ready Sniper\'s Rifle', character_name: 'Cree Hask', outcome: 'action' })).toBeNull()
+  })
+
+  it('returns null for non-action rows even if the label looks like an action', () => {
+    expect(actionDetail({
+      label: 'Cree Hask - Take Cover (+2 Defensive Modifier)',
+      character_name: 'Cree Hask', outcome: 'Success',
+    })).toBeNull()
   })
 })
