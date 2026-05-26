@@ -11,7 +11,7 @@ import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap, coverGrowGrid } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
-import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken } from '../lib/tactical-view'
+import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, fitZoom } from '../lib/tactical-view'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -419,6 +419,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Keep refs in sync for canvas drawing
   useEffect(() => { tokensRef.current = tokens }, [tokens])
   useEffect(() => { sceneRef.current = scene }, [scene])
+  // Mirror imgScale so the resize mouseup persists the FINAL value (the
+  // mouseup closure can lag the last setImgScale from the move handler).
+  const imgScaleRef = useRef(imgScale)
+  useEffect(() => { imgScaleRef.current = imgScale }, [imgScale])
 
   // Reconcile fog state from the scene row → local mirror. We don't
   // touch fogLocal during a drag (would get clobbered by realtime
@@ -663,23 +667,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const isFirstLoad = lastSyncedSceneIdRef.current !== active.id
       if (isFirstLoad || !isGM) {
         if (active.cell_px) setCellPx(active.cell_px)
-        // img_scale is trickier than cell_px. The bg-image-load
-        // effect (~line 780) runs a local auto-fit when the scene
-        // has no saved img_scale (null or default 1) - sets the
-        // player's local imgScale to fit-to-container width. That
-        // value is NOT persisted to the DB.
-        //
-        // If we re-apply `active.img_scale` on every loadScenes
-        // call (which fires on every tactical_scenes UPDATE - e.g.
-        // GM toggling a window or wall), the local auto-fit value
-        // (~0.6) gets clobbered back to the DB's default (1 or
-        // null), causing the player's view to zoom-jump on every
-        // GM action that touches the scene row.
-        //
-        // Only re-apply when the GM has set a non-default scale
-        // via the popout. The default (null/1) means "let the
-        // viewer auto-fit" - leave the local value alone.
-        if (active.img_scale && active.img_scale !== 1) setImgScale(active.img_scale)
+        // img_scale is the SHARED background scale - apply the DB value
+        // (default 1 = 100% raw) so GM + players render the bg identically.
+        // The lastSyncedSceneIdRef gate (isFirstLoad) means a GM's in-flight
+        // popout edit on the SAME scene isn't clobbered by a realtime UPDATE;
+        // a scene CHANGE (or any player load) re-syncs from the DB. No
+        // per-client auto-fit overwrites this anymore (that was the divergence
+        // bug) - per-screen fitting is zoom, not img_scale.
+        setImgScale(active.img_scale ?? 1)
       }
       if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
@@ -699,7 +694,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       loadTokens(first.id)
       if (lastSyncedSceneIdRef.current !== first.id) {
         if (first.cell_px) setCellPx(first.cell_px)
-        if (first.img_scale) setImgScale(first.img_scale)
+        setImgScale(first.img_scale ?? 1)
         setMapLocked(first.is_locked ?? false)
         if (typeof first.show_grid === 'boolean') setShowGrid(first.show_grid)
         if (typeof first.grid_color === 'string' && first.grid_color) setGridColor(first.grid_color)
@@ -852,27 +847,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     img.crossOrigin = 'anonymous'
     img.onload = () => {
       bgImageRef.current = img
-      // If the scene has no saved img_scale yet (first time), every
-      // viewer (GM AND players) picks a fit-to-container default
-      // locally. Pre-fix this was GM-only - the player kept
-      // img_scale=1 (raw natural pixels), which overflowed their
-      // container any time the natural image was wider than their
-      // viewport. Result: GM saw the whole scene, player saw a
-      // zoomed-in fragment of it. Reported tonight with the
-      // "Stansfield's Gas Station" GM/player screenshot pair (both
-      // had db_img_scale=1; the GM auto-fit locally, the player
-      // didn't, hence the visual divergence).
-      //
-      // Auto-fit is local-only - not persisted. Each viewer fits
-      // their own container width. GM manual adjustments via the
-      // popout still persist via the existing cellPx debounce path
-      // and override this auto-fit on subsequent loads.
-      if ((scene.img_scale == null || scene.img_scale === 1) && containerRef.current && img.naturalWidth > 0) {
-        const cw = containerRef.current.clientWidth
-        const fit = cw / img.naturalWidth
-        // Only override if natural is much wider than container (avoid touching existing manual scales)
-        if (img.naturalWidth > cw * 1.1) setImgScale(fit)
-      }
+      // img_scale is SHARED + authoritative: it comes from the DB (applied in
+      // loadScenes) and the GM's corner-resize persists it, so every client
+      // renders the background at the SAME scale. We deliberately do NOT
+      // auto-fit per-client here. The old per-client auto-fit (fit the bg to
+      // THIS window's width, never saved) is exactly what made the map differ
+      // per player ("Juno on the edge but thinks she's in the middle"),
+      // dropped tokens into black on narrow screens, and raced the open-frame
+      // by resizing the canvas after load. Per-screen fitting is a VIEWPORT
+      // concern now - handled by zoom/scroll (see fitToScreen), which never
+      // touches the shared scale.
       setBgLoadTick(t => t + 1)
       draw()
       // Center once per scene. After the image loads, canvas dimensions are
@@ -3358,6 +3342,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     if (resizing) {
       setResizing(null)
+      // Persist the GM's background scale so it's SHARED - every client
+      // renders at this value (before, the resize was local + lost on reload).
+      if (sceneRef.current) updateScene(sceneRef.current.id, { img_scale: imgScaleRef.current })
       return
     }
     if (panning) {
@@ -3598,15 +3585,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function fitToScreen() {
+    // Per-client viewport fit via ZOOM. img_scale is shared/authoritative, so
+    // fitting must NOT rescale the background (that would impose this client's
+    // window on everyone). Zoom is local, so each viewer can fit independently.
     const container = containerRef.current
-    if (container && bgImageRef.current) {
-      const containerW = container.clientWidth
-      const img = bgImageRef.current
-      setImgScale(img.naturalWidth > 0 ? containerW / img.naturalWidth : 1)
-    } else {
-      setImgScale(1)
-    }
-    setZoom(1)
+    const img = bgImageRef.current
+    const contentW = img ? img.naturalWidth * imgScale : 0
+    setZoom(container ? fitZoom(container.clientWidth, contentW) : 1)
     setPanX(0)
     setPanY(0)
     if (containerRef.current) { containerRef.current.scrollTop = 0; containerRef.current.scrollLeft = 0 }

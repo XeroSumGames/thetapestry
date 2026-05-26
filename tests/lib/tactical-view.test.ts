@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell } from '../../lib/tactical-view'
+import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell, fitZoom } from '../../lib/tactical-view'
 
 // Invariant (Xero 2026-05-22): sharing drives what PLAYERS see, not the GM's
 // own pane. The GM can preview the campaign map while players see the shared
@@ -87,5 +87,23 @@ describe('centerScrollOnCell', () => {
     // zoom 2 doubles the pixel position of the same cell
     expect(centerScrollOnCell({ ...geo, zoom: 2, canvasW: 2850, canvasH: 2150, cellX: 32.5, cellY: 22.5 }))
       .toEqual({ left: 32.5 * 25 * 2 - 450, top: 22.5 * 25 * 2 - 300 })
+  })
+})
+
+describe('fitZoom', () => {
+  it('returns the ratio that fits content width into the viewport', () => {
+    expect(fitZoom(900, 1800)).toBe(0.5)
+    expect(fitZoom(1800, 900)).toBe(2)
+  })
+
+  it('clamps to the [0.1, 5] zoom range', () => {
+    expect(fitZoom(100, 5000)).toBe(0.1) // would be 0.02
+    expect(fitZoom(5000, 100)).toBe(5)   // would be 50
+  })
+
+  it('falls back to 1 on degenerate inputs (no divide-by-zero / negatives)', () => {
+    expect(fitZoom(0, 1000)).toBe(1)
+    expect(fitZoom(1000, 0)).toBe(1)
+    expect(fitZoom(-5, 1000)).toBe(1)
   })
 })

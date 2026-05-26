@@ -129,3 +129,14 @@ export function scrollCellIntoView(
   })
   container.scrollTo({ left, top, behavior: 'smooth' })
 }
+
+// Per-client "fit to screen" zoom: how much to zoom so content of width
+// `contentW` fits the viewport of width `viewW`. This is a VIEWPORT op
+// (each client picks its own), distinct from the background's shared
+// `img_scale` - fitting must never rescale the shared map per client, or
+// the GM and players diverge. Clamped to the same [0.1, 5] zoom range the
+// resize/zoom controls use. Degenerate inputs fall back to 1 (100%).
+export function fitZoom(viewW: number, contentW: number): number {
+  if (!(viewW > 0) || !(contentW > 0)) return 1
+  return Math.max(0.1, Math.min(5, viewW / contentW))
+}
