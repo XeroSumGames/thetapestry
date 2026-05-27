@@ -21,6 +21,13 @@
   roll-feed-log-preview.html when amending log messages (2026-05-19)".
 
   Recent updates:
+  - 2026-05-27: Mounted-Weapon Fire DROPPED its "FIRE " caps prefix
+                (Xero) - same call as the STABILIZE removal below; the
+                line now reads "Jake devastates Goon 1 using ...".
+                Code: lib/roll-helpers.ts. (The remaining caps prefixes -
+                STRESS CHECK / HEAL / UNJAM / REPAIR / DRIVE / BREW /
+                NAVIGATE / INSTALL / GATHER / ATTRIBUTE CHECK - are
+                untouched pending a per-prefix decision.)
   - 2026-05-27: Stabilize narrative DROPPED its "STABILIZE " caps
                 prefix (Xero) - the line now reads as a plain
                 sentence ("Marv wildly succeeds at stabilizing
@@ -1014,22 +1021,22 @@
   <div class="row red"><div class="row-head"><span class="name">Bea</span><div class="right"><span class="time">2:51 PM</span><span class="toggle">▸</span></div></div><div class="narrative">NAVIGATE Bea leads Minnie into a worse spot</div></div>
   <div class="row red"><div class="row-head"><span class="name">Bea</span><div class="right"><span class="time">2:51 PM</span><span class="toggle">▸</span></div></div><div class="narrative">NAVIGATE Bea loses the route but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
-  <h3 id="fire">Mounted-Weapon Fire (FIRE prefix locked 2026-05-20, last narrative holdout migrated to prefix-CAPS to align with DRIVE / BREW / NAVIGATE / HEAL / UNJAM / REPAIR / STABILIZE pattern)</h3>
+  <h3 id="fire">Mounted-Weapon Fire (FIRE caps prefix DROPPED 2026-05-27 per Xero; plain narrative sentence now, same call as STABILIZE)</h3>
   <p class="note">Label format from <code>/vehicle</code> popout: <code>🎯 &lt;weapon&gt; attack → &lt;target&gt; · &lt;vehicle&gt; · &lt;crew&gt; · Ranged Combat (DEX) · &lt;outcome&gt;</code>. Two narrative branches: with target (combatant) vs no target (firing for effect into the air). Dire Failure narrative is bespoke - weapon malfunction outweighs target context.</p>
   <h4 style="margin: 6px 0 4px; font-size: 13px; color: var(--muted);">With target</h4>
-  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake devastates Goon 1 using Minnie's Mounted MG</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake hits Goon 1 using Minnie's Mounted MG and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
-  <div class="row blue"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake hits Goon 1 using Minnie's Mounted MG</div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake misses Goon 1 using Minnie's Mounted MG</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake misfires Minnie's Mounted MG catastrophically</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake misses Goon 1 using Minnie's Mounted MG but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake devastates Goon 1 using Minnie's Mounted MG</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake hits Goon 1 using Minnie's Mounted MG and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:00 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake hits Goon 1 using Minnie's Mounted MG</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake misses Goon 1 using Minnie's Mounted MG</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake misfires Minnie's Mounted MG catastrophically</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake misses Goon 1 using Minnie's Mounted MG but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
   <h4 style="margin: 8px 0 4px; font-size: 13px; color: var(--muted);">No target (firing for effect)</h4>
-  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:02 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake fires Minnie's Mounted MG with stunning precision</div></div>
-  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:02 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake fires Minnie's Mounted MG and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
-  <div class="row blue"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:02 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake fires Minnie's Mounted MG</div></div>
-  <div class="row amber"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake fires Minnie's Mounted MG and the shot goes wide</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake misfires Minnie's Mounted MG catastrophically</div></div>
-  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">FIRE Jake fires Minnie's Mounted MG and the shot goes wide but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:02 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake fires Minnie's Mounted MG with stunning precision</div></div>
+  <div class="row green"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:02 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake fires Minnie's Mounted MG and has a Moment of Insight as to why it went so well <span class="insight-badge">+1 Insight Die</span></div></div>
+  <div class="row blue"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:02 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake fires Minnie's Mounted MG</div></div>
+  <div class="row amber"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake fires Minnie's Mounted MG and the shot goes wide</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake misfires Minnie's Mounted MG catastrophically</div></div>
+  <div class="row red"><div class="row-head"><span class="name">Jake</span><div class="right"><span class="time">3:03 PM</span><span class="toggle">▸</span></div></div><div class="narrative">Jake fires Minnie's Mounted MG and the shot goes wide but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
 
   <h3 id="vehicle-install">Install Fuel Drum (INSTALL prefix, dice-gated 2026-05-24)</h3>
   <p class="note">Vehicle fuel-drum install check (Mechanic* or Tinkerer; roller picked from the whole crew). Label: <code>&lt;name&gt; - Install - &lt;vehicle&gt; (&lt;skill&gt;)</code>. Outcome-keyed narrative; the precise effect (capacity +1 / drum damaged + lost / drum lost + a tank of fuel wasted) also shows as a badge in the popout modal. Rulings + resolution in <code>lib/vehicle-checks.ts</code> (<code>applyInstallOutcome</code>).</p>

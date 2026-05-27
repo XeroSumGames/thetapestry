@@ -137,6 +137,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // to every other viewer of this campaign. Player receives → smooth
   // flyTo + matching tile layer. One-shot, not continuous-follow.
   const viewShareChannelRef = useRef<any>(null)
+  // Pins + campaign-NPC realtime channels. Held in refs so the init
+  // effect's cleanup can tear them down on unmount; otherwise a new
+  // subscribed pair leaks every time the map remounts (e.g. toggling
+  // between the campaign and tactical maps), since supabase-js does not
+  // dedupe channels by name.
+  const pinsChannelRef = useRef<any>(null)
+  const npcsMapChannelRef = useRef<any>(null)
   const [sharedToast, setSharedToast] = useState<string | null>(null)
   const [shareFlash, setShareFlash] = useState(false)
   const pingMarkersRef = useRef<any[]>([])
@@ -934,7 +941,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       //     postgres_changes; a GM's "Show pin" click reliably updated
       //     the sidebar list but NOT the map markers until refresh.
       //     Adding the broadcast listener closes the gap.
-      supabase.channel(`campaign_pins_${campaignId}`)
+      pinsChannelRef.current = supabase.channel(`campaign_pins_${campaignId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
         .on('broadcast', { event: 'pins_changed' }, () => loadPins())
         // Catch-up reload on (re)subscribe: the pins_changed broadcast is
@@ -944,7 +951,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         // catching one ephemeral broadcast.
         .subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadPins() })
 
-      supabase.channel(`campaign_npcs_map_${campaignId}`)
+      npcsMapChannelRef.current = supabase.channel(`campaign_npcs_map_${campaignId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
         .subscribe()
 
@@ -993,8 +1000,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     document.addEventListener('visibilitychange', handlePinsVisibility)
     return () => {
       document.removeEventListener('visibilitychange', handlePinsVisibility)
-      // Unmount cleanup: drop active pulses and unsubscribe the ping
-      // channel so /table doesn't accumulate channels when scenes flip.
+      // Unmount cleanup: drop active pulses and unsubscribe EVERY channel
+      // (ping, view-share, pins, npcs) so /table doesn't accumulate
+      // subscribed channels each time the map remounts (e.g. campaign <->
+      // tactical toggle).
       const map = mapInstanceRef.current
       pingMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
       pingMarkersRef.current = []
@@ -1012,6 +1021,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       if (viewShareChannelRef.current) {
         try { supabase.removeChannel(viewShareChannelRef.current) } catch {}
         viewShareChannelRef.current = null
+      }
+      if (pinsChannelRef.current) {
+        try { supabase.removeChannel(pinsChannelRef.current) } catch {}
+        pinsChannelRef.current = null
+      }
+      if (npcsMapChannelRef.current) {
+        try { supabase.removeChannel(npcsMapChannelRef.current) } catch {}
+        npcsMapChannelRef.current = null
       }
       if (mapInstanceRef.current) {
         try { mapInstanceRef.current.remove() } catch {}

@@ -770,9 +770,9 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // 'devastates', HI/S 'hits', F/LI 'misses', DF 'misfires
   // catastrophically' (weapon malfunction outweighs target). No-target
   // variant uses 'fires ... goes wide' so the LI tail composes without
-  // doubled connector. FIRE prefix-CAPS added 2026-05-20 to align with
-  // DRIVE / BREW / NAVIGATE / HEAL / UNJAM / REPAIR / STABILIZE pattern -
-  // mounted-weapon was the last narrative holdout without a prefix.
+  // doubled connector. The "FIRE " caps prefix (added 2026-05-20) was
+  // DROPPED 2026-05-27 (Xero) so the line reads as a plain narrative
+  // sentence, same call as the STABILIZE prefix removal.
   const vehAtkMatch = r.label.match(/^🎯\s+(.+?)\s+attack(?:\s+→\s+(.+?))?\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·\s+Ranged Combat/)
   if (vehAtkMatch) {
     const weapon  = vehAtkMatch[1].trim()
@@ -782,24 +782,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const verbTail = `using ${vehicle}'s ${weapon}`
     if (target) {
       switch (r.outcome) {
-        case 'Wild Success':  return `FIRE ${crew} devastates ${target} ${verbTail}`
-        case 'High Insight':  return `FIRE ${crew} hits ${target} ${verbTail} and has a Moment of Insight as to why it went so well`
-        case 'Success':       return `FIRE ${crew} hits ${target} ${verbTail}`
-        case 'Failure':       return `FIRE ${crew} misses ${target} ${verbTail}`
-        case 'Dire Failure':  return `FIRE ${crew} misfires ${vehicle}'s ${weapon} catastrophically`
-        case 'Low Insight':   return `FIRE ${crew} misses ${target} ${verbTail} but has a Moment of Insight as to why it went so badly`
-        default:              return `FIRE ${crew} ${hit ? 'hits' : 'misses'} ${target} ${verbTail}`
+        case 'Wild Success':  return `${crew} devastates ${target} ${verbTail}`
+        case 'High Insight':  return `${crew} hits ${target} ${verbTail} and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `${crew} hits ${target} ${verbTail}`
+        case 'Failure':       return `${crew} misses ${target} ${verbTail}`
+        case 'Dire Failure':  return `${crew} misfires ${vehicle}'s ${weapon} catastrophically`
+        case 'Low Insight':   return `${crew} misses ${target} ${verbTail} but has a Moment of Insight as to why it went so badly`
+        default:              return `${crew} ${hit ? 'hits' : 'misses'} ${target} ${verbTail}`
       }
     }
     // No target - firing into the air or for effect.
     switch (r.outcome) {
-      case 'Wild Success':  return `FIRE ${crew} fires ${vehicle}'s ${weapon} with stunning precision`
-      case 'High Insight':  return `FIRE ${crew} fires ${vehicle}'s ${weapon} and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `FIRE ${crew} fires ${vehicle}'s ${weapon}`
-      case 'Failure':       return `FIRE ${crew} fires ${vehicle}'s ${weapon} and the shot goes wide`
-      case 'Dire Failure':  return `FIRE ${crew} misfires ${vehicle}'s ${weapon} catastrophically`
-      case 'Low Insight':   return `FIRE ${crew} fires ${vehicle}'s ${weapon} and the shot goes wide but has a Moment of Insight as to why it went so badly`
-      default:              return `FIRE ${crew} fires ${verbTail}`
+      case 'Wild Success':  return `${crew} fires ${vehicle}'s ${weapon} with stunning precision`
+      case 'High Insight':  return `${crew} fires ${vehicle}'s ${weapon} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${crew} fires ${vehicle}'s ${weapon}`
+      case 'Failure':       return `${crew} fires ${vehicle}'s ${weapon} and the shot goes wide`
+      case 'Dire Failure':  return `${crew} misfires ${vehicle}'s ${weapon} catastrophically`
+      case 'Low Insight':   return `${crew} fires ${vehicle}'s ${weapon} and the shot goes wide but has a Moment of Insight as to why it went so badly`
+      default:              return `${crew} fires ${verbTail}`
     }
   }
   // Drive - "<name> - Drive - <vehicle>". Vehicle driving check.
