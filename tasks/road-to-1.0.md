@@ -10,8 +10,8 @@ High-level only. The granular work lives in `tasks/todo.md` (CURRENT OPEN) and t
 
 | Milestone | What it is | Money? | Gates |
 |---|---|---|---|
-| **Beta-500** (target 2026-06-01) | ~500 SELECT free friendlies, a bigger test | NO | "they get in, data is safe, we'd know if it broke, we can recover" |
-| **TheTapestry 1.0** | Paid public launch - "structurally ready for the world" | YES | the real milestone; also the gate the 3-VTT platform/monorepo work waits behind |
+| **Beta-500** (target 2026-07-01) | ~500 SELECT free friendlies, a bigger test | NO | "they get in, data is safe, we'd know if it broke, we can recover" |
+| **TheTapestry 1.0** (target 2026-09-01) | Paid public launch - "structurally ready for the world" | YES | the real milestone; also the gate the 3-VTT platform/monorepo work waits behind |
 
 Source: `tasks/beta-500-readiness-2026-06-01.md`, `tasks/architecture-path.md` (1.0 = "sound enough to take to the world / paid launch / 50k users").
 
