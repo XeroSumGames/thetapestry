@@ -1,6 +1,6 @@
 # Launch Plan: Limited Public, 2026-06-15 (SUPERSEDED 2026-05-20)
 
-> **STATUS: ARCHIVED.** Xero redirected 2026-05-20: stop optimizing around a launch date. The platform-stability work is the entire mandate. See [tasks/puffer-fish-platform-plan.md](puffer-fish-platform-plan.md) for the active plan.
+> **STATUS: ARCHIVED.** Xero redirected 2026-05-20: stop optimizing around a launch date. **CURRENT anchor (2026-05-27): [tasks/north-star.md](north-star.md)** - the real timeline is Beta-500 7/1 -> 9/1 Kickstarter (TheTapestry only) -> billing ~10/1 post-KS. The "2026-06-15" in this filename + body is DEAD; do not act on it. (Earlier active plan: [tasks/puffer-fish-platform-plan.md](puffer-fish-platform-plan.md).)
 >
 > This file is preserved for the audience-reframe + per-role gap analysis + outsourcing-options + invite-code-gate explainer content. The dated timeline + freeze-week + reviewer-outreach windows are NOT active. Do not act on the timeline below.
 
