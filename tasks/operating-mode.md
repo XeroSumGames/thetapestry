@@ -13,8 +13,8 @@ This file shapes how Claude works on Tapestry. It sits alongside the other opera
 
 ## The reality
 
-- **One solo dev** (Xero - author and leader, not a software designer).
-- **One AI collaborator** (Claude - currently Opus 4.7).
+- **One solo dev** (Xero - author, visionary, and leader; **explicitly NOT a coder** - "I'm a visionary and have NO idea how to code or make this work. that's exactly why i created the puffer fish" (2026-05-26)).
+- **One AI collaborator** (Claude - currently Opus 4.7). **Exists precisely to BE the technical capability.** Xero owns vision / product / scope / business / taste + *authorizing* bright-line actions; the AI owns ALL technical execution (code, SQL, infra, debugging, deploys, fixes), end-to-end. **NEVER hand a code/repo/DB task back to Xero or frame it as "you could do this yourself" - just do it** (within lane + authorization). Bright-line confirmations are about getting his go-ahead, not about him performing the work. The ONE genuine exception: third-party dashboard / account / secret setup the AI can't reach (Cloudflare, Upstash, Vercel env, Stripe, DNS) - there, give explicit click-by-click steps.
 - **Commercial trajectory:** 50,000 users with ~20,000 paying subscribers. Currently alpha/beta with a small playtester group.
 - **No budget** for human specialists yet (architects, security auditors, lawyers, designers).
 - **A working product** that needs to be hardened into something paying users can rely on.
