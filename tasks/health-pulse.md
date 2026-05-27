@@ -6,6 +6,32 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-27 06:04 UTC
+
+**Status:** DRIFT (continuing — 6th flag; same 3 items unresolved; 3 todos now confirmed shipped)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [685 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 00:04 UTC (2 commits):**
+- `d60e407` docs(beta-500): align internal target date to 2026-07-01 (not a drift item)
+- `cf9a0ed` docs(roadmap): set milestone target dates (not a drift item)
+
+**Drift (unchanged — 6th consecutive cycle flagging the same items):**
+- HOPED-FOR (2026-05-19 batch + re-arch vehicle/combat items): `debug-handoff.md` Confidence Ledger not drained post-playtest despite 2026-05-25 AND 2026-05-26 playtests both having run (8 days since batch shipped)
+- 3 stale `- [ ]` todos confirmed shipped — all committed 2026-05-25, still open in todo.md:
+  - Tactical ping red/green/red (`02d7389 feat(tactical): match the campaign-map ping`)
+  - Initiative round number in header (`f10d0ff feat(initiative): show the round number`)
+  - img_scale shared authoritative (`6ef34ce fix(tactical): make background img_scale shared`)
+- Ledger test count stale: debug-handoff shows 622/37 files; actual 685/40 files (+63 tests, +3 files)
+
+**Action:** Puffer Fish (overdue — 6 cycles): (1) drain HOPED-FOR in debug-handoff.md using the 2026-05-25 + 2026-05-26 playtest evidence; (2) mark the 3 stale todos complete; (3) run `node scripts/refresh-ledger.mjs` to sync test count.
+
+---
+
 ## 2026-05-27 00:04 UTC
 
 **Status:** DRIFT (continuing — 5th flag; same 3 items unresolved since 2026-05-26 06:07 UTC)
