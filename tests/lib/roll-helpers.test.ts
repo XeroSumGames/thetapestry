@@ -298,38 +298,38 @@ describe('compactRollSummary', () => {
       .toBe('Cree kicks off a Coordinated Effort with Tactics* and the plan falls apart but Cree has a Moment of Insight as to why it went so badly')
   })
 
-  // Stabilize narrative (canon locked 2026-05-19). STABILIZE prefix
-  // mirrors ATTRIBUTE CHECK / STRESS CHECK. HI keeps the bespoke
-  // "while doing so" tail per Xero 2026-05-11 lock; other outcomes
-  // follow the standard success/failure pattern + HI/LI tail rule.
+  // Stabilize narrative (canon locked 2026-05-19; "STABILIZE " caps prefix
+  // DROPPED 2026-05-27 per Xero - reads as a plain sentence now). HI keeps
+  // the bespoke "while doing so" tail per Xero 2026-05-11 lock; other
+  // outcomes follow the standard success/failure pattern + HI/LI tail rule.
   it('stabilize Wild Success', () => {
     expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Wild Success' }))
-      .toBe('STABILIZE Marv wildly succeeds at stabilizing Cree Hask')
+      .toBe('Marv wildly succeeds at stabilizing Cree Hask')
   })
 
   it('stabilize High Insight keeps bespoke "while doing so" tail', () => {
     expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'High Insight' }))
-      .toBe('STABILIZE Marv stabilizes Cree Hask and has a Moment of Insight while doing so')
+      .toBe('Marv stabilizes Cree Hask and has a Moment of Insight while doing so')
   })
 
   it('stabilize Success', () => {
     expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Success' }))
-      .toBe('STABILIZE Marv stabilizes Cree Hask')
+      .toBe('Marv stabilizes Cree Hask')
   })
 
   it('stabilize Failure', () => {
     expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Failure' }))
-      .toBe('STABILIZE Marv fails to stabilize Cree Hask')
+      .toBe('Marv fails to stabilize Cree Hask')
   })
 
   it('stabilize Dire Failure', () => {
     expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Dire Failure' }))
-      .toBe('STABILIZE Marv disastrously fails to stabilize Cree Hask')
+      .toBe('Marv disastrously fails to stabilize Cree Hask')
   })
 
   it('stabilize Low Insight: F narrative + canonical LI tail', () => {
     expect(compactRollSummary({ label: 'Marv - Stabilize Cree Hask', character_name: 'Marv', outcome: 'Low Insight' }))
-      .toBe('STABILIZE Marv fails to stabilize Cree Hask but has a Moment of Insight as to why it went so badly')
+      .toBe('Marv fails to stabilize Cree Hask but has a Moment of Insight as to why it went so badly')
   })
 
   // Heal narrative (canon locked 2026-05-19). HEAL prefix added. DF

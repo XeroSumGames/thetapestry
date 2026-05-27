@@ -436,22 +436,22 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     }
   }
   // Stabilize - label "<name> - Stabilize <target>". Canon locked
-  // 2026-05-19 per Xero. STABILIZE prefix mirrors ATTRIBUTE CHECK /
-  // STRESS CHECK pattern. HI keeps the bespoke "while doing so" tail
-  // (Xero 2026-05-11 lock); other outcomes follow the standard
-  // success/failure narrative + HI/LI tail rule.
+  // 2026-05-19 per Xero; the "STABILIZE " caps prefix was DROPPED 2026-05-27
+  // (Xero) so the line reads as a plain narrative sentence. HI keeps the
+  // bespoke "while doing so" tail (Xero 2026-05-11 lock); other outcomes
+  // follow the standard success/failure narrative + HI/LI tail rule.
   const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
   if (stabilizeMatch) {
     const tgt = stabilizeMatch[1]
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `STABILIZE ${name} wildly succeeds at stabilizing ${tgt}`
-      case 'High Insight':  return `STABILIZE ${name} stabilizes ${tgt} and has a Moment of Insight while doing so`
-      case 'Success':       return `STABILIZE ${name} stabilizes ${tgt}`
-      case 'Failure':       return `STABILIZE ${name} fails to stabilize ${tgt}`
-      case 'Dire Failure':  return `STABILIZE ${name} disastrously fails to stabilize ${tgt}`
-      case 'Low Insight':   return `STABILIZE ${name} fails to stabilize ${tgt} but has a Moment of Insight as to why it went so badly`
-      default:              return `STABILIZE ${name} ${hit ? 'stabilizes' : 'fails to stabilize'} ${tgt}`
+      case 'Wild Success':  return `${name} wildly succeeds at stabilizing ${tgt}`
+      case 'High Insight':  return `${name} stabilizes ${tgt} and has a Moment of Insight while doing so`
+      case 'Success':       return `${name} stabilizes ${tgt}`
+      case 'Failure':       return `${name} fails to stabilize ${tgt}`
+      case 'Dire Failure':  return `${name} disastrously fails to stabilize ${tgt}`
+      case 'Low Insight':   return `${name} fails to stabilize ${tgt} but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} ${hit ? 'stabilizes' : 'fails to stabilize'} ${tgt}`
     }
   }
   // Coordinate - "<name> - Coordinate (vs <target>)"

@@ -7678,7 +7678,16 @@ export default function TablePage() {
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                {/* MAP | token | POPOUT as a fixed 3-column block. The side
+                    columns are minmax(0,1fr) so they stay EQUAL no matter what
+                    they hold, which pins the center (token) column to the exact
+                    tile center - directly above the centered name below - and
+                    never lets it drift. State chips live in the right column so
+                    they sit right of POPOUT without shifting the centered token.
+                    Each column has an always-present wrapper so the grid keeps
+                    3 columns even when MAP / POPOUT are conditionally absent. */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', columnGap: '12px', width: '100%' }}>
+                  <div style={{ justifySelf: 'end' }}>
                   {gmLike && (combatActive || showTacticalMap) && (() => {
                     // Read the actual token state - was checking initiativeOrder,
                     // which meant the button didn't flip color for PCs placed on
@@ -7711,6 +7720,7 @@ export default function TablePage() {
                       </div>
                     )
                   })()}
+                  </div>
                   {/* Avatar border colors signal status in priority order:
                       active combatant (red) > online (green) > default
                       (teal). Online presence is read from onlineUserIds
@@ -7727,16 +7737,17 @@ export default function TablePage() {
                       </div>
                     )
                   })()}
+                  <div style={{ justifySelf: 'start', display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                   {(gmLike || isMe) && (
                     <div onClick={e => { e.stopPropagation(); openPopout(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, { w: 800, h: 800 }) }}
                       style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
                       Popout
                     </div>
                   )}
-                  {/* State chips to the RIGHT of Popout (Xero 2026-05-27; reverses
-                      the 2026-05-25 own-row decision). Returns null when no active
-                      conditions so nothing is added to the row in the common case. */}
+                  {/* State chips: right of POPOUT in col 3. Returns null when no
+                      active conditions, so the common case adds nothing. */}
                   <PlayerStatusChips liveState={entry.liveState} lastingWounds={(entry.character.data as any)?.lastingWounds} />
+                  </div>
                 </div>
                 {/* Name: allow wrapping so it never truncates to nothing on narrow
                     tiles. wordBreak ensures a single long name breaks mid-word
