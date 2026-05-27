@@ -2611,7 +2611,7 @@ export default function TablePage() {
   }
 
   async function refreshMapTokenIds() {
-    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (!activeScene) return
     // Only count tokens that are actually ON the map. Archived (soft-
     // deleted) rows preserve position for a future remap but shouldn't
@@ -2621,7 +2621,7 @@ export default function TablePage() {
   }
 
   async function removeTokenFromMap(name: string) {
-    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (!activeScene) return
     // Soft-delete (stamp archived_at) instead of hard-delete so the
     // token's grid_x / grid_y / scale / rotation persist for the next
@@ -2644,7 +2644,7 @@ export default function TablePage() {
   // the end so all clients refetch once instead of N times.
   async function placeFolderOnMap(npcsToPlace: { id: string; name: string; portrait_url?: string | null; disposition?: string | null; npc_type?: string | null }[]) {
     if (npcsToPlace.length === 0) { alert('No NPCs to place.'); return }
-    const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
+    const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (sceneErr || !activeScene) {
       alert('No active tactical scene. Open the Tactical Map and create or activate a scene first.')
       return
@@ -2768,7 +2768,7 @@ export default function TablePage() {
   // perfectly symmetric. Single broadcast at the end.
   async function unmapFolderFromMap(npcsToRemove: { id: string }[]) {
     if (npcsToRemove.length === 0) return
-    const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (sceneErr || !activeScene) { alert('No active tactical scene.'); return }
     const npcIds = npcsToRemove.map(n => n.id)
     // Soft-delete: stamp archived_at = now() on the live tokens. This
@@ -2797,7 +2797,7 @@ export default function TablePage() {
   }
 
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
-    const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).single()
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
     // Three-way toggle: live → archive (off-map, position preserved);
     // archived → un-archive (back on map at original cell);
@@ -7470,7 +7470,7 @@ export default function TablePage() {
                   <CampaignObjects campaignId={id} isGM={gmLike} tokenRefreshKey={tokenRefreshKey}
                     onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
                     onPlaceOnMap={async (name, portraitUrl, wpMax) => {
-                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).single()
+                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
                       if (!activeScene) { alert('No active scene.'); return }
                       const objSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
                       await supabase.from('scene_tokens').insert({
@@ -7483,7 +7483,7 @@ export default function TablePage() {
                       initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
                     }}
                     onRemoveFromMap={async (name) => {
-                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
                       if (activeScene) {
                         await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', name).eq('token_type', 'object')
                         setTokenRefreshKey(k => k + 1)
@@ -7694,7 +7694,7 @@ export default function TablePage() {
                           // it in place. Each scene keeps its own independent token,
                           // so a PC can be on as many scenes as you like (mirrors the
                           // NPC/folder archive behaviour - hard-delete lost positions).
-                          const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+                          const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
                           if (activeScene) {
                             await supabase.from('scene_tokens').update({ archived_at: new Date().toISOString() }).eq('scene_id', activeScene.id).eq('name', entry.character.name).is('archived_at', null)
                             setTokenRefreshKey(k => k + 1)
