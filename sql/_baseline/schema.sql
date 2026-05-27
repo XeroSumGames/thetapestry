@@ -4044,6 +4044,137 @@ end;
 $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.loot_npc_equipment_item(p_npc_id uuid, p_character_id uuid, p_weapon_slot text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+declare
+  v_user_id    uuid := auth.uid();
+  v_npc        record;
+  v_pc         record;
+  v_skills     jsonb;
+  v_weapon     jsonb;
+  v_weapon_name text;
+  v_condition  text;
+  v_ammo_cur   int;
+  v_ammo_max   int;
+  v_reloads    int;
+  v_notes      text;
+  v_wp         int;
+  v_rp         int;
+  v_lootable   boolean;
+  v_pc_data    jsonb;
+  v_pc_inv     jsonb;
+  v_match_idx  int := -1;
+  v_existing   jsonb;
+  v_new_pc_inv jsonb;
+  v_new_item   jsonb;
+  i            int;
+begin
+  if v_user_id is null then
+    return jsonb_build_object('ok', false, 'error', 'not authenticated');
+  end if;
+  if p_weapon_slot not in ('weapon', 'weapon2') then
+    return jsonb_build_object('ok', false, 'error', 'invalid weapon slot (must be weapon or weapon2)');
+  end if;
+  select * into v_npc from public.campaign_npcs where id = p_npc_id;
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'NPC not found');
+  end if;
+  select * into v_pc from public.characters where id = p_character_id;
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'character not found');
+  end if;
+  if v_pc.user_id is null or v_pc.user_id <> v_user_id then
+    return jsonb_build_object('ok', false, 'error', 'not your character');
+  end if;
+  if not exists (
+    select 1 from public.campaign_members
+    where campaign_id = v_npc.campaign_id
+      and user_id     = v_user_id
+      and character_id = p_character_id
+  ) then
+    return jsonb_build_object('ok', false, 'error', 'character not in NPC''s campaign');
+  end if;
+  v_wp := coalesce(v_npc.wp_current, v_npc.wp_max, 10);
+  v_rp := coalesce(v_npc.rp_current, v_npc.rp_max, 6);
+  v_lootable := (v_npc.status = 'dead')
+             or (v_wp = 0)
+             or (v_rp = 0 and v_wp > 0);
+  if not v_lootable then
+    return jsonb_build_object('ok', false, 'error', 'NPC must be dead, mortally wounded, or unconscious to loot');
+  end if;
+  v_skills := coalesce(v_npc.skills, '{}'::jsonb);
+  v_weapon  := v_skills->p_weapon_slot;
+  if v_weapon is null or jsonb_typeof(v_weapon) = 'null' then
+    return jsonb_build_object('ok', false, 'error', 'no weapon in that slot');
+  end if;
+  v_weapon_name := v_weapon->>'weaponName';
+  if v_weapon_name is null or trim(v_weapon_name) = '' then
+    return jsonb_build_object('ok', false, 'error', 'weapon slot has no name');
+  end if;
+  v_condition := coalesce(v_weapon->>'condition', 'Unknown');
+  v_ammo_cur  := coalesce((v_weapon->>'ammoCurrent')::int, 0);
+  v_ammo_max  := coalesce((v_weapon->>'ammoMax')::int, 0);
+  v_reloads   := coalesce((v_weapon->>'reloads')::int, 0);
+  if v_ammo_max > 0 then
+    v_notes := v_condition
+      || ' - ' || v_ammo_cur || '/' || v_ammo_max || ' ammo'
+      || ', ' || v_reloads || ' reload' || case when v_reloads <> 1 then 's' else '' end;
+  else
+    v_notes := v_condition;
+  end if;
+  update public.campaign_npcs
+     set skills = jsonb_set(v_skills, array[p_weapon_slot], 'null'::jsonb)
+   where id = p_npc_id;
+  v_pc_data := coalesce(v_pc.data, '{}'::jsonb);
+  v_pc_inv  := coalesce(v_pc_data->'inventory', '[]'::jsonb);
+  if jsonb_typeof(v_pc_inv) <> 'array' then
+    v_pc_inv := '[]'::jsonb;
+  end if;
+  for i in 0 .. jsonb_array_length(v_pc_inv) - 1 loop
+    if (v_pc_inv->i->>'name') = v_weapon_name
+       and not coalesce((v_pc_inv->i->>'custom')::boolean, false) then
+      v_match_idx := i;
+      v_existing  := v_pc_inv->i;
+      exit;
+    end if;
+  end loop;
+  if v_match_idx >= 0 then
+    v_new_pc_inv := jsonb_set(
+      v_pc_inv,
+      array[v_match_idx::text, 'qty'],
+      to_jsonb(coalesce((v_existing->>'qty')::int, 1) + 1)
+    );
+  else
+    v_new_item := jsonb_strip_nulls(jsonb_build_object(
+      'name',   v_weapon_name,
+      'qty',    1,
+      'custom', false,
+      'notes',  v_notes
+    ));
+    v_new_pc_inv := v_pc_inv || jsonb_build_array(v_new_item);
+  end if;
+  update public.characters
+     set data = jsonb_set(v_pc_data, '{inventory}', v_new_pc_inv)
+   where id = p_character_id;
+  insert into public.roll_log (
+    campaign_id, user_id, character_name, label,
+    die1, die2, amod, smod, cmod, total, outcome
+  ) values (
+    v_npc.campaign_id,
+    v_user_id,
+    v_pc.name,
+    chr(127890) || ' ' || v_pc.name || ' looted ' || v_weapon_name || ' from ' || v_npc.name,
+    0, 0, 0, 0, 0, 0, 'loot'
+  );
+  return jsonb_build_object('ok', true);
+end;
+$function$
+;
+
 CREATE OR REPLACE FUNCTION public.module_reviews_recompute_aggregate()
  RETURNS trigger
  LANGUAGE plpgsql
