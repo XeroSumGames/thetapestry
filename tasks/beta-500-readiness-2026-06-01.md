@@ -1,4 +1,4 @@
-# Beta-500 Readiness - target 2026-06-01 (puffer-fish, 2026-05-24)
+# Beta-500 Readiness - target 2026-07-01 (puffer-fish, 2026-05-24; target moved 06-01 -> 07-01 by Xero 2026-05-26. Filename keeps the original date as a stable identifier.)
 
 **Goal:** open to ~500 SELECT users on 6/1 as a larger beta. **Semi-friendlies, NO subscriptions, NO money** - just a bigger test. This scoping is the whole point: it strips out the entire payment / PCI / tax / billing surface (normally a launch's hardest part) and raises rough-edge tolerance. But it is still 500 real people on prod, so the floor is: **they can get in, their data is safe, you would know if it broke, and you can recover.**
 
