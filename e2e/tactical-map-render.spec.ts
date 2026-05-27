@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { test, expect, type Page } from '@playwright/test'
 import { AUTH, canAuth, CAMPAIGN_ID } from './_fixtures'
 import { captureAnonKey, resolveCreds, SUPABASE_URL, type SupaCreds } from './_teardown'
@@ -5,7 +7,17 @@ import { captureAnonKey, resolveCreds, SUPABASE_URL, type SupaCreds } from './_t
 // TACTICAL-MAP RENDER FIX - 2-client acceptance (the automatable slice).
 //
 // Backs the P0 render-model fix that made the Minnie S7 playtest unplayable.
-//   Spec: tasks/tactical-map-render-fix-spec-2026-05-26.md (Puffer).
+//   Fix spec: tasks/tactical-map-render-fix-spec-2026-05-26.md (Puffer).
+//   Acceptance GATE: tasks/tactical-map-verify-2client-testplan-2026-05-27.md
+//     (Puffer) - 8 MANUAL 2-client checks + a 3-item automatable subset routed
+//     here. This file IS that subset: gate item 2 (shared scale read identically
+//     by 2 clients) = test below; gate item 3 (no per-client width auto-fit) =
+//     the source-guard test; gate item 1 ("img_scale persisted non-null after a
+//     GM opens an unset scene") does NOT match the SHIPPED model - HP chose
+//     "default 1/NULL = render raw", persisting only on a GM corner-resize, NOT
+//     first-load-compute-and-persist - so we assert nullable-or-number, not
+//     non-null (flagged to Puffer; the gate's item 1 premise is from the spec,
+//     not the build).
 //   HP impl LANDED: 6ef34ce (shared + authoritative img_scale, kills per-client
 //   divergence), fca10a6 (locked-map "Center" escape hatch for players),
 //   dc6eea6 (active-scene query .single -> .maybeSingle).
@@ -168,5 +180,25 @@ test.describe('Tactical-map render fix - 2-client acceptance', () => {
       await gmCtx.close()
       await plCtx.close()
     }
+  })
+})
+
+// Item 3 of Puffer's automatable subset (tasks/tactical-map-verify-2client-testplan-2026-05-27.md):
+// a static tripwire that the ROOT CAUSE stays removed. No auth/browser needed.
+test.describe('Tactical-map render fix - source guard (root cause stays removed)', () => {
+  test('no setImgScale derives the shared scale from a per-client container/image width', () => {
+    // The 2026-05-26 divergence bug was an on-image-load `setImgScale(containerW /
+    // naturalWidth)` that fit the bg to EACH client's window. The fix (6ef34ce)
+    // removed it; img_scale is now ONLY the shared DB value (loadScenes), the GM
+    // corner-resize, or the GM's Share-View broadcast - never a per-client width.
+    // This fails if any width-derived setImgScale is reintroduced.
+    const src = readFileSync(join(process.cwd(), 'components', 'TacticalMap.tsx'), 'utf8')
+    const offenders = [...src.matchAll(/setImgScale\([^;]*?\)/g)]
+      .map(m => m[0].replace(/\s+/g, ' '))
+      .filter(call => /\b(containerW|clientWidth|offsetWidth|naturalWidth|naturalW|innerWidth)\b/.test(call))
+    expect(
+      offenders,
+      `per-client width-derived setImgScale reintroduced (the divergence root cause): ${offenders.join(' ; ')}`,
+    ).toEqual([])
   })
 })
