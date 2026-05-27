@@ -181,12 +181,26 @@ export async function restoreCampaignSnapshot(
   }
 
   // 6. Character states (optional). Wipes + re-inserts the exact rows.
+  //    Filters out stale rows where the referenced character no longer exists
+  //    (player left campaign, character deleted after snapshot) to prevent FK
+  //    violations on character_states_character_id_fkey. Silently skipping
+  //    stale entries is correct - those characters don't exist to restore to.
   if (snap.includes_character_states && snap.character_states) {
     const wipe = await supabase.from('character_states').delete().eq('campaign_id', campaignId)
     if (wipe.error) errors.push(`character_states wipe: ${wipe.error.message}`)
     if (snap.character_states.length > 0) {
-      const r = await supabase.from('character_states').insert(snap.character_states.map(stripGenerated))
-      if (r.error) errors.push(`character_states insert: ${r.error.message}`)
+      // Verify which character_ids still exist before inserting.
+      const snapCharIds = [...new Set(snap.character_states.map((s: any) => s.character_id as string))]
+      const { data: existingChars } = await supabase
+        .from('characters')
+        .select('id')
+        .in('id', snapCharIds)
+      const validCharIds = new Set((existingChars ?? []).map((c: any) => c.id as string))
+      const validStates = snap.character_states.filter((s: any) => validCharIds.has(s.character_id))
+      if (validStates.length > 0) {
+        const r = await supabase.from('character_states').insert(validStates.map(stripGenerated))
+        if (r.error) errors.push(`character_states insert: ${r.error.message}`)
+      }
     }
   }
 
