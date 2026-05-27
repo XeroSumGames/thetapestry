@@ -3737,6 +3737,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             for ~1.5s after click as confirmation. Not a continuous
             follow - deliberate, GM-driven. */}
         <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Locked-map escape hatch - players can't pan when the GM locks the
+              map, so give them a one-tap re-center so they're never stranded. */}
+          {!isGM && mapLocked && (
+            <button type="button" onClick={() => centerViewport()}
+              title="Center the map on your token"
+              style={{ padding: '3px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Center
+            </button>
+          )}
           {isGM && (
             <button type="button"
               onClick={() => {
