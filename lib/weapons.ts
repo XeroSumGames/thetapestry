@@ -90,7 +90,7 @@ export const RANGED_WEAPONS: Weapon[] = [
   { name: 'Black Powder Rifle', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 1, traits: [] },
   { name: 'Bolt-Action / Pump Rifle', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 1, traits: [] },
   { name: 'Bow', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '4+1d6', rpPercent: 50, enc: 1, ammo: 'Common', clip: 1, traits: ['Tracking'] },
-  { name: 'Carbine', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+1d6', rpPercent: 50, enc: 1, ammo: 'Uncommon', clip: 30, traits: ['Automatic Burst'] },
+  { name: 'Carbine', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+1d6', rpPercent: 50, enc: 1, ammo: 'Uncommon', clip: 30, traits: ['Automatic Burst (3)'] },
   { name: 'Compound Bow', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '4+2d3', rpPercent: 50, enc: 2, ammo: 'Common', clip: 1, traits: ['Tracking'] },
   { name: 'Crossbow', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Uncommon', damage: '4+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 1, traits: ['Unwieldy (1)'] },
   { name: 'Heavy Pistol', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '3+2d3', rpPercent: 50, enc: 1, ammo: 'Uncommon', clip: 9, traits: [] },

@@ -108,6 +108,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const [lootItems, setLootItems] = useState<LootItem[] | null>(null)
   const [lootError, setLootError] = useState<string | null>(null)
   const [takingItem, setTakingItem] = useState<string | null>(null)
+  const [takingAll, setTakingAll] = useState(false)
   // Bumped by the `tapestry:recruit-updated` window event so the
   // recruit-state effect below re-runs without a full page refresh.
   // The emit sites live in app/stories/[id]/table/page.tsx inside
@@ -369,6 +370,17 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
     setLootItems(prev => prev ? prev.filter(i => !(i.source === 'equipment' && i.weaponSlot === item.weaponSlot)) : prev)
   }
 
+  async function takeAllItems() {
+    if (!lootItems?.length) return
+    setTakingAll(true)
+    // Snapshot the list before iterating - the state updates inside
+    // takeItem will mutate lootItems during the loop.
+    for (const item of [...lootItems]) {
+      await takeItem(item)
+    }
+    setTakingAll(false)
+  }
+
   return (
     <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '8px 10px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -604,6 +616,12 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 })
               )}
             </div>
+            {lootItems && lootItems.length > 0 && (
+              <button onClick={takeAllItems} disabled={takingAll || !!takingItem}
+                style={{ marginBottom: '8px', padding: '8px', background: takingAll ? '#1a2e10' : '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (takingAll || !!takingItem) ? 'wait' : 'pointer', opacity: (takingAll || !!takingItem) ? 0.6 : 1, fontWeight: 600 }}>
+                {takingAll ? 'Taking All…' : `Take All (${lootItems.length})`}
+              </button>
+            )}
             <button onClick={() => { setShowLoot(false); setLootError(null) }}
               style={{ padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
