@@ -11,6 +11,7 @@ import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
 import NpcRoster, { getNpcRingColor, getNpcTokenBorderColor } from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
+import MapSetupPanel from '../../../../components/MapSetupPanel'
 import TradeNegotiationModal from '../../../../components/TradeNegotiationModal'
 import PlayerNpcCard from '../../../../components/PlayerNpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
@@ -442,6 +443,9 @@ export default function TablePage() {
     if (typeof window === 'undefined') return
     localStorage.setItem(`tactical_map_view_${id}`, showTacticalMap ? '1' : '0')
   }, [showTacticalMap, id])
+  // In-tab Map Setup panel (replaces the old separate-window popout so it can't
+  // get buried). Rendered as a floating, draggable, always-on-top overlay.
+  const [mapSetupOpen, setMapSetupOpen] = useState(false)
 
   // Multistory cross-scene initiative tag. For each initiative entry,
   // resolve its character_id / npc_id to a scene token and check
@@ -5367,10 +5371,10 @@ export default function TablePage() {
             {/* Campaign Map button + Tactical Map scene-picker dropdown (echoes Checks/Community: New Scene + every scene, active in green) */}
             <button onClick={() => setShowTacticalMap(false)} className={`hdr-btn${!showTacticalMap ? ' hdr-btn--active' : ''}`} style={hdrBtn(!showTacticalMap ? '#2a1210' : '#242424', !showTacticalMap ? '#f5a89a' : '#d4cfc9', !showTacticalMap ? '#c0392b' : '#3a3a3a')}>Campaign Map</button>
             {renderHeaderMenu('tacticalmap', 'Tactical Map', [
-              // Map Setup pops out the scene-controls panel into its own
-              // window (was a standalone header button; folded in here so
-              // the dropdown reads Map Setup -> New Scene -> scenes).
-              { label: 'Map Setup', onClick: () => openPopout(`/scene-controls-popout?c=${id}`, `scene-controls-${id}`, { w: 250, h: 600 }) },
+              // Map Setup opens the scene-controls panel as an in-tab floating,
+              // draggable, always-on-top overlay (was a separate browser window
+              // that kept getting buried). Toggles open/closed.
+              { label: 'Map Setup', onClick: () => setMapSetupOpen(o => !o) },
               { label: 'New Scene', onClick: () => createNewScene() },
               ...sceneList.map(s => ({ label: s.name, color: s.is_active ? '#7fc458' : undefined, onClick: () => openScene(s.id) })),
             ], hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a'))}
@@ -10559,6 +10563,11 @@ export default function TablePage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* In-tab Map Setup overlay (GM-only; replaces the buried-window popout). */}
+      {gmLike && mapSetupOpen && (
+        <MapSetupPanel campaignId={id} onClose={() => setMapSetupOpen(false)} />
       )}
 
     </div>
