@@ -8,6 +8,8 @@ show in-flight focus). Keep it to a few lines per lane. Convention + ownership:
 Format per lane: **focus** (what right now) / **touching** (files/area) /
 **updated** (timestamp + HEAD you're working from).
 
+> **NORTH STAR - all lanes align here: [tasks/north-star.md](north-star.md).** Goal = TheTapestry **stable, polished, fun for the 9/1 Kickstarter** (Beta-500 7/1 proves it; player-free / GM-paid billing ~10/1 post-KS, OFF the pre-KS path). Every lane's focus below must ladder up to this - if your work doesn't serve it, question it. #1 priority now: reliable core table loop (tactical-map render fix + verify). New workstream: KS first-impression / polish.
+
 ---
 
 ## Hunt & Peck

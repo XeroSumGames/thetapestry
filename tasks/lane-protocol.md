@@ -11,6 +11,8 @@ describes only TWO lanes and should be updated - see bottom).
 
 ---
 
+> **All three lanes align to ONE anchor: [tasks/north-star.md](north-star.md)** - the validated vision. Its whole purpose is to keep the lanes moving the SAME direction with no contradictions or overlaps. Read it, prioritize against it, and lead every handoff with it. (Goal now: TheTapestry stable/polished/fun for the 9/1 Kickstarter; billing ~10/1 post-KS.)
+
 ## The three lanes
 
 | Lane | Owns / decides | Edits (hot files) | Collision profile |

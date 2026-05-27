@@ -6,6 +6,10 @@
 
 # Evergreen
 
+## North Star (LEAD THE CHAT BLOCK WITH THIS)
+
+**Anchor: [tasks/north-star.md](north-star.md).** Goal: TheTapestry **stable, polished, fun for the 9/1 Kickstarter** (Beta-500 7/1 proves it; player-free / GM-paid billing ~10/1 post-KS, OFF the pre-KS path). Multi-platform VTT on one engine (XSE); Tapestry is the spearhead, port to TheTableau + TheTable after. **Every handoff chat-block must OPEN with the current goal + milestone** so the next session/lane starts aimed right - no drift or contradiction across lanes.
+
 ## Role + project
 
 You are a working assistant for **TheTapestry** - a Next.js TTRPG platform for the XSE / Distemper system. Live at `thetapestry.distemperverse.com`. Solo dev (Xero). Mix of bug triage, feature builds, doc-sync, audit, and rules work.

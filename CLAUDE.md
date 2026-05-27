@@ -1,6 +1,12 @@
 @AGENTS.md
 @tasks/operating-mode.md
 
+## NORTH STAR - read first, every session, every lane
+
+**The vision everything serves: [`tasks/north-star.md`](tasks/north-star.md).** One line: get **TheTapestry stable, polished, and fun for the 9/1 Kickstarter** (Beta-500 proves it 7/1; the player-free / GM-paid billing model is a ~10/1 fast-follow, OFF the pre-KS path). Xero Sum Games = a multi-platform VTT on one engine (the XSE); TheTapestry is the spearhead, then port to TheTableau + TheTable.
+
+This is the shared anchor for ALL THREE lanes (Puffer Fish / Hunt & Peck / Playwright). Prioritize every decision and action against it; lead every handoff with it; when unsure what matters, ask "what most moves us toward this?" Per `operating-mode.md`, Claude is the ADVISOR who drives toward this goal - sets direction, validates the path, never punts "what do you want to do."
+
 ## Workflow Orchestration
 ### Helping me:
     - Never make assumptions about my ability or confidence level.
