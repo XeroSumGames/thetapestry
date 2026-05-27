@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-27 18:04 UTC
+
+**Status:** DRIFT (continuing — 10th flag; 1 new stale todo; previous 3 still open)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [693 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 15:04 UTC:** 19 commits (initiative NPC picker, loot feed, auth fixes, docs)
+
+**Drift:**
+- HOPED-FOR (2026-05-19 batch + re-arch vehicle/combat items): Confidence Ledger still not drained post-2026-05-25 + 2026-05-26 playtests (10 cycles; >8 days since batch shipped)
+- 4 stale `- [ ]` todos: img_scale (prev. L66), initiative round (`f10d0ff`), tactical ping (`02d7389`), **+NPC picker (`13854c4`) NEW this cycle**
+- Ledger test count stale: debug-handoff shows 622/37; actual 693/40 (+71 tests, +3 files)
+
+**Action:** Puffer Fish (10 cycles overdue): drain HOPED-FOR in debug-handoff.md after 2026-05-26 playtest; close 4 shipped todos; update ledger test count.
+
+---
+
 ## 2026-05-27 15:04 UTC
 
 **Status:** DRIFT (continuing — 9th flag; same 3 items; 0 commits since 12:07 UTC)
