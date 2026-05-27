@@ -71,8 +71,10 @@ test.describe('Ch7 - Session lifecycle (start -> active -> end -> history)', () 
       // --- Start Session -> active state ---
       await startBtn.click()
       // The "Session 1" counter appears (same sessionStatus==='active' gate that
-      // enables dice) and the End Session control replaces Start.
-      await expect(gm.getByText('Session 1', { exact: true }).first(), 'session counter should read Session 1').toBeVisible({ timeout: 15_000 })
+      // enables dice) and the End Session control replaces Start. The header
+      // renders it as a colored suffix " (Session 1)" (table/page.tsx:5305), so
+      // match the count tolerant of the parens/spacing/styling, not exact text.
+      await expect(gm.getByText(/\bSession 1\b/).first(), 'session counter should read Session 1').toBeVisible({ timeout: 15_000 })
       const endBtn = gm.getByRole('button', { name: 'End Session' }).first()
       await expect(endBtn, 'active table should offer End Session').toBeVisible()
       // The session row persisted: number 1, not yet ended.
