@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-27 21:04 UTC
+
+**Status:** DRIFT (continuing — 11th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [697 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 18:04 UTC:** bg-to-grid lock shipped (`b38cdf2`), NPC picker shipped (`13854c4`)
+
+**Drift:**
+- HOPED-FOR still not drained: 2026-05-19 batch (9 days old) + re-arch vehicle/combat items (3 days past 2026-05-25 ride). Ledger test count stale: shows 622/37, actual 697/40.
+- NPC picker (`13854c4` feat(initiative)) SHIPPED but todo still `- [ ]` — stale-as-open (audit-correction needed)
+- 2 genuinely-open stale todos remain: initiative round label (`RollsFeed.tsx:476` + table-page 3 insert sites) + tactical ping color/3-pulse (`TacticalMap.tsx` count:2->3, red/green/red)
+
+**Action:** Puffer Fish (11 cycles overdue): drain HOPED-FOR in debug-handoff.md; update ledger test count to 697/40; close NPC picker todo.
+
+---
+
 ## 2026-05-27 18:04 UTC
 
 **Status:** DRIFT (continuing — 10th flag; 1 new stale todo; previous 3 still open)
