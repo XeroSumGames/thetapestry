@@ -10,7 +10,7 @@
 
 ## MUST-HAVE (hard blockers / data-safety / cannot-undo)
 
-1. **[OP+PF] Signup must actually work on prod - verify END-TO-END.** Verified 2026-05-24: `app/api/auth/verify-turnstile/route.ts` returns **503 in prod when Upstash env vars are missing** (lines 108-114, before it even checks the token), and 500s if `TURNSTILE_SECRET_KEY` is unset. So today, if signup gates on that call, **nobody can sign up.**
+1. **[OP+PF] Signup must actually work on prod - verify END-TO-END. ✅ CLOSED + VERIFIED 2026-05-27** (full prod signup -> "CHECK YOUR EMAIL"). Fixed all three: Upstash env vars set + `TURNSTILE_SECRET_KEY` set (403-on-dummy confirms rate-limiter+secret green) + the `size:'invisible'` Turnstile render bug removed (`5f73bfb`). The lingering "bot check failed" after the fix was a stale browser cache (hard-refresh resolved it), NOT a Cloudflare key/hostname issue. (Original: `verify-turnstile` 503'd in prod without Upstash env + 500'd without `TURNSTILE_SECRET_KEY` - nobody could sign up.)
    - [OP] Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (free tier covers it) AND confirm `TURNSTILE_SECRET_KEY` in the Vercel dashboard.
    - [PF/manual] Then a real prod signup smoke - the E2E suite deliberately cannot automate Turnstile, so this is by hand.
    - If invite-gated ("500 SELECT users" -> `signup_codes`): test code generation + redemption + that the invite path still passes Turnstile. Confirm 500 codes can be minted.

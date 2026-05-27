@@ -18,7 +18,7 @@ Source: `tasks/beta-500-readiness-2026-06-01.md`, `tasks/architecture-path.md` (
 ---
 
 ## Beta-500 (the near gate) - mostly done, short critical path
-- [ ] **[Xero] Signup works end-to-end on prod** - the one true blocker. Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` + confirm `TURNSTILE_SECRET_KEY` in Vercel (`verify-turnstile` 503s without them), then a manual prod signup smoke (+ invite-code mint/redeem if invite-gated).
+- [x] **[Xero] Signup works end-to-end on prod - CLOSED + VERIFIED 2026-05-27** (full signup -> "CHECK YOUR EMAIL" on prod). Upstash + `TURNSTILE_SECRET_KEY` set; the `size:'invisible'` Turnstile render bug removed. (Invite-code mint/redeem still worth a manual check if beta is invite-gated.)
 - [x] **Data-safety: `characters` cross-user write/data-loss class - largely CLOSED.** GM-of-campaign RLS applied; PC-PC trade RPC + client rewire shipped. (Was the RED Risk-Register item.)
 - [ ] **Operational floor:** external uptime monitor on `/api/health` w/ alerting to a human; known Supabase backup cadence; a realtime concurrent-connection-cap sanity + small load test; moderation capacity (can two people clear `/moderate`?) + a user report/abuse path.
 - [ ] **E2E green-light:** `npm run test:e2e` as go/no-go; combat-flow covered or manually smoked.

@@ -127,9 +127,7 @@ export default function SignupPage() {
       })
       if (!check.ok) {
         cachedTokenRef.current = null
-        const j = await check.json().catch(() => null)
-        const codes = j?.codes?.length ? ` [${j.codes.join(', ')}]` : ''
-        setError(`Bot check failed${codes} - please try again.`)
+        setError('Bot check failed - please try again.')
         return
       }
     }

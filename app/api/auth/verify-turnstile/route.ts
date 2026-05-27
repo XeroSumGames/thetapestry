@@ -160,7 +160,9 @@ export async function POST(req: NextRequest) {
   // Surface Cloudflare's error-codes so a rejected token tells us WHY
   // (e.g. invalid-input-secret = secret/site-key mismatch, or a hostname
   // problem) instead of an opaque 403. Codes are non-sensitive.
+  // Log Cloudflare's error-codes server-side for future debugging (kept;
+  // useful if real tokens ever start failing). Not returned to the client.
   const codes = Array.isArray(data['error-codes']) ? data['error-codes'] : []
   console.error('[verify-turnstile] cloudflare siteverify failed:', codes.join(',') || 'no-codes')
-  return NextResponse.json({ ok: false, error: 'challenge failed', codes }, { status: 403 })
+  return NextResponse.json({ ok: false, error: 'challenge failed' }, { status: 403 })
 }
