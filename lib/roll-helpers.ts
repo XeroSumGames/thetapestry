@@ -916,22 +916,19 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       default:              return `GATHER ${name} scavenges for brewing materials`
     }
   }
-  // Loot - label "🎒 <name> looted <items> from <container>". Narrative
-  // compact banner hides WHAT was looted (keeps players reading the log
-  // without spoiling everyone's hauls); ▸ expand reveals the full list.
+  // Loot - two label formats:
+  //   loot_npc_item:           "🎒 <PC> searched the corpse of <NPC> and looted <Item> [×N]"
+  //   loot_npc_equipment_item: "🎒 <PC> looted <weapon> from <NPC>"
+  // Show the full label so the feed details exactly what was taken.
   if (r.outcome === 'loot') {
-    // "Found nothing" - label "🎒 <PC> searched the corpse of <NPC> and found nothing"
-    // or "🎒 <PC> looked through the remains of <Object> and found nothing".
+    // "Found nothing" cases - contextual message only (nothing to reveal).
     const nothingCorpseMatch = r.label.match(/^🎒\s+(.+?)\s+searched the corpse of\s+(.+?)\s+and found nothing/)
     if (nothingCorpseMatch) return `${r.character_name} searched the corpse of ${nothingCorpseMatch[2]} and found nothing`
     const nothingObjMatch = r.label.match(/^🎒\s+(.+?)\s+looked through the remains of\s+(.+?)\s+and found nothing/)
     if (nothingObjMatch) return `${r.character_name} looked through the remains of ${nothingObjMatch[2]} and found nothing`
-    // NPC corpse search - label "🎒 <PC> searched the corpse of <NPC> and looted <Item>".
-    const corpseMatch = r.label.match(/^🎒\s+(.+?)\s+searched the corpse of\s+(.+?)\s+and looted/)
-    if (corpseMatch) return `${r.character_name} searched the corpse of ${corpseMatch[2]} and found something`
-    // Object/container loot - "🎒 <PC> looted <Item> from <Object>".
-    const lootMatch = r.label.match(/^🎒\s+(.+?)\s+looted\s+.+\s+from\s+(.+)$/)
-    if (lootMatch) return `${r.character_name} looked through the remains of ${lootMatch[2]} and found something`
+    // All other loot rows: show the label verbatim - it already reads as a
+    // clear one-liner describing exactly what was taken and from whom.
+    if (r.label.startsWith('🎒')) return r.label
   }
   // (Group Check moved to a bespoke Tier A banner in components/RollsFeed.tsx
   // - keyed off label prefix + damage_json.groupCheckParticipants - so it

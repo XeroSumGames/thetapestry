@@ -726,6 +726,42 @@ describe('compactRollSummary', () => {
       character_name: 'Cree Hask', outcome: 'action',
     })).toBe('Cree Hask prepares to Defend')
   })
+
+  // Loot (2026-05-27): full label shown verbatim; "found nothing" stays as contextual message
+  it('loot: loot_npc_item label shown verbatim with item name', () => {
+    expect(compactRollSummary({
+      label: '🎒 Juno searched the corpse of Alex Torrez and looted Medical Kit',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('🎒 Juno searched the corpse of Alex Torrez and looted Medical Kit')
+  })
+
+  it('loot: loot_npc_item label with qty shown verbatim', () => {
+    expect(compactRollSummary({
+      label: '🎒 Juno searched the corpse of Alex Torrez and looted Bandage ×3',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('🎒 Juno searched the corpse of Alex Torrez and looted Bandage ×3')
+  })
+
+  it('loot: loot_npc_equipment_item label shown verbatim with weapon name', () => {
+    expect(compactRollSummary({
+      label: '🎒 Juno looted Carbine from Alex Torrez',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('🎒 Juno looted Carbine from Alex Torrez')
+  })
+
+  it('loot: "found nothing" corpse search returns contextual message (no item to reveal)', () => {
+    expect(compactRollSummary({
+      label: '🎒 Juno searched the corpse of Alex Torrez and found nothing',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('Juno searched the corpse of Alex Torrez and found nothing')
+  })
+
+  it('loot: "found nothing" object/container returns contextual message', () => {
+    expect(compactRollSummary({
+      label: '🎒 Juno looked through the remains of Barrel 1 and found nothing',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('Juno looked through the remains of Barrel 1 and found nothing')
+  })
 })
 
 describe('actionDetail', () => {
