@@ -916,19 +916,24 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       default:              return `GATHER ${name} scavenges for brewing materials`
     }
   }
-  // Loot - two label formats:
-  //   loot_npc_item:           "🎒 <PC> searched the corpse of <NPC> and looted <Item> [×N]"
-  //   loot_npc_equipment_item: "🎒 <PC> looted <weapon> from <NPC>"
-  // Show the full label so the feed details exactly what was taken.
+  // Loot - two label formats (post-2026-05-27, no emoji):
+  //   loot_npc_item:           "<PC> searched the corpse of <NPC> and looted a <Item> [xN]"
+  //   loot_npc_equipment_item: "<PC> looted a <weapon> from <NPC>"
+  // Old rows (pre-2026-05-27) had a leading 🎒 emoji - strip it for display.
   if (r.outcome === 'loot') {
+    // Strip legacy bag emoji so old DB rows still read cleanly.
+    const raw = r.label.replace(/^🎒\s*/, '')
     // "Found nothing" cases - contextual message only (nothing to reveal).
-    const nothingCorpseMatch = r.label.match(/^🎒\s+(.+?)\s+searched the corpse of\s+(.+?)\s+and found nothing/)
-    if (nothingCorpseMatch) return `${r.character_name} searched the corpse of ${nothingCorpseMatch[2]} and found nothing`
-    const nothingObjMatch = r.label.match(/^🎒\s+(.+?)\s+looked through the remains of\s+(.+?)\s+and found nothing/)
-    if (nothingObjMatch) return `${r.character_name} looked through the remains of ${nothingObjMatch[2]} and found nothing`
-    // All other loot rows: show the label verbatim - it already reads as a
-    // clear one-liner describing exactly what was taken and from whom.
-    if (r.label.startsWith('🎒')) return r.label
+    if (/searched the corpse of .+ and found nothing/.test(raw)) {
+      const m = raw.match(/^(.+?)\s+searched the corpse of\s+(.+?)\s+and found nothing/)
+      if (m) return `${r.character_name} searched the corpse of ${m[2]} and found nothing`
+    }
+    if (/looked through the remains of .+ and found nothing/.test(raw)) {
+      const m = raw.match(/^(.+?)\s+looked through the remains of\s+(.+?)\s+and found nothing/)
+      if (m) return `${r.character_name} looked through the remains of ${m[2]} and found nothing`
+    }
+    // All other loot rows: show label (emoji-stripped) verbatim.
+    if (raw) return raw
   }
   // (Group Check moved to a bespoke Tier A banner in components/RollsFeed.tsx
   // - keyed off label prefix + damage_json.groupCheckParticipants - so it

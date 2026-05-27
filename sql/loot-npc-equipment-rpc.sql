@@ -170,7 +170,7 @@ begin
     v_npc.campaign_id,
     v_user_id,
     v_pc.name,
-    chr(127890) || ' ' || v_pc.name || ' looted ' || v_weapon_name || ' from ' || v_npc.name,
+    v_pc.name || ' looted a ' || v_weapon_name || ' from ' || v_npc.name,
     0, 0, 0, 0, 0, 0, 'loot'
   );
 

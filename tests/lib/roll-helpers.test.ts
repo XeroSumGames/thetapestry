@@ -727,26 +727,42 @@ describe('compactRollSummary', () => {
     })).toBe('Cree Hask prepares to Defend')
   })
 
-  // Loot (2026-05-27): full label shown verbatim; "found nothing" stays as contextual message
-  it('loot: loot_npc_item label shown verbatim with item name', () => {
+  // Loot (2026-05-27): label shown verbatim; "found nothing" stays as contextual message.
+  // New format (post-2026-05-27): no emoji, "a" before item name.
+  it('loot: new loot_npc_item label (no emoji, with "a")', () => {
+    expect(compactRollSummary({
+      label: 'Juno searched the corpse of Alex Torrez and looted a Medical Kit',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('Juno searched the corpse of Alex Torrez and looted a Medical Kit')
+  })
+
+  it('loot: new loot_npc_item label with qty', () => {
+    expect(compactRollSummary({
+      label: 'Juno searched the corpse of Alex Torrez and looted a Bandage x3',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('Juno searched the corpse of Alex Torrez and looted a Bandage x3')
+  })
+
+  it('loot: new loot_npc_equipment_item label (no emoji, with "a")', () => {
+    expect(compactRollSummary({
+      label: 'Juno looted a Carbine from Alex Torrez',
+      character_name: 'Juno', outcome: 'loot',
+    })).toBe('Juno looted a Carbine from Alex Torrez')
+  })
+
+  // Old format (pre-2026-05-27): 🎒 prefix stripped for display.
+  it('loot: legacy 🎒 prefix stripped on old DB rows', () => {
     expect(compactRollSummary({
       label: '🎒 Juno searched the corpse of Alex Torrez and looted Medical Kit',
       character_name: 'Juno', outcome: 'loot',
-    })).toBe('🎒 Juno searched the corpse of Alex Torrez and looted Medical Kit')
+    })).toBe('Juno searched the corpse of Alex Torrez and looted Medical Kit')
   })
 
-  it('loot: loot_npc_item label with qty shown verbatim', () => {
-    expect(compactRollSummary({
-      label: '🎒 Juno searched the corpse of Alex Torrez and looted Bandage ×3',
-      character_name: 'Juno', outcome: 'loot',
-    })).toBe('🎒 Juno searched the corpse of Alex Torrez and looted Bandage ×3')
-  })
-
-  it('loot: loot_npc_equipment_item label shown verbatim with weapon name', () => {
+  it('loot: legacy 🎒 equipment row stripped', () => {
     expect(compactRollSummary({
       label: '🎒 Juno looted Carbine from Alex Torrez',
       character_name: 'Juno', outcome: 'loot',
-    })).toBe('🎒 Juno looted Carbine from Alex Torrez')
+    })).toBe('Juno looted Carbine from Alex Torrez')
   })
 
   it('loot: "found nothing" corpse search returns contextual message (no item to reveal)', () => {

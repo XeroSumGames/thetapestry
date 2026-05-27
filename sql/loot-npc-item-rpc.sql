@@ -1,8 +1,8 @@
 -- ============================================================
--- loot_npc_item — player-side "Search Remains" loot transfer
+-- loot_npc_item - player-side "Search Remains" loot transfer
 -- ============================================================
 --
--- Players currently have NO surface to take loot from a downed NPC —
+-- Players currently have NO surface to take loot from a downed NPC -
 -- it's all GM-mediated through NpcCard's "Give to" flow. This RPC
 -- closes that gap. Players can click 🎒 Search Remains on a
 -- PlayerNpcCard for any NPC who is dead / mortally wounded /
@@ -10,7 +10,7 @@
 --
 --   1. Validates the looter's session + character ownership.
 --   2. Validates the looter's character is in the NPC's campaign.
---   3. Validates the NPC is "lootable" — status='dead', or
+--   3. Validates the NPC is "lootable" - status='dead', or
 --      wp_current=0 (mortally wounded), or rp_current=0 with
 --      wp_current>0 (unconscious).
 --   4. Decrements (or removes) the named item from the NPC's
@@ -70,7 +70,7 @@ begin
 
   -- 1. Fetch NPC (RLS already restricts to the user's campaigns
   --    via "Campaign members can read campaign npcs", but we're in
-  --    SECURITY DEFINER so we bypass it — the campaign-membership
+  --    SECURITY DEFINER so we bypass it - the campaign-membership
   --    check at step 3 is the real gate).
   select * into v_npc from public.campaign_npcs where id = p_npc_id;
   if not found then
@@ -166,7 +166,7 @@ begin
       to_jsonb(coalesce((v_pc_existing->>'qty')::int, 1) + v_take)
     );
   else
-    -- Append a fresh entry — keep the source item's metadata
+    -- Append a fresh entry - keep the source item's metadata
     -- (enc / rarity / notes) but force qty to v_take.
     v_new_item := jsonb_strip_nulls(
       jsonb_build_object(
@@ -197,9 +197,9 @@ begin
     v_npc.campaign_id,
     v_user_id,
     v_pc.name,
-    '🎒 ' || v_pc.name || ' searched the corpse of ' || v_npc.name ||
-      ' and looted ' || p_item_name ||
-      case when v_take > 1 then ' ×' || v_take else '' end,
+    v_pc.name || ' searched the corpse of ' || v_npc.name ||
+      ' and looted a ' || p_item_name ||
+      case when v_take > 1 then ' x' || v_take else '' end,
     0, 0, 0, 0, 0, 0, 'loot'
   );
 
