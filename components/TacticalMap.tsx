@@ -11,7 +11,7 @@ import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
-import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, fitZoom } from '../lib/tactical-view'
+import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, effectiveScale } from '../lib/tactical-view'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -542,8 +542,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (!canvasRef.current || !scene) return null
     const rect = canvasRef.current.getBoundingClientRect()
     const cellSize = getCellSize()
-    const mx = (e.clientX - rect.left) / zoom
-    const my = (e.clientY - rect.top) / zoom
+    const mx = (e.clientX - rect.left) / getScale()
+    const my = (e.clientY - rect.top) / getScale()
     let x = Math.max(0, Math.min(scene.grid_cols, mx / cellSize))
     let y = Math.max(0, Math.min(scene.grid_rows, my / cellSize))
     // SHIFT-to-snap. Free-form drawing by default lets the GM draw
@@ -697,7 +697,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const appeared = toks.filter(t => (isGM || t.is_visible) && !prevTokenIdsRef.current.has(t.id))
       const target = appeared.find(t => t.token_type === 'pc') ?? appeared[0]
       const container = containerRef.current, canvas = canvasRef.current
-      if (target && container && canvas) scrollCellIntoView(container, canvas, target.grid_x, target.grid_y, getCellSize(), zoom)
+      if (target && container && canvas) scrollCellIntoView(container, canvas, target.grid_x, target.grid_y, getCellSize(), getScale())
     } else {
       tokenScrollSceneRef.current = sceneId
     }
@@ -752,14 +752,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           return next
         })
       },
-      tactical_zoom: (p) => {
-        // GM zoom snaps players' view to match (playtest #27). Players can
-        // still zoom locally afterwards - only re-syncs on the next GM zoom.
-        if (!isGM) {
-          const nextZoom = p?.zoom
-          if (typeof nextZoom === 'number' && nextZoom > 0) setZoom(nextZoom)
-        }
-      },
+      // (The tactical_zoom auto-broadcast was removed 2026-05-27: zoom is now a
+      // purely LOCAL per-client slider - one person zooming must never change
+      // anyone else's view. The deliberate Share View push below still exists.)
       tactical_view_share: (p) => {
         // GM Share View - one-shot deliberate push of scroll + zoom. Not a
         // continuous follow; players can keep panning after. (No img_scale: the
@@ -807,7 +802,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (!container || !canvas) return
       const visible = tokensRef.current.filter(t => isGM || t.is_visible)
       const pcs = visible.filter(t => t.token_type === 'pc')
-      frameViewportOnTokens(container, canvas, pcs.length ? pcs : visible, getCellSize(), zoom)
+      frameViewportOnTokens(container, canvas, pcs.length ? pcs : visible, getCellSize(), getScale())
     }, 0)
   }
 
@@ -900,15 +895,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
   }, [tokens, scene?.cell_feet])
 
-  // GM-only: broadcast zoom changes so player views snap to match (playtest
-  // #27). The receiving-side listener is in the realtime subscribe block
-  // above; it only runs for non-GM clients, so a GM changing zoom doesn't
-  // echo back to themselves. Broadcast only fires once `tacticalChannelRef`
-  // has subscribed to avoid firing before the channel is ready.
-  useEffect(() => {
-    if (!isGM || !tacticalChannelRef.current) return
-    tacticalChannelRef.current.send({ type: 'broadcast', event: 'tactical_zoom', payload: { zoom } })
-  }, [zoom, isGM])
+  // (Removed 2026-05-27: the GM-zoom auto-broadcast that snapped every player's
+  // zoom to the GM's. Zoom is now a LOCAL per-client slider - one person
+  // zooming must not change anyone else's view. The GM can still deliberately
+  // push their view via the Share View button.)
 
   // Spacebar = pan-mode visual cue + click-and-drag override.
   // Arrow keys (or WASD) = continuous smooth pan via rAF, no mouse
@@ -1013,6 +1003,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     return cellPx
   }
 
+  // THE render scale (fit-to-panel-width x local zoom) - math in lib/tactical-
+  // view effectiveScale(). Reads container width LIVE, so the ResizeObserver
+  // redraw re-fills the width on any window resize.
+  function getScale(): number {
+    const s = sceneRef.current
+    const container = containerRef.current
+    if (!s || !container) return zoom
+    return effectiveScale(container.clientWidth, s.grid_cols * getCellSize(), zoom)
+  }
+
   function draw() {
     const canvas = canvasRef.current
     const container = containerRef.current
@@ -1035,8 +1035,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // second, independent scale that decoupled the bg from the grid (bg didn't
     // fill the grid; tokens "bounced" when it was dragged) - was retired
     // 2026-05-27; the render no longer reads it.
-    canvas.width = Math.max(baseW, baseW * zoom, gridW)
-    canvas.height = Math.max(baseH, baseH * zoom, gridH)
+    // Single effective scale (fit-to-width x personal zoom) - see getScale().
+    // At zoom=1, gridW*scale == baseW, so the map fills the panel width exactly;
+    // a map taller than the panel makes the canvas taller -> vertical scroll.
+    const scale = getScale()
+    canvas.width = Math.max(baseW, gridW * scale)
+    canvas.height = Math.max(baseH, gridH * scale)
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
@@ -1047,9 +1051,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     ctx.fillStyle = '#111'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Apply zoom - scales everything: image, grid, tokens
+    // Apply the effective scale - scales everything: image, grid, tokens.
     ctx.save()
-    ctx.scale(zoom, zoom)
+    ctx.scale(scale, scale)
 
     // Background image - drawn to fill the grid extent, identical for everyone.
     // No corner resize handles anymore: the bg can't be scaled independently of
@@ -2443,8 +2447,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const gridH = scene.grid_rows * cellSize
     const offsetX = (canvasRef.current.width - gridW) / 2
     const offsetY = (canvasRef.current.height - gridH) / 2
-    const mx = (e.clientX - rect.left) / zoom
-    const my = (e.clientY - rect.top) / zoom
+    const mx = (e.clientX - rect.left) / getScale()
+    const my = (e.clientY - rect.top) / getScale()
     const gx = Math.floor((mx - 0) / cellSize)
     const gy = Math.floor((my - 0) / cellSize)
     if (gx < 0 || gx >= scene.grid_cols || gy < 0 || gy >= scene.grid_rows) return null
@@ -2460,8 +2464,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (!canvasRef.current || !scene) return null
     const rect = canvasRef.current.getBoundingClientRect()
     const cellSize = getCellSize()
-    const mx = (e.clientX - rect.left) / zoom
-    const my = (e.clientY - rect.top) / zoom
+    const mx = (e.clientX - rect.left) / getScale()
+    const my = (e.clientY - rect.top) / getScale()
     const x = Math.max(0, Math.min(scene.grid_cols, mx / cellSize))
     const y = Math.max(0, Math.min(scene.grid_rows, my / cellSize))
     return { x, y }
@@ -2592,8 +2596,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       e.preventDefault()
       const rect = canvasRef.current.getBoundingClientRect()
       const cellSize = getCellSize()
-      const mxCells = (e.clientX - rect.left) / zoom / cellSize
-      const myCells = (e.clientY - rect.top) / zoom / cellSize
+      const mxCells = (e.clientX - rect.left) / getScale() / cellSize
+      const myCells = (e.clientY - rect.top) / getScale() / cellSize
       // 1) Try to find the nearest door/window SEGMENT within a half-
       //    cell. Segments are the primary surface.
       let bestSegId: string | null = null
@@ -2648,8 +2652,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (fogEditMode === 'select' && isGM && e.button === 0 && canvasRef.current && scene) {
       const rect = canvasRef.current.getBoundingClientRect()
       const cellSize = getCellSize()
-      const mx = (e.clientX - rect.left) / zoom / cellSize
-      const my = (e.clientY - rect.top) / zoom / cellSize
+      const mx = (e.clientX - rect.left) / getScale() / cellSize
+      const my = (e.clientY - rect.top) / getScale() / cellSize
       let bestId: string | null = null
       let bestDist = 0.5
       for (const w of wallsLocalRef.current) {
@@ -2675,8 +2679,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (!canvasRef.current || !scene) return
       const rect = canvasRef.current.getBoundingClientRect()
       const cellSize = getCellSize()
-      const mx = (e.clientX - rect.left) / zoom / cellSize
-      const my = (e.clientY - rect.top) / zoom / cellSize
+      const mx = (e.clientX - rect.left) / getScale() / cellSize
+      const my = (e.clientY - rect.top) / getScale() / cellSize
       // Find nearest segment by point-to-segment distance.
       let bestId: string | null = null
       let bestDist = 0.5 // half-cell threshold
@@ -2709,8 +2713,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       if (canvasRef.current && scene) {
         const rect = canvasRef.current.getBoundingClientRect()
         const cellSize = getCellSize()
-        const mx = (e.clientX - rect.left) / zoom / cellSize
-        const my = (e.clientY - rect.top) / zoom / cellSize
+        const mx = (e.clientX - rect.left) / getScale() / cellSize
+        const my = (e.clientY - rect.top) / getScale() / cellSize
         let bestSeg: WallSegment | null = null
         let bestDist = 0.3 // tighter threshold so a normal click on a token doesn't accidentally toggle a nearby door
         for (const w of wallsLocalRef.current) {
@@ -3068,8 +3072,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           || isControlledObject
         if (canDrag && canvasRef.current) {
           const rect = canvasRef.current.getBoundingClientRect()
-          const mx = (e.clientX - rect.left) / zoom
-          const my = (e.clientY - rect.top) / zoom
+          const mx = (e.clientX - rect.left) / getScale()
+          const my = (e.clientY - rect.top) / getScale()
           const cellSize = getCellSize()
           const tokCx = tok.grid_x * cellSize + cellSize / 2
           const tokCy = tok.grid_y * cellSize + cellSize / 2
@@ -3182,8 +3186,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     if (dragging && canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect()
-      const mx = (e.clientX - rect.left) / zoom
-      const my = (e.clientY - rect.top) / zoom
+      const mx = (e.clientX - rect.left) / getScale()
+      const my = (e.clientY - rect.top) / getScale()
       dragPosRef.current = { px: mx + dragging.offsetX, py: my + dragging.offsetY }
       // Coalesce redraws to one per animation frame (playtest #28). Calling
       // draw() synchronously on every mousemove forced a full canvas
@@ -3524,16 +3528,30 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function fitToScreen() {
-    // Per-client viewport fit via ZOOM only - never rescales the shared map.
-    // The composite's width is the grid extent (grid_cols * cell_px); zoom so
-    // it fits this viewer's container. Zoom is local, so each viewer fits
-    // independently without changing what anyone else sees.
+    // "See the whole map": set the LOCAL zoom so the entire composite fits this
+    // viewer's panel in BOTH dimensions, then center it. zoom=1 already fills
+    // the width (getScale), so this only zooms further OUT when the map is
+    // taller than the panel; it never changes what other viewers see.
     const container = containerRef.current
-    const contentW = scene ? scene.grid_cols * getCellSize() : 0
-    setZoom(container ? fitZoom(container.clientWidth, contentW) : 1)
+    const s = sceneRef.current
+    if (!container || !s) { setZoom(1); return }
+    const gridW = s.grid_cols * getCellSize()
+    const gridH = s.grid_rows * getCellSize()
+    if (gridW <= 0 || gridH <= 0) { setZoom(1); return }
+    const fitW = container.clientWidth / gridW
+    const fitH = container.clientHeight / gridH
+    // zoom multiplies the fill-width baseline (fitW); whole-map fit is the
+    // smaller of the two fits, so zoom = min(1, fitH/fitW). Clamp to the slider.
+    setZoom(Math.max(0.25, Math.min(1, fitH / fitW)))
     setPanX(0)
     setPanY(0)
-    if (containerRef.current) { containerRef.current.scrollTop = 0; containerRef.current.scrollLeft = 0 }
+    // Center after the canvas resizes to the new scale.
+    requestAnimationFrame(() => {
+      const c = containerRef.current, cv = canvasRef.current
+      if (!c || !cv) return
+      c.scrollLeft = Math.max(0, (cv.width - c.clientWidth) / 2)
+      c.scrollTop = Math.max(0, (cv.height - c.clientHeight) / 2)
+    })
   }
 
   // Scene-controls bus - keeps the popped-out controls window in sync.
@@ -3709,12 +3727,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               {tacticalShareFlash ? '✓ Shared' : '👁 Share View'}
             </button>
           )}
-          <div style={{ background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>0%</span>
-            <input type="range" min={25} max={100} step={5} value={Math.round(zoom * 100)}
+          {/* Personal zoom slider - LOCAL only (never broadcast). 100% = fill
+              the panel width (the baseline); drag up to zoom in, down to zoom
+              out. The live % readout doubles as the right label. */}
+          <div style={{ background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Zoom (only your view; 100% = fit the panel width)">
+            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>25%</span>
+            <input type="range" min={25} max={300} step={5} value={Math.round(zoom * 100)}
               onChange={e => setZoom(Number(e.target.value) / 100)}
-              style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
-            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>100%</span>
+              style={{ width: '70px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
+            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '34px', textAlign: 'right' }}>{Math.round(zoom * 100)}%</span>
           </div>
         </div>
 

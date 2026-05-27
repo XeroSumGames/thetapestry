@@ -140,3 +140,16 @@ export function fitZoom(viewW: number, contentW: number): number {
   if (!(viewW > 0) || !(contentW > 0)) return 1
   return Math.max(0.1, Math.min(5, viewW / contentW))
 }
+
+// THE tactical-canvas render scale. The composite (background + grid + tokens)
+// has a "natural" width of the grid extent `gridW` (= grid_cols * cell_px). We
+// always fit that to the viewport WIDTH (containerWidth / gridW) so the map
+// fills the panel on every machine - a taller map just scrolls down - then
+// multiply by this viewer's LOCAL `zoom` slider. One scale drives BOTH the draw
+// transform and the pointer<->cell math, so they can never drift apart, and it
+// is purely per-client (one person zooming never changes another's view).
+// Degenerate inputs fall back to `zoom` (or 1).
+export function effectiveScale(containerWidth: number, gridW: number, zoom: number): number {
+  if (!(gridW > 0) || !(containerWidth > 0)) return zoom > 0 ? zoom : 1
+  return (containerWidth / gridW) * zoom
+}

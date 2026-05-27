@@ -76,10 +76,36 @@ GM + a player member of the same campaign, ideally different window widths.
 A, C, F show the art filling the grid with tokens on it, identical across the
 two clients; B shows no resize handles + no token bounce; D/E/G unchanged.
 
+## ADDENDUM - fit-to-panel-width display model (2nd commit, Xero spec 2026-05-27)
+The composite now scales to fill the center panel's WIDTH per machine, with a
+local zoom slider on top. Extra checks:
+
+### H. Fills the width on open
+1. Open a scene -> the map fills the panel WIDTH (not a small tile, not zoomed
+   into a fragment). If the map is taller than the panel, scroll down to see the
+   bottom; the grid extends all the way down the map.
+
+### I. Cell PX changes square size, not the fill-width
+1. GM changes Cell PX (scene controls). EXPECT: the squares get bigger/smaller
+   (fewer/more of them) but the grid still spans the full panel width and still
+   covers the whole map. The map doesn't shrink into a corner.
+
+### J. Zoom slider is LOCAL (the key one)
+1. Top-right slider: 100% = fill-width; drag up to ~300% to zoom in, down to 25%
+   to zoom out. It scrolls, the map stays aligned.
+2. CRUCIAL: GM zooms -> the PLAYER's zoom does NOT change (and vice versa). One
+   person's slider only moves their own view. (This removed the old GM-zoom
+   auto-broadcast.)
+
+### K. Fit to Screen = whole map
+1. Click Fit to Screen -> the ENTIRE map fits in your panel (both width and
+   height) and is centered. Local only.
+
 ## Notes
-- Pure render-model change in `components/TacticalMap.tsx`; no schema/data
-  migration (grid re-fit happens lazily on GM load). Rollback = revert the one
-  commit. `img_scale` DB column is retained (now unused by the renderer).
+- Render-model change in `components/TacticalMap.tsx` + one tested helper
+  `effectiveScale()` in `lib/tactical-view.ts` (4 unit tests). No schema/data
+  migration (grid re-fit happens lazily on GM load). Rollback = revert the
+  commits. `img_scale` DB column is retained (now unused by the renderer).
 - E2E `e2e/tactical-map-render.spec.ts` still green (locked-map escape hatch +
-  shared render state + the source-guard, which now passes with zero
-  setImgScale calls). The pixel checks above stay manual (canvas).
+  shared render state + the source-guard, which passes with zero setImgScale
+  calls). The pixel + zoom-independence checks above stay manual (canvas).

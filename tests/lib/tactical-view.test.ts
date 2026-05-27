@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell, fitZoom } from '../../lib/tactical-view'
+import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell, fitZoom, effectiveScale } from '../../lib/tactical-view'
 
 // Invariant (Xero 2026-05-22): sharing drives what PLAYERS see, not the GM's
 // own pane. The GM can preview the campaign map while players see the shared
@@ -105,5 +105,32 @@ describe('fitZoom', () => {
     expect(fitZoom(0, 1000)).toBe(1)
     expect(fitZoom(1000, 0)).toBe(1)
     expect(fitZoom(-5, 1000)).toBe(1)
+  })
+})
+
+describe('effectiveScale', () => {
+  it('fills the panel width at zoom=1 (composite width == container width)', () => {
+    // gridW 1000 in a 500px panel -> 0.5 so the 1000px map renders at 500px.
+    expect(effectiveScale(500, 1000, 1)).toBe(0.5)
+    // square map already == panel -> 1:1.
+    expect(effectiveScale(800, 800, 1)).toBe(1)
+  })
+
+  it('multiplies the fill-width baseline by the local zoom', () => {
+    // 500/1000 = 0.5 baseline; zoom 2 -> 1.0 (zoomed in 2x).
+    expect(effectiveScale(500, 1000, 2)).toBe(1)
+    // zoom 0.5 -> 0.25 (zoomed out).
+    expect(effectiveScale(500, 1000, 0.5)).toBe(0.25)
+  })
+
+  it('is independent per client: same map, different panel widths -> different scale', () => {
+    expect(effectiveScale(600, 1200, 1)).toBe(0.5)
+    expect(effectiveScale(1200, 1200, 1)).toBe(1)
+  })
+
+  it('falls back to the zoom (or 1) on degenerate inputs', () => {
+    expect(effectiveScale(0, 1000, 1.5)).toBe(1.5)
+    expect(effectiveScale(500, 0, 2)).toBe(2)
+    expect(effectiveScale(0, 0, 0)).toBe(1)
   })
 })
