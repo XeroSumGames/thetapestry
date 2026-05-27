@@ -9,7 +9,7 @@ import {
 } from '../lib/data/tactical'
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
-import { gridToCoverMap, coverGrowGrid } from '../lib/tactical-grid'
+import { gridToCoverMap } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
 import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, fitZoom } from '../lib/tactical-view'
 
@@ -264,7 +264,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [panning, setPanning] = useState<{ startX: number; startY: number; startPanX: number; startPanY: number } | null>(null)
   const [mapLocked, setMapLocked] = useState(false)
   const [showGrid, setShowGrid] = useState(true)
-  const [imgScale, setImgScale] = useState(1)
   const [gridColor, setGridColor] = useState('white')
   const [ping, setPing] = useState<{ gx: number; gy: number; t: number; color: string; count: number } | null>(null)
   const [gridOpacity, setGridOpacity] = useState(0.4)
@@ -385,7 +384,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [fogLocal, setFogLocal] = useState<Record<string, boolean>>({})
   const fogLocalRef = useRef<Record<string, boolean>>({})
   useEffect(() => { fogLocalRef.current = fogLocal }, [fogLocal])
-  const [resizing, setResizing] = useState<{ corner: string; startX: number; startY: number; startZoom: number } | null>(null)
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
   const portraitCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
@@ -419,10 +417,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Keep refs in sync for canvas drawing
   useEffect(() => { tokensRef.current = tokens }, [tokens])
   useEffect(() => { sceneRef.current = scene }, [scene])
-  // Mirror imgScale so the resize mouseup persists the FINAL value (the
-  // mouseup closure can lag the last setImgScale from the move handler).
-  const imgScaleRef = useRef(imgScale)
-  useEffect(() => { imgScaleRef.current = imgScale }, [imgScale])
 
   // Reconcile fog state from the scene row → local mirror. We don't
   // touch fogLocal during a drag (would get clobbered by realtime
@@ -625,16 +619,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   // Load scenes
-  // Tracks the last scene whose saved cellPx / imgScale we applied to
-  // local UI state. cellPx and imgScale are LIVE local controls - the
-  // popout's Cell-px stepper and the zoom slider write them via the
-  // broadcast channel without persisting to the DB on every tick.
-  // Without this guard, a `tactical_scenes` realtime UPDATE (e.g. from
-  // a +Col click on the popout writing grid_cols) re-runs loadScenes
-  // and clobbers the user's in-flight local cellPx / imgScale by
-  // snapping them back to the DB row. Result: the map appears to
-  // "enlarge" or "shrink" whenever you nudge cols/rows. Only sync from
-  // DB when the active scene ID actually changes.
+  // Tracks the last scene whose saved cell_px we applied to local UI state.
+  // cell_px is a LIVE local control - the popout's Cell-px stepper writes it
+  // via the broadcast channel without persisting to the DB on every tick.
+  // Without this guard, a `tactical_scenes` realtime UPDATE (e.g. from a +Col
+  // click on the popout writing grid_cols) re-runs loadScenes and clobbers the
+  // user's in-flight local cell_px by snapping it back to the DB row. Result:
+  // the map appears to "enlarge" or "shrink" whenever you nudge cols/rows. Only
+  // sync from DB when the active scene ID actually changes.
   const lastSyncedSceneIdRef = useRef<string | null>(null)
   // Guards createScene against rapid double-fire (see createScene).
   const creatingSceneRef = useRef(false)
@@ -649,32 +641,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (active) {
       setScene(active)
       loadTokens(active.id)
-      // GM path: apply saved visual settings ONLY on first load or
-      // scene switch. The lastSyncedSceneIdRef guard exists because
-      // the GM's popout writes cellPx/imgScale to DB after a 400ms
-      // debounce, which fires postgres_changes on the GM's main
-      // window TacticalMap. Without the guard, every popout nudge
-      // would re-run loadScenes and clobber the in-flight local
-      // values that arrived via the bus seconds earlier.
+      // GM path: apply saved cell_px ONLY on first load or scene switch. The
+      // lastSyncedSceneIdRef guard exists because the GM's popout writes cell_px
+      // to DB after a 400ms debounce, which fires postgres_changes on the GM's
+      // main-window TacticalMap; without the guard every popout nudge would
+      // re-run loadScenes and clobber the in-flight local value.
       //
-      // Player path: ALWAYS apply cellPx/imgScale from DB. Players
-      // don't have a popout, can't make local changes, so there's
-      // nothing to clobber. Pre-fix bug - when the GM adjusted
-      // cellPx or imgScale via the popout, the player's view stayed
-      // at the original first-load values forever, producing
-      // dramatically different zoom/scale between GM and player
-      // (the "scene looks different on player side" report).
+      // Player path: ALWAYS apply cell_px from DB so the GM's cell-size change
+      // reaches players (they have no popout, nothing to clobber). cell_px +
+      // grid_cols/rows are now the ONLY shared map-scale fields - the bg renders
+      // to the grid extent, so there is no separate img_scale to sync.
       const isFirstLoad = lastSyncedSceneIdRef.current !== active.id
       if (isFirstLoad || !isGM) {
         if (active.cell_px) setCellPx(active.cell_px)
-        // img_scale is the SHARED background scale - apply the DB value
-        // (default 1 = 100% raw) so GM + players render the bg identically.
-        // The lastSyncedSceneIdRef gate (isFirstLoad) means a GM's in-flight
-        // popout edit on the SAME scene isn't clobbered by a realtime UPDATE;
-        // a scene CHANGE (or any player load) re-syncs from the DB. No
-        // per-client auto-fit overwrites this anymore (that was the divergence
-        // bug) - per-screen fitting is zoom, not img_scale.
-        setImgScale(active.img_scale ?? 1)
       }
       if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
@@ -694,7 +673,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       loadTokens(first.id)
       if (lastSyncedSceneIdRef.current !== first.id) {
         if (first.cell_px) setCellPx(first.cell_px)
-        setImgScale(first.img_scale ?? 1)
         setMapLocked(first.is_locked ?? false)
         if (typeof first.show_grid === 'boolean') setShowGrid(first.show_grid)
         if (typeof first.grid_color === 'string' && first.grid_color) setGridColor(first.grid_color)
@@ -783,13 +761,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
       },
       tactical_view_share: (p) => {
-        // GM Share View - one-shot deliberate push of scroll + zoom +
-        // imgScale. Not a continuous follow; players can keep panning after.
+        // GM Share View - one-shot deliberate push of scroll + zoom. Not a
+        // continuous follow; players can keep panning after. (No img_scale: the
+        // map scale is shared via grid dims, so only the viewport - zoom +
+        // scroll - is pushed.)
         if (isGM) return
         if (typeof p?.zoom === 'number' && p.zoom > 0) setZoom(p.zoom)
-        if (typeof p?.imgScale === 'number' && p.imgScale > 0) setImgScale(p.imgScale)
-        // Defer the scroll to next frame so a zoom/imgScale change above
-        // resizes the canvas first (else we scroll inside the OLD dims).
+        // Defer the scroll to next frame so a zoom change above resizes the
+        // canvas first (else we scroll inside the OLD dims).
         if (typeof p?.scrollLeft === 'number' && typeof p?.scrollTop === 'number') {
           requestAnimationFrame(() => {
             const container = containerRef.current
@@ -847,16 +826,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     img.crossOrigin = 'anonymous'
     img.onload = () => {
       bgImageRef.current = img
-      // img_scale is SHARED + authoritative: it comes from the DB (applied in
-      // loadScenes) and the GM's corner-resize persists it, so every client
-      // renders the background at the SAME scale. We deliberately do NOT
-      // auto-fit per-client here. The old per-client auto-fit (fit the bg to
-      // THIS window's width, never saved) is exactly what made the map differ
-      // per player ("Juno on the edge but thinks she's in the middle"),
-      // dropped tokens into black on narrow screens, and raced the open-frame
-      // by resizing the canvas after load. Per-screen fitting is a VIEWPORT
-      // concern now - handled by zoom/scroll (see fitToScreen), which never
-      // touches the shared scale.
+      // The background renders to FILL the grid extent (see draw()), so there
+      // is no per-client image scaling. The grid is fit to the image's aspect
+      // by the effect below (GM-only, persisted), keeping art + grid + tokens
+      // one shared composite. Per-screen fitting is a VIEWPORT concern - zoom /
+      // scroll only (see fitToScreen) - never the shared map.
       setBgLoadTick(t => t + 1)
       draw()
       // Center once per scene. After the image loads, canvas dimensions are
@@ -869,15 +843,24 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     img.src = scene.background_url
   }, [scene?.background_url])
 
-  // Grow-only auto-fit: keep the grid covering the map on image load /
-  // cell_px / resize, and re-assert if the grid dims ever revert small
-  // (e.g. a grid-color change snapped it back to the top-left, 2026-05-25).
+  // Lock the grid to the background: size the grid to EXACTLY cover the image
+  // at the current cell_px (gridToCoverMap), and persist it (GM-only) so every
+  // client shares the same dims - the bg renders to the grid extent, so a
+  // matching grid means it fills without distortion and tokens always sit on
+  // the art. Runs on image load + cell_px change; re-asserts if the dims drift
+  // (e.g. a popout edit). The equality guard stops a re-fire loop. REPLACED the
+  // old grow-only cover, which let the grid grow LARGER than the art so tokens
+  // past the art's edge fell into black (the "map not the same / tokens in the
+  // void" playtest bug). Only applies when there's a background image; a
+  // gridded-but-art-less scene keeps its manual dims.
   useEffect(() => {
     const img = bgImageRef.current, s = sceneRef.current
     if (!isGM || !img || !s) return
-    const g = coverGrowGrid(s.grid_cols, s.grid_rows, img.naturalWidth, img.naturalHeight, imgScale, cellPx)
-    if (g) { setScene(p => p ? { ...p, ...g } : p); updateScene(s.id, g) }
-  }, [bgLoadTick, cellPx, imgScale, isGM, scene?.grid_cols, scene?.grid_rows])
+    const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, 1, cellPx)
+    if (!cols || !rows || (cols === s.grid_cols && rows === s.grid_rows)) return
+    const g = { grid_cols: cols, grid_rows: rows }
+    setScene(p => p ? { ...p, ...g } : p); updateScene(s.id, g)
+  }, [bgLoadTick, cellPx, isGM, scene?.grid_cols, scene?.grid_rows])
 
   // Refresh tokens when parent signals a change
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
@@ -908,7 +891,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // updated parent state but the canvas kept rendering the prior frame
   // until something else in the dep list happened to change. Cost is
   // one extra draw per vehicle update (cheap - single rAF tick).
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, wallRectStart, wallRectEnd, firingArcs, toggleLabel, vehicles])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, wallRectStart, wallRectEnd, firingArcs, toggleLabel, vehicles])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -1037,24 +1020,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const s = sceneRef.current
     if (!s) return
 
-    // Canvas must be large enough for the zoomed view AND the scaled image
+    // Canvas must be large enough for the zoomed view AND the full grid.
     const baseW = container.clientWidth
     const baseH = container.clientHeight
     const cellSize = getCellSize()
     const gridW = s.grid_cols * cellSize
     const gridH = s.grid_rows * cellSize
-    // Image size is derived from the image's own natural dimensions (same file
-    // → same dims for everyone) scaled by img_scale. This keeps GM and players
-    // pixel-identical AND decouples the image from grid changes - adding a
-    // column or row moves the grid, not the map.
-    let imgW = 0, imgH = 0
-    if (bgImageRef.current) {
-      const img = bgImageRef.current
-      imgW = img.naturalWidth * imgScale
-      imgH = img.naturalHeight * imgScale
-    }
-    canvas.width = Math.max(baseW, baseW * zoom, imgW)
-    canvas.height = Math.max(baseH, baseH * zoom, imgH)
+    // The background is LOCKED to the grid: it renders to exactly cover the grid
+    // extent (gridW x gridH), so the art, the grid, and the tokens are ONE rigid
+    // composite - tokens always sit ON the art (never in black) and it's
+    // pixel-identical for every viewer (grid_cols/rows + cell_px are shared DB
+    // fields). The grid auto-fits the image's aspect on load (see the bg-load
+    // effect), so filling it introduces no visible distortion. img_scale - a
+    // second, independent scale that decoupled the bg from the grid (bg didn't
+    // fill the grid; tokens "bounced" when it was dragged) - was retired
+    // 2026-05-27; the render no longer reads it.
+    canvas.width = Math.max(baseW, baseW * zoom, gridW)
+    canvas.height = Math.max(baseH, baseH * zoom, gridH)
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
@@ -1069,23 +1051,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     ctx.save()
     ctx.scale(zoom, zoom)
 
-    // Background image - natural-dimensions × img_scale, same for every viewer.
+    // Background image - drawn to fill the grid extent, identical for everyone.
+    // No corner resize handles anymore: the bg can't be scaled independently of
+    // the grid (that was the decoupling bug), so there's nothing to drag.
     if (bgImageRef.current) {
-      const img = bgImageRef.current
-      const scaledW = img.naturalWidth * imgScale
-      const scaledH = img.naturalHeight * imgScale
-      ctx.drawImage(img, 0, 0, scaledW, scaledH)
-      mapDrawRef.current = { x: 0, y: 0, w: scaledW, h: scaledH }
-
-      // Resize handles at corners (GM only, unlocked)
-      if (isGM && !mapLocked) {
-        const hs = 10
-        ctx.fillStyle = '#c0392b'
-        ;[
-          [0, 0], [scaledW - hs, 0],
-          [0, scaledH - hs], [scaledW - hs, scaledH - hs],
-        ].forEach(([hx, hy]) => ctx.fillRect(hx, hy, hs, hs))
-      }
+      ctx.drawImage(bgImageRef.current, offsetX, offsetY, gridW, gridH)
+      mapDrawRef.current = { x: offsetX, y: offsetY, w: gridW, h: gridH }
     } else {
       ctx.fillStyle = '#1a1a1a'
       ctx.fillRect(offsetX, offsetY, gridW, gridH)
@@ -3108,28 +3079,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return
       }
     }
-    // Check if clicking a resize handle (corners of the map image)
-    if (isGM && !mapLocked && bgImageRef.current && canvasRef.current && containerRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect()
-      // Convert to canvas-space (undo zoom so coordinates match where handles are drawn)
-      const mx = (e.clientX - rect.left) / zoom
-      const my = (e.clientY - rect.top) / zoom
-      const m = mapDrawRef.current
-      const hs = 14 // hit area slightly larger than visual handle
-      const corners = [
-        { name: 'tl', x: m.x, y: m.y },
-        { name: 'tr', x: m.x + m.w - hs, y: m.y },
-        { name: 'bl', x: m.x, y: m.y + m.h - hs },
-        { name: 'br', x: m.x + m.w - hs, y: m.y + m.h - hs },
-      ]
-      for (const c of corners) {
-        if (mx >= c.x && mx <= c.x + hs && my >= c.y && my <= c.y + hs) {
-          setResizing({ corner: c.name, startX: e.clientX, startY: e.clientY, startZoom: imgScale })
-          return
-        }
-      }
-    }
-    // No token or handle clicked - start panning (unless locked)
+    // (The map-image corner resize handles were removed 2026-05-27: the bg is
+    // now locked to the grid, so there is no independent image scale to drag.)
+    // No token clicked - start panning (unless locked)
     setSelectedToken(null)
     onTokenSelect?.(null)
     trace('TacticalMap-mousedown-pan', {
@@ -3208,12 +3160,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // Update blast preview hover cell first so it tracks even while
     // the player is panning / dragging in the rare overlap case.
     updateThrowHover(e)
-    if (resizing) {
-      const delta = e.clientX - resizing.startX
-      const scaleDelta = delta / 300
-      setImgScale(Math.max(0.1, Math.min(5, resizing.startZoom + scaleDelta)))
-      return
-    }
     if (panning && containerRef.current) {
       const dx = e.clientX - panning.startX
       const dy = e.clientY - panning.startY
@@ -3338,13 +3284,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         setFogRectStart(null)
         setFogRectEnd(null)
       }
-      return
-    }
-    if (resizing) {
-      setResizing(null)
-      // Persist the GM's background scale so it's SHARED - every client
-      // renders at this value (before, the resize was local + lost on reload).
-      if (sceneRef.current) updateScene(sceneRef.current.id, { img_scale: imgScaleRef.current })
       return
     }
     if (panning) {
@@ -3578,19 +3517,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // Exact snap to cover the map at the current cell size (can also shrink).
     const img = bgImageRef.current
     if (!img || !scene) return
-    const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, imgScale, cellPx)
+    const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, 1, cellPx)
     if (!cols) return
     setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p)
     await updateScene(scene.id, { grid_cols: cols, grid_rows: rows })
   }
 
   function fitToScreen() {
-    // Per-client viewport fit via ZOOM. img_scale is shared/authoritative, so
-    // fitting must NOT rescale the background (that would impose this client's
-    // window on everyone). Zoom is local, so each viewer can fit independently.
+    // Per-client viewport fit via ZOOM only - never rescales the shared map.
+    // The composite's width is the grid extent (grid_cols * cell_px); zoom so
+    // it fits this viewer's container. Zoom is local, so each viewer fits
+    // independently without changing what anyone else sees.
     const container = containerRef.current
-    const img = bgImageRef.current
-    const contentW = img ? img.naturalWidth * imgScale : 0
+    const contentW = scene ? scene.grid_cols * getCellSize() : 0
     setZoom(container ? fitZoom(container.clientWidth, contentW) : 1)
     setPanX(0)
     setPanY(0)
@@ -3732,7 +3671,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         {/* Zoom control + Share View - top right. Share View is the
             tactical-map sibling of the CampaignMap "👁 Share View"
             button (added 2026-05-11). GM-only one-shot push of the
-            current scroll position + zoom + imgScale to all players.
+            current scroll position + zoom to all players (the map scale
+            is shared via grid dims, so only the viewport is pushed).
             Players' container smooth-scrolls to match. Flash green
             for ~1.5s after click as confirmation. Not a continuous
             follow - deliberate, GM-driven. */}
@@ -3759,7 +3699,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     scrollLeft: container.scrollLeft,
                     scrollTop: container.scrollTop,
                     zoom,
-                    imgScale,
                   },
                 })
                 setTacticalShareFlash(true)
@@ -4011,7 +3950,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           onWheel={undefined}
           style={{
             display: 'block',
-            cursor: panning ? 'grabbing' : spaceHeld ? 'grab' : resizing ? 'nwse-resize' : dragging ? 'grabbing' : 'default',
+            cursor: panning ? 'grabbing' : spaceHeld ? 'grab' : dragging ? 'grabbing' : 'default',
             // Promote the canvas to its own GPU compositor layer so the
             // browser doesn't repaint the entire visible region on every
             // scroll write. Removes the 'twitch' that appears on large
