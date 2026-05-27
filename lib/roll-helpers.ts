@@ -411,13 +411,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const name = r.character_name
     if (isAtMax) {
       switch (r.outcome) {
-        case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed and shrugs the pressure off`
-        case 'High Insight':  return `STRESS CHECK ${name} calms themselves down and has a Moment of Insight as to why it went so well`
-        case 'Success':       return `STRESS CHECK ${name} calms themselves down`
-        case 'Failure':       return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point`
-        case 'Dire Failure':  return `STRESS CHECK ${name} disastrously cracks and reaches their Breaking Point`
-        case 'Low Insight':   return `STRESS CHECK ${name} fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly`
-        default:              return `STRESS CHECK ${name} ${hit ? 'calms themselves down' : 'fails to calm and reaches their Breaking Point'}`
+        case 'Wild Success':  return `${name} is wildly composed and shrugs the pressure off`
+        case 'High Insight':  return `${name} calms themselves down and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `${name} calms themselves down`
+        case 'Failure':       return `${name} fails to calm and reaches their Breaking Point`
+        case 'Dire Failure':  return `${name} disastrously cracks and reaches their Breaking Point`
+        case 'Low Insight':   return `${name} fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly`
+        default:              return `${name} ${hit ? 'calms themselves down' : 'fails to calm and reaches their Breaking Point'}`
       }
     }
     // mid-play - no mechanical bits per project rule "Compact log
@@ -426,13 +426,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     // on the character card; repeating it in the feed line is
     // duplication.
     switch (r.outcome) {
-      case 'Wild Success':  return `STRESS CHECK ${name} is wildly composed under pressure`
-      case 'High Insight':  return `STRESS CHECK ${name} holds steady against the pressure and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `STRESS CHECK ${name} holds steady against the pressure`
-      case 'Failure':       return `STRESS CHECK ${name} feels the weight`
-      case 'Dire Failure':  return `STRESS CHECK ${name} buckles under the pressure`
-      case 'Low Insight':   return `STRESS CHECK ${name} feels the weight but has a Moment of Insight as to why it went so badly`
-      default:              return `STRESS CHECK ${name} ${hit ? 'holds steady against the pressure' : 'feels the weight'}`
+      case 'Wild Success':  return `${name} is wildly composed under pressure`
+      case 'High Insight':  return `${name} holds steady against the pressure and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} holds steady against the pressure`
+      case 'Failure':       return `${name} feels the weight`
+      case 'Dire Failure':  return `${name} buckles under the pressure`
+      case 'Low Insight':   return `${name} feels the weight but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} ${hit ? 'holds steady against the pressure' : 'feels the weight'}`
     }
   }
   // Stabilize - label "<name> - Stabilize <target>". Canon locked
@@ -494,13 +494,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const kitPhrase = kit === 'naked Medicine*' ? 'by hand' : `with a ${kit}`
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `HEAL ${name} expertly treats ${target} ${kitPhrase} with exceptional care`
-      case 'High Insight':  return `HEAL ${name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `HEAL ${name} treats ${target} ${kitPhrase}`
-      case 'Failure':       return `HEAL ${name} fails to make progress treating ${target}`
-      case 'Dire Failure':  return `HEAL ${name} botches the treatment, making ${target} worse`
-      case 'Low Insight':   return `HEAL ${name} botches the treatment, the wound may become infected, but has a Moment of Insight as to why it went so badly`
-      default:              return `HEAL ${name} attempts to treat ${target} ${kitPhrase}`
+      case 'Wild Success':  return `${name} expertly treats ${target} ${kitPhrase} with exceptional care`
+      case 'High Insight':  return `${name} expertly treats ${target} ${kitPhrase} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} treats ${target} ${kitPhrase}`
+      case 'Failure':       return `${name} fails to make progress treating ${target}`
+      case 'Dire Failure':  return `${name} botches the treatment, making ${target} worse`
+      case 'Low Insight':   return `${name} botches the treatment, the wound may become infected, but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} attempts to treat ${target} ${kitPhrase}`
     }
   }
   // Pending heal tick - System row emitted by drainPendingHeals when a
@@ -543,13 +543,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const wName = unjamMatch[1].trim()
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `UNJAM ${name} clears the jam on their ${wName} with practiced ease`
-      case 'High Insight':  return `UNJAM ${name} unjams their ${wName} and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `UNJAM ${name} unjams their ${wName}`
-      case 'Failure':       return `UNJAM ${name} fails to unjam their ${wName}`
-      case 'Dire Failure':  return `UNJAM ${name} makes the jam on their ${wName} worse`
-      case 'Low Insight':   return `UNJAM ${name} fails to unjam their ${wName} but has a Moment of Insight as to why it went so badly`
-      default:              return `UNJAM ${name} ${hit ? 'unjams' : 'fails to unjam'} their ${wName}`
+      case 'Wild Success':  return `${name} clears the jam on their ${wName} with practiced ease`
+      case 'High Insight':  return `${name} unjams their ${wName} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} unjams their ${wName}`
+      case 'Failure':       return `${name} fails to unjam their ${wName}`
+      case 'Dire Failure':  return `${name} makes the jam on their ${wName} worse`
+      case 'Low Insight':   return `${name} fails to unjam their ${wName} but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} ${hit ? 'unjams' : 'fails to unjam'} their ${wName}`
     }
   }
   // Repair (melee) - "Repair - <weaponName> (<skill>)". Mirror of Unjam
@@ -560,13 +560,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const wName = repairMatch[1].trim()
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `REPAIR ${name} restores their ${wName} to fighting shape`
-      case 'High Insight':  return `REPAIR ${name} repairs their ${wName} and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `REPAIR ${name} repairs their ${wName}`
-      case 'Failure':       return `REPAIR ${name} fails to repair their ${wName}`
-      case 'Dire Failure':  return `REPAIR ${name} damages their ${wName} further`
-      case 'Low Insight':   return `REPAIR ${name} fails to repair their ${wName} but has a Moment of Insight as to why it went so badly`
-      default:              return `REPAIR ${name} ${hit ? 'repairs' : 'fails to repair'} their ${wName}`
+      case 'Wild Success':  return `${name} restores their ${wName} to fighting shape`
+      case 'High Insight':  return `${name} repairs their ${wName} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} repairs their ${wName}`
+      case 'Failure':       return `${name} fails to repair their ${wName}`
+      case 'Dire Failure':  return `${name} damages their ${wName} further`
+      case 'Low Insight':   return `${name} fails to repair their ${wName} but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} ${hit ? 'repairs' : 'fails to repair'} their ${wName}`
     }
   }
   // Upkeep - "Upkeep - <weaponName>". Each outcome maps to its own
@@ -812,13 +812,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const veh = driveMatch[1].trim()
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `DRIVE ${name} drives ${veh} with flawless precision`
-      case 'High Insight':  return `DRIVE ${name} drives ${veh} and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `DRIVE ${name} drives ${veh} smoothly`
-      case 'Failure':       return `DRIVE ${name} loses control of ${veh} briefly`
-      case 'Dire Failure':  return `DRIVE ${name} wrecks ${veh}'s run`
-      case 'Low Insight':   return `DRIVE ${name} loses control of ${veh} but has a Moment of Insight as to why it went so badly`
-      default:              return `DRIVE ${name} ${hit ? 'drives' : 'loses control of'} ${veh}`
+      case 'Wild Success':  return `${name} drives ${veh} with flawless precision`
+      case 'High Insight':  return `${name} drives ${veh} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} drives ${veh} smoothly`
+      case 'Failure':       return `${name} loses control of ${veh} briefly`
+      case 'Dire Failure':  return `${name} wrecks ${veh}'s run`
+      case 'Low Insight':   return `${name} loses control of ${veh} but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} ${hit ? 'drives' : 'loses control of'} ${veh}`
     }
   }
   // Brew - "<name> - Brew - <vehicle> (<skill>) [<after>/<max>|full <max>/<max>]".
@@ -841,26 +841,26 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     if (fullMatch && hit) {
       const max = fullMatch[2]
       switch (r.outcome) {
-        case 'Wild Success':  return `BREW ${name} brews a flawless batch but ${veh}'s reserves are already full (${max}/${max} days)`
-        case 'High Insight':  return `BREW ${name} brews a tank but ${veh}'s reserves are already full (${max}/${max} days), and has a Moment of Insight as to why it went so well`
-        case 'Success':       return `BREW ${name} brews a tank but ${veh}'s reserves are already full (${max}/${max} days)`
+        case 'Wild Success':  return `${name} brews a flawless batch but ${veh}'s reserves are already full (${max}/${max} days)`
+        case 'High Insight':  return `${name} brews a tank but ${veh}'s reserves are already full (${max}/${max} days), and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `${name} brews a tank but ${veh}'s reserves are already full (${max}/${max} days)`
       }
     }
     if (deltaMatch && hit) {
       const after = deltaMatch[1], max = deltaMatch[2]
       switch (r.outcome) {
-        case 'Wild Success':  return `BREW ${name} brews a flawless batch of fuel for ${veh} - ${after}/${max} days`
-        case 'High Insight':  return `BREW ${name} brews a tank of fuel for ${veh} - ${after}/${max} days, and has a Moment of Insight as to why it went so well`
-        case 'Success':       return `BREW ${name} brews a tank of fuel for ${veh} - ${after}/${max} days`
+        case 'Wild Success':  return `${name} brews a flawless batch of fuel for ${veh} - ${after}/${max} days`
+        case 'High Insight':  return `${name} brews a tank of fuel for ${veh} - ${after}/${max} days, and has a Moment of Insight as to why it went so well`
+        case 'Success':       return `${name} brews a tank of fuel for ${veh} - ${after}/${max} days`
       }
     }
     // Failure paths - no fuel produced regardless of tail.
     switch (r.outcome) {
-      case 'Failure':       return `BREW ${name}'s brew runs dry - no fuel produced`
-      case 'Dire Failure':  return `BREW ${name} ruins the batch - no fuel produced`
-      case 'Low Insight':   return `BREW ${name}'s brew runs dry - no fuel produced, but has a Moment of Insight as to why it went so badly`
+      case 'Failure':       return `${name}'s brew runs dry - no fuel produced`
+      case 'Dire Failure':  return `${name} ruins the batch - no fuel produced`
+      case 'Low Insight':   return `${name}'s brew runs dry - no fuel produced, but has a Moment of Insight as to why it went so badly`
     }
-    return `BREW ${name} ${hit ? 'brews fuel for' : 'fails to brew fuel for'} ${veh}`
+    return `${name} ${hit ? 'brews fuel for' : 'fails to brew fuel for'} ${veh}`
   }
   // Navigate - "<name> - Navigate - <vehicle> (<skill>)". Vehicle
   // navigator-seat check. Canon locked 2026-05-19. NAVIGATE prefix
@@ -872,13 +872,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const veh = navigateMatch[1].trim()
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `NAVIGATE ${name} charts a flawless route for ${veh}`
-      case 'High Insight':  return `NAVIGATE ${name} charts the route for ${veh} and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `NAVIGATE ${name} charts the route for ${veh}`
-      case 'Failure':       return `NAVIGATE ${name} loses the route briefly`
-      case 'Dire Failure':  return `NAVIGATE ${name} leads ${veh} into a worse spot`
-      case 'Low Insight':   return `NAVIGATE ${name} loses the route but has a Moment of Insight as to why it went so badly`
-      default:              return `NAVIGATE ${name} ${hit ? 'charts the route for' : 'loses the route for'} ${veh}`
+      case 'Wild Success':  return `${name} charts a flawless route for ${veh}`
+      case 'High Insight':  return `${name} charts the route for ${veh} and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} charts the route for ${veh}`
+      case 'Failure':       return `${name} loses the route briefly`
+      case 'Dire Failure':  return `${name} leads ${veh} into a worse spot`
+      case 'Low Insight':   return `${name} loses the route but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} ${hit ? 'charts the route for' : 'loses the route for'} ${veh}`
     }
   }
   // Install - "<name> - Install - <vehicle> (<skill>)". Vehicle fuel-drum
@@ -891,13 +891,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const veh = installMatch[1].trim()
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `INSTALL ${name} fits a fuel drum to ${veh} flawlessly - +1 day of storage`
-      case 'High Insight':  return `INSTALL ${name} fits a fuel drum to ${veh} - +1 day of storage, and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `INSTALL ${name} fits a fuel drum to ${veh} - +1 day of storage`
-      case 'Failure':       return `INSTALL ${name} botches the fitting - the drum is damaged and lost`
-      case 'Dire Failure':  return `INSTALL ${name} loses the drum and wastes a tank of ${veh}'s fuel`
-      case 'Low Insight':   return `INSTALL ${name} botches the fitting - the drum is lost, but has a Moment of Insight as to why it went so badly`
-      default:              return `INSTALL ${name} works on ${veh}'s fuel storage`
+      case 'Wild Success':  return `${name} fits a fuel drum to ${veh} flawlessly - +1 day of storage`
+      case 'High Insight':  return `${name} fits a fuel drum to ${veh} - +1 day of storage, and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} fits a fuel drum to ${veh} - +1 day of storage`
+      case 'Failure':       return `${name} botches the fitting - the drum is damaged and lost`
+      case 'Dire Failure':  return `${name} loses the drum and wastes a tank of ${veh}'s fuel`
+      case 'Low Insight':   return `${name} botches the fitting - the drum is lost, but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} works on ${veh}'s fuel storage`
     }
   }
   // Gather - "<name> - Gather - <vehicle> (Scavenging)". Vehicle brewing-
@@ -911,13 +911,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     const veh = gatherVehicleMatch[1].trim()
     const name = r.character_name
     switch (r.outcome) {
-      case 'Wild Success':  return `GATHER ${name} scavenges a haul of brewing materials for ${veh} - 2 days`
-      case 'High Insight':  return `GATHER ${name} scavenges brewing materials for ${veh} - 1 day, and has a Moment of Insight as to why it went so well`
-      case 'Success':       return `GATHER ${name} scavenges brewing materials for ${veh} - 1 day`
-      case 'Failure':       return `GATHER ${name} finds no usable brewing materials`
-      case 'Dire Failure':  return `GATHER ${name} comes back empty-handed and the worse for it`
-      case 'Low Insight':   return `GATHER ${name} finds nothing, but has a Moment of Insight as to why it went so badly`
-      default:              return `GATHER ${name} scavenges for brewing materials`
+      case 'Wild Success':  return `${name} scavenges a haul of brewing materials for ${veh} - 2 days`
+      case 'High Insight':  return `${name} scavenges brewing materials for ${veh} - 1 day, and has a Moment of Insight as to why it went so well`
+      case 'Success':       return `${name} scavenges brewing materials for ${veh} - 1 day`
+      case 'Failure':       return `${name} finds no usable brewing materials`
+      case 'Dire Failure':  return `${name} comes back empty-handed and the worse for it`
+      case 'Low Insight':   return `${name} finds nothing, but has a Moment of Insight as to why it went so badly`
+      default:              return `${name} scavenges for brewing materials`
     }
   }
   // Loot - two label formats (post-2026-05-27, no emoji):
@@ -1031,16 +1031,15 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       DEX: 'dexterity',
     }
     const attrName = ATTR_FULL[attr] ?? attr.toLowerCase()
-    // Format per Xero 2026-05-18: "ATTRIBUTE CHECK <name> {success-adverb}
-    // attempted to use their <attribute>". Category prefix on every
-    // outcome so feed scanners can spot attribute checks at a glance.
-    const prefix = 'ATTRIBUTE CHECK'
-    if (r.outcome === 'Wild Success') return `${prefix} ${r.character_name} wildly succeeded at using their ${attrName}`
-    if (r.outcome === 'High Insight') return `${prefix} ${r.character_name} successfully attempted to use their ${attrName} and has a Moment of Insight as to why it went so well`
-    if (r.outcome === 'Dire Failure') return `${prefix} ${r.character_name} disastrously failed at using their ${attrName}`
-    if (r.outcome === 'Low Insight') return `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName} but has a Moment of Insight as to why it went so badly`
-    return hit ? `${prefix} ${r.character_name} successfully attempted to use their ${attrName}`
-               : `${prefix} ${r.character_name} unsuccessfully attempted to use their ${attrName}`
+    // Format: "<name> {success-adverb} attempted to use their <attribute>".
+    // The "ATTRIBUTE CHECK " caps prefix was DROPPED 2026-05-27 (Xero) along
+    // with the other action-log prefixes; the line reads as a plain sentence.
+    if (r.outcome === 'Wild Success') return `${r.character_name} wildly succeeded at using their ${attrName}`
+    if (r.outcome === 'High Insight') return `${r.character_name} successfully attempted to use their ${attrName} and has a Moment of Insight as to why it went so well`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} disastrously failed at using their ${attrName}`
+    if (r.outcome === 'Low Insight') return `${r.character_name} unsuccessfully attempted to use their ${attrName} but has a Moment of Insight as to why it went so badly`
+    return hit ? `${r.character_name} successfully attempted to use their ${attrName}`
+               : `${r.character_name} unsuccessfully attempted to use their ${attrName}`
   }
   // Last-resort fallback for old verbose labels that predate compactRollSummary.
   // These rows have baked-in outcome text (Moment of Insight, wildly successful,

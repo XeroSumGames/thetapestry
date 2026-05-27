@@ -122,32 +122,32 @@ describe('compactRollSummary', () => {
   // the label and the regex matcher needs to see the bare suffix.
   it('attribute check Failure: ATTRIBUTE CHECK prefix + unsuccessfully', () => {
     expect(compactRollSummary({ label: 'ACU Check', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen')
+      .toBe('Enya unsuccessfully attempted to use their acumen')
   })
 
   it('attribute check Success: ATTRIBUTE CHECK prefix + successfully', () => {
     expect(compactRollSummary({ label: 'PHY Check', character_name: 'Enya', outcome: 'Success' }))
-      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their physicality')
+      .toBe('Enya successfully attempted to use their physicality')
   })
 
   it('attribute check Wild Success: wildly succeeded', () => {
     expect(compactRollSummary({ label: 'DEX Check', character_name: 'Enya', outcome: 'Wild Success' }))
-      .toBe('ATTRIBUTE CHECK Enya wildly succeeded at using their dexterity')
+      .toBe('Enya wildly succeeded at using their dexterity')
   })
 
   it('attribute check Dire Failure: disastrously failed', () => {
     expect(compactRollSummary({ label: 'INF Check', character_name: 'Enya', outcome: 'Dire Failure' }))
-      .toBe('ATTRIBUTE CHECK Enya disastrously failed at using their influence')
+      .toBe('Enya disastrously failed at using their influence')
   })
 
   it('attribute check High Insight: success + Moment of Insight', () => {
     expect(compactRollSummary({ label: 'RSN Check', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('ATTRIBUTE CHECK Enya successfully attempted to use their reason and has a Moment of Insight as to why it went so well')
+      .toBe('Enya successfully attempted to use their reason and has a Moment of Insight as to why it went so well')
   })
 
   it('attribute check Low Insight: failure + Moment of Insight', () => {
     expect(compactRollSummary({ label: 'ACU Check', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen but has a Moment of Insight as to why it went so badly')
+      .toBe('Enya unsuccessfully attempted to use their acumen but has a Moment of Insight as to why it went so badly')
   })
 
   it('attribute check with em-dash prefix in label still matches', () => {
@@ -155,12 +155,12 @@ describe('compactRollSummary', () => {
     // an em-dash. Suffix strip must handle both ASCII hyphen and
     // em-dash so the narrative branch fires either way.
     expect(compactRollSummary({ label: 'Enya — ACU Check', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen')
+      .toBe('Enya unsuccessfully attempted to use their acumen')
   })
 
   it('attribute check with ASCII hyphen prefix in label still matches', () => {
     expect(compactRollSummary({ label: 'Enya - ACU Check', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('ATTRIBUTE CHECK Enya unsuccessfully attempted to use their acumen')
+      .toBe('Enya unsuccessfully attempted to use their acumen')
   })
 
   // Stress Check narrative (canon copy locked 2026-05-19). Six outcomes
@@ -173,63 +173,63 @@ describe('compactRollSummary', () => {
   // --- mid-play ---
   it('stress check mid-play Wild Success', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Wild Success' }))
-      .toBe('STRESS CHECK Enya is wildly composed under pressure')
+      .toBe('Enya is wildly composed under pressure')
   })
 
   it('stress check mid-play High Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('STRESS CHECK Enya holds steady against the pressure and has a Moment of Insight as to why it went so well')
+      .toBe('Enya holds steady against the pressure and has a Moment of Insight as to why it went so well')
   })
 
   it('stress check mid-play Success', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Success' }))
-      .toBe('STRESS CHECK Enya holds steady against the pressure')
+      .toBe('Enya holds steady against the pressure')
   })
 
   it('stress check mid-play Failure', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('STRESS CHECK Enya feels the weight')
+      .toBe('Enya feels the weight')
   })
 
   it('stress check mid-play Dire Failure', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Dire Failure' }))
-      .toBe('STRESS CHECK Enya buckles under the pressure')
+      .toBe('Enya buckles under the pressure')
   })
 
   it('stress check mid-play Low Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('STRESS CHECK Enya feels the weight but has a Moment of Insight as to why it went so badly')
+      .toBe('Enya feels the weight but has a Moment of Insight as to why it went so badly')
   })
 
   // --- at-max ---
   it('stress check at-max Wild Success', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Wild Success' }))
-      .toBe('STRESS CHECK Enya is wildly composed and shrugs the pressure off')
+      .toBe('Enya is wildly composed and shrugs the pressure off')
   })
 
   it('stress check at-max High Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('STRESS CHECK Enya calms themselves down and has a Moment of Insight as to why it went so well')
+      .toBe('Enya calms themselves down and has a Moment of Insight as to why it went so well')
   })
 
   it('stress check at-max Success', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Success' }))
-      .toBe('STRESS CHECK Enya calms themselves down')
+      .toBe('Enya calms themselves down')
   })
 
   it('stress check at-max Failure', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('STRESS CHECK Enya fails to calm and reaches their Breaking Point')
+      .toBe('Enya fails to calm and reaches their Breaking Point')
   })
 
   it('stress check at-max Dire Failure', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Dire Failure' }))
-      .toBe('STRESS CHECK Enya disastrously cracks and reaches their Breaking Point')
+      .toBe('Enya disastrously cracks and reaches their Breaking Point')
   })
 
   it('stress check at-max Low Insight', () => {
     expect(compactRollSummary({ label: 'Enya - Stress Check (at max)', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('STRESS CHECK Enya fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly')
+      .toBe('Enya fails to calm and reaches their Breaking Point but has a Moment of Insight as to why it went so badly')
   })
 
   // Distract bespoke narrative (canon copy locked 2026-05-19). 4 outcomes
@@ -338,99 +338,99 @@ describe('compactRollSummary', () => {
   // kit phrase simplified to "by hand".
   it('heal Wild Success with kit', () => {
     expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Wild Success' }))
-      .toBe("HEAL Junie expertly treats Marv with a Doctor's Bag with exceptional care")
+      .toBe("Junie expertly treats Marv with a Doctor's Bag with exceptional care")
   })
 
   it('heal High Insight with kit', () => {
     expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'High Insight' }))
-      .toBe("HEAL Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why it went so well")
+      .toBe("Junie expertly treats Marv with a Doctor's Bag and has a Moment of Insight as to why it went so well")
   })
 
   it('heal Success with kit', () => {
     expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Success' }))
-      .toBe("HEAL Junie treats Marv with a Doctor's Bag")
+      .toBe("Junie treats Marv with a Doctor's Bag")
   })
 
   it('heal Failure: no mechanical bits', () => {
     expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Failure' }))
-      .toBe('HEAL Junie fails to make progress treating Marv')
+      .toBe('Junie fails to make progress treating Marv')
   })
 
   it('heal Dire Failure: no "1 WP damage" mechanical bit', () => {
     expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Dire Failure' }))
-      .toBe('HEAL Junie botches the treatment, making Marv worse')
+      .toBe('Junie botches the treatment, making Marv worse')
   })
 
   it('heal Low Insight: directional infection cue + canonical LI tail', () => {
     expect(compactRollSummary({ label: "Junie - Heal Marv (Doctor's Bag)", character_name: 'Junie', outcome: 'Low Insight' }))
-      .toBe('HEAL Junie botches the treatment, the wound may become infected, but has a Moment of Insight as to why it went so badly')
+      .toBe('Junie botches the treatment, the wound may become infected, but has a Moment of Insight as to why it went so badly')
   })
 
   it('heal naked Medicine kit phrase is "by hand"', () => {
     expect(compactRollSummary({ label: 'Junie - Heal Marv (naked Medicine*)', character_name: 'Junie', outcome: 'Success' }))
-      .toBe('HEAL Junie treats Marv by hand')
+      .toBe('Junie treats Marv by hand')
   })
 
   // Unjam narrative (canon locked 2026-05-19). UNJAM prefix added.
   it('unjam Wild Success', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Wild Success' }))
-      .toBe('UNJAM Cree clears the jam on their Pistol with practiced ease')
+      .toBe('Cree clears the jam on their Pistol with practiced ease')
   })
 
   it('unjam High Insight', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'High Insight' }))
-      .toBe('UNJAM Cree unjams their Pistol and has a Moment of Insight as to why it went so well')
+      .toBe('Cree unjams their Pistol and has a Moment of Insight as to why it went so well')
   })
 
   it('unjam Success', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Success' }))
-      .toBe('UNJAM Cree unjams their Pistol')
+      .toBe('Cree unjams their Pistol')
   })
 
   it('unjam Failure', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Failure' }))
-      .toBe('UNJAM Cree fails to unjam their Pistol')
+      .toBe('Cree fails to unjam their Pistol')
   })
 
   it('unjam Dire Failure: makes it worse', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Dire Failure' }))
-      .toBe('UNJAM Cree makes the jam on their Pistol worse')
+      .toBe('Cree makes the jam on their Pistol worse')
   })
 
   it('unjam Low Insight: F narrative + canonical LI tail', () => {
     expect(compactRollSummary({ label: 'Cree - Unjam - Pistol (Ranged Combat)', character_name: 'Cree', outcome: 'Low Insight' }))
-      .toBe('UNJAM Cree fails to unjam their Pistol but has a Moment of Insight as to why it went so badly')
+      .toBe('Cree fails to unjam their Pistol but has a Moment of Insight as to why it went so badly')
   })
 
   // Repair narrative (canon locked 2026-05-19). Melee mirror of Unjam.
   it('repair Wild Success', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Wild Success' }))
-      .toBe('REPAIR Frankie restores their Machete to fighting shape')
+      .toBe('Frankie restores their Machete to fighting shape')
   })
 
   it('repair High Insight', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'High Insight' }))
-      .toBe('REPAIR Frankie repairs their Machete and has a Moment of Insight as to why it went so well')
+      .toBe('Frankie repairs their Machete and has a Moment of Insight as to why it went so well')
   })
 
   it('repair Success', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Success' }))
-      .toBe('REPAIR Frankie repairs their Machete')
+      .toBe('Frankie repairs their Machete')
   })
 
   it('repair Failure', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Failure' }))
-      .toBe('REPAIR Frankie fails to repair their Machete')
+      .toBe('Frankie fails to repair their Machete')
   })
 
   it('repair Dire Failure: damages it further', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Dire Failure' }))
-      .toBe('REPAIR Frankie damages their Machete further')
+      .toBe('Frankie damages their Machete further')
   })
 
   it('repair Low Insight: F narrative + canonical LI tail', () => {
     expect(compactRollSummary({ label: 'Frankie - Repair - Machete (Melee Combat)', character_name: 'Frankie', outcome: 'Low Insight' }))
-      .toBe('REPAIR Frankie fails to repair their Machete but has a Moment of Insight as to why it went so badly')
+      .toBe('Frankie fails to repair their Machete but has a Moment of Insight as to why it went so badly')
   })
 
   // Recruit narrative (canon polish locked 2026-05-19, option D: no
@@ -573,27 +573,27 @@ describe('compactRollSummary', () => {
   // UNJAM / REPAIR / STABILIZE pattern.
   it('drive Wild Success', () => {
     expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Wild Success' }))
-      .toBe('DRIVE Joe drives Minnie with flawless precision')
+      .toBe('Joe drives Minnie with flawless precision')
   })
   it('drive High Insight', () => {
     expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'High Insight' }))
-      .toBe('DRIVE Joe drives Minnie and has a Moment of Insight as to why it went so well')
+      .toBe('Joe drives Minnie and has a Moment of Insight as to why it went so well')
   })
   it('drive Success', () => {
     expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Success' }))
-      .toBe('DRIVE Joe drives Minnie smoothly')
+      .toBe('Joe drives Minnie smoothly')
   })
   it('drive Failure', () => {
     expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Failure' }))
-      .toBe('DRIVE Joe loses control of Minnie briefly')
+      .toBe('Joe loses control of Minnie briefly')
   })
   it('drive Dire Failure', () => {
     expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Dire Failure' }))
-      .toBe('DRIVE Joe wrecks Minnie\'s run')
+      .toBe('Joe wrecks Minnie\'s run')
   })
   it('drive Low Insight', () => {
     expect(compactRollSummary({ label: 'Joe - Drive - Minnie', character_name: 'Joe', outcome: 'Low Insight' }))
-      .toBe('DRIVE Joe loses control of Minnie but has a Moment of Insight as to why it went so badly')
+      .toBe('Joe loses control of Minnie but has a Moment of Insight as to why it went so badly')
   })
 
   // Brew narrative (canon locked 2026-05-19, fuel state in line per
@@ -601,41 +601,41 @@ describe('compactRollSummary', () => {
   // the narrative paths.
   it('brew Wild Success: produces fuel, after/max in line', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'Wild Success' }))
-      .toBe('BREW Enya brews a flawless batch of fuel for Minnie - 3/5 days')
+      .toBe('Enya brews a flawless batch of fuel for Minnie - 3/5 days')
   })
   it('brew High Insight: produces fuel, HI tail after the count', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('BREW Enya brews a tank of fuel for Minnie - 3/5 days, and has a Moment of Insight as to why it went so well')
+      .toBe('Enya brews a tank of fuel for Minnie - 3/5 days, and has a Moment of Insight as to why it went so well')
   })
   it('brew Success: produces fuel, simple line', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) 3/5', character_name: 'Enya', outcome: 'Success' }))
-      .toBe('BREW Enya brews a tank of fuel for Minnie - 3/5 days')
+      .toBe('Enya brews a tank of fuel for Minnie - 3/5 days')
   })
   it('brew Failure: dry, no fuel', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Failure' }))
-      .toBe('BREW Enya\'s brew runs dry - no fuel produced')
+      .toBe('Enya\'s brew runs dry - no fuel produced')
   })
   it('brew Dire Failure: ruined batch', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Dire Failure' }))
-      .toBe('BREW Enya ruins the batch - no fuel produced')
+      .toBe('Enya ruins the batch - no fuel produced')
   })
   it('brew Low Insight: dry + LI tail', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*)', character_name: 'Enya', outcome: 'Low Insight' }))
-      .toBe('BREW Enya\'s brew runs dry - no fuel produced, but has a Moment of Insight as to why it went so badly')
+      .toBe('Enya\'s brew runs dry - no fuel produced, but has a Moment of Insight as to why it went so badly')
   })
   // Brew edge case - tank already full going in; success branch swaps
   // to the "reserves are already full" variant.
   it('brew Wild Success but already full: full-tank variant', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) full 5/5', character_name: 'Enya', outcome: 'Wild Success' }))
-      .toBe('BREW Enya brews a flawless batch but Minnie\'s reserves are already full (5/5 days)')
+      .toBe('Enya brews a flawless batch but Minnie\'s reserves are already full (5/5 days)')
   })
   it('brew High Insight but already full: HI tail on full-tank variant', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) full 5/5', character_name: 'Enya', outcome: 'High Insight' }))
-      .toBe('BREW Enya brews a tank but Minnie\'s reserves are already full (5/5 days), and has a Moment of Insight as to why it went so well')
+      .toBe('Enya brews a tank but Minnie\'s reserves are already full (5/5 days), and has a Moment of Insight as to why it went so well')
   })
   it('brew Success but already full: simple full-tank variant', () => {
     expect(compactRollSummary({ label: 'Enya - Brew - Minnie (Mechanic*) full 5/5', character_name: 'Enya', outcome: 'Success' }))
-      .toBe('BREW Enya brews a tank but Minnie\'s reserves are already full (5/5 days)')
+      .toBe('Enya brews a tank but Minnie\'s reserves are already full (5/5 days)')
   })
 
   // Navigate narrative (canon locked 2026-05-19). Vehicle navigator
@@ -643,27 +643,27 @@ describe('compactRollSummary', () => {
   // the narrative line - the SMOD chip below shows the contribution.
   it('navigate Wild Success', () => {
     expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Wild Success' }))
-      .toBe('NAVIGATE Bea charts a flawless route for Minnie')
+      .toBe('Bea charts a flawless route for Minnie')
   })
   it('navigate High Insight', () => {
     expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'High Insight' }))
-      .toBe('NAVIGATE Bea charts the route for Minnie and has a Moment of Insight as to why it went so well')
+      .toBe('Bea charts the route for Minnie and has a Moment of Insight as to why it went so well')
   })
   it('navigate Success', () => {
     expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Success' }))
-      .toBe('NAVIGATE Bea charts the route for Minnie')
+      .toBe('Bea charts the route for Minnie')
   })
   it('navigate Failure', () => {
     expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Failure' }))
-      .toBe('NAVIGATE Bea loses the route briefly')
+      .toBe('Bea loses the route briefly')
   })
   it('navigate Dire Failure', () => {
     expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Dire Failure' }))
-      .toBe('NAVIGATE Bea leads Minnie into a worse spot')
+      .toBe('Bea leads Minnie into a worse spot')
   })
   it('navigate Low Insight', () => {
     expect(compactRollSummary({ label: 'Bea - Navigate - Minnie (Navigation)', character_name: 'Bea', outcome: 'Low Insight' }))
-      .toBe('NAVIGATE Bea loses the route but has a Moment of Insight as to why it went so badly')
+      .toBe('Bea loses the route but has a Moment of Insight as to why it went so badly')
   })
 
   // First Impression narrative (canon locked 2026-05-10 + 11 with
@@ -781,18 +781,18 @@ describe('compactRollSummary', () => {
 })
 
 describe('vehicle_damage_table', () => {
-  it('returns the label verbatim (system name + sum readable in the feed)', () => {
+  it('returns the label verbatim (plain "took damage to the <system>" sentence; the 2+4=6 roll lives in the expanded view)', () => {
     expect(compactRollSummary({
-      label: 'DAMAGE Minnie - 2+4 = 6: Engine',
+      label: 'Minnie took damage to the Engine',
       character_name: 'Minnie', outcome: 'vehicle_damage_table',
-    })).toBe('DAMAGE Minnie - 2+4 = 6: Engine')
+    })).toBe('Minnie took damage to the Engine')
   })
 
   it('works for any vehicle or system name', () => {
     expect(compactRollSummary({
-      label: 'DAMAGE Y - 3+5 = 8: Fuel Tank',
+      label: 'Y took damage to the Fuel Tank',
       character_name: 'Y', outcome: 'vehicle_damage_table',
-    })).toBe('DAMAGE Y - 3+5 = 8: Fuel Tank')
+    })).toBe('Y took damage to the Fuel Tank')
   })
 })
 

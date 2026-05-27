@@ -1035,7 +1035,10 @@ export default function VehiclePage() {
                 campaign_id: campaignId,
                 user_id: myUserId,
                 character_name: vehicle.name,
-                label: `DAMAGE ${vehicle.name} - ${d1}+${d2} = ${sum}: ${system}`,
+                // Compact line reads as a plain sentence; the 2+4=6 roll math
+                // lives in the expanded view (die1/die2/total below drive the
+                // generic expand panel). Xero 2026-05-27.
+                label: `${vehicle.name} took damage to the ${system}`,
                 die1: d1, die2: d2,
                 amod: 0, smod: 0, cmod: 0, total: sum,
                 outcome: 'vehicle_damage_table',
