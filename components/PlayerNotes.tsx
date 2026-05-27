@@ -49,8 +49,18 @@ export default function PlayerNotes({ campaignId, header }: { campaignId: string
     const channel = supabase.channel(`gm_notes_share_${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_notes', filter: `campaign_id=eq.${campaignId}` }, () => loadShared())
       .on('broadcast', { event: 'gm_notes_updated' }, () => loadShared())
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+      // Catch-up reloads. The gm_notes_updated broadcast is fire-and-forget,
+      // so a client that dropped/late-joined/backgrounded never reloads and
+      // shows stale shared notes until refresh. Reload on SUBSCRIBED
+      // (re)connect and on tab-return-to-visible so convergence doesn't
+      // depend on catching one ephemeral broadcast.
+      .subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadShared() })
+    function handleVisibility() { if (!document.hidden) void loadShared() }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      supabase.removeChannel(channel)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId])
 

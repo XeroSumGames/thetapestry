@@ -26,6 +26,14 @@ export function getCampaignNpcs(campaignId: string) {
 }
 
 /**
+ * One NPC by id. Drop-in for
+ * `supabase.from('campaign_npcs').select('*').eq('id', id).maybeSingle()`.
+ */
+export function getCampaignNpcById(id: string) {
+  return db().from('campaign_npcs').select('*').eq('id', id).maybeSingle()
+}
+
+/**
  * Patch one NPC. Drop-in for `supabase.from('campaign_npcs').update(p).eq('id', id)`.
  * Pass `.select()` follow-up at the call site if it needs the row back; this
  * mirrors the bare update shape most call sites use.

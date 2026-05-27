@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import NpcCard from '../../components/NpcCard'
 import PlayerNpcCard from '../../components/PlayerNpcCard'
 import type { CampaignNpc } from '../../components/NpcRoster'
+import { getCampaignNpcById } from '../../lib/data/campaign-npcs'
 
 export default function NpcSheetPage() {
   const supabase = createClient()
@@ -72,20 +73,33 @@ export default function NpcSheetPage() {
     //     the damage on the campaign's initiative channel. This is how the
     //     main table page updates in real time; subscribing here too means
     //     the popout window no longer lags behind the attacker's main tab.
+    // Catch-up refetch. The npc_damaged broadcast is fire-and-forget and the
+    // postgres_changes UPDATE can be dropped on a backgrounded socket, so a
+    // client that dropped/late-joined/was-hidden can miss a damage event and
+    // show stale WP/RP until refresh. Re-pull the row on each channel's
+    // SUBSCRIBED (re)connect and on tab-return-to-visible.
+    async function refetchNpc() {
+      if (!npcId) return
+      const { data } = await getCampaignNpcById(npcId)
+      if (data) setNpc(data as CampaignNpc)
+    }
     const postgresCh = supabase.channel(`npcsheet_${npcId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaign_npcs', filter: `id=eq.${npcId}` }, (payload: any) => {
         if (payload.new) setNpc(payload.new as CampaignNpc)
       })
-      .subscribe()
+      .subscribe((status: string) => { if (status === 'SUBSCRIBED') void refetchNpc() })
     const broadcastCh = campaignId
       ? supabase.channel(`initiative_${campaignId}`)
           .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
             const { npcId: n, patch } = msg.payload ?? {}
             if (n === npcId && patch) setNpc(prev => prev ? ({ ...prev, ...patch } as CampaignNpc) : prev)
           })
-          .subscribe()
+          .subscribe((status: string) => { if (status === 'SUBSCRIBED') void refetchNpc() })
       : null
+    function handleVisibility() { if (!document.hidden) void refetchNpc() }
+    document.addEventListener('visibilitychange', handleVisibility)
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
       supabase.removeChannel(postgresCh)
       if (broadcastCh) supabase.removeChannel(broadcastCh)
     }

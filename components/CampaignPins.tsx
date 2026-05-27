@@ -167,9 +167,19 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     loadPins(); loadScenes()
     const ch = supabase.channel(`campaign_pins_${campaignId}`)
     ch.on('broadcast', { event: 'pins_changed' }, () => { void loadPins() })
-    ch.subscribe()
+    // Catch-up reloads. The pins_changed broadcast is fire-and-forget with
+    // no delivery guarantee, so a client that was disconnected, subscribed
+    // late, or dropped the packet never reloads and shows a stale pin set
+    // until a manual refresh (playtest: "shared a pin, didn't show without a
+    // refresh"). Reloading on the SUBSCRIBED (re)connect and on tab-return-
+    // to-visible makes convergence stop depending on catching one ephemeral
+    // broadcast. Mirrors the RollsFeed / TableChat catch-up pattern.
+    ch.subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadPins() })
     pinsChannelRef.current = ch
+    function handleVisibility() { if (!document.hidden) void loadPins() }
+    document.addEventListener('visibilitychange', handleVisibility)
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
       supabase.removeChannel(ch)
       pinsChannelRef.current = null
     }

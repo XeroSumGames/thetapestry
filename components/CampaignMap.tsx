@@ -937,7 +937,12 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       supabase.channel(`campaign_pins_${campaignId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
         .on('broadcast', { event: 'pins_changed' }, () => loadPins())
-        .subscribe()
+        // Catch-up reload on (re)subscribe: the pins_changed broadcast is
+        // fire-and-forget, so a client that dropped/late-joined never reloads
+        // and shows stale markers until refresh. Reloading on SUBSCRIBED (and
+        // on tab-return-to-visible below) makes convergence not depend on
+        // catching one ephemeral broadcast.
+        .subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadPins() })
 
       supabase.channel(`campaign_npcs_map_${campaignId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
@@ -981,7 +986,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       viewShareChannelRef.current = viewCh
     }
     init()
+    // Tab-return catch-up: a backgrounded tab can miss the pins_changed
+    // broadcast (Chrome pauses the socket); reload on hidden->visible so the
+    // map markers converge with the DB without a manual refresh.
+    function handlePinsVisibility() { if (!document.hidden && mapInstanceRef.current) void loadPins() }
+    document.addEventListener('visibilitychange', handlePinsVisibility)
     return () => {
+      document.removeEventListener('visibilitychange', handlePinsVisibility)
       // Unmount cleanup: drop active pulses and unsubscribe the ping
       // channel so /table doesn't accumulate channels when scenes flip.
       const map = mapInstanceRef.current

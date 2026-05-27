@@ -17,6 +17,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { insertRollLog } from '../../lib/data/roll-log'
+import { getCampaignClock } from '../../lib/data/campaigns'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { advance, readClock, queueStreamingHeal, cancelEvent, type ClockState } from '../../lib/campaign-clock'
 import { OUTCOME } from '../../lib/roll-outcomes'
@@ -253,6 +254,19 @@ export default function CampaignSheetPage() {
       setLoaded(true)
     }
     load()
+    // Catch-up reload. The clock_advanced/clock_set broadcasts are fire-and-
+    // forget and postgres_changes can be dropped on a backgrounded socket, so
+    // a client that dropped/late-joined/was-hidden can show a stale clock,
+    // party WP, or pending-effects list until refresh. Re-pull the clock +
+    // vehicles and refetch party/pending on each channel's SUBSCRIBED
+    // (re)connect and on tab-return-to-visible.
+    async function catchUp() {
+      const { data } = await getCampaignClock(campaignId)
+      const cl = (data as any)?.clock as ClockState | undefined
+      if (cl && typeof cl.canon_day === 'number') setClockState({ canon_day: cl.canon_day, hour: cl.hour })
+      loadVehicles()
+      scheduleRefetch()
+    }
     const broadcastCh = supabase.channel(`campaign_clock_${campaignId}`)
       .on('broadcast', { event: 'clock_advanced' }, (msg: any) => {
         const next = msg?.payload?.clock as ClockState | undefined
@@ -263,7 +277,7 @@ export default function CampaignSheetPage() {
         const next = msg?.payload?.clock as ClockState | undefined
         if (next) setClockState(next)
       })
-      .subscribe()
+      .subscribe((status: string) => { if (status === 'SUBSCRIBED') void catchUp() })
     const pgCh = supabase.channel(`campaign_pg_${campaignId}`)
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${campaignId}` },
@@ -279,9 +293,12 @@ export default function CampaignSheetPage() {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'campaign_events', filter: `campaign_id=eq.${campaignId}` },
         () => { scheduleRefetch() })
-      .subscribe()
+      .subscribe((status: string) => { if (status === 'SUBSCRIBED') void catchUp() })
+    function handleVisibility() { if (!document.hidden) void catchUp() }
+    document.addEventListener('visibilitychange', handleVisibility)
     return () => {
       cancelled = true
+      document.removeEventListener('visibilitychange', handleVisibility)
       if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
       supabase.removeChannel(broadcastCh)
       supabase.removeChannel(pgCh)
