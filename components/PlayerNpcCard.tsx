@@ -11,6 +11,10 @@ interface LootItem {
   enc?: number
   rarity?: string
   notes?: string
+  // Equipment-slot items (weapons from skills.weapon / skills.weapon2).
+  // The RPC path is different: loot_npc_equipment_item instead of loot_npc_item.
+  source?: 'inventory' | 'equipment'
+  weaponSlot?: 'weapon' | 'weapon2'
 }
 
 // Player-facing NPC card - strictly read-only. GM-only data (RAPID stats,
@@ -259,11 +263,12 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
     setLootError(null)
     setShowLoot(true)
     setLootItems(null)
-    // Re-fetch the NPC's inventory fresh on each open so a player
-    // who took an item earlier in the session sees the latest list.
+    // Re-fetch fresh on each open so a player who took earlier in the
+    // session sees the latest list. Fetch both inventory (named items)
+    // and skills (weapons with ammo data live in skills.weapon / .weapon2).
     const { data, error } = await supabase
       .from('campaign_npcs')
-      .select('inventory')
+      .select('inventory, skills')
       .eq('id', npc.id)
       .maybeSingle()
     if (error) {
@@ -271,13 +276,42 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
       setLootItems([])
       return
     }
-    const inv = (data as any)?.inventory
-    setLootItems(Array.isArray(inv) ? (inv as LootItem[]) : [])
+    const inv: LootItem[] = Array.isArray((data as any)?.inventory)
+      ? (data as any).inventory.map((i: any) => ({ ...i, source: 'inventory' as const }))
+      : []
+
+    // Synthesize loot items from weapon slots. Each slot contributes one
+    // item (the weapon itself with condition + ammo data in the notes).
+    // Melee weapons (ammoMax === 0) still appear - just no ammo note.
+    const skills = (data as any)?.skills ?? {}
+    const weaponItems: LootItem[] = []
+    for (const slot of ['weapon', 'weapon2'] as const) {
+      const w = skills[slot]
+      if (!w?.weaponName) continue
+      const ammoNote = w.ammoMax > 0
+        ? `${w.ammoCurrent ?? 0}/${w.ammoMax} ammo · ${w.reloads ?? 0} reload${(w.reloads ?? 0) !== 1 ? 's' : ''}`
+        : null
+      const notesParts = [w.condition, ammoNote].filter(Boolean)
+      weaponItems.push({
+        name: w.weaponName,
+        qty: 1,
+        notes: notesParts.join(' · ') || undefined,
+        source: 'equipment',
+        weaponSlot: slot,
+      })
+    }
+
+    // Weapons first (the valuable stuff), then inventory items.
+    setLootItems([...weaponItems, ...inv])
   }
 
   async function takeItem(item: LootItem) {
     if (!viewingCharacterId) {
       setLootError('No character selected as the looter.')
+      return
+    }
+    if (item.source === 'equipment') {
+      await takeEquipmentItem(item)
       return
     }
     const tag = `${item.name}:${item.custom ? 'c' : 'std'}`
@@ -300,8 +334,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
       setLootError(result?.error ?? 'Loot failed (no result).')
       return
     }
-    // Optimistic local decrement so the panel reflects the take
-    // immediately. Re-opening will fetch fresh anyway.
+    // Optimistic local decrement so the panel reflects the take immediately.
     setLootItems(prev => {
       if (!prev) return prev
       return prev
@@ -310,6 +343,30 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           : i)
         .filter(i => i.qty > 0)
     })
+  }
+
+  async function takeEquipmentItem(item: LootItem) {
+    if (!viewingCharacterId || !item.weaponSlot) return
+    const tag = `${item.name}:${item.weaponSlot}`
+    setTakingItem(tag)
+    setLootError(null)
+    const { data, error } = await supabase.rpc('loot_npc_equipment_item', {
+      p_npc_id: npc.id,
+      p_character_id: viewingCharacterId,
+      p_weapon_slot: item.weaponSlot,
+    })
+    setTakingItem(null)
+    if (error) {
+      setLootError(error.message)
+      return
+    }
+    const result = data as { ok: boolean; error?: string } | null
+    if (!result?.ok) {
+      setLootError(result?.error ?? 'Loot failed (no result).')
+      return
+    }
+    // Remove the taken weapon from the panel immediately.
+    setLootItems(prev => prev ? prev.filter(i => !(i.source === 'equipment' && i.weaponSlot === item.weaponSlot)) : prev)
   }
 
   return (
@@ -518,13 +575,17 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Carlito, sans-serif' }}>Nothing left to take.</div>
               ) : (
                 lootItems.map((item, idx) => {
-                  const tag = `${item.name}:${item.custom ? 'c' : 'std'}`
+                  const tag = item.source === 'equipment'
+                    ? `${item.name}:${item.weaponSlot}`
+                    : `${item.name}:${item.custom ? 'c' : 'std'}`
                   const taking = takingItem === tag
+                  const isWeapon = item.source === 'equipment'
                   return (
                     <div key={`${tag}_${idx}`}
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '6px' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#111', border: `1px solid ${isWeapon ? '#4a2010' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '6px' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                          {isWeapon && <span style={{ fontSize: '13px', color: '#EF9F27', marginRight: '5px' }}>WEAPON</span>}
                           {item.name}{item.qty > 1 && <span style={{ color: '#7ab3d4', marginLeft: '4px' }}>×{item.qty}</span>}
                         </div>
                         {(item.rarity || item.notes) && (
