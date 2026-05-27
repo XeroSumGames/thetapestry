@@ -1,5 +1,17 @@
 # Lessons Learned
 
+## NEVER ask Xero to do anything technical that you can do - he is the visionary, not the coder (2026-05-27, second reinforcement)
+
+Verbatim (2026-05-27): **"stop asking me to do ANYTHING that you can do. you're my team. i'm the guy with the vision but no idea how to do things. i never want to have to do anything with code if YOU can do it."** This was a second reinforcement - Puffer Fish had already written it down from the 2026-05-26 playtest session; it was written into operating-mode.md and the memory system. It still showed up again in Hunt & Peck. That means one of two things: either the lesson wasn't read at session start, or it was read and not applied. Neither is acceptable.
+
+**What this means in practice:**
+- Bright-line confirmations ("can I apply this SQL?") = getting his DECISION, not asking him to execute. I still do the work; he says go. Then I do it.
+- "You could run this command yourself" = wrong. Run it and tell him the result.
+- "Here are the steps you'd need to take in Vercel to set X" = only legitimate for 3rd-party accounts/dashboards I cannot reach. Everything in the repo/DB/code is mine to execute.
+- If a task is in my lane and I have authorization, just do it. Don't ask Xero to perform it.
+
+**The ONE genuine exception:** third-party dashboard/account/secret setup (Cloudflare, Upstash, Vercel env vars, Stripe, DNS) where I literally cannot reach. Give explicit click-by-click steps. Everything else: do it.
+
 ## Don't present a decision menu that includes corner-cutting options - when the root-cause fix is clear, state it as THE answer and plan it (2026-05-26)
 
 For the tactical-map img_scale divergence I gave Xero an A/B/C menu: A = keep the art + fix the render properly, B = drop backgrounds entirely, C = ship a center-on-token band-aid only. Xero: "stop cutting corners ... isn't A the right answer?" It was - A was always the answer. The mistake: B *degrades the product* (drops his map art) and C is *symptom-only*, yet I lined them up beside the real fix as if they were peers, making Xero do the work of rejecting the lesser paths. This is the same class as the banned quick/full menu (memory `feedback_never_offer_quick`), just subtler - the lesser options weren't labelled "quick," they were "drop a feature" and "band-aid." Rule: when the correct root-cause fix is identifiable, present it as the plan, not as one choice among ways to do less. A genuine safety-net (the center-on-token button) is fine to ship *alongside* the real fix while it's built, but never framed as an *alternative to* it. Risk/timing is handled by PHASING the real fix (plan it, do it with margin + an eyeball if it's load-bearing), not by offering a smaller fix. See `feedback_never_offer_quick` (recurrence logged there too).
