@@ -56,7 +56,6 @@ export default function LoginPage() {
     if (!ts || !sitekey || widgetIdRef.current) return
     widgetIdRef.current = ts.render('#turnstile-container-login', {
       sitekey,
-      size: 'invisible',
       callback: (token: string) => { cachedTokenRef.current = token; widgetErroredRef.current = false },
       'expired-callback': () => { cachedTokenRef.current = null },
       'error-callback': () => { cachedTokenRef.current = null; widgetErroredRef.current = true },

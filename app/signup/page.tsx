@@ -66,7 +66,6 @@ export default function SignupPage() {
     // calling execute() which conflicts with Managed mode and hangs.
     widgetIdRef.current = ts.render('#turnstile-container', {
       sitekey,
-      size: 'invisible',
       callback: (token: string) => { cachedTokenRef.current = token; widgetErroredRef.current = false },
       'expired-callback': () => { cachedTokenRef.current = null },
       'error-callback': () => { cachedTokenRef.current = null; widgetErroredRef.current = true },
