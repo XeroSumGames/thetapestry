@@ -61,6 +61,12 @@ export default function SceneControlsPopoutPage() {
   const [nameDraft, setNameDraft] = useState('')
   const [error, setError] = useState<string>('')
   const [uploading, setUploading] = useState(false)
+  // Upload progress: a 0-100 percentage when the byte-progress XHR path is
+  // working, or null = "indeterminate" (the proven SDK fallback, which gives no
+  // progress). `uploadDone` flashes a brief confirmation so the GM knows it
+  // finished (the old bare "..." left them staring, unsure if it worked).
+  const [uploadPct, setUploadPct] = useState<number | null>(0)
+  const [uploadDone, setUploadDone] = useState(false)
   // In-app confirm state. Native confirm() in this popout truncates
   // its message because Chromium sizes the dialog from the parent
   // window width (~250px), so the prompt body ("Delete the map
@@ -313,16 +319,54 @@ export default function SceneControlsPopoutPage() {
   // Helpers - mirror TacticalMap's onClick handlers but operate directly
   // on supabase / local state. The main window will see DB updates via
   // its existing tactical_scenes realtime sub.
+  // Upload the file to storage with a real byte-progress callback (XHR exposes
+  // upload.onprogress; the supabase-js SDK upload() does not). Resolves on a 2xx
+  // store. Throws on any failure so the caller can fall back to the SDK path.
+  async function uploadWithProgress(bucket: string, path: string, file: File, onPct: (pct: number) => void): Promise<void> {
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!base || !anon) throw new Error('missing supabase env')
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    if (!token) throw new Error('no session')
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', `${base}/storage/v1/object/${bucket}/${path}`)
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      xhr.setRequestHeader('apikey', anon)
+      xhr.setRequestHeader('x-upsert', 'true')
+      if (file.type) xhr.setRequestHeader('Content-Type', file.type)
+      xhr.upload.onprogress = e => { if (e.lengthComputable) onPct(Math.round((e.loaded / e.total) * 100)) }
+      xhr.onload = () => { (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error(`upload status ${xhr.status}`)) }
+      xhr.onerror = () => reject(new Error('network error'))
+      xhr.send(file)
+    })
+  }
+
   async function uploadBackground(file: File) {
     if (!scene) return
+    setError('')
+    setUploadDone(false)
+    setUploadPct(0)
     setUploading(true)
     const path = `${campaignId}/${scene.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`
-    const { error: uErr } = await supabase.storage.from('tactical-maps').upload(path, file, { upsert: true })
-    if (uErr) { setError('Upload failed: ' + uErr.message); setUploading(false); return }
+    try {
+      // Preferred path: real byte-progress so the GM sees "how much" uploaded.
+      await uploadWithProgress('tactical-maps', path, file, pct => setUploadPct(pct))
+    } catch {
+      // Fallback: the proven SDK upload (no progress -> indeterminate bar). The
+      // upload can never break just because the progress path had a problem.
+      setUploadPct(null)
+      const { error: uErr } = await supabase.storage.from('tactical-maps').upload(path, file, { upsert: true })
+      if (uErr) { setError('Upload failed: ' + uErr.message); setUploading(false); setUploadPct(0); return }
+    }
     const { data: urlData } = supabase.storage.from('tactical-maps').getPublicUrl(path)
     const { error: updErr } = await supabase.from('tactical_scenes').update({ background_url: urlData.publicUrl }).eq('id', scene.id)
-    if (updErr) { setError('Save failed: ' + updErr.message); setUploading(false); return }
+    if (updErr) { setError('Save failed: ' + updErr.message); setUploading(false); setUploadPct(0); return }
     setUploading(false)
+    setUploadPct(100)
+    setUploadDone(true)
+    setTimeout(() => setUploadDone(false), 2500)
   }
 
   async function updateSceneField(field: keyof Scene, value: any) {
@@ -396,10 +440,18 @@ export default function SceneControlsPopoutPage() {
           style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
       </div>
 
-      <label style={{ ...btn, cursor: 'pointer' }}>
-        {uploading ? '...' : 'Upload Map'}
-        <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) uploadBackground(e.target.files[0]) }} />
+      <label style={{ ...btn, cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.9 : 1, color: uploadDone ? '#7fc458' : (btn as any).color }}>
+        {uploadDone ? '✓ Map Uploaded'
+          : uploading ? (uploadPct == null ? 'Uploading...' : `Uploading ${uploadPct}%`)
+          : 'Upload Map'}
+        <input type="file" accept="image/*" hidden disabled={uploading} onChange={e => { if (e.target.files?.[0]) uploadBackground(e.target.files[0]) }} />
       </label>
+      {uploading && (
+        <div style={{ height: '6px', background: '#242424', borderRadius: '3px', overflow: 'hidden', margin: '4px 0 2px' }}
+          title={uploadPct == null ? 'Uploading...' : `Uploaded ${uploadPct}%`}>
+          <div style={{ height: '100%', width: uploadPct == null ? '100%' : `${uploadPct}%`, background: '#7ab3d4', borderRadius: '3px', transition: 'width .15s linear', opacity: uploadPct == null ? 0.6 : 1 }} />
+        </div>
+      )}
 
       {reusableMaps.length > 0 && (
         // Reuse-from-library - pick a background_url from any of the
