@@ -459,13 +459,17 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                   <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                   <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                   {canManage && (
+                    // Folder reveal as a green/red radio dot, matching the
+                    // per-pin reveal radios below. Green = all pins in the
+                    // folder are revealed to players; red = not (click reveals
+                    // all; click again hides all). stopPropagation so it
+                    // doesn't also collapse/expand the folder.
                     <button onClick={e => { e.stopPropagation(); void setFolderRevealed(folderName, !allFolderRevealed) }}
                       title={allFolderRevealed
-                        ? `Hide all ${folderPins.length} pin${folderPins.length === 1 ? '' : 's'} in ${folderName}`
-                        : `Reveal all ${folderPins.length} pin${folderPins.length === 1 ? '' : 's'} in ${folderName}`}
-                      style={{ padding: '1px 8px', background: allFolderRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allFolderRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allFolderRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
-                      {allFolderRevealed ? 'Hide' : 'Show'}
-                    </button>
+                        ? `All ${folderPins.length} pin${folderPins.length === 1 ? '' : 's'} in ${folderName} visible to players - click to hide all`
+                        : `Click to reveal all ${folderPins.length} pin${folderPins.length === 1 ? '' : 's'} in ${folderName} to players`}
+                      aria-label={allFolderRevealed ? `Hide all pins in ${folderName} from players` : `Reveal all pins in ${folderName} to players`}
+                      style={{ width: '15px', height: '15px', borderRadius: '50%', padding: 0, flexShrink: 0, cursor: 'pointer', background: allFolderRevealed ? '#7fc458' : '#c0392b', border: `1px solid ${allFolderRevealed ? '#2d5a1b' : '#7a1f16'}`, boxShadow: allFolderRevealed ? '0 0 4px rgba(127,196,88,.6)' : 'none' }} />
                   )}
                   <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderPins.length}</span>
                 </div>
