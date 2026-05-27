@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tapestry E2E Results - 2026-05-27</title>
+<title>Tapestry E2E Results - Living Record</title>
 <style>
   :root{
     --bg:#141414; --panel:#1a1a1a; --panel2:#202020; --border:#2e2e2e;
@@ -51,8 +51,12 @@
 <body>
 <div class="wrap">
 
-  <h1>Tapestry &mdash; E2E Test Results</h1>
-  <p class="sub">Playwright suite against <strong>production</strong> (thetapestry.distemperverse.com) &middot; The Arena + 4 disposable accounts &middot; generated 2026-05-27</p>
+  <h1>Tapestry &mdash; E2E Test Results <span style="font-size:14px;color:var(--mute);letter-spacing:.04em">(living record)</span></h1>
+  <p class="sub">Playwright suite against <strong>production</strong> (thetapestry.distemperverse.com) &middot; The Arena + 4 disposable accounts &middot; <strong>last updated 2026-05-27</strong></p>
+
+  <div class="note warn">
+    <strong>THIS IS THE SINGLE PERSISTENT E2E RECORD.</strong> Update it IN PLACE after every full <code>npm run test:e2e</code> re-cert: refresh the status banner + cards, add a dated CHANGELOG entry, add/flip the spec rows + coverage matrix. <strong>Do NOT spin a new dated copy</strong> - this file IS the canonical living dashboard AND the complete history. Convention recorded in <code>tasks/lane-protocol.md</code> (E2E lane) + memory <code>reference_e2e_results_dashboard</code>.
+  </div>
 
   <div class="banner">
     <div class="big">128 passed &middot; 0 failed &middot; 5 retry-absorbed</div>
@@ -74,6 +78,16 @@
     <span class="pill p-amber">MANUAL</span> verified by hand, not headless &nbsp;
     <span class="pill p-mute">EXCLUDED</span> bright line / never automated
   </p>
+
+  <!-- ============ CHANGELOG (cumulative record - newest first) ============ -->
+  <h2>Changelog &mdash; the complete record</h2>
+  <p class="sub" style="margin-bottom:.5rem">Every batch of E2E work, newest first. Append a dated entry here each session; never delete history.</p>
+  <ul>
+    <li><strong>2026-05-27</strong> &mdash; Established this canonical living file (consolidated the prior dated snapshots into the changelog below). Shipped + green on prod: <code>tactical-map-render</code> (3 tests - the #1 KS core-loop gate: shared scale across clients, locked-map escape hatch, no per-client auto-fit; = Puffer's routed automatable subset), <code>messages-dm</code> (DM realtime), <code>pins-catchup</code> (broadcast catch-up regression). Rewrote <code>section-c-npc-reveal</code> against the real driver (npc_relationships, not hidden_from_players) - cleared a deterministic test-debt. Fixed <code>session-lifecycle</code> (counter selector broke on HP's session-suffix restyle). <strong>Resolved:</strong> PC&rarr;PC trade data-loss (atomic RPC; test un-fixme'd) and the messages-dm teardown blocker (Xero OK'd one tagged residue). <strong>Routed:</strong> per-message DELETE in Messages (Puffer RLS + HP UI). Full re-cert: <strong>128 passed / 0 failed / 5 retry-absorbed</strong>.</li>
+    <li><strong>2026-05-27 (earlier)</strong> &mdash; Added <code>vehicle-maintenance-checks</code> (dice-gated Install/Gather), <code>campfire-lfg-warstory</code> (LFG + interest + War Story auto-approve), and Ch14.4 in <code>rumors-publish-clone</code> (v2 "update available" notice + version history).</li>
+    <li><strong>2026-05-24</strong> &mdash; Phase 2 batch (all green, zero app-code edits): <code>char-create-methods</code>, <code>session-lifecycle</code>, <code>npc-roster-crud</code>, <code>inventory-trade</code>, <code>communities-lifecycle</code>, <code>story-lifecycle</code>, <code>rumors-publish-clone</code>, plus the <code>world-pin-to-queue</code> map_pins bypass-regression. Capstone re-cert <strong>123 passed / 0 failed / 1 skipped</strong>. Found + routed two prod bugs: the map_pins moderation bypass (closed - trigger applied; regression net added) and the PC&rarr;PC trade data-loss (own-row RLS; routed, since fixed).</li>
+    <li><strong>Gate-0 + Phase 1 (through 2026-05-24)</strong> &mdash; Foundation: <code>auth.setup</code> auto-login (4 sessions), the whole-site <code>console-network</code> route sweep, <code>role-nav</code>, <code>rules-deeplinks</code>, <code>character-create</code>, <code>presence</code>, <code>campfire-social</code>, <code>account-settings</code>, <code>seed-smoke</code>, and the realtime slices <code>section-a1</code> (combat start), <code>section-a3</code> (token move), <code>section-c</code> (NPC reveal), <code>section-d</code> (stockpile), <code>section-e</code> (pins + whispers).</li>
+  </ul>
 
   <!-- ============ NEW THIS SESSION ============ -->
   <h2>New / changed this session <span class="pill p-green">2026-05-27</span></h2>
@@ -182,7 +196,7 @@
   <footer>
     Run: <code>npm run test:e2e</code> (auto-login mints sessions first). &nbsp; Source of truth tracked in
     <code>tasks/beginners-guide-testplan.md</code> (chapter map), <code>tasks/e2e-full-suite-build-plan-2026-05-24.md</code> (build plan), and <code>tasks/todo.md</code> (phase progress).
-    <br>Point-in-time snapshot generated 2026-05-27 from a live full-suite run: <strong>128 passed / 0 failed / 5 retry-absorbed flaky</strong> (9.8 min, prod under load). Supersedes the 2026-05-24 snapshot.
+    <br><strong>Living record</strong> - updated in place after each full re-cert (this file replaces the old dated <code>e2e-results-YYYY-MM-DD.html</code> snapshots; never spin a new one). Latest re-cert 2026-05-27: <strong>128 passed / 0 failed / 5 retry-absorbed flaky</strong> (9.8 min, prod under load).
   </footer>
 
 </div>

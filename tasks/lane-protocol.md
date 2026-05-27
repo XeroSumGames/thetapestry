@@ -112,6 +112,20 @@ transients; a real regression fails every attempt. This is the shared green
 light. (It is how this session's section-c regression would have been caught no
 matter which lane introduced it.)
 
+## E2E results dashboard - ONE persistent living file (Xero, 2026-05-27)
+
+The E2E lane keeps a SINGLE canonical results record at **`tasks/e2e-results.html`**.
+It is a LIVING file: after every full `npm run test:e2e` re-cert, update it IN
+PLACE - refresh the status banner + summary cards, append a dated CHANGELOG entry
+(newest first, never delete history), and add/flip the spec rows + coverage
+matrix. **Never spin a new dated copy** (the old `e2e-results-YYYY-MM-DD.html`
+snapshots were consolidated into it and removed). This file is both the current
+dashboard AND the complete history of what the lane has shipped, so "is this
+logged anywhere?" never has to be asked again. (Playwright's own
+`playwright-report/index.html` is gitignored + overwritten each run - a throwaway
+view of the last run only, NOT the record.) Mirrored in memory
+`reference_e2e_results_dashboard`.
+
 ## What this protocol CANNOT do
 
 Be honest: these chats are separate Claude instances that cannot message each
