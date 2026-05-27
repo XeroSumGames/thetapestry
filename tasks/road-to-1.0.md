@@ -2,18 +2,21 @@
 
 **Author:** Puffer Fish (synthesis). **Created:** 2026-05-26. **Status:** LIVING DOC - Xero owns scope (what's in/out of 1.0 is his call; this is the starting synthesis to edit/rewrite).
 
-High-level only. The granular work lives in `tasks/todo.md` (CURRENT OPEN) and the source docs linked below; this doc is the map, not the punch list.
+High-level only. The granular work lives in `tasks/todo.md` (CURRENT OPEN) and the source docs linked below; this doc is the map, not the punch list. **Anchor: [`tasks/north-star.md`](north-star.md)** - the validated goal everything serves.
 
 ---
 
-## Two finish lines (don't conflate them)
+## The milestones (re-aimed to the north star, 2026-05-27)
 
-| Milestone | What it is | Money? | Gates |
+| Milestone | What it is | Billing? | Bar |
 |---|---|---|---|
-| **Beta-500** (target 2026-07-01) | ~500 SELECT free friendlies, a bigger test | NO | "they get in, data is safe, we'd know if it broke, we can recover" |
-| **TheTapestry 1.0** (target 2026-09-01) | Paid public launch - "structurally ready for the world" | YES | the real milestone; also the gate the 3-VTT platform/monorepo work waits behind |
+| **Beta-500** (7/1) | ~500 SELECT free friendlies, all free-GM | NO | "they get in, data is safe, we'd know if it broke, we can recover" |
+| **9/1 - KICKSTARTER launch** (TheTapestry only) | The Distemper KS (TTRPG + comic + VTT) goes live; backers get blanket free-GM for final playtesting | **NO at launch** | **stable, polished, FUN** - looks great, intuitive, lots to explore, runs flawlessly in front of a paying-decision audience. First-impression + reliability > feature-completeness. |
+| **~10/1 - paid model on** (post-KS) | System fully open; player-free / GM-paid subs + Stripe + content-gating turn on | YES | the billing/entitlements surface - a fast-follow, NOT a 9/1 blocker |
 
-Source: `tasks/beta-500-readiness-2026-06-01.md`, `tasks/architecture-path.md` (1.0 = "sound enough to take to the world / paid launch / 50k users").
+**Key reframe:** 9/1 is a **Kickstarter / marketing moment**, so the bar is polish + reliability + delight, not feature-completeness. **All paid machinery (Stripe, GM-seat entitlements, content-gating, `/rumors` purchase) is deferred to ~10/1 and is OFF the 9/1 critical path** (backers get free GM during the campaign). The 3-VTT platform (TheTableau port, monorepo) comes after.
+
+Source: [`tasks/north-star.md`](north-star.md), `tasks/beta-500-readiness-2026-06-01.md`, `tasks/architecture-path.md`.
 
 ---
 
@@ -43,8 +46,8 @@ Full punch list: `tasks/beta-500-readiness-2026-06-01.md`.
 - The structural bug-class kills in `tasks/architecture-path.md` (e.g. the realtime broadcast catch-up class swept 2026-05-26; PC lasting-wounds -> real column; conditions routing).
 - The one-time `/pre-launch-audit` (top-down data model / auth / payment / scale / observability) BEFORE paid signups.
 
-### 4. The paid-launch surface  *(deferred for beta-500, REQUIRED for 1.0)*
-- Stripe / billing / subscriptions / tax.
+### 4. The paid-launch surface  *(DEFERRED to ~10/1 post-Kickstarter - NOT a 9/1 blocker; backers get free GM during the KS)*
+- Stripe / billing / subscriptions / tax - the **per-platform GM-seat** model (players free, GMs pay) + content-gating (free-content allowlist vs gated `/rumors` content). See `north-star.md`.
 - Lawyer-reviewed ToS + Privacy (basic pages + delete-account exist; real legal review owed before money).
 - Third-party security audit + pen test.
 - PITR / Supabase Pro / realtime + connection scale headroom.
