@@ -97,7 +97,7 @@ export interface InitiativeBarProps {
   onDefer: (entryId: string) => void | Promise<void>
   onRemove: (entry: any) => void | Promise<void>
   onAddPCToCombat: (entry: any) => void | Promise<void>
-  onAddNPC: (name: string) => void | Promise<void>
+  onAddNPC: (name: string, npcId?: string | null) => void | Promise<void>
   onGrantAction: (entry: any) => void | Promise<void>
   onSkipTurn: (entry: any) => void | Promise<void>
   /** Current combat round number - appended to the "INITIATIVE"
@@ -153,6 +153,37 @@ function InitiativeBarImpl({
       window.removeEventListener('resize', reposition)
     }
   }, [showAddPC])
+
+  // Same portal-anchor machinery for the + NPC roster suggestions (the bar's
+  // overflow-x:auto would clip an inline dropdown). Anchored to the +NPC
+  // wrapper so it pins below the input.
+  const addNPCBtnRef = useRef<HTMLDivElement | null>(null)
+  const [addNPCAnchor, setAddNPCAnchor] = useState<{ top: number; left: number } | null>(null)
+  useEffect(() => {
+    if (!showAddNPC) { setAddNPCAnchor(null); return }
+    const reposition = () => {
+      const r = addNPCBtnRef.current?.getBoundingClientRect()
+      if (r) setAddNPCAnchor({ top: r.bottom + 4, left: r.left })
+    }
+    reposition()
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+    return () => {
+      window.removeEventListener('scroll', reposition, true)
+      window.removeEventListener('resize', reposition)
+    }
+  }, [showAddNPC])
+  // Enter / Add: link to a roster NPC if the typed text exactly matches one
+  // (so npc_id + the ACU/DEX init mod are set), otherwise add it as an ad-hoc
+  // free-text combatant (npc_id null, plain 2d6) - the explicit fallback.
+  function commitNpcText() {
+    const q = npcName.trim()
+    if (!q) return
+    const exact = campaignNpcs.find(n => ((n as any).name ?? '').toLowerCase() === q.toLowerCase())
+    onAddNPC(exact ? ((exact as any).name as string) : q, exact ? exact.id : null)
+    setNpcName('')
+    setShowAddNPC(false)
+  }
 
   function compactName(name: string): string {
     const parts = name.trim().split(/\s+/)
@@ -413,6 +444,7 @@ function InitiativeBarImpl({
                 )}
               </>
             )}
+            <div ref={addNPCBtnRef} style={{ position: 'relative', display: 'flex' }}>
             {!showAddNPC ? (
               <button onClick={() => setShowAddNPC(true)}
                 style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -425,30 +457,48 @@ function InitiativeBarImpl({
                   value={npcName}
                   onChange={e => setNpcName(e.target.value)}
                   onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      const name = npcName.trim()
-                      if (!name) return
-                      onAddNPC(name)
-                      setNpcName('')
-                      setShowAddNPC(false)
-                    }
+                    if (e.key === 'Enter') commitNpcText()
                     if (e.key === 'Escape') { setShowAddNPC(false); setNpcName('') }
                   }}
-                  placeholder="NPC name..."
-                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', width: '120px' }}
+                  placeholder="Pick or name an NPC..."
+                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', width: '140px' }}
                 />
-                <button onClick={() => {
-                  const name = npcName.trim()
-                  if (!name) return
-                  onAddNPC(name)
-                  setNpcName('')
-                  setShowAddNPC(false)
-                }}
+                <button onClick={commitNpcText}
                   style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Add</button>
                 <button onClick={() => { setShowAddNPC(false); setNpcName('') }}
                   style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>✕</button>
               </div>
             )}
+            {/* Roster suggestions in a portal (escapes the bar's overflow-x:auto
+                clip). CLICK a match to link the combatant to its campaign_npcs
+                record - that's what carries the ACU/DEX init modifier, WP/RP,
+                status, and portrait. Typing filters; Add/Enter falls back to an
+                ad-hoc free-text NPC when nothing matches exactly. */}
+            {showAddNPC && addNPCAnchor && typeof document !== 'undefined' && createPortal(
+              <div style={{ position: 'fixed', top: addNPCAnchor.top, left: addNPCAnchor.left, zIndex: 99999, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '180px', maxHeight: '240px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
+                {(() => {
+                  const q = npcName.trim().toLowerCase()
+                  const matches = campaignNpcs
+                    .filter(n => { const nm = ((n as any).name ?? '').toLowerCase(); return nm && (!q || nm.includes(q)) })
+                    .slice(0, 12)
+                  if (matches.length === 0) {
+                    return (
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', padding: '4px 8px', lineHeight: 1.4 }}>
+                        No roster match{npcName.trim() ? ` - Add creates "${npcName.trim()}" as a one-off` : ''}.
+                      </div>
+                    )
+                  }
+                  return matches.map(n => (
+                    <button key={n.id} onClick={() => { onAddNPC((n as any).name, n.id); setNpcName(''); setShowAddNPC(false) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '2px' }}>
+                      {(n as any).name}
+                    </button>
+                  ))
+                })()}
+              </div>,
+              document.body,
+            )}
+            </div>
             <button onClick={() => onNextTurn()}
               style={{ padding: '4px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Next →

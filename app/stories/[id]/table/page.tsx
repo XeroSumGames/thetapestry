@@ -5,6 +5,7 @@ import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
 import { prepareUpload } from '../../../../lib/safe-upload'
+import { buildNpcInitiativeRow } from '../../../../lib/initiative-actions'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
@@ -2566,22 +2567,21 @@ export default function TablePage() {
     handleRollRequest(`${first.name} - Infection Check (Wound)`, first.amod, 0)
   }
 
-  async function addNPC(name: string) {
+  // Add an NPC to initiative mid-combat. npcId set = the GM picked a roster
+  // NPC: link npc_id + roll its ACU/DEX modifier (buildNpcInitiativeRow); no
+  // npcId = ad-hoc free-text combatant (plain 2d6, npc_id null).
+  async function addNPC(name: string, npcId?: string | null) {
     if (!gmLike) return
     const trimmed = name.trim()
     if (!trimmed) return
-    const roll = rollD6() + rollD6()
-    await supabase.from('initiative_order').insert({
-      campaign_id: id,
-      character_name: trimmed,
-      character_id: null,
-      user_id: null,
-      roll,
-      is_active: false,
-      is_npc: true,
-      actions_remaining: 2,
-    })
+    const npc = npcId
+      ? (rosterNpcs.find((n: any) => n.id === npcId) ?? campaignNpcs.find((n: any) => n.id === npcId) ?? null)
+      : null
+    const row = buildNpcInitiativeRow({ campaignId: id, name: trimmed, npc, d1: rollD6(), d2: rollD6() })
+    await supabase.from('initiative_order').insert(row)
     await loadInitiative(id)
+    // Broadcast so every client's bar shows the new combatant (mirrors addPCToCombat).
+    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
   // Add a PC to the initiative mid-combat (playtest #23). Used when a player

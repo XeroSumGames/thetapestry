@@ -1,5 +1,43 @@
 import { describe, it, expect, vi } from 'vitest'
-import { decrementInitiativeAction } from '../../lib/initiative-actions'
+import { decrementInitiativeAction, buildNpcInitiativeRow } from '../../lib/initiative-actions'
+
+describe('buildNpcInitiativeRow', () => {
+  it('links a roster NPC: npc_id + 2d6 + ACU + DEX + portrait/type', () => {
+    const npc = { id: 'npc-1', name: 'Ash Salazar', acumen: 2, dexterity: 1, portrait_url: 'http://x/p.png', npc_type: 'raider' }
+    const row = buildNpcInitiativeRow({ campaignId: 'camp-1', name: 'ash', npc, d1: 4, d2: 3 })
+    expect(row).toMatchObject({
+      campaign_id: 'camp-1',
+      character_name: 'Ash Salazar', // roster name wins over the typed text
+      npc_id: 'npc-1',
+      portrait_url: 'http://x/p.png',
+      npc_type: 'raider',
+      roll: 4 + 3 + 2 + 1, // 10
+      is_npc: true,
+      is_active: false,
+      actions_remaining: 2,
+      character_id: null,
+      user_id: null,
+    })
+  })
+
+  it('ad-hoc NPC (npc null): npc_id null, plain 2d6, typed name kept', () => {
+    const row = buildNpcInitiativeRow({ campaignId: 'camp-1', name: '  Mystery Goon  ', npc: null, d1: 5, d2: 2 })
+    expect(row).toMatchObject({
+      character_name: '  Mystery Goon  ', // caller already trims; builder keeps what it's given
+      npc_id: null,
+      portrait_url: null,
+      npc_type: null,
+      roll: 7, // 5 + 2, no modifier
+      is_npc: true,
+    })
+  })
+
+  it('treats missing ACU/DEX as 0', () => {
+    const row = buildNpcInitiativeRow({ campaignId: 'c', name: 'x', npc: { id: 'n', name: 'No Stats' }, d1: 6, d2: 6 })
+    expect(row.roll).toBe(12)
+    expect(row.npc_id).toBe('n')
+  })
+})
 
 // Minimal mock supabase covering the three query shapes
 // decrementInitiativeAction uses:

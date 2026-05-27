@@ -15,6 +15,46 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { OUTCOME } from './roll-outcomes'
 
+// A campaign_npcs record as far as initiative cares - just the fields that
+// flow onto the initiative_order row. Loosely typed (the real rows carry more).
+export interface InitiativeNpcLike {
+  id: string
+  name?: string | null
+  acumen?: number | null
+  dexterity?: number | null
+  portrait_url?: string | null
+  npc_type?: string | null
+}
+
+// Build the initiative_order insert row for an NPC added to combat. When `npc`
+// is a roster record (the GM picked one), the row LINKS to it via npc_id and
+// rolls 2d6 + ACU + DEX, carrying portrait + type - identical to combat-start,
+// so the next-round reroll can find its modifier. When `npc` is null (an ad-hoc
+// free-text combatant), npc_id is null and it rolls a plain 2d6. The two d6 are
+// passed in so this stays pure (the caller owns the RNG) and unit-testable.
+export function buildNpcInitiativeRow(args: {
+  campaignId: string
+  name: string
+  npc: InitiativeNpcLike | null
+  d1: number
+  d2: number
+}) {
+  const { campaignId, name, npc, d1, d2 } = args
+  return {
+    campaign_id: campaignId,
+    character_name: npc?.name ?? name,
+    character_id: null as string | null,
+    user_id: null as string | null,
+    npc_id: npc?.id ?? null,
+    portrait_url: npc?.portrait_url ?? null,
+    npc_type: npc?.npc_type ?? null,
+    roll: d1 + d2 + (npc?.acumen ?? 0) + (npc?.dexterity ?? 0),
+    is_active: false,
+    is_npc: true,
+    actions_remaining: 2,
+  }
+}
+
 export type DecrementResult = {
   ok: boolean
   newRemaining: number
