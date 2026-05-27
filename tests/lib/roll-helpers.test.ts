@@ -780,6 +780,22 @@ describe('compactRollSummary', () => {
   })
 })
 
+describe('vehicle_damage_table', () => {
+  it('returns the label verbatim (system name + sum readable in the feed)', () => {
+    expect(compactRollSummary({
+      label: 'DAMAGE Minnie - 2+4 = 6: Engine',
+      character_name: 'Minnie', outcome: 'vehicle_damage_table',
+    })).toBe('DAMAGE Minnie - 2+4 = 6: Engine')
+  })
+
+  it('works for any vehicle or system name', () => {
+    expect(compactRollSummary({
+      label: 'DAMAGE Y - 3+5 = 8: Fuel Tank',
+      character_name: 'Y', outcome: 'vehicle_damage_table',
+    })).toBe('DAMAGE Y - 3+5 = 8: Fuel Tank')
+  })
+})
+
 describe('actionDetail', () => {
   it('Take Cover: returns the note with the wrapping parens stripped', () => {
     expect(actionDetail({

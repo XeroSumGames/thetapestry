@@ -4,18 +4,27 @@ import { useState } from 'react'
 import { type VehicleDamageTable, damageRowForRoll } from '../lib/vehicle-damage'
 
 // Collapsible per-vehicle damage table with a "Roll 2d6" button that highlights
-// the affected-system row (Y/Minnie damage table, 2026-05-24). Pure UI - the
-// table data + 2d6 mapping live in lib/vehicle-damage.ts. Client-side roll only
-// (no feed/DB write); the GM reads the result + effect off the highlighted row.
-export default function VehicleDamageTable({ table }: { table: VehicleDamageTable }) {
+// the affected-system row (Y/Minnie damage table, 2026-05-24). Table data + 2d6
+// mapping live in lib/vehicle-damage.ts.
+// onRoll fires after each roll so the parent can write to the roll_log feed;
+// omit it to keep the roll client-side only (old behaviour).
+interface VehicleDamageTableProps {
+  table: VehicleDamageTable
+  onRoll?: (d1: number, d2: number, sum: number, system: string, effect: string) => void
+}
+export default function VehicleDamageTable({ table, onRoll }: VehicleDamageTableProps) {
   const [open, setOpen] = useState(false)
   const [roll, setRoll] = useState<{ d1: number; d2: number; sum: number } | null>(null)
 
   function rollDamage() {
     const d1 = 1 + Math.floor(Math.random() * 6)
     const d2 = 1 + Math.floor(Math.random() * 6)
-    setRoll({ d1, d2, sum: d1 + d2 })
+    const sum = d1 + d2
+    setRoll({ d1, d2, sum })
     setOpen(true)
+    // Notify the parent so it can log the roll to the feed.
+    const row = damageRowForRoll(table, sum)
+    if (row && onRoll) onRoll(d1, d2, sum, row.system, row.effect)
   }
 
   const hitRow = roll ? damageRowForRoll(table, roll.sum) : undefined

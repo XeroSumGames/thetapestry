@@ -94,6 +94,10 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   // (Comment refreshed 2026-05-20 per skill+combat narrative audit;
   // earlier text described a draft format that never shipped.)
   if (r.outcome === 'gather_materials') return r.label
+  // Vehicle damage table roll - "DAMAGE <vehicle> - <d1>+<d2> = <sum>: <system>".
+  // The label is the full narrative (no dice strip needed); return verbatim so
+  // the feed shows the system hit without any further transformation.
+  if (r.outcome === 'vehicle_damage_table') return r.label
   // Strip the "<name> - " or "<name> - " prefix that GM-from-popout rolls
   // and some legacy paths bake into the label, so the downstream regex
   // matchers see the bare suffix ("ACU Check", "Medicine* (RSN)", etc.).

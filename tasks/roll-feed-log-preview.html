@@ -6,7 +6,7 @@
 <!--
   Roll Feed - Complete Log Preview
   =================================
-  Last updated: 2026-05-27 (loot detail pass)
+  Last updated: 2026-05-27 (vehicle damage table roll feed)
   Current state after the 2026-05-19 log-trimming pass + 2026-05-20
   outcomeColor dedup (canonical lib/roll-helpers.ts now accepts both
   display-form 'Wild Success' and snake_case 'wild_success' inputs;
@@ -345,6 +345,7 @@
     <li><a href="#navigate">Navigate</a></li>
     <li><a href="#vehicle-install">Install Fuel Drum</a></li>
     <li><a href="#vehicle-gather">Gather Materials (check)</a></li>
+    <li><a href="#vehicle-damage-table">Damage Table roll</a></li>
     <li><strong>System / out-of-combat</strong></li>
     <li><a href="#wound-infection-warning">Wound Infection warning</a></li>
     <li><a href="#weapon-malfunction">Weapon malfunction</a></li>
@@ -1041,6 +1042,11 @@
   <div class="row amber"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:59 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree finds no usable brewing materials</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:59 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree comes back empty-handed and the worse for it</div></div>
   <div class="row red"><div class="row-head"><span class="name">Cree</span><div class="right"><span class="time">2:59 PM</span><span class="toggle">▸</span></div></div><div class="narrative">GATHER Cree finds nothing, but has a Moment of Insight as to why it went so badly <span class="insight-badge">+1 Insight Die</span></div></div>
+
+  <h3 id="vehicle-damage-table">Damage Table roll (2026-05-27 - was client-side only, now logged)</h3>
+  <p class="note">The GM presses "Roll 2d6" on the vehicle damage table card to find which system took the hit. <code>outcome='vehicle_damage_table'</code>; label format: <code>DAMAGE &lt;vehicle&gt; - &lt;d1&gt;+&lt;d2&gt; = &lt;sum&gt;: &lt;system&gt;</code>. Rendered verbatim by <code>compactRollSummary</code> (no transformation). <code>character_name</code> = vehicle name. Previously client-side only (no feed/DB write); now logs via <code>VehicleDamageTable.onRoll</code> -> <code>insertRollLog</code> in <code>app/vehicle/page.tsx</code>.</p>
+  <div class="row" style="border-left-color: #EF9F27;"><div class="row-head"><span class="name">Minnie</span><div class="right"><span class="time">2:59 PM</span><span class="toggle">▸</span></div></div><div class="narrative">DAMAGE Minnie - 2+4 = 6: Engine</div></div>
+  <div class="row" style="border-left-color: #EF9F27;"><div class="row-head"><span class="name">Minnie</span><div class="right"><span class="time">3:01 PM</span><span class="toggle">▸</span></div></div><div class="narrative">DAMAGE Minnie - 5+6 = 11: Cargo Hold</div></div>
 
   <h3 id="gather-materials">Gather Materials (passive event row, Q4-d 2026-05-19 - SUPERSEDED by the dice check above; kept for historical rows)</h3>
   <p class="note">The original passive 1-day action - clicking "+ Gather Materials" bumped <code>brewing_supplies_current</code> by 1 and inserted a system row with no dice. As of 2026-05-24 that button opens the Scavenging check above instead, but old rows with <code>outcome='gather_materials'</code> still render verbatim via <code>compactRollSummary</code>. Brew check is BLOCKED when supplies = 0; every Brew attempt consumes 1 day of supplies (success or fail).</p>

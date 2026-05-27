@@ -10,6 +10,7 @@ import { useCampaignChannel } from '../../lib/realtime/useCampaignChannel'
 import { usePostgresSubscription } from '../../lib/realtime/usePostgresSubscription'
 import { broadcastOnce } from '../../lib/realtime/broadcastOnce'
 import { getCachedAuth } from '../../lib/auth-cache'
+import { insertRollLog } from '../../lib/data/roll-log'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import VehicleDamageTable from '../../components/VehicleDamageTable'
@@ -1028,7 +1029,19 @@ export default function VehiclePage() {
               roll 2d6 here to see which system took the hit. */}
           {(() => {
             const dt = resolveVehicleDamageTable(vehicle)
-            return dt ? <VehicleDamageTable table={dt} /> : null
+            return dt ? <VehicleDamageTable table={dt} onRoll={async (d1, d2, sum, system, effect) => {
+              if (!campaignId || !myUserId) return
+              await insertRollLog({
+                campaign_id: campaignId,
+                user_id: myUserId,
+                character_name: vehicle.name,
+                label: `DAMAGE ${vehicle.name} - ${d1}+${d2} = ${sum}: ${system}`,
+                die1: d1, die2: d2,
+                amod: 0, smod: 0, cmod: 0, total: sum,
+                outcome: 'vehicle_damage_table',
+                damage_json: { vehicleId: vehicle.id, vehicleName: vehicle.name, checkKind: 'damage_table', system, effect },
+              })
+            }} /> : null
           })()}
 
           {/* Stress */}
