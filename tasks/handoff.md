@@ -173,19 +173,34 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-24 (puffer-fish: routed-items verification + lane-board)
+# Session state - 2026-05-27 (Hunt & Peck: player tile, vehicle damage log, locked-map Center, .single hardening)
 
-## Current HEAD: derive (`git rev-parse --short HEAD`; was `291737a` at write). page.tsx 10,564 LOC. Test count is DRIFTING - ledger doc shows 548, the health-pulse flagged `622/37` (commit `7901cbb`, 5th stale flag); ~37 files in `tests/lib/`. Derive the real number via `npm test` before quoting it; the Confidence Ledger refresh (`scripts/refresh-ledger.mjs`) is owed.
+## Current HEAD: `dc6eea6` (verified). 697/697 tests passing (40 files, `npm test` confirmed). All guardrails green.
 
-## What this puffer-fish session did (2026-05-24, short)
-- **Both routed items were ALREADY SHIPPED before I started** - prior puffer session committed them in `6660e49` (working copy was 3 commits behind on session start; FETCH + sync to origin/main first, always). I verified rather than redid:
-  1. **3-lane operating-mode** - [operating-mode.md](operating-mode.md) "Multi-chat lanes" now Hunt&Peck / Puffer Fish / Playwright-E2E (was 2-lane). Matches `tasks/lane-protocol.md`. CORRECT.
-  2. **map_pins moderation bypass** (E2E finding, `tasks/security-finding-map-pins-moderation-2026-05-24.md`) - triaged into the Risk Register ([debug-handoff.md](debug-handoff.md) Sec 1, **RED/MEDIUM**) + fix written: `sql/map-pins-moderation-enforce-2026-05-24.sql` (BEFORE INSERT trigger, SECURITY DEFINER, mirrors the campfire `enforce_moderation_on_insert`). I red-teamed the trigger vs the live `"View pins"` SELECT policy (`sql/_baseline/schema.sql:2581` - visibility keys on `status='approved'` ONLY): the non-Thriver private-pin clamp to `status='active'` (owner-only) and shared-pin force to `status='pending'` (queue) BOTH correctly close the bypass. Logic is sound.
-- **Lane-board row** updated + pushed (`291737a`) noting the re-verification.
+## What shipped this session (2026-05-27, Hunt & Peck)
 
-## What's OPEN / next for puffer-fish (this session's residual)
-- **>>> map_pins fix is STILL OPEN ON PROD. <<<** SQL is written + verified but NOT applied (bright line = live RLS/trigger change, needs Xero's go). One command owed to Xero: `npx supabase db query --linked -f sql/map-pins-moderation-enforce-2026-05-24.sql`. After it lands: E2E adds the "Survivor REST insert with status='approved' -> trigger forces pending" assertion (mirrors `campfire-social.spec.ts`); demote the Risk Register entry RED -> closed.
-- Everything in the 2026-05-24 (stability-audit) block below is STILL CURRENT background - Phase 7 close-out (vehicle Section B rides the 2026-05-25 Minnie playtest), the 5 architecture moves (#1 client-state layer), operator items owed by Xero (Upstash env vars; apply `sql/audit-log-table-2026-05-20.sql`).
+- **`75d8f1a`** - Player tile: name never vanishes (`wordBreak:break-word` replaces `nowrap+overflow:hidden`); state-chips moved RIGHT of the Popout button (reverses 2026-05-25 own-row decision, Xero-directed 2026-05-27).
+- **`d2ea8c4`** - Vehicle damage table roll logged to the feed: `outcome='vehicle_damage_table'`, label "DAMAGE Minnie - 2+4=6: Engine", 2 new tests, preview HTML synced.
+- **fca10a6`** - Locked-map Center button for players: top-right button, visible only when `mapLocked && !isGM`, calls `centerViewport()`. Escape hatch so a locked map can never permanently strand a player.
+- **`dc6eea6`** - Hardened 8 active-scene queries: `.single()` -> `.order('created_at',{ascending:false}).limit(1).maybeSingle()` across the table page and vehicle page. Prevents the "No active tactical scene" crash if 2+ scenes are ever simultaneously active.
+
+Also shipped earlier this session (already in HEAD before this update):
+- Loot feed: item details shown, "a/an" article, no emoji (`16841bf`).
+- Take All loot button + Carbine Burst fix 1 roll -> 3 (`52f8783`).
+- Snapshot restore FK crash fixed (`6941751`).
+- `onGiveItem` client rewired to call `give_item_to_character` RPC - PC trade no longer destroys items (`e866df0`).
+
+## What's OPEN / next for Hunt & Peck
+
+Priority order (from `tasks/todo.md` CURRENT OPEN):
+
+1. **NPC card popout viewport clamping** - the GM-side NPC card can open near the bottom/edge and clip off. Fix: clamp position so it never overflows any edge; cap max-height to available vertical space with internal scroll. Bundle with the broader NPC modal redesign pass.
+2. ~~**Footgun audit: free-text inputs bound to realtime-synced state**~~ **DONE 2026-05-27 - zero open instances, no code change.** Swept every `<input>`/`<textarea>` in `app/`; GM notes / vehicle notes / character notes / campaign-sheet / table-page fields all already use the safe shape (local draft + commit-on-blur/button, re-seed only on id change). The Scene Name fix (f1f44fc) closed the last real one. Now the established codebase convention - see `tasks/lessons.md` 2026-05-25 entry. (`tasks/todo.md` ~L58.)
+3. **Pin broadcast catch-up reloads** (5 surfaces missing the pattern) - `CampaignMap` + `CampaignPins` + `PlayerNotes` + `app/npc-sheet` + `app/campaign-sheet` all lack `SUBSCRIBED`/`visibilitychange` catch-up reload. Copy the `RollsFeed`/`TableChat` pattern to all 5 in one batch. Full spec in `tasks/todo.md` ~L89.
+4. **Per-player Map toggle double-click race** (WATCH - lower priority; RETEST first since the spawn-visibility fix removed the frantic re-clicking trigger). `tasks/todo.md` ~L66.
+5. **Tactical-map render fix** (img_scale divergence) - the big one. Full spec: `tasks/tactical-map-render-fix-spec-2026-05-26.md`. Shared authoritative img_scale + per-client fit via ZOOM + sentinel null split. The locked-map Center button (`fca10a6`) is shipped as an escape hatch; the root divergence remains. `tasks/todo.md` ~L68.
+
+Also still open in the playtest batch (from `tasks/todo.md` ~L69-91): Initiative round number in the feed ("Initiative (Round N)"), NPC roster picker in the initiative bar (link `npc_id`), tactical ping 3-twitch red/green/red, share-route feature on campaign map, LOOT cluster ("Search Remains does nothing"), streamline ADD NPC modal, multi-weapon NPC sheet, remove/consume inventory item, heal-over-time subsystem.
 
 ---
 
