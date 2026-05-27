@@ -6,6 +6,17 @@
 
 ## 🎯 CURRENT OPEN - 2026-05-15
 
+> **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
+
+### ✨ KS FIRST-IMPRESSION / POLISH (#2 workstream) - puffer-fish 2026-05-27
+The KS is a marketing moment; first impression = conversion. Audit (pass 1): [tasks/ks-first-impression-audit-2026-05-27.md](ks-first-impression-audit-2026-05-27.md).
+- [ ] **[XERO decision + HP wiring] F1** - what does the KS link point to + what does `/` show a cold visitor? Today `/` drops logged-out visitors into the ghost MAP, not `/publiclanding`. Decide + wire.
+- [ ] **[XERO content -> HP wires] F2** - `/publiclanding` is a DRAFT (placeholder copy, empty screenshot boxes, BETA framing "Request Beta Access", stale 6/15 date). The #1 KS conversion surface. Needs real copy + screenshots/video + Kickstarter framing/CTA.
+- [ ] **[PUFFER] F3** - reconcile stale 6/15 launch refs (publiclanding + `tasks/launch-plan-2026-06-15.md`) to the 7/1 beta / 9/1 KS timeline.
+- [ ] **[HP/UX + live-visual] F4/F5** - polish the cold-`/` ghost-map landing (clear value-prop + get-in CTA, not a dead-end) + the new-GM first-action ("create your first campaign / run a free module"), so a new GM isn't stalled on an empty map.
+- [ ] **[HP minor] F6** - single-source the WelcomeModal <-> /firsttimers duplicated onboarding copy.
+- [ ] **[PUFFER next] live VISUAL pass** - screenshot publiclanding / cold-`/` / signup / new-GM dashboard on prod, judge look/feel vs the KS bar.
+
 ### 🚀 BETA-500 readiness (target 2026-06-01) - puffer-fish 2026-05-24
 Full doc: [tasks/beta-500-readiness-2026-06-01.md](beta-500-readiness-2026-06-01.md). 500 SELECT free friendlies, NO money/subs (the no-money scoping strips payment/PCI/tax entirely). Critical path is SHORT - only #1 + #2 are true blockers. Owner tags: [OP]=Xero/operator, [PF]=puffer, [HP]=hunt&peck, [E2E]=playwright.
 - [x] **[OP+PF] #1 BLOCKER - signup works end-to-end on prod. CLOSED + VERIFIED 2026-05-27** (full signup -> "CHECK YOUR EMAIL" confirmation on prod). Was: `verify-turnstile` 503 (Upstash env missing) + missing `TURNSTILE_SECRET_KEY` + the `size:'invisible'` render bug. All three fixed: env vars set (403-on-dummy confirms rate-limiter+secret), `size:'invisible'` removed (`5f73bfb`). NOTE: the lingering "bot check failed" after the fix was just a STALE BROWSER CACHE (no hard refresh) - not a real failure; once refreshed onto the new build, signup works. NOT a Cloudflare key/hostname issue. (Invite-code mint/redeem path still worth a manual check if beta is invite-gated.)
