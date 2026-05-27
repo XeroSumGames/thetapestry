@@ -322,16 +322,6 @@ function InitiativeBarImpl({
             }
           }
 
-          // NPC type chip color
-          const typeColors: Record<string, { fg: string; bg: string; border: string }> = {
-            bystander:  { fg: '#7fc458', bg: '#1a2e10', border: '#2d5a1b' },
-            antagonist: { fg: '#d48bd4', bg: '#2a102a', border: '#8b2e8b' },
-            foe:        { fg: '#f5a89a', bg: '#2a1210', border: '#c0392b' },
-          }
-          const typeColor = entry.npc_type && typeColors[entry.npc_type]
-            ? typeColors[entry.npc_type]
-            : { fg: '#EF9F27', bg: '#2a2010', border: '#5a4a1b' }
-
           return (
             <div key={entry.id} style={{
               display: 'flex', alignItems: 'center', gap: '6px',
@@ -354,12 +344,6 @@ function InitiativeBarImpl({
               <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                 {compactName(entry.character_name)}
               </span>
-              {entry.is_npc && entry.npc_type && (
-                <span style={{ fontSize: '13px', color: typeColor.fg, background: typeColor.bg, border: `1px solid ${typeColor.border}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif' }}>{entry.npc_type}</span>
-              )}
-              {entry.is_npc && !entry.npc_type && (
-                <span style={{ fontSize: '13px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif' }}>NPC</span>
-              )}
               {/* Cross-scene chip - shown when the combatant's token
                   sits on a different tactical scene than the active
                   one. Stops "wait, why isn't this NPC on the map?"
