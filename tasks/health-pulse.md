@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-28 12:04 UTC
+
+**Status:** DRIFT (continuing — 15th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [703 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 09:05 UTC:** 0 commits — no change since 14th pulse
+
+**Drift:**
+- HOPED-FOR not drained: 2026-05-19 batch (10 days old, drain target was 2026-05-25) + re-arch vehicle popout/combat-math items (>3 days past drain target). debug-handoff ledger stale: shows 622/37, actual 703/40.
+- 3 stale-as-open todos unchanged: NPC picker (line 85), initiative round label (line 84), tactical ping (line 86) — all confirmed shipped in 13th pulse; still `- [ ]`.
+
+**Action:** Same as 13th–14th (unactioned x15): Puffer Fish — drain HOPED-FOR + update ledger count in debug-handoff.md; mark 3 stale todo lines closed.
+
+---
+
 ## 2026-05-28 09:05 UTC
 
 **Status:** DRIFT (continuing — 14th flag)
