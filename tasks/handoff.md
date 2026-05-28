@@ -173,34 +173,41 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
-# Session state - 2026-05-27 (Hunt & Peck: player tile, vehicle damage log, locked-map Center, .single hardening)
+# Session state - 2026-05-28 (Hunt & Peck: tactical-map render rewrite + vehicle/cargo UX)
 
-## Current HEAD: `dc6eea6` (verified). 697/697 tests passing (40 files, `npm test` confirmed). All guardrails green.
+## Current HEAD: `da7100b` (verify with `git rev-parse --short HEAD`). 707/707 tests (40 files). All guardrails green. Working tree clean. Everything ships to main (Vercel = live/dev env).
 
-## What shipped this session (2026-05-27, Hunt & Peck)
+## What shipped this session (2026-05-28, Hunt & Peck)
+**Tactical-map render rewrite (the big arc, builds on `b38cdf2` lock-bg-to-grid + `fca10a6` Center btn):**
+- `6d9d706` fit-to-panel-width + LOCAL per-client zoom (no shared rescale); `8d2866d` proportional grid cap (small Cell PX no longer squishes a wide/tall map); `f4daeac` open at 100% fill-width; `467d112` cut the cross-scene initiative tie (no more "on another scene" chip); `663f49d` Map Setup in-tab floating panel above the header z-index; `100cfc1` per-player Map toggle reliable/instant/fast (`placeTokenOnMap` is now idempotent ensure-on + optimistic button flip); `dfd944e` scene-scoped vehicle "aboard" (extracted tested `computeAboard` to `lib/tactical-view.ts` - a PC is only hidden-as-aboard on scenes where the vehicle has a token).
+- `4a0990a` Map Setup as an in-tab floating panel (iframe host of `/scene-controls-popout`); `7a8c067` map-upload progress bar + done state.
 
-- **`75d8f1a`** - Player tile: name never vanishes (`wordBreak:break-word` replaces `nowrap+overflow:hidden`); state-chips moved RIGHT of the Popout button (reverses 2026-05-25 own-row decision, Xero-directed 2026-05-27).
-- **`d2ea8c4`** - Vehicle damage table roll logged to the feed: `outcome='vehicle_damage_table'`, label "DAMAGE Minnie - 2+4=6: Engine", 2 new tests, preview HTML synced.
-- **fca10a6`** - Locked-map Center button for players: top-right button, visible only when `mapLocked && !isGM`, calls `centerViewport()`. Escape hatch so a locked map can never permanently strand a player.
-- **`dc6eea6`** - Hardened 8 active-scene queries: `.single()` -> `.order('created_at',{ascending:false}).limit(1).maybeSingle()` across the table page and vehicle page. Prevents the "No active tactical scene" crash if 2+ scenes are ever simultaneously active.
+**Vehicle / cargo UX:**
+- Cargo rows now uniform: `5cac2e0`→`139d723`→`4725320`→`50dd329`→`da7100b` = `Name (Enc: N)  − qty +  ×`, description in a hover tooltip. `abe5e6f` fixed the invisible (#3a3a3a) remove btn.
+- `05b5eec` Doctor's Bag desc tightened; `681f51d` **Bicycle (enc 6)** added to catalog (`lib/xse-schema.ts`).
+- **LIVE DB (Xero-authorized):** Minnie's cargo (campaign `cc766e7f`) renamed to canonical catalog names + real ENC + `custom:false`, capacity **100→300**, M60(Mounted)=0. Verified **159/300 ENC**.
 
-Also shipped earlier this session (already in HEAD before this update):
-- Loot feed: item details shown, "a/an" article, no emoji (`16841bf`).
-- Take All loot button + Carbine Burst fix 1 roll -> 3 (`52f8783`).
-- Snapshot restore FK crash fixed (`6941751`).
-- `onGiveItem` client rewired to call `give_item_to_character` RPC - PC trade no longer destroys items (`e866df0`).
+## PENDING XERO DECISIONS (blocked - ask first)
+1. **Vehicle damage logging (proposed, NOT built).** Wants 2 entries: (a) "Minnie took N damage" (bullet/ram) + (b) the damage-table EFFECT shown. State: damage-table roll IS logged (`vehicle_damage_table`, label "Minnie took damage to the Engine") but the `effect` sits unused in `damage_json` and renders NOWHERE; WP damage never logs (silent `−1` stepper). Recommended: an "Apply Damage" amount field (subtract WP + 1 log) for (a) + render system+truncated effect in the feed for (b). **Awaiting his pick: apply-damage field vs per-`−1`-click log.** Code: `app/vehicle/page.tsx` (WP ctrls + `VehicleDamageTable onRoll` ~L1032), `lib/vehicle-damage.ts` (rows = `{system, effect}`), `components/RollsFeed.tsx` (add a `vehicle_damage_table` case).
+2. Other Doctor's Bags (PC inventories) still show the OLD note (notes denormalized per item); only Minnie's updated.
 
-## What's OPEN / next for Hunt & Peck
+## OPEN HP queue (genuinely open; VERIFY each vs code first - the todo lags badly)
+1. **ADD NPC modal redesign** (GM: cumbersome). Bundles: streamline New-NPC form, **clamp NPC-card popout to viewport**, **multiple weapons + equipment per NPC** (multi-weapon needs Puffer schema `skills.weapon/weapon2`->`skills.weapons[]`). MOCKUP-FIRST.
+2. **Vehicle damage logging** (pending #1 above).
+3. **Grid contrast** - white grid @ 0.4 opacity washes out on bright maps; bump default / contrast-aware.
+4. **Share route** with players on the campaign map (`components/CampaignMap.tsx`).
+5. **Heal/Rest subsystem finish** - Rest is a placeholder; needs Xero to enumerate gaps.
+Small/optional: "Aboard <vehicle>" tile indicator (kills "✓ Map but no token"); editable-qty steppers for PC/NPC `InventoryPanel`; fuzzy catalog-name match in the cargo Add form.
 
-Priority order (from `tasks/todo.md` CURRENT OPEN):
+## VERIFICATION OWED (manual, on live - canvas can't auto-test)
+- The whole tactical-map render rework needs a **2-client visual eyeball** (art fills width, tokens on art not black, zoom is LOCAL, no token bounce): `tasks/tactical-bg-grid-lock-testplan-2026-05-27.md`. E2E data layer is green (`e2e/tactical-map-render.spec.ts`, re-cert by the Playwright lane `e055337`); pixels are manual.
 
-1. **NPC card popout viewport clamping** - the GM-side NPC card can open near the bottom/edge and clip off. Fix: clamp position so it never overflows any edge; cap max-height to available vertical space with internal scroll. Bundle with the broader NPC modal redesign pass.
-2. ~~**Footgun audit: free-text inputs bound to realtime-synced state**~~ **DONE 2026-05-27 - zero open instances, no code change.** Swept every `<input>`/`<textarea>` in `app/`; GM notes / vehicle notes / character notes / campaign-sheet / table-page fields all already use the safe shape (local draft + commit-on-blur/button, re-seed only on id change). The Scene Name fix (f1f44fc) closed the last real one. Now the established codebase convention - see `tasks/lessons.md` 2026-05-25 entry. (`tasks/todo.md` ~L58.)
-3. **Pin broadcast catch-up reloads** (5 surfaces missing the pattern) - `CampaignMap` + `CampaignPins` + `PlayerNotes` + `app/npc-sheet` + `app/campaign-sheet` all lack `SUBSCRIBED`/`visibilitychange` catch-up reload. Copy the `RollsFeed`/`TableChat` pattern to all 5 in one batch. Full spec in `tasks/todo.md` ~L89.
-4. **Per-player Map toggle double-click race** (WATCH - lower priority; RETEST first since the spawn-visibility fix removed the frantic re-clicking trigger). `tasks/todo.md` ~L66.
-5. **Tactical-map render fix** (img_scale divergence) - the big one. Full spec: `tasks/tactical-map-render-fix-spec-2026-05-26.md`. Shared authoritative img_scale + per-client fit via ZOOM + sentinel null split. The locked-map Center button (`fca10a6`) is shipped as an escape hatch; the root divergence remains. `tasks/todo.md` ~L68.
-
-Also still open in the playtest batch (from `tasks/todo.md` ~L69-91): Initiative round number in the feed ("Initiative (Round N)"), NPC roster picker in the initiative bar (link `npc_id`), tactical ping 3-twitch red/green/red, share-route feature on campaign map, LOOT cluster ("Search Remains does nothing"), streamline ADD NPC modal, multi-weapon NPC sheet, remove/consume inventory item, heal-over-time subsystem.
+## GOTCHAS (read before building)
+- **The todo lags the code - VERIFY before quoting scope.** This session ~5 "open" todos were already shipped (NPC picker `13854c4`, init round number, ping, cross-scene cut). Grep/read first.
+- **LOC ratchets:** `components/TacticalMap.tsx`, `app/stories/[id]/table/page.tsx`, `app/vehicle/page.tsx` are god-components with LOC ceilings that ONLY ratchet down. Run `node scripts/check-arch.mjs` before shipping to them; extract pure logic to `lib/` (did `computeAboard`) or keep edits compact. `--force` re-baselines up but resist.
+- **Realtime-echo footgun:** never bind a free-text input per-keystroke to realtime-synced state - uncontrolled + commit-on-blur, or discrete steppers (why cargo qty is `−`/`+`).
+- **Live-DB write = bright line:** confirm intent. `npx supabase db query --linked -f sql/<file>.sql`; dollar-quote (`$json$...$json$`) JSONB literals with apostrophes.
+- **Multi-lane:** fetch+rebase before every push; Playwright/E2E is a SEPARATE chat (route via `tasks/active-lanes.md` + paste-nudge). Health-pulse keeps flagging DRIFT (stale todos / ledger / HOPED-FOR) - Puffer/maintenance.
 
 ---
 
