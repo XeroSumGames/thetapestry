@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-28 06:05 UTC
+
+**Status:** DRIFT (continuing — 13th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [703 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 00:04 UTC:** 8 commits (per-player Map toggle reliable fix, cross-scene initiative chip removed, Map Setup above header, zoom reset on scene open, proportional grid cap, E2E re-cert for fit-to-width model)
+
+**Drift:**
+- HOPED-FOR still not drained: 2026-05-19 batch (10 days old) + re-arch vehicle/combat items (4 days past 2026-05-25 drain target). debug-handoff ledger count still stale (shows 622/37; actual 703/40).
+- 3 stale-as-open todos now confirmed SHIPPED: NPC picker (prior cycles), initiative round label (`RollsFeed.tsx:476` + table-page 3 insert sites confirmed in code — all write `round:N`), tactical ping (count:3 + `#ff3a1d/#39ff14/#ff3a1d` confirmed in TacticalMap.tsx L788/3025).
+
+**Action:** Puffer Fish (13 cycles overdue): drain HOPED-FOR + update ledger test count in debug-handoff.md; close 3 stale todo lines (NPC picker + round label + tactical ping).
+
+---
+
 ## 2026-05-28 00:04 UTC
 
 **Status:** DRIFT (continuing — 12th flag)
