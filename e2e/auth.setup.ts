@@ -1,6 +1,7 @@
 import { test as setup } from '@playwright/test'
-import { AUTH, loadCredential, type AccountKey } from './_fixtures'
-import { existsSync, statSync, mkdirSync } from 'node:fs'
+import { AUTH, CAMPAIGN_ID, loadCredential, type AccountKey } from './_fixtures'
+import { ANON_KEY_FILE } from './_teardown'
+import { existsSync, statSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
 // Auto-login. Runs as a 'setup' project (a dependency of the test projects), so
@@ -39,3 +40,32 @@ for (const key of ['gm', 'marv', 'pesky', 'percy'] as AccountKey[]) {
     await page.context().storageState({ path: AUTH[key] })
   })
 }
+
+// Capture the PUBLIC Supabase anon key ONCE here and persist it (gitignored,
+// e2e/.auth/anon-key.txt). Setup runs ALONE before the parallel workers load
+// prod, so this is reliable - whereas each spec sniffing the key off a live
+// request races a 12s window and flaked the 2-client REST specs under heavy
+// load. captureAnonKey() then reads this file instantly. Always refreshes (the
+// key is stable but this keeps a rotation from leaving a stale key on disk).
+setup('capture supabase anon key', async ({ browser }) => {
+  if (process.env.E2E_SUPABASE_ANON_KEY) return // explicitly provided - nothing to capture
+  if (!existsSync(AUTH.gm)) return // need an authed session to force a Supabase request
+  const ctx = await browser.newContext({ storageState: AUTH.gm })
+  const page = await ctx.newPage()
+  try {
+    const keyP = new Promise<string | null>((resolve) => {
+      const t = setTimeout(() => resolve(null), 30_000)
+      page.on('request', (req) => {
+        const k = req.headers()['apikey']
+        if (k && req.url().includes('.supabase.co')) { clearTimeout(t); resolve(k) }
+      })
+    })
+    // The table page mounts realtime subs + client fetches -> a browser
+    // *.supabase.co request fires promptly, carrying the apikey header.
+    await page.goto(`/stories/${CAMPAIGN_ID}/table`, { waitUntil: 'domcontentloaded' }).catch(() => {})
+    const key = await keyP
+    if (key) writeFileSync(ANON_KEY_FILE, key, 'utf8')
+  } finally {
+    await ctx.close()
+  }
+})

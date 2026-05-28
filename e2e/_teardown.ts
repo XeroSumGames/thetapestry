@@ -1,4 +1,6 @@
 import type { BrowserContext, Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 // Reusable teardown infra for write-specs. The rule (Xero OK'd create/teardown
 // on prod 2026-05-23): a test may only ever delete data IT created, and it does
@@ -7,6 +9,10 @@ import type { BrowserContext, Page } from '@playwright/test'
 // destructive beyond the row id the test just made.
 
 export const SUPABASE_URL = process.env.E2E_SUPABASE_URL ?? 'https://jbudzglgtxeoaufpejrv.supabase.co'
+
+// Where the setup project persists the PUBLIC anon key (gitignored, see
+// auth.setup.ts). Every spec reads it instead of racing to sniff it live.
+export const ANON_KEY_FILE = join(process.cwd(), 'e2e', '.auth', 'anon-key.txt')
 
 // @supabase/ssr stores the session in one cookie: sb-<ref>-auth-token whose
 // value is "base64-" + base64(JSON{ access_token, refresh_token, ... }).
@@ -29,6 +35,14 @@ export async function accessTokenFromContext(ctx: BrowserContext): Promise<strin
 export function captureAnonKey(page: Page, timeoutMs = 12_000): Promise<string | null> {
   const envKey = process.env.E2E_SUPABASE_ANON_KEY
   if (envKey) return Promise.resolve(envKey)
+  // Prefer the key the setup project already captured + persisted (it ran ALONE,
+  // before the parallel workers loaded prod, so it's reliable). This removes the
+  // per-spec sniff race that flaked 2-client REST specs under heavy load. Falls
+  // through to a live sniff only if setup hasn't written the file yet.
+  try {
+    const cached = readFileSync(ANON_KEY_FILE, 'utf8').trim()
+    if (cached) return Promise.resolve(cached)
+  } catch { /* not captured yet - fall through to the live sniff */ }
   return new Promise((resolve) => {
     const t = setTimeout(() => resolve(null), timeoutMs)
     page.on('request', (req) => {
