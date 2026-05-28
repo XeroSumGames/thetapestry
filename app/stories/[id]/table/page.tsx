@@ -2726,33 +2726,28 @@ export default function TablePage() {
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
-    // Three-way toggle: live → archive (off-map, position preserved);
-    // archived → un-archive (back on map at original cell);
-    // no row → insert fresh at (0,0). Hard-delete used to be the off
-    // path here, which wiped grid_x/y so the token came back at
-    // top-left after re-placement. Mirrors placeFolderOnMap.
-    const { data: existing } = await supabase
+    // ENSURE-ON, idempotent. "+ Map" is an ADD intent: this puts the token ON
+    // the active scene and NEVER archives it (removal is removeTokenFromMap).
+    // Pre-fix this was a blind toggle - archived a LIVE token - so a re-click
+    // (common while the slow round-trips + token reload settled) silently took
+    // a just-placed PC back off the map (the "Shimmy isn't on the map" churn).
+    // ONE read covers BOTH the existing-by-name check AND the spawn occupancy
+    // (was two queries); positions come from the same rows.
+    const { data: sceneTokens } = await supabase
       .from('scene_tokens')
-      .select('id, archived_at')
+      .select('id, name, archived_at, grid_x, grid_y')
       .eq('scene_id', activeScene.id)
-      .eq('name', name)
-      .limit(1)
-    if (existing && existing.length > 0) {
-      const row = existing[0] as { id: string; archived_at: string | null }
-      if (row.archived_at) {
-        // Archived → un-archive in place to restore the GM's prior position.
-        await supabase.from('scene_tokens')
-          .update({ archived_at: null })
-          .eq('id', row.id)
-      } else {
-        // Live → archive (off-map) but keep grid_x/y for the next show.
-        await supabase.from('scene_tokens')
-          .update({ archived_at: new Date().toISOString() })
-          .eq('id', row.id)
+    const rows = (sceneTokens ?? []) as { id: string; name: string; archived_at: string | null; grid_x: number; grid_y: number }[]
+    const existing = rows.find(t => t.name === name)
+    if (existing) {
+      // Off-map -> un-archive in place (restores the prior cell). Already live
+      // -> nothing to do (idempotent; a stale re-click can't dislodge it).
+      if (existing.archived_at) {
+        await supabase.from('scene_tokens').update({ archived_at: null }).eq('id', existing.id)
+        setTokenRefreshKey(k => k + 1)
+        await refreshMapTokenIds()
+        initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
       }
-      setTokenRefreshKey(k => k + 1)
-      await refreshMapTokenIds()
-      initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
       return
     }
     // Token ring color: PCs get the standard blue; NPCs use their
@@ -2765,8 +2760,8 @@ export default function TablePage() {
       ? '#7ab3d4'
       : getNpcTokenBorderColor({ disposition: npcRow?.disposition, npc_type: (npcRow as any)?.npc_type })
     // Step to the nearest FREE cell, not always (1,1), so placed tokens don't stack (playtest 2026-05-25: 3 PCs all landed on (1,1)).
-    const { data: occ } = await supabase.from('scene_tokens').select('grid_x, grid_y').eq('scene_id', activeScene.id).is('archived_at', null)
-    const spawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15, (occ ?? []) as { grid_x: number; grid_y: number }[])
+    const occ = rows.filter(t => t.archived_at == null).map(t => ({ grid_x: t.grid_x, grid_y: t.grid_y }))
+    const spawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15, occ)
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
       name,
@@ -7622,22 +7617,23 @@ export default function TablePage() {
                     return (
                       <div onClick={async e => {
                         e.stopPropagation()
-                        if (!claimToggleLock(entry.character.id)) return // ignore re-clicks until the place/remove + refresh settle (else a 2nd click toggles it back off)
+                        const charId = entry.character.id
+                        const name = entry.character.name
+                        if (!claimToggleLock(charId)) return // debounce rapid re-clicks (800ms)
                         if (onMap) {
-                          // Remove from THIS scene only - ARCHIVE (not hard-delete)
-                          // so the per-scene position persists; re-adding un-archives
-                          // it in place. Each scene keeps its own independent token,
-                          // so a PC can be on as many scenes as you like (mirrors the
-                          // NPC/folder archive behaviour - hard-delete lost positions).
-                          const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
-                          if (activeScene) {
-                            await supabase.from('scene_tokens').update({ archived_at: new Date().toISOString() }).eq('scene_id', activeScene.id).eq('name', entry.character.name).is('archived_at', null)
-                            setTokenRefreshKey(k => k + 1)
-                            initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
-                          }
+                          // Optimistic: flip the button OFF instantly so it reflects
+                          // the click before the DB write + token reload settle. The
+                          // authoritative reload (onTokensUpdate) reconciles.
+                          setMapTokens(prev => prev.filter(t => t.character_id !== charId))
+                          await removeTokenFromMap(name)
                         } else {
-                          setShowTacticalMap(true) // jump to the tactical map so the freshly-placed token is actually visible (it lands on the tactical scene, not the campaign/Leaflet view)
-                          placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined)
+                          setShowTacticalMap(true) // jump to the tactical map so the placed token is visible
+                          // Optimistic: flip ON instantly via a synthetic entry the
+                          // real reload replaces. placeTokenOnMap is idempotent
+                          // ensure-on, so this can't double-place or archive.
+                          setMapTokens(prev => prev.some(t => t.character_id === charId) ? prev
+                            : [...prev, { id: `opt-${charId}`, name, token_type: 'pc', character_id: charId, npc_id: null, grid_x: 0, grid_y: 0, wp_max: null, wp_current: null }])
+                          await placeTokenOnMap(name, 'pc', charId, undefined, getCharPhoto(entry) || undefined)
                         }
                       }}
                         title={onMap ? 'On the map - click to REMOVE from the map' : 'Click to ADD to the tactical map'}
