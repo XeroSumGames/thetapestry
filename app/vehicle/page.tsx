@@ -1221,6 +1221,7 @@ export default function VehiclePage() {
                   title={`${item.name}${item.notes ? ` - ${item.notes}` : ''}${item.enc > 0 ? ` (${item.enc} enc each)` : ''}${item.rarity && item.rarity !== 'Common' ? ` [${item.rarity}]` : ''}`}
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
                   <span style={{ width: '30ch', flexShrink: 0, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                  <span style={{ flexShrink: 0, color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} title="Encumbrance per item">(Enc: {item.enc})</span>
                   {canEdit ? (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                       <button title="-1 (removes at 0)" onClick={() => { const raw = vehicle.cargo ?? []; const n = item.qty - 1; updateVehicle({ ...vehicle, cargo: (n <= 0 ? raw.filter((_, i) => i !== idx) : raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: n } : c)) as any }) }}
