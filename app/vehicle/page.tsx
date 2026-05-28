@@ -1213,15 +1213,16 @@ export default function VehiclePage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 12px' }}>
               {normalizedCargo.map((item, idx) => (
-                <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
-                  <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{item.name}</span>
-                  {item.notes && <span style={{ color: '#5a5550', fontSize: '14px' }}>{item.notes}</span>}
-                  {item.enc > 0 && (
-                    <span style={{ color: '#7ab3d4', fontSize: '13px' }} title={`${item.enc} enc per item`}>[{item.enc * item.qty}]</span>
-                  )}
-                  {/* -/+ qty stepper (- floors at 0, 0 drops the line) then a delete-line ×. */}
+                <div key={`${item.name}-${idx}`}
+                  // Uniform row: a fixed 30ch name column, then -/+ stepper + delete-x,
+                  // so the controls line up across every row. The description (notes,
+                  // enc, rarity) moved to a hover tooltip - inline descriptions made
+                  // rows ragged/scrunched (Xero 2026-05-28).
+                  title={`${item.name}${item.notes ? ` - ${item.notes}` : ''}${item.enc > 0 ? ` (${item.enc} enc each)` : ''}${item.rarity && item.rarity !== 'Common' ? ` [${item.rarity}]` : ''}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
+                  <span style={{ width: '30ch', flexShrink: 0, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                   {canEdit ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                       <button title="-1 (removes at 0)" onClick={() => { const raw = vehicle.cargo ?? []; const n = item.qty - 1; updateVehicle({ ...vehicle, cargo: (n <= 0 ? raw.filter((_, i) => i !== idx) : raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: n } : c)) as any }) }}
                         style={{ width: '20px', height: '20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0 }}>−</button>
                       <span style={{ color: '#7ab3d4', minWidth: '16px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{item.qty}</span>
