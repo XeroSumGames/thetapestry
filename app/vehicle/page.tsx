@@ -16,7 +16,7 @@ import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import VehicleDamageTable from '../../components/VehicleDamageTable'
 import { resolveVehicleDamageTable, buildVehicleDamageLog } from '../../lib/vehicle-damage'
 import { getWeaponByName } from '../../lib/weapons'
-import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
+import { type InventoryItem, normalizeInventoryItem, cargoLoad } from '../../lib/inventory'
 import { rarityColor } from '../../lib/rarity-colors'
 import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT, findEquipmentByName } from '../../lib/xse-schema'
@@ -1202,12 +1202,9 @@ export default function VehiclePage() {
         <div>
           {/* Cargo & Equipment */}
           {(() => {
-            // Normalize cargo for read so legacy { name, qty, notes }
-            // rows pick up enc=0 / rarity=Common defaults. Display only;
-            // writes go through the new unified shape.
-            const normalizedCargo: InventoryItem[] = (vehicle.cargo ?? []).map(normalizeInventoryItem)
-            const cargoTotalEnc = normalizedCargo.reduce((s, i) => s + i.enc * i.qty, 0)
-            const overloaded = cargoTotalEnc > vehicle.encumbrance
+            // Normalize cargo for read (legacy { name, qty, notes } rows pick
+            // up enc=0 / Common defaults) + summarize the encumbrance load.
+            const { items: normalizedCargo, totalEnc: cargoTotalEnc, overloaded, pct: encPct, color: encColor } = cargoLoad(vehicle.cargo, vehicle.encumbrance)
             return (
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
@@ -1222,6 +1219,10 @@ export default function VehiclePage() {
                   {showAddCargo ? 'Cancel' : '+ Add'}
                 </button>
               )}
+            </div>
+            <div style={{ height: '8px', background: '#242424', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}
+              title={`${cargoTotalEnc} / ${vehicle.encumbrance} Enc (${Math.round(encPct * 100)}%)`}>
+              <div style={{ height: '100%', width: `${Math.min(encPct, 1) * 100}%`, background: encColor, borderRadius: '4px', transition: 'width 0.3s' }} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 12px' }}>
               {normalizedCargo.map((item, idx) => (

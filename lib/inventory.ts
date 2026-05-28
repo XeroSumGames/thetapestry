@@ -35,3 +35,23 @@ export function normalizeInventoryItem(raw: any): InventoryItem {
     worn: typeof raw?.worn === 'boolean' ? raw.worn : false,
   }
 }
+
+export interface CargoLoad {
+  items: InventoryItem[]
+  totalEnc: number
+  capacity: number
+  pct: number
+  overloaded: boolean
+  /** Capacity-bar color: green < 75%, amber 75-90%, red >= 90% / over. */
+  color: string
+}
+
+// Normalize a vehicle's cargo list and summarize its encumbrance load against
+// a capacity. Pure so the totals + the green/amber/red thresholds are testable.
+export function cargoLoad(cargo: any[] | null | undefined, capacity: number): CargoLoad {
+  const items = (cargo ?? []).map(normalizeInventoryItem)
+  const totalEnc = items.reduce((s, i) => s + i.enc * i.qty, 0)
+  const pct = capacity > 0 ? totalEnc / capacity : 0
+  const color = pct >= 0.9 ? '#c0392b' : pct >= 0.75 ? '#EF9F27' : '#7fc458'
+  return { items, totalEnc, capacity, pct, overloaded: totalEnc > capacity, color }
+}
