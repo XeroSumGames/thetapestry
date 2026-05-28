@@ -37,6 +37,20 @@ import { captureAnonKey, resolveCreds, SUPABASE_URL, type SupaCreds } from './_t
 //      for every viewer - never re-derived per client. So a GM session and a
 //      player session must read the render-determining fields IDENTICALLY. This
 //      also proves the scale-sentinel migration columns (natural_w/h) are live.
+//
+//   3. IMG_SCALE RETIRED FROM THE RENDER (2026-05-27 model evolution, b38cdf2).
+//      The bg is now LOCKED to the grid extent and the grid auto-fits the image
+//      via gridToCoverMap on GM load - there is no independent image scale left
+//      to drag out of alignment. The source-guard below asserts ZERO setImgScale
+//      calls (was: no width-derived ones). NOTE ON SCOPE: "the grid tracks the
+//      image ASPECT" is the PURE gridToCoverMap math, covered deterministically
+//      by tests/lib/tactical-grid.test.ts; asserting it on the LIVE scene needs
+//      the canvas client to actually mount + load the bg + run the GM-only re-fit
+//      (and existing scenes only re-fit on a GM open), which is canvas-coupled
+//      and state-dependent - so it stays MANUAL, NOT a brittle E2E. Shared grid
+//      dims across clients ARE covered (test 2's cross-client identity). The
+//      fill-to-panel-width display + LOCAL zoom (GM zoom no longer broadcasts)
+//      also stay MANUAL (canvas): tasks/tactical-bg-grid-lock-testplan-2026-05-27.md.
 
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
@@ -181,24 +195,26 @@ test.describe('Tactical-map render fix - 2-client acceptance', () => {
       await plCtx.close()
     }
   })
+
 })
 
 // Item 3 of Puffer's automatable subset (tasks/tactical-map-verify-2client-testplan-2026-05-27.md):
 // a static tripwire that the ROOT CAUSE stays removed. No auth/browser needed.
 test.describe('Tactical-map render fix - source guard (root cause stays removed)', () => {
-  test('no setImgScale derives the shared scale from a per-client container/image width', () => {
-    // The 2026-05-26 divergence bug was an on-image-load `setImgScale(containerW /
-    // naturalWidth)` that fit the bg to EACH client's window. The fix (6ef34ce)
-    // removed it; img_scale is now ONLY the shared DB value (loadScenes), the GM
-    // corner-resize, or the GM's Share-View broadcast - never a per-client width.
-    // This fails if any width-derived setImgScale is reintroduced.
+  test('img_scale is fully retired from the render path - ZERO setImgScale calls', () => {
+    // The 2026-05-26 divergence bug rode an independent img_scale (originally an
+    // on-load `setImgScale(containerW / naturalWidth)` per-client auto-fit). The
+    // 2026-05-27 model (b38cdf2) RETIRES img_scale from the render entirely: the
+    // bg is locked to the grid extent and the grid auto-fits the image. So the
+    // component should no longer call setImgScale AT ALL. Any reappearance means
+    // an independent image scale crept back in - the exact decoupler that caused
+    // the per-client divergence + token "bounce". (img_scale stays a DB column,
+    // just unused by the renderer.)
     const src = readFileSync(join(process.cwd(), 'components', 'TacticalMap.tsx'), 'utf8')
-    const offenders = [...src.matchAll(/setImgScale\([^;]*?\)/g)]
-      .map(m => m[0].replace(/\s+/g, ' '))
-      .filter(call => /\b(containerW|clientWidth|offsetWidth|naturalWidth|naturalW|innerWidth)\b/.test(call))
+    const calls = [...src.matchAll(/setImgScale\s*\(/g)].map(m => m[0])
     expect(
-      offenders,
-      `per-client width-derived setImgScale reintroduced (the divergence root cause): ${offenders.join(' ; ')}`,
-    ).toEqual([])
+      calls.length,
+      `setImgScale reintroduced (${calls.length} call(s)) - an independent image scale is back in the render path, the divergence/bounce root cause`,
+    ).toBe(0)
   })
 })
