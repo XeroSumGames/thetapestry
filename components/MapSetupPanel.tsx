@@ -9,9 +9,13 @@ import { useEffect, useRef, useState } from 'react'
 // working UNCHANGED through the existing BroadcastChannel scene-controls bus -
 // BroadcastChannel is shared across same-origin iframe + parent exactly like it
 // was across the two windows. Swapping the container is the whole change.
+// Keep the draggable titlebar clear of the table-page header (which is tall and
+// sits at a high z-index) so the panel can never be dragged behind it and lost.
+const HEADER_SAFE = 64
+
 export default function MapSetupPanel({ campaignId, onClose }: { campaignId: string; onClose: () => void }) {
   const STORAGE_KEY = `mapsetup_panel_pos_${campaignId}`
-  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 12, y: 70 })
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 12, y: HEADER_SAFE + 8 })
 
   function clampX(x: number) {
     const w = typeof window !== 'undefined' ? window.innerWidth : 1200
@@ -19,7 +23,8 @@ export default function MapSetupPanel({ campaignId, onClose }: { campaignId: str
   }
   function clampY(y: number) {
     const h = typeof window !== 'undefined' ? window.innerHeight : 800
-    return Math.max(0, Math.min(y, h - 40))
+    // Floor at HEADER_SAFE so the titlebar always stays below the header.
+    return Math.max(HEADER_SAFE, Math.min(y, h - 40))
   }
 
   // Restore the saved position (clamped so a stale value can't open off-screen).
@@ -57,7 +62,9 @@ export default function MapSetupPanel({ campaignId, onClose }: { campaignId: str
 
   return (
     <div ref={ref} style={{
-      position: 'fixed', left: pos.x, top: pos.y, zIndex: 1000, width: '284px',
+      // Above the table-page header (zIndex 10001) so the titlebar is always
+      // visible + grabbable; below the GM dropdown menus (10050+).
+      position: 'fixed', left: pos.x, top: pos.y, zIndex: 10002, width: '284px',
       background: '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '6px',
       boxShadow: '0 8px 28px rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column', overflow: 'hidden',
     }}>
