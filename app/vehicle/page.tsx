@@ -1215,7 +1215,11 @@ export default function VehiclePage() {
               {normalizedCargo.map((item, idx) => (
                 <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
                   <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{item.name}</span>
-                  {/* -/+ qty stepper. Discrete clicks (no typing); - floors at 0, and 0 drops the line. */}
+                  {item.notes && <span style={{ color: '#5a5550', fontSize: '14px' }}>{item.notes}</span>}
+                  {item.enc > 0 && (
+                    <span style={{ color: '#7ab3d4', fontSize: '13px' }} title={`${item.enc} enc per item`}>[{item.enc * item.qty}]</span>
+                  )}
+                  {/* -/+ qty stepper (- floors at 0, 0 drops the line) then a delete-line ×. */}
                   {canEdit ? (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                       <button title="-1 (removes at 0)" onClick={() => { const raw = vehicle.cargo ?? []; const n = item.qty - 1; updateVehicle({ ...vehicle, cargo: (n <= 0 ? raw.filter((_, i) => i !== idx) : raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: n } : c)) as any }) }}
@@ -1223,12 +1227,10 @@ export default function VehiclePage() {
                       <span style={{ color: '#7ab3d4', minWidth: '16px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{item.qty}</span>
                       <button title="+1" onClick={() => { const raw = vehicle.cargo ?? []; updateVehicle({ ...vehicle, cargo: raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: item.qty + 1 } : c) as any }) }}
                         style={{ width: '20px', height: '20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0 }}>+</button>
+                      <button title={`Remove ${item.name} from cargo`} onClick={() => { const raw = vehicle.cargo ?? []; updateVehicle({ ...vehicle, cargo: raw.filter((_, i) => i !== idx) as any }) }}
+                        style={{ width: '20px', height: '20px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0, marginLeft: '2px' }}>×</button>
                     </span>
                   ) : (item.qty > 1 && <span style={{ color: '#7ab3d4' }}>×{item.qty}</span>)}
-                  {item.enc > 0 && (
-                    <span style={{ color: '#7ab3d4', fontSize: '13px' }} title={`${item.enc} enc per item`}>[{item.enc * item.qty}]</span>
-                  )}
-                  {item.notes && <span style={{ color: '#5a5550', fontSize: '14px' }}>{item.notes}</span>}
                 </div>
               ))}
             </div>
