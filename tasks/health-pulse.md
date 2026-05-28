@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-28 18:04 UTC
+
+**Status:** DRIFT (continuing — 17th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [707 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 15:06 UTC:** 2 commits — todo.md reconciliation (NPC picker L85 + ping L86 + LOOT L99 marked `[x]`). Tests unchanged 707.
+
+**Drift:**
+- HOPED-FOR not drained (9 days — 2026-05-19 batch + re-arch vehicle/combat-math items). Drain target was 2026-05-25 playtest; debug-handoff ledger still lists them HOPED-FOR.
+- 2 stale-as-open todos remain `- [ ]` despite being shipped:
+  - L84 initiative round label: `RollsFeed.tsx:476` already renders `(Round N)` — feature shipped.
+  - L135 3-lane coordination: `lane-protocol.md` + `active-lanes.md` exist; `operating-mode.md` already has the 3-lane section — shipped.
+
+**Action:** Puffer Fish — (1) drain HOPED-FOR in debug-handoff.md; (2) mark L84 + L135 closed in todo.md.
+
+---
+
 ## 2026-05-28 15:06 UTC
 
 **Status:** DRIFT (continuing — 16th flag)
