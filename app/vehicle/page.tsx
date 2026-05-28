@@ -1234,9 +1234,15 @@ export default function VehiclePage() {
                         ? raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: normalizeInventoryItem(c).qty - 1 } : c)
                         : raw.filter((_, i) => i !== idx)
                       updateVehicle({ ...vehicle, cargo: newCargo as any })
-                    }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
-                      onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
-                      onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
+                    }}
+                      title={item.qty > 1 ? `Remove one ${item.name} (×${item.qty} in cargo)` : `Remove ${item.name} from cargo`}
+                      // Visible red × chip (matches the PC/NPC inventory remove). Was
+                      // color:#3a3a3a - invisible on the dark bg until hover, so the GM
+                      // couldn't find how to remove an item (playtest: "remove a
+                      // medicine bag from inventory").
+                      style={{ marginLeft: 'auto', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 5px', lineHeight: 1.3, flexShrink: 0 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#3a1a16')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#2a1210')}>×</button>
                   )}
                 </div>
               ))}
