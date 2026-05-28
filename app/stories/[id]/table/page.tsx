@@ -416,14 +416,11 @@ export default function TablePage() {
     // changes when the bool flips.
     if (combatActive) woundInfectionLoggedRef.current = new Set()
   }, [combatActive])
-  // Multistory: per-entry off-scene tag for the initiative bar.
-  // Map from initiative entry id → scene name (or '' if same scene as
-  // active). Computed by joining initiative entries' character_id /
-  // npc_id against scene_tokens, then resolving scene_id → name.
-  // Populated by the useEffect below; refreshed when initiative or
-  // tokens change so a token shunted via "→ Scene" updates the tag
-  // without manual reload.
-  const [entrySceneTags, setEntrySceneTags] = useState<Record<string, string>>({})
+  // Scene-token change counter -> feeds useSceneNav's scene-picker refresh
+  // (bumped by the channel below on scene_tokens / tactical_scenes changes).
+  // (The cross-scene "this PC is on another scene" initiative tag was REMOVED
+  // 2026-05-27 per Xero - PCs tied to another scene was confusing; multi-story
+  // / multi-layer support is deferred until we design it properly.)
   const [tokenScenesRefreshKey, setTokenScenesRefreshKey] = useState(0)
   // Note: the Add-PC / Add-NPC / npcName UI state used to live here; it
   // moved into <InitiativeBar/> during the C2 extraction since nothing
@@ -447,83 +444,9 @@ export default function TablePage() {
   // get buried). Rendered as a floating, draggable, always-on-top overlay.
   const [mapSetupOpen, setMapSetupOpen] = useState(false)
 
-  // Multistory cross-scene initiative tag. For each initiative entry,
-  // resolve its character_id / npc_id to a scene token and check
-  // whether that token is on the active scene. If not, surface the
-  // scene name as a chip on the initiative bar so combat continuity
-  // doesn't get confusing when PCs split across floors.
-  useEffect(() => {
-    if (initiativeOrder.length === 0) {
-      setEntrySceneTags({})
-      return
-    }
-    let cancelled = false
-    ;(async () => {
-      // Pull every scene in THIS campaign first so we can scope the
-      // token query to those ids only - pre-fix, the scene_tokens
-      // SELECT was unfiltered, so a PC's character_id resolved to
-      // whichever stale token row happened to be processed last
-      // (e.g. one left over from a prior scene like "Canyon Lake
-      // Marina"). That stale tag then lit up the cross-scene chip
-      // on every PC every session.
-      const { data: scenes } = await supabase
-        .from('tactical_scenes')
-        .select('id, name, is_active')
-        .eq('campaign_id', id)
-      if (cancelled) return
-      const sceneNameById: Record<string, string> = {}
-      let activeSceneId: string | null = null
-      const sceneIds: string[] = []
-      for (const s of (scenes ?? []) as any[]) {
-        sceneNameById[s.id] = s.name
-        sceneIds.push(s.id)
-        if (s.is_active) activeSceneId = s.id
-      }
-      if (sceneIds.length === 0) { setEntrySceneTags({}); return }
-      const { data: toks } = await supabase
-        .from('scene_tokens')
-        .select('scene_id, character_id, npc_id')
-        .is('archived_at', null)
-        .in('scene_id', sceneIds)
-      if (cancelled) return
-      // Build character_id → scene_id and npc_id → scene_id lookups.
-      // When a PC has tokens on multiple scenes (very common with
-      // multi-scene campaigns), PREFER the active scene - that way
-      // the cross-scene chip only shows when the token is genuinely
-      // off-stage. Pre-fix the last-write-wins behavior could pick
-      // the off-stage scene by accident and falsely tag the PC.
-      const charScene: Record<string, string> = {}
-      const npcScene: Record<string, string> = {}
-      for (const t of (toks ?? []) as any[]) {
-        if (t.character_id) {
-          if (!charScene[t.character_id] || t.scene_id === activeSceneId) {
-            charScene[t.character_id] = t.scene_id
-          }
-        }
-        if (t.npc_id) {
-          if (!npcScene[t.npc_id] || t.scene_id === activeSceneId) {
-            npcScene[t.npc_id] = t.scene_id
-          }
-        }
-      }
-      const tags: Record<string, string> = {}
-      for (const e of initiativeOrder) {
-        const sceneId = e.character_id ? charScene[e.character_id]
-          : e.npc_id ? npcScene[e.npc_id]
-          : null
-        if (!sceneId || sceneId === activeSceneId) continue
-        tags[e.id] = sceneNameById[sceneId] ?? 'Other scene'
-      }
-      setEntrySceneTags(tags)
-    })()
-    return () => { cancelled = true }
-  }, [initiativeOrder, id, supabase, tokenScenesRefreshKey])
-
-  // Bump tokenScenesRefreshKey when a token moves between scenes
-  // (the "→ Scene" button in TacticalMap mutates scene_tokens.scene_id
-  // and broadcasts token_changed; postgres_changes on scene_tokens
-  // catches the row update directly here). Cheap - just flips a
-  // counter that retriggers the scene-tags effect above.
+  // Bump tokenScenesRefreshKey on scene_tokens / tactical_scenes changes so
+  // useSceneNav's scene-picker dropdown stays fresh (e.g. a token shunted via
+  // "→ Scene", a new scene, a rename). Cheap - just flips a counter.
   // Migrated to useCampaignChannel (3d): stable [id] subscription, sentry-wrapped.
   useCampaignChannel(id, {
     channelName: `init-scene-tags-${id}`,
@@ -5697,7 +5620,6 @@ export default function TablePage() {
             campaignNpcs={campaignNpcs}
             userId={userId}
             isGM={gmLike}
-            entrySceneTags={entrySceneTags}
             onNextTurn={nextTurn}
             onDefer={deferInitiative}
             onRemove={handleInitiativeBarRemove}

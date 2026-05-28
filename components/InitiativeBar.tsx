@@ -80,11 +80,6 @@ export interface InitiativeBarProps {
   campaignNpcs: CampaignNpcLike[]
   userId: string | null
   isGM: boolean
-  // Map from entry.id → scene name for combatants whose token sits
-  // on a different tactical scene than the active one. Used to chip
-  // "(Scene name)" badges on the bar so a multistory split party
-  // doesn't make initiative confusing. Empty / missing = same scene.
-  entrySceneTags?: Record<string, string>
   // Callbacks - parent owns DB writes / broadcasts. Entry params are
   // typed as `any` because TypeScript function parameter types are
   // contravariant - the parent's full InitiativeEntry shape (with
@@ -113,7 +108,6 @@ function InitiativeBarImpl({
   userId,
   combatRound,
   isGM,
-  entrySceneTags,
   onNextTurn,
   onDefer,
   onRemove,
@@ -344,16 +338,6 @@ function InitiativeBarImpl({
               <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                 {compactName(entry.character_name)}
               </span>
-              {/* Cross-scene chip - shown when the combatant's token
-                  sits on a different tactical scene than the active
-                  one. Stops "wait, why isn't this NPC on the map?"
-                  confusion during multistory splits. */}
-              {entrySceneTags && entrySceneTags[entry.id] && (
-                <span title={`Token is on scene: ${entrySceneTags[entry.id]}`}
-                  style={{ fontSize: '13px', color: '#7adcd4', background: '#1a2e2e', border: '1px solid #2e5a5a', padding: '0 6px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                  📍 {entrySceneTags[entry.id]}
-                </span>
-              )}
               <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
               <span style={{ fontSize: '13px', letterSpacing: '2px' }}>
                 {Array.from({ length: 2 }).map((_, i) => {
