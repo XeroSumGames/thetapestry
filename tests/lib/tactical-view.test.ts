@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell, fitZoom, effectiveScale } from '../../lib/tactical-view'
+import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell, fitZoom, effectiveScale, computeAboard } from '../../lib/tactical-view'
 
 // Invariant (Xero 2026-05-22): sharing drives what PLAYERS see, not the GM's
 // own pane. The GM can preview the campaign map while players see the shared
@@ -132,5 +132,45 @@ describe('effectiveScale', () => {
     expect(effectiveScale(0, 1000, 1.5)).toBe(1.5)
     expect(effectiveScale(500, 0, 2)).toBe(2)
     expect(effectiveScale(0, 0, 0)).toBe(1)
+  })
+})
+
+describe('computeAboard (scene-scoped vehicle occupancy)', () => {
+  const minnie = {
+    name: 'Minnie',
+    driver_character_id: 'shimmy', driver_kind: 'pc',
+    navigator_character_id: 'goon', navigator_kind: 'npc',
+    passenger_seats: [null, { character_id: 'juno', kind: 'pc' }],
+    mounted_weapons: [{ shooter_character_id: 'mikey', shooter_kind: 'pc' }],
+  }
+
+  it('treats crew as aboard when the vehicle has a token on the scene', () => {
+    const r = computeAboard([minnie], new Set(['Minnie', 'Enya']))
+    expect(r.aboardCharIds).toEqual(new Set(['shimmy', 'juno', 'mikey']))
+    expect(r.aboardNpcIds).toEqual(new Set(['goon']))
+    expect(r.passengerCountByVehicleName.get('Minnie')).toBe(4)
+  })
+
+  it('does NOT treat crew as aboard when the vehicle is NOT on the scene (the bug)', () => {
+    // Minnie isn't on this map -> nobody is driving her here -> crew render.
+    const r = computeAboard([minnie], new Set(['Enya', 'Juno Lask']))
+    expect(r.aboardCharIds.size).toBe(0)
+    expect(r.aboardNpcIds.size).toBe(0)
+    expect(r.passengerCountByVehicleName.size).toBe(0)
+  })
+
+  it('scopes per vehicle: only the on-scene vehicle hides its crew', () => {
+    const truck = { name: 'Truck', driver_character_id: 'dash', driver_kind: 'pc' }
+    const r = computeAboard([minnie, truck], new Set(['Truck']))
+    expect(r.aboardCharIds).toEqual(new Set(['dash']))
+    expect(r.passengerCountByVehicleName.has('Minnie')).toBe(false)
+    expect(r.passengerCountByVehicleName.get('Truck')).toBe(1)
+  })
+
+  it('ignores empty seats and unfilled roles', () => {
+    const empty = { name: 'Empty', passenger_seats: [null, null], mounted_weapons: [null] }
+    const r = computeAboard([empty], new Set(['Empty']))
+    expect(r.aboardCharIds.size).toBe(0)
+    expect(r.passengerCountByVehicleName.size).toBe(0)
   })
 })

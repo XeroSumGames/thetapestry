@@ -153,3 +153,50 @@ export function effectiveScale(containerWidth: number, gridW: number, zoom: numb
   if (!(gridW > 0) || !(containerWidth > 0)) return zoom > 0 ? zoom : 1
   return (containerWidth / gridW) * zoom
 }
+
+// --- vehicle "aboard" suppression (scene-scoped) --------------------------
+// A PC/NPC sitting in a vehicle seat is treated as INSIDE the vehicle and
+// hidden from the tactical canvas (the vehicle token carries a passenger
+// badge instead). This is SCENE-SCOPED: vehicle occupancy lives campaign-
+// global (campaigns.vehicles), but each scene is its own moment - a crew
+// member only counts as "aboard" on scenes where the vehicle actually has a
+// token (matched by name). If the vehicle isn't on this map, nobody's driving
+// it here, so its crew render as normal tokens. Pure, so the scene-scope can
+// be unit-tested away from the canvas.
+export interface AboardVehicle {
+  name: string
+  driver_character_id?: string | null
+  driver_kind?: string | null
+  brewer_character_id?: string | null
+  brewer_kind?: string | null
+  navigator_character_id?: string | null
+  navigator_kind?: string | null
+  mounted_weapons?: ReadonlyArray<{ shooter_character_id?: string | null; shooter_kind?: string | null } | null> | null
+  passenger_seats?: ReadonlyArray<{ character_id?: string | null; kind?: string | null } | null> | null
+}
+
+export function computeAboard(
+  vehicles: ReadonlyArray<AboardVehicle>,
+  tokenNamesOnScene: ReadonlySet<string>,
+): { aboardCharIds: Set<string>; aboardNpcIds: Set<string>; passengerCountByVehicleName: Map<string, number> } {
+  const aboardCharIds = new Set<string>()
+  const aboardNpcIds = new Set<string>()
+  const passengerCountByVehicleName = new Map<string, number>()
+  for (const v of vehicles) {
+    if (!tokenNamesOnScene.has(v.name)) continue // vehicle not on this scene -> crew aren't aboard here
+    let count = 0
+    const add = (id: string | null | undefined, kind: string | null | undefined) => {
+      if (!id) return
+      count++
+      if (kind === 'pc') aboardCharIds.add(id)
+      else if (kind === 'npc') aboardNpcIds.add(id)
+    }
+    add(v.driver_character_id, v.driver_kind)
+    add(v.brewer_character_id, v.brewer_kind)
+    add(v.navigator_character_id, v.navigator_kind)
+    for (const w of (v.mounted_weapons ?? [])) add(w?.shooter_character_id, w?.shooter_kind)
+    for (const s of (v.passenger_seats ?? [])) if (s) add(s.character_id, s.kind)
+    if (count > 0) passengerCountByVehicleName.set(v.name, count)
+  }
+  return { aboardCharIds, aboardNpcIds, passengerCountByVehicleName }
+}

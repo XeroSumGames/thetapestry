@@ -11,7 +11,7 @@ import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
-import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, effectiveScale } from '../lib/tactical-view'
+import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, effectiveScale, computeAboard } from '../lib/tactical-view'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -1517,31 +1517,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ctx.restore()
     }
 
-    // Aboard-token suppression (2026-05-17). Any PC/NPC currently
-    // sitting in a vehicle seat is treated as "inside the vehicle" and
-    // hidden from the canvas; the vehicle token gets a small 🪑 N badge
-    // showing how many bodies are aboard. Avoids overlapping portraits
-    // on a multi-cell vehicle footprint and saves us from the
-    // seat-cell-snap calibration mess. Passengers reappear via the
-    // popout's Disembark flow (places them next to the bus).
-    const aboardCharIds = new Set<string>()
-    const aboardNpcIds = new Set<string>()
-    const passengerCountByVehicleName = new Map<string, number>()
-    for (const v of (vehicles ?? [])) {
-      let count = 0
-      const add = (id: string | null | undefined, kind: string | null | undefined) => {
-        if (!id) return
-        count++
-        if (kind === 'pc') aboardCharIds.add(id)
-        else if (kind === 'npc') aboardNpcIds.add(id)
-      }
-      add(v.driver_character_id, v.driver_kind)
-      add(v.brewer_character_id, v.brewer_kind)
-      add(v.navigator_character_id, v.navigator_kind)
-      for (const w of (v.mounted_weapons ?? [])) add(w?.shooter_character_id, w?.shooter_kind)
-      for (const s of (v.passenger_seats ?? [])) if (s) add(s.character_id, s.kind)
-      if (count > 0) passengerCountByVehicleName.set(v.name, count)
-    }
+    // Aboard-token suppression (2026-05-17; scene-scoped 2026-05-28). Crew in a
+    // vehicle seat are hidden from the canvas (the vehicle token shows a 🪑 N
+    // passenger badge instead). SCENE-SCOPED: a crew member only counts as
+    // aboard on scenes where the vehicle has a token (matched by name) - so a
+    // driver isn't hidden on maps the vehicle isn't even in. Pure + unit-tested
+    // in lib/tactical-view (computeAboard).
+    const tokenNamesOnScene = new Set(tokensRef.current.map(t => t.name))
+    const { aboardCharIds, aboardNpcIds, passengerCountByVehicleName } = computeAboard(vehicles ?? [], tokenNamesOnScene)
 
     // Tokens. Sort so objects render first (bottom), then NPCs, then PCs
     // on top - canvas is painter's-algorithm, last draw wins. Prevents a
