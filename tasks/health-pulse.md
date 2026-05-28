@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-28 00:04 UTC
+
+**Status:** DRIFT (continuing — 12th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [701 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 21:04 UTC:** 7 commits (tactical map-upload progress bar, Map Setup floating panel, fit-to-panel-width + local zoom, E2E dashboard)
+
+**Drift:**
+- HOPED-FOR still not drained: 2026-05-19 batch (9+ days) + re-arch vehicle/combat items (3 days past 2026-05-25 drain target). Ledger also stale: debug-handoff shows 622/37; actual 701/40 (+79 tests, +3 files).
+- NPC picker SHIPPED (`components/InitiativeBar.tsx` now filters `campaignNpcs`, sets `npc_id`) but todo line 84 still `- [ ]` — stale-as-open (audit-correction needed).
+- 2 genuinely-open stale todos: initiative round label (`RollsFeed.tsx:476` + table-page 3 insert sites) + tactical ping 3-pulse/red-green-red (`TacticalMap.tsx` count:2->3).
+
+**Action:** Puffer Fish (12 cycles overdue): drain HOPED-FOR in debug-handoff.md; run `node scripts/refresh-ledger.mjs` to update 622/37 -> 701/40; close NPC picker todo line 84.
+
+---
+
 ## 2026-05-27 21:04 UTC
 
 **Status:** DRIFT (continuing — 11th flag)
