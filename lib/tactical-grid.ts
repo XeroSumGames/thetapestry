@@ -7,10 +7,15 @@
 // Xero "grid should extend to the map") so the math is unit-testable and
 // the LOC-ratcheted map component stays lean.
 
-// Cell counts needed for the grid to span the rendered image. Clamped to
-// [1, cap] so a tiny cell_px on a huge image can't spawn a runaway grid
-// that freezes the O(cols*rows) render loops. Returns {cols:0,rows:0} when
-// inputs are unusable (no image / bad cell size) - callers should guard.
+// Cell counts needed for the grid to span the rendered image. Capped at `cap`
+// per axis so a tiny cell_px on a huge image can't spawn a runaway grid that
+// freezes the O(cols*rows) render loops - but the cap is applied
+// PROPORTIONALLY (both axes scaled by the same factor) so the grid keeps the
+// image's ASPECT RATIO. Capping each axis independently (the pre-2026-05-27
+// bug) collapsed a wide or tall map toward the cap's square, which then
+// squished the background (drawn to fill the grid extent) out of proportion.
+// Returns {cols:0,rows:0} for unusable inputs (no image / bad cell size) -
+// callers should guard.
 export function gridToCoverMap(
   naturalWidth: number,
   naturalHeight: number,
@@ -19,9 +24,15 @@ export function gridToCoverMap(
   cap = 250,
 ): { cols: number; rows: number } {
   if (!naturalWidth || !naturalHeight || cellPx <= 0) return { cols: 0, rows: 0 }
-  const span = (natural: number) =>
-    Math.min(cap, Math.max(1, Math.ceil((natural * imgScale) / cellPx)))
-  return { cols: span(naturalWidth), rows: span(naturalHeight) }
+  let cols = Math.max(1, Math.ceil((naturalWidth * imgScale) / cellPx))
+  let rows = Math.max(1, Math.ceil((naturalHeight * imgScale) / cellPx))
+  const maxDim = Math.max(cols, rows)
+  if (maxDim > cap) {
+    const k = cap / maxDim
+    cols = Math.max(1, Math.round(cols * k))
+    rows = Math.max(1, Math.round(rows * k))
+  }
+  return { cols, rows }
 }
 
 // Grow-only variant for the auto-fit effect: returns the DB-shaped grid

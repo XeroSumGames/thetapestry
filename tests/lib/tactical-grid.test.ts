@@ -28,6 +28,17 @@ describe('gridToCoverMap', () => {
     expect(r).toEqual({ cols: 250, rows: 250 })
   })
 
+  it('caps PROPORTIONALLY so a wide map keeps its aspect (not squished to a square)', () => {
+    // 20000x10000 (2:1) at 1px cells would be 20000x10000 cells; capped at 250
+    // on the long axis -> 250x125, still 2:1. (The old per-axis cap gave
+    // 250x250 = 1:1, which squished the art drawn to fill the grid.)
+    expect(gridToCoverMap(20000, 10000, 1, 1, 250)).toEqual({ cols: 250, rows: 125 })
+  })
+
+  it('caps PROPORTIONALLY for a tall map too', () => {
+    expect(gridToCoverMap(10000, 20000, 1, 1, 250)).toEqual({ cols: 125, rows: 250 })
+  })
+
   it('never returns less than 1 cell for a real image', () => {
     expect(gridToCoverMap(10, 10, 1, 35)).toEqual({ cols: 1, rows: 1 })
   })
