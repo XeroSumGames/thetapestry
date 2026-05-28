@@ -118,6 +118,32 @@ export function damageRowForRoll(table: VehicleDamageTable, sum: number): Vehicl
   return table.rows.find(r => r.roll === sum)
 }
 
+// Build the new WP + the roll_log payload for a chunk of vehicle WP loss
+// (the Apply-Damage field). Pure so the clamp + payload shape are testable
+// without the DB. Returns null when the amount isn't a positive integer.
+export function buildVehicleDamageLog(args: {
+  vehicle: { id: string; name: string; wp_current: number }
+  amount: number | string
+  campaignId: string
+  userId: string
+}): { newWp: number; row: Record<string, unknown> } | null {
+  const amt = Math.floor(Number(args.amount))
+  if (!Number.isFinite(amt) || amt <= 0) return null
+  const { vehicle } = args
+  return {
+    newWp: Math.max(0, vehicle.wp_current - amt),
+    row: {
+      campaign_id: args.campaignId,
+      user_id: args.userId,
+      character_name: vehicle.name,
+      label: `${vehicle.name} took ${amt} damage`,
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: amt,
+      outcome: 'vehicle_damage',
+      damage_json: { vehicleId: vehicle.id, vehicleName: vehicle.name, checkKind: 'damage', amount: amt },
+    },
+  }
+}
+
 // Resolve which damage table (if any) a vehicle uses. Minnie is the only one
 // today; matched by name (case-insensitive) so no per-record data migration is
 // needed. Extend here (or move to a flag) when other vehicles get tables.

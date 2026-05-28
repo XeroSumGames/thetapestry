@@ -386,6 +386,50 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
     )
   }
 
+  // vehicle_damage - raw WP loss applied via the vehicle page's Apply-Damage
+  // field. One line per damage event ("Minnie took 7 damage"); the system hit
+  // is a separate vehicle_damage_table entry rolled right after.
+  if (r.outcome === 'vehicle_damage') {
+    return (
+      <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>💥 {r.label}</span>
+          <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+        </div>
+      </div>
+    )
+  }
+
+  // vehicle_damage_table - the 2d6 system-damage roll. The system hit lives in
+  // r.label; the (potentially long) effect text rides in damage_json.effect and
+  // is truncated here with an expand toggle so the feed stays scannable.
+  if (r.outcome === 'vehicle_damage_table') {
+    const dj = (r.damage_json ?? {}) as any
+    const effect: string = dj.effect || ''
+    const isExpanded = expandedRollIds.has(r.id)
+    const long = effect.length > 120
+    const shown = long && !isExpanded ? effect.slice(0, 120).trimEnd() + '...' : effect
+    return (
+      <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1408', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔧 Vehicle Damage</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+            {long && (
+              <button onClick={() => toggleExpanded(r.id)}
+                title={isExpanded ? 'Hide effect' : 'View effect'}
+                style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }}>
+                {isExpanded ? '▾' : '▸'}
+              </button>
+            )}
+          </div>
+        </div>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontWeight: 600, fontFamily: 'Carlito, sans-serif' }}>{r.label}</div>
+        {effect && <div style={{ fontSize: '14px', color: '#f5d8a0', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, marginTop: '2px' }}>{shown}</div>}
+      </div>
+    )
+  }
+
   // wound_infection_warning - first shot/stab/cut wound on a character
   // during combat. Single banner per character per combat (the emit
   // site dedupes via a ref + a roll_log cross-check). Orange outline

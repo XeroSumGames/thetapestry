@@ -14,7 +14,7 @@ import { insertRollLog } from '../../lib/data/roll-log'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import VehicleDamageTable from '../../components/VehicleDamageTable'
-import { resolveVehicleDamageTable } from '../../lib/vehicle-damage'
+import { resolveVehicleDamageTable, buildVehicleDamageLog } from '../../lib/vehicle-damage'
 import { getWeaponByName } from '../../lib/weapons'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { rarityColor } from '../../lib/rarity-colors'
@@ -57,6 +57,7 @@ export default function VehiclePage() {
   const [addQty, setAddQty] = useState('1')
   const [addEnc, setAddEnc] = useState('0')
   const [addNotes, setAddNotes] = useState('')
+  const [dmgAmount, setDmgAmount] = useState('')
   // Driver/Brewer crew pool - populated alongside the vehicle.
   const [crew, setCrew] = useState<CrewMember[]>([])
   const [myUserId, setMyUserId] = useState<string | null>(null)
@@ -360,6 +361,15 @@ export default function VehiclePage() {
       // channel, holding 500ms so the server fans out before teardown.
       await broadcastOnce(`tactical_${campaignId}`, 'vehicle_updated', { vehicle_id: updated.id }, { holdMs: 500 })
     }
+  }
+
+  async function applyDamage() {
+    if (!vehicle || !campaignId || !myUserId) return
+    const built = buildVehicleDamageLog({ vehicle, amount: dmgAmount, campaignId, userId: myUserId })
+    if (!built) return
+    await updateVehicle({ ...vehicle, wp_current: built.newWp })
+    await insertRollLog(built.row)
+    setDmgAmount('')
   }
 
   // Auto-vacate helper (2026-05-17): when a character is assigned to
@@ -1014,7 +1024,9 @@ export default function VehiclePage() {
               <span style={lbl}>Wound Points</span>
               <span style={{ fontSize: '18px', color: wpColor, fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>{vehicle.wp_current} / {vehicle.wp_max}</span>
               {canEdit && (
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input type="number" min={1} value={dmgAmount} placeholder="dmg" onChange={e => setDmgAmount(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') applyDamage() }} style={{ width: '46px', padding: '2px 6px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
+                  <button onClick={applyDamage} title="Apply damage + log it" style={{ padding: '2px 8px', marginRight: '6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>Apply</button>
                   <button onClick={() => updateVehicle({ ...vehicle, wp_current: Math.max(0, vehicle.wp_current - 1) })} style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>-1</button>
                   <button onClick={() => updateVehicle({ ...vehicle, wp_current: Math.min(vehicle.wp_max, vehicle.wp_current + 1) })} style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+1</button>
                 </div>

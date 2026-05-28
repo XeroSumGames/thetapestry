@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { MINNIE_DAMAGE_TABLE, damageRowForRoll, resolveVehicleDamageTable } from '../../lib/vehicle-damage'
+import { MINNIE_DAMAGE_TABLE, damageRowForRoll, resolveVehicleDamageTable, buildVehicleDamageLog } from '../../lib/vehicle-damage'
 
 describe('MINNIE_DAMAGE_TABLE', () => {
   it('covers every 2d6 result 2-12 exactly once (no dup 8 / missing 9)', () => {
@@ -52,5 +52,35 @@ describe('resolveVehicleDamageTable', () => {
     expect(resolveVehicleDamageTable({ name: '' })).toBeNull()
     expect(resolveVehicleDamageTable(null)).toBeNull()
     expect(resolveVehicleDamageTable(undefined)).toBeNull()
+  })
+})
+
+describe('buildVehicleDamageLog', () => {
+  const vehicle = { id: 'v1', name: 'Minnie', wp_current: 50 }
+  const base = { campaignId: 'c1', userId: 'u1' }
+
+  it('subtracts WP and builds a single damage log row', () => {
+    const out = buildVehicleDamageLog({ vehicle, amount: 7, ...base })
+    expect(out?.newWp).toBe(43)
+    expect(out?.row.outcome).toBe('vehicle_damage')
+    expect(out?.row.label).toBe('Minnie took 7 damage')
+    expect(out?.row.total).toBe(7)
+    expect((out?.row.damage_json as any).amount).toBe(7)
+    expect((out?.row.damage_json as any).checkKind).toBe('damage')
+  })
+
+  it('clamps WP at zero (no negative WP)', () => {
+    expect(buildVehicleDamageLog({ vehicle, amount: 999, ...base })?.newWp).toBe(0)
+  })
+
+  it('coerces numeric strings from the input field', () => {
+    expect(buildVehicleDamageLog({ vehicle, amount: '5', ...base })?.newWp).toBe(45)
+  })
+
+  it('returns null for non-positive / non-numeric amounts', () => {
+    expect(buildVehicleDamageLog({ vehicle, amount: 0, ...base })).toBeNull()
+    expect(buildVehicleDamageLog({ vehicle, amount: -3, ...base })).toBeNull()
+    expect(buildVehicleDamageLog({ vehicle, amount: '', ...base })).toBeNull()
+    expect(buildVehicleDamageLog({ vehicle, amount: 'abc', ...base })).toBeNull()
   })
 })
