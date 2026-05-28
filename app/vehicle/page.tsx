@@ -1214,32 +1214,21 @@ export default function VehiclePage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 12px' }}>
               {normalizedCargo.map((item, idx) => (
                 <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
-                  <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
-                    {item.name}
-                    {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
-                  </span>
+                  <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{item.name}</span>
+                  {/* Editable qty: uncontrolled + commit on blur/Enter (a realtime vehicle echo can't clobber mid-typing); key re-seeds on external change; 0 clears the line. */}
+                  {canEdit ? (
+                    <input type="number" min={0} key={`qty-${item.name}-${idx}-${item.qty}`} defaultValue={item.qty} title="Set quantity (0 removes it)"
+                      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+                      onBlur={e => { const n = Math.max(0, Math.floor(Number(e.target.value) || 0)); if (n === item.qty) return; const raw = vehicle.cargo ?? []; updateVehicle({ ...vehicle, cargo: (n <= 0 ? raw.filter((_, i) => i !== idx) : raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: n } : c)) as any }) }}
+                      style={{ width: '46px', padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
+                  ) : (item.qty > 1 && <span style={{ color: '#7ab3d4' }}>×{item.qty}</span>)}
                   {item.enc > 0 && (
-                    <span style={{ color: '#7ab3d4', fontSize: '13px' }} title={`${item.enc} enc per item`}>
-                      [{item.enc * item.qty}]
-                    </span>
+                    <span style={{ color: '#7ab3d4', fontSize: '13px' }} title={`${item.enc} enc per item`}>[{item.enc * item.qty}]</span>
                   )}
                   {item.notes && <span style={{ color: '#5a5550', fontSize: '14px' }}>{item.notes}</span>}
                   {canEdit && (
-                    <button onClick={() => {
-                      // Use the underlying raw cargo array for writes -
-                      // splice the matching index, decrement qty if > 1,
-                      // else drop.
-                      const raw = vehicle.cargo ?? []
-                      const newCargo = item.qty > 1
-                        ? raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: normalizeInventoryItem(c).qty - 1 } : c)
-                        : raw.filter((_, i) => i !== idx)
-                      updateVehicle({ ...vehicle, cargo: newCargo as any })
-                    }}
-                      title={item.qty > 1 ? `Remove one ${item.name} (×${item.qty} in cargo)` : `Remove ${item.name} from cargo`}
-                      // Visible red × chip (matches the PC/NPC inventory remove). Was
-                      // color:#3a3a3a - invisible on the dark bg until hover, so the GM
-                      // couldn't find how to remove an item (playtest: "remove a
-                      // medicine bag from inventory").
+                    <button onClick={() => { const raw = vehicle.cargo ?? []; updateVehicle({ ...vehicle, cargo: raw.filter((_, i) => i !== idx) as any }) }}
+                      title={`Remove ${item.name} from cargo`}
                       style={{ marginLeft: 'auto', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 5px', lineHeight: 1.3, flexShrink: 0 }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#3a1a16')}
                       onMouseLeave={e => (e.currentTarget.style.background = '#2a1210')}>×</button>
