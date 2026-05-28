@@ -808,6 +808,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Load background image when scene changes
   useEffect(() => {
+    // Reset local zoom to 100% on scene-open / map-import (effect re-runs on
+    // background_url change). 100% = fill the panel width, so a fresh map fills
+    // the frame instead of inheriting a prior zoom (e.g. 115%) that overflows.
+    setZoom(1)
     if (!scene?.background_url) {
       bgImageRef.current = null
       draw()
