@@ -14,7 +14,7 @@ High-level only. The granular work lives in `tasks/todo.md` (CURRENT OPEN) and t
 | **9/1 - KICKSTARTER launch** (TheTapestry only) | The Distemper KS (TTRPG + comic + VTT) goes live; backers get blanket free-GM for final playtesting | **NO at launch** | **stable, polished, FUN** - looks great, intuitive, lots to explore, runs flawlessly in front of a paying-decision audience. First-impression + reliability > feature-completeness. |
 | **~10/1 - paid model on** (post-KS) | System fully open; player-free / GM-paid subs + Stripe + content-gating turn on | YES | the billing/entitlements surface - a fast-follow, NOT a 9/1 blocker |
 
-**Key reframe:** 9/1 is a **Kickstarter / marketing moment**, so the bar is polish + reliability + delight, not feature-completeness. **All paid machinery (Stripe, GM-seat entitlements, content-gating, `/rumors` purchase) is deferred to ~10/1 and is OFF the 9/1 critical path** (backers get free GM during the campaign). The 3-VTT platform (TheTableau port, monorepo) comes after.
+**Key reframe:** 9/1 is a **Kickstarter / marketing moment**, so the bar is polish + reliability + delight, not feature-completeness. **All paid machinery (Stripe, GM-seat entitlements, content-gating, `/rumors` purchase) is deferred to ~10/1 and is OFF the 9/1 critical path** (backers get free GM during the campaign). The 3-VTT platform (TheTableau port, monorepo) comes after. **Full 9/1 plan of record + go/no-go checklist: [tasks/kickstarter-readiness-2026-09-01.md](kickstarter-readiness-2026-09-01.md).**
 
 Source: [`tasks/north-star.md`](north-star.md), `tasks/beta-500-readiness-2026-06-01.md`, `tasks/architecture-path.md`.
 
