@@ -264,6 +264,7 @@ export const EQUIPMENT: EquipmentItem[] = [
   { name: "Angler's Set",           rarity: 'Uncommon', enc: 1, notes: '+2 to Fishing attempts' },
   { name: 'Backpack',               rarity: 'Common',   enc: 0, notes: '+2 Encumbrance' },
   { name: 'Basic Survival Kit',     rarity: 'Common',   enc: 2, notes: 'Tent, Sleeping Bag' },
+  { name: 'Bicycle',                rarity: 'Common',   enc: 6, notes: 'Pedal transport; faster than on foot over roads, silent, no fuel' },
   { name: 'Bicycle Repair Kit',     rarity: 'Common',   enc: 0, notes: '' },
   { name: 'Bolt Cutters',           rarity: 'Common',   enc: 1, notes: '' },
   { name: 'Binoculars',             rarity: 'Common',   enc: 1, notes: '+1 Perception Check when at Long or Distant Range' },
