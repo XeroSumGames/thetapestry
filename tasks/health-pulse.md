@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-28 15:06 UTC
+
+**Status:** DRIFT (continuing — 16th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [707 passed, 40 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 12:04 UTC:** 7 commits — tactical map fixes (vehicle aboard scene-scope, per-player Map toggle, cross-scene initiative chip, Map Setup above header, zoom reset, proportional grid cap, map-upload progress bar). Tests up 703→707 (+4 new).
+
+**Drift:**
+- HOPED-FOR not drained: 2026-05-19 batch (10 days old, drain target was 2026-05-25) + re-arch vehicle popout/combat-math items (>3 days past target). debug-handoff ledger still stale (shows 622/37, actual 707/40).
+- 3 stale-as-open todos unchanged (confirmed shipped 13th pulse, still `- [ ]`): NPC picker L85 (InitiativeBar.tsx: npc_id+campaignNpcs match ships), initiative round label L84 (RollsFeed.tsx:476 ships), tactical ping L86 (TacticalMap.tsx count:3 + red/green/red ships).
+
+**Action:** Same x16 (unactioned): Puffer Fish — drain HOPED-FOR + update ledger count in debug-handoff.md; mark 3 stale todos closed in todo.md.
+
+---
+
 ## 2026-05-28 12:04 UTC
 
 **Status:** DRIFT (continuing — 15th flag)
