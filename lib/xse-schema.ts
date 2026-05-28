@@ -271,7 +271,7 @@ export const EQUIPMENT: EquipmentItem[] = [
   { name: 'Climbing Gear',          rarity: 'Uncommon', enc: 1, notes: 'Includes ropes, carabiners, and harnesses. Can be used to scaling buildings.' },
   { name: 'Compass',                rarity: 'Common',   enc: 0, notes: '+1 Navigation Checks' },
   { name: 'Crowbar',                rarity: 'Common',   enc: 1, notes: '' },
-  { name: "Doctor's Bag",           rarity: 'Uncommon', enc: 1, notes: '+2 to any Medicine* check; heals 1+2d3 over a 24 hour period' },
+  { name: "Doctor's Bag",           rarity: 'Uncommon', enc: 1, notes: '+2 SMod to Medicine* checks; 1+2d3 WP/24 hours' },
   { name: 'Fire-starting Kit',      rarity: 'Common',   enc: 0, notes: '' },
   { name: 'First Aid Kit',          rarity: 'Common',   enc: 1, notes: '+1 to any Medicine* check; heals 1+1d3 over a 24 hour period' },
   { name: 'Fishing Kit',            rarity: 'Common',   enc: 1, notes: '+1 to Fishing attempts' },
