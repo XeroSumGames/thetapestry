@@ -842,8 +842,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       draw()
       if (scene && centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        setZoom(1)
-        centerViewport(1)
+        const fit = containerRef.current ? fitWholeMapZoom(containerRef.current.clientWidth, containerRef.current.clientHeight, scene.grid_cols * getCellSize(), scene.grid_rows * getCellSize()) : 1
+        setZoom(fit)
+        centerViewport(fit)
       }
       return
     }
@@ -858,12 +859,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // scroll only (see fitToScreen) - never the shared map.
       setBgLoadTick(t => t + 1)
       draw()
-      // Center once per scene. At zoom=1 the grid fills the panel width; fitToScreen
-      // is available if the viewer wants to see the whole map vertically too.
+      // Center once per scene. fitWholeMapZoom fits both axes; same effective
+      // scale for equal window heights regardless of container width (scale parity).
       if (centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        setZoom(1)
-        centerViewport(1)
+        const fit = containerRef.current ? fitWholeMapZoom(containerRef.current.clientWidth, containerRef.current.clientHeight, scene.grid_cols * getCellSize(), scene.grid_rows * getCellSize()) : 1
+        setZoom(fit)
+        centerViewport(fit)
       }
     }
     img.src = scene.background_url
