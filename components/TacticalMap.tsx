@@ -11,7 +11,7 @@ import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
-import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, effectiveScale, fitWholeMapZoom, isCellInView, findMoveFollowToken, findCenterTargets, computeAboard } from '../lib/tactical-view'
+import { tokenCentroidCell, centerScrollOnCell, scrollCellIntoView, drawFallbackToken, effectiveScale, fitWholeMapZoom, isCellInView, findMoveFollowToken, findCenterTargets, computeAboard } from '../lib/tactical-view'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -806,20 +806,28 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const pingChannelRef = pingChannel.channelRef
 
   // Frame on scene open or CENTER button: prefer own PC > active combatant > PCs > visible.
-  // scaleOverride bypasses the stale zoom closure when zoom was just set.
   function centerViewport(scaleOverride?: number) {
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
-    // setTimeout(0) so the canvas dimensions written inside draw() have
-    // settled into the DOM before we read scroll dimensions.
     setTimeout(() => {
       if (!container || !canvas) return
       const scale = scaleOverride ?? getScale()
+      const s = sceneRef.current
+      const cs = getCellSize()
+      // Use expected canvas dims (canvas.width/height may be stale when called after setZoom).
+      const cw = s ? Math.max(container.clientWidth, s.grid_cols * cs * scale) : canvas.width
+      const ch = s ? Math.max(container.clientHeight, s.grid_rows * cs * scale) : canvas.height
       const visible = tokensRef.current.filter(t => isGM || t.is_visible)
       const activeEntry = initiativeOrderRef.current.find((e: any) => e.is_active)
-      const targets = findCenterTargets(visible, myCharacterIdRef.current, activeEntry)
-      frameViewportOnTokens(container, canvas, targets, getCellSize(), scale)
+      const c = tokenCentroidCell(findCenterTargets(visible, myCharacterIdRef.current, activeEntry))
+      if (c) {
+        const { left, top } = centerScrollOnCell({ cellX: c.cellX, cellY: c.cellY, cellPx: cs, zoom: scale, canvasW: cw, canvasH: ch, viewW: container.clientWidth, viewH: container.clientHeight })
+        container.scrollLeft = left; container.scrollTop = top
+      } else {
+        container.scrollLeft = Math.max(0, (cw - container.clientWidth) / 2)
+        container.scrollTop = Math.max(0, (ch - container.clientHeight) / 2)
+      }
     }, 0)
   }
 
