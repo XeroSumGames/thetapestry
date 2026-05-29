@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-29 06:05 UTC
+
+**Status:** DRIFT (continuing — 20th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [718 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift (3 stale todos; HOPED-FOR still not drained):**
+- HOPED-FOR not drained (10 days — 2026-05-19 batch + re-arch vehicle/combat-math items). Minnie S7 playtest DID occur 2026-05-26 (confirmed in debug-handoff.md L10 "post-Minnie-S7 playtest" refresh). Confidence Ledger was NOT updated to drain HOPED-FOR → PLAYTESTED RECENTLY.
+- Realtime channels: vehicle popout broadcasts (Section B) + combat-math/infection modal (A2/F) both ride the 2026-05-25 playtest; ledger entry still says "Promote to full GREEN after B confirms" with no confirmation recorded.
+- 3 stale-as-open todos (all `- [ ]` but code already shipped):
+  - L80 E2E tactical-map re-cert: commit `e055337` (2026-05-27) explicitly "extend tactical-map-render for bg-locked/fit-to-width model + re-cert" — shipped.
+  - L84 initiative round label: `RollsFeed.tsx:520` already renders `⚔️ Initiative (Round N)` — shipped.
+  - L136 3-lane coordination: `operating-mode.md` has the 3-lane section ("three always-on" + Playwright lane description) — shipped.
+
+**Action:** Puffer Fish — drain HOPED-FOR post-Minnie-S7 in debug-handoff.md Confidence Ledger; mark L80, L84, L136 closed in todo.md. (20th flag — unactioned for 2+ days.)
+
+---
+
 ## 2026-05-29 00:04 UTC
 
 **Status:** DRIFT (continuing — 19th flag)
