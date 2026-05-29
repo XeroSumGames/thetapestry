@@ -33,7 +33,8 @@ Full doc: [tasks/beta-500-readiness-2026-06-01.md](beta-500-readiness-2026-06-01
 - [ ] **[OP/PF] realtime scale sanity** - Supabase concurrent-realtime-connection cap + a small concurrent-client load test; confirm Vercel plan limits/ToS (Hobby?).
 - [ ] **[Xero] moderation capacity** - can 2 people clear `/moderate` for 500 users? + a user report/abuse path. (Server-side enforcement is solid post campfire + map_pins triggers.)
 - [ ] **[E2E+manual] pre-beta green light** - full `npm run test:e2e` + combat-flow (#10) covered or manually smoked; the 2026-05-25 playtest covers vehicle + combat math.
-- [ ] **[PF/OP] observability** - external uptime monitor on `/api/health` + confirm Sentry alerts route to a human (the health-pulse is internal-only).
+- [ ] **[OP] observability A - external uptime monitor on `/api/health`.** PREPPED by Puffer: full click-by-click in [tasks/ops-uptime-monitor-setup-2026-05-29.md](ops-uptime-monitor-setup-2026-05-29.md). Decision: Better Stack free (UptimeRobot's free tier is disqualified - non-commercial-only ToS). Xero's only step = create the account + monitor + Slack-push pager (~15 min); then Puffer flips incident-runbook L38 + checks the readiness boxes.
+- [ ] **[OP] observability B - confirm Sentry alerts route to a human.** Separate ~5-min Xero task (Sentry -> thetapestry -> Alerts -> Create Alert Rule + test). Split from A so closing the uptime monitor does not falsely mark the whole item done. Steps in the same playbook, Section 5.
 - DEFER (proportionate, no money/friendlies): Stripe/billing/tax, third-party security audit + pen test, PITR/Pro tier, lawyer-reviewed ToS (pages + delete-account exist), 50k-scale work.
 
 ### 🔗 PLATFORM (post-1.0 pointer; NOT actionable now)
