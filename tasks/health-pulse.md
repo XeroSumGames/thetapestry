@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-29 21:07 UTC
+
+**Status:** DRIFT (continuing — 24th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files — +20 since 23rd flag]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (10+ days — 2026-05-19 batch; drain target was 2026-05-25 playtest, never actioned).
+- Confidence Ledger in debug-handoff.md stale: says 622 tests/37 files (refreshed 2026-05-24) vs actual 738/41 — +116 tests, +4 files unrecorded.
+- Stale-as-open todos (still `[ ]` but code shipped):
+  - **NEW — L85:** "player viewport doesn't FOLLOW token MOVES" still `[ ]`, but fix shipped at L84 (`7ba065b` 2026-05-29, move-follow for active combatant + own PC). Hunt & Peck should close L85.
+  - L81: E2E re-cert for fit-to-width render model — still `[ ]`, Playwright/E2E lane.
+  - L88: initiative round number in feed — still `[ ]`, HP lane.
+- L80: img_scale divergence code shipped 2026-05-27, awaiting Xero's 2-client visual eyeball — blocks TacticalMap YELLOW → GREEN.
+
+**Action:** Puffer Fish — (1) refresh Confidence Ledger test count (622/37 → 738/41); (2) drain HOPED-FOR post-Minnie-S7; (3) close L85 in todo.md (fix shipped). HP closes L88. E2E closes L81. Xero eyeballs L80 (2 browsers).
+
+---
+
 ## 2026-05-29 18:04 UTC
 
 **Status:** DRIFT (continuing — 23rd flag)
