@@ -842,9 +842,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       draw()
       if (scene && centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        const fit = containerRef.current ? fitWholeMapZoom(containerRef.current.clientWidth, containerRef.current.clientHeight, scene.grid_cols * getCellSize(), scene.grid_rows * getCellSize()) : 1
-        setZoom(fit)
-        centerViewport(fit)
+        setZoom(1)
+        centerViewport(1)
       }
       return
     }
