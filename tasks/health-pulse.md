@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-29 15:07 UTC
+
+**Status:** DRIFT (continuing — 22nd flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [718 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR not drained (10+ days — 2026-05-19 batch; drain target was 2026-05-25 playtest, never actioned).
+- 4 stale-as-open todos (confirmed shipped in 21st flag, still unchecked in todo.md):
+  - L80: E2E tactical-map re-cert — commit `e055337` shipped it.
+  - L84: initiative round label — `RollsFeed.tsx:520` renders `⚔️ Initiative (Round N)` — confirmed live this run.
+  - L106: pin catch-up fix — `CampaignMap.tsx:952+999` has the handler — confirmed shipped.
+  - L136: 3-lane coordination — `operating-mode.md` three-lane section present — confirmed live this run.
+
+**Action:** Same as 21st: Puffer Fish close L80/L84/L106/L136 in todo.md; drain HOPED-FOR in Confidence Ledger. No new issues found.
+
+---
+
 ## 2026-05-29 09:05 UTC
 
 **Status:** DRIFT (continuing — 21st flag)
