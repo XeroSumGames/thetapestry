@@ -141,20 +141,20 @@ export function fitZoom(viewW: number, contentW: number): number {
   return Math.max(0.1, Math.min(5, viewW / contentW))
 }
 
-// THE tactical-canvas render scale. `cell_px` is the shared absolute size of
-// one grid cell (persisted in the DB, same on every client). The composite
-// renders at `cell_px * zoom` pixels per cell. One scale drives BOTH the draw
-// transform and the pointer<->cell math so they can never drift apart; it is
-// purely per-client (one person zooming never changes another's view).
-// Degenerate inputs fall back to 1.
-export function effectiveScale(zoom: number): number {
-  return zoom > 0 ? zoom : 1
+// Fill-to-width scale: at zoom=1 the grid fills containerWidth exactly (cell_px * scale == containerWidth/grid_cols).
+// One scale drives BOTH the draw transform and the pointer<->cell math; purely per-client.
+// Degenerate inputs fall back to zoom (or 1).
+export function effectiveScale(containerWidth: number, gridW: number, zoom: number): number {
+  const z = zoom > 0 ? zoom : 1
+  if (!(containerWidth > 0) || !(gridW > 0)) return z
+  return (containerWidth / gridW) * z
 }
 
-/** Per-client default zoom on scene open: fit the WHOLE grid into this viewport. */
+/** Raw zoom value that fits the WHOLE grid into the viewport (fill-to-width model).
+ * At zoom=1 the grid fills viewW; returns min(1, ratio) so height fits too. */
 export function fitWholeMapZoom(viewW: number, viewH: number, gridW: number, gridH: number): number {
   if (!(viewW > 0) || !(viewH > 0) || !(gridW > 0) || !(gridH > 0)) return 1
-  return Math.max(0.25, Math.min(3, Math.min(viewW / gridW, viewH / gridH)))
+  return Math.max(0.1, Math.min(1, (viewH * gridW) / (gridH * viewW)))
 }
 
 /** True when a grid cell is at least partially visible in the current scroll position. */

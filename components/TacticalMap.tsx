@@ -806,18 +806,22 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const pingChannelRef = pingChannel.channelRef
 
   // Frame on scene open or CENTER button: prefer own PC > active combatant > PCs > visible.
-  function centerViewport(scaleOverride?: number) {
+  function centerViewport(rawZoomOverride?: number) {
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
     setTimeout(() => {
       if (!container || !canvas) return
-      const scale = scaleOverride ?? getScale()
       const s = sceneRef.current
       const cs = getCellSize()
+      const gridW = s ? s.grid_cols * cs : 0
+      const gridH = s ? s.grid_rows * cs : 0
+      // Compute effective scale from raw zoom (fill-to-width: at zoom=1, grid fills container width).
       // Use expected canvas dims (canvas.width/height may be stale when called after setZoom).
-      const cw = s ? Math.max(container.clientWidth, s.grid_cols * cs * scale) : canvas.width
-      const ch = s ? Math.max(container.clientHeight, s.grid_rows * cs * scale) : canvas.height
+      const rawZ = rawZoomOverride ?? zoom
+      const scale = gridW > 0 ? effectiveScale(container.clientWidth, gridW, rawZ) : rawZ > 0 ? rawZ : 1
+      const cw = s ? Math.max(container.clientWidth, gridW * scale) : canvas.width
+      const ch = s ? Math.max(container.clientHeight, gridH * scale) : canvas.height
       const visible = tokensRef.current.filter(t => isGM || t.is_visible)
       const activeEntry = initiativeOrderRef.current.find((e: any) => e.is_active)
       const c = tokenCentroidCell(findCenterTargets(visible, myCharacterIdRef.current, activeEntry))
@@ -831,15 +835,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }, 0)
   }
 
-  function fitWholeMapNow(): number {
-    const container = containerRef.current
-    const s = sceneRef.current
-    if (!container || !s) return 1
-    const gridW = s.grid_cols * getCellSize()
-    const gridH = s.grid_rows * getCellSize()
-    return fitWholeMapZoom(container.clientWidth, container.clientHeight, gridW, gridH)
-  }
-
   // Load background image when scene changes
   useEffect(() => {
     if (!scene?.background_url) {
@@ -847,9 +842,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       draw()
       if (scene && centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        const fit = fitWholeMapNow()
-        setZoom(fit)
-        centerViewport(fit)
+        setZoom(1)
+        centerViewport(1)
       }
       return
     }
@@ -864,13 +858,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // scroll only (see fitToScreen) - never the shared map.
       setBgLoadTick(t => t + 1)
       draw()
-      // Center once per scene. After the image loads, canvas dimensions are
-      // final - this is the right moment to scroll to fit + center.
+      // Center once per scene. At zoom=1 the grid fills the panel width; fitToScreen
+      // is available if the viewer wants to see the whole map vertically too.
       if (centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        const fit = fitWholeMapNow()
-        setZoom(fit)
-        centerViewport(fit)
+        setZoom(1)
+        centerViewport(1)
       }
     }
     img.src = scene.background_url
@@ -1041,10 +1034,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     return cellPx
   }
 
-  // THE render scale: cell_px is the shared absolute base; local zoom multiplies it.
+  // Fill-to-width scale: at zoom=1 the grid fills the container width.
   // See lib/tactical-view effectiveScale(). Purely per-client; never broadcast.
   function getScale(): number {
-    return effectiveScale(zoom)
+    const container = containerRef.current
+    const s = sceneRef.current
+    if (!container || !s) return zoom > 0 ? zoom : 1
+    const gridW = s.grid_cols * getCellSize()
+    return effectiveScale(container.clientWidth, gridW, zoom)
   }
 
   function draw() {
@@ -1069,9 +1066,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // second, independent scale that decoupled the bg from the grid (bg didn't
     // fill the grid; tokens "bounced" when it was dragged) - was retired
     // 2026-05-27; the render no longer reads it.
-    // Single effective scale (fit-to-width x personal zoom) - see getScale().
-    // At zoom=1, gridW*scale == baseW, so the map fills the panel width exactly;
-    // a map taller than the panel makes the canvas taller -> vertical scroll.
+    // Fill-to-width: at zoom=1, scale = containerW/gridW so gridW*scale == baseW.
+    // Zoom > 1 over-fills width (scroll); zoom < 1 shrinks below container width.
     const scale = getScale()
     canvas.width = Math.max(baseW, gridW * scale)
     canvas.height = Math.max(baseH, gridH * scale)

@@ -109,35 +109,43 @@ describe('fitZoom', () => {
 })
 
 describe('effectiveScale', () => {
-  it('returns zoom directly (shared cell_px is the absolute base)', () => {
-    expect(effectiveScale(0.5)).toBe(0.5)
-    expect(effectiveScale(1)).toBe(1)
-    expect(effectiveScale(2)).toBe(2)
+  it('fills container width at zoom=1 (fill-to-width model)', () => {
+    // 900px container, 1800px grid: scale = 900/1800 * 1 = 0.5 -> grid renders at 900px
+    expect(effectiveScale(900, 1800, 1)).toBe(0.5)
+    // square: container == grid -> scale 1
+    expect(effectiveScale(900, 900, 1)).toBe(1)
   })
 
-  it('falls back to 1 on degenerate inputs', () => {
-    expect(effectiveScale(0)).toBe(1)
-    expect(effectiveScale(-1)).toBe(1)
+  it('multiplies by zoom (zoom=2 doubles rendered width)', () => {
+    expect(effectiveScale(900, 1800, 2)).toBe(1)
+    expect(effectiveScale(900, 900, 0.5)).toBe(0.5)
+  })
+
+  it('falls back to zoom (or 1) on degenerate inputs', () => {
+    expect(effectiveScale(0, 900, 1)).toBe(1)    // no container -> fall back to z=1
+    expect(effectiveScale(900, 0, 1)).toBe(1)    // no grid -> fall back to z=1
+    expect(effectiveScale(900, 900, 0)).toBe(1)  // zoom=0 -> fallback z=1 -> scale=1
   })
 })
 
 describe('fitWholeMapZoom', () => {
-  it('uses width when width is the tighter constraint', () => {
-    // 1000x500 grid in a 500x400 viewport: fitW=0.5, fitH=0.8 -> min=0.5
-    expect(fitWholeMapZoom(500, 400, 1000, 500)).toBe(0.5)
+  it('returns 1 when the grid is wider than tall relative to the viewport', () => {
+    // 500x400 viewport, 1000x500 grid: height-fit zoom = (400*1000)/(500*500) = 1.6 -> clamp to 1
+    expect(fitWholeMapZoom(500, 400, 1000, 500)).toBe(1)
   })
 
-  it('uses height when height is the tighter constraint', () => {
-    // 500x1000 grid in a 400x500 viewport: fitW=0.8, fitH=0.5 -> min=0.5
-    expect(fitWholeMapZoom(400, 500, 500, 1000)).toBe(0.5)
+  it('returns a zoom < 1 when the grid is proportionally taller than the viewport', () => {
+    // 400x500 viewport, 500x1000 grid: zoom = (500*500)/(1000*400) = 0.625
+    expect(fitWholeMapZoom(400, 500, 500, 1000)).toBe(0.625)
   })
 
-  it('clamps to 0.25 on tiny viewport / huge grid', () => {
-    expect(fitWholeMapZoom(50, 50, 5000, 5000)).toBe(0.25)
+  it('returns 1 for square viewport and square grid (no vertical overflow)', () => {
+    expect(fitWholeMapZoom(500, 500, 500, 500)).toBe(1)
   })
 
-  it('clamps to 3 on huge viewport / tiny grid', () => {
-    expect(fitWholeMapZoom(5000, 5000, 500, 500)).toBe(3)
+  it('clamps to 0.1 for extreme tall grids', () => {
+    // viewW=100, viewH=100, gridW=100, gridH=100000: zoom=(100*100)/(100000*100)=0.001 -> clamp 0.1
+    expect(fitWholeMapZoom(100, 100, 100, 100000)).toBe(0.1)
   })
 
   it('falls back to 1 on degenerate inputs', () => {
