@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-29 09:05 UTC
+
+**Status:** DRIFT (continuing — 21st flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [718 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR not drained (10+ days — 2026-05-19 batch; vehicle popout broadcasts + combat-math/infection modal). Minnie S7 playtest (2026-05-26) confirmed in debug-handoff.md but Confidence Ledger never updated.
+- 4 stale-as-open todos confirmed shipped (all `- [ ]` but code exists):
+  - L80 E2E tactical-map re-cert: commit `e055337` "extend tactical-map-render for bg-locked/fit-to-width" — shipped.
+  - L84 initiative round label: `RollsFeed.tsx:520` renders `⚔️ Initiative (Round N)` — shipped.
+  - L106 pin catch-up fix: `CampaignMap.tsx:952+999` has SUBSCRIBED reload + visibilitychange handler (commit `4b48f00`) — shipped. (NEW — not in 20th flag.)
+  - L136 3-lane coordination: `operating-mode.md` three-lane section present — shipped.
+
+**Action:** Puffer Fish — (1) drain HOPED-FOR in debug-handoff.md Confidence Ledger post-Minnie-S7; (2) mark L80, L84, L106, L136 closed in todo.md. 21st consecutive flag.
+
+---
+
 ## 2026-05-29 06:05 UTC
 
 **Status:** DRIFT (continuing — 20th flag)
