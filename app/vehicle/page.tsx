@@ -1231,7 +1231,7 @@ export default function VehiclePage() {
                   // so the controls line up across every row. The description (notes,
                   // enc, rarity) moved to a hover tooltip - inline descriptions made
                   // rows ragged/scrunched (Xero 2026-05-28).
-                  title={`${item.name}${item.notes ? ` - ${item.notes}` : ''}${item.enc > 0 ? ` (${item.enc} enc each)` : ''}${item.rarity && item.rarity !== 'Common' ? ` [${item.rarity}]` : ''}`}
+                  title={`${item.name}${item.notes ? ` ${item.notes}` : ''}. Enc: ${item.enc} . Rarity: ${item.rarity}`}
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
                   <span style={{ width: '30ch', flexShrink: 0, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                   <span style={{ flexShrink: 0, color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} title="Encumbrance per item">(Enc: {item.enc})</span>
