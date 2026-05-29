@@ -882,12 +882,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // void" playtest bug). Only applies when there's a background image; a
   // gridded-but-art-less scene keeps its manual dims.
   useEffect(() => {
-    const img = bgImageRef.current, s = sceneRef.current
-    if (!isGM || !img || !s) return
-    const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, 1, cellPx)
-    if (!cols || !rows || (cols === s.grid_cols && rows === s.grid_rows)) return
-    const g = { grid_cols: cols, grid_rows: rows }
-    setScene(p => p ? { ...p, ...g } : p); updateScene(s.id, g)
+    const img = bgImageRef.current, s = sceneRef.current, c = containerRef.current
+    if (!img || !s || !c) return
+    const refit = (gw: number, gh: number) => { const f = fitWholeMapZoom(c.clientWidth, c.clientHeight, gw, gh); setZoom(f); centerViewport(f) }
+    if (isGM) {
+      const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, 1, cellPx)
+      if (!cols || !rows || (cols === s.grid_cols && rows === s.grid_rows)) return
+      setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p); updateScene(s.id, { grid_cols: cols, grid_rows: rows }); refit(cols * cellPx, rows * cellPx)
+    } else refit(s.grid_cols * cellPx, s.grid_rows * cellPx)
   }, [bgLoadTick, cellPx, isGM, scene?.grid_cols, scene?.grid_rows])
 
   // Refresh tokens when parent signals a change

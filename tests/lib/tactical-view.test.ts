@@ -129,9 +129,9 @@ describe('effectiveScale', () => {
 })
 
 describe('fitWholeMapZoom', () => {
-  it('returns 1 when the grid is wider than tall relative to the viewport', () => {
-    // 500x400 viewport, 1000x500 grid: height-fit zoom = (400*1000)/(500*500) = 1.6 -> clamp to 1
-    expect(fitWholeMapZoom(500, 400, 1000, 500)).toBe(1)
+  it('returns cover zoom > 1 when the grid needs height-fill on a wide container', () => {
+    // 500x400 viewport, 1000x500 grid: ratio = (400*1000)/(500*500) = 1.6 -> cover (no upper clamp)
+    expect(fitWholeMapZoom(500, 400, 1000, 500)).toBe(1.6)
   })
 
   it('returns a zoom < 1 when the grid is proportionally taller than the viewport', () => {
@@ -139,7 +139,7 @@ describe('fitWholeMapZoom', () => {
     expect(fitWholeMapZoom(400, 500, 500, 1000)).toBe(0.625)
   })
 
-  it('returns 1 for square viewport and square grid (no vertical overflow)', () => {
+  it('returns 1 for square viewport and square grid', () => {
     expect(fitWholeMapZoom(500, 500, 500, 500)).toBe(1)
   })
 

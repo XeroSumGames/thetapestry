@@ -150,11 +150,15 @@ export function effectiveScale(containerWidth: number, gridW: number, zoom: numb
   return (containerWidth / gridW) * z
 }
 
-/** Raw zoom value that fits the WHOLE grid into the viewport (fill-to-width model).
- * At zoom=1 the grid fills viewW; returns min(1, ratio) so height fits too. */
+/** Raw zoom that COVERS the viewport with the grid (fill-to-width model).
+ * ratio = (viewH * gridW) / (gridH * viewW).
+ * ratio <= 1 (wide container): zoom = ratio, grid fills height, width gap on sides.
+ * ratio > 1 (tall container): zoom = ratio > 1, grid fills height, overflows width (scrollable).
+ * No upper clamp so the grid always covers the full panel without a gap below.
+ * Clamps to 0.1 so extreme shapes don't produce a near-zero zoom. */
 export function fitWholeMapZoom(viewW: number, viewH: number, gridW: number, gridH: number): number {
   if (!(viewW > 0) || !(viewH > 0) || !(gridW > 0) || !(gridH > 0)) return 1
-  return Math.max(0.1, Math.min(1, (viewH * gridW) / (gridH * viewW)))
+  return Math.max(0.1, (viewH * gridW) / (gridH * viewW))
 }
 
 /** True when a grid cell is at least partially visible in the current scroll position. */
