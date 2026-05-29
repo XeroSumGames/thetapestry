@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell, fitZoom, effectiveScale, computeAboard } from '../../lib/tactical-view'
+import { shouldFollowSharedTactical, shouldRenderTactical, tokenCentroidCell, centerScrollOnCell, fitZoom, effectiveScale, fitWholeMapZoom, isCellInView, findMoveFollowToken, findCenterTargets, computeAboard } from '../../lib/tactical-view'
 
 // Invariant (Xero 2026-05-22): sharing drives what PLAYERS see, not the GM's
 // own pane. The GM can preview the campaign map while players see the shared
@@ -109,29 +109,139 @@ describe('fitZoom', () => {
 })
 
 describe('effectiveScale', () => {
-  it('fills the panel width at zoom=1 (composite width == container width)', () => {
-    // gridW 1000 in a 500px panel -> 0.5 so the 1000px map renders at 500px.
-    expect(effectiveScale(500, 1000, 1)).toBe(0.5)
-    // square map already == panel -> 1:1.
-    expect(effectiveScale(800, 800, 1)).toBe(1)
+  it('returns zoom directly (shared cell_px is the absolute base)', () => {
+    expect(effectiveScale(0.5)).toBe(0.5)
+    expect(effectiveScale(1)).toBe(1)
+    expect(effectiveScale(2)).toBe(2)
   })
 
-  it('multiplies the fill-width baseline by the local zoom', () => {
-    // 500/1000 = 0.5 baseline; zoom 2 -> 1.0 (zoomed in 2x).
-    expect(effectiveScale(500, 1000, 2)).toBe(1)
-    // zoom 0.5 -> 0.25 (zoomed out).
-    expect(effectiveScale(500, 1000, 0.5)).toBe(0.25)
+  it('falls back to 1 on degenerate inputs', () => {
+    expect(effectiveScale(0)).toBe(1)
+    expect(effectiveScale(-1)).toBe(1)
+  })
+})
+
+describe('fitWholeMapZoom', () => {
+  it('uses width when width is the tighter constraint', () => {
+    // 1000x500 grid in a 500x400 viewport: fitW=0.5, fitH=0.8 -> min=0.5
+    expect(fitWholeMapZoom(500, 400, 1000, 500)).toBe(0.5)
   })
 
-  it('is independent per client: same map, different panel widths -> different scale', () => {
-    expect(effectiveScale(600, 1200, 1)).toBe(0.5)
-    expect(effectiveScale(1200, 1200, 1)).toBe(1)
+  it('uses height when height is the tighter constraint', () => {
+    // 500x1000 grid in a 400x500 viewport: fitW=0.8, fitH=0.5 -> min=0.5
+    expect(fitWholeMapZoom(400, 500, 500, 1000)).toBe(0.5)
   })
 
-  it('falls back to the zoom (or 1) on degenerate inputs', () => {
-    expect(effectiveScale(0, 1000, 1.5)).toBe(1.5)
-    expect(effectiveScale(500, 0, 2)).toBe(2)
-    expect(effectiveScale(0, 0, 0)).toBe(1)
+  it('clamps to 0.25 on tiny viewport / huge grid', () => {
+    expect(fitWholeMapZoom(50, 50, 5000, 5000)).toBe(0.25)
+  })
+
+  it('clamps to 3 on huge viewport / tiny grid', () => {
+    expect(fitWholeMapZoom(5000, 5000, 500, 500)).toBe(3)
+  })
+
+  it('falls back to 1 on degenerate inputs', () => {
+    expect(fitWholeMapZoom(0, 500, 1000, 500)).toBe(1)
+    expect(fitWholeMapZoom(500, 0, 1000, 500)).toBe(1)
+    expect(fitWholeMapZoom(500, 500, 0, 500)).toBe(1)
+    expect(fitWholeMapZoom(500, 500, 500, 0)).toBe(1)
+  })
+})
+
+describe('isCellInView', () => {
+  const base = { cellPx: 35, zoom: 1, scrollLeft: 0, scrollTop: 0, viewW: 700, viewH: 525 }
+
+  it('a cell at the origin is in view', () => {
+    expect(isCellInView({ ...base, cellX: 0, cellY: 0 })).toBe(true)
+  })
+
+  it('a cell fully within the viewport is in view', () => {
+    // cell (5,5): px=175, size=35 -> fits in 700x525
+    expect(isCellInView({ ...base, cellX: 5, cellY: 5 })).toBe(true)
+  })
+
+  it('a cell whose left edge is at viewW is NOT in view', () => {
+    // cell (20,0): px=700, size=35; px NOT < 0+700 -> false
+    expect(isCellInView({ ...base, cellX: 20, cellY: 0 })).toBe(false)
+  })
+
+  it('a cell whose top edge is at viewH is NOT in view', () => {
+    // cell (0,15): py=525, size=35; py NOT < 0+525 -> false
+    expect(isCellInView({ ...base, cellX: 0, cellY: 15 })).toBe(false)
+  })
+
+  it('a cell scrolled into view is visible', () => {
+    // cell (25,20): px=875, py=700; scrolled to (200,200), view 700x525 -> (875<900, 700<925)
+    expect(isCellInView({ ...base, cellX: 25, cellY: 20, scrollLeft: 200, scrollTop: 200 })).toBe(true)
+  })
+
+  it('zoom scales both position and cell size', () => {
+    // cell (5,5) at zoom=2: px=350, size=70 -> in 700x525
+    expect(isCellInView({ ...base, zoom: 2, cellX: 5, cellY: 5 })).toBe(true)
+    // cell (10,0) at zoom=2: px=700, NOT < viewW 700 -> false
+    expect(isCellInView({ ...base, zoom: 2, cellX: 10, cellY: 0 })).toBe(false)
+  })
+})
+
+const tok = (id: string, cid: string | null, nid: string | null, name: string, type = 'pc', x = 1, y = 1) =>
+  ({ id, character_id: cid, npc_id: nid, name, token_type: type, grid_x: x, grid_y: y })
+
+describe('findMoveFollowToken', () => {
+  const t1 = tok('t1', 'char1', null, 'Mikey')
+  const t2 = tok('t2', null, 'npc1', 'Benny', 'npc', 3, 3)
+  const active = { character_id: null, npc_id: 'npc1', character_name: 'Benny' }
+
+  it('returns null when no token moved', () => {
+    const pos = new Map([['t1', { x: 1, y: 1 }], ['t2', { x: 3, y: 3 }]])
+    expect(findMoveFollowToken([t1, t2], pos, 'char1', active)).toBeNull()
+  })
+
+  it('returns a token that moved AND matches own PC', () => {
+    const pos = new Map([['t1', { x: 0, y: 0 }]])
+    expect(findMoveFollowToken([t1, t2], pos, 'char1', null)).toBe(t1)
+  })
+
+  it('returns a token that moved AND matches active combatant', () => {
+    const pos = new Map([['t2', { x: 1, y: 1 }]])
+    const moved = { ...t2, grid_x: 3, grid_y: 3 }
+    expect(findMoveFollowToken([t1, moved], pos, null, active)).toBe(moved)
+  })
+
+  it('ignores tokens that moved but are neither own PC nor active', () => {
+    const other = tok('t3', 'char3', null, 'Randy', 'pc', 5, 5)
+    const pos = new Map([['t3', { x: 2, y: 2 }]])
+    expect(findMoveFollowToken([other], pos, 'char1', active)).toBeNull()
+  })
+
+  it('returns null for a newly appeared token (no prev entry)', () => {
+    expect(findMoveFollowToken([t1], new Map(), 'char1', null)).toBeNull()
+  })
+})
+
+describe('findCenterTargets', () => {
+  const pc1 = tok('p1', 'char1', null, 'Mikey', 'pc')
+  const pc2 = tok('p2', 'char2', null, 'Juno', 'pc')
+  const npc = tok('n1', null, 'npc1', 'Benny', 'npc')
+
+  it('returns the own PC when present', () => {
+    expect(findCenterTargets([pc1, pc2, npc], 'char1', null)).toEqual([pc1])
+  })
+
+  it('falls back to active combatant when own PC not visible', () => {
+    const active = { character_id: null, npc_id: 'npc1', character_name: 'Benny' }
+    expect(findCenterTargets([pc2, npc], 'char1', active)).toEqual([npc])
+  })
+
+  it('falls back to all PCs when no own/active', () => {
+    expect(findCenterTargets([pc1, pc2, npc], null, null)).toEqual([pc1, pc2])
+  })
+
+  it('falls back to all visible when no PCs', () => {
+    expect(findCenterTargets([npc], null, null)).toEqual([npc])
+  })
+
+  it('returns empty array for empty visible', () => {
+    expect(findCenterTargets([], 'char1', null)).toEqual([])
   })
 })
 

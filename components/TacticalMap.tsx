@@ -11,7 +11,7 @@ import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
 import { gridToCoverMap } from '../lib/tactical-grid'
 import { useFogBarPosition } from '../lib/use-fog-bar-position'
-import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, effectiveScale, computeAboard } from '../lib/tactical-view'
+import { frameViewportOnTokens, scrollCellIntoView, drawFallbackToken, effectiveScale, fitWholeMapZoom, isCellInView, findMoveFollowToken, findCenterTargets, computeAboard } from '../lib/tactical-view'
 
 // Feet per band - used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -384,6 +384,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [fogLocal, setFogLocal] = useState<Record<string, boolean>>({})
   const fogLocalRef = useRef<Record<string, boolean>>({})
   useEffect(() => { fogLocalRef.current = fogLocal }, [fogLocal])
+  const initiativeOrderRef = useRef<any[]>(initiativeOrder)
+  useEffect(() => { initiativeOrderRef.current = initiativeOrder }, [initiativeOrder])
+  const myCharacterIdRef = useRef<string | null | undefined>(myCharacterId)
+  useEffect(() => { myCharacterIdRef.current = myCharacterId }, [myCharacterId])
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
   const portraitCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
@@ -394,6 +398,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const centeredSceneIdRef = useRef<string | null>(null)
   // loadTokens: prev ids scroll a new token into view; seq guard drops stale out-of-order fetches.
   const prevTokenIdsRef = useRef<Set<string>>(new Set())
+  const prevTokenPosRef = useRef<Map<string, { x: number; y: number }>>(new Map())
   const tokenScrollSceneRef = useRef<string | null>(null)
   const loadTokensSeqRef = useRef(0)
   // Same guard for loadScenes: it fires from mount + the tactical_scenes
@@ -694,14 +699,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const toks = (data ?? []) as unknown as Token[]
     setTokens(toks)
     if (tokenScrollSceneRef.current === sceneId) {
+      const container = containerRef.current, canvas = canvasRef.current
+      // Appeared-token follow (existing)
       const appeared = toks.filter(t => (isGM || t.is_visible) && !prevTokenIdsRef.current.has(t.id))
       const target = appeared.find(t => t.token_type === 'pc') ?? appeared[0]
-      const container = containerRef.current, canvas = canvasRef.current
       if (target && container && canvas) scrollCellIntoView(container, canvas, target.grid_x, target.grid_y, getCellSize(), getScale())
+      // Move-follow for active combatant + viewer's own PC (off-screen only)
+      if (container && canvas) {
+        const activeEntry = initiativeOrderRef.current.find((e: any) => e.is_active)
+        const mover = findMoveFollowToken(toks, prevTokenPosRef.current, myCharacterIdRef.current, activeEntry)
+        if (mover && !isCellInView({ cellX: mover.grid_x, cellY: mover.grid_y, cellPx: getCellSize(), zoom: getScale(), scrollLeft: container.scrollLeft, scrollTop: container.scrollTop, viewW: container.clientWidth, viewH: container.clientHeight }))
+          scrollCellIntoView(container, canvas, mover.grid_x, mover.grid_y, getCellSize(), getScale())
+      }
     } else {
       tokenScrollSceneRef.current = sceneId
     }
     prevTokenIdsRef.current = new Set(toks.map(t => t.id))
+    prevTokenPosRef.current = new Map(toks.map(t => [t.id, { x: t.grid_x, y: t.grid_y }]))
   }
 
   // Init - load scenes on mount/campaign change. The render-loop's
@@ -791,8 +805,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   })
   const pingChannelRef = pingChannel.channelRef
 
-  // Frame on scene open: prefer PC tokens (players in view, not the empty middle).
-  function centerViewport() {
+  // Frame on scene open or CENTER button: prefer own PC > active combatant > PCs > visible.
+  // scaleOverride bypasses the stale zoom closure when zoom was just set.
+  function centerViewport(scaleOverride?: number) {
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
@@ -800,24 +815,33 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // settled into the DOM before we read scroll dimensions.
     setTimeout(() => {
       if (!container || !canvas) return
+      const scale = scaleOverride ?? getScale()
       const visible = tokensRef.current.filter(t => isGM || t.is_visible)
-      const pcs = visible.filter(t => t.token_type === 'pc')
-      frameViewportOnTokens(container, canvas, pcs.length ? pcs : visible, getCellSize(), getScale())
+      const activeEntry = initiativeOrderRef.current.find((e: any) => e.is_active)
+      const targets = findCenterTargets(visible, myCharacterIdRef.current, activeEntry)
+      frameViewportOnTokens(container, canvas, targets, getCellSize(), scale)
     }, 0)
+  }
+
+  function fitWholeMapNow(): number {
+    const container = containerRef.current
+    const s = sceneRef.current
+    if (!container || !s) return 1
+    const gridW = s.grid_cols * getCellSize()
+    const gridH = s.grid_rows * getCellSize()
+    return fitWholeMapZoom(container.clientWidth, container.clientHeight, gridW, gridH)
   }
 
   // Load background image when scene changes
   useEffect(() => {
-    // Reset local zoom to 100% on scene-open / map-import (effect re-runs on
-    // background_url change). 100% = fill the panel width, so a fresh map fills
-    // the frame instead of inheriting a prior zoom (e.g. 115%) that overflows.
-    setZoom(1)
     if (!scene?.background_url) {
       bgImageRef.current = null
       draw()
       if (scene && centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        centerViewport()
+        const fit = fitWholeMapNow()
+        setZoom(fit)
+        centerViewport(fit)
       }
       return
     }
@@ -833,10 +857,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       setBgLoadTick(t => t + 1)
       draw()
       // Center once per scene. After the image loads, canvas dimensions are
-      // final - this is the right moment to scroll to the middle.
+      // final - this is the right moment to scroll to fit + center.
       if (centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        centerViewport()
+        const fit = fitWholeMapNow()
+        setZoom(fit)
+        centerViewport(fit)
       }
     }
     img.src = scene.background_url
@@ -1007,14 +1033,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     return cellPx
   }
 
-  // THE render scale (fit-to-panel-width x local zoom) - math in lib/tactical-
-  // view effectiveScale(). Reads container width LIVE, so the ResizeObserver
-  // redraw re-fills the width on any window resize.
+  // THE render scale: cell_px is the shared absolute base; local zoom multiplies it.
+  // See lib/tactical-view effectiveScale(). Purely per-client; never broadcast.
   function getScale(): number {
-    const s = sceneRef.current
-    const container = containerRef.current
-    if (!s || !container) return zoom
-    return effectiveScale(container.clientWidth, s.grid_cols * getCellSize(), zoom)
+    return effectiveScale(zoom)
   }
 
   function draw() {
@@ -3516,29 +3538,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   function fitToScreen() {
     // "See the whole map": set the LOCAL zoom so the entire composite fits this
-    // viewer's panel in BOTH dimensions, then center it. zoom=1 already fills
-    // the width (getScale), so this only zooms further OUT when the map is
-    // taller than the panel; it never changes what other viewers see.
+    // viewer's panel in BOTH dimensions, then center it. Never changes other viewers.
     const container = containerRef.current
     const s = sceneRef.current
     if (!container || !s) { setZoom(1); return }
     const gridW = s.grid_cols * getCellSize()
     const gridH = s.grid_rows * getCellSize()
     if (gridW <= 0 || gridH <= 0) { setZoom(1); return }
-    const fitW = container.clientWidth / gridW
-    const fitH = container.clientHeight / gridH
-    // zoom multiplies the fill-width baseline (fitW); whole-map fit is the
-    // smaller of the two fits, so zoom = min(1, fitH/fitW). Clamp to the slider.
-    setZoom(Math.max(0.25, Math.min(1, fitH / fitW)))
-    setPanX(0)
-    setPanY(0)
-    // Center after the canvas resizes to the new scale.
-    requestAnimationFrame(() => {
-      const c = containerRef.current, cv = canvasRef.current
-      if (!c || !cv) return
-      c.scrollLeft = Math.max(0, (cv.width - c.clientWidth) / 2)
-      c.scrollTop = Math.max(0, (cv.height - c.clientHeight) / 2)
-    })
+    const fit = fitWholeMapZoom(container.clientWidth, container.clientHeight, gridW, gridH)
+    setZoom(fit)
+    centerViewport(fit)
   }
 
   // Scene-controls bus - keeps the popped-out controls window in sync.

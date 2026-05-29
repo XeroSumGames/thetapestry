@@ -141,17 +141,76 @@ export function fitZoom(viewW: number, contentW: number): number {
   return Math.max(0.1, Math.min(5, viewW / contentW))
 }
 
-// THE tactical-canvas render scale. The composite (background + grid + tokens)
-// has a "natural" width of the grid extent `gridW` (= grid_cols * cell_px). We
-// always fit that to the viewport WIDTH (containerWidth / gridW) so the map
-// fills the panel on every machine - a taller map just scrolls down - then
-// multiply by this viewer's LOCAL `zoom` slider. One scale drives BOTH the draw
-// transform and the pointer<->cell math, so they can never drift apart, and it
-// is purely per-client (one person zooming never changes another's view).
-// Degenerate inputs fall back to `zoom` (or 1).
-export function effectiveScale(containerWidth: number, gridW: number, zoom: number): number {
-  if (!(gridW > 0) || !(containerWidth > 0)) return zoom > 0 ? zoom : 1
-  return (containerWidth / gridW) * zoom
+// THE tactical-canvas render scale. `cell_px` is the shared absolute size of
+// one grid cell (persisted in the DB, same on every client). The composite
+// renders at `cell_px * zoom` pixels per cell. One scale drives BOTH the draw
+// transform and the pointer<->cell math so they can never drift apart; it is
+// purely per-client (one person zooming never changes another's view).
+// Degenerate inputs fall back to 1.
+export function effectiveScale(zoom: number): number {
+  return zoom > 0 ? zoom : 1
+}
+
+/** Per-client default zoom on scene open: fit the WHOLE grid into this viewport. */
+export function fitWholeMapZoom(viewW: number, viewH: number, gridW: number, gridH: number): number {
+  if (!(viewW > 0) || !(viewH > 0) || !(gridW > 0) || !(gridH > 0)) return 1
+  return Math.max(0.25, Math.min(3, Math.min(viewW / gridW, viewH / gridH)))
+}
+
+/** True when a grid cell is at least partially visible in the current scroll position. */
+export function isCellInView(args: {
+  cellX: number; cellY: number
+  cellPx: number; zoom: number
+  scrollLeft: number; scrollTop: number
+  viewW: number; viewH: number
+}): boolean {
+  const { cellX, cellY, cellPx, zoom, scrollLeft, scrollTop, viewW, viewH } = args
+  const px = cellX * cellPx * zoom
+  const py = cellY * cellPx * zoom
+  const s = cellPx * zoom
+  return px + s > scrollLeft && px < scrollLeft + viewW && py + s > scrollTop && py < scrollTop + viewH
+}
+
+type ActiveEntry = { character_id?: string | null; npc_id?: string | null; character_name?: string | null } | null | undefined
+
+/** Find the first token that moved AND is the active combatant or the viewer's own PC. */
+export function findMoveFollowToken<T extends { id: string; grid_x: number; grid_y: number; character_id: string | null; npc_id: string | null; name: string }>(
+  toks: ReadonlyArray<T>,
+  prevPos: ReadonlyMap<string, { x: number; y: number }>,
+  myId: string | null | undefined,
+  activeEntry: ActiveEntry,
+): T | null {
+  for (const tok of toks) {
+    const prev = prevPos.get(tok.id)
+    if (!prev || (prev.x === tok.grid_x && prev.y === tok.grid_y)) continue
+    const isOwn = !!myId && tok.character_id === myId
+    const isActive = !!activeEntry && (
+      (activeEntry.character_id && tok.character_id === activeEntry.character_id)
+      || (activeEntry.npc_id && tok.npc_id === activeEntry.npc_id)
+      || (activeEntry.character_name && tok.name === activeEntry.character_name)
+    )
+    if (isOwn || isActive) return tok
+  }
+  return null
+}
+
+/** Priority-ordered targets for centering: own PC > active combatant > all PCs > all visible. */
+export function findCenterTargets<T extends { character_id: string | null; npc_id: string | null; name: string; token_type: string }>(
+  visible: ReadonlyArray<T>,
+  myId: string | null | undefined,
+  activeEntry: ActiveEntry,
+): ReadonlyArray<T> {
+  const ownPc = myId ? visible.find(t => t.character_id === myId) : undefined
+  if (ownPc) return [ownPc]
+  const activeTok = activeEntry
+    ? visible.find(t =>
+        (activeEntry.character_id && t.character_id === activeEntry.character_id)
+        || (activeEntry.npc_id && t.npc_id === activeEntry.npc_id)
+        || (activeEntry.character_name && t.name === activeEntry.character_name))
+    : undefined
+  if (activeTok) return [activeTok]
+  const pcs = visible.filter(t => t.token_type === 'pc')
+  return pcs.length ? pcs : visible
 }
 
 // --- vehicle "aboard" suppression (scene-scoped) --------------------------
