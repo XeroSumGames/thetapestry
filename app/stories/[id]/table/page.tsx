@@ -814,7 +814,7 @@ export default function TablePage() {
   const [useInFlight, setUseInFlight] = useState<Set<string>>(new Set())
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
-  const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
+  const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both' | 'map'>('both')
   // The Chat tab's <ChatMessageList> virtualizes via react-virtuoso's
   // customScrollParent mode, sharing the scroll container that already
   // serves the Logs / Both tabs (rollsFeed.rollFeedRef). Virtuoso needs

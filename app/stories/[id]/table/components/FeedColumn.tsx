@@ -20,7 +20,7 @@ interface FeedColumnProps {
   myUsername: string
   isGM: boolean
   gmLike: boolean
-  feedTab: 'rolls' | 'chat' | 'both'
+  feedTab: 'rolls' | 'chat' | 'both' | 'map'
   setFeedTab: any
   sessionStatus: string
   sessionActing: boolean
@@ -70,7 +70,17 @@ export function FeedColumn({
             {tab === 'rolls' ? 'Logs' : tab === 'chat' ? 'Chat' : 'Both'}
           </button>
         ))}
+        {gmLike && (
+          <button onClick={() => setFeedTab('map')}
+            style={{ flex: 1, padding: '8px 0', background: feedTab === 'map' ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: feedTab === 'map' ? '2px solid #c0392b' : '2px solid transparent', color: feedTab === 'map' ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Map
+          </button>
+        )}
       </div>
+      {feedTab === 'map' ? (
+        <iframe src={`/scene-controls-popout?c=${campaignId}`} title="Map Setup"
+          style={{ flex: 1, height: 0, border: 'none', display: 'block', minHeight: 0 }} />
+      ) : (
       <div ref={setFeedScrollContainer} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
         {sessionStatus === 'idle' && (
           gmLike ? (
@@ -190,6 +200,7 @@ export function FeedColumn({
           )
         })()}
       </div>
+      )}
       {/* Bottom: chat composer (textarea + Send + whisper indicator).
           Owns its own input state and the slash-command parsing
           inside <ChatComposer> - see components/TableChat.tsx. */}
