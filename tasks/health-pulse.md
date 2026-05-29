@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-29 00:04 UTC
+
+**Status:** DRIFT (continuing — 19th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [718 passed, 41 files — up from 707/40]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Notable since 18th flag (21:04 UTC 2026-05-28):** ~10 commits — vehicle cargo features (encumbrance bar, damage logging, qty stepper), tactical-map fixes (scene-scope vehicle aboard, per-player Map toggle, cross-scene initiative tie, img_scale/zoom/lock-to-grid commits), docs (KS plan, handoff). TacticalMap YELLOW fix actively in-flight (b38cdf2 bg-locked-to-grid, 6d9d706 fit-to-panel-width, f4daeac zoom-reset on import); not yet 2-client-verified so YELLOW stays.
+
+**Drift (unchanged from 18th flag):**
+- HOPED-FOR not drained (10 days — 2026-05-19 batch + re-arch vehicle/combat-math items). Drain target was 2026-05-25 playtest; debug-handoff.md Confidence Ledger still lists them HOPED-FOR with no update.
+- 2 stale-as-open todos remain `- [ ]` despite being shipped:
+  - L84 initiative round label: `RollsFeed.tsx:476` already renders `(Round N)` — feature shipped.
+  - L135 3-lane coordination: `lane-protocol.md` + `active-lanes.md` exist; `operating-mode.md` has the 3-lane section — shipped.
+
+**Action:** Puffer Fish — same x19 (unactioned): (1) drain HOPED-FOR in debug-handoff.md Confidence Ledger; (2) mark L84 + L135 closed in todo.md.
+
+---
+
 ## 2026-05-28 21:04 UTC
 
 **Status:** DRIFT (continuing — 18th flag)
