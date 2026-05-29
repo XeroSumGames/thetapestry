@@ -858,11 +858,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // scroll only (see fitToScreen) - never the shared map.
       setBgLoadTick(t => t + 1)
       draw()
-      if (centeredSceneIdRef.current !== scene.id) {
-        centeredSceneIdRef.current = scene.id
-        setZoom(1)
-        centerViewport(1)
-      }
+      centeredSceneIdRef.current = scene.id
+      setZoom(1)
+      centerViewport(1)
     }
     img.src = scene.background_url
   }, [scene?.background_url])
