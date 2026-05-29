@@ -18,7 +18,7 @@ Billing / GM-paid gating does NOT exist until ~10/1 (post-KS). **So through Beta
 - [ ] **[HP]** Combat math / conditions / end-of-combat infection verified (the documented manual 2-client smoke, #10).
 - [ ] **[HP]** Broadcast catch-up fix on all 5 subs (pins didn't show without refresh; class).
 - [ ] **[E2E]** Full `npm run test:e2e` green on prod as a launch gate; combat-flow covered or manually smoked.
-- [ ] **[PF/OP]** Beta-safety floor: uptime monitor + alerting on `/api/health` (a mid-demo outage during a live KS is catastrophic); backup cadence confirmed; realtime concurrent-connection sanity at backer-scale.
+- [ ] **[PF/OP]** Beta-safety floor: ~~uptime monitor + alerting on `/api/health`~~ **DONE 2026-05-29** (Better Stack, 30s check, Slack + email pager, verified - `tasks/ops-uptime-monitor-setup-2026-05-29.md`); STILL OPEN: backup cadence confirmed; realtime concurrent-connection sanity at backer-scale; Sentry alert-rule routing (todo observability B).
 
 ### B. Polish + first-impression (the "looks great / feel promising" half)
 - [ ] **[PF->HP]** KS first-impression punch list (from [ks-first-impression-audit-2026-05-27.md](ks-first-impression-audit-2026-05-27.md)) - the cold-visitor path (landing -> signup -> first campaign -> first session) has no rough/dead-end/"what do I do now" moments.

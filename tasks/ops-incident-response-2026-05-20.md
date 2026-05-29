@@ -34,8 +34,9 @@ If none of those apply, this is not an incident. Use the normal triage playbook 
 | Vercel dashboard | Vercel project for `thetapestry` | Deploy history, env vars, logs |
 | Supabase dashboard | Project `jbudzglgtxeoaufpejrv` | DB query editor, logs, RLS, backups |
 | GitHub repo | `XeroSumGames/thetapestry` | Commit history, `git revert` source |
+| Uptime monitor | Better Stack (`betterstack.com`) -> "Tapestry prod /api/health" monitor | External 30s HTTP check of `/api/health`; posts incidents to `#all-xero-sum-games` Slack + email. This is the pager. |
 
-Daily monitoring: none enforced yet (R4 Sentry-Slack runbook ready but click-through pending).
+Daily monitoring: external uptime monitor LIVE 2026-05-29 - Better Stack hits `/api/health` every 30s and posts incidents to the `#all-xero-sum-games` Slack channel (Slack mobile-app push = the free pager, since Better Stack's native push/SMS/call are paid) plus email. Verified end-to-end (test incident landed in Slack + phone push). Setup playbook: `tasks/ops-uptime-monitor-setup-2026-05-29.md`. STILL PENDING: the Sentry alert-rule click-through (Sentry catches app ERRORS; the uptime monitor catches OUTAGES - both needed). See `tasks/todo.md` observability B.
 
 ---
 
