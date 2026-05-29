@@ -858,13 +858,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // scroll only (see fitToScreen) - never the shared map.
       setBgLoadTick(t => t + 1)
       draw()
-      // Center once per scene. fitWholeMapZoom fits both axes; same effective
-      // scale for equal window heights regardless of container width (scale parity).
       if (centeredSceneIdRef.current !== scene.id) {
         centeredSceneIdRef.current = scene.id
-        const fit = containerRef.current ? fitWholeMapZoom(containerRef.current.clientWidth, containerRef.current.clientHeight, scene.grid_cols * getCellSize(), scene.grid_rows * getCellSize()) : 1
-        setZoom(fit)
-        centerViewport(fit)
+        setZoom(1)
+        centerViewport(1)
       }
     }
     img.src = scene.background_url
@@ -883,12 +880,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   useEffect(() => {
     const img = bgImageRef.current, s = sceneRef.current, c = containerRef.current
     if (!img || !s || !c) return
-    const refit = (gw: number, gh: number) => { const f = fitWholeMapZoom(c.clientWidth, c.clientHeight, gw, gh); setZoom(f); centerViewport(f) }
     if (isGM) {
       const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, 1, cellPx)
       if (!cols || !rows || (cols === s.grid_cols && rows === s.grid_rows)) return
-      setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p); updateScene(s.id, { grid_cols: cols, grid_rows: rows }); refit(cols * cellPx, rows * cellPx)
-    } else refit(s.grid_cols * cellPx, s.grid_rows * cellPx)
+      setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p); updateScene(s.id, { grid_cols: cols, grid_rows: rows })
+    }
+    setZoom(1); centerViewport(1)
   }, [bgLoadTick, cellPx, isGM, scene?.grid_cols, scene?.grid_rows])
 
   // Refresh tokens when parent signals a change
