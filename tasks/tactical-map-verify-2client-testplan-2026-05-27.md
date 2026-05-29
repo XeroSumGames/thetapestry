@@ -12,7 +12,7 @@ Companion to the fix spec: `tasks/tactical-map-render-fix-spec-2026-05-26.md` (t
 At the 2026-05-26 Minnie playtest: players couldn't see their own tokens (rendered in the black void off the map), and the map rendered at a DIFFERENT scale per client. Root cause: `img_scale` did two jobs (shared image-to-grid scale AND per-client viewport fit), was never persisted, and `1` meant both "unset" and "100%" -> every client silently auto-fit the bg to its own window while the grid stayed at `cell_px`. Locked map then stranded mis-centered viewers.
 
 ## Preconditions
-- HP's render rewrite is DEPLOYED to prod (per the fix spec: shared authoritative img_scale rendered for all + per-client fit via ZOOM; no silent per-client rescale; locked-map "center on my token").
+- HP's render rewrite is DEPLOYED to prod. **As of 2026-05-29 the full model shipped in `7ba065b`** ("shared scale metric, fit-on-open, smart move-follow") on top of the earlier `6ef34ce`/`fca10a6` lock-bg-to-grid work. This gate now covers BOTH the scale-divergence fix (checks 1-8) AND the move-follow fix (checks 9-12) - the move-follow was the 2026-05-29 playtest NO-GO, so checks 9-12 are the new must-prove.
 - Scale-sentinel migration applied (done 2026-05-26).
 - A test scene with a BACKGROUND IMAGE + PC tokens placed near the RIGHT and BOTTOM grid edges (Spring Valley `0c2ddae8` is a good fixture - 57x43, bg 2048x1536, tokens were at cols 44-56).
 - TWO accounts (a GM + a player) on TWO browsers/windows of DIFFERENT widths - and crucially include ONE NARROW viewport (the original victim was Opera at 1318px). Hard-refresh both onto the new build first.
@@ -27,6 +27,13 @@ At the 2026-05-26 Minnie playtest: players couldn't see their own tokens (render
 7. **Reload stability:** hard-reload BOTH clients -> identical correct result (no auto-fit clobber of the persisted scale).
 8. **Second scene:** switch the active scene to a different map (e.g. Frank's Compound) -> repeat checks 1-3 -> same correctness on a different image/grid.
 
+### Move-follow checks (NEW - the 2026-05-29 fix in `7ba065b`; these are the must-prove)
+The 2026-05-29 playtest NO-GO: the player's viewport did NOT follow a token MOVE, so a GM-moved or edge token left the player's frame and "if the GM moves Mikey 1 row right, the player can no longer see him." `7ba065b` makes the player's view auto-scroll on MOVE for the active combatant + the viewer's own PC (only when the moved token would be OFF-screen), and retargets the CENTER button. Prove it:
+9. **Follow the active combatant on MOVE:** start initiative so a known token is the ACTIVE combatant. On the PLAYER client, scroll so that token is off-screen, then have the GM move it. The player's viewport auto-scrolls to bring the active token back into view (it is NOT left off-screen). Repeat with the active token already on-screen -> the view should NOT jump (follow only fires when it would be off-screen).
+10. **Follow your own PC on MOVE:** on the player client, scroll your own PC off-screen, then have the GM move your PC one or more cells. Your viewport auto-scrolls back to your PC. (Also: when YOU move your own PC, your view keeps it framed.)
+11. **No spurious follow:** the GM moves an UNRELATED token (not the active combatant, not the player's own PC). The player's viewport does NOT jump - their pan stays put. (Confirms follow is scoped to own-PC + active, not every move.)
+12. **CENTER button priority:** on the player client, pan away from everything, then click CENTER ("Center the map on your token"). It recenters on the player's OWN PC first (falls back to active combatant > any PC > any visible token if the player has no PC on the map) - NOT the geometric map center.
+
 ## Automatable subset (E2E lane, data/DOM level - canvas pixels stay manual)
 Route to Playwright (their wheelhouse) once the rewrite lands:
 - After a GM opens an unset scene, assert the scene's `img_scale` is PERSISTED (non-null) and `natural_w`/`natural_h` are populated (REST).
@@ -35,7 +42,7 @@ Route to Playwright (their wheelhouse) once the rewrite lands:
 - (Pixel-level "token is on the bg" stays a MANUAL 2-client check - canvas can't be asserted headlessly.)
 
 ## Go / No-Go
-- **GREEN (fix proven):** ALL 8 manual checks pass on TWO clients including a NARROW viewport. Then Puffer demotes the TacticalMap entry in the Risk Register (`debug-handoff.md` Sec 1) from YELLOW back toward GREEN, and the core-loop reliability item is met for the KS.
+- **GREEN (fix proven):** ALL 12 manual checks pass on TWO clients including a NARROW viewport. Then Puffer demotes the TacticalMap entry in the Risk Register (`debug-handoff.md` Sec 1) from YELLOW back toward GREEN, and the core-loop reliability item is met for the KS.
 - **RED:** any check fails -> back to Hunt & Peck with the specific failing check #; do NOT demote.
 
 ## Ownership
