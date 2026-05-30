@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-30 12:07 UTC
+
+**Status:** DRIFT (continuing — 27th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (11+ days — 2026-05-19 batch; drain target was 2026-05-25, never actioned in Confidence Ledger).
+- Confidence Ledger stale: debug-handoff.md says 622 tests/37 files vs actual 738/41.
+- L78 stale-as-open (`100cfc1` shipped idempotent-toggle fix; todo still `[ ]`). Already in 26th flag.
+- PC-trade un-fixme (L30) still `[ ]` — test confirms "was test.fixme" (past tense). E2E lane.
+- **CORRECTION to 26th flag — TacticalMap YELLOW now 8 unverified commits** (was reported "6+"; `afb962b` pass-live-occupancy + `7287337` atomic bg-upload were missed): ef13951, 5aaaf40, 4a2b3ff, f722652, e94f143, 9e6400c, afb962b, 7287337.
+- **NEW — possible stale-as-open L108** ("Remove/consume an item from inventory"): `acc5ae9` (2026-05-30 04:33 UTC) adds feed logging "when player clicks x to use/remove an item" — phrasing implies the x-button affordance pre-existed; todo still `[ ]`. HP verify: does the x-button already work? If yes, close L108.
+
+**Action:** HP — investigate L108 (x-button pre-existed acc5ae9?); close L78. Puffer Fish — refresh Confidence Ledger (622/37→738/41), drain HOPED-FOR. E2E — close PC-trade un-fixme (L30). Xero — 2-client eyeball on TacticalMap (8 unverified commits in YELLOW area; gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`).
+
+---
+
 ## 2026-05-30 09:03 UTC
 
 **Status:** DRIFT (continuing — 26th flag)
