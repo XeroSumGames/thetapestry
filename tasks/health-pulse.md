@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-30 21:05 UTC
+
+**Status:** DRIFT (continuing — 30th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (2026-05-19 batch, 11+ days; drain target was 2026-05-25 playtest; Confidence Ledger last refreshed 2026-05-24).
+- Confidence Ledger stale: debug-handoff.md says 622 tests/37 files; actual 738/41. Run `scripts/refresh-ledger.mjs`.
+- L78 (scene chooser / blank-map default) still `[ ]` — `useSceneNav` + scene-picker dropdown ARE in the code (`page.tsx:484,5294`); stale-as-open, needs HP to close.
+- L100 (Initiative "Round N" display) still `[ ]` — `RollsFeed.tsx:520` renders `(Round ${round})`; stale-as-open since 28th flag.
+- L108 (Remove/consume inventory item) still `[ ]` — `acc5ae9` shipped x-button feed logging; HP to verify affordance + close.
+- TacticalMap YELLOW: **19 commits** since last 2-client verify (was 10 on prior flag); `15d161d` cell_px hard-cap is latest. Gate re-run still awaiting Xero.
+
+**Action:** Xero — re-run 12-check tactical-map gate (`tasks/tactical-map-verify-2client-testplan-2026-05-27.md`; PASS = #1 KS closes). HP — close L78/L100/L108. Puffer — refresh Confidence Ledger + drain HOPED-FOR.
+
+---
+
 ## 2026-05-30 18:04 UTC
 
 **Status:** DRIFT (continuing — 29th flag)
