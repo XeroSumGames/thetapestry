@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-30 18:04 UTC
+
+**Status:** DRIFT (continuing — 29th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (11+ days — 2026-05-19 batch; drain target was 2026-05-25; Confidence Ledger last refreshed 2026-05-24).
+- Confidence Ledger stale: debug-handoff.md says 622 tests/37 files; actual 738/41. `scripts/refresh-ledger.mjs` is the fix.
+- L78 (per-player Map toggle double-click race) still `[ ]` — `100cfc1` shipped the idempotent-toggle fix; flagged for closure since 26th.
+- L100 (Initiative "Round N" display) still `[ ]` — `RollsFeed.tsx:520` already renders `(Round ${round})`; stale-as-open since 28th.
+- L108 (Remove/consume inventory item) still `[ ]` — `acc5ae9` added x-button feed logging; HP to verify affordance works and close.
+- TacticalMap YELLOW: 2 more scene-controls fixes since 28th (`38e59cb` cell_px persist + `89be0be` popout clobber); now 10 commits since last 2-client verify. Gate re-run still awaiting Xero.
+
+**Action:** Xero — re-run 12-check tactical-map gate (`tasks/tactical-map-verify-2client-testplan-2026-05-27.md`; all-PASS = #1 KS closes). HP — close L78/L100/L108. Puffer Fish — refresh Confidence Ledger + drain HOPED-FOR.
+
+---
+
 ## 2026-05-30 15:03 UTC
 
 **Status:** DRIFT (continuing — 28th flag)
