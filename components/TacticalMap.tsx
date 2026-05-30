@@ -903,7 +903,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (isGM) {
       const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, 1, cellPx)
       if (!cols || !rows || (cols === s.grid_cols && rows === s.grid_rows)) return
-      setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p); updateScene(s.id, { grid_cols: cols, grid_rows: rows })
+      // Surface write failures (was silent; masked GM-vs-player grid divergence).
+      console.info('[TM] auto-fit', { sceneId: s.id, from: [s.grid_cols, s.grid_rows], to: [cols, rows], cellPx })
+      setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p)
+      updateScene(s.id, { grid_cols: cols, grid_rows: rows }).then(({ error }: any) => { if (error) console.error('[TM] auto-fit FAILED', error) })
     }
     setZoom(1); centerViewport(1)
   }, [bgLoadTick, cellPx, isGM, scene?.grid_cols, scene?.grid_rows])
