@@ -201,3 +201,125 @@ test.describe('Ch9 / #10 - Combat-flow Phase A (Start Combat -> initiative_order
     }
   })
 })
+
+test.describe('Ch9 / #10 - Combat-flow Phase C (deterministic damage via gm_apply_damage)', () => {
+  test.skip(!canAuth('gm') || !canAuth('marv'), 'needs gm + marv sessions/creds')
+
+  // Phase C - Puffer's gm_apply_damage SECURITY DEFINER RPC (sql/gm-apply-damage-
+  // rpc-2026-05-30.sql) drives the data-layer assertion the dice path can't:
+  // applying wp_damage = wp_max to a PC crosses wp_current from >0 to 0, which
+  // triggers the canon stress-on-mortal +1 (cap 5) and writes a roll_log row
+  // with damage_json.via='gm_apply' so E2E can disambiguate it from a real
+  // attack. The PLAYER's table page subs character_states realtime, so the
+  // GM-side RPC call should make their client refetch (section-a3 pattern).
+  // Authz: the RPC RAISEs for any non-GM caller; the negative half proves it.
+  test('GM apply-damage(PC, wp_max) -> wp_current=0 + stress+1 + roll_log via=gm_apply; player refetches; non-GM RAISES', async ({ browser }) => {
+    const gmCtx = await browser.newContext({ storageState: AUTH.gm })
+    const plCtx = await browser.newContext({ storageState: AUTH.marv })
+    const gm = await gmCtx.newPage()
+    const pl = await plCtx.newPage()
+    let campaignId: string | null = null
+    let gmCreds: SupaCreds | null = null
+    try {
+      const gmAnonP = captureAnonKey(gm)
+      const plAnonP = captureAnonKey(pl)
+      gmCreds = await resolveCreds(gm, gmAnonP)
+      const plCreds = await resolveCreds(pl, plAnonP)
+      expect(gmCreds && plCreds, 'could not resolve gm + marv creds').toBeTruthy()
+
+      const setup = await setupThrowawayWithMarvPc({
+        gm, pl, gmCreds: gmCreds!, plCreds: plCreds!, name: `${RUN} Combat C`,
+      })
+      campaignId = setup.campaignId
+
+      // Baseline: read marv's wp_max + stress to compute the expected after-state.
+      const stBefore = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/character_states?campaign_id=eq.${campaignId}&character_id=eq.${MARV_CHAR}&select=wp_current,wp_max,stress`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ wp_current: number; wp_max: number; stress: number }>
+      expect(stBefore?.[0], 'baseline character_states not readable').toBeTruthy()
+      const wpMax = stBefore[0].wp_max
+      const stressBefore = stBefore[0].stress ?? 0
+      const expectedStress = Math.min(5, stressBefore + 1) // canon cap
+
+      // marv opens the table so the character_states realtime sub is live BEFORE
+      // we arm the refetch wait.
+      await pl.goto(`/stories/${campaignId}/table`, { waitUntil: 'domcontentloaded' })
+      await pl.waitForTimeout(2500)
+
+      // Arm the player's realtime-triggered REFETCH (the same shape section-a3
+      // uses for scene_tokens). The character_states sub fires loadCharacterStates
+      // on any UPDATE; we just need a GET on the table after the RPC mutates.
+      const refetch = pl.waitForResponse(
+        (r) => r.url().includes('/rest/v1/character_states') && r.request().method() === 'GET',
+        { timeout: 15_000 },
+      ).catch(() => null)
+
+      // GM calls the RPC with damage = wp_max (forces wp_current to 0 + the
+      // stress-on-mortal bump). Same call shape `onApplyDamage` would use.
+      const rpc = await gm.request.post(
+        `${SUPABASE_URL}/rest/v1/rpc/gm_apply_damage`,
+        {
+          headers: { ...H(gmCreds!), 'Content-Type': 'application/json' },
+          data: { p_campaign_id: campaignId, p_target_kind: 'pc', p_target_id: MARV_CHAR, p_wp_damage: wpMax },
+        },
+      )
+      expect(rpc.ok(), `gm_apply_damage RPC failed: ${rpc.status()} ${await rpc.text()}`).toBe(true)
+
+      // Player's character_states subscription delivered + refetch fired.
+      expect(await refetch, 'player did not refetch character_states after the GM RPC (realtime not delivered)').toBeTruthy()
+
+      // DB: wp_current=0 AND stress=expectedStress (the canon +1, cap 5).
+      await expect.poll(
+        async () => {
+          const r = await gm.request.get(
+            `${SUPABASE_URL}/rest/v1/character_states?campaign_id=eq.${campaignId}&character_id=eq.${MARV_CHAR}&select=wp_current,stress`,
+            { headers: H(gmCreds!) },
+          )
+          const rows = await r.json().catch(() => []) as Array<{ wp_current: number; stress: number }>
+          return rows?.[0] ? { wp_current: rows[0].wp_current, stress: rows[0].stress } : null
+        },
+        { timeout: 8_000, message: 'character_states should converge to wp_current=0 + stress=expected after the RPC' },
+      ).toEqual({ wp_current: 0, stress: expectedStress })
+
+      // roll_log audit row carries the gm_apply marker + target shape.
+      const logRows = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/roll_log?campaign_id=eq.${campaignId}&order=created_at.desc&limit=1&select=damage_json,target_name`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ damage_json: Record<string, any> | null; target_name: string | null }>
+      expect(logRows?.[0], 'no roll_log row for the campaign').toBeTruthy()
+      const dj = (logRows[0].damage_json ?? {}) as Record<string, any>
+      expect(dj.via, 'roll_log.damage_json.via should be gm_apply').toBe('gm_apply')
+      expect(dj.target_kind, 'roll_log.damage_json.target_kind should be pc').toBe('pc')
+      expect(dj.target_id, 'roll_log.damage_json.target_id should match marv char').toBe(MARV_CHAR)
+      expect(dj.wp_before, 'roll_log.damage_json.wp_before should equal baseline wp_current').toBe(stBefore[0].wp_current)
+      expect(dj.wp_after, 'roll_log.damage_json.wp_after should be 0').toBe(0)
+      expect(dj.stress_after, 'roll_log.damage_json.stress_after should match expected').toBe(expectedStress)
+      expect(typeof logRows[0].target_name === 'string' && logRows[0].target_name!.length > 0, 'roll_log.target_name should resolve to the character').toBe(true)
+
+      // Negative: marv (non-GM) calls the RPC -> RAISEs (in-function authz).
+      const neg = await pl.request.post(
+        `${SUPABASE_URL}/rest/v1/rpc/gm_apply_damage`,
+        {
+          headers: { ...H(plCreds!), 'Content-Type': 'application/json' },
+          data: { p_campaign_id: campaignId, p_target_kind: 'pc', p_target_id: MARV_CHAR, p_wp_damage: 1 },
+        },
+      )
+      expect(neg.ok(), 'expected non-GM caller to be REJECTED by the RPC, got an OK response').toBe(false)
+      const negBody = (await neg.text()).toLowerCase()
+      expect(
+        negBody.includes('not authorized'),
+        `RPC error should explain non-GM rejection ('not authorized'), got: ${negBody}`,
+      ).toBe(true)
+    } finally {
+      if (campaignId && gmCreds) {
+        await gm.request.delete(
+          `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}`,
+          { headers: H(gmCreds) },
+        ).catch(() => {})
+      }
+      await gmCtx.close()
+      await plCtx.close()
+    }
+  })
+})
