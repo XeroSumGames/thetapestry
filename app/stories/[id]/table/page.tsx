@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
+import { activeSceneId } from '../../../../lib/data/scenes'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
 import { prepareUpload } from '../../../../lib/safe-upload'
@@ -182,7 +183,7 @@ export default function TablePage() {
       combat_ended: () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) },
       player_kicked: (payload) => { if (payload?.userId === userIdRef.current) { alert('You have been removed from this session by the GM.'); window.location.href = `/stories/${id}` } },
       combat_started: () => { loadInitiative(id); rollsFeed.refetch() },
-      tactical_shared: (payload) => { setTacticalShared(payload?.shared ?? false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(payload?.shared ?? false) },
+      tactical_shared: (payload) => { setTacticalShared(payload?.shared ?? false); if (payload?.sceneId) setSharedSceneId(payload.sceneId); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(payload?.shared ?? false) },
       tactical_unshared: () => { setTacticalShared(false); if (shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(false) },
       scene_activated: () => { if (tacticalSharedRef.current && shouldFollowSharedTactical(gmLikeRef.current)) setShowTacticalMap(true); setTokenRefreshKey(k => k + 1) },
       gut_instinct_resolved: (payload) => {
@@ -473,6 +474,10 @@ export default function TablePage() {
     })
   }, [combatActive, showTacticalMap])
   const [tacticalShared, setTacticalShared] = useState(false)
+  // Players follow only the scene the GM has EXPLICITLY shared (via Share Map),
+  // not whatever's `is_active`. Lets the GM browse / prep other scenes privately
+  // without dragging the player along (Xero 2026-05-30).
+  const [sharedSceneId, setSharedSceneId] = useState<string | null>(null)
   // Ref-mirror so the realtime broadcast handler at subscription time
   // doesn't capture a stale `tacticalShared`. Used by the
   // `scene_activated` listener to decide whether a GM scene switch
@@ -1771,7 +1776,7 @@ export default function TablePage() {
         setStartingCombat(false)
         if (!tacticalShared) {
           setTacticalShared(true); setShowTacticalMap(true)
-          initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true } })
+          initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId: await activeSceneId(supabase, id) } })
         }
         await rollsFeed.refetch()
         initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
@@ -1823,7 +1828,7 @@ export default function TablePage() {
     if (!tacticalShared) {
       setTacticalShared(true)
       setShowTacticalMap(true)
-      initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true } })
+      initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId: await activeSceneId(supabase, id) } })
     }
     // Refresh the GM's log feed so the new entries appear immediately, then
     // broadcast combat start so players also reload their state. We rely on
@@ -5311,10 +5316,14 @@ export default function TablePage() {
           </button>
         )}
         {gmLike && showTacticalMap && !combatActive && (
-          <button onClick={() => {
+          <button onClick={async () => {
             const newShared = !tacticalShared
             setTacticalShared(newShared)
-            initChannelRef.current?.send({ type: 'broadcast', event: newShared ? 'tactical_shared' : 'tactical_unshared', payload: { shared: newShared } })
+            // Capture the GM's CURRENT active scene id so the player follows
+            // explicitly. The player stays on it even if the GM later activates
+            // another scene to prep behind the scenes.
+            const sceneId = newShared ? await activeSceneId(supabase, id) : null
+            initChannelRef.current?.send({ type: 'broadcast', event: newShared ? 'tactical_shared' : 'tactical_unshared', payload: { shared: newShared, sceneId } })
           }}
             className={`hdr-btn${tacticalShared ? ' hdr-btn--active' : ''}`}
             style={hdrBtn(tacticalShared ? '#1a2e10' : '#242424', tacticalShared ? '#7fc458' : '#d4cfc9', tacticalShared ? '#2d5a1b' : '#3a3a3a')}>
@@ -6404,6 +6413,7 @@ export default function TablePage() {
               campaignNpcs={campaignNpcs}
               entries={entries}
               myCharacterId={myCharIdRef.current}
+              viewingSceneId={gmLike ? null : sharedSceneId}
               vehicles={vehicles}
               onVehiclesNeedRefresh={refetchVehicles}
               onObjectMove={handleMapObjectMove}

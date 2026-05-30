@@ -124,6 +124,7 @@ interface Props {
   campaignNpcs?: any[]
   entries?: any[]
   myCharacterId?: string | null
+  viewingSceneId?: string | null // Player follows this scene (explicit Share Map); GM ignores.
   moveMode?: { characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null
   onMoveComplete?: () => void
   onMoveCancel?: () => void
@@ -192,7 +193,7 @@ interface Props {
   onVehiclesNeedRefresh?: () => void
 }
 
-function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove, onVehiclesNeedRefresh }: Props) {
+function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, viewingSceneId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove, onVehiclesNeedRefresh }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   // Pan coalescing - multiple mousemove events per frame get merged into
@@ -651,7 +652,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (seq !== loadScenesSeqRef.current) return // superseded by a newer load - don't overwrite (or re-activate) with stale data
     const data = (sceneRows ?? []) as unknown as Scene[]
     setScenes(data)
-    const active = data.find((s: Scene) => s.is_active)
+    // Player: explicit Share Map scene; GM: is_active (GM browses freely).
+    const active = (!isGM && viewingSceneId ? data.find((s: Scene) => s.id === viewingSceneId) : data.find((s: Scene) => s.is_active))
     if (active) {
       setScene(active)
       loadTokens(active.id)
@@ -903,16 +905,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (isGM) {
       const { cols, rows } = gridToCoverMap(img.naturalWidth, img.naturalHeight, 1, cellPx)
       if (!cols || !rows || (cols === s.grid_cols && rows === s.grid_rows)) return
-      // Surface write failures (was silent; masked GM-vs-player grid divergence).
-      console.info('[TM] auto-fit', { sceneId: s.id, from: [s.grid_cols, s.grid_rows], to: [cols, rows], cellPx })
-      setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p)
-      updateScene(s.id, { grid_cols: cols, grid_rows: rows }).then(({ error }: any) => { if (error) console.error('[TM] auto-fit FAILED', error) })
+      setScene(p => p ? { ...p, grid_cols: cols, grid_rows: rows } : p); updateScene(s.id, { grid_cols: cols, grid_rows: rows }).then(({ error }: any) => { if (error) console.error('[TM] auto-fit FAILED', error) })
     }
     setZoom(1); centerViewport(1)
   }, [bgLoadTick, cellPx, isGM, scene?.grid_cols, scene?.grid_rows])
 
   // Refresh tokens when parent signals a change
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
+  useEffect(() => { if (!isGM) loadScenes() }, [viewingSceneId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live token-patch listener - lets external popups (like ObjectCard's
   // rotation slider) push optimistic patches into our `tokens` state

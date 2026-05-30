@@ -39,7 +39,7 @@ export interface CampaignBroadcastPayloads {
   // vehicle popout's MOVE HERE snaps). Receivers refetch; payload empty.
   token_moved: EmptyPayload
   scene_activated: EmptyPayload
-  tactical_shared: { shared: boolean }
+  tactical_shared: { shared: boolean; sceneId?: string | null }
   tactical_unshared: EmptyPayload
   // Vehicle popout -> TacticalMap: the campaigns.vehicles JSON changed
   // (board/disembark/damage), and the popout's mounted-weapon arc toggle.

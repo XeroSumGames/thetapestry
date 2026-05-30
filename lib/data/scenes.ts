@@ -54,6 +54,14 @@ export async function activateCampaignScene(supabase: SupabaseClient, campaignId
 
 // Create a fresh blank scene, make it the active one, and return its id (or
 // null on error). Mirrors TacticalMap.createScene's insert + deactivate-others.
+// Lookup the active tactical scene's id for a campaign. Used by the table page's
+// Share Map / combat-start auto-share to attach the scene id to the broadcast
+// so players follow the explicitly-shared scene (Xero 2026-05-30).
+export async function activeSceneId(supabase: SupabaseClient, campaignId: string): Promise<string | null> {
+  const { data } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', campaignId).eq('is_active', true).maybeSingle()
+  return (data as any)?.id ?? null
+}
+
 export async function createCampaignScene(supabase: SupabaseClient, campaignId: string, name: string): Promise<string | null> {
   const { data, error } = await supabase
     .from('tactical_scenes')
