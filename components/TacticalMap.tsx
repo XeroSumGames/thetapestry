@@ -388,9 +388,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   useEffect(() => { fogLocalRef.current = fogLocal }, [fogLocal])
   const initiativeOrderRef = useRef<any[]>(initiativeOrder)
   useEffect(() => { initiativeOrderRef.current = initiativeOrder }, [initiativeOrder])
-  // Keeps the ref fresh independently of the React prop chain so the move-follow
-  // logic in loadTokens has the correct active entry even when a token_moved
-  // broadcast races with the parent's loadInitiative -> setState -> useEffect path.
+  // Direct ref-load avoids the prop-chain race that left move-follow stale on turn-change.
   async function loadInitiativeRef() {
     const { data } = await campaignInitiativeOrder(campaignId ?? '')
     if (data) initiativeOrderRef.current = data
@@ -642,7 +640,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // user's in-flight local cell_px by snapping it back to the DB row. Result:
   // the map appears to "enlarge" or "shrink" whenever you nudge cols/rows. Only
   // sync from DB when the active scene ID actually changes.
-  const lastSyncedSceneIdRef = useRef<string | null>(null)
+  const lastSyncedSceneIdRef = useRef<string | null>(null), playerViewingSceneIdRef = useRef<string | null>(null) // 2nd: sticky scene lock; only Share Map re-targets it
   // Guards createScene against rapid double-fire (see createScene).
   const creatingSceneRef = useRef(false)
 
@@ -652,8 +650,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (seq !== loadScenesSeqRef.current) return // superseded by a newer load - don't overwrite (or re-activate) with stale data
     const data = (sceneRows ?? []) as unknown as Scene[]
     setScenes(data)
-    // Player: explicit Share Map scene; GM: is_active (GM browses freely).
-    const active = (!isGM && viewingSceneId ? data.find((s: Scene) => s.id === viewingSceneId) : data.find((s: Scene) => s.is_active))
+    // Player: Share Map prop > sticky ref > is_active (first load); GM: is_active.
+    const stickyId = !isGM ? (viewingSceneId ?? playerViewingSceneIdRef.current) : null
+    const active = stickyId ? data.find((s: Scene) => s.id === stickyId) : data.find((s: Scene) => s.is_active)
+    if (!isGM && active) playerViewingSceneIdRef.current = active.id
     if (active) {
       setScene(active)
       loadTokens(active.id)
@@ -912,7 +912,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Refresh tokens when parent signals a change
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
-  useEffect(() => { if (!isGM) loadScenes() }, [viewingSceneId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!isGM) { if (viewingSceneId) playerViewingSceneIdRef.current = viewingSceneId; loadScenes() } }, [viewingSceneId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live token-patch listener - lets external popups (like ObjectCard's
   // rotation slider) push optimistic patches into our `tokens` state
