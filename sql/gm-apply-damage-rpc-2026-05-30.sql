@@ -5,8 +5,9 @@
 --   tasks/e2e-combat-flow-plan-2026-05-30.md  (Phase C unblocker)
 --   tasks/finding-pc-trade-rls-dataloss-2026-05-24.md (the pattern this mirrors)
 --
--- *** NOT YET APPLIED TO LIVE. *** Bright line (new SECURITY DEFINER fn on prod
--- + GRANT). Apply ONLY on Xero's go:
+-- *** APPLIED LIVE 2026-05-30 *** by Puffer with Xero's go. Verified via
+-- pg_proc: gm_apply_damage(uuid, text, uuid, integer), SECURITY DEFINER = true.
+-- Reapply / replay (idempotent CREATE OR REPLACE):
 --   npx supabase db query --linked -f sql/gm-apply-damage-rpc-2026-05-30.sql
 --
 -- Schemas verified against sql/_baseline/schema.sql:
