@@ -6,6 +6,7 @@ import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-cont
 import {
   campaignScenes, insertScene, updateScene, deactivateOtherScenes, deactivateAllScenes,
   sceneTokens, updateToken, insertTokens, deleteToken, deleteTokensForScene, campaignVehiclesOnly,
+  campaignInitiativeOrder,
 } from '../lib/data/tactical'
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
@@ -386,6 +387,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   useEffect(() => { fogLocalRef.current = fogLocal }, [fogLocal])
   const initiativeOrderRef = useRef<any[]>(initiativeOrder)
   useEffect(() => { initiativeOrderRef.current = initiativeOrder }, [initiativeOrder])
+  // Keeps the ref fresh independently of the React prop chain so the move-follow
+  // logic in loadTokens has the correct active entry even when a token_moved
+  // broadcast races with the parent's loadInitiative -> setState -> useEffect path.
+  async function loadInitiativeRef() {
+    const { data } = await campaignInitiativeOrder(campaignId ?? '')
+    if (data) initiativeOrderRef.current = data
+  }
   const myCharacterIdRef = useRef<string | null | undefined>(myCharacterId)
   useEffect(() => { myCharacterIdRef.current = myCharacterId }, [myCharacterId])
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
@@ -723,6 +731,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // colocated with the old combined effect's teardown).
   useEffect(() => {
     loadScenes()
+    void loadInitiativeRef()
     return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current) }
   }, [campaignId])
 
@@ -737,6 +746,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     postgres: [
       { label: 'tactical:scene_tokens', event: '*', table: 'scene_tokens', handler: () => { if (sceneRef.current) loadTokens(sceneRef.current.id) } },
       { label: 'tactical:tactical_scenes', event: '*', table: 'tactical_scenes', filter: `campaign_id=eq.${campaignId}`, handler: () => { loadScenes() } },
+      // Keeps initiativeOrderRef fresh so the move-follow in loadTokens always
+      // sees the correct active combatant even when initiative changes race the
+      // token_moved broadcast (turn-change race, Suspect #1).
+      { label: 'tactical:initiative_order', event: '*', table: 'initiative_order', filter: `campaign_id=eq.${campaignId}`, handler: loadInitiativeRef },
     ],
     broadcasts: {
       token_moved: () => { if (sceneRef.current) loadTokens(sceneRef.current.id) },

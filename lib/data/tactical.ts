@@ -65,3 +65,10 @@ export function deleteTokensForScene(sceneId: string) {
 export function campaignVehiclesOnly(campaignId: string) {
   return db().from('campaigns').select('vehicles').eq('id', campaignId).maybeSingle()
 }
+
+// --- initiative_order (active-entry ref hydration in TacticalMap) ------------
+
+/** Minimal columns needed for move-follow token tracking. */
+export function campaignInitiativeOrder(campaignId: string) {
+  return db().from('initiative_order').select('character_id,npc_id,character_name,is_active').eq('campaign_id', campaignId)
+}
