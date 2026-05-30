@@ -605,15 +605,34 @@ export default function SceneControlsPopoutPage() {
 
 // ── Stepper subcomponent - replaces three inline copies in TacticalMap
 // for cols / rows / cell_feet so the popout panel stays readable.
+// Double-click the value to type a number directly; Enter commits, Esc
+// cancels, blur commits (so click-away saves rather than discards).
 function Stepper({ label, value, onChange, suffix, step = 1 }: {
   label: string; value: number; onChange: (v: number) => void; suffix?: string; step?: number
 }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  function startEdit() { setDraft(String(value)); setEditing(true) }
+  function commit() {
+    const n = parseInt(draft, 10)
+    if (Number.isFinite(n)) onChange(n)
+    setEditing(false)
+  }
   return (
     <div>
       <div style={lbl}>{label}</div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
         <button onClick={() => onChange(value - step)} style={stepBtn}>−</button>
-        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '30px', textAlign: 'center' }}>{value}{suffix}</span>
+        {editing ? (
+          <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={e => { if (e.key === 'Enter') commit(); else if (e.key === 'Escape') setEditing(false) }}
+            style={{ fontSize: '13px', color: '#f5f2ee', background: '#1a1a1a', border: '1px solid #5a5a5a', borderRadius: '3px', fontFamily: 'Carlito, sans-serif', width: '50px', textAlign: 'center', padding: '1px 2px' }} />
+        ) : (
+          <span onDoubleClick={startEdit}
+            title="Double-click to edit"
+            style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '30px', textAlign: 'center', cursor: 'text', userSelect: 'none' }}>{value}{suffix}</span>
+        )}
         <button onClick={() => onChange(value + step)} style={stepBtn}>+</button>
       </div>
     </div>
