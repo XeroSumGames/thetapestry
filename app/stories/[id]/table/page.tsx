@@ -7585,8 +7585,7 @@ export default function TablePage() {
           const slotCount = Math.max(playerEntries.length, 3)
           const isCompact = slotCount > 5
           const avatarSize = isCompact ? '28px' : '36px'
-          const nameSize = isCompact ? '11px' : '13px'
-          const subSize = isCompact ? '9px' : '10px'
+          const nameSize = '13px'
           const pad = isCompact ? '4px' : '8px'
           return playerEntries.map((entry, i) => {
             const photo = getCharPhoto(entry)

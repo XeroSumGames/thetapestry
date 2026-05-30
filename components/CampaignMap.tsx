@@ -185,6 +185,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const routeWaypointsRef = useRef<{ lat: number; lng: number }[]>([])
   const routeMarkersRef = useRef<any[]>([])
   const routeLineRef = useRef<any>(null)
+  // Full polyline latlngs after OSRM/fallback resolves - stored so Share
+  // Route can broadcast the exact geometry without re-hitting OSRM.
+  const routeCoordsRef = useRef<[number, number][] | null>(null)
   const [routeMode, setRouteMode] = useState(false)
   const [routeStatus, setRouteStatus] = useState('')
   const [routeLoading, setRouteLoading] = useState(false)
@@ -193,6 +196,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // dropdown can recompute the ETA without re-hitting OSRM.
   const [routeDistanceMeters, setRouteDistanceMeters] = useState<number | null>(null)
   const [routeIsFallback, setRouteIsFallback] = useState(false)
+  const [routeShareFlash, setRouteShareFlash] = useState(false)
   useEffect(() => { routeModeRef.current = routeMode }, [routeMode])
   // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
   // dblclick handler registered in the init effect can always call the
@@ -410,6 +414,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     routeMarkersRef.current = []
     if (routeLineRef.current) { try { map?.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
     routeWaypointsRef.current = []
+    routeCoordsRef.current = null
     setRouteStatus('')
     setRouteLoading(false)
     setRouteDistanceMeters(null)
@@ -474,6 +479,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       if (!route?.geometry?.coordinates) throw new Error('No route in response')
       // OSRM returns [lng, lat] - Leaflet wants [lat, lng].
       const latlngs = route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]) as [number, number][]
+      routeCoordsRef.current = latlngs
       routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 4, opacity: 0.85 }).addTo(map)
       const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
       const meters = route.distance ?? 0
@@ -484,6 +490,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       console.error('[campaign-map] OSRM route failed:', err)
       // Fallback: dashed straight line through the waypoints.
       const latlngs = points.map(p => [p.lat, p.lng]) as [number, number][]
+      routeCoordsRef.current = latlngs
       routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 3, opacity: 0.7, dashArray: '6,6' }).addTo(map)
       const meters = totalMeters(points)
       const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
@@ -989,6 +996,44 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           setSharedToast('GM shared a view')
           window.setTimeout(() => setSharedToast(null), 2500)
         })
+        .on('broadcast', { event: 'cm_route_share' }, (msg: any) => {
+          // Players (and other GMs) receive a shared route and draw it.
+          const p = msg?.payload ?? {}
+          const coords = Array.isArray(p.coords) ? p.coords as [number, number][] : null
+          if (!coords || coords.length < 2) return
+          const L = (window as any).L
+          const map = mapInstanceRef.current
+          if (!L || !map) return
+          // Wipe any existing route layers before drawing the received one.
+          routeMarkersRef.current.forEach(m => { try { map.removeLayer(m) } catch {} })
+          routeMarkersRef.current = []
+          if (routeLineRef.current) { try { map.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
+          // Draw the shared polyline.
+          const isFallback = p.isFallback === true
+          routeLineRef.current = L.polyline(coords, { color: '#EF9F27', weight: isFallback ? 3 : 4, opacity: isFallback ? 0.7 : 0.85, ...(isFallback ? { dashArray: '6,6' } : {}) }).addTo(map)
+          routeCoordsRef.current = coords
+          // Reconstruct waypoint markers from payload.
+          const waypoints: { lat: number; lng: number }[] = Array.isArray(p.waypoints) ? p.waypoints : []
+          const total = waypoints.length
+          waypoints.forEach((wp, idx) => {
+            const isFirst = idx === 0
+            const isFinal = idx === total - 1
+            const bg = isFirst ? '#7fc458' : isFinal ? '#c0392b' : '#EF9F27'
+            const fg = isFirst ? '#0f1a0f' : isFinal ? '#2a0f0a' : '#1a1205'
+            const letter = waypointLabel(idx)
+            const html = `<div style="width:20px;height:20px;border-radius:50%;background:${bg};border:2px solid #f5f2ee;box-shadow:0 0 8px ${bg}e6;display:flex;align-items:center;justify-content:center;color:${fg};font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">${letter}</div>`
+            const icon = L.divIcon({ html, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
+            routeMarkersRef.current.push(L.marker([wp.lat, wp.lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9100 }).addTo(map))
+          })
+          const meters = typeof p.meters === 'number' ? p.meters : null
+          setRouteDistanceMeters(meters)
+          setRouteIsFallback(isFallback)
+          if (typeof p.travelMode === 'string' && TRAVEL_MODES[p.travelMode as TravelMode]) {
+            setTravelMode(p.travelMode as TravelMode)
+          }
+          setSharedToast('GM shared a route')
+          window.setTimeout(() => setSharedToast(null), 2500)
+        })
         .subscribe()
       viewShareChannelRef.current = viewCh
     }
@@ -1209,6 +1254,35 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               {shareFlash ? '✓ Shared' : '👁 Share View'}
             </button>
           )}
+          {/* SHARE ROUTE - GM-only. Visible only when a route is plotted
+              (routeDistanceMeters !== null). Broadcasts the polyline coords,
+              waypoints, distance, fallback flag, and current travel mode so
+              players can reconstruct the exact Leaflet layers. Flash green
+              ~1.5s for GM confirmation. Added 2026-05-30. */}
+          {isGM && routeDistanceMeters !== null && (
+            <button type="button"
+              onClick={() => {
+                const coords = routeCoordsRef.current
+                if (!coords) return
+                viewShareChannelRef.current?.send({
+                  type: 'broadcast',
+                  event: 'cm_route_share',
+                  payload: {
+                    coords,
+                    waypoints: routeWaypointsRef.current,
+                    meters: routeDistanceMeters,
+                    isFallback: routeIsFallback,
+                    travelMode,
+                  },
+                })
+                setRouteShareFlash(true)
+                window.setTimeout(() => setRouteShareFlash(false), 1500)
+              }}
+              title="Push the current plotted route to every player"
+              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeShareFlash ? '#5a3a0a' : '#3a3a3a'}`, background: routeShareFlash ? '#2e1c04' : 'rgba(15,15,15,.85)', color: routeShareFlash ? '#EF9F27' : '#d4cfc9' }}>
+              {routeShareFlash ? '✓ Shared' : '🛣 Share Route'}
+            </button>
+          )}
           <div style={{ position: 'relative' }}>
             <input value={searchQuery} onChange={e => {
               setSearchQuery(e.target.value)
@@ -1314,10 +1388,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           orange-tinted to keep the two visually distinct. Shows the
           current step (click start, click destination, plotting, or
           final distance + ETA). */}
-      {routeMode && (
-        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(42,32,16,0.95)', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px' }}>
+      {(routeMode || routeDistanceMeters !== null) && (
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(42,32,16,0.95)', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px', pointerEvents: routeMode ? 'none' : 'auto' }}>
           <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point... (Shift-click to add waypoints; Alt+click a pin to snap)')}</span>
-          <span style={{ marginLeft: 'auto', color: '#EF9F27', fontSize: '13px' }}>Esc to clear</span>
+          {routeMode
+            ? <span style={{ marginLeft: 'auto', color: '#EF9F27', fontSize: '13px' }}>Esc to clear</span>
+            : <button type="button" onClick={clearRoute} title="Clear route" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#EF9F27', fontSize: '13px', cursor: 'pointer', padding: '0', lineHeight: 1 }}>✕</button>
+          }
         </div>
       )}
 
