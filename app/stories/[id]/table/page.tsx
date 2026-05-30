@@ -2741,10 +2741,14 @@ export default function TablePage() {
     const rows = (sceneTokens ?? []) as { id: string; name: string; archived_at: string | null; grid_x: number; grid_y: number }[]
     const existing = rows.find(t => t.name === name)
     if (existing) {
-      // Off-map -> un-archive in place (restores the prior cell). Already live
-      // -> nothing to do (idempotent; a stale re-click can't dislodge it).
+      // Off-map -> un-archive AND re-spawn to a fresh cell. Restoring the prior
+      // cell stranded tokens at wherever they were last dragged (e.g. corner of
+      // an 80x120 grid), which read as "the token is in the wrong place" the
+      // next time it was placed. Already-live -> idempotent no-op.
       if (existing.archived_at) {
-        await supabase.from('scene_tokens').update({ archived_at: null }).eq('id', existing.id)
+        const occ = rows.filter(t => t.archived_at == null).map(t => ({ grid_x: t.grid_x, grid_y: t.grid_y }))
+        const spawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15, occ)
+        await supabase.from('scene_tokens').update({ archived_at: null, grid_x: spawn.grid_x, grid_y: spawn.grid_y }).eq('id', existing.id)
         setTokenRefreshKey(k => k + 1)
         await refreshMapTokenIds()
         initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
