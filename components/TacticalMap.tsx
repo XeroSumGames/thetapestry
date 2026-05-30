@@ -705,6 +705,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const { data } = await sceneTokens(sceneId)
     if (seq !== loadTokensSeqRef.current) return // superseded by a newer load - don't overwrite with stale data
     const toks = (data ?? []) as unknown as Token[]
+    // Set ref immediately so centerViewport (called from img.onload or the
+    // re-center below) reads fresh tokens rather than an empty/stale array.
+    tokensRef.current = toks
     setTokens(toks)
     if (tokenScrollSceneRef.current === sceneId) {
       const container = containerRef.current, canvas = canvasRef.current
@@ -721,6 +724,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
     } else {
       tokenScrollSceneRef.current = sceneId
+      // Re-center if the background image loaded before tokens arrived (the
+      // img.onload centerViewport ran with an empty tokensRef and centered
+      // on map midpoint instead of the party). Now that tokensRef is fresh,
+      // re-run so the player opens on their characters, not a blank corner.
+      if (centeredSceneIdRef.current === sceneId) centerViewport()
     }
     prevTokenIdsRef.current = new Set(toks.map(t => t.id))
     prevTokenPosRef.current = new Map(toks.map(t => [t.id, { x: t.grid_x, y: t.grid_y }]))
