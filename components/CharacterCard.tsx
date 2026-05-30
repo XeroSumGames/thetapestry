@@ -1087,6 +1087,22 @@ function CharacterCardImpl({
           onGiveToCommunity={onGiveItemToCommunity}
           otherVehicles={otherVehicles}
           onGiveToVehicle={onGiveItemToVehicle}
+          onRemoveItem={campaignIdProp ? async (item, newQty) => {
+            const { user } = await getCachedAuth()
+            if (!user) return
+            const label = newQty === 0
+              ? `${c.name} used their last ${item.name}`
+              : `${c.name} used ${item.name} (${newQty} remaining)`
+            await insertRollLog({
+              campaign_id: campaignIdProp,
+              user_id: user.id,
+              character_name: c.name,
+              label,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+              outcome: 'item_consumed',
+              damage_json: { characterId: c.id, itemName: item.name, newQty },
+            })
+          } : undefined}
         />
       )}
 

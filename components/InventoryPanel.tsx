@@ -68,6 +68,11 @@ interface Props {
   // updates campaigns.vehicles[i].cargo at the parent.
   otherVehicles?: { id: string; name: string }[]
   onGiveToVehicle?: (item: InventoryItem, targetVehicleId: string, qty: number) => void
+  // Called when the player clicks × to remove/use an item, BEFORE the
+  // inventory is updated. Lets the parent write a roll_log entry so the
+  // session feed shows "Character used Item" without requiring characters
+  // to be in the realtime publication. newQty = qty after decrement (0 = full remove).
+  onRemoveItem?: (item: InventoryItem, newQty: number) => void
 }
 
 // Canonical palette per Xero (2026-05-09); see lib/rarity-colors.ts.
@@ -79,7 +84,7 @@ const RARITY_COLORS: Record<string, { color: string; bg: string; border: string 
 
 type InventorySortKey = 'manual' | 'name' | 'enc-desc' | 'rarity'
 
-export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc, otherCommunities, onGiveToCommunity, otherVehicles, onGiveToVehicle }: Props) {
+export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc, otherCommunities, onGiveToCommunity, otherVehicles, onGiveToVehicle, onRemoveItem }: Props) {
   const [search, setSearch] = useState('')
   // Search-your-own-inventory: narrows the rendered list against item
   // name + notes. Distinct from `search` (which filters the catalog
@@ -132,8 +137,10 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
 
   function removeItem(idx: number) {
     const item = inventory[idx]
-    if (item.qty > 1) {
-      onUpdate(inventory.map((i, j) => j === idx ? { ...i, qty: i.qty - 1 } : i))
+    const newQty = item.qty > 1 ? item.qty - 1 : 0
+    onRemoveItem?.(item, newQty)
+    if (newQty > 0) {
+      onUpdate(inventory.map((i, j) => j === idx ? { ...i, qty: newQty } : i))
     } else {
       onUpdate(inventory.filter((_, j) => j !== idx))
     }
