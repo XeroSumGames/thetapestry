@@ -6481,6 +6481,7 @@ export default function TablePage() {
                     onFirstImpression={myEntry
                       ? () => { setFirstImpressionNpcId(npc.id); setShowSpecialCheck('first_impression') }
                       : undefined}
+                    onItemTaken={() => loadEntries(id)}
                   />
                 )
               })}
@@ -6593,6 +6594,7 @@ export default function TablePage() {
                       onFirstImpression={myEntry
                         ? () => { setFirstImpressionNpcId(npc.id); setShowSpecialCheck('first_impression') }
                         : undefined}
+                      onItemTaken={() => loadEntries(id)}
                     />
                   )}
                   {/* Resize handle - bottom-right corner. Drag to resize the

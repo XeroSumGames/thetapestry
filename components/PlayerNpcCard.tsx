@@ -76,6 +76,11 @@ interface Props {
   // (cmod != null && cmod !== 0) since a second roll on the same pair
   // overwrites the first; suppress to avoid accidental clobbering.
   onFirstImpression?: () => void
+  // Called after any successful item Take so the parent can refresh
+  // the player's character inventory. characters.data is not in the
+  // realtime publication, so without this the inventory panel never
+  // reflects the loot until the player manually refreshes.
+  onItemTaken?: () => void
 }
 
 type RecruitState =
@@ -84,7 +89,7 @@ type RecruitState =
   | { kind: 'failed'; outcome: string }
   | null
 
-export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit, onSetupApprentice, onFirstImpression }: Props) {
+export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit, onSetupApprentice, onFirstImpression, onItemTaken }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
@@ -344,6 +349,9 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           : i)
         .filter(i => i.qty > 0)
     })
+    // characters.data is not in the realtime publication; the parent must
+    // reload entry data so the player's inventory panel shows the new item.
+    onItemTaken?.()
   }
 
   async function takeEquipmentItem(item: LootItem) {
@@ -368,6 +376,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
     }
     // Remove the taken weapon from the panel immediately.
     setLootItems(prev => prev ? prev.filter(i => !(i.source === 'equipment' && i.weaponSlot === item.weaponSlot)) : prev)
+    onItemTaken?.()
   }
 
   async function takeAllItems() {
