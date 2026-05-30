@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-30 09:03 UTC
+
+**Status:** DRIFT (continuing — 26th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (12+ days — 2026-05-19 batch; drain target 2026-05-25, never actioned in Confidence Ledger).
+- Confidence Ledger stale: debug-handoff.md says 622 tests/37 files vs actual 738/41 — +116 tests unrecorded.
+- **NEW stale-as-open — L78** (WATCH/maybe-harden per-player Map toggle double-click race): commit `100cfc1` 2026-05-27 shipped idempotent ENSURE-ON + explicit toggle + optimistic flip — exactly the fix L78 called for; todo still `[ ]`. Missed by 06:08 pulse.
+- PC-trade un-fixme (L30) still `[ ]` — `e2e/inventory-trade.spec.ts:116` confirms "was test.fixme" (past tense = already un-fixme'd). E2E lane.
+- TacticalMap YELLOW: 6+ commits since last 2-client verify; gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md` open.
+- **CORRECTION re 06:08 entry:** L85 ("player viewport doesn't FOLLOW token MOVES") is a REAL open bug from 2026-05-29 playtest — do NOT close it. The `7ba065b` [x] item is the effectiveScale/scene-open fix; L85 is the remaining move-follow gap.
+
+**Action:** HP — close L78 (idempotent-toggle shipped `100cfc1`; do NOT close L85). Puffer Fish — refresh Confidence Ledger (622/37→738/41), drain HOPED-FOR. E2E — close PC-trade un-fixme (L30). Xero — 2-client eyeball on TacticalMap gate.
+
+---
+
 ## 2026-05-30 06:08 UTC
 
 **Status:** DRIFT (continuing — 25th flag)
