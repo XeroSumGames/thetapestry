@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-30 06:08 UTC
+
+**Status:** DRIFT (continuing — 25th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (11+ days — 2026-05-19 batch; drain target was 2026-05-25 playtest, never actioned in Confidence Ledger).
+- Confidence Ledger stale: debug-handoff.md says 622 tests/37 files vs actual 738/41 — +116 tests unrecorded.
+- Stale-as-open todos (code shipped, still `[ ]`):
+  - L85: viewport move-follow (shipped `7ba065b` 2026-05-29) still open — HP/Puffer close it.
+  - **NEW — PC-trade un-fixme** (todo.md ~L30 `[ROUTED -> E2E] un-fixme the PC-trade assertion`): `e2e/inventory-trade.spec.ts` comment confirms "was test.fixme while give-item RPC was pending" — already un-fixme'd, todo not closed. E2E lane to close.
+- **NEW — 6 tactical-map commits since 24th flag** (all in YELLOW area, unverified): `ef13951` always re-fit on bg load, `5aaaf40`/`4a2b3ff` background/no-bg scene open zoom=1, `f722652` cover-zoom fills panel, `e94f143` fitWholeMapZoom on open, `9e6400c` MAP tab in sidebar. All await Xero's 2-client visual verify (L80 gate still open).
+
+**Action:** Xero — 2-client eyeball on TacticalMap (the 6 new commits are all in the YELLOW area; the gate at `tasks/tactical-map-verify-2client-testplan-2026-05-27.md` remains open). Puffer Fish — drain HOPED-FOR, close L85, refresh Ledger. E2E — close PC-trade un-fixme todo.
+
+---
+
 ## 2026-05-29 21:07 UTC
 
 **Status:** DRIFT (continuing — 24th flag)
