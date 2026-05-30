@@ -1,5 +1,25 @@
 # Lessons Learned
 
+## A ref passed via a prop never updates unless the parent re-renders with the new ref VALUE - pass state not refs for mount-time centering (2026-05-30)
+
+`myCharacterId={myCharIdRef.current}` - reading a ref's current value at render time means TacticalMap gets `null` if `init()` hasn't completed yet. Refs don't trigger parent re-renders, but `init()` does trigger other state updates that DO cause a re-render, at which point the ref is set and the correct value flows down. However, by the time that re-render happens, `centerViewport` has already fired (from `img.onload` + `loadTokens`). Fix: in TacticalMap, detect the first non-null transition in `myCharacterId` prop and re-fire `centerViewport` if the scene is already loaded (`centeredSceneIdRef.current !== null`). Pattern: `useEffect(() => { const p = myCharacterIdRef.current; myCharacterIdRef.current = myCharacterId; if (!p && myCharacterId && centeredSceneIdRef.current) centerViewport() }, [myCharacterId])`.
+
+## A prop-mirrored ref (useRef + useEffect) is stale during realtime races - give the component its own subscription for critical data (2026-05-30)
+
+`initiativeOrderRef` was populated via `useEffect(() => { initiativeOrderRef.current = initiativeOrder }, [initiativeOrder])`. This runs AFTER React's render cycle - there is a window between when the parent's DB subscription fires `setState` and when the effect updates the ref. Any async handler (like `loadTokens` called by `token_moved`) that reads the ref during that window sees stale data. The fix: components that need critical data to be up-to-date INSIDE realtime handlers should own their own DB subscription that writes directly to the ref (no React state, no re-render, no effect delay). The prop-mirror `useEffect` stays as belt-and-suspenders for non-realtime callers. Pattern: add a `handler: loadInitiativeRef` to the postgres array in `useCampaignChannel` - the `configRef` mechanism in `useCampaignChannel` ensures the handler stays fresh without resubscribing.
+
+## Reuse an existing broadcast channel for a new event type (same peer group) rather than opening a new channel (2026-05-30)
+
+When adding Share Route, the route broadcast (`cm_route_share`) was added as a second `.on()` handler on the existing `campaign_view_share_${campaignId}` channel before its `.subscribe()`. This is correct - Supabase broadcast channels are scoped to the peer group already subscribed to that channel name, so routing a new event type through the same channel costs nothing extra and avoids leaving a stale additional subscription that needs its own cleanup. New channel = new subscription = one more thing to `removeChannel` on unmount. Same channel + new event = one handler in the chain, zero new plumbing. Apply this whenever the peer group (and auth scope) is the same as an existing channel.
+
+## Capture Ref values during the resolved callback, not on broadcast (2026-05-30)
+
+Route coordinates live in Leaflet refs (`routeLineRef`, `routeMarkersRef`), not React state. To broadcast them without re-hitting OSRM, capture the `latlngs` array into a new `routeCoordsRef` at the SAME point the polyline is drawn (the async OSRM success and fallback branches inside `handleRouteClick`). Then Share Route reads `routeCoordsRef.current` instantly on button click with no re-fetch. Trying to reconstruct coords from a Leaflet polyline layer at click-time is fragile; a ref capture at draw-time is clean.
+
+## The route status banner `pointerEvents:'none'` must be cleared when you add clickable children (2026-05-30)
+
+The original route banner had `pointerEvents:'none'` so clicks fell through to the map. When a ✕ dismiss button was added for the player-received state, the parent `pointerEvents` had to be changed to `'auto'` (while keeping the pointer-events semantics intact for the routeMode in-progress case). Pattern: set `pointerEvents` on the wrapper as `routeMode ? 'none' : 'auto'`; the ✕ button only renders in the non-routeMode branch so it's always clickable.
+
 ## A handoff ALWAYS writes BOTH the chat block AND tasks/handoff.md - never ask "want me to write it down too", just do both (2026-05-28)
 
 Xero (verbatim): "write that down as that should always be done with a handoff. let's not 'lose that knowledge'." When asked for a handoff, the chat block is the deliverable BUT updating `tasks/handoff.md` (replace the stale Session-State section with the current one - HEAD, what shipped, pending decisions, open queue, verification owed, gotchas) is a MANDATORY part of the same task, not an optional add-on. I'd produced the chat block and then asked "want me to also write it into handoff.md?" - wrong; the file update is automatic, because the chat block evaporates with the window but the file is the durable substrate the next session + the other lanes read. So: handoff = (1) update handoff.md Session-State in place + (2) output the self-contained chat block, every time, no asking. (Reinforces memory `process_evergreen_handoff` / `feedback_handoff`.)

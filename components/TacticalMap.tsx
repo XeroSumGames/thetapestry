@@ -395,7 +395,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (data) initiativeOrderRef.current = data
   }
   const myCharacterIdRef = useRef<string | null | undefined>(myCharacterId)
-  useEffect(() => { myCharacterIdRef.current = myCharacterId }, [myCharacterId])
+  // Re-center once when we first learn which PC is ours (parent init() resolved after map loaded).
+  useEffect(() => { const p = myCharacterIdRef.current; myCharacterIdRef.current = myCharacterId; if (!p && myCharacterId && centeredSceneIdRef.current) centerViewport() }, [myCharacterId])
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
   const portraitCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
