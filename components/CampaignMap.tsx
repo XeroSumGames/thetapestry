@@ -445,9 +445,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     // click there is the destination. The first click is always the start.
     const isFinal = !isFirst && !addWaypoint
     const letter = waypointLabel(idx)
-    // A = green (start), final = red (destination), intermediate = amber.
-    const bg = isFirst ? '#7fc458' : isFinal ? '#c0392b' : '#EF9F27'
-    const fg = isFirst ? '#0f1a0f' : isFinal ? '#2a0f0a' : '#1a1205'
+    // A = green (start), final = red (destination), intermediate = purple.
+    const bg = isFirst ? '#7fc458' : isFinal ? '#c0392b' : '#a855f7'
+    const fg = isFirst ? '#0f1a0f' : isFinal ? '#2a0f0a' : '#1a0f2e'
     const html = `<div style="width:20px;height:20px;border-radius:50%;background:${bg};border:2px solid #f5f2ee;box-shadow:0 0 8px ${bg}e6;display:flex;align-items:center;justify-content:center;color:${fg};font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">${letter}</div>`
     const icon = L.divIcon({ html, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
     routeMarkersRef.current.push(L.marker([lat, lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9100 }).addTo(map))
@@ -461,7 +461,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // points so far, then keep waiting for more (or the finishing click).
       if (routeLineRef.current) { try { map.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
       const provisional = routeWaypointsRef.current.map(p => [p.lat, p.lng]) as [number, number][]
-      routeLineRef.current = L.polyline(provisional, { color: '#EF9F27', weight: 2, opacity: 0.6, dashArray: '4,6' }).addTo(map)
+      routeLineRef.current = L.polyline(provisional, { color: '#a855f7', weight: 2, opacity: 0.6, dashArray: '4,6' }).addTo(map)
       setRouteStatus(`Waypoint ${letter} added - click to finish, Shift-click to add more`)
       return
     }
@@ -480,7 +480,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // OSRM returns [lng, lat] - Leaflet wants [lat, lng].
       const latlngs = route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]) as [number, number][]
       routeCoordsRef.current = latlngs
-      routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 4, opacity: 0.85 }).addTo(map)
+      routeLineRef.current = L.polyline(latlngs, { color: '#a855f7', weight: 4, opacity: 0.85 }).addTo(map)
       const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
       const meters = route.distance ?? 0
       setRouteDistanceMeters(meters)
@@ -491,7 +491,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // Fallback: dashed straight line through the waypoints.
       const latlngs = points.map(p => [p.lat, p.lng]) as [number, number][]
       routeCoordsRef.current = latlngs
-      routeLineRef.current = L.polyline(latlngs, { color: '#EF9F27', weight: 3, opacity: 0.7, dashArray: '6,6' }).addTo(map)
+      routeLineRef.current = L.polyline(latlngs, { color: '#a855f7', weight: 3, opacity: 0.7, dashArray: '6,6' }).addTo(map)
       const meters = totalMeters(points)
       const mode = TRAVEL_MODES[travelModeRef.current] ?? TRAVEL_MODES.walking
       setRouteDistanceMeters(meters)
@@ -1010,7 +1010,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           if (routeLineRef.current) { try { map.removeLayer(routeLineRef.current) } catch {} ; routeLineRef.current = null }
           // Draw the shared polyline.
           const isFallback = p.isFallback === true
-          routeLineRef.current = L.polyline(coords, { color: '#EF9F27', weight: isFallback ? 3 : 4, opacity: isFallback ? 0.7 : 0.85, ...(isFallback ? { dashArray: '6,6' } : {}) }).addTo(map)
+          routeLineRef.current = L.polyline(coords, { color: '#a855f7', weight: isFallback ? 3 : 4, opacity: isFallback ? 0.7 : 0.85, ...(isFallback ? { dashArray: '6,6' } : {}) }).addTo(map)
           routeCoordsRef.current = coords
           // Reconstruct waypoint markers from payload.
           const waypoints: { lat: number; lng: number }[] = Array.isArray(p.waypoints) ? p.waypoints : []
@@ -1018,8 +1018,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           waypoints.forEach((wp, idx) => {
             const isFirst = idx === 0
             const isFinal = idx === total - 1
-            const bg = isFirst ? '#7fc458' : isFinal ? '#c0392b' : '#EF9F27'
-            const fg = isFirst ? '#0f1a0f' : isFinal ? '#2a0f0a' : '#1a1205'
+            const bg = isFirst ? '#7fc458' : isFinal ? '#c0392b' : '#a855f7'
+            const fg = isFirst ? '#0f1a0f' : isFinal ? '#2a0f0a' : '#1a0f2e'
             const letter = waypointLabel(idx)
             const html = `<div style="width:20px;height:20px;border-radius:50%;background:${bg};border:2px solid #f5f2ee;box-shadow:0 0 8px ${bg}e6;display:flex;align-items:center;justify-content:center;color:${fg};font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">${letter}</div>`
             const icon = L.divIcon({ html, className: '', iconSize: [20, 20], iconAnchor: [10, 10] })
@@ -1194,7 +1194,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               }
             }}
             title={routeMode ? 'Stop planning (Esc)' : 'Plot a road route from A to B'}
-            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeMode ? '#EF9F27' : '#3a3a3a'}`, background: routeMode ? '#2a2010' : 'rgba(15,15,15,.85)', color: routeMode ? '#EF9F27' : '#d4cfc9' }}>
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeMode ? '#a855f7' : '#3a3a3a'}`, background: routeMode ? '#1c0e30' : 'rgba(15,15,15,.85)', color: routeMode ? '#a855f7' : '#d4cfc9' }}>
             {routeMode ? '✕ Stop' : '🛣 Route'}
           </button>
           {/* Travel-mode picker reused for route ETA. Same dropdown as
@@ -1202,7 +1202,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           {routeMode && (
             <select value={travelMode} onChange={e => setTravelMode(e.target.value as TravelMode)}
               title="How are the characters traveling? Affects the ETA shown for the route."
-              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #EF9F27', background: '#2a2010', color: '#cce0f5', width: '175px' }}>
+              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #a855f7', background: '#1c0e30', color: '#cce0f5', width: '175px' }}>
               {Object.entries(TRAVEL_MODES).map(([key, m]) => (
                 <option key={key} value={key} style={{ background: '#0f0f0f', color: '#cce0f5' }}>
                   {m.emoji} {m.label} ({m.mph} mph)
@@ -1279,7 +1279,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 window.setTimeout(() => setRouteShareFlash(false), 1500)
               }}
               title="Push the current plotted route to every player"
-              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeShareFlash ? '#5a3a0a' : '#3a3a3a'}`, background: routeShareFlash ? '#2e1c04' : 'rgba(15,15,15,.85)', color: routeShareFlash ? '#EF9F27' : '#d4cfc9' }}>
+              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeShareFlash ? '#3d1a5e' : '#3a3a3a'}`, background: routeShareFlash ? '#1a0c2e' : 'rgba(15,15,15,.85)', color: routeShareFlash ? '#a855f7' : '#d4cfc9' }}>
               {routeShareFlash ? '✓ Shared' : '🛣 Share Route'}
             </button>
           )}
@@ -1389,11 +1389,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           current step (click start, click destination, plotting, or
           final distance + ETA). */}
       {(routeMode || routeDistanceMeters !== null) && (
-        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(42,32,16,0.95)', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px', pointerEvents: routeMode ? 'none' : 'auto' }}>
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,15,40,0.95)', border: '1px solid #a855f7', borderRadius: '3px', color: '#a855f7', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px', pointerEvents: routeMode ? 'none' : 'auto' }}>
           <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point... (Shift-click to add waypoints; Alt+click a pin to snap)')}</span>
           {routeMode
-            ? <span style={{ marginLeft: 'auto', color: '#EF9F27', fontSize: '13px' }}>Esc to clear</span>
-            : <button type="button" onClick={clearRoute} title="Clear route" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#EF9F27', fontSize: '13px', cursor: 'pointer', padding: '0', lineHeight: 1 }}>✕</button>
+            ? <span style={{ marginLeft: 'auto', color: '#a855f7', fontSize: '13px' }}>Esc to clear</span>
+            : <button type="button" onClick={clearRoute} title="Clear route" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#a855f7', fontSize: '13px', cursor: 'pointer', padding: '0', lineHeight: 1 }}>✕</button>
           }
         </div>
       )}
