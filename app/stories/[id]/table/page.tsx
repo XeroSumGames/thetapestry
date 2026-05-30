@@ -71,6 +71,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
+import { sceneTokenPositions } from '../../../../lib/data/tactical'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { useSceneNav } from './useSceneNav'
 import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../lib/tactical-view'
@@ -7338,7 +7339,8 @@ export default function TablePage() {
                       .single()
                     if (!activeScene) { alert('No active tactical scene - open one from Map Setup first.'); return }
                     const emoji = getCategoryEmoji(pin.category)
-                    const pinSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
+                    const { data: pinOcc } = await sceneTokenPositions((activeScene as any).id)
+                    const pinSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15, pinOcc ?? [])
                     const { error } = await supabase.from('scene_tokens').insert({
                       scene_id: (activeScene as any).id,
                       name: emoji,
@@ -7393,7 +7395,8 @@ export default function TablePage() {
                     onPlaceOnMap={async (name, portraitUrl, wpMax) => {
                       const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
                       if (!activeScene) { alert('No active scene.'); return }
-                      const objSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
+                      const { data: objOcc } = await sceneTokenPositions(activeScene.id)
+                      const objSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15, objOcc ?? [])
                       await supabase.from('scene_tokens').insert({
                         scene_id: activeScene.id, name, token_type: 'object',
                         portrait_url: portraitUrl, grid_x: objSpawn.grid_x, grid_y: objSpawn.grid_y,
@@ -7442,12 +7445,11 @@ export default function TablePage() {
                       // Fetch the cloned scene's grid dimensions so the
                       // copy spawns under the top-right zoom slider, not
                       // under the top-left fog/lighting toolbar.
-                      const { data: cloneScene } = await supabase
-                        .from('tactical_scenes')
-                        .select('grid_cols, grid_rows')
-                        .eq('id', source.scene_id)
-                        .maybeSingle()
-                      const dupSpawn = defaultSpawnCell((cloneScene as any)?.grid_cols ?? 20, (cloneScene as any)?.grid_rows ?? 15)
+                      const [{ data: cloneScene }, { data: dupOcc }] = await Promise.all([
+                        supabase.from('tactical_scenes').select('grid_cols, grid_rows').eq('id', source.scene_id).maybeSingle(),
+                        sceneTokenPositions(source.scene_id),
+                      ])
+                      const dupSpawn = defaultSpawnCell((cloneScene as any)?.grid_cols ?? 20, (cloneScene as any)?.grid_rows ?? 15, dupOcc ?? [])
                       const { error } = await supabase.from('scene_tokens').insert({
                         scene_id: source.scene_id,
                         name: candidate,

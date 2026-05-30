@@ -40,6 +40,10 @@ export function deactivateAllScenes(campaignId: string) {
 export function sceneTokens(sceneId: string) {
   return db().from('scene_tokens').select('*').eq('scene_id', sceneId).is('archived_at', null)
 }
+/** Grid positions of live tokens - used for spawn occupancy checks. */
+export function sceneTokenPositions(sceneId: string) {
+  return db().from('scene_tokens').select('grid_x, grid_y').eq('scene_id', sceneId).is('archived_at', null)
+}
 /** Generic single-token patch (position / door / visibility / scale / etc.). */
 export function updateToken(id: string, patch: Update<'scene_tokens'>) {
   return db().from('scene_tokens').update(patch).eq('id', id)

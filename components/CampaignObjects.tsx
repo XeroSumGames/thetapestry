@@ -194,7 +194,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       // is_wall (always block). Windows flag is_window (block
       // movement, vision passes through). All other icons stay as
       // pass-through decoration.
-      const addSpawn = defaultSpawnCell(activeSceneCols, activeSceneRows)
+      const addSpawn = defaultSpawnCell(activeSceneCols, activeSceneRows, objects)
       await supabase.from('scene_tokens').insert({
         scene_id: activeSceneId,
         name: addName.trim(),
@@ -247,7 +247,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     if (!activeSceneId || !lib.metadata) return
     const meta = lib.metadata
     const wpMax = meta.indestructible ? null : (meta.wp_max ?? 3)
-    const tplSpawn = defaultSpawnCell(activeSceneCols, activeSceneRows)
+    const tplSpawn = defaultSpawnCell(activeSceneCols, activeSceneRows, objects)
     await supabase.from('scene_tokens').insert({
       scene_id: activeSceneId,
       name: lib.name,
