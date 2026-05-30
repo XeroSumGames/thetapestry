@@ -5288,7 +5288,7 @@ export default function TablePage() {
         {gmLike && !combatActive && (
           <>
             {/* Campaign Map button + Tactical Map scene-picker dropdown (echoes Checks/Community: New Scene + every scene, active in green) */}
-            <button onClick={() => setShowTacticalMap(false)} className={`hdr-btn${!showTacticalMap ? ' hdr-btn--active' : ''}`} style={hdrBtn(!showTacticalMap ? '#2a1210' : '#242424', !showTacticalMap ? '#f5a89a' : '#d4cfc9', !showTacticalMap ? '#c0392b' : '#3a3a3a')}>Campaign Map</button>
+            <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }} className={`hdr-btn${!showTacticalMap ? ' hdr-btn--active' : ''}`} style={hdrBtn(!showTacticalMap ? '#2a1210' : '#242424', !showTacticalMap ? '#f5a89a' : '#d4cfc9', !showTacticalMap ? '#c0392b' : '#3a3a3a')}>Campaign Map</button>
             {renderHeaderMenu('tacticalmap', 'Tactical Map', [
               // Map Setup opens the scene-controls panel as an in-tab floating,
               // draggable, always-on-top overlay (was a separate browser window
