@@ -28,6 +28,7 @@ import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { createSceneControlsBus, type SceneControlsBus } from '../../lib/scene-controls-bus'
 import { ModalBackdrop, Z_INDEX } from '../../lib/style-helpers'
+import { gridToCoverMap } from '../../lib/tactical-grid'
 
 interface Scene {
   id: string
@@ -343,6 +344,29 @@ export default function SceneControlsPopoutPage() {
     })
   }
 
+  // Write background_url + grid dims atomically so players see correct proportions
+  // the moment the realtime UPDATE lands - no transient squash waiting for the
+  // separate gridToCoverMap round-trip from TacticalMap's img.onload effect.
+  async function setBackgroundWithDims(publicUrl: string): Promise<boolean> {
+    if (!scene) return false
+    let patch: { background_url: string; grid_cols?: number; grid_rows?: number } = { background_url: publicUrl }
+    try {
+      const dims = await new Promise<{ w: number; h: number }>((res, rej) => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => res({ w: img.naturalWidth, h: img.naturalHeight })
+        img.onerror = () => rej(new Error('img load'))
+        img.src = publicUrl
+      })
+      const { cols, rows } = gridToCoverMap(dims.w, dims.h, 1, cellPx)
+      if (cols && rows) { patch.grid_cols = cols; patch.grid_rows = rows }
+    } catch { /* image failed to load - write URL only; TacticalMap fixes dims */ }
+    const { error: updErr } = await supabase.from('tactical_scenes').update(patch).eq('id', scene.id)
+    if (updErr) { setError('Save failed: ' + updErr.message); return false }
+    setScene(prev => prev ? { ...prev, ...patch } : prev)
+    return true
+  }
+
   async function uploadBackground(file: File) {
     if (!scene) return
     setError('')
@@ -361,8 +385,8 @@ export default function SceneControlsPopoutPage() {
       if (uErr) { setError('Upload failed: ' + uErr.message); setUploading(false); setUploadPct(0); return }
     }
     const { data: urlData } = supabase.storage.from('tactical-maps').getPublicUrl(path)
-    const { error: updErr } = await supabase.from('tactical_scenes').update({ background_url: urlData.publicUrl }).eq('id', scene.id)
-    if (updErr) { setError('Save failed: ' + updErr.message); setUploading(false); setUploadPct(0); return }
+    const ok = await setBackgroundWithDims(urlData.publicUrl)
+    if (!ok) { setUploading(false); setUploadPct(0); return }
     setUploading(false)
     setUploadPct(100)
     setUploadDone(true)
@@ -462,7 +486,7 @@ export default function SceneControlsPopoutPage() {
           onChange={e => {
             const url = e.target.value
             if (!url) return
-            updateSceneField('background_url', url)
+            setBackgroundWithDims(url)
             e.currentTarget.value = ''
           }}
           title="Reuse a map you've already uploaded to another story or scene"
