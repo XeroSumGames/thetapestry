@@ -10,7 +10,9 @@
 
 ### 🔴 GATE-RED -> AWAITING RE-RUN (#1 KS core-loop reliability)
 - [ ] **[XERO action] re-run the 12-check tactical-map gate.** HP's `a9b8c44` fix shipped (move-follow now reads from its own initiative_order subscription, no React-render delay - matches puffer suspect #1 exactly). Gate: [tasks/tactical-map-verify-2client-testplan-2026-05-27.md](tactical-map-verify-2client-testplan-2026-05-27.md). All-12 PASS on 2 clients -> puffer demotes TacticalMap Risk Register YELLOW -> GREEN and #1 KS core-loop reliability closes. Original RED finding: [tasks/finding-tactical-map-move-follow-red-2026-05-30.md](finding-tactical-map-move-follow-red-2026-05-30.md).
-- [x] **[SHIPPED] player viewport centering race (2 fixes).** (1) `9154d26`: image-before-tokens race - `tokensRef.current` set early, re-center from else-branch when image already loaded. (2) this session: `myCharacterId` prop is null at mount (parent `init()` hasn't resolved yet) - TacticalMap now re-centers once when the prop first becomes non-null AND scene is loaded.
+- [x] **[SHIPPED] player viewport centering race (2 fixes).** (1) `9154d26`: image-before-tokens race - `tokensRef.current` set early, re-center from else-branch when image already loaded. (2) `c0d9fb8`: `myCharacterId` prop is null at mount (parent `init()` hasn't resolved yet) - TacticalMap now re-centers once when the prop first becomes non-null AND scene is loaded.
+- [x] **[SHIPPED `a068ffb`] "+ Map" un-archive now re-spawns at a fresh cell.** Was restoring the row's last `grid_x`/`grid_y` - which stranded tokens at wherever they were last dragged (e.g. (76,104) on an 80×120 grid -> token reappeared off-screen). Now: un-archive writes `archived_at=null` AND a fresh `defaultSpawnCell` position based on live occupancy. ROOT CAUSE of the 2026-05-30 "token is in the wrong place" playtest report.
+- [ ] **[FOLLOW-UP] tactical_scenes grid auto-fit may not be self-correcting after stale cellPx.** Live DB had `grid_cols=80, grid_rows=120` for a 2800×4200 PORTRAIT image at `cell_px=30` - that's `gridToCoverMap` output with `cellPx=35` (the React `useState` default), NOT the scene's real 30. The GM's `[bgLoadTick, cellPx, isGM, ...]` effect SHOULD have re-run with `cellPx=30` and written (94, 140), but didn't. Possible: `isGM` flips to true BEFORE `cellPx` settles to the DB value, effect fires once with `(cellPx=35, isGM=true)` matching the stale DB -> returns early via the equality guard, then `cellPx` change re-fires but the guard already locked in the wrong (80,120) DB write. Manually corrected live: scene `8fa2523c` -> (94, 140) + token `c939e995` (Cree) -> (3, 1). Verify on next GM refresh whether the auto-fit holds or reverts. If reverts, the `[bgLoadTick,...]` effect needs a guard that ignores the initial `cellPx=35` render or waits for `cellPx === scene.cell_px` before writing.
 
 ### 🟢 COMBAT-FLOW #10 (E2E, beta-500 floor item) - RPC unblocker LIVE
 - [x] **[PUFFER] `gm_apply_damage` RPC applied live 2026-05-30** ([sql/gm-apply-damage-rpc-2026-05-30.sql](../sql/gm-apply-damage-rpc-2026-05-30.sql)). SECURITY DEFINER, GM-only authz, atomic WP damage on `character_states` (PC) or `campaign_npcs` (NPC) + PC stress-on-mortal (cap 5 per canon) + `roll_log` row with `damage_json.via='gm_apply'`. Verified in pg_proc. Mirrors the `give_item_to_character` Option-B pattern.
@@ -380,8 +382,8 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 **Phase 3-5** (the four committed structural workstreams from chat - sequenced AFTER Phase 0-2)
 - [ ] **Decompose `app/stories/[id]/table/page.tsx`** (12,429 lines) - extract by concern into hooks + sub-components. Realtime subscription audit folds into this.
 - *(Modal unification + CMod Stack dedup-removed 2026-05-19. Canonical entries live in "Ready to build (medium)" below - search for "Modal unification (5 of 6 remaining)" and "CMod Stack reusable component".)*
-- [x] ~~**Stabilize migration to dedicated `<RollModal>` (Phase 1)**~~ SHIPPED 2026-05-20. The 🩸 STABILIZE dropdown now routes through a dedicated `<RollModal>` instance (table/page.tsx L12730+) backed by `lib/stabilize-helpers.ts` (pure outcome → narrative + 1d6-PHY incap roll, 10 unit tests). New `runStabilizeCascade` helper owns DB writes + optimistic state updates + progression log. The brittle `pendingRoll.label.includes('Stabilize ')` branch in `executeRoll` is preserved unreachable for one-playtest rollback safety (Phase 4 deletion). Surprise root-cause: the per-card Stabilize button on `CharacterCard.tsx:660` was using the PATIENT's own RSN/Medicine as the medic's stats (latent bug since inception); removed as part of the cleanup. Post-combat stabilize surface is now follow-up territory if playtest demands it. Tests: 400/400 (10 new). tsc clean. Phase 2 (Distract) + Phase 3 (First Impression) + Phase 4 (retire pendingRoll branch) chain behind.
-- [x] ~~**Stabilize migration Phase 2 - Distract**~~ SHIPPED 2026-05-20. The in-combat Distract button now routes through a dedicated `<RollModal>` backed by `lib/distract-helpers.ts` (pure outcome → action-delta + narrative, 11 unit tests). New `runDistractCascade` helper owns the `initiative_order.actions_remaining` update + `turn_changed` broadcast. Target picker rendered via `preRollExtras` (Close-range candidates). Legacy `executeRoll` Distract branch preserved unreachable for Phase 4 deletion. Bonus cleanup: deleted the dead `applySocialAction` Distract branch (superseded by the in-combat button trigger but never removed). Tests 411/411 pass.
+- [x] ~~**Stabilize migration to dedicated `<RollModal>` (Phase 1)**~~ SHIPPED 2026-05-20. The 🩸 STABILIZE dropdown now routes through a dedicated `<RollModal>` instance (table/page.tsx L12730+) backed by `lib/stabilize-helpers.ts` (pure outcome -> narrative + 1d6-PHY incap roll, 10 unit tests). New `runStabilizeCascade` helper owns DB writes + optimistic state updates + progression log. The brittle `pendingRoll.label.includes('Stabilize ')` branch in `executeRoll` is preserved unreachable for one-playtest rollback safety (Phase 4 deletion). Surprise root-cause: the per-card Stabilize button on `CharacterCard.tsx:660` was using the PATIENT's own RSN/Medicine as the medic's stats (latent bug since inception); removed as part of the cleanup. Post-combat stabilize surface is now follow-up territory if playtest demands it. Tests: 400/400 (10 new). tsc clean. Phase 2 (Distract) + Phase 3 (First Impression) + Phase 4 (retire pendingRoll branch) chain behind.
+- [x] ~~**Stabilize migration Phase 2 - Distract**~~ SHIPPED 2026-05-20. The in-combat Distract button now routes through a dedicated `<RollModal>` backed by `lib/distract-helpers.ts` (pure outcome -> action-delta + narrative, 11 unit tests). New `runDistractCascade` helper owns the `initiative_order.actions_remaining` update + `turn_changed` broadcast. Target picker rendered via `preRollExtras` (Close-range candidates). Legacy `executeRoll` Distract branch preserved unreachable for Phase 4 deletion. Bonus cleanup: deleted the dead `applySocialAction` Distract branch (superseded by the in-combat button trigger but never removed). Tests 411/411 pass.
 - [x] ~~**Stabilize migration Phase 3 - First Impression**~~ ALREADY SHIPPED 2026-05-19 via the parallel FI streamline track. The spec at tasks/spec-stabilize-migration.md was stale on this point - verified 2026-05-20 (FirstImpressionModal component + resolveFirstImpression resolver + 18 unit tests + 3 entry points all routing through the dedicated modal). Spec updated to reflect actual status.
 - [x] ~~**Stabilize / Distract / Gut Instinct Phase 4 - retire legacy executeRoll branches.**~~ SHIPPED 2026-05-23 as **3c-B1** (`35b72fe`), applying the INTENT of `claude/phase4-prestage` (`3671c68`) directly to main. The prestage branch was NOT merged and is now obsolete: diffing it vs current main showed 12,745 deletions of files that exist today (lib/data, lib/realtime, check-arch, database.types, etc.) because it branched off an ancient main (page.tsx was 13,469 then) - merging would have wiped the grand-rearch infra. Re-verified unreachability on current main (no handleRollRequest caller produces ' - Distract' / 'Stabilize ' / 'Gut Instinct'), removed the 3 dead branches + the 2 dangling traitNotes spreads. page.tsx 12663 -> 12564; seam-leakage 1266->1263, prod-console 118->115. 532 tests + tsc + guardrails clean. **Branch `claude/phase4-prestage` can be deleted** (its content is superseded). First step of the 3c-B `executeRoll` -> `useRollResolution` rebuild.
 - [x] ~~**Lasting Wound effect-text: Lost Eye + Crippled per-roll-CMod wording**~~ SHIPPED 2026-05-20 per Xero canon confirmation. `lib/xse-schema.ts:735` Lost Eye override: "-1 CMod on Dexterity checks" -> "-1 on Dexterity checks" (mirrors canon L712 "-1 on checks using Dexterity"). `lib/xse-schema.ts:744` Crippled override: "-1 ACU attribute and -1 CMod on Perception checks" -> "-1 Perception and -1 ACU" (mirrors canon L721 "-1 Perception & -1 Acumen"). Three Lasting Wounds now follow the canon-locked lasting-modifier principle (Skittish + Lost Eye + Crippled); the other 9 entries already did. Tests 419/419 pass; no preview rows or test assertions referenced these specific overrides so no other surfaces needed updating.
@@ -398,7 +400,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [x] ~~**#6 / mark 01:32:51**~~ - player drag/drop NPCs in their tab (Phase A). Shipped `4b9ce21`.
 - [x] ~~**#7 / mark 02:07:35**~~ - "drives Minnie" breakdown formatting. Shipped `faa60ab` (DRIVE / BREW / NAVIGATE prefix-CAPS narratives + fuel state baked into BREW line; supersedes the parallel-chat `54c46a1` mid-session collision).
 - [x] ~~**#8 / mark 02:12:29**~~ - Minnie inventory player-editable. Shipped `1f79e08`.
-- [x] ~~**#9 / mark 02:21:57**~~ - fuel storage fungible (+1 day per drum). Shipped `c31e564` - per-vehicle cap via new optional `fuel_max_base` + `fuel_storage_max` cols, 55-Gallon Drum scavengeable item, Install/Uninstall UI on vehicle popout. Minnie 4 → 6 cap.
+- [x] ~~**#9 / mark 02:21:57**~~ - fuel storage fungible (+1 day per drum). Shipped `c31e564` - per-vehicle cap via new optional `fuel_max_base` + `fuel_storage_max` cols, 55-Gallon Drum scavengeable item, Install/Uninstall UI on vehicle popout. Minnie 4 -> 6 cap.
 - [x] ~~**#10 / mark 02:25:36**~~ - storage for 2 days of brewing supplies. Shipped `f3b20fb` - new optional `brewing_supplies_current` + `brewing_supplies_max` cols, [+ Gather Materials] button (passive 1-day action, no dice), brew blocked at 0, every brew burns 1 supply. Minnie cap 2.
 - [x] ~~**#11 / mark 02:28:30**~~ - generic Advantage tab based on scavenging roles. Shipped 5 phases: `054c04d` (schema + helpers), `47a1f36` (GM grant dialog + player tab + Use button), `011c55e` (P4 ⭐ Award button on roll feed + P5 C3 consumed broadcast - fixed JSX from the prior compacted session).
 - [x] ~~**#12 / mark 02:37:45**~~ - CLOSE ALL on multi-NPC-card view. Shipped `fcd8a9d`.
@@ -411,7 +413,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 
 - [x] ~~**Polish-pass-2026-05-14 testplan**~~ - PLAYTESTED 2026-05-18, all sections passed. Coord Effort, Healing, Year-0, Campaign Sheet header/Edit Clock modal, Export Log, Luxury Ration, die3, Weapon Repair, CampaignObjects "found nothing", 4 polish bundles all working as intended.
 - [x] ~~**Thriver-godmode-sweep testplan**~~ - PLAYTESTED 2026-05-18, all sections passed. Thriver-on-non-owned-campaign + GM regression + Survivor no-leak all green.
-- [x] ~~**Preplay-testsmoke-2026-05-17**~~ - PLAYTESTED 2026-05-18 ([tasks/preplay-testsmoke-2026-05-17.md](preplay-testsmoke-2026-05-17.md)). Covered 2026-05-15→17 ships: drag-end grab-offset fix, vehicle passenger model, Coord Effort Withdraw retcon, Heal-LI infection cascade, Day-0 Lasting Damage modal, Lasting Wound chips, HIDE ALL panic button, vehicle sheet redesign, pin sidebar OSRM router, GM Notes draft, Tools sidebar, moderation email triggers, bug report tools. All green.
+- [x] ~~**Preplay-testsmoke-2026-05-17**~~ - PLAYTESTED 2026-05-18 ([tasks/preplay-testsmoke-2026-05-17.md](preplay-testsmoke-2026-05-17.md)). Covered 2026-05-15->17 ships: drag-end grab-offset fix, vehicle passenger model, Coord Effort Withdraw retcon, Heal-LI infection cascade, Day-0 Lasting Damage modal, Lasting Wound chips, HIDE ALL panic button, vehicle sheet redesign, pin sidebar OSRM router, GM Notes draft, Tools sidebar, moderation email triggers, bug report tools. All green.
 
 ### Ready to build (small)
 - [x] ~~**Encumbrance over-limit RP drain - canon correction**~~ SHIPPED 2026-05-20. The full Encumbrance rule got dropped between manuscript versions; Xero supplied canon. Was: flat 1 RP/hour for any overloaded character. Now: 1 RP/hour PER POINT over the limit (`overBy` in `lib/encumbrance.ts`; Advance Time tick multiplies). Rules prose added to `/rules/character-overview/secondary-stats`. Canon doc: `tasks/rules-extract-encumbrance-2026-05-20.md`. 13 encumbrance tests. **Two pieces of the same canon DEFERRED (bigger surfaces):**
@@ -486,7 +488,7 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [ ] **Government Remnants / Beacons of Hope factions**
 
 ### CRB rewrite workstream (Tier 3 optional - open)
-- [ ] Morality loss/regain ladder (3 lost → -1 INF; 6 regained → +1 INF)
+- [ ] Morality loss/regain ladder (3 lost -> -1 INF; 6 regained -> +1 INF)
 - [ ] Called Shots (Wild Success required, Fill in the Gaps)
 - [ ] Tactical Advantages (+1 to +3 CMod GM-discretion catch-all)
 - [ ] Chases subsystem (Speed-matched Opposed across range bands)
@@ -500,9 +502,9 @@ Full punch list: [tasks/pre-launch-audit-2026-05-17.md](pre-launch-audit-2026-05
 - [ ] **Morale outcomes percentages (25/50/75%)** - verify moodRow table at [app/rules/communities/morale/page.tsx:100+](../app/rules/communities/morale/page.tsx)
 
 ### CRB rewrite workstream (Cross-cutting - open, CRB-doc side only)
-- [ ] General Knowledge → Specific Knowledge sweep
+- [ ] General Knowledge -> Specific Knowledge sweep
 - [ ] CMod ladder labels (11 tiers renamed)
-- [ ] 12 Profession bundles (7-skill → 5-skill)
+- [ ] 12 Profession bundles (7-skill -> 5-skill)
 
 ### Backburner
 - [ ] **Campaign calendar** - deferred; revisit only on listed pain triggers (Forgotten Skip Week, world events sticking past end-date, etc.). See [memory/project_campaign_calendar.md](../../../../Users/tony_/.claude/projects/C--TheTapestry/memory/project_campaign_calendar.md).
@@ -573,7 +575,7 @@ Source: [tasks/froms-tos-crb.md](froms-tos-crb.md) audit of Distemper CRB v0.9.2
   - CRB Ch. 07 pp. 116-117. (Subsistence supersedes the older 2026-05-08 flagged item below.)
 - [ ] **6. Travel Times subsystem** - 8h travel + 8h rest + 8h sleep cycle; 1 RP/hour overage past 8h. CRB Ch. 08 p. 142.
 - [ ] **7. Resource Quality / Supplies abstraction** - Common / Uncommon / Rare units of generic Supplies as a resource currency. Anchors Communities economy. CRB Ch. 08 pp. 131, 133.
-- [ ] **8. Per-activity yield rates** - Scavenging 2/Daily, Foraging 2 Standard, Fishing 2 Luxury, Trapping 1 Luxury/trap, Hunting 10 Luxury (15 Wild), Farming season → 90 days at 1 Standard each. CRB Ch. 08 pp. 134-136. Depends on (1) and (7) landing first.
+- [ ] **8. Per-activity yield rates** - Scavenging 2/Daily, Foraging 2 Standard, Fishing 2 Luxury, Trapping 1 Luxury/trap, Hunting 10 Luxury (15 Wild), Farming season -> 90 days at 1 Standard each. CRB Ch. 08 pp. 134-136. Depends on (1) and (7) landing first.
 - [ ] **9. Base of Operations sizing** - Tiny (≤4) / Small (≤12) / Medium (≤36, min for Homestead) / Large (≤300) / Massive (≤1000), with monthly Supplies cost. Pre-Community gap. CRB Ch. 09 pp. 152-155.
 
 **Tier 2 - Distemper-supplement content (not core canon):**
@@ -586,14 +588,14 @@ Source: [tasks/froms-tos-crb.md](froms-tos-crb.md) audit of Distemper CRB v0.9.2
 **Tier 3 - Optional GM-aid promotions (playtest first):**
 
 - [ ] **Negotiations Gambit / Rebuttal** - two-step Opposed Check structure for social scenes. CRB Ch. 10 p. 178.
-- [ ] **Morality loss/regain ladder** - 3 lost → -1 INF; 6 regained → +1 INF; INF floor at -2. Puts teeth on canon's "Morality starts at 3." CRB Ch. 10 pp. 181-182.
+- [ ] **Morality loss/regain ladder** - 3 lost -> -1 INF; 6 regained -> +1 INF; INF floor at -2. Puts teeth on canon's "Morality starts at 3." CRB Ch. 10 pp. 181-182.
 - [ ] **Called Shots** - Wild Success required, freeform effect via Fill in the Gaps. CRB Ch. 07 p. 119.
 - [ ] **Tactical Advantages** - +1 to +3 CMod GM-discretion catch-all. CRB Ch. 07 p. 119.
 - [ ] **Chases subsystem** - Speed-matched Opposed Athletics/Animal Handling/Driving across range bands; escape at Distant. CRB Ch. 08 p. 141.
 - [ ] **Banishment** - Code-of-Conduct teeth for Communities. CRB Ch. 09 p. 165.
 - [ ] **Luxury Ration clears 1 Stress pip** - gives Luxury Rations a real purpose. Compatible with canon Cooling Off. CRB Ch. 08 p. 133.
 - [ ] **Mundane vs Complex Tasks split** + Simplified Group Check (+2 CMod per participant, no AMods/SMods, Mundane-only label). CRB Ch. 09 pp. 166-167.
-- [ ] **Apprentice continuity on PC death** - player promotes Apprentice → PC. CRB Ch. 09 p. 173.
+- [ ] **Apprentice continuity on PC death** - player promotes Apprentice -> PC. CRB Ch. 09 p. 173.
 
 **Tier 4 - Skip / drop (don't promote, recommend dropping from CRB):**
 
@@ -608,22 +610,22 @@ Source: [tasks/froms-tos-crb.md](froms-tos-crb.md) audit of Distemper CRB v0.9.2
 
 Audit produced ~150 FROM/TO blocks across Chs. 01-10. See [tasks/froms-tos-crb.md](froms-tos-crb.md) for full per-chapter listing. Largest cross-cutting fixes:
 
-- [ ] **DMM/DMR → MDM/RDM** sweep (every chapter, ~40 sites including 33 NPC stat blocks).
+- [ ] **DMM/DMR -> MDM/RDM** sweep (every chapter, ~40 sites including 33 NPC stat blocks).
 - [ ] **Intimidation skill removal** - replace with Manipulation or Psychology\* across Chs. 05, 07, 09, 10 (~12 sites).
-- [ ] **General Knowledge → Specific Knowledge** sweep (Chs. 04, 05, 07).
-- [ ] **Mechanics\* → Mechanic\*** plural sweep (Chs. 06, 08).
-- [ ] **Panic Threshold / Stress counter → Stress Level (0-5) + Stress Modifier (RSN+ACU AMod)** - wholesale replacement across Chs. 05, 07, 08, 10.
-- [ ] **Insight Dice on Death** - "1 WP + 1 RP per die" → "1 WP + 1 RP total" at three sites (CRB pp. 28, 122, plus the live `app/rules/core-mechanics/insight-dice/page.tsx` which still has the bug).
+- [ ] **General Knowledge -> Specific Knowledge** sweep (Chs. 04, 05, 07).
+- [ ] **Mechanics\* -> Mechanic\*** plural sweep (Chs. 06, 08).
+- [ ] **Panic Threshold / Stress counter -> Stress Level (0-5) + Stress Modifier (RSN+ACU AMod)** - wholesale replacement across Chs. 05, 07, 08, 10.
+- [ ] **Insight Dice on Death** - "1 WP + 1 RP per die" -> "1 WP + 1 RP total" at three sites (CRB pp. 28, 122, plus the live `app/rules/core-mechanics/insight-dice/page.tsx` which still has the bug).
 - [ ] **Lv4 Skill Trait paragraphs** - pull from all 24 skill descriptions in Ch. 05 §05 pending unified Lv4 trait release.
 - [ ] **Combat Actions table** - 17 actions, "Grapple" (not Grappling), drop "Skill Check" action (Ch. 07 p. 108).
 - [ ] **CMod ladder labels** - all 11 tiers renamed (Ch. 04 pp. 22, 25-26).
-- [ ] **All 12 Profession bundles** - wholesale 7-skill → 5-skill replacement (Ch. 05 pp. 41-43).
-- [ ] **Paradigm roster** - 16 → 12: drop Beat Cop, Cosmetic Surgeon, Family Doctor, Flea Market Trader, Handyman, Semi-Pro Athlete, Trucker; add Antiques Dealer + Hot Rod Mechanic; rename "Business Owner" body → "Bar Owner" (Ch. 05 pp. 62-65).
-- [ ] **Range Band movement** - Engaged → Close = 3 (not 1), → Medium = 6 (not 3), → Long = 10 (not 6), → Distant = 15 (not 10). Ch. 07 pp. 117-118.
+- [ ] **All 12 Profession bundles** - wholesale 7-skill -> 5-skill replacement (Ch. 05 pp. 41-43).
+- [ ] **Paradigm roster** - 16 -> 12: drop Beat Cop, Cosmetic Surgeon, Family Doctor, Flea Market Trader, Handyman, Semi-Pro Athlete, Trucker; add Antiques Dealer + Hot Rod Mechanic; rename "Business Owner" body -> "Bar Owner" (Ch. 05 pp. 62-65).
+- [ ] **Range Band movement** - Engaged -> Close = 3 (not 1), -> Medium = 6 (not 3), -> Long = 10 (not 6), -> Distant = 15 (not 10). Ch. 07 pp. 117-118.
 - [ ] **Morale Check structure** - replace freeform CMod list with canon's 6 named slots (Mood / Fed / Clothed / Enough Hands / A Clear Voice / Someone To Watch Over Me / Adjusted). Ch. 09 p. 164.
 - [ ] **Morale outcomes** - replace "1d6 / 2d6 leave" with canon's percentage attrition (25% / 50% / 75%) and Mood-carryforward values. Ch. 09 pp. 164-165.
 - [ ] **Fed Check + Clothed Check** - both missing entirely from the CRB; insert canon's two 6-row outcome tables. Ch. 09 p. 167.
-- [ ] **Apprentice unlock** - Wild Success OR High Insight → **High Insight only** (3 sites: Cohort, Conscript, Convert + Apprentices section). Ch. 09 pp. 169-172.
+- [ ] **Apprentice unlock** - Wild Success OR High Insight -> **High Insight only** (3 sites: Cohort, Conscript, Convert + Apprentices section). Ch. 09 pp. 169-172.
 - [ ] **Apprentice creation CDP** - add canon's 3 RAPID + 5 skill CDP allocation. Ch. 09 p. 173.
 
 ---
@@ -636,7 +638,7 @@ Audit produced ~150 FROM/TO blocks across Chs. 01-10. See [tasks/froms-tos-crb.m
 
 ---
 
-## ✅ Shipped 2026-05-03 → 2026-05-04 - audit follow-ups + tactical fog/zoom fixes
+## ✅ Shipped 2026-05-03 -> 2026-05-04 - audit follow-ups + tactical fog/zoom fixes
 
 Aggregated from the multi-session audit follow-up arc. Each item is a single commit on `main` from the `claude/audit-followup-2026-05-03` branch.
 
@@ -644,7 +646,7 @@ Aggregated from the multi-session audit follow-up arc. Each item is a single com
 - [x] **gm-kit: scoped scene_tokens fetch + lazy JSZip** - `cloneModuleIntoCampaign` was fetching ALL `scene_tokens` across the DB (unfiltered `select('*')`) and filtering client-side; now uses `.in('scene_id', sceneIds)` for proper server-side filtering. Plus JSZip moved to a dynamic `await import('jszip')` inside `exportGmKit` (was a top-level import pulling ~50KB into every bundle that touched the module). Commit `8553234`. Testplan: `tasks/gm-kit-scope-2026-05-03-testplan.md`.
 - [x] **Dead-code: drop `LABEL_STYLE_LG_TIGHT` + `app/oldfavicon.ico`** - `LABEL_STYLE_LG_TIGHT` was created defensively during the initial label-style sweep but had no 14px+.08em sites to map onto. Verified zero callers. `oldfavicon.ico` was a leftover orphan from a favicon refresh. Commit `5fd6275`. Testplan: `tasks/dead-code-2026-05-03-testplan.md`.
 - [x] **Painted fog absolute (initial)** - reverted the `!visible.has(k)` guard on painted-fog rendering, making painted fog absolute. Fixed the morning playtest where day-mode unbounded sight on a no-walls map cleared every painted-fog cell. Commit `26f6dfc`.
-- [x] **Painted fog blocker-gated (the real fix)** - the "absolute" fix above broke the open-window-clears-fog workflow on properly-walled maps. Final fix gates LoS-defeasibility on `hasBlockers = visionSegs.length > 0 || cellBlockers.size > 0`. No blockers → painted fog absolute, auto-fog off. Blockers + PC → LoS-driven painted fog + auto-fog. Both morning and evening playtest cases satisfied. Commit `4f2ee48`. Testplan: `tasks/fog-blocker-gated-2026-05-04-testplan.md`.
+- [x] **Painted fog blocker-gated (the real fix)** - the "absolute" fix above broke the open-window-clears-fog workflow on properly-walled maps. Final fix gates LoS-defeasibility on `hasBlockers = visionSegs.length > 0 || cellBlockers.size > 0`. No blockers -> painted fog absolute, auto-fog off. Blockers + PC -> LoS-driven painted fog + auto-fog. Both morning and evening playtest cases satisfied. Commit `4f2ee48`. Testplan: `tasks/fog-blocker-gated-2026-05-04-testplan.md`.
 - [x] **imgScale clobber on tactical_scenes UPDATE** - player view zoom-jumped every time the GM toggled a window/wall. Cause: `loadScenes()` (which fires on every `tactical_scenes` UPDATE) was unconditionally re-applying `setImgScale(active.img_scale)` for every player, clobbering the per-viewer local auto-fit value. Fix: only re-apply when DB has a non-default value (`>0 && !== 1`). Commit `3d699d4`. Testplan: `tasks/imgscale-clobber-2026-05-04-testplan.md`.
 - [x] **Sentry-example wizard scaffolding dropped** - `app/sentry-example-page/page.tsx` + `app/api/sentry-example-api/route.ts` from the Sentry setup wizard, never wired into anything. Commit `68505c4`. Testplan: `tasks/sentry-example-drop-2026-05-03-testplan.md`.
 - [x] **Z-index norm: NoteAttachmentsView lightbox** - single-site swap from literal `zIndex: 10010` to `Z_INDEX.criticalModalOver`. Two other off-scale literals (`10001` × 2) deliberately preserved because of intentional `+1`-above-critical stacking offsets. Commit `ab22260`. Testplan: `tasks/zindex-norm-2026-05-03-testplan.md`.
@@ -672,7 +674,7 @@ Aggregated from the multi-session audit follow-up arc. Each item is a single com
 - [x] **`admin_users_with_login()` + `admin_user_with_login(uuid)` RPCs** - `sql/admin-users-with-login.sql`, applied to live. SECURITY DEFINER, Thriver-gated, joins `profiles` + `auth.users.last_sign_in_at` so the client SDK can surface last-login without exposing `auth.users` directly.
 - [x] **`profiles.email` backfill - GrumpyBattersby caught** - `UPDATE profiles SET email = auth.users.email WHERE profiles.email IS NULL`. All 16 of 16 profiles now have `email`. Old account `2d789818-…` from 2026-04-21 had been missed by the original backfill.
 - [x] **Email visibility on /moderate row** - commit `9861034 fix(moderate,visits): emails always visible + visit alert on new ip_hash only`. Was a CSS-overflow bug (single-line layout with `overflow:hidden + textOverflow:ellipsis + whiteSpace:nowrap` ate emails behind long usernames). Fixed by splitting top row (username + chips) from bottom muted line (email · Joined · Last login) - email can never be cropped now.
-- [x] **Visit-alert email gate - visitNumber === 1 only** - same commit `9861034`. The old gate stacked `isFirstVisit` (per-session) with `!isRepeatSurvivor` (signed-in user with `visitNumber > 5` was suppressed). Live `visitor_logs` showed every active user's `ip_hash` count was 88-1612, so `isRepeatSurvivor=true` on every request → no emails fired anywhere. Per Xero pref: binary gate. Edge function `supabase/functions/log-visit/index.ts` deployed live (`jbudzglgtxeoaufpejrv`).
+- [x] **Visit-alert email gate - visitNumber === 1 only** - same commit `9861034`. The old gate stacked `isFirstVisit` (per-session) with `!isRepeatSurvivor` (signed-in user with `visitNumber > 5` was suppressed). Live `visitor_logs` showed every active user's `ip_hash` count was 88-1612, so `isRepeatSurvivor=true` on every request -> no emails fired anywhere. Per Xero pref: binary gate. Edge function `supabase/functions/log-visit/index.ts` deployed live (`jbudzglgtxeoaufpejrv`).
 - [x] **`RETURNS TABLE` column-ambiguity fix on the admin RPCs** - commit `78df30c fix(moderate): qualify Thriver-gate columns to escape RETURNS TABLE shadowing`. The unqualified Thriver gate `WHERE id = auth.uid() AND lower(role) = 'thriver'` collided with the OUT params declared by `RETURNS TABLE (id uuid, role text, ...)`. Aliased the gate's read as `caller` so every reference is qualified. Lesson captured in `tasks/lessons.md` 2026-05-08.
 
 Testplans:
@@ -683,10 +685,10 @@ Testplans:
 
 ## ✅ Shipped 2026-05-06 marathon-session tail
 
-Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-05-04 → 2026-05-05) is captured in `tasks/handoff-2026-05-06.md`.
+Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-05-04 -> 2026-05-05) is captured in `tasks/handoff-2026-05-06.md`.
 
 - [x] **GM Notes popout - every field click-to-edit** - commit `c4610ad feat(gm-notes): make popout fields inline-editable`. Editable surfaces: campaign description, plot beats (campaign_notes title + content), scene names, NPC name/type/disposition/motivation/notes/hidden, pin name/notes/sort_order/revealed. Helper components `EditableText` / `EditableSelect` / `EditableToggle` / `EditableNumber` at the bottom of the file. Optimistic local update + rollback via `.update().select()` so RLS rejections surface as alerts.
-- [x] **GM Notes popout - campaign description font 14 → 17px** - commit `6200fb2 style(gm-notes): bump campaign description 14→17px on popout`. Reads small from second-monitor distance; lede paragraph now visually distinct.
+- [x] **GM Notes popout - campaign description font 14 -> 17px** - commit `6200fb2 style(gm-notes): bump campaign description 14->17px on popout`. Reads small from second-monitor distance; lede paragraph now visually distinct.
 - [x] **Sequence guards on `useRollsFeed.refetch` + `useChatPanel.refetch`** - commit `d4a97e1 fix(realtime): sequence guards on rolls + chat refetch`. Ports the `loadEntries` `refetchSeqRef` pattern. Stale earlier query landing AFTER fresher state now drops instead of clobbering.
 - [x] **Thriver godmode UI sweep - 4 of 5 surfaces** - commit `92f9243 feat(thriver): godmode UI sweep on table page`. Single `gmLike = isGM || isThriver` derivation routed through NpcRoster, CampaignCommunity, CampaignObjects, VehicleCard, the GM/Player Notes pane, and the `gm=` flag on the NPC sheet popout URL. Surface 5 (character-sheet edit affordance for non-owned PCs) deferred to next sweep. **Side-effect bug fix:** `VehicleCard canEdit={true}` was wide-open - now `canEdit={gmLike}`, so players can no longer edit shared vehicles.
 - [x] **2026-05-06 backlog snapshot** - commit `24b8456 docs(backlog): 2026-05-06 open-work checklist + printable docx`. Generates `tasks/open-work-checklist-2026-05-06.md` + `tasks/open-work-2026-05-06.docx` + `scripts/build-open-work-docx-2026-05-06.py`. Supersedes `tasks/open-work-2026-05-05-printable.md`.
@@ -714,11 +716,11 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 - [x] **Reactions + comments on Campfire posts** - `components/ReactionButtons.tsx` + `components/InlineRepliesPanel.tsx`. Phase 4E.
 - [x] **Campaign creation - "Run in District Zero" pre-populates setting content** - commit `3ba25a8` Phase 4C, `app/stories/new/page.tsx:34-211` accepts `?setting=<slug>`.
 - [x] **Per-community Campfire feed (Communities Phase E)** - commit `9725b09 feat(communities): Phase 4D - per-community Campfire feed`, `components/CampaignCommunity.tsx:233-689`.
-- [x] **`/modules` → `/rumors` marketplace browse + search + filters** - commit `6625a07 feat(modules): Phase C marketplace`. `app/rumors/page.tsx`.
+- [x] **`/modules` -> `/rumors` marketplace browse + search + filters** - commit `6625a07 feat(modules): Phase C marketplace`. `app/rumors/page.tsx`.
 - [x] **`/modules/[id]` detail page - version history + reviews** - commit `b9ac828`. `app/rumors/[id]/page.tsx`. Reviews via `sql/modules-phase-c-reviews.sql`.
 - [x] **Listed-module Thriver moderation queue** - `app/moderate/page.tsx:111` queries modules for `moderation_status='pending'`/`visibility='listed'`.
 - [x] **Module cover image upload + featured-module surface on dashboard** - `app/rumors/[id]/edit/page.tsx`, `app/campfire/page.tsx:230-260`, bucket `sql/module-covers-bucket.sql`.
-- [x] **Migrate character photos from base64 → Supabase Storage** - commit `2c49873 fix(picker): sharpen library portraits + ship character-photo migration tool`. Tool at `app/tools/migrate-character-photos/page.tsx`.
+- [x] **Migrate character photos from base64 -> Supabase Storage** - commit `2c49873 fix(picker): sharpen library portraits + ship character-photo migration tool`. Tool at `app/tools/migrate-character-photos/page.tsx`.
 - [x] **Tier C2 - extract initiative bar into its own component** - commit `f712691 refactor(C2)`. `components/InitiativeBar.tsx`.
 - [x] **4E Inline `<t:UNIX:f>` token rendering** - same renderer as HammerTime above. Already in use across Campfire reply panels.
 
@@ -729,7 +731,7 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 **XSE SRD as a public web reference (`/rules/*`):**
 - Sidebar `Rules` promoted from "- soon" placeholder to a real link. Public-prefix gating (`PUBLIC_PREFIXES`) added to `LayoutShell.tsx` so guests can read the SRD without an account.
 - New `/rules` landing - 13-card section grid (§01-§08 + Appendices A-D). 11 stub pages render their anchor outline + a "forthcoming" notice; only `/rules/communities` ships full copy.
-- `/rules/communities` (Style A - one long page, 16 anchors) - full §08 copy reconciled against `tasks/rules-extract-communities.md`. 4 "Try it →" callouts deep-link to `/communities` and `/characters/new`.
+- `/rules/communities` (Style A - one long page, 16 anchors) - full §08 copy reconciled against `tasks/rules-extract-communities.md`. 4 "Try it ->" callouts deep-link to `/communities` and `/characters/new`.
 - `/rules/communities2` + 5 sub-pages (Style B - many short pages) - same SRD content split across `/recruitment`, `/apprentices`, `/morale`, `/structure`, `/crb-additions` for an A/B comparison test. Orange `StyleBanner` at the top of every comparison page flips to the other style anchor-aware. Loser of A/B gets deleted in one commit. ([components/rules/StyleBanner.tsx](../components/rules/StyleBanner.tsx))
 - `RulesNav` left rail - non-scrolling column; only `<main>` scrolls (sticky was unreliable inside LayoutShell's existing scroll context). IntersectionObserver pinned to `<main>` so the active-anchor highlight tracks correctly. Manual `scrollIntoView` on hash-change so deep links like `/rules/communities#apprentices` land on the heading. ([components/rules/RulesNav.tsx](../components/rules/RulesNav.tsx), [app/rules/layout.tsx](../app/rules/layout.tsx))
 - Wix export - `scripts/build-rules-html.mjs` fetches every `/rules/*` page, extracts `<main>`, absolutizes links to the live Tapestry domain, writes one HTML file per route to `out/wix-rules/` for paste into Wix HTML-embed blocks (Strategy B). Scheduled remote agent `trig_01WynguxqCjrQLWRaGfwjxr7` runs it ~30min after the deploy. ([scripts/build-rules-html.mjs](../scripts/build-rules-html.mjs))
@@ -750,10 +752,10 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 - "Start near existing community" wizard tile - fourth tile on /stories/new alongside Custom / Setting / Module. Picks an approved world community, seeds the new campaign's Homestead pin at its coords, fires the encounter handshake to the source GM. Self-filtered (own communities hidden).
 
 **Apprentice creation flow rewrite:**
-- Apprentice creation flipped from Paradigm-based to **Profession-based** per SRD §08 p.21 (Xero clarification). New 5-step wizard: Identity (name + age + 3 trait words + background) → Profession pick (12 PROFESSIONS, each seeds 1 CDP per profession-skill) → 3 CDP RAPID (baseline 0) → 5 CDP skills (per-skill SRD cap = master_PC.skill − 1) → Confirm. Recruit-time auto-rolls Motivation/Complication AND age + 3 words. ([components/ProfessionPicker.tsx](../components/ProfessionPicker.tsx), [components/ApprenticeCreationWizard.tsx](../components/ApprenticeCreationWizard.tsx), [lib/xse-engine.ts](../lib/xse-engine.ts) `THREE_WORDS_LIST` / `rollThreeWords` / `rollApprenticeAge`)
+- Apprentice creation flipped from Paradigm-based to **Profession-based** per SRD §08 p.21 (Xero clarification). New 5-step wizard: Identity (name + age + 3 trait words + background) -> Profession pick (12 PROFESSIONS, each seeds 1 CDP per profession-skill) -> 3 CDP RAPID (baseline 0) -> 5 CDP skills (per-skill SRD cap = master_PC.skill − 1) -> Confirm. Recruit-time auto-rolls Motivation/Complication AND age + 3 words. ([components/ProfessionPicker.tsx](../components/ProfessionPicker.tsx), [components/ApprenticeCreationWizard.tsx](../components/ApprenticeCreationWizard.tsx), [lib/xse-engine.ts](../lib/xse-engine.ts) `THREE_WORDS_LIST` / `rollThreeWords` / `rollApprenticeAge`)
 
 **Inventory system - full queue closed:**
-- **#1** Encumbrance time-tick - GM Tools → Time. House-rule: every overencumbered PC + NPC loses 1 RP per hour over the limit. Hours stepper, affected-list preview with INCAP red-flag, single roll-log summary. PCs hitting RP=0 from non-zero with WP > 0 get the existing Mortal/Incap pipeline (incap_rounds + Stress pip).
+- **#1** Encumbrance time-tick - GM Tools -> Time. House-rule: every overencumbered PC + NPC loses 1 RP per hour over the limit. Hours stepper, affected-list preview with INCAP red-flag, single roll-log summary. PCs hitting RP=0 from non-zero with WP > 0 get the existing Mortal/Incap pipeline (incap_rounds + Stress pip).
 - **#2** PC ↔ NPC trade - InventoryPanel give modal now shows three recipient groups: 👤 PCs (existing), 🎭 NPCs (new), 🏘 communities. Hidden-from-players NPCs filtered out for non-GM viewers; dead NPCs filtered too.
 - **#3** Vehicle cargo unification - VehicleCargo aliased to InventoryItem; tolerant reads for legacy { name, qty, notes } rows; vehicle popout cargo editor surfaces enc + total/cap; VehicleCard summary stat shows current/cap with OVERLOADED red. Minnie's seed cargo backfilled with enc values (98 of 100 cap, 2 slack). ([lib/inventory.ts](../lib/inventory.ts))
 - **#4** Shared community stockpile - new `community_stockpile_items` table (row-per-item, RLS gated to campaign members). 📦 Stockpile section under Role Coverage in CampaignCommunity panel; inline + Add (catalog autofills enc); InventoryPanel give modal gains 🏘 community recipients for deposits. Withdrawal-to-PC and realtime sub left as followups. ([sql/community-stockpile.sql](../sql/community-stockpile.sql))
@@ -762,16 +764,16 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 **Map / scene polish:**
 - Cell PX persistence - `tactical_scenes.cell_px` is now hydrated on popout open (gated by lastSyncedSceneIdRef so realtime UPDATEs don't clobber in-flight changes); debounced write on user change. Schema NOTIFY pgrst added so column changes propagate immediately. Persist failures now log to console with a `[scene-controls] <field> persist failed: <message>` tag.
 - Grid settings persistence - show_grid / grid_color / grid_opacity now survive main-window refresh. Same scene-id-keyed hydration pattern. ([sql/tactical-scenes-grid-persist.sql](../sql/tactical-scenes-grid-persist.sql))
-- Cell PX lower bound dropped 20 → 5 (still steps in 5s).
+- Cell PX lower bound dropped 20 -> 5 (still steps in 5s).
 
 **GM screen + popouts:**
 - GM Screen (`/gm-screen`) drag + resize + lock for the 7 reference panels - each box draggable by title bar, resizable via native CSS resize, layout persisted to localStorage; toolbar Lock/Edit toggle + Reset Layout. 8th GM Notes panel mounted via `next/dynamic` ssr:false + force-dynamic so SSR doesn't fail on the Supabase client.
-- Map Setup popout dropdown - "Reuse map" lists every uploaded map across all the GM's campaigns (de-duped by URL, sorted alphabetically as `Campaign → Scene`); picking one stamps the URL onto the current scene without re-uploading.
+- Map Setup popout dropdown - "Reuse map" lists every uploaded map across all the GM's campaigns (de-duped by URL, sorted alphabetically as `Campaign -> Scene`); picking one stamps the URL onto the current scene without re-uploading.
 - Delete Map / Delete Scene confirms moved to in-app modal (native confirm() was getting clipped in the narrow popout).
 
 **Pin system:**
 - Category icon picker on campaign pin edit + view-mode emoji indicator (shared lib/pin-categories.ts taxonomy with MapView).
-- 🌍 Add to world map button → 🗺️ Add to tactical map button when in tactical mode; spawns a `token_type='pin'` minimal marker (just emoji, no square, no label) at (1,1).
+- 🌍 Add to world map button -> 🗺️ Add to tactical map button when in tactical mode; spawns a `token_type='pin'` minimal marker (just emoji, no square, no label) at (1,1).
 - Tactical-mode X removes only the pin's markers from the active scene; campaign pin survives. New `scene_tokens.campaign_pin_id` links markers back to source. ([sql/scene-tokens-campaign-pin-link.sql](../sql/scene-tokens-campaign-pin-link.sql))
 
 **Comic reader:**
@@ -780,12 +782,12 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 **Story creation flow:**
 - /rumors "All settings" filter repurposed as Sort By (Featured / Newest / Most subscribed / A-Z / Z-A).
 - /stories/new - Custom Setting moves Starting Location above the "Or start from a Module" picker so location pinning happens first.
-- Paradigm Pick → Step 4 (Final Review) on the edit wizard (was landing on Step 0).
+- Paradigm Pick -> Step 4 (Final Review) on the edit wizard (was landing on Step 0).
 
 **Tab + UI:**
 - Mode-aware sidebar tab default - Pins for campaign map, NPCs for tactical/combat. Auto-flips on mode change only when user is on the other mode's default (Assets/Notes survive).
 - NPC roster per-folder MAP/UNMAP button next to SHOW (places markers without revealing).
-- Communities Phase E status: 96% implemented overall. Two items remain (per-community Campfire feed = blocked on Campfire existing → see Phase 4 plan below; Lv4 Skill Traits = locked on all-or-nothing Trait list).
+- Communities Phase E status: 96% implemented overall. Two items remain (per-community Campfire feed = blocked on Campfire existing -> see Phase 4 plan below; Lv4 Skill Traits = locked on all-or-nothing Trait list).
 
 ---
 
@@ -809,17 +811,17 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 
 ### Phase 4B - Promotion + moderation flow (~2 days, depends on 4A)
 - DB: add `moderation_status` (`approved` | `pending` | `rejected`) + `approved_by` + `approved_at` to the same three tables. Same shape as `world_communities`.
-- Compose: campaign-internal → instant publish; setting / global → pending. Author always sees own pending posts with a banner.
+- Compose: campaign-internal -> instant publish; setting / global -> pending. Author always sees own pending posts with a banner.
 - Moderation queue: extend [app/moderate/page.tsx](../app/moderate/page.tsx) with sections for pending forums / war stories / LFG. Approve / Reject buttons mirror existing world_communities pattern.
 
 ### Phase 4C - Setting hubs DZ + Kings Crossroads (~2-3 days, depends on 4A + 4B)
 - Route: `app/settings/[setting]/page.tsx` - single dynamic page for any registered setting.
-- Layout: name + tagline → canon timeline (from `SETTING_PINS[setting]`) + community pin layer (`world_communities` filtered) → setting feed (4A's filter applied to Forums / War Stories / LFG) → "Run a campaign in [Setting]" button (jumps to /stories/new?setting=X).
+- Layout: name + tagline -> canon timeline (from `SETTING_PINS[setting]`) + community pin layer (`world_communities` filtered) -> setting feed (4A's filter applied to Forums / War Stories / LFG) -> "Run a campaign in [Setting]" button (jumps to /stories/new?setting=X).
 - Sidebar: new "Settings" expandable with DZ + Kings Crossroads.
 
 ### Phase 4D - Per-community Campfire feed (~1 day)
 - Closes spec-communities §2.
-- Auto-posts: Morale Check finalize → `📊 <Community> · Week N · <Outcome>` with modifiers_json summary. Schism / Migration / Dissolution → auto-post the event. Manual GM "Post community update" for free-form.
+- Auto-posts: Morale Check finalize -> `📊 <Community> · Week N · <Outcome>` with modifiers_json summary. Schism / Migration / Dissolution -> auto-post the event. Manual GM "Post community update" for free-form.
 - Surface: Community detail page + /communities Following card render the latest 5-10 events.
 
 ### Phase 4E - Polish (each ~1 day, opportunistic)
@@ -883,12 +885,12 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
   published modules via the new Thriver migration tool
   `/tools/migrate-settings-to-modules`. Commits `70fa32f`, `b310ccd`,
   `197491d`.
-- **Kings Crossing → Kings Crossroads rename** - real Delaware location
+- **Kings Crossing -> Kings Crossroads rename** - real Delaware location
   is "Kings Crossroads" (Sussex County, near Greenwood). Full code
   rename across `lib/settings.ts`, `lib/setting-npcs.ts`,
   `lib/setting-pins.ts`, plus DB migration
   `sql/setting-rename-kings-crossroads.sql` (applied). Commit `b5f5602`.
-- **Font swap - Barlow Condensed → Carlito (legibility)** -
+- **Font swap - Barlow Condensed -> Carlito (legibility)** -
   playtesters reported the narrow Barlow Condensed at 13px (the
   project's minimum inline font-size) was hard to read on UI labels,
   chips, and buttons. Carlito is the open-source metric-compatible
@@ -926,7 +928,7 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 - **C2 InitiativeBar extracted** - 406-line component pulled out of the
   9300-line table page. Lives at `components/InitiativeBar.tsx`.
 - **Auth Web-Lock contention** - codemod across 44 files migrating
-  `supabase.auth.getUser()` → `getCachedAuth()`. Commit `67989ce`.
+  `supabase.auth.getUser()` -> `getCachedAuth()`. Commit `67989ce`.
 - **Distract redesign** - unified ATTACK ROLL modal + 30 ft Close-range
   gate + outcome scaling (Wild=both, Success=1, Dire Failure=Inspired+1)
   + object filter + auto-select pre-selected target + log line trim.
@@ -939,7 +941,7 @@ Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-
 ## 🎯 From 2026-04-29 chat - roll-log clarity + modal unification + new-campaign bug
 
 - [ ] **Gut Instinct results presentation needs rework.** Tied to "how info is shared in roll logs" - current Gut Instinct rolls land in the standard roll modal + roll_log feed, but the *result framing* doesn't communicate what the player learned (or didn't) clearly. Needs design discussion: what's the canonical surface for "your gut says X" - narrative card in the feed? An overlay on the rolling PC's sheet? GM-only insight delivered via DM? This is about player comprehension, not mechanics - the formula (`Perception + Psychology/Streetwise/Tactics`) is fine.
-- [ ] **First Impression → straight to roll modal.** Today First Impression has a separate pre-roll picker (target NPC + skill). Xero wants clicking First Impression on a revealed NPC card to **skip the picker** and dump straight into the main Attack Roll modal pre-populated with `INF + Manipulation/Streetwise/Psychology` and the NPC pre-targeted. Save: ~3-4 clicks per use. Same "roll-log clarity" theme as Gut Instinct.
+- [ ] **First Impression -> straight to roll modal.** Today First Impression has a separate pre-roll picker (target NPC + skill). Xero wants clicking First Impression on a revealed NPC card to **skip the picker** and dump straight into the main Attack Roll modal pre-populated with `INF + Manipulation/Streetwise/Psychology` and the NPC pre-targeted. Save: ~3-4 clicks per use. Same "roll-log clarity" theme as Gut Instinct.
 - *(Modal unification + CMod Stack third-copies dedup-removed 2026-05-19. Canonical entries live in CURRENT OPEN > "Ready to build (medium)" - search for "Modal unification (5 of 6 remaining)" and "CMod Stack reusable component".)*
 
 ## 🎯 From 2026-04-27 Mongrels playtest (Xero's batch handoff)
@@ -951,7 +953,7 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 ### Bugs (combat correctness)
 - [x] 🤖 **Distract didn't remove an action for the next round on Cree.** (Shipped be6e768 2026-04-30 - Distract result handler was already fixed with .select()+SILENT RLS FAIL+turn_changed; applied same defensive pattern to Cover Fire and Inspire in applySocialAction which had the same raw-update gap; sql/initiative-order-rls-members-write.sql already exists covering the RLS write policy.)
 - [x] 🤖 **Stabilize should consume an action.** (Verified 2026-04-30 - no change needed; fireStabilize already sets actionPreConsumedRef=true then awaits consumeAction before the roll modal is interactable; consumeAction has .select()+SILENT RLS FAIL; closeRollModal sees preConsumed=true and correctly skips double-consume on all paths including cancel. Pre-existing RLS fix file sql/initiative-order-rls-members-write.sql covers the write.)
-- [x] **Stabilize button should pick from ALL mortally-wounded characters in range, not just the first.** Shipped 2026-04-28 as `476989e` - `find` → `filter`, every wounded combatant within 20ft gets its own button, each with its own engaged check. Single-target case looks identical to before. Testplan: tasks/stabilize-multi-target-testplan.md.
+- [x] **Stabilize button should pick from ALL mortally-wounded characters in range, not just the first.** Shipped 2026-04-28 as `476989e` - `find` -> `filter`, every wounded combatant within 20ft gets its own button, each with its own engaged check. Single-target case looks identical to before. Testplan: tasks/stabilize-multi-target-testplan.md.
 - [x] 🤖 **What happens to a character after Stabilize is used?** (Shipped 3026569 2026-04-30 - root cause identified: Stabilize success branch wrote to character_states without .select(), so a silent RLS rejection left death_countdown untouched and the round-tick continued the death spiral. Added .select()+SILENT RLS FAIL to both the PC (character_states) and NPC (campaign_npcs) success paths. Round-tick Warren guard verified correct: dcActive=(death_countdown!=null && >0)=false when death_countdown=null, so !dcActive=true and WP=1 bump fires correctly for stabilized chars. incap_rounds=max(1,1d6-PHY) confirmed correct per spec (todo.md §405).)
 - [ ] **Lag on initiative - needs solo validation.** User will playtest alone with multiple combatants and confirm the perceived lag on turn advance. Earlier work shipped batched fetches in `nextTurn` (see [PLAYTEST_TODO.md:81](tasks/PLAYTEST_TODO.md:81) #32) but a long initiative chain may still feel slow. Look for: sequential awaits in `nextTurn` that aren't yet in `Promise.all`, missed indexes on initiative_order, the postgres_changes subscription firing extra unnecessary `loadInitiative()` rounds. Don't action until Xero confirms the symptom on his own machine.
 
@@ -960,10 +962,10 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 
 ### Rules / mechanics gaps
 - [x] **Crossbow + bow should require a Reload / Ready Weapon between shots.** Shipped 2026-04-28 (earlier) as `03de984` - Attack button disabled when `ammoCurrent <= 0` on clip-tracked ranged weapons.
-- [x] **Weapon DB SRD audit - confirm everything is there (Club is missing).** Shipped 2026-04-28 (Path A: rename + add + fix) as `179f883` + `769e3e4` + DB migration `sql/weapons-srd-rename.sql`. Findings: 5 entries had stats matching CRB weapons but wrong names (Bayonet/Bowie→Baseball Bat, Bat/Stick→Bullwhip, Cleaver→Club, Makeshift Cleaver→Makeshift Club, Compact Bow→Compound Bow). Plus 3 stat fixes (Machete range, Compound Bow range/rarity, Katana parens) and 3 new weapons (Black Powder Rifle, Mortar, Tranquilizer Gun). Audit: tasks/srd-weapons-audit.md. Cattle Prod 400% confirmed correct; RPG Launcher → Rocket Launcher rename + Flamethrower clip discrepancy still flagged in audit doc as open follow-ups.
+- [x] **Weapon DB SRD audit - confirm everything is there (Club is missing).** Shipped 2026-04-28 (Path A: rename + add + fix) as `179f883` + `769e3e4` + DB migration `sql/weapons-srd-rename.sql`. Findings: 5 entries had stats matching CRB weapons but wrong names (Bayonet/Bowie->Baseball Bat, Bat/Stick->Bullwhip, Cleaver->Club, Makeshift Cleaver->Makeshift Club, Compact Bow->Compound Bow). Plus 3 stat fixes (Machete range, Compound Bow range/rarity, Katana parens) and 3 new weapons (Black Powder Rifle, Mortar, Tranquilizer Gun). Audit: tasks/srd-weapons-audit.md. Cattle Prod 400% confirmed correct; RPG Launcher -> Rocket Launcher rename + Flamethrower clip discrepancy still flagged in audit doc as open follow-ups.
 
 ### UX / friction
-- [ ] **Streamline logging into missions.** Xero says login → join campaign → land in table is too many steps for players. Audit the player side of the flow today: `/login` → `/stories` → click campaign → click "Join Session" → `/stories/[id]/table`. Possible streamlines: deep-link straight to the active session if there's one running; auto-redirect from `/stories/[id]` to `/table` when the GM has a session active; preserve the last campaign in localStorage and offer a "Resume last session" tile on `/stories`. Discuss with Xero before shipping - the right cut depends on what specifically felt slow.
+- [ ] **Streamline logging into missions.** Xero says login -> join campaign -> land in table is too many steps for players. Audit the player side of the flow today: `/login` -> `/stories` -> click campaign -> click "Join Session" -> `/stories/[id]/table`. Possible streamlines: deep-link straight to the active session if there's one running; auto-redirect from `/stories/[id]` to `/table` when the GM has a session active; preserve the last campaign in localStorage and offer a "Resume last session" tile on `/stories`. Discuss with Xero before shipping - the right cut depends on what specifically felt slow.
 - [x] **Drag-to-bottom-left is blocked by a popup.** Shipped 2026-04-28 as `cf175f8` - TacticalMap toggles `body.dragging-token` while a token drag is in progress; globals.css disables pointer-events on `.drag-blocker` overlays. Both NotificationBell + MessagesBell dropdowns now carry the className. Notification position stayed locked at `left:10px` per the feedback memory.
 - [x] **Map pinging is too clunky - make it easier.** Shipped 2026-04-29 - **Alt + left-click on an empty cell** fires a ping. Replaces both the press-and-hold (~600ms) and the Alt+double-click gestures, both of which felt clunky. Modifier keeps it deliberate - no accidental clicks fire pings. Token interactions on the cell still win.
 
@@ -975,29 +977,29 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 ## 🎯 Next up (post-combat sprint)
 - [x] **NPC inventory - primary & secondary weapons should count toward encumbrance.** Shipped 2026-04-28 as `e6199bc` - NpcCard was passing empty strings to InventoryPanel for the weapon names; now pulls them off `npc.skills.weapon.weaponName` / `npc.skills.weapon2.weaponName`. InventoryPanel + computeEncumbrance were already correct, just being fed nulls.
 - [x] **Player-side loot - Search Remains button on the NPC popout.** Shipped 2026-04-29 as `11ddf77` - `PlayerNpcCard` shows "🎒 Search Remains" when `displayStatus !== 'active'`; new SECURITY DEFINER RPC `loot_npc_item` does atomic transfer + audit row in roll_log. SQL: `sql/loot-npc-item-rpc.sql`.
-- [x] **Stale realtime subscriptions - table tab needs manual refresh after backgrounding.** Shipped 2026-04-28 as `607342d` - visibilitychange listener on the table page + useChatPanel + useRollsFeed re-runs the load functions on hidden→visible. State refetch only in v1; channel rebuild deferred until/if state-only proves insufficient (supabase-js handles socket reconnection internally on health checks). Testplan: tasks/realtime-visibility-refetch-testplan.md. Also covered later by useRollsFeed extraction (B2.2) which carries the same handler.
+- [x] **Stale realtime subscriptions - table tab needs manual refresh after backgrounding.** Shipped 2026-04-28 as `607342d` - visibilitychange listener on the table page + useChatPanel + useRollsFeed re-runs the load functions on hidden->visible. State refetch only in v1; channel rebuild deferred until/if state-only proves insufficient (supabase-js handles socket reconnection internally on health checks). Testplan: tasks/realtime-visibility-refetch-testplan.md. Also covered later by useRollsFeed extraction (B2.2) which carries the same handler.
 - [x] **SRD wording sweep - replace user-visible "SRD" with "the rules"** - shipped 2026-04-28 as `84027d4`. 8 user-visible hits swapped: CommunityMoraleModal leader-not-set banner + 4 tooltips, CampaignCommunity Assigned-NPCs hint + Re-balance Roles tooltip, stories/[id]/community quota-tick tooltip. gm-screen `XSE SRD v1.1` header left as a system-version banner pending Xero's call. Code comments referencing SRD as a source remain (authoring notes).
 - [ ] **King's Crossing Mall - tactical scenes** - author battle maps for the mall complex (motel courtyard, Costco interior, gas station, Belvedere's etc.) and wire into `SETTING_SCENES.kings_crossing_mall` in `lib/setting-scenes.ts` using the same filter-from-CHASED_SCENES pattern as the pins + NPCs.
 - [ ] **King's Crossing Mall - handouts** - port any in-world broadcasts, journal pages, or ham-radio transcripts that fit the persistent mall setting into `SETTING_HANDOUTS.kings_crossing_mall` in `lib/setting-handouts.ts`. Mirror the filter-from-CHASED_HANDOUTS approach.
-- [x] **Community leader "step down" mechanism** - shipped 2026-04-23. PC leader or GM sees a "Step Down" button next to the Leader dropdown; picker offers Auto (next founder → longest-tenured), Leave Leaderless, or any specific member. `handleRemoveMember` now auto-promotes the same way when the outgoing member was the leader, so leaving the community also triggers succession.
+- [x] **Community leader "step down" mechanism** - shipped 2026-04-23. PC leader or GM sees a "Step Down" button next to the Leader dropdown; picker offers Auto (next founder -> longest-tenured), Leave Leaderless, or any specific member. `handleRemoveMember` now auto-promotes the same way when the outgoing member was the leader, so leaving the community also triggers succession.
 - [x] **"Assigned" role - mission/task linkage** - shipped 2026-04-23. Schema: `assignment_pc_id uuid` on community_members (FK to characters, ON DELETE SET NULL) + reuses `current_task` from the Apprentice migration. UI: picking "Assigned" on the role dropdown opens a modal for director PC + task text; save writes all three fields in one update; cancel leaves the role unchanged. Display: assigned rows mirror Apprentice rows - `<NPC> ⇐ <PC>` name + "Task: <text>" line with GM-edit ✎. Flipping role OUT of 'assigned' auto-clears assignment_pc_id + current_task. PC-deletion silently clears via FK. SQL: `sql/community-members-add-assignment-pc.sql`.
 - *(CMod Stack reusable component third-copy dedup-removed 2026-05-19. Canonical entry in CURRENT OPEN > "Ready to build (medium)" - "CMod Stack reusable component".)*
 - [ ] **GM force-push view to players** - when the GM switches view (campaign world map ↔ tactical map, or scene A ↔ scene B), they should be able to push that view change to every connected player so everyone follows along automatically. Today there's `tactical_shared` / `tactical_unshared` broadcasts on `init_${id}` that toggle the tactical-map pane on the player side, but no general "switch to scene X" or "switch to campaign view" push. Likely shape: extend the `tactical_shared` broadcast (or add a new `view_changed` event) carrying `{ view: 'campaign' | 'tactical', sceneId?: string }`; player TacticalMap activates the matching scene + opens/closes the pane to match. GM side: a "Sync to players" toggle (or always-on) + auto-fire on scene-switch in TacticalMap setup.
 - [ ] **Character Evolution / CDP Calculator** - post-creation character growth tool. Characters earn CDP (Character Development Points) over time (per-session awards, session arcs, milestones) and spend them to raise RAPID attributes, raise/acquire skills, take Traits, etc. Today the character creation funnel (`/characters/new` Backstory, `/characters/quick`, `/characters/random`) handles the CDP spend at character-creation time only; there's no surface for spending earned CDP afterward. Build a `/characters/[id]/evolve` (or modal on the character sheet) that: (1) shows the character's current CDP balance from `data.cdp` (already tracked), (2) lists buyable upgrades per the rules - attribute raises (cost = current value × multiplier), skill raises (cost = next-level cost), new trait picks (cost depends on tier), (3) previews the cost before commit, (4) applies the spend in one transaction (decrement `data.cdp`, write the changes, append a `roll_log` entry with `outcome='evolution'` so the table feed surfaces it). Reuse the wizard's CDP cost tables - they're already in `lib/xse-engine.ts` / wizard step components; extract into a shared helper if needed. Player-facing tool, GM doesn't need to approve (CDP is GM-awarded already, spend is the player's call). Audit log entry covers the GM oversight surface.
-- [x] **GM Tools → Restore to Full Health is slow** - shipped 2026-05-05 as `55d0693`. DB writes were already parallelized via Promise.all; the real freeze was the post-write refetch blocking modal close. Fix: optimistic local patches BEFORE the await, modal closes immediately, refetch + broadcast run in background. `Restoring…` disabled-state on the button. Per-row UPDATEs are still N (different wp_max per row prevents `.in()` batching), but they all fire in one Promise.all wave so 11 targets = ~150ms not ~1.6s. Comment at `app/stories/[id]/table/page.tsx:9735` documents the fix. **If this still feels slow in a real session, the next escalation is a SECURITY DEFINER bulk_restore RPC using CASE WHEN to collapse to one round-trip - log fresh repro first.**
+- [x] **GM Tools -> Restore to Full Health is slow** - shipped 2026-05-05 as `55d0693`. DB writes were already parallelized via Promise.all; the real freeze was the post-write refetch blocking modal close. Fix: optimistic local patches BEFORE the await, modal closes immediately, refetch + broadcast run in background. `Restoring…` disabled-state on the button. Per-row UPDATEs are still N (different wp_max per row prevents `.in()` batching), but they all fire in one Promise.all wave so 11 targets = ~150ms not ~1.6s. Comment at `app/stories/[id]/table/page.tsx:9735` documents the fix. **If this still feels slow in a real session, the next escalation is a SECURITY DEFINER bulk_restore RPC using CASE WHEN to collapse to one round-trip - log fresh repro first.**
 - [x] **Restore from snapshot auto-launches into that snapshot** - shipped 2026-04-29 as `7c26a9d` - `CampaignSnapshots.tsx` now `window.location.href`'s to `/stories/<id>/table` after a successful restore so the GM lands directly on the scene.
 - [x] **`/modules` Thriver-delete + clear test modules** - shipped 2026-04-29: Thriver-only DELETE chip on each `/modules` card (also gated to module author); confirmation modal in place. Test-module bulk-clear handled by Xero via the new chip.
 - [x] **Phase C Communities** - weekly Morale Check + Resource Checks (Fed/Clothed) shipped 2026-04-23. Activity Blocks + Lv4 skill auto-CMods deferred to Phase D.
 
 ## 🔒 Backburner - Campaign calendar
-**Status:** Multiple independent in-game time signals exist (`communities.week_number`, the new Advance Time / encumbrance tick, `map_pins.event_date` text, world event `cmod_active` toggle, `sessions.start/end` real-world). They work decoupled today; a unified calendar would let them interlock - time-tick advances real game clock → communities auto-week-tick → Morale becomes due → world events with end-dates auto-deactivate → ration consumption etc.
+**Status:** Multiple independent in-game time signals exist (`communities.week_number`, the new Advance Time / encumbrance tick, `map_pins.event_date` text, world event `cmod_active` toggle, `sessions.start/end` real-world). They work decoupled today; a unified calendar would let them interlock - time-tick advances real game clock -> communities auto-week-tick -> Morale becomes due -> world events with end-dates auto-deactivate -> ration consumption etc.
 
 **Why deferred:** none of the friction points actually bite yet. Manual Skip Week + manual world-event toggle + manual encumbrance tick all work in current play. Building a calendar to head off pain that hasn't materialized is premature. See `memory:project_campaign_calendar.md` for the full framing.
 
 **Revisit triggers** (any one of these flips it back to active):
 - [ ] Forgetting to Skip Week and a community sits frozen for 4+ sessions
 - [ ] World events that should've ended weeks ago still applying CMod in play
-- [ ] Wanting "X days passed" → automatic ration consumption / weather change / community drift
+- [ ] Wanting "X days passed" -> automatic ration consumption / weather change / community drift
 - [ ] Encumbrance tick feels like it should auto-fire on time advancement instead of being a button
 
 When picking this back up:
@@ -1026,19 +1028,19 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - **DM messages auto-linkify URLs** - the campaign-invite DM body said "Tap to join: https://…" but the URL was rendered as plain text - uncopyable on mobile, unclickable everywhere. Added `linkifyBody()` helper in `app/messages/page.tsx` that splits on http(s) URL boundaries and emits `<a target="_blank" rel="noreferrer">` for each chunk. Applies to every DM, not just invites. Commit e541fa5.
 - **Player NPC popout is 140×140** - GM keeps the 571×257 default (full NpcCard is dense). Player popout opens the read-only PlayerNpcCard (portrait + name + 2 badges + close), so 257px height was mostly empty. Two reachable-by-player paths pass `{ w: 140, h: 140 }` when `!isGM`. **Plus** a `window.resizeTo()` on mount inside `app/npc-sheet/page.tsx` because Chrome remembers per-window-name geometry - without it, a popout that was ever opened at the larger size stays large. Commits 100f738, this commit.
 - **Retention Check - drop SRD reference + skill picker** - copy now reads "to salvage fragments" (no rule citation). Leader sees an inline skill picker + SMod field next to the Attempt button on the Result stage; defaults to whatever drove the failed Morale roll, swappable. Commit 6007832.
-- **`/campfire` warmer tagline** - "The meta layer - connect with players, GMs, and visitors across campaigns." → "Take a seat. Here you can connect with players, GMs, and visitors outside of campaigns." Commit f3703c3.
-- **Copy nits** - "Roles are already at SRD minimums" → "their minimums" (commit 492fede). `/creating-a-character`: "the SRD does not allow banking" → "the rules do not allow banking" (commit 7a4d5d7).
+- **`/campfire` warmer tagline** - "The meta layer - connect with players, GMs, and visitors across campaigns." -> "Take a seat. Here you can connect with players, GMs, and visitors outside of campaigns." Commit f3703c3.
+- **Copy nits** - "Roles are already at SRD minimums" -> "their minimums" (commit 492fede). `/creating-a-character`: "the SRD does not allow banking" -> "the rules do not allow banking" (commit 7a4d5d7).
 
 ## ✅ Shipped 2026-04-24 (Tapestry rebrand + Communities polish)
 - **Brand taxonomy enforced** - every user-visible "Distemperverse" reference in CampaignCommunity rewritten to "Tapestry" (publish strip, button, modal copy, unpublish confirm, sub-headings, recruit-offer count). Memory `project_brand_taxonomy.md` records the rule: DistemperVerse = umbrella IP (game + comics + platform), Tapestry = the platform itself; cross-campaign features always = Tapestry. Code comments scrubbed too - zero `Distemperverse` strings left in any .ts/.tsx (commits 141ac1c, af6bd29).
 - **Player self-leave Communities** - red-bordered "Leave" button on a player's own PC row, distinct from the GM's "Remove" ×. Soft-leaves via `community_members.left_at` with `left_reason='self'`. New RLS policy `Player leaves own community row` (`sql/community-members-self-leave.sql`) lets a campaign member soft-delete only their own PC's row. Commit bc997c8.
 - **delete-user edge function - full table + storage sweep** - fixed npc_relationships bug (was keying on user_id instead of character_id, always a no-op); added explicit cleanup for newer campaign-scoped tables (player_notes, campaign_notes, campaign_snapshots, object_token_library, tactical_scenes, communities); recursive storage-bucket sweep across pin-attachments, note-attachments, object-tokens, campaign-npcs, tactical-maps, session-attachments per owned campaign. Auth deletion last so partial failures don't strand orphan auth rows. Needs `npx supabase functions deploy delete-user --project-ref jbudzglgtxeoaufpejrv`. Commit 842b9f3.
-- **Pin date dropped from expanded card** - `By <username> · Apr 7, 2026` → just `By <username>`. world_event pins still show `event_date` (in-world date, useful). Commit 8e50cc6.
-- **"Published Communities" → "Player Communities"** - synthetic folder label in the MapView pins panel reads better for a ghost reader. Commit 612cc7b.
-- **Community size_band retaxonomy** - old Small/Band/Settlement/Enclave/City scale → new Group/Small/Medium/Large/Huge/Nation State (Group <13, Small 13-50, Medium 51-150, Large 151-500, Huge 501-1000, Nation State 1000+). Updated `computeSizeBand`, MapView marker dot ramp (20→40px), and the world_communities CHECK constraint. One-shot migration `sql/world-communities-size-band-retaxonomy.sql` recomputes each row from live member count, falls back to label-swap when source is gone. Default bumped to 'Group'. Commit 0cbeb8e.
+- **Pin date dropped from expanded card** - `By <username> · Apr 7, 2026` -> just `By <username>`. world_event pins still show `event_date` (in-world date, useful). Commit 8e50cc6.
+- **"Published Communities" -> "Player Communities"** - synthetic folder label in the MapView pins panel reads better for a ghost reader. Commit 612cc7b.
+- **Community size_band retaxonomy** - old Small/Band/Settlement/Enclave/City scale -> new Group/Small/Medium/Large/Huge/Nation State (Group <13, Small 13-50, Medium 51-150, Large 151-500, Huge 501-1000, Nation State 1000+). Updated `computeSizeBand`, MapView marker dot ramp (20->40px), and the world_communities CHECK constraint. One-shot migration `sql/world-communities-size-band-retaxonomy.sql` recomputes each row from live member count, falls back to label-swap when source is gone. Default bumped to 'Group'. Commit 0cbeb8e.
 - **`notify_world_community_public_update()` array_append fix** - latent bug: trigger used `text[] || 'literal'` which Postgres parses ambiguously and fails with `22P02 malformed array literal`. The retaxonomy was the first UPDATE to ever change `size_band` on existing rows, surfacing it. Replaced with `array_append`. Inline fix in `sql/world-communities-update-notify.sql`; live-environment patch in `sql/world-communities-update-notify-fix.sql`. Commit f459e72.
-- **Sidebar version chip v1.0 → v0.5** - aligns with the actual phase coverage. User will step it forward as Phase milestones complete. Commit e969aca.
-- **Copy polish** - "Roles are already at SRD minimums" → "their minimums" (commit 492fede). `/creating-a-character` step copy: "the SRD does not allow banking" → "the rules do not allow banking" (this commit).
+- **Sidebar version chip v1.0 -> v0.5** - aligns with the actual phase coverage. User will step it forward as Phase milestones complete. Commit e969aca.
+- **Copy polish** - "Roles are already at SRD minimums" -> "their minimums" (commit 492fede). `/creating-a-character` step copy: "the SRD does not allow banking" -> "the rules do not allow banking" (this commit).
 
 ## ✅ Shipped 2026-04-23 (Mall setting wiring + small polish)
 - **King's Crossing Mall - NPC seed wired** - added `KINGS_CROSSING_MALL_NPCS` as a filtered subset of CHASED_NPCS (12 names: Robertsons, Ortizes, Pastor Nick, Eric, Macy, Mikey, Art Buchanan) plus Maddy Bell + Troy & Mark Bell as post-Chased survivors. Wired into `SETTING_NPCS.kings_crossing_mall`. Single source of truth, so Chased stat tweaks propagate. Connors intentionally excluded - Chased-only antagonists. Commits c5b62f3, 4de722e.
@@ -1051,13 +1053,13 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 **NOTE:** The Lv4 Morale auto-CMods that originally shipped in this batch (Inspiration "Beacon of Hope" +4, Psychology\* "Insightful Counselor" +3) were reverted on the same day - Xero's ruling is Lv4 Traits ship together with the full list or not at all. See `memory:project_lv4_traits.md`. The entries below are what remains live.
 - **Skip Week button** - secondary "Skip Week" on the Weekly Check strip advances `week_number` without rolling. Pure clock bump, no consequences; Mood still carries from the last actual check.
 - **Pressgang confirmation** - Conscript approach on the Recruit modal now shows a red "pressure, not persuasion" warning banner at pick stage, plus a blocking confirm() at submit. Cancel returns to pick without burning Insight Dice.
-- **Community Dashboard** - new GM-only route `/stories/[id]/community`. Community picker + Morale history (last 20 weeks) + resource history (last 40 rolls) + current role distribution with SRD-minimum threshold markers + recruitment stats by approach + member-type breakdown. Community ▾ → Dashboard entry links to it.
+- **Community Dashboard** - new GM-only route `/stories/[id]/community`. Community picker + Morale history (last 20 weeks) + resource history (last 40 rolls) + current role distribution with SRD-minimum threshold markers + recruitment stats by approach + member-type breakdown. Community ▾ -> Dashboard entry links to it.
 - **At-a-Glance block** - inside each expanded community body: Recent Morale trend chips (W/H/S/F/D/L letters, last 5 weeks) + "You" row showing the viewer's role, Apprentice bond, and NPCs they recruited. Visible to everyone; primary view for non-GMs.
-- **Apprentice task delegation** - `community_members.current_task` text column. Apprentice rows render a "Task: <text>" line with GM-edit ✎; no task + GM → "+ Assign task" dashed button. Edit-in-place with Enter/Escape keyboard handling. SQL: `sql/community-members-add-current-task.sql`.
+- **Apprentice task delegation** - `community_members.current_task` text column. Apprentice rows render a "Task: <text>" line with GM-edit ✎; no task + GM -> "+ Assign task" dashed button. Edit-in-place with Enter/Escape keyboard handling. SQL: `sql/community-members-add-current-task.sql`.
 
 ## ✅ Shipped 2026-04-23 (Communities Phase C - Weekly Morale loop)
-- **Weekly Check modal** - `components/CommunityMoraleModal.tsx`. Single-button rolls Fed → Clothed → Morale in sequence. GM sees per-roll AMod/SMod/CMod inputs + 6 auto-filled Morale slots with override inputs (Mood from prior check's cmod_for_next; Enough Hands / Clear Voice / Safety computed mechanically; Fed + Clothed snap to actual rolled outcomes; Additional freeform). Result stage shows each roll, slot breakdown, departures / dissolution, then "Finalize & Save" commits everything in a single batch (cancel leaves DB untouched).
-- **Community logic extracted** - `lib/community-logic.ts` - pure helpers for CMod slot math, outcome → next-Morale CMod, outcome → departure %, weighted NPC departure picker (Unassigned → Cohort → Convert → Conscript → Founder → Apprentice), roll classification.
+- **Weekly Check modal** - `components/CommunityMoraleModal.tsx`. Single-button rolls Fed -> Clothed -> Morale in sequence. GM sees per-roll AMod/SMod/CMod inputs + 6 auto-filled Morale slots with override inputs (Mood from prior check's cmod_for_next; Enough Hands / Clear Voice / Safety computed mechanically; Fed + Clothed snap to actual rolled outcomes; Additional freeform). Result stage shows each roll, slot breakdown, departures / dissolution, then "Finalize & Save" commits everything in a single batch (cancel leaves DB untouched).
+- **Community logic extracted** - `lib/community-logic.ts` - pure helpers for CMod slot math, outcome -> next-Morale CMod, outcome -> departure %, weighted NPC departure picker (Unassigned -> Cohort -> Convert -> Conscript -> Founder -> Apprentice), roll classification.
 - **Consequence engine** - Failure 25% / Dire Failure 50% / Low Insight 75% leave; PCs never auto-removed. `consecutive_failures` ticks on any failure tier, resets to 0 on any success tier. `week_number` bumps on finalize. 3rd consecutive failure flips community to `status='dissolved'` + `dissolved_at=now`, all members soft-removed with reason='dissolved'.
 - **New left_reason 'morale_75'** - `sql/community-members-add-morale-75-reason.sql` widens the CHECK constraint. Modal falls back to 'manual' if the migration hasn't been applied yet.
 - **Roll-log custom cards** - `fed_check` / `clothed_check` / `morale_check` render as colored cards in the Logs tab with slot breakdowns, departure names, consecutive-failure counter, and a red dissolved variant. compactRollSummary narrative falls back to the stored label for the Both tab.
@@ -1069,7 +1071,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - **Community roster row redesign** - NPC name renders bold/prominent; recruitment type moves to subtle subtext; Apprentice rows show `Apprentice ⇐ <PC name>` inline so masters are visible. Roles bars now compute percentages over **NPCs only**. New "Player Characters (N)" block sits between role bars and NPC roster.
 - **Recruit copy fix** - `"X joined Y as a Cohort."` / `"as an Apprentice to Z"` (articles added everywhere - modal + roll_log label).
 - **Log trimming** - failure recruit labels compact to narrative `"Ada tried to recruit Jess but it didn't go well"` / `"it went badly"` (Dire Failure / Low Insight).
-- **Header bar nesting** - flat 12+ buttons → 4 dropdowns: `Checks ▾` / `Community ▾` / `Campaign ▾` (Share, Sessions, Stories) / `GM Tools ▾` (Restore, Loot, CDP, GM Screen). Custom dropdown replaces native `<select>` on Checks so option text center-aligns across browsers. ESC + outside-click close; chevron flips `▾`↔`▴` when open.
+- **Header bar nesting** - flat 12+ buttons -> 4 dropdowns: `Checks ▾` / `Community ▾` / `Campaign ▾` (Share, Sessions, Stories) / `GM Tools ▾` (Restore, Loot, CDP, GM Screen). Custom dropdown replaces native `<select>` on Checks so option text center-aligns across browsers. ESC + outside-click close; chevron flips `▾`↔`▴` when open.
 - **Canvas token z-order** - tactical map sorts tokens so objects render first (bottom), then NPCs, then PCs on top. Barrels no longer cover PC name plates.
 - **`consumeAction` race guard** - per-entry `Set<string>` in-flight ref. A double-clicked Aim (or any action button) no longer decrements `actions_remaining` twice and skips the turn.
 
@@ -1109,9 +1111,9 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] Manipulation rolls auto-include First Impression CMod - "Interacting with NPC?" dropdown on social skill rolls auto-sets CMod from relationship_cmod
 - [x] Add to Combat modal filters NPCs already in initiative (was already working via initiativeNpcIds prop)
 - [x] Self-attack applies damage to self (confirmed working)
-- [x] **Stafford → Staff** - typo in weapon database, renamed
+- [x] **Stafford -> Staff** - typo in weapon database, renamed
 - [x] **NPC card HP not updating on damage** - root cause: player deals damage from their browser, setState only updates player's React state. GM is a different client and never received the update. Fixed by broadcasting `npc_damaged` event through the initiative channel (same pattern as turn_changed). Also: NpcCard reads HP from props only (no useState), card grid merges latest campaignNpcs at render, realtime callback suppressed during manual updates to prevent race condition
-- [x] **General Knowledge → Specific Knowledge** - renamed in all NPC seed data (setting-npcs.ts), DB backfill via jsonb_set query
+- [x] **General Knowledge -> Specific Knowledge** - renamed in all NPC seed data (setting-npcs.ts), DB backfill via jsonb_set query
 - [x] **Stabilize button blocked during combat** - consumeAction was called before handleRollRequest, which triggered nextTurn and changed the active combatant before the roll gate ran. Fixed: open roll first, then consume action. Same fix for Charge and Rapid Fire
 - [x] **Dead NPCs appearing in Start Combat** - rosterNpcs filter missed the combat picker re-fetch path; also NPC death now sets status='dead' so the existing status filter catches them
 - [x] **Initiative bar shows all combatants with color coding** - green (active), yellow (waiting), red (acted); rotates so active is always leftmost
@@ -1123,9 +1125,9 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] **Auto-advance after 2 actions** - root causes: (1) consumeAction didn't write actions_remaining=0 to DB before calling nextTurn, (2) closeRollModal used rollResult state (subject to React batching/stale closures) - switched to rollExecutedRef, (3) Charge/Rapid Fire/Stabilize double-consumed via closeRollModal - added actionPreConsumedRef flag, (4) nextTurn had no fallback when no active entry found in DB
 - [x] **NPC HP display lags until refresh** - NpcRoster had no realtime subscription on campaign_npcs; added Supabase realtime channel that calls loadNpcs() on any change
 - [x] **Roll modal stuck "Rolling..."** - confirmed resolved, will readdress if it recurs
-- [x] **Damage bidirectional** - PC→NPC and NPC→PC both work. Root cause was silent RLS rejection on `character_states` and `campaign_npcs` UPDATE policies. Fixed via `sql/character-states-rls-fix.sql` and `sql/campaign-npcs-rls-fix.sql` plus explicit `.select()` on both updates to detect 0-row cases. Biggest diagnostic unlock: `next.config.ts` `compiler.removeConsole` was stripping every `console.log` from production - switched diagnostic logs to `console.warn` to survive the build.
-- [x] Player join 20s → 1-2s - RLS index fix (`sql/campaign-members-indexes.sql`) and `log-visit` edge function unblock
-- [x] Combat start 15s → fast (verified by user)
+- [x] **Damage bidirectional** - PC->NPC and NPC->PC both work. Root cause was silent RLS rejection on `character_states` and `campaign_npcs` UPDATE policies. Fixed via `sql/character-states-rls-fix.sql` and `sql/campaign-npcs-rls-fix.sql` plus explicit `.select()` on both updates to detect 0-row cases. Biggest diagnostic unlock: `next.config.ts` `compiler.removeConsole` was stripping every `console.log` from production - switched diagnostic logs to `console.warn` to survive the build.
+- [x] Player join 20s -> 1-2s - RLS index fix (`sql/campaign-members-indexes.sql`) and `log-visit` edge function unblock
+- [x] Combat start 15s -> fast (verified by user)
 - [x] PCs showing "Unknown" - characters/profiles cross-user RLS (`sql/character-profile-rls-fix.sql`)
 - [x] Combat Started + Initiative boxes missing in Logs - `user_id: userId` on system roll_log inserts (RLS) and explicit timestamps for ordering
 - [x] Combat Started above Initiative
@@ -1140,9 +1142,9 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] Open NpcCard refreshes when underlying NPC HP changes
 - [ ] **Player-facing NPC card on Show All click** - clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM). Design question: should the player card just show Name, First Impression role, and description? Or more?
 - [x] **Insight Dice pre-roll CMod** - confirmed +3 CMod (per SRD)
-- [x] **Insight Dice sequential reroll** - `f2e708f` `spent` boolean → `insightUsed: 'pre' | 'die1' | 'die2' | 'both' | null`. After rerolling one die, only the OTHER die's button remains; second spend locks the panel. Pre-roll 3d6 still locks post-roll rerolls.
-- [x] **Whisper chat** - click a player's portrait → private whisper between you two (GM + other players do not see it). Chat tab auto-switches when a whisper arrives addressed to you. Purple styling distinguishes whispers from group chat.
-- [~] **NPC health as narrative feeling** - *DEFERRED 2026-04-26 → long-term review list. User decided not to ship as currently scoped (narrative state strings replacing pip numbers for non-GM). Re-open if a different framing comes up.*
+- [x] **Insight Dice sequential reroll** - `f2e708f` `spent` boolean -> `insightUsed: 'pre' | 'die1' | 'die2' | 'both' | null`. After rerolling one die, only the OTHER die's button remains; second spend locks the panel. Pre-roll 3d6 still locks post-roll rerolls.
+- [x] **Whisper chat** - click a player's portrait -> private whisper between you two (GM + other players do not see it). Chat tab auto-switches when a whisper arrives addressed to you. Purple styling distinguishes whispers from group chat.
+- [~] **NPC health as narrative feeling** - *DEFERRED 2026-04-26 -> long-term review list. User decided not to ship as currently scoped (narrative state strings replacing pip numbers for non-GM). Re-open if a different framing comes up.*
 
 ---
 
@@ -1178,7 +1180,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] War Stories - moved to Phase 4 (Campfire)
 
 ### Stress & Breaking Point (SRD Core Mechanic)
-- [x] Stress bar tracker on character card (5 segments, color-coded green→yellow→red)
+- [x] Stress bar tracker on character card (5 segments, color-coded green->yellow->red)
 - [x] Stress Check button triggers roll using Stress Modifier (RSN + ACU AMods)
 - [x] Breaking Point auto-triggers when stress reaches 5 - rolls 2d6 on Table 13
 - [x] Breaking Point modal shows result name, effect, and resets stress to 0
@@ -1193,13 +1195,13 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] **Attack Roll** auto-populates last-targeted character - target dropdown, CMod, range band all pre-applied when a second attack happens in the same turn
 - [x] **Charge** - both actions, melee/unarmed attack, targets within 20ft, skips weapon range filter
 - [x] **Charge** fix - actually costs 2 actions now (was silently costing 1 because actionCostRef wasn't set)
-- [x] **Coordinate** - dedicated modal: dropdown picks enemy → Tactics* roll → allies within Close range get +2 CMod vs that target. Log entry announces recipients.
-- [x] **Cover Fire** - target picker modal → -2 CMod to enemy's next action
+- [x] **Coordinate** - dedicated modal: dropdown picks enemy -> Tactics* roll -> allies within Close range get +2 CMod vs that target. Log entry announces recipients.
+- [x] **Cover Fire** - target picker modal -> -2 CMod to enemy's next action
 - [x] **Defend** - +2 defense_bonus applied to damage calc, clears after one hit (unless has_cover)
-- [x] **Distract** - target picker modal → steals 1 action from target
+- [x] **Distract** - target picker modal -> steals 1 action from target
 - [x] **Fire from Cover** - both actions, only appears when has_cover, fire weapon + keep defense
 - [x] **Grapple** - full opposed check system, auto-roll both sides, grappled/grappling states, Break Free/Release actions
-- [x] **Inspire** - target picker modal → grants +1 action to ally, once per round (inspired_this_round)
+- [x] **Inspire** - target picker modal -> grants +1 action to ally, once per round (inspired_this_round)
 - [x] **Move** - grid highlight + click to move token, 10ft Chebyshev
 - [x] **Rapid Fire** - -1 CMod first shot, costs 2 actions, ranged only
 - [x] **Ready Weapon** - modal with Switch/Reload/Unjam, Tracking +1, weapon swap updates entries state
@@ -1249,16 +1251,16 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] Auto-damage on successful attacks with DMM/DMR defense
 - [x] Damage breakdown in roll modal
 - [x] NPC damage applies to campaign_npcs table
-- [x] RP reaches 0 → Incapacitated for 4-PHY rounds, then regain 1 RP
+- [x] RP reaches 0 -> Incapacitated for 4-PHY rounds, then regain 1 RP
 - [x] RP auto-recovery: 1 per round for conscious characters below max
-- [x] WP reaches 0 → Mortally Wounded with death countdown (4+PHY rounds per SRD)
-- [x] Death countdown decrements each round, reaches 0 → Dead
-- [x] Stabilize mechanic - Medicine roll, success → incapacitated 1d6-PHY rounds, then 1 WP + 1 RP (PCs + NPCs)
+- [x] WP reaches 0 -> Mortally Wounded with death countdown (4+PHY rounds per SRD)
+- [x] Death countdown decrements each round, reaches 0 -> Dead
+- [x] Stabilize mechanic - Medicine roll, success -> incapacitated 1d6-PHY rounds, then 1 WP + 1 RP (PCs + NPCs)
 - [x] NPC mortal wounds - death_countdown (4+PHY), incap_rounds, badges, turn skip, stabilize button
 - [x] Death prevention via Insight Die - trade ALL dice, regain 1 WP + 1 RP (per SRD)
 - [x] Lasting Wounds - PHY check first, Table 12 only on failure (per SRD)
 - [x] Healing rates - Rest button with hours/days/weeks, SRD rates (1 WP/day, 1 WP/2 days mortally wounded, 1 RP/hour)
-- [x] Mortally Wounded → +1 Stress at end of combat
+- [x] Mortally Wounded -> +1 Stress at end of combat
 - [x] Mortally wounded NPCs excluded from combat picker (WP=0 filter)
 - [x] Defend/Take Cover defense_bonus applied to damage calculation
 - [x] Winded combatants get 1 action instead of 2 on next turn
@@ -1278,7 +1280,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] Tracking +1 CMod via Ready Weapon action
 - [x] Upkeep Checks (Mechanic/Tinkerer/weapon skill, full SRD outcomes)
 - [x] Encumbrance tracker (6 + PHY AMod, OVERLOADED warning)
-- [x] **Weapon range realism pass** - nominal bands recalibrated to real-world effective combat range (Heavy Pistol Close→Medium, Carbine Medium→Long, Compact Bow Long→Medium, Molotov Distant→Close, RPG Distant→Long, Mounted Turret Medium→Long). Profile CMods tuned: Assault Rifle gains Distant (-3), Heavy Mounted gains Distant (-4), Flamethrower gains Medium (-4), Heavy Pistol Medium -1→0, Bow Long -2→-3.
+- [x] **Weapon range realism pass** - nominal bands recalibrated to real-world effective combat range (Heavy Pistol Close->Medium, Carbine Medium->Long, Compact Bow Long->Medium, Molotov Distant->Close, RPG Distant->Long, Mounted Turret Medium->Long). Profile CMods tuned: Assault Rifle gains Distant (-3), Heavy Mounted gains Distant (-4), Flamethrower gains Medium (-4), Heavy Pistol Medium -1->0, Bow Long -2->-3.
 - [x] **Taser split** - old melee Taser renamed **Cattle Prod** (contact stun unchanged); new **Taser** is projectile darts (Close range, clip 1, Rare ammo, Stun). SQL migration `sql/weapon-taser-rename.sql` auto-converts existing characters/NPCs.
 - [ ] **Add Katana to weapon database** - differentiate from Sword (higher damage or different traits, e.g. lighter/faster with lower Cumbersome, or a unique trait like Precise)
 
@@ -1298,8 +1300,8 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] Weapon dropdown on NPC edit form
 - [x] Viewed NPCs highlighted in roster, Show All / Hide All toggle
 - [x] NPCs linked to campaign map pins - `campaign_npcs.campaign_pin_id` wired in seed, backfill SQL for existing campaigns, pin popup shows `ALSO HERE` list of linked NPCs (player view filtered by `revealedNpcIds`, dead NPCs struck through, realtime via `campaign_npcs` channel)
-- [x] Click pin name in Assets tab → map flies to it and opens popup (uses `clusterGroup.zoomToShowLayer`)
-- [x] Click NPC card in NPCs tab again → closes (toggle behavior)
+- [x] Click pin name in Assets tab -> map flies to it and opens popup (uses `clusterGroup.zoomToShowLayer`)
+- [x] Click NPC card in NPCs tab again -> closes (toggle behavior)
 - [x] `sort_order` column on `campaign_pins` and `campaign_npcs` - seeded campaigns get story-order from array index, manual additions append at max+1, drag the ⠿ handle to reorder
 - [x] NPC seed schema fix - migrated `lib/setting-npcs.ts` off legacy `rapid_range`/`wp`/`rp`/`dmm`/`dmr`/`init`/`per`/`enc`/`pt` to live RAPID columns; resurrected silently-broken NPC seeding (was inserting 0 rows on every create)
 - [x] Show All / Hide All button on NPCs tab - always visible when NPCs exist (disabled with tooltip when no players have joined), bulk-batched DB ops
@@ -1333,11 +1335,11 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] NPC card 3-column grid layout over campaign map
 - [x] Publish to Library button on NPC card (GM only)
 - [x] NPC form + card compacted (portrait/bank/status on one row)
-- [x] Renamed Friendly → Bystander NPC type
+- [x] Renamed Friendly -> Bystander NPC type
 - [x] NPC folder tree - collapsible folders, drag NPCs between, drag to reorder, double-click rename, folder field on edit form
 - [x] NPC Show/Hide syncs token visibility on tactical map
 - [x] NPC browsing/filtering - search bar + type/status filter chips
-- [x] GM Screen - pop-out /gm-screen page for second monitor (outcomes, combat actions, range bands, conditions, CMods, healing, skills→attrs)
+- [x] GM Screen - pop-out /gm-screen page for second monitor (outcomes, combat actions, range bands, conditions, CMods, healing, skills->attrs)
 
 ### Player Inventory System
 - [x] InventoryPanel component - item list, catalog search (33 SRD items + **all 50+ weapons**), custom items, qty tracking
@@ -1394,8 +1396,8 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] **Player-initiated loot from ObjectCard (destroyed-only v1)** - players can open an ObjectCard for a destroyed crate (`wp_max > 0 && wp_current <= 0`) and click a per-item **Take** button; item lands in their own `character.data.equipment`, crate contents decrement, loot log entry written. Matches the existing CampaignObjects policy exactly. Follow-ups: `lootable` flag for pre-destroyed unlock, always-allowed policy, inventory-vs-equipment reconciliation (loot currently appends to legacy string[] equipment, not the new InventoryItem[] inventory).
 - [x] **Lootable flag (GM-controlled unlock)** - new `scene_tokens.lootable boolean` column (`sql/scene-tokens-lootable.sql`). ObjectCard header for GM gets a 🔒 Locked / 🔓 Unlocked toggle (hidden when destroyed since destruction already opens contents). Players can Take items when `destroyed || lootable` is true; Contents header reflects state (Destroyed / Unlocked / Locked for GM, Loot for player). Remaining follow-ups: always-allowed policy, inventory/equipment reconciliation.
 - [x] **GM Note image handouts - inline preview + lightbox** - shared GM notes already supported image attachments, but they rendered as 32×32 thumbnails with a filename link, useless for storytelling pages. New shared `NoteAttachmentsView` component renders images inline at full panel width (capped at 600px height), click-to-zoom lightbox at native resolution, non-image files stay as compact chips. Used by both `GmNotes` and `PlayerNotes`. Also added a realtime `campaign_notes` subscription to `PlayerNotes` so a GM toggling Share pushes the handout (or its updates) to players without a page refresh.
-- [x] **Object Duplicate button** - new `Dup` button next to Edit in the GM's Assets → Objects panel. Clones the source `scene_token` row including portrait, color, WP (resets `wp_current` to full), `is_visible`, properties, contents, and `lootable`. Auto-suffixes name as `… (copy)`, `(copy 2)`, etc. so collisions can't happen. Spawns at top-left (1,1) per the token spawn rule. Broadcasts `token_changed` so the map and other clients see it.
-- [ ] **Surface Give loot UI in the GM Assets → Objects panel too** - mirror the per-item Give controls that now live on ObjectCard so GM can loot without placing the object on the map first (current panel loot still requires crate to be destroyed).
+- [x] **Object Duplicate button** - new `Dup` button next to Edit in the GM's Assets -> Objects panel. Clones the source `scene_token` row including portrait, color, WP (resets `wp_current` to full), `is_visible`, properties, contents, and `lootable`. Auto-suffixes name as `… (copy)`, `(copy 2)`, etc. so collisions can't happen. Spawns at top-left (1,1) per the token spawn rule. Broadcasts `token_changed` so the map and other clients see it.
+- [ ] **Surface Give loot UI in the GM Assets -> Objects panel too** - mirror the per-item Give controls that now live on ObjectCard so GM can loot without placing the object on the map first (current panel loot still requires crate to be destroyed).
 
 ### Campaign Management
 - [x] Launch, Leave, Share buttons
@@ -1457,21 +1459,21 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 ### Setting Seeds
 - [x] District Zero - 31 pins seeded to world map, 18 NPCs in setting-npcs.ts
 - [x] Chased - 14 pins (campaign-scoped), 21 NPCs + 5 pregens in setting-npcs.ts
-- [x] Renamed district0 → district_zero across entire codebase
+- [x] Renamed district0 -> district_zero across entire codebase
 - [x] campaign_npcs table created with RLS + Realtime
 - [x] Campaign creation auto-seeds NPCs for District Zero and Chased
 - [x] Mongrels - 28 pins (campaign-scoped, 14 waypoints + 14 landmarks/encounters) with notes, landmark (🗿) and encounter (⚡) categories added
 - [x] Pregen system - PregenSeed with full character data, buildCharacterFromPregen() builder, pregen selection UI on campaign page
 - [x] Chased pregens - 5 fully statted pregens (David, Carly, Morgan, Marv, Victor) with skills, weapons, equipment, relationships
-- [x] Chased NPC skill name fixes - "Ranged Weapons" → "Ranged Combat" (Ray, Jackie, Maddy)
-- [x] Chased Georgetown pin updated - coords, category → settlement, description
+- [x] Chased NPC skill name fixes - "Ranged Weapons" -> "Ranged Combat" (Ray, Jackie, Maddy)
+- [x] Chased Georgetown pin updated - coords, category -> settlement, description
 - [x] Tactical scene seeding - SETTING_SCENES in lib/setting-scenes.ts, auto-seeds during campaign creation (Chased: Connor Boys Farmhouse)
 - [x] Empty campaign package - Gus pregen, Dylan & Becky NPCs, Battersby Farm + Gas Station pins, gas station scene, Session Zero handout
 - [x] Empty pregens - 4 shared Chased pregens (David, Carly, Morgan, Marv) + Gus González (Empty-exclusive)
 - [x] GM handout seeding - SETTING_HANDOUTS in lib/setting-handouts.ts, auto-seeds during campaign creation
 - [x] Chased pins updated - 16 total (14 original + Battersby Farm + Stansfield's Gas Station)
 - [x] Empty maps to Chased content - shares pins, NPCs, scenes via setting slug mapping
-- [x] End session modal drop zone text size bumped (11/10px → 13/12px)
+- [x] End session modal drop zone text size bumped (11/10px -> 13/12px)
 - [x] All setting pins campaign-scoped only (District Zero, Chased, Mongrels)
 - [x] Make Thriver button - error feedback on failure
 - [x] Extracted SETTINGS to shared lib/settings.ts (was duplicated in 5 files)
@@ -1552,7 +1554,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] Visitor log filter - search by user/IP/page, multi-exclude with chips (type + Enter to exclude, click chip to remove)
 - [x] Visitor log timestamp column - exact time alongside relative "When"
 - [x] Thriver user deletion - edge function with admin API, prevents self-delete
-- [x] Renamed /campaigns → /stories - URLs, text, redirects for backwards compat
+- [x] Renamed /campaigns -> /stories - URLs, text, redirects for backwards compat
 - [x] Singleton Supabase client - fixes auth lock race condition
 - [x] Performance pass - duplicate font removal, next.config, query parallelization, lazy images, unused deps removed
 - [ ] Remaining event instrumentation (9 items)
@@ -1566,7 +1568,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [ ] Campfire global feed - approved Rumors, World Events, session summaries, War Stories, LFG posts visible to all
 - [ ] Campfire setting feed - filtered view per setting (District Zero, Chased, Mongrels)
 - [ ] Campfire campaign feed - private feed per campaign, GM session summaries, player War Stories
-- [ ] Promotion flow - campaign post → setting feed → global feed, Thriver approval at each level
+- [ ] Promotion flow - campaign post -> setting feed -> global feed, Thriver approval at each level
 - [ ] World Events - Thriver-authored announcements that shape the living world, permanently pinned
 - [ ] War Stories - players post memorable moments from sessions, visible on campaign and setting feeds
 - [ ] Filtering by setting, date, post type
@@ -1643,7 +1645,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] **Object tokens targetable in attacks** - weapons crates/barrels/doors with WP appear in Attack Roll target dropdown; damage decrements `scene_tokens.wp_current`; no defensive mod, no RP, no death countdown. Works in primary + reroll damage paths.
 - [x] **ObjectCard on double-click** - GM + players double-click an object token to open an inline draggable card: name, WP bar, portrait, properties (GM sees hidden ones). Live WP sync.
 - [x] **Map selection pre-populates attack target** - single-click a token, open Attack modal, target dropdown is pre-filled (overrides `last_attack_target` if both exist)
-- [x] **Edit Object modal** - font sizes bumped for readability (10→12, 11→12, 12→13, 13→14)
+- [x] **Edit Object modal** - font sizes bumped for readability (10->12, 11->12, 12->13, 13->14)
 - [x] **Range circles on selected token** - clicking a PC/NPC auto-draws 3 circles: green Engaged, blue 9ft Move, red primary-weapon range. Object tokens (crates, cars, doors) never show range bands. Drawn under tokens so sprites stay crisp. Show/Hide Ranges toggle in GM strip.
 - [x] **Range band circles REMOVED from tokens** - overlay drawing, Show/Hide Ranges button, `showRangeOverlay` state, and related constants all deleted from `TacticalMap.tsx`. Attack modal's auto range-band logic (`getAutoRangeBand` in page.tsx) still drives CMod + target filtering - just no canvas painting.
 - [x] **ObjectCard loot (GM)** - Contents section shows per-item `Give to [PC]` dropdown + green `Give` button. Transfers one-at-a-time to the chosen character's equipment, decrements (or removes) the crate's quantity in `scene_tokens.contents`, logs `🎒 [name] looted [item] from [crate]` to roll_log. Works on intact crates - no need to destroy first.
@@ -1652,7 +1654,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] **GM/player map alignment fix** - image size now derives from `image.naturalWidth × img_scale` (viewer-independent) instead of `container.clientWidth × img_scale` (viewer-dependent). Everyone sees pixel-identical positioning.
 - [x] **Cols/Rows changes no longer resize the image** - grid and image are fully decoupled; Cols+ only moves the grid.
 - [x] **Rescale Tactical Scenes tool** (`/tools/rescale-tactical-scenes`, Thriver only) - one-time migration that probes each scene's image naturalWidth and converts legacy container-based `img_scale` to the new baseline. Per-row + bulk rescale.
-- [x] **Order box on Assets → Map Pins edit form** - parity with /map sidebar. GM sets explicit numeric `sort_order`; list resorts immediately on save.
+- [x] **Order box on Assets -> Map Pins edit form** - parity with /map sidebar. GM sets explicit numeric `sort_order`; list resorts immediately on save.
 
 ---
 
@@ -1666,13 +1668,13 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] **Sidebar: "My Communities" link** under "My Stories"
 - [x] `/communities` index - grid grouped by campaign with status chip (Group / Community / Dissolved), member count, "N to Community" progress, GM badge
 - [x] `/communities/[id]` detail page - mounts the CampaignCommunity panel scoped to the community's campaign
-- [x] 13+ threshold auto-detection (Group → Community status badge)
+- [x] 13+ threshold auto-detection (Group -> Community status badge)
 
 ### Phase B - Recruitment mechanic
 - [ ] `Recruit` button on NPC card (GM + player)
 - [ ] Recruitment modal - approach picker (Cohort / Conscript / Convert), skill auto-suggest, CMod preview
 - [ ] First Impression integration (`npc_relationships.relationship_cmod` flows into Recruitment CMod)
-- [ ] Outcome resolution → auto-insert `community_members` row per SRD table (Success / Wild Success / High Insight / Failure / Dire Failure / Low Insight)
+- [ ] Outcome resolution -> auto-insert `community_members` row per SRD table (Success / Wild Success / High Insight / Failure / Dire Failure / Low Insight)
 - [ ] Apprentice toggle on Wild Success / High Insight - one Apprentice per PC, persistent bond
 - [ ] Recruitment log entry in `roll_log` with custom card style
 
@@ -1680,7 +1682,7 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 - [x] `community_morale_checks` table + `community_resource_checks` table + RLS (already landed in Phase A migration)
 - [x] Fed / Clothed / Morale rolled together in a single **Weekly Check modal** (`components/CommunityMoraleModal.tsx`) - NPCs assumed reasonable proficiency, GM adjusts A/S/CMod per roll, single "Run Weekly Check" fires all three rolls sequentially
 - [x] Morale auto-fills all 6 SRD slots - Mood (from prior week's cmod_for_next), Fed + Clothed (snap to actual rolled outcomes), Enough Hands (mechanical − 1 per understaffed role group, max −3), A Clear Voice (0 with leader, −1 leaderless), Someone To Watch Over Me (+1 ≥10% Safety, −1 <5%); GM override on any slot + Additional freeform CMod
-- [x] Consequence application: Failure 25% / Dire Failure 50% / Low Insight 75% leave, weighted priority Unassigned → Cohort → Convert → Conscript → Founder → Apprentice, PCs never auto-removed; `consecutive_failures` +1 on failure / reset to 0 on success; `week_number` increments on finalize
+- [x] Consequence application: Failure 25% / Dire Failure 50% / Low Insight 75% leave, weighted priority Unassigned -> Cohort -> Convert -> Conscript -> Founder -> Apprentice, PCs never auto-removed; `consecutive_failures` +1 on failure / reset to 0 on success; `week_number` increments on finalize
 - [x] 3-consecutive-failure dissolution - Result stage flips to a red "Finalize - Dissolve Community" button, all members soft-removed with reason='dissolved', community flips to status='dissolved'
 - [x] Custom roll_log cards for `fed_check` / `clothed_check` / `morale_check` with slot breakdown + departure list + dissolve warning; compactRollSummary narrative for the Both tab
 - [x] New SQL migration `sql/community-members-add-morale-75-reason.sql` widens left_reason CHECK to include 'morale_75' for the Low Insight drop
@@ -1689,9 +1691,9 @@ Final pass shipped in commit `07652f8` (merged to main `98d81c9`). DB layer (`sq
 ### Phase D - Activity Blocks + dashboard ✅ 2026-04-23 (Lv4 items deferred)
 - [x] "Skip Week" button on the Weekly Check strip advances `week_number` without rolls (Activity Block off-screen time)
 - [x] Conscription pressgang - red warning banner on pick stage + blocking confirm() on submit ("this is coercion, requires credible threat")
-- [x] `/stories/[id]/community` full-screen GM dashboard: Morale history (last 20), resource history (last 40), role distribution with SRD minimum markers, recruitment stats by approach, member breakdown by recruitment_type. Community ▾ → Dashboard links to it.
+- [x] `/stories/[id]/community` full-screen GM dashboard: Morale history (last 20), resource history (last 40), role distribution with SRD minimum markers, recruitment stats by approach, member breakdown by recruitment_type. Community ▾ -> Dashboard links to it.
 - [x] At-a-Glance block inside each expanded community body: Recent Morale trend chips (last 5) + "You" row showing viewer's role, Apprentice, and their recruited NPCs. Visible to everyone.
-- [x] Apprentice task delegation - `community_members.current_task` freeform text, GM-editable inline on apprentice rows. Display: "Task: <text>" with ✎ edit. No task + GM → "+ Assign task" affordance. SQL: `sql/community-members-add-current-task.sql`.
+- [x] Apprentice task delegation - `community_members.current_task` freeform text, GM-editable inline on apprentice rows. Display: "Task: <text>" with ✎ edit. No task + GM -> "+ Assign task" affordance. SQL: `sql/community-members-add-current-task.sql`.
 
 **🔒 Lv4 Skill Traits system - FULLY BACKBURNER (Xero 2026-04-23, reinforced)**
 Every skill gets a Trait at Level 4, but the full list isn't written. Xero's ruling: **ships together or not at all - no piecemeal.** The two CRB-defined Morale bonuses (Inspiration "Beacon of Hope" +4, Psychology\* "Insightful Counselor" +3) were shipped in `03d8767` and then reverted on the same day to enforce this rule. Until the authoritative list lands, the GM stuffs any Lv4 bonus into the Morale "Additional" slot manually. Pending:
@@ -1705,7 +1707,7 @@ Communities become first-class entities in the Distemperverse. Every published c
 - [x] Day-one schema carries `published_at`, `world_visibility`, `world_community_id` on `communities` (`sql/communities-phase-a.sql`)
 - [x] `world_communities` mirror table (`sql/world-communities.sql`) - sanitized public row with size band, public status, faction label, moderation_status
 - [x] Community "Publish to Tapestry" toggle on `CampaignCommunity.tsx` (line 1972) + handlePublish at :883 + Thriver moderation queue at `app/moderate/page.tsx` (`sql/world-communities-moderation-notify.sql`)
-- [x] World map overlay - published communities render via `MapView.tsx` with size-banded icons (radius 20→40px on size band)
+- [x] World map overlay - published communities render via `MapView.tsx` with size-banded icons (radius 20->40px on size band)
 - [x] GM-to-GM contact handshake - `community_encounters` table + 🤝-button on world-map community cards + notification metadata jsonb (`sql/community-encounters.sql`)
 - [x] Trade / alliance / feud links - `world_community_links` with two-way consent, color-coded polylines on world map (`sql/world-community-links.sql`)
 - [x] Migration on dissolution - `community-migrations` table + autocopy migration tooling lets survivors land in nearby published communities (`sql/community-migrations.sql` + `sql/community-migrations-autocopy.sql`); modal in `CampaignCommunity.tsx`
@@ -1760,11 +1762,11 @@ Communities become first-class entities in the Distemperverse. Every published c
 - [ ] GM Kit Export v2 = printable PDF + module zip from a module snapshot
 - [ ] Module + Community cross-publish (depends on Phase 4b Phase E)
 - [ ] In-session GM toolkit - scene switcher, NPC roster, handouts panel, roll tables linked to dice roller
-- [ ] Third-party module import (Roll20 / Foundry → Tapestry module - stretch)
+- [ ] Third-party module import (Roll20 / Foundry -> Tapestry module - stretch)
 
 ### Phase F - GM Adventure Authoring Toolkit 🚩 (added 2026-04-30)
 
-The current authoring path is "run a campaign for months, then click Publish Module." That works for Xero personally but assumes the GM has already done the work in their head + populated the campaign before Publish exists as a button. New GMs need scaffolding that helps them go from blank-page idea → playable adventure WITHOUT a long live-campaign on-ramp first.
+The current authoring path is "run a campaign for months, then click Publish Module." That works for Xero personally but assumes the GM has already done the work in their head + populated the campaign before Publish exists as a button. New GMs need scaffolding that helps them go from blank-page idea -> playable adventure WITHOUT a long live-campaign on-ramp first.
 
 **Vision:** opinionated, guided forms that walk the GM through the bones of an adventure (the "story arc" form), plus on-the-fly creation tools for everything an adventure needs (NPCs, maps, handouts, encounters, route tables). Output of the authoring tools feeds straight into the Module Publish flow - adventures authored with this toolkit ship as Modules end-to-end.
 
@@ -1774,7 +1776,7 @@ The current authoring path is "run a campaign for months, then click Publish Mod
   - "What happens along the way?" (3-5 beat outline; each beat carries an optional encounter / scene / handout reference)
   - "Where do they end?" (resolution scenes - branching outcomes Wild / Success / Failure / Dire)
   - Persists to a new `adventures` table or as a structured `metadata.adventure_arc` blob on the existing `campaigns` row. Same data exports into the published module's manifest so subscribers see the arc.
-- [ ] **NPC quick-build inline forms** - surface the existing generateRandomNpc + manual-edit flow as a popover from inside the Story Arc form ("add an NPC to this beat"). Pre-fills the NPC's role from the beat (antagonist for the climax, bystander for the opening, etc.). Pairs with the new GM Tools → Populate flow.
+- [ ] **NPC quick-build inline forms** - surface the existing generateRandomNpc + manual-edit flow as a popover from inside the Story Arc form ("add an NPC to this beat"). Pre-fills the NPC's role from the beat (antagonist for the climax, bystander for the opening, etc.). Pairs with the new GM Tools -> Populate flow.
 - [ ] **Map quick-build** - drop a new tactical scene from inside a beat. Image upload + grid + cell_px + a "place opening tokens" affordance. Wires straight into `tactical_scenes`.
 - [ ] **Handout quick-build** - title + rich text + optional image; persists to `campaign_notes` with `share=true`. Surfaces as the player handout when its beat fires.
 - [ ] **Encounter quick-build** - pre-rolled stat block for a fight (initiative line-up, recommended weapons, terrain notes). Drops into a beat as "what happens here." Could mature into a roll-table + outcome-tier reference once Lv 4 traits land.
@@ -1809,7 +1811,7 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 - [ ] Ghost-to-Survivor funnel analytics - track where conversions happen
 - [ ] A/B test soft wall messaging
 - [ ] Onboarding flow for physical product QR scanners - different from standard signup
-- [ ] **Reactivate `/firsttimers` onboarding page** - file exists at `app/firsttimers/page.tsx` and remains reachable, but signup no longer auto-redirects new users to it (see `app/signup/page.tsx`, was disabled alongside the `/welcome` forced redirect in 2026-04-20 playtest fix #12). When the site is ready to onboard new users: change signup's fallback from `/dashboard` back to `/firsttimers`, and re-enable the `/dashboard` → `/welcome` redirect in `app/dashboard/page.tsx` (also commented-out under playtest #12).
+- [ ] **Reactivate `/firsttimers` onboarding page** - file exists at `app/firsttimers/page.tsx` and remains reachable, but signup no longer auto-redirects new users to it (see `app/signup/page.tsx`, was disabled alongside the `/welcome` forced redirect in 2026-04-20 playtest fix #12). When the site is ready to onboard new users: change signup's fallback from `/dashboard` back to `/firsttimers`, and re-enable the `/dashboard` -> `/welcome` redirect in `app/dashboard/page.tsx` (also commented-out under playtest #12).
 
 ---
 
@@ -1825,7 +1827,7 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 ## 🔵 Phase 9 - Maturity
 - [ ] Rules reference - surface in-app search across the SRD content (SRD copy is structurally complete; `/rules/*` pages just need search UI)
 - [ ] Contextual rules links - from character sheet and dice roller to relevant SRD sections
-- [x] GM quick-reference panel - pop-out /gm-screen with outcomes, CMod, range bands, combat actions, healing, skills→attrs
+- [x] GM quick-reference panel - pop-out /gm-screen with outcomes, CMod, range bands, combat actions, healing, skills->attrs
 - [ ] Mobile optimization pass - dashboard, map, character wizard, table view all responsive
 - [ ] Mobile dice roller - optimized for rolling at a physical table on your phone
 - [ ] Global search - find characters, campaigns, pins, NPCs, Campfire posts
@@ -1843,14 +1845,14 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 ## 🔵 Phase 11 - Cross-Platform Parity
 - [ ] **Campaign Calendar** - date-gated lore events, GM-controlled include/ignore/pending states. Build for Displaced first, backport to Tapestry using same schema pattern if player demand exists. Potential Distemper uses: seasonal/anniversary events tied to collapse timeline, campaign duration tracking, faction state changes over time. Schema: `campaign_date timestamptz` on campaigns table (default year TBD - confirm canonical Distemper present year).
 - [ ] **Roll20 Export** - one-way migration for GMs/players who want to take a campaign to Roll20. Accepts loss of Tapestry-specific features (tactical ranges, realtime, insight/stress automation). Three parts:
-  1. **Minimal "Distemper" Roll20 character sheet** (HTML/CSS/sheet-worker JS): Rapid attrs → amod, skill table, weapons, WP/RP, one roll button per skill/weapon (`2d6 + @{amod} + @{skill_level} + @{weapon_cmod}`). Hosted in a Pro game or submitted to Roll20's public sheet repo.
+  1. **Minimal "Distemper" Roll20 character sheet** (HTML/CSS/sheet-worker JS): Rapid attrs -> amod, skill table, weapons, WP/RP, one roll button per skill/weapon (`2d6 + @{amod} + @{skill_level} + @{weapon_cmod}`). Hosted in a Pro game or submitted to Roll20's public sheet repo.
   2. **Exporter in Tapestry** (GM-only): per-campaign ZIP download - `characters/<name>.json` (Roll20 Character Vault format: name, bio, avatar, attribs[], abilities[]), `npcs/<name>.json`, `handouts/` (scenes, pins, GM/player notes, cliffhangers), `manifest.json`.
   3. **Ingest paths**: Pro GMs drag JSONs into the Character Vault or run a small API script that batch-creates characters + handouts from the manifest; free-tier GMs paste bios into handouts and manually click "Create Character." Scope estimate: sheet ~2-4 days, exporter ~1 day, API import script ~half a day; add calendar time if submitting the sheet to Roll20's public library.
 
 ---
 
 ## 🛠 Tools
-- [x] **Portrait Resizer** (`/tools/portrait-resizer`) - drag-drop image → 256×256 JPEG with center-crop, quality slider (0.5-1.0), live previews at 256/56/32px, optional dashed circle overlay showing token clip area, live file size display, download button
+- [x] **Portrait Resizer** (`/tools/portrait-resizer`) - drag-drop image -> 256×256 JPEG with center-crop, quality slider (0.5-1.0), live previews at 256/56/32px, optional dashed circle overlay showing token clip area, live file size display, download button
 
 ### Future enhancements for the tools suite
 - [ ] **Batch mode** - multi-file upload, process and download as zip
@@ -1907,7 +1909,7 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 
 - [ ] **2.1** New file `components/RecruitmentModal.tsx`. Props: `npc`, `campaignId`, `communities[]` (if multiple; modal starts with community picker if >1), `onClose`, `onRecruited`.
 - [ ] **2.2** Step 1 UI: three approach cards (Cohort / Conscript / Convert) with flavor text from spec §2. Apprentice picked later as a toggle - it's not an approach, it's a modifier.
-- [ ] **2.3** Step 2 UI: skill picker auto-suggests per approach (Cohort → Barter/Tactics, Conscript → Intimidation/Tactics, Convert → Inspiration/Psychology). Free-pick fallback for house-rule flex. SMod pulls from the roller PC's skills; AMod pulls from the PC's relevant RAPID (INF for most social).
+- [ ] **2.3** Step 2 UI: skill picker auto-suggests per approach (Cohort -> Barter/Tactics, Conscript -> Intimidation/Tactics, Convert -> Inspiration/Psychology). Free-pick fallback for house-rule flex. SMod pulls from the roller PC's skills; AMod pulls from the PC's relevant RAPID (INF for most social).
 - [ ] **2.4** Step 3 UI: CMod review. Auto-fills:
     - First Impression bonus = `npc_relationships.relationship_cmod` for the rolling PC vs this NPC (may be null/0 if never rolled First Impression).
     - GM freeform +/- CMod input.
@@ -1929,8 +1931,8 @@ The current authoring path is "run a campaign for months, then click Publish Mod
     - 0-3: Dire Failure
     - 1+1: Moment of Low Insight (overlay; dire-failure + escalation flavor)
   - Per-approach copy for each bucket (cohort/conscript/convert have different flavor strings - spec §3 table).
-- [ ] **3.3** Outcome screen: dice animation → result banner (green/red/amber) → "Confirm" button that commits the outcome.
-- [ ] **3.4** Commit success → INSERT `community_members` row:
+- [ ] **3.3** Outcome screen: dice animation -> result banner (green/red/amber) -> "Confirm" button that commits the outcome.
+- [ ] **3.4** Commit success -> INSERT `community_members` row:
     - `community_id` (selected community)
     - `npc_id` (the NPC being recruited)
     - `character_id` null (NPC member)
@@ -1938,7 +1940,7 @@ The current authoring path is "run a campaign for months, then click Publish Mod
     - `apprentice_of_character_id` = roller PC if apprentice toggled
     - `role` = 'unassigned' (GM assigns later)
     - `joined_at` now, `joined_week` = community.week_number
-- [ ] **3.5** Commit failure / dire failure → no DB write other than roll_log. Show flavor + "Close" button.
+- [ ] **3.5** Commit failure / dire failure -> no DB write other than roll_log. Show flavor + "Close" button.
 
 **Ship gate**: commit `feat: Recruitment roll + outcome + community_members insert`.
 
@@ -1980,15 +1982,15 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 
 ## Testing plan (to `tasks/testplan.md` on implementation day)
 
-1. **Happy path Cohort**: Revealed NPC → GM clicks Recruit → Cohort/Barter/+0 CMod → Success → NPC appears in community member list with "Cohort" label.
-2. **Apprentice path**: Same but Wild Success → toggle Apprentice ON → insert sets apprentice_of_character_id.
-3. **Apprentice cap**: PC already has an apprentice → toggle disabled with tooltip.
-4. **Convert flavor**: Pick Convert → skill list narrows to Inspiration/Psychology → win the roll → recruitment_type = 'convert', not 'cohort'.
-5. **Dire Failure**: Bad CMod → 1+1 → Moment of Low Insight card shown, no membership written, roll_log entry reads alienation.
-6. **Multi-community selector**: Create 2 communities → open Recruit → step 0 shows picker.
-7. **No community case**: Campaign with zero communities → Recruit button hidden on NPC card OR modal shows "Create a community first" CTA.
-8. **Already-member guard**: Recruit a recruited NPC → button disabled OR modal shows "already a member".
-9. **RLS**: Non-GM player tries to open Recruit → button not rendered; direct API call rejected by campaign_members policy.
+1. **Happy path Cohort**: Revealed NPC -> GM clicks Recruit -> Cohort/Barter/+0 CMod -> Success -> NPC appears in community member list with "Cohort" label.
+2. **Apprentice path**: Same but Wild Success -> toggle Apprentice ON -> insert sets apprentice_of_character_id.
+3. **Apprentice cap**: PC already has an apprentice -> toggle disabled with tooltip.
+4. **Convert flavor**: Pick Convert -> skill list narrows to Inspiration/Psychology -> win the roll -> recruitment_type = 'convert', not 'cohort'.
+5. **Dire Failure**: Bad CMod -> 1+1 -> Moment of Low Insight card shown, no membership written, roll_log entry reads alienation.
+6. **Multi-community selector**: Create 2 communities -> open Recruit -> step 0 shows picker.
+7. **No community case**: Campaign with zero communities -> Recruit button hidden on NPC card OR modal shows "Create a community first" CTA.
+8. **Already-member guard**: Recruit a recruited NPC -> button disabled OR modal shows "already a member".
+9. **RLS**: Non-GM player tries to open Recruit -> button not rendered; direct API call rejected by campaign_members policy.
 10. **Feed log**: All outcomes land in roll_log with custom styling, compact line reads narratively.
 
 ---
@@ -2028,7 +2030,7 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 ## 🎯 From 2026-04-28 chat (Welcome page + Messages bell session)
 
 - [x] **Run `sql/messages-realtime-publication.sql` on prod database** - applied 2026-04-28; Xero confirmed chat in `/messages` now refreshes live without reload. Adds `public.messages` and `public.conversation_participants` to the `supabase_realtime` publication and sets `REPLICA IDENTITY FULL` on `conversation_participants` so the bell's `user_id=eq.<uid>` filter survives UPDATE payloads.
-- [ ] **Welcome page → Quick Reference card content TBD.** [app/welcome/page.tsx](app/welcome/page.tsx) has a `Quick Reference` placeholder card. Needs cheat-sheet content per Xero's direction: CDP, WP/RP, Stress, Inspiration, links into the SRD/CRB. Wait for Xero to specify what to surface first, then wire it in.
+- [ ] **Welcome page -> Quick Reference card content TBD.** [app/welcome/page.tsx](app/welcome/page.tsx) has a `Quick Reference` placeholder card. Needs cheat-sheet content per Xero's direction: CDP, WP/RP, Stress, Inspiration, links into the SRD/CRB. Wait for Xero to specify what to surface first, then wire it in.
 
 ## 🔒 Backburner - Setting content (deferred 2026-05-20 per Xero: "content comes when the platform is stable")
 
