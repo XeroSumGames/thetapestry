@@ -252,7 +252,11 @@ export default function SceneControlsPopoutPage() {
   // Debounced because the stepper fires each click; we don't want a
   // DB write per +/-. Skip writes triggered by inbound bus messages
   // (suppressOutboundRef) so applying a remote update doesn't echo
-  // back as a redundant DB write.
+  // back as a redundant DB write. scene?.id is NOT a dep: switching
+  // scenes must not flush the popout's prior cellPx to the new row
+  // (2026-05-30 playtest: created a new scene that got clobbered to
+  // 175 because the previous scene's popout state was still 175 when
+  // the effect re-fired on scene change, beating the hydration).
   const cellPxPersistRef = useRef<any>(null)
   useEffect(() => {
     if (suppressOutboundRef.current) return
@@ -266,7 +270,7 @@ export default function SceneControlsPopoutPage() {
       })
     }, 400)
     return () => { if (cellPxPersistRef.current) clearTimeout(cellPxPersistRef.current) }
-  }, [cellPx, scene?.id, supabase])
+  }, [cellPx, supabase])
 
   // showGrid / gridColor / gridOpacity persist mirrors. Same pattern
   // as cellPx - debounced (400ms), suppress-aware so hydrating from
