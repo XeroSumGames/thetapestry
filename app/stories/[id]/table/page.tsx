@@ -478,6 +478,8 @@ export default function TablePage() {
   // not whatever's `is_active`. Lets the GM browse / prep other scenes privately
   // without dragging the player along (Xero 2026-05-30).
   const [sharedSceneId, setSharedSceneId] = useState<string | null>(null)
+  // Transient "✓ Shared" flash on the Share Map button after click.
+  const [shareMapFlash, setShareMapFlash] = useState(false)
   // Ref-mirror so the realtime broadcast handler at subscription time
   // doesn't capture a stale `tacticalShared`. Used by the
   // `scene_activated` listener to decide whether a GM scene switch
@@ -5315,19 +5317,25 @@ export default function TablePage() {
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
         )}
-        {gmLike && showTacticalMap && !combatActive && (
+        {gmLike && !combatActive && (
           <button onClick={async () => {
-            const newShared = !tacticalShared
-            setTacticalShared(newShared)
-            // Capture the GM's CURRENT active scene id so the player follows
-            // explicitly. The player stays on it even if the GM later activates
-            // another scene to prep behind the scenes.
-            const sceneId = newShared ? await activeSceneId(supabase, id) : null
-            initChannelRef.current?.send({ type: 'broadcast', event: newShared ? 'tactical_shared' : 'tactical_unshared', payload: { shared: newShared, sceneId } })
+            // Push WHATEVER the GM is currently viewing to the player. On tactical:
+            // push the active scene id; on campaign: unshare so the player follows
+            // back to the campaign map. Always one click, no toggle (Xero 2026-05-30).
+            if (showTacticalMap) {
+              const sceneId = await activeSceneId(supabase, id)
+              setTacticalShared(true)
+              initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId } })
+            } else {
+              setTacticalShared(false)
+              initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_unshared', payload: {} })
+            }
+            setShareMapFlash(true)
+            window.setTimeout(() => setShareMapFlash(false), 1500)
           }}
-            className={`hdr-btn${tacticalShared ? ' hdr-btn--active' : ''}`}
-            style={hdrBtn(tacticalShared ? '#1a2e10' : '#242424', tacticalShared ? '#7fc458' : '#d4cfc9', tacticalShared ? '#2d5a1b' : '#3a3a3a')}>
-            {tacticalShared ? 'Unshare Map' : 'Share Map'}
+            className={`hdr-btn${shareMapFlash ? ' hdr-btn--active' : ''}`}
+            style={hdrBtn(shareMapFlash ? '#1a2e10' : '#242424', shareMapFlash ? '#7fc458' : '#d4cfc9', shareMapFlash ? '#2d5a1b' : '#3a3a3a')}>
+            {shareMapFlash ? '✓ Shared' : 'Share Map'}
           </button>
         )}
         {gmLike && sessionStatus === 'active' && !combatActive && (
