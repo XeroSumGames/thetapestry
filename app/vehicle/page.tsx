@@ -372,6 +372,30 @@ export default function VehiclePage() {
     setDmgAmount('')
   }
 
+  // Quick ±1 WP buttons - use the same log shape as applyDamage so the
+  // roll feed shows every WP change, not just ones typed into the field.
+  async function adjustWp(delta: number) {
+    if (!vehicle || !campaignId || !myUserId) return
+    if (delta < 0) {
+      const built = buildVehicleDamageLog({ vehicle, amount: -delta, campaignId, userId: myUserId })
+      if (!built) return
+      await updateVehicle({ ...vehicle, wp_current: built.newWp })
+      await insertRollLog(built.row)
+    } else {
+      const newWp = Math.min(vehicle.wp_max, vehicle.wp_current + delta)
+      await updateVehicle({ ...vehicle, wp_current: newWp })
+      await insertRollLog({
+        campaign_id: campaignId,
+        user_id: myUserId,
+        character_name: vehicle.name,
+        label: `${vehicle.name} repaired ${delta} WP`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: delta,
+        outcome: 'vehicle_repair',
+        damage_json: { vehicleId: vehicle.id, vehicleName: vehicle.name, checkKind: 'repair', amount: delta },
+      })
+    }
+  }
+
   // Auto-vacate helper (2026-05-17): when a character is assigned to
   // a new seat, clear them from every OTHER seat on the same vehicle.
   // Without this, Mikey could be Driver AND Shooter AND Passenger #3
@@ -1027,8 +1051,8 @@ export default function VehiclePage() {
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <input type="number" min={1} value={dmgAmount} placeholder="dmg" onChange={e => setDmgAmount(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') applyDamage() }} style={{ width: '46px', padding: '2px 6px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
                   <button onClick={applyDamage} title="Apply damage + log it" style={{ padding: '2px 8px', marginRight: '6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>Apply</button>
-                  <button onClick={() => updateVehicle({ ...vehicle, wp_current: Math.max(0, vehicle.wp_current - 1) })} style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>-1</button>
-                  <button onClick={() => updateVehicle({ ...vehicle, wp_current: Math.min(vehicle.wp_max, vehicle.wp_current + 1) })} style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+1</button>
+                  <button onClick={() => adjustWp(-1)} style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>-1</button>
+                  <button onClick={() => adjustWp(1)} style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+1</button>
                 </div>
               )}
             </div>
