@@ -7338,7 +7338,9 @@ export default function TablePage() {
                       .select('id, grid_cols, grid_rows')
                       .eq('campaign_id', id)
                       .eq('is_active', true)
-                      .single()
+                      .order('created_at', { ascending: false })
+                      .limit(1)
+                      .maybeSingle()
                     if (!activeScene) { alert('No active tactical scene - open one from Map Setup first.'); return }
                     const emoji = getCategoryEmoji(pin.category)
                     const { data: pinOcc } = await sceneTokenPositions((activeScene as any).id)
@@ -7367,7 +7369,9 @@ export default function TablePage() {
                       .select('id')
                       .eq('campaign_id', id)
                       .eq('is_active', true)
-                      .single()
+                      .order('created_at', { ascending: false })
+                      .limit(1)
+                      .maybeSingle()
                     if (!activeScene) { alert('No active tactical scene.'); return }
                     const { error } = await supabase.from('scene_tokens')
                       .delete()
