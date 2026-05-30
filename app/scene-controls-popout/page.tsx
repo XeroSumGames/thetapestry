@@ -255,14 +255,13 @@ export default function SceneControlsPopoutPage() {
   // because the popout window kept rewriting it). The clean answer is to
   // not drive persist from state at all - the stepper onClick is the only
   // intentional source of truth, so wire persist directly there.
-  // Cap at 100 (was 200). The high cap was an attractor for the recurring
-  // "cell_px=175/200" playtest bug - 200 is the value a runaway writer
-  // settles at when something keeps incrementing. If cell_px > 100 appears
-  // in the DB after this ships, the popout is NOT the writer (this cap
-  // makes the popout incapable of producing it). 100 is also plenty -
-  // typical scenes are 25-50.
+  // Cap at 300. High-DPI maps (e.g. 4800x6600 designed for a 16x22 grid)
+  // need cellPx=300 to auto-fit to their intended grid. The DB constraint
+  // matches. The recurring 'cellPx mysteriously reaches 200' playtest bug
+  // is fixed at the code level (persist only fires on stepper click); the
+  // cap is defense in depth, not the primary lock.
   const persistCellPx = useCallback((next: number) => {
-    const clamped = Math.max(5, Math.min(100, next))
+    const clamped = Math.max(5, Math.min(300, next))
     setCellPx(clamped)
     const sceneId = scene?.id
     if (!sceneId) return
