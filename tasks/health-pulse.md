@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-30 15:03 UTC
+
+**Status:** DRIFT (continuing — 28th flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (11+ days — 2026-05-19 batch; drain target was 2026-05-25; 2026-05-30 playtest happened but Confidence Ledger not updated).
+- Confidence Ledger stale: debug-handoff.md says 622 tests/37 files; actual 738/41. `scripts/refresh-ledger.mjs` is the fix.
+- L78 stale-as-open (per-player Map toggle double-click race): `100cfc1` already shipped the fix; carried from 26th+27th flags.
+- **NEW stale-as-open — Initiative "Round N" display todo:** todo says "L476 hardcoded to ⚔️ Initiative"; actual `components/RollsFeed.tsx:520` already renders `(Round ${round})` from `damage_json.round`. Item can be closed.
+- **GOOD NEWS — TacticalMap move-follow fix LANDED** (`a9b8c44`, today). Awaiting Xero re-run of 12-check gate (`tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). This is the #1 KS priority item.
+
+**Action:** HP — close Initiative Round N todo + L78. Xero — re-run the 12-check tactical-map gate (all-PASS closes #1 KS priority). Puffer Fish — refresh Confidence Ledger, drain HOPED-FOR.
+
+---
+
 ## 2026-05-30 12:07 UTC
 
 **Status:** DRIFT (continuing — 27th flag)
