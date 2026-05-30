@@ -22,7 +22,7 @@
 // Route name ends in `-popout` so LayoutShell auto-hides the sidebar
 // (per the FULL_WIDTH_PATTERN convention in AGENTS.md).
 
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -245,32 +245,25 @@ export default function SceneControlsPopoutPage() {
   useEffect(() => { if (!suppressOutboundRef.current) busRef.current?.postState('showRangeOverlay', showRangeOverlay) }, [showRangeOverlay])
   useEffect(() => { if (!suppressOutboundRef.current) busRef.current?.postState('mapLocked', mapLocked) }, [mapLocked])
 
-  // Persist cellPx to tactical_scenes.cell_px so it survives reload.
-  // Without this the popout + TacticalMap stay in sync over the bus
-  // for the lifetime of the session, but when either window remounts
-  // they rehydrate from DB which is still the old value (default 35).
-  // Debounced because the stepper fires each click; we don't want a
-  // DB write per +/-. Skip writes triggered by inbound bus messages
-  // (suppressOutboundRef) so applying a remote update doesn't echo
-  // back as a redundant DB write. scene?.id is NOT a dep: switching
-  // scenes must not flush the popout's prior cellPx to the new row
-  // (2026-05-30 playtest: created a new scene that got clobbered to
-  // 175 because the previous scene's popout state was still 175 when
-  // the effect re-fired on scene change, beating the hydration).
-  const cellPxPersistRef = useRef<any>(null)
-  useEffect(() => {
-    if (suppressOutboundRef.current) return
-    if (!scene) return
-    if (cellPxPersistRef.current) clearTimeout(cellPxPersistRef.current)
-    const sceneId = scene.id
-    const value = cellPx
-    cellPxPersistRef.current = setTimeout(() => {
-      supabase.from('tactical_scenes').update({ cell_px: value }).eq('id', sceneId).then(({ error }: any) => {
-        if (error) console.error('[scene-controls] cell_px persist failed:', error.message)
-      })
-    }, 400)
-    return () => { if (cellPxPersistRef.current) clearTimeout(cellPxPersistRef.current) }
-  }, [cellPx, supabase])
+  // Persist cellPx to tactical_scenes.cell_px ONLY on explicit user click.
+  // Earlier this was a useEffect on [cellPx], with a suppressOutboundRef flag
+  // to ignore inbound bus / hydration / scene-switch races. Every variant of
+  // that pattern leaked: the flag is set in setTimeout(...,0) which is a
+  // macrotask, but React effect flush timing varies, so non-user cellPx
+  // changes occasionally beat the suppress and clobbered the wrong scene
+  // (2026-05-30 playtest: cell_px=200 reappeared after a hard refresh
+  // because the popout window kept rewriting it). The clean answer is to
+  // not drive persist from state at all - the stepper onClick is the only
+  // intentional source of truth, so wire persist directly there.
+  const persistCellPx = useCallback((next: number) => {
+    const clamped = Math.max(5, Math.min(200, next))
+    setCellPx(clamped)
+    const sceneId = scene?.id
+    if (!sceneId) return
+    supabase.from('tactical_scenes').update({ cell_px: clamped }).eq('id', sceneId).then(({ error }: any) => {
+      if (error) console.error('[scene-controls] cell_px persist failed:', error.message)
+    })
+  }, [scene?.id, supabase])
 
   // showGrid / gridColor / gridOpacity persist mirrors. Same pattern
   // as cellPx - debounced (400ms), suppress-aware so hydrating from
@@ -547,7 +540,7 @@ export default function SceneControlsPopoutPage() {
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <Stepper label="Cell (ft)" value={scene.cell_feet ?? 3} onChange={v => updateSceneField('cell_feet', Math.max(1, v))} suffix="ft" />
-            <Stepper label="Cell (px)" value={cellPx} onChange={v => setCellPx(Math.max(5, Math.min(200, v)))} suffix="px" step={5} />
+            <Stepper label="Cell (px)" value={cellPx} onChange={persistCellPx} suffix="px" step={5} />
           </div>
         </div>
       </div>
