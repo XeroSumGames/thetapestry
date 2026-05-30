@@ -8,6 +8,9 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
+### 🔴 GATE-RED (top priority - blocks #1 core-loop reliability for KS)
+- [ ] **[ROUTED -> HUNT & PECK; puffer finding 2026-05-30] tactical-map gate check #9 RED on 2026-05-30 playtest - move-follow does not fire for the active combatant on the player client.** `7ba065b` shipped the move-follow code; in the live test (GM moves Cree via SPRINT, Cree is active combatant, player isn't Cree) the player's view did NOT scroll to bring Cree into frame - parked on a different region. Code-grounded suspect (#1 most likely): `initiativeOrderRef.current` empty/stale at `TacticalMap.tsx:709` when `loadTokens` runs from the move broadcast -> `activeEntry` undefined -> active branch never matches -> follow no-ops. Full finding + cheap diagnostic + the 2 lesser suspects + tonight's GM workaround (Share View after each move) in [tasks/finding-tactical-map-move-follow-red-2026-05-30.md](finding-tactical-map-move-follow-red-2026-05-30.md). Risk Register (TacticalMap) stays YELLOW; demote gated on all-12 re-run GREEN.
+
 ### ✨ KS FIRST-IMPRESSION / POLISH (#2 workstream) - puffer-fish 2026-05-27
 The KS is a marketing moment; first impression = conversion. Audit (pass 1): [tasks/ks-first-impression-audit-2026-05-27.md](ks-first-impression-audit-2026-05-27.md).
 - [ ] **[XERO decision + HP wiring] F1** - what does the KS link point to + what does `/` show a cold visitor? Today `/` drops logged-out visitors into the ghost MAP, not `/publiclanding`. Decide + wire.
