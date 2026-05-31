@@ -125,6 +125,22 @@ export default function StepNine({ state, onChange }: Props) {
             </select>
           </div>
         </div>
+        {(step6.complicationNote || step6.motivationNote) && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+            {step6.complicationNote ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <label style={fieldLabel}>Complication notes</label>
+                <div style={{ ...fieldInput, minHeight: '56px', color: '#d4cfc9', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{step6.complicationNote}</div>
+              </div>
+            ) : <div />}
+            {step6.motivationNote ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <label style={fieldLabel}>Motivation notes</label>
+                <div style={{ ...fieldInput, minHeight: '56px', color: '#d4cfc9', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{step6.motivationNote}</div>
+              </div>
+            ) : <div />}
+          </div>
+        )}
       </div>
 
       {/* RAPID attributes */}

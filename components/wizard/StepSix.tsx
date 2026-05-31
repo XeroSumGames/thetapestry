@@ -32,7 +32,7 @@ export default function StepSix({ state, onChange }: Props) {
         style={{ ...nbtn, marginBottom: '10px' }}>
         Random Complication
       </button>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '10px' }}>
         {complications.map(c => (
           <div key={c}
             onClick={() => updateStep({ complication: c })}
@@ -48,6 +48,11 @@ export default function StepSix({ state, onChange }: Props) {
           </div>
         ))}
       </div>
+      <textarea
+        style={noteArea}
+        value={stepData.complicationNote ?? ''}
+        onChange={e => updateStep({ complicationNote: e.target.value })}
+        placeholder="How does this complication show up for your character? (optional)" />
 
       {/* Motivation */}
       <div style={sh}>Motivation</div>
@@ -59,7 +64,7 @@ export default function StepSix({ state, onChange }: Props) {
         style={{ ...nbtn, marginBottom: '10px' }}>
         Random Motivation
       </button>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '10px' }}>
         {motivations.map(m => (
           <div key={m}
             onClick={() => updateStep({ motivation: m })}
@@ -75,6 +80,11 @@ export default function StepSix({ state, onChange }: Props) {
           </div>
         ))}
       </div>
+      <textarea
+        style={noteArea}
+        value={stepData.motivationNote ?? ''}
+        onChange={e => updateStep({ motivationNote: e.target.value })}
+        placeholder="What drives them specifically? (optional)" />
 
     </div>
   )
@@ -93,4 +103,11 @@ const nbtn: React.CSSProperties = {
   border: '1px solid #3a3a3a', background: '#242424', color: '#f5f2ee',
   fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
   transition: 'all .15s',
+}
+
+const noteArea: React.CSSProperties = {
+  width: '100%', padding: '8px 10px', marginBottom: '1.5rem',
+  background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px',
+  color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+  minHeight: '60px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box',
 }

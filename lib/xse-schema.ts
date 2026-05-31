@@ -827,7 +827,9 @@ export interface XSECharacter {
   photoDataUrl: string;
   threeWords: [string, string, string];
   complication: string;
+  complicationNote: string;
   motivation: string;
+  motivationNote: string;
   notes: string;
 
   // Creation
@@ -905,7 +907,9 @@ export function createBlankCharacter(): XSECharacter {
     photoDataUrl: '',
     threeWords: ['', '', ''],
     complication: '',
+    complicationNote: '',
     motivation: '',
+    motivationNote: '',
     notes: '',
     creationMethod: 'backstory',
     rapid,

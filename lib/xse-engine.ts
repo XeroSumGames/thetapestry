@@ -83,7 +83,9 @@ export interface StepData {
   skillCDPMap?: Partial<Record<string, number>>
   profession?: string
   complication?: string
+  complicationNote?: string
   motivation?: string
+  motivationNote?: string
   note?: string
 }
 
@@ -218,7 +220,9 @@ char.creationMethod = 'backstory'
 
   const step6 = state.steps[5]
   char.complication = step6?.complication ?? ''
+  char.complicationNote = step6?.complicationNote ?? ''
   char.motivation = step6?.motivation ?? ''
+  char.motivationNote = step6?.motivationNote ?? ''
 
   char.weaponPrimary = {
     weaponName: state.weaponPrimary,
