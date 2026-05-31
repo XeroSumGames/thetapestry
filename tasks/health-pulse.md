@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-31 09:03 UTC
+
+**Status:** DRIFT (continuing — 33rd flag; 7 stale-as-done todos)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still in ledger (Tier-2 Recruit, Advantages, FI streamline, Stress 12-string, Vehicle popout broadcasts) — 12 days; drain target = Beta-500 dry-run before 2026-07-01. No action until then.
+- Stale-as-done todos (7 total — action needed):
+  - H2 (`AUDIT H2 - refresh Confidence Ledger`): done by `52fe1d4` 2026-05-31; debug-handoff.md now shows 738/41 w/ "Auto-refreshed". Still `[ ]` in todo.md.
+  - H3 (`AUDIT H3 - HOPED-FOR drain`): done by `52fe1d4`; DRAIN PASS 2026-05-30 notation present in debug-handoff.md §3. Still `[ ]`.
+  - M2 (`AUDIT M2 - TacticalMap 14-day watch note`): done by `52fe1d4`; watch note present in debug-handoff.md §1 (L43-45). Still `[ ]`.
+  - M4 (`AUDIT M4 - Patterns learned 2026-05-30`): done by `52fe1d4`; subsection at debug-handoff.md L125. Still `[ ]`.
+  - L78 (scene chooser / blank-map default): `useSceneNav.ts` + scene-picker exist in codebase. Still `[ ]` — flagged since 06:05 pulse.
+  - L100 (Initiative "Round N" display): `RollsFeed.tsx:520` renders `(Round ${round})`. Still `[ ]` — flagged since 06:05 pulse.
+  - L175 (3-lane coordination): `operating-mode.md` + `lane-protocol.md` + `active-lanes.md` all exist. Still `[ ]` — flagged since 06:05 pulse.
+
+**Action:** HP — mark all 7 stale-as-done todos `[x]` in `tasks/todo.md` (H2, H3, M2, M4, L78, L100, L175). 5-min sweep.
+
+---
+
 ## 2026-05-31 06:05 UTC
 
 **Status:** DRIFT (continuing — 32nd flag; significantly reduced since 00:05 pulse)
