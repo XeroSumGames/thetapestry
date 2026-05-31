@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-31 00:05 UTC
+
+**Status:** DRIFT (continuing — 31st flag)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR still undrained (2026-05-19 batch, 12 days; drain target was 2026-05-25 playtest; Confidence Ledger last refreshed 2026-05-24).
+- Confidence Ledger stale: debug-handoff.md says 622 tests/37 files; actual 738/41. Run `scripts/refresh-ledger.mjs`.
+- L78 (scene chooser / blank-map default) still `[ ]` — stale-as-open; code evidence (`useSceneNav`, scene-picker) in codebase.
+- L100 (Initiative "Round N" display) still `[ ]` — `RollsFeed.tsx:520` renders `(Round ${round})`; stale-as-open since 28th flag.
+- L108 (Remove/consume inventory item) still `[ ]` — `acc5ae9` shipped x-button feed logging; HP to verify + close.
+- TacticalMap YELLOW: **23 commits** since 2-client gate (was 19). New since last pulse: `421a4d6` (share-map one-shot push), `c3e0f10` (sticky scene lock for player — "gate complete"), `0599207` (players follow scene only on explicit Share Map), `aea76cd` (diag: surface auto-fit grid persist failures). Gate re-run still awaiting Xero.
+
+**Action:** Xero — re-run 12-check tactical-map gate (`tasks/tactical-map-verify-2client-testplan-2026-05-27.md`; PASS = #1 KS closes). HP — close L78/L100/L108. Puffer — refresh Confidence Ledger + drain HOPED-FOR post 2026-05-25 playtest.
+
+---
+
 ## 2026-05-30 21:05 UTC
 
 **Status:** DRIFT (continuing — 30th flag)
