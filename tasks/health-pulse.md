@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-31 21:06 UTC
+
+**Status:** DRIFT (carry-over — 18:06 actions not yet taken)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [822 passed, 45 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- **18:06 actions unresolved** — no new commits since that pulse. Three items still pending:
+  - Confidence Ledger stale: debug-handoff.md §3 still shows 738/41 → actual 822/45. Run `node scripts/refresh-ledger.mjs` to update.
+  - `todo.md:13` "6 mechanics still owe real code" still `[ ]` (5 of 6 shipped; annotate done).
+  - `todo.md:64` #2 BLOCKER parent still `[ ]` despite all sub-items `[x]` ("characters-class fully covered end-to-end").
+- HOPED-FOR (Tier-2 Recruit, Advantages, FI streamline, Stress 12-string): 12+ days, drain target Beta-500 before 2026-07-01. No urgency.
+
+**Action:** Same as 18:06 — HP take the 3 checklist actions above when back at keyboard.
+
+---
+
 ## 2026-05-31 18:06 UTC
 
 **Status:** DRIFT
