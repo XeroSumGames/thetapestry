@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp } from '../../lib/xse-engine'
+import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp, skillStepDown } from '../../lib/xse-engine'
 import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, PROFESSIONS, AttributeName, SkillValue } from '../../lib/xse-schema'
 import HelpTooltip from '../HelpTooltip'
 import { CDP_DESCRIPTION, SKILL_TIER_DESCRIPTION, VOCATIONAL_DESCRIPTION } from '../../lib/help-text'
@@ -66,13 +66,16 @@ export default function StepFour({ state, onChange }: Props) {
       updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1, skillCDPMap: newCDPMap })
     } else {
       if (cdpThisSkill <= 0) return
-      const prev = skillStepUp((cumVal - 1) as SkillValue, false)
-      const loss = cumVal - prev
-      newDeltas[skillName] = (newDeltas[skillName] ?? 0) - loss
-      if ((newDeltas[skillName] ?? 0) <= 0) delete newDeltas[skillName]
+      const deltaThisStep = newDeltas[skillName] ?? 0
+      if (deltaThisStep <= 0) return
+      const cumBase = (cumVal - deltaThisStep) as SkillValue
+      const newCumVal = skillStepDown(cumVal as SkillValue, cumBase, skill.vocational)
+      const newDelta = newCumVal - cumBase
+      if (newDelta <= 0) delete newDeltas[skillName]
+      else newDeltas[skillName] = newDelta
       newCDPMap[skillName] = cdpThisSkill - 1
       if (newCDPMap[skillName] <= 0) delete newCDPMap[skillName]
-      updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1 - 1, skillCDPMap: newCDPMap })
+      updateStep({ skillDeltas: newDeltas, skillCDPSpent: Math.max(0, skillCDPSpent - 1), skillCDPMap: newCDPMap })
     }
   }
 
@@ -170,7 +173,7 @@ export default function StepFour({ state, onChange }: Props) {
           const deltaThisStep = skillDeltas[sk.name] ?? 0
           const isProfSk = profSkills.includes(sk.name)
           const canInc = skillCDPSpent < 4 && cumVal < 3
-          const canDec = deltaThisStep > 0
+          const canDec = (stepData.skillCDPMap?.[sk.name] ?? 0) > 0
           const disp = cumVal >= 0 ? (cumVal > 0 ? `+${cumVal}` : '0') : String(cumVal)
           return (
             <div key={sk.name} style={{
