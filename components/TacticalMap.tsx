@@ -145,7 +145,7 @@ interface Props {
   throwMode?: { attackerCharId: string | null; attackerNpcId: string | null; rangeFeet: number; hasBlast?: boolean; friendlyCharacterIds?: string[]; friendlyNpcIds?: string[] } | null
   onThrowComplete?: (gx: number, gy: number) => void
   onThrowCancel?: () => void
-  onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
+  onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; grid_w?: number | null; grid_h?: number | null; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
   onTokenChanged?: () => void                               // Notify parent to broadcast token_changed so other clients re-fetch
   onPlayerDragMove?: (characterId: string) => void          // Player finished a valid drag-move; parent consumes 1 action
   // GM dragged the *active* combatant's token. Parent consumes 1 action
@@ -945,7 +945,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Notify parent of token positions for range calculations
   useEffect(() => {
     if (onTokensUpdate && scene) {
-      onTokensUpdate(tokens.map(t => ({ id: t.id, name: t.name, token_type: t.token_type, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y, wp_max: t.wp_max, wp_current: t.wp_current, controlled_by_character_ids: t.controlled_by_character_ids ?? null, rotation: t.rotation ?? 0 })), scene.cell_feet ?? 3)
+      onTokensUpdate(tokens.map(t => ({ id: t.id, name: t.name, token_type: t.token_type, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y, grid_w: t.grid_w ?? null, grid_h: t.grid_h ?? null, wp_max: t.wp_max, wp_current: t.wp_current, controlled_by_character_ids: t.controlled_by_character_ids ?? null, rotation: t.rotation ?? 0 })), scene.cell_feet ?? 3)
     }
   }, [tokens, scene?.cell_feet])
 

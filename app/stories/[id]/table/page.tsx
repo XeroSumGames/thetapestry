@@ -497,7 +497,7 @@ export default function TablePage() {
   // reloads (same-client broadcast doesn't reach the map's channel).
   const [pinRefreshKey, setPinRefreshKey] = useState(0)
   const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null>(null)
-  const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null; controlled_by_character_ids?: string[] | null; rotation?: number }[]>([])
+  const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; grid_w?: number | null; grid_h?: number | null; wp_max: number | null; wp_current: number | null; controlled_by_character_ids?: string[] | null; rotation?: number }[]>([])
   const [mapCellFeet, setMapCellFeet] = useState(3)
   const [mapTokenNpcIds, setMapTokenNpcIds] = useState<Set<string>>(new Set())
   const [showNpcPicker, setShowNpcPicker] = useState(false)
@@ -4396,7 +4396,7 @@ export default function TablePage() {
   // and the target-dropdown onChange (the only two computeAttackCmod callers).
   function cmodCtx(): AttackCmodCtx {
     return {
-      entries, npcs: campaignNpcs, tokens: mapTokens, initiative: initiativeOrder,
+      entries, npcs: campaignNpcs, tokens: mapTokens, initiative: initiativeOrder, vehicles: vehicles.map((v: any) => ({ name: v.name, size: v.size })),
       userId, pendingLabel: pendingRoll?.label ?? '', coordEffort: coordEffortRef.current,
     }
   }

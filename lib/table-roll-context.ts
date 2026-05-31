@@ -94,6 +94,9 @@ export interface CmodSources {
   sameTarget?: number
   targetDefense?: number
   targetDefenseLabel?: string
+  /** Vehicle-as-cover RDM bonus (CRB Ch. 08 p. 140). Ranged-only; null if no cover. */
+  vehicleCover?: number
+  vehicleCoverLabel?: string
   range?: number
   sick?: number
   insight?: number
@@ -120,6 +123,7 @@ export function buildCmodBreakdown(s: CmodSources): { terms: CmodTerm[]; total: 
     { label: 'Coordinated Effort CMod', value: s.coordinatedEffort ?? 0 },
     { label: 'Same target CMod', value: s.sameTarget ?? 0 },
     { label: s.targetDefenseLabel || 'Target defense', value: s.targetDefense ?? 0 },
+    { label: s.vehicleCoverLabel || 'Vehicle cover RDM', value: s.vehicleCover ?? 0 },
     { label: 'Range CMod', value: s.range ?? 0 },
     { label: 'Sick CMod', value: s.sick ?? 0 },
     { label: 'Insight CMod', value: s.insight ?? 0 },
@@ -129,6 +133,8 @@ export function buildCmodBreakdown(s: CmodSources): { terms: CmodTerm[]; total: 
   const total = terms.reduce((acc, t) => acc + t.value, 0)
   return { terms, total }
 }
+
+import { vehicleCoverRdm } from './vehicle-cover'
 
 // --- Attack CMod resolution (3c-B2) ------------------------------------------
 // resolveTargetDefense + computeAttackCmod were closure functions on the table
@@ -144,7 +150,20 @@ export interface CmodEntry {
   character: { id: string; name: string; data?: { rapid?: CmodRapid | null } | null }
 }
 export interface CmodNpc { name: string; physicality?: number | null; dexterity?: number | null }
-export interface CmodToken { token_type: string; name: string }
+export interface CmodToken {
+  token_type: string
+  name: string
+  // Grid position is OPTIONAL on the structural type so existing callers that
+  // only need name/type don't have to thread footprint fields. The vehicle-
+  // cover path requires them and gracefully falls back when absent.
+  grid_x?: number
+  grid_y?: number
+  grid_w?: number | null
+  grid_h?: number | null
+  character_id?: string | null
+  npc_id?: string | null
+}
+export interface CmodVehicle { name: string; size: number }
 export interface CmodInitEntry {
   character_name: string
   character_id?: string | null
@@ -163,6 +182,7 @@ export interface TargetLookupCtx {
   npcs: readonly CmodNpc[]
   tokens: readonly CmodToken[]
   initiative: readonly CmodInitEntry[]
+  vehicles?: readonly CmodVehicle[]
 }
 
 export interface AttackCmodCtx extends TargetLookupCtx {
@@ -234,10 +254,29 @@ export function computeAttackCmod(
   )
   const coordinate = (myInitEntry?.coordinate_target === targetName) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
   const sameTarget = (activeEntry?.last_attack_target === targetName) ? 1 : 0
+  // Vehicle-as-cover: ranged-only; defender sitting on a size-3+ vehicle's
+  // footprint adds +1..+4 RDM (subtracts from attacker's to-hit).
+  const cover = !isMelee ? resolveVehicleCover(targetName, ctx) : null
   const sources: CmodSources = {
     weaponCondition, aim, coordinatedEffort, coordinate, sameTarget,
     targetDefense: -def.value, targetDefenseLabel: def.label,
+    ...(cover ? { vehicleCover: -cover.bonus, vehicleCoverLabel: `Vehicle cover RDM (${cover.vehicleName}, size ${cover.size})` } : {}),
   }
-  const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value
+  const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value - (cover?.bonus ?? 0)
   return { net, sources }
+}
+
+/** Lookup the target token + scene vehicles + run vehicleCoverRdm, returning null on missing data. */
+function resolveVehicleCover(targetName: string, ctx: TargetLookupCtx) {
+  if (!ctx.vehicles || ctx.vehicles.length === 0) return null
+  const tTok = ctx.tokens.find(t => t.name === targetName)
+  if (!tTok || tTok.grid_x == null || tTok.grid_y == null) return null
+  const objectTokens = ctx.tokens.filter(t =>
+    t.token_type === 'object' && t.grid_x != null && t.grid_y != null,
+  ) as Array<Required<Pick<CmodToken, 'grid_x' | 'grid_y'>> & CmodToken>
+  return vehicleCoverRdm(
+    { grid_x: tTok.grid_x, grid_y: tTok.grid_y, grid_w: tTok.grid_w, grid_h: tTok.grid_h },
+    objectTokens.map(o => ({ name: o.name, token_type: o.token_type, grid_x: o.grid_x!, grid_y: o.grid_y!, grid_w: o.grid_w, grid_h: o.grid_h })),
+    ctx.vehicles,
+  )
 }
