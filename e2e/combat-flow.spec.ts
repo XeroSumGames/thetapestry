@@ -322,4 +322,150 @@ test.describe('Ch9 / #10 - Combat-flow Phase C (deterministic damage via gm_appl
       await plCtx.close()
     }
   })
+
+  // PHASE C v2 - gm_apply_damage with the new p_infection_risk arg
+  // (sql/gm-apply-damage-rpc-v2-infection-2026-05-30.sql, commit 4259d67).
+  // Locks in the 4 contract gates from the v2 brief:
+  //   (positive) PC + mortal-wound + flag=true  -> damage_json.infection_risk=true
+  //   (negative) PC + non-mortal   + flag=true  -> flag NOT set
+  //   (negative) NPC               + flag=true  -> flag NOT set (canon: NPCs never)
+  //   (compat)   omit the arg                   -> damage_json byte-identical to v1
+  //
+  // Ordered so a single throwaway campaign exercises all four shapes without
+  // mid-test state resets: non-mortal first (marv stays alive), NPC next
+  // (independent target), mortal last (closes marv out).
+  //
+  // *** APP-SIDE BRIDGE GAP (flagged) ***
+  // The brief proposed extending this test with "infection-modal renders on the
+  // OWNER'S client only". Verified against app code: NO code path currently
+  // reads damage_json.infection_risk (only lib/roll-helpers reads the unrelated
+  // infection_DAYS / infection_SEVERITY env-sickness fields). The existing
+  // "wound infection warning" surface is the orange RollsFeed banner gated on
+  // roll_log.outcome === 'wound_infection_warning', inserted by
+  // maybeLogWoundInfection() from the in-combat attack handler keyed off
+  // weaponCausesWoundInfection() + pendingWoundInfectionRef. Until that bridge
+  // is built (preferred: gm_apply_damage server-side also inserts the
+  // wound_infection_warning row when the flag fires; alternative: client wires
+  // damage_json.infection_risk -> maybeLogWoundInfection), this RPC flag is a
+  // data-only contract. Bridge routed: tasks/finding-infection-risk-app-bridge
+  // -2026-05-30.md + todo line under combat-flow #10. The banner DOM assertion
+  // ships as a follow-up commit once the bridge lands.
+  test('p_infection_risk gates: set ONLY on PC mortal-wound; omitted / non-mortal / NPC stays clean', async ({ browser }) => {
+    const gmCtx = await browser.newContext({ storageState: AUTH.gm })
+    const plCtx = await browser.newContext({ storageState: AUTH.marv })
+    const gm = await gmCtx.newPage()
+    const pl = await plCtx.newPage()
+    let campaignId: string | null = null
+    let gmCreds: SupaCreds | null = null
+    try {
+      const gmAnonP = captureAnonKey(gm)
+      const plAnonP = captureAnonKey(pl)
+      gmCreds = await resolveCreds(gm, gmAnonP)
+      const plCreds = await resolveCreds(pl, plAnonP)
+      expect(gmCreds && plCreds, 'could not resolve gm + marv creds').toBeTruthy()
+
+      const setup = await setupThrowawayWithMarvPc({
+        gm, pl, gmCreds: gmCreds!, plCreds: plCreds!, name: `${RUN} Combat C2 infection`,
+      })
+      campaignId = setup.campaignId
+
+      // marv baseline (needs >= 3 wp so we can do 2x non-mortal + 1 mortal).
+      const baseSt = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/character_states?campaign_id=eq.${campaignId}&character_id=eq.${MARV_CHAR}&select=wp_current,wp_max`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ wp_current: number; wp_max: number }>
+      expect(baseSt?.[0], 'marv character_states not readable').toBeTruthy()
+      expect(baseSt[0].wp_max >= 3, 'wp_max too low to exercise non-mortal + mortal in one run').toBe(true)
+
+      // Seed an NPC with explicit wp_current so the RPC's before-state is defined.
+      const npcIns = await gm.request.post(
+        `${SUPABASE_URL}/rest/v1/campaign_npcs`,
+        {
+          headers: { ...H(gmCreds!), 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          data: { campaign_id: campaignId, name: `${RUN} InfectionNPC`, wp_max: 10, wp_current: 10 },
+        },
+      )
+      expect(npcIns.ok(), `campaign_npcs INSERT failed: ${npcIns.status()} ${await npcIns.text()}`).toBe(true)
+      const npcId = (await npcIns.json() as Array<{ id: string }>)[0].id
+
+      // Helper: call the RPC + return the latest roll_log row's damage_json.
+      const callAndReadDj = async (data: Record<string, any>): Promise<Record<string, any>> => {
+        const r = await gm.request.post(
+          `${SUPABASE_URL}/rest/v1/rpc/gm_apply_damage`,
+          { headers: { ...H(gmCreds!), 'Content-Type': 'application/json' }, data },
+        )
+        expect(r.ok(), `RPC call failed: ${r.status()} ${await r.text()}`).toBe(true)
+        const rows = await (await gm.request.get(
+          `${SUPABASE_URL}/rest/v1/roll_log?campaign_id=eq.${campaignId}&order=created_at.desc&limit=1&select=damage_json`,
+          { headers: H(gmCreds!) },
+        )).json() as Array<{ damage_json: Record<string, any> | null }>
+        expect(rows?.[0]?.damage_json, 'roll_log row should carry damage_json').toBeTruthy()
+        return rows[0].damage_json ?? {}
+      }
+
+      // CASE 1 - BACKWARD COMPAT: 4-arg call (no p_infection_risk) on marv, 1 dmg.
+      // v1 callers must remain byte-identical (no spurious infection_risk key).
+      const dj1 = await callAndReadDj({
+        p_campaign_id: campaignId, p_target_kind: 'pc', p_target_id: MARV_CHAR, p_wp_damage: 1,
+      })
+      expect(dj1.via, 'v1 field preserved').toBe('gm_apply')
+      expect(dj1.target_kind).toBe('pc')
+      expect(
+        dj1.infection_risk,
+        '4-arg call MUST stay v1-byte-identical (no infection_risk set)',
+      ).not.toBe(true)
+
+      // CASE 2 - NEGATIVE non-mortal: flag=true but damage does NOT cross to WP=0.
+      // Canon: wound-infection check fires on mortal-wound entry; non-mortal = no flag.
+      const dj2 = await callAndReadDj({
+        p_campaign_id: campaignId, p_target_kind: 'pc', p_target_id: MARV_CHAR, p_wp_damage: 1, p_infection_risk: true,
+      })
+      expect(dj2.via).toBe('gm_apply')
+      expect(
+        dj2.infection_risk,
+        'non-mortal damage MUST NOT set infection_risk (gated on WP=0 entry per RPC contract)',
+      ).not.toBe(true)
+
+      // CASE 3 - NEGATIVE NPC target: flag=true on an NPC. Canon: NPCs never roll
+      // wound infection -> the RPC suppresses the flag.
+      const dj3 = await callAndReadDj({
+        p_campaign_id: campaignId, p_target_kind: 'npc', p_target_id: npcId, p_wp_damage: 10, p_infection_risk: true,
+      })
+      expect(dj3.via).toBe('gm_apply')
+      expect(dj3.target_kind).toBe('npc')
+      expect(
+        dj3.infection_risk,
+        'NPC target MUST NOT set infection_risk (canon: NPCs never roll wound infection)',
+      ).not.toBe(true)
+
+      // CASE 4 - POSITIVE: PC mortal-wound with flag=true -> damage_json carries
+      // infection_risk=true alongside the v1 fields. Send exactly the remaining
+      // wp so the assertion is robust to whatever capping behavior the RPC has.
+      const beforeMortal = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/character_states?campaign_id=eq.${campaignId}&character_id=eq.${MARV_CHAR}&select=wp_current`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ wp_current: number }>
+      const remaining = beforeMortal[0].wp_current
+      expect(remaining > 0, 'marv should still be alive going into the mortal-wound case').toBe(true)
+      const dj4 = await callAndReadDj({
+        p_campaign_id: campaignId, p_target_kind: 'pc', p_target_id: MARV_CHAR, p_wp_damage: remaining, p_infection_risk: true,
+      })
+      expect(dj4.via).toBe('gm_apply')
+      expect(dj4.target_kind).toBe('pc')
+      expect(dj4.wp_after, 'PC should land at wp_current=0 after mortal-wound damage').toBe(0)
+      expect(
+        dj4.infection_risk,
+        'PC + mortal-wound + flag=true MUST set damage_json.infection_risk=true',
+      ).toBe(true)
+    } finally {
+      if (campaignId && gmCreds) {
+        await gm.request.delete(
+          `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}`,
+          { headers: H(gmCreds) },
+        ).catch(() => {})
+      }
+      await gmCtx.close()
+      await plCtx.close()
+    }
+  })
 })
