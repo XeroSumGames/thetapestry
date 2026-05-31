@@ -4,6 +4,7 @@ import { ModalBackdrop } from '../lib/style-helpers'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'
+import { advance as advanceClock } from '../lib/campaign-clock'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
@@ -1144,8 +1145,9 @@ function CharacterCardImpl({
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowRestModal(false)}
                 style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => {
+              <button onClick={async () => {
                 const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
+                if (totalHours <= 0) { setShowRestModal(false); return }
                 const totalDays = totalHours / 24
                 const wasMortal = localState.wp_current === 0 || localState.death_countdown != null
                 const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
@@ -1154,6 +1156,32 @@ function CharacterCardImpl({
                 const newRP = Math.min(localState.rp_max, localState.rp_current + rpHeal)
                 onStatUpdate?.(localState.id, 'wp_current', newWP)
                 onStatUpdate?.(localState.id, 'rp_current', newRP)
+                // Advance the campaign clock by the rested duration so all the
+                // time-based drainers fire (pending heals, rations, subsistence,
+                // infection) and a System "Time advances Nh" row shows in feed.
+                // Then write a Rest-specific row so players see what the patient
+                // recovered. Best-effort: never block the heal on a clock error.
+                if (campaignIdProp) {
+                  try {
+                    await advanceClock(campaignIdProp, totalHours)
+                    const { user } = await getCachedAuth()
+                    if (user) {
+                      const hoursText = totalHours === 1 ? '1 hour' : `${totalHours} hours`
+                      const recovered = `+${rpHeal} RP, +${wpHeal} WP`
+                      await insertRollLog({
+                        campaign_id: campaignIdProp,
+                        user_id: user.id,
+                        character_name: c.name,
+                        label: `${c.name} rested ${hoursText} (${recovered})`,
+                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                        outcome: 'rest',
+                        damage_json: { characterId: c.id, hours: totalHours, wpHeal, rpHeal, wasMortal },
+                      })
+                    }
+                  } catch (e) {
+                    console.error('[rest] clock advance / log insert failed:', e)
+                  }
+                }
                 setShowRestModal(false)
                 setRestHours(0); setRestDays(0); setRestWeeks(0)
               }}

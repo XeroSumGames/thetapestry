@@ -55,6 +55,9 @@ export const OUTCOME = {
   loot: 'loot',
   morale_check: 'morale_check',
   pending_heal: 'pending_heal',
+  // PC rested for some duration: WP/RP recover per canon (never-MW = 1 WP/day;
+  // was-MW = 1 WP / 2 days; 1 RP/hour). damage_json carries hours + heal totals.
+  rest: 'rest',
   rations: 'rations',
   recruit: 'recruit',
   retention_check: 'retention_check',
@@ -137,6 +140,7 @@ export type EventTag =
   | typeof OUTCOME.loot
   | typeof OUTCOME.morale_check
   | typeof OUTCOME.pending_heal
+  | typeof OUTCOME.rest
   | typeof OUTCOME.rations
   | typeof OUTCOME.recruit
   | typeof OUTCOME.retention_check
