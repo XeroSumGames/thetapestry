@@ -9,7 +9,8 @@ Run cold: hard-refresh both browsers onto prod first.
 | # | Item | Commit | Status |
 |---|---|---|---|
 | 1 | REST FINISH | `2ea7aaf` | shipped |
-| 2 | VEHICLES-AS-COVER | (next push) | shipped |
+| 2 | VEHICLES-AS-COVER | `f264f7b` | shipped |
+| 3 | ITEM CONDITION + Upkeep tests | (next push) | shipped (refactor + tests; behavior unchanged) |
 
 ---
 
@@ -96,3 +97,59 @@ heal land).
   follow-up E2E + helper case when canon is locked.
 - Vehicle damage state / wreckage doesn't currently degrade the cover
   bonus. A canon-aligned wreck rule could degrade by stress level.
+
+---
+
+## #3 - Item Condition + Upkeep Check (verify-first - mostly already shipped)
+
+**What turned out to be already shipped:**
+- ItemCondition type with 5 states (Pristine -> Used -> Worn -> Damaged -> Broken)
+- `condition` field on weaponPrimary / weaponSecondary slots
+- Upkeep Check button on the CharacterCard weapon admin row
+- Full state-machine transitions in useRollResolution (Wild Success / High
+  Insight improve capped at Used; Failure degrades; Dire Failure breaks;
+  Low Insight breaks + 1 WP damage to character)
+- Condition selector visible on the inventory tile
+- Attack button DISABLED with "Weapon Broken" label when condition='Broken'
+- Unjam/Repair parallel paths also wired
+
+**What I shipped today:**
+- Extracted the inline upkeep transition into `lib/upkeep.ts` as a pure
+  function (`upkeepTransition`), behavior-preserving.
+- 33 unit tests covering every outcome (6) x condition (5) combination,
+  plus the breakWP/message side effects and the defensive-fallback for
+  unknown condition strings.
+- Refactored `useRollResolution.ts` to call the helper (no behavior change).
+
+**Setup:** Combat session, PC with a non-Unarmed weapon equipped at some
+known condition (e.g. set to 'Worn' via the condition dropdown on the
+weapon slot).
+
+**Run:**
+1. PC's turn. Click `Upkeep Check` on the weapon admin row.
+2. Pick a roller (any character with Mechanic*/Tinkerer/weapon-skill).
+3. Set the dice / SMod to a known value to force each outcome and confirm:
+
+**PASS criteria (run each outcome at least once):**
+- **Wild Success:** condition improves 1 level (e.g. Worn -> Used); banner
+  says "Condition improved by 1 level". Used stays at Used (floor).
+- **High Insight:** condition improves 2 levels (Damaged -> Used); banner
+  says "Condition improved by 2 levels". Worn -> Used (floor cap).
+- **Success:** no change to condition; banner says "No change to condition".
+- **Failure:** condition degrades 1 level (Worn -> Damaged); banner says
+  "Condition degraded by 1 level". Broken stays at Broken (ceiling).
+- **Dire Failure:** condition jumps to Broken regardless of starting state;
+  banner says "Item breaks immediately!".
+- **Low Insight:** condition jumps to Broken + PC takes 1 WP damage; banner
+  says "Item breaks immediately! 1 WP damage." + a Stress row if the WP hit
+  causes a Mortal Wound.
+- After Dire Failure / Low Insight on a starting Damaged weapon, the
+  `Attack with X` button disables and shows "Weapon Broken".
+
+**FAIL clues:**
+- Condition doesn't change after roll resolves -> the `transition.next`
+  write to characters.data path regressed.
+- Low Insight doesn't apply WP damage -> the breakWP branch regressed
+  (or `myEntry.liveState` is null - check the state is loaded).
+- Wild Success from Used moves to Pristine -> the Math.max(1, ...) floor
+  regressed; Used is the cap per canon.

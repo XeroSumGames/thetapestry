@@ -15,6 +15,8 @@ import { createClient } from '../../../../../lib/supabase-browser'
 import { useRollsFeed } from '../../../../../components/RollsFeed'
 import { OUTCOME } from '../../../../../lib/roll-outcomes'
 import { getOutcome, outcomeColor, compactRollSummary } from '../../../../../lib/roll-helpers'
+import { upkeepTransition, type UpkeepOutcome } from '../../../../../lib/upkeep'
+import type { ItemCondition } from '../../../../../lib/xse-schema'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD, weaponCausesWoundInfection } from '../../../../../lib/weapons'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../../lib/damage'
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../../lib/table-roll-context'
@@ -1293,44 +1295,38 @@ export function useRollResolution(deps: RollResolutionDeps) {
       healPendingRef.current = null
     }
 
-    // Upkeep Check result - adjust weapon condition
+    // Upkeep Check result - canon state machine extracted to lib/upkeep.ts
+    // and unit-tested across all 6 outcomes x 5 conditions. The inline logic
+    // here just calls the helper, persists the new condition, and handles
+    // the Low-Insight WP-damage side effect.
     let upkeepResult = ''
     if (pendingRoll.label.startsWith('Upkeep - ') && myEntry) {
       const weaponName = pendingRoll.label.replace('Upkeep - ', '')
       const charData = myEntry.character.data ?? {}
-      const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
       const slots = ['weaponPrimary', 'weaponSecondary'] as const
       for (const slot of slots) {
         if (charData[slot]?.weaponName === weaponName) {
-          const currentIdx = conditions.indexOf(charData[slot].condition ?? 'Used')
-          let newIdx = currentIdx
-          if (outcome === 'Wild Success') { newIdx = Math.max(1, currentIdx - 1); upkeepResult = 'Condition improved by 1 level' }
-          else if (outcome === 'High Insight') { newIdx = Math.max(1, currentIdx - 2); upkeepResult = 'Condition improved by 2 levels' }
-          else if (outcome === 'Failure') { newIdx = Math.min(4, currentIdx + 1); upkeepResult = 'Condition degraded by 1 level' }
-          else if (outcome === 'Dire Failure') { newIdx = 4; upkeepResult = 'Item breaks immediately!' }
-          else if (outcome === 'Low Insight') {
-            newIdx = 4; upkeepResult = 'Item breaks immediately! 1 WP damage.'
-            if (myEntry.liveState) {
-              const newWP = Math.max(0, myEntry.liveState.wp_current - 1)
-              const upkeepUpdate: any = { wp_current: newWP }
-              if (newWP === 0 && myEntry.liveState.wp_current > 0) {
-                upkeepUpdate.death_countdown = mortalWoundCountdown(myEntry.character.data?.rapid?.PHY ?? 0)
-                upkeepUpdate.stress = Math.min(5, (myEntry.liveState.stress ?? 0) + 1)
-              }
-              await supabase.from('character_states').update(upkeepUpdate).eq('id', myEntry.stateId)
-              if (newWP === 0 && myEntry.liveState.wp_current > 0) {
-                await insertRollLog({
-                  campaign_id: id, user_id: userId, character_name: 'System',
-                  label: `😰 ${myEntry.character.name} gains a Stress from being Mortally Wounded`,
-                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
-                })
-              }
+          const transition = upkeepTransition((charData[slot].condition ?? 'Used') as ItemCondition, outcome as UpkeepOutcome)
+          upkeepResult = transition.message
+          if (transition.breakWP > 0 && myEntry.liveState) {
+            const newWP = Math.max(0, myEntry.liveState.wp_current - transition.breakWP)
+            const upkeepUpdate: any = { wp_current: newWP }
+            if (newWP === 0 && myEntry.liveState.wp_current > 0) {
+              upkeepUpdate.death_countdown = mortalWoundCountdown(myEntry.character.data?.rapid?.PHY ?? 0)
+              upkeepUpdate.stress = Math.min(5, (myEntry.liveState.stress ?? 0) + 1)
+            }
+            await supabase.from('character_states').update(upkeepUpdate).eq('id', myEntry.stateId)
+            if (newWP === 0 && myEntry.liveState.wp_current > 0) {
+              await insertRollLog({
+                campaign_id: id, user_id: userId, character_name: 'System',
+                label: `😰 ${myEntry.character.name} gains a Stress from being Mortally Wounded`,
+                die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
+              })
             }
           }
-          else { upkeepResult = 'No change to condition' }
-          if (newIdx !== currentIdx) {
+          if (transition.next !== charData[slot].condition) {
             await supabase.from('characters').update({
-              data: { ...charData, [slot]: { ...charData[slot], condition: conditions[newIdx] } }
+              data: { ...charData, [slot]: { ...charData[slot], condition: transition.next } }
             }).eq('id', myEntry.character.id)
           }
           break
