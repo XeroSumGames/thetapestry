@@ -62,6 +62,9 @@ export const OUTCOME = {
   // damage_json carries { feetFallen, wpDealt, rpDealt } / { submergedRounds, wpDealt, rpDealt }.
   falling: 'falling',
   drowning: 'drowning',
+  // Overland travel push (CRB Ch. 08 p. 142). Pushing past the 8h soft cap
+  // costs 1 RP per additional hour. damage_json carries { hours, pushHours, rpDealt }.
+  travel: 'travel',
   rations: 'rations',
   recruit: 'recruit',
   retention_check: 'retention_check',
@@ -147,6 +150,7 @@ export type EventTag =
   | typeof OUTCOME.rest
   | typeof OUTCOME.falling
   | typeof OUTCOME.drowning
+  | typeof OUTCOME.travel
   | typeof OUTCOME.rations
   | typeof OUTCOME.recruit
   | typeof OUTCOME.retention_check

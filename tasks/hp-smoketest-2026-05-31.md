@@ -12,7 +12,8 @@ Run cold: hard-refresh both browsers onto prod first.
 | 2 | VEHICLES-AS-COVER | `f264f7b` | shipped |
 | 3 | ITEM CONDITION + Upkeep tests | `724a1e2` | shipped (refactor + tests; behavior unchanged) |
 | 4 | CONDITIONS PHASE-2 | (no commit) | VERIFY-FIRST: no work needed (see todo) |
-| 5 | ENV DAMAGE TRIO | (next push) | shipped (Falling + Drowning helpers + Env Dmg button; Subsistence already on clock) |
+| 5 | ENV DAMAGE TRIO | `1b5b958` | shipped (Falling + Drowning helpers + Env Dmg button; Subsistence already on clock) |
+| 6 | TRAVEL TIMES | (next push) | shipped (push cost helper + Travel button + clock advance) |
 
 ---
 
@@ -224,3 +225,68 @@ the damage land. GM has the PC card open.
   field. Surfacing it as an auto-source on resist checks is a follow-up.
 - Athletics Wild Success "Fill in the Gaps" mitigation on falls is a GM
   judgement call, not auto-applied.
+
+---
+
+## #6 - Travel Times (push-past-8h costs RP, advances clock)
+
+**Spec recap:** standard cycle = 8h travel + 8h rest + 8h sleep = 24h, no RP
+cost. Pushing past 8h of contiguous travel costs 1 RP per additional hour.
+0 RP drops to Incapacitated (existing incap path handles it).
+
+**What I shipped:**
+- `lib/travel.ts` with `travelPushCost(hours)` returning
+  `{ rp, pushHours }`. 10 unit tests covering 0/exactly-8/9/12/16 hours,
+  fractional inputs (floored), NaN/Infinity/negative defenses.
+- New OUTCOME tag `travel`.
+- New `Travel` button on the CharacterCard combat-toolbar (between
+  Env Dmg and Rest). Prompts for hours; if > 8, drains RP, advances the
+  campaign clock, writes a tagged feed row. Per-PC like Rest - the GM
+  clicks for each character on a long haul.
+
+**Setup:** PC in a campaign session with full or near-full RP, GM has the
+PC card open.
+
+**Run (within-cap):**
+1. Click `Travel` on the PC card.
+2. Enter `8` for hours.
+
+**PASS criteria (within-cap):**
+- No RP change (8 = cap).
+- Campaign clock advances 8h.
+- Feed row: `Cree traveled 8 hours (within the 8h soft cap; no RP cost)`
+  with `outcome='travel'`.
+
+**Run (push):**
+1. Click `Travel`.
+2. Enter `12` for hours.
+
+**PASS criteria (push):**
+- PC's RP drops by 4 (12 - 8 = 4 push hours).
+- Campaign clock advances 12h.
+- Feed row: `Cree pushed travel 12 hours (-4 RP for 4 hours past the 8h cap)`.
+- If the RP hit drops the PC to 0, the next attempted action (or the
+  existing incap path) should trigger the Incapacitated state.
+- System "Time advances 12 hours" row also appears (from `advanceClock`).
+
+**FAIL clues:**
+- RP doesn't drain on 12h -> the `travelPushCost` import broke or the
+  Math.floor regressed.
+- Clock doesn't advance -> the `advanceClock` import path broke.
+- Wrong push hours in label -> formula regression in `lib/travel.ts`; the
+  10 unit tests should catch this.
+- No feed row -> `insertRollLog` failed; check console for
+  `[travel] clock advance / log insert failed`.
+
+**Known edges / follow-ups:**
+- Per-PC button means a 5-character party on a 12h haul = 5 clicks. A
+  party-wide "Travel for the whole party" action on the campaign sheet
+  is the natural follow-up; Puffer's spec flagged this as a design Q.
+- The CampaignMap measure tool already shows travel-time estimates per
+  mode (walking / bicycle / minnie). A future tie-in: pick a destination
+  on the map, calculate the time from the route, and apply this same
+  helper without a manual hour entry.
+- Travel cost doesn't currently differentiate by transport mode (a
+  vehicle ride is the same as foot travel). Per CRB a vehicle reduces
+  the fatigue cost - follow-up when the vehicle-passenger mechanic
+  surfaces a "you're a passenger" tag.

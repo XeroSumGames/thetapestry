@@ -6,6 +6,7 @@ import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'
 import { advance as advanceClock } from '../lib/campaign-clock'
 import { fallingDamage, drowningDamage } from '../lib/env-damage'
+import { travelPushCost } from '../lib/travel'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
@@ -628,6 +629,39 @@ function CharacterCardImpl({
                       }
                     }
                   }} style={btn('#3a2a10', '#d4a87f')} title="Apply Falling or Drowning damage (Subsistence auto-drains via clock)">Env Dmg</button>
+                  <button onClick={async () => {
+                    // Travel push - GM enters total hours traveled; if > 8 the
+                    // character loses 1 RP per push-hour, the campaign clock
+                    // advances by those hours, and a tagged feed row writes.
+                    // Per-PC like Rest; the GM clicks per character after a haul.
+                    if (!localState) return
+                    const hoursStr = prompt('How many hours of contiguous travel?\n\n(8h = no cost; each hour past 8 drains 1 RP)', '8')?.trim()
+                    if (!hoursStr) return
+                    const hours = parseInt(hoursStr, 10)
+                    if (!Number.isFinite(hours) || hours <= 0) return
+                    const cost = travelPushCost(hours)
+                    const newRP = Math.max(0, localState.rp_current - cost.rp)
+                    onStatUpdate?.(localState.id, 'rp_current', newRP)
+                    if (campaignIdProp) {
+                      try {
+                        await advanceClock(campaignIdProp, hours)
+                        const { user } = await getCachedAuth()
+                        if (user) {
+                          const label = cost.rp === 0
+                            ? `${c.name} traveled ${hours} hours (within the 8h soft cap; no RP cost)`
+                            : `${c.name} pushed travel ${hours} hours (-${cost.rp} RP for ${cost.pushHours} hour${cost.pushHours === 1 ? '' : 's'} past the 8h cap)`
+                          await insertRollLog({
+                            campaign_id: campaignIdProp, user_id: user.id, character_name: c.name,
+                            label, die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                            outcome: 'travel',
+                            damage_json: { characterId: c.id, hours, pushHours: cost.pushHours, rpDealt: cost.rp },
+                          })
+                        }
+                      } catch (e) {
+                        console.error('[travel] clock advance / log insert failed:', e)
+                      }
+                    }
+                  }} style={btn('#10283a', '#7fb3d4')} title="Apply travel hours (push past 8h costs RP; advances the clock)">Travel</button>
                   <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')}>Rest</button>
                 </>
               )}
