@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-31 12:06 UTC
+
+**Status:** DRIFT (continuing — 34th flag; same 7 stale-as-done todos unresolved)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- No new issues since 09:03 UTC pulse. Same 7 unchecked todos remain open:
+  - H2 (Confidence Ledger refresh) — done in `52fe1d4`; debug-handoff shows 738/41
+  - H3 (HOPED-FOR drain) — done in `52fe1d4`; §3 DRAIN PASS 2026-05-30 present
+  - M2 (TacticalMap 14-day watch note) — done in `52fe1d4`; §1 watch note present
+  - M4 (Patterns learned 2026-05-30) — done in `52fe1d4`; §2 subsection present
+  - L78 (scene chooser): useSceneNav.ts + picker in codebase
+  - L100 (Initiative Round N): RollsFeed.tsx:520 renders `(Round ${round})`
+  - L175 (3-lane coordination): operating-mode.md + lane-protocol.md + active-lanes.md exist
+- HOPED-FOR items (Tier-2 Recruit, Advantages, FI streamline, Stress 12-string) still 12 days old; drain target = Beta-500 dry-run before 2026-07-01.
+
+**Action:** Same as 09:03 — HP mark H2/H3/M2/M4/L78/L100/L175 `[x]` in tasks/todo.md. 5-min sweep.
+
+---
+
 ## 2026-05-31 09:03 UTC
 
 **Status:** DRIFT (continuing — 33rd flag; 7 stale-as-done todos)
