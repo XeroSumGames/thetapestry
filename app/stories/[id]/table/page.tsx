@@ -1760,7 +1760,7 @@ export default function TablePage() {
         const [{ data: insertedDrop, error: dropInsertErr }, { error: dropLogErr }] = await Promise.all([
           supabase.from('initiative_order').insert(dropInsertRows).select(),
           insertRollLog([
-            { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
+            { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Into the Moment',
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.combat_start,
               damage_json: { combatants } as any, created_at: new Date(now).toISOString() },
             { campaign_id: id, user_id: userId, character_name: 'System',
@@ -1798,7 +1798,7 @@ export default function TablePage() {
       const [{ data: insertedInit, error: initInsertErr }, { error: rollInsertErr }] = await Promise.all([
         supabase.from('initiative_order').insert(toInsert).select(),
         insertRollLog([
-          { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
+          { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Into the Moment',
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.combat_start,
             damage_json: { combatants } as any, created_at: new Date(now).toISOString() },
           { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
@@ -2382,7 +2382,7 @@ export default function TablePage() {
     // Snapshot the combatants for the log entry before clearing initiative.
     const combatants = initiativeOrder.map(e => e.character_name)
     const { error: endLogErr } = await insertRollLog({
-      campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended',
+      campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Out of the Moment',
       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
       outcome: OUTCOME.combat_end,
       damage_json: { combatants } as any,
@@ -3367,7 +3367,7 @@ export default function TablePage() {
             if (error) console.error('[endSession] chat_messages delete failed:', error.message)
           }),
           combatActive ? Promise.all([
-            insertRollLog({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action }),
+            insertRollLog({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Out of the Moment', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action }),
             supabase.from('initiative_order').delete().eq('campaign_id', id),
           ]) : Promise.resolve(),
         ])
@@ -5342,19 +5342,19 @@ export default function TablePage() {
           <button onClick={startCombat} disabled={startingCombat}
             className="hdr-btn"
             style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat ? 0.5 : 1, cursor: startingCombat ? 'not-allowed' : 'pointer' }}>
-            {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
+            {startingCombat ? 'Rolling...' : '⚔️ Into the Moment'}
           </button>
         )}
         {gmLike && combatActive && (
           <button onClick={endCombat}
             className="hdr-btn"
             style={hdrBtn('#0f2035', '#7ab3d4', '#1a3a5c')}>
-            End Combat
+            End the Moment
           </button>
         )}
         {combatActive && (
           <div style={hdrBtn('#2a1210', '#f5a89a', '#c0392b')}>
-            In Combat
+            In the Moment
           </div>
         )}
         <div style={{ flex: 1 }} />
@@ -7087,7 +7087,7 @@ export default function TablePage() {
               type FolderBucket = { name: string; key: string; npcs: any[] }
               const folders: FolderBucket[] = []
               if (combatNpcsInOrder.length > 0) {
-                folders.push({ name: '⚔️ In Combat', key: '__combat__', npcs: combatNpcsInOrder })
+                folders.push({ name: '⚔️ In the Moment', key: '__combat__', npcs: combatNpcsInOrder })
               }
               // Community buckets - NPC is recruited (in playerNpcCommunityMap) and not in combat
               const communityBuckets = new Map<string, any[]>()
@@ -7235,7 +7235,7 @@ export default function TablePage() {
                       <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
                       {npcIsDead && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>💀 Dead</div>}
                       {npcIsMortal && <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>🩸 Mortally Wounded</div>}
-                      {inCombat && !npcIsDead && !npcIsMortal && <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In Combat</div>}
+                      {inCombat && !npcIsDead && !npcIsMortal && <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In the Moment</div>}
                       {!npc._combatOnly && npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
                         <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
                       )}
@@ -8395,7 +8395,7 @@ export default function TablePage() {
       {showNpcPicker && (
         <div onClick={() => setShowNpcPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Start Combat</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Into the Moment</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Select NPCs for this encounter</div>
             {(() => {
               // Exclude dead NPCs from the combat picker
@@ -8515,7 +8515,7 @@ export default function TablePage() {
               <button onClick={() => { setShowNpcPicker(false); setDropCharacter('') }} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={confirmStartCombat} disabled={startingCombat}
                 style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: startingCombat ? 'not-allowed' : 'pointer', opacity: startingCombat ? 0.6 : 1 }}>
-                {startingCombat ? 'Rolling...' : `⚔️ Start Combat${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
+                {startingCombat ? 'Rolling...' : `⚔️ Into the Moment${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
               </button>
             </div>
           </div>
