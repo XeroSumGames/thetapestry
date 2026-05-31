@@ -6,6 +6,26 @@ Iterate in Claude Chat Artifacts; final back to repo via HP wires. Voice: concre
 
 ---
 
+## Back-of-book features blurb (the compressed version)
+
+**THE TAPESTRY**
+*A virtual tabletop for Distemper*
+
+Survive together. Build something between sessions. Keep what you build.
+
+- **CHARACTERS** that carry across every campaign you play
+- **COMBAT** on a tactical map with grid, fog, and line-of-sight
+- **COMMUNITIES** you build and defend between sessions - morale, labor, who lives, who leaves
+- **A REAL WORLD MAP** for travel across the post-pandemic United States, with routes and travel time
+- **RUMORS** - modular adventures any GM can publish, remix, or just run
+- **WAR STORIES** - your campaigns archived as a library you can return to
+- **ONE GM PAYS, EVERY PLAYER FREE** - no per-seat fees, no upgrades to roll dice
+- **THE RULES ARE THE CODE** - canon enforced at the engine level, no house-rule math errors
+
+Public beta now. Kickstarter opens 2026-09-01.
+
+---
+
 ## /publiclanding
 
 ### Hero tagline (3 variants - pick one)
