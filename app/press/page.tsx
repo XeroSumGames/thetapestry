@@ -2,10 +2,12 @@
 // reviewers, YouTubers, and bloggers who land here from outreach or
 // from /publiclanding's footer.
 //
-// DRAFT (2026-05-20). Placeholder copy + asset links. Real assets +
-// founder bio + final messaging supplied by Xero before reviewer
-// outreach starts (target 2026-05-28 to 2026-06-01 per
-// tasks/launch-plan-2026-06-15.md).
+// DRAFT (2026-05-20; date refs reconciled 2026-05-30). Placeholder
+// copy + asset links. Real assets + founder bio + final messaging
+// supplied by Xero ahead of KS reviewer outreach.
+// Active timeline: Beta-500 opens 2026-07-01, Kickstarter 2026-09-01.
+// Source-of-truth: tasks/north-star.md +
+// tasks/kickstarter-readiness-2026-09-01.md.
 
 import Link from 'next/link'
 

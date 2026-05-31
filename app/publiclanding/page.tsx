@@ -2,10 +2,14 @@
 // YouTubers, bloggers). Sidebar-suppressed via NO_SIDEBAR_PAGES in
 // LayoutShell.tsx; visible to ghosts via PUBLIC_PAGES.
 //
-// DRAFT (2026-05-20). Placeholder copy and screenshot boxes. Real
-// copy + assets to be supplied by Xero before 2026-06-15 launch.
-// Pairs with /press (press kit) and the launch plan at
-// tasks/launch-plan-2026-06-15.md.
+// DRAFT (2026-05-20; date refs reconciled 2026-05-30). Placeholder
+// copy and screenshot boxes. Real copy + assets to be supplied by
+// Xero per F2 in tasks/todo.md CURRENT OPEN.
+// Active timeline: Beta-500 opens 2026-07-01, Kickstarter 2026-09-01.
+// Source-of-truth: tasks/north-star.md +
+// tasks/kickstarter-readiness-2026-09-01.md +
+// tasks/beta-500-readiness-2026-06-01.md.
+// Pairs with /press (press kit).
 
 import Link from 'next/link'
 

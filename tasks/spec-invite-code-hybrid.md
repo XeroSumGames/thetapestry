@@ -184,4 +184,4 @@ A misconfigured deploy with `INVITE_REQUIRED=true` and no codes minted locks out
 
 ## 9. Maintenance
 
-Update `tasks/launch-plan-2026-06-15.md` invite-code section when this ships (mark the gate live). If the REQUIRED flag is ever flipped on for a launch, document the date + why in `tasks/decisions.md`. Add the `signup_invites` table to the RLS gap-sweep audit's Tier-1 list (it'll have full repo coverage from this spec's SQL).
+Update `tasks/beta-500-readiness-2026-06-01.md` (and `tasks/kickstarter-readiness-2026-09-01.md` if KS-relevant) when this ships - mark the gate live there, not in the archived `tasks/launch-plan-2026-06-15.md` (superseded 2026-05-20; see its status header). If the REQUIRED flag is ever flipped on for a launch, document the date + why in `tasks/decisions.md`. Add the `signup_invites` table to the RLS gap-sweep audit's Tier-1 list (it'll have full repo coverage from this spec's SQL).

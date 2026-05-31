@@ -33,7 +33,7 @@ Billing / GM-paid gating does NOT exist until ~10/1 (post-KS). **So through Beta
 ### D. Landing + pitch
 - [ ] **[OP/HP]** `/publiclanding` is REAL, not the placeholder stub (the audit flagged empty boxes). The hero must land.
 - [ ] **[OP] DECISION:** what does the KS "play the VTT" link point to (the F1 question) - the live signup, a guided demo, the Arena? Drives the funnel.
-- [ ] **[OP/HP]** Remove/repoint any stale launch dates in `publiclanding` / `press` (the dead `6/15` strings).
+- [x] **[PUFFER] DONE 2026-05-30** - repointed stale 6/15 refs in `app/publiclanding/page.tsx` + `app/press/page.tsx` (dev-facing top-of-file comments now cite the 7/1 Beta-500 / 9/1 KS timeline + active anchors). Rendered page copy is F2 / F4-F5 scope. Closes todo F3.
 
 ### E. Go / no-go
 All of A green (esp. the tactical-map gate) + B clear + C "fun, not empty" + D real -> GREEN to launch. Any A-item red -> hold.
