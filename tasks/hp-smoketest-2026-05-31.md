@@ -10,7 +10,9 @@ Run cold: hard-refresh both browsers onto prod first.
 |---|---|---|---|
 | 1 | REST FINISH | `2ea7aaf` | shipped |
 | 2 | VEHICLES-AS-COVER | `f264f7b` | shipped |
-| 3 | ITEM CONDITION + Upkeep tests | (next push) | shipped (refactor + tests; behavior unchanged) |
+| 3 | ITEM CONDITION + Upkeep tests | `724a1e2` | shipped (refactor + tests; behavior unchanged) |
+| 4 | CONDITIONS PHASE-2 | (no commit) | VERIFY-FIRST: no work needed (see todo) |
+| 5 | ENV DAMAGE TRIO | (next push) | shipped (Falling + Drowning helpers + Env Dmg button; Subsistence already on clock) |
 
 ---
 
@@ -153,3 +155,72 @@ weapon slot).
   (or `myEntry.liveState` is null - check the state is loaded).
 - Wild Success from Used moves to Pristine -> the Math.max(1, ...) floor
   regressed; Used is the cap per canon.
+
+---
+
+## #5 - Environmental damage (Falling + Drowning; Subsistence already shipped)
+
+**Verify-first finding:** Subsistence is already fully wired - auto-drains
+via the campaign-clock tick (`lib/campaign-clock.ts:drainSubsistenceDamage`,
+fires on every advance past day 2 without food). Only Falling + Drowning
+were net-new today.
+
+**What I shipped:**
+- `lib/env-damage.ts` with pure formulas: `fallingDamage(feetFallen)`,
+  `holdBreathRounds(phyAmod)`, `drowningDamage(phyAmod, submergedRounds)`,
+  `drowningResistCmod(phyAmod, submergedRounds)`, `subsistenceRecovery(...)`.
+- 25 unit tests covering canon edge cases (under-10 ft = 0, hold-breath
+  window math, cumulative resist CMod, recovery caps at max).
+- New `Env Dmg` button on the CharacterCard combat-toolbar row.
+- New OUTCOME tags `falling` + `drowning` so feed rows render with their
+  own outcome class.
+
+**Setup:** PC in a campaign session with less than max WP/RP so you can see
+the damage land. GM has the PC card open.
+
+**Run:**
+1. Click `Env Dmg` button (between Infection and Rest).
+2. Modal prompt: enter `1` for Falling.
+3. Modal prompt: enter `25` for feet fallen.
+4. Click OK.
+
+**PASS criteria (Falling):**
+- Character's WP drops by 6 and RP drops by 6 (25 ft = 2 segments of 10 ft = 6/6).
+- Roll feed shows: `Cree fell 25 ft (-6 WP, -6 RP)` with `outcome='falling'`.
+- 0-9 ft input results in no damage (under threshold).
+- If the damage drops WP to 0, the mortal-wound auto-fill should NOT
+  trigger (this path uses onStatUpdate which is fire-and-forget; the death
+  countdown + stress would need the Apply Damage RPC path for full
+  cascade - flagged as a known edge below).
+
+**Run (Drowning):**
+1. Click `Env Dmg`.
+2. Enter `2` for Drowning.
+3. Enter `8` for rounds submerged (PC at PHY 0 has a 6-round hold-breath window).
+
+**PASS criteria (Drowning):**
+- Window = 6 + PHY AMod rounds. At PHY 0, window = 6.
+- Within window (rounds <= window): no damage; feed says "held breath N
+  rounds (within X-round window; no damage)".
+- 1 round past = 3 WP + 3 RP.
+- 8 rounds at PHY 0 = (8-6) * 3 = 6 WP + 6 RP.
+- A PC with PHY +2 has window 8, so 8 rounds = 0 damage.
+
+**FAIL clues:**
+- Damage doesn't apply -> `onStatUpdate` not called; check the modal
+  prompt cancel path doesn't swallow the click.
+- Wrong amount -> formula regression in `lib/env-damage.ts`; the 25 unit
+  tests should catch this.
+- No feed row -> `insertRollLog` failed; check console for
+  `[env-damage] log insert failed`.
+
+**Known edges / follow-ups:**
+- WP drop to 0 via env damage does NOT trigger the mortal-wound auto-fill
+  (death_countdown + stress) the way the gm_apply_damage RPC does.
+  Manually set death_countdown via the GM tools if needed, or follow up
+  with an extended RPC that accepts a damage kind tag.
+- Drowning resist CMod (-1 per round past window) is NOT auto-applied
+  to subsequent roll modals - the GM enters it manually in the CMod
+  field. Surfacing it as an auto-source on resist checks is a follow-up.
+- Athletics Wild Success "Fill in the Gaps" mitigation on falls is a GM
+  judgement call, not auto-applied.

@@ -54,7 +54,7 @@ describe('OUTCOME - event tags (lowercase, key matches value)', () => {
     'action', 'barter', 'cdp', 'clothed_check', 'combat_end', 'combat_start',
     'coordinate', 'death', 'defer', 'drop', 'encumbrance', 'evolution',
     'fed_check', 'incap', 'initiative', 'loot', 'morale_check', 'pending_heal',
-    'rest', 'rations', 'recruit', 'retention_check', 'revive', 'sprint', 'stress',
+    'rest', 'falling', 'drowning', 'rations', 'recruit', 'retention_check', 'revive', 'sprint', 'stress',
     'subsistence',
   ] as const
 
@@ -132,14 +132,14 @@ describe('outcomeKind discriminator', () => {
     }
   })
 
-  it('counts: 6 roll + 3 grapple + 31 event = 40 total', () => {
+  it('counts: 6 roll + 3 grapple + 33 event = 42 total', () => {
     const values = Object.values(OUTCOME)
     const rollCount = values.filter(v => isRollResult(v as RollOutcome)).length
     const grappleCount = values.filter(v => isGrappleResult(v as RollOutcome)).length
     const eventCount = values.filter(v => isEventTag(v as RollOutcome)).length
     expect(rollCount).toBe(6)
     expect(grappleCount).toBe(3)
-    expect(eventCount).toBe(31)
+    expect(eventCount).toBe(33)
     expect(rollCount + grappleCount + eventCount).toBe(values.length)
   })
 })

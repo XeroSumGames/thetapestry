@@ -58,6 +58,10 @@ export const OUTCOME = {
   // PC rested for some duration: WP/RP recover per canon (never-MW = 1 WP/day;
   // was-MW = 1 WP / 2 days; 1 RP/hour). damage_json carries hours + heal totals.
   rest: 'rest',
+  // Environmental damage one-shots (CRB Ch. 07 pp. 116-117). GM-button driven.
+  // damage_json carries { feetFallen, wpDealt, rpDealt } / { submergedRounds, wpDealt, rpDealt }.
+  falling: 'falling',
+  drowning: 'drowning',
   rations: 'rations',
   recruit: 'recruit',
   retention_check: 'retention_check',
@@ -141,6 +145,8 @@ export type EventTag =
   | typeof OUTCOME.morale_check
   | typeof OUTCOME.pending_heal
   | typeof OUTCOME.rest
+  | typeof OUTCOME.falling
+  | typeof OUTCOME.drowning
   | typeof OUTCOME.rations
   | typeof OUTCOME.recruit
   | typeof OUTCOME.retention_check
