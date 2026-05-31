@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-31 06:05 UTC
+
+**Status:** DRIFT (continuing — 32nd flag; significantly reduced since 00:05 pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [738 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Progress since 00:05 pulse:** `52fe1d4` closed H1+H2+H3+M2+M4 (Confidence Ledger refreshed to 738/41, HOPED-FOR drain pass applied, TacticalMap watch note added, Patterns-2026-05-30 subsection added, as-any ledger updated). `52e2911` closed M5+L3 (realtime-wrap bypass finding doc + useEffect audit done).
+
+**Drift:**
+- HOPED-FOR still in ledger (Tier-2 Recruit, Advantages, FI streamline, Stress Check 12-string, Vehicle popout broadcasts) — 12 days; drain target now explicitly set to "next full Beta-500 dry-run playtest before 2026-07-01" (updated in 52fe1d4).
+- Stale-as-done todos (3 items audit-correction needed):
+  - `useSceneNav.ts` exists (2026-05-25): "Scene navigation for the table header's Tactical Map dropdown" — matches spec. Scene chooser todo item still `[ ]`.
+  - Initiative "Round N": write side shipped (`table/page.tsx:1806,1891,2148` write `round` into `damage_json`); render side at `RollsFeed.tsx:520` present. Both halves done; todo still `[ ]`.
+  - 3-lane COORDINATION todo (line 175): `operating-mode.md` already contains the 3-lane description; `lane-protocol.md` + `active-lanes.md` exist. Still `[ ]`.
+
+**Action:** HP — mark 3 stale-as-done todo items `[x]` (scene-chooser, Initiative Round N, 3-lane coordination). HOPED-FOR drain event = next Beta-500 dry-run (target 2026-07-01); no action needed until then.
+
+---
+
 ## 2026-05-31 00:05 UTC
 
 **Status:** DRIFT (continuing — 31st flag)
