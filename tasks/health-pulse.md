@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-31 18:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [822 passed, 45 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- **Confidence Ledger stale:** live suite 822/45; debug-handoff.md §3 still shows 738/41. 4 new test files landed since last refresh: `vehicle-cover` (12), `env-damage` (25), `upkeep` (33), `travel` (10); `roll-outcomes` grew 48→52. Run `scripts/refresh-ledger.mjs` to update §3.
+- **5 of 6 KS mechanics shipped since 15:07 pulse:** `f264f7b` vehicles-as-cover (#2), `724a1e2` upkeep extract (#3), `1b5b958` env-damage/Falling+Drowning (#4), `e7b1e56` travel (#5). Combined with REST (#1) from before — 5 of 6 done. `todo.md:12` "6 mechanics still owe real code" is still `[ ]`.
+- **Carry-over (15:07):** `todo.md:63` (#2 BLOCKER parent) + Upstash dup — still `[ ]`.
+- HOPED-FOR (Tier-2 Recruit, Advantages, FI streamline, Stress 12-string): 12+ days old; drain target = Beta-500 dry-run before 2026-07-01. No action needed yet.
+
+**Action:** HP — (1) run `node scripts/refresh-ledger.mjs` + commit to update debug-handoff.md §3 to 822/45; (2) annotate todo.md:12 with "5 of 6 shipped"; (3) mark `todo.md:63` #2 BLOCKER parent `[x]` + Upstash dup `[x]`.
+
+---
+
 ## 2026-05-31 15:07 UTC
 
 **Status:** DRIFT
