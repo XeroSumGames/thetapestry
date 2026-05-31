@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-05-31 15:07 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [739 passed, 41 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- Previous 7 stale items (H2/H3/M2/M4/L78/L100/L175) RESOLVED since 12:06 pulse (`99ef1b1` + `ea5d234`). 2 new stale-as-done items found:
+  - `todo.md:63` `#2 BLOCKER - characters cross-user write` — all sub-items `[x]`, last says "fully covered end-to-end", parent still `[ ]`
+  - `todo.md:~232` `[HIGH] Set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN` — done 2026-05-26 (CURRENT OPEN line 61 `[x]`), dup tracking item still `[ ]`
+- HOPED-FOR (Tier-2 Recruit, Advantages, FI streamline, Stress 12-string): 12+ days old; drain target = Beta-500 dry-run before 2026-07-01. No action needed yet.
+- `2ea7aaf feat(rest): wire Rest button to clock advance + roll_log feed row` shipped since last pulse — passes all gates, Rest mechanic #1 of 6 in progress.
+
+**Action:** HP — mark `todo.md:63` (#2 BLOCKER parent) `[x]` + mark the Upstash dup item `[x]`. Both are confirmed-done stale checkboxes.
+
+---
+
 ## 2026-05-31 12:06 UTC
 
 **Status:** DRIFT (continuing — 34th flag; same 7 stale-as-done todos unresolved)
