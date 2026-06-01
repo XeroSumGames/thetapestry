@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-01 12:05 UTC
+
+**Status:** DRIFT (carry-over — 09:06 actions still pending; 4th consecutive run, no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [841 passed, 46 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** no open PRs; gh CLI unavailable in sandbox
+
+**Drift:**
+- **4 carry-overs (unresolved since 00:06 — 4 runs):**
+  - Confidence Ledger: debug-handoff.md §3 still says 738/41 → live 841/46. Run `node scripts/refresh-ledger.mjs`.
+  - `todo.md:37` "6 mechanics still owe real code" still `[ ]` — all 6 done. Mark `[x]`.
+  - `todo.md:88` #2 BLOCKER parent still `[ ]` — all 8 sub-flows closed + verified. Mark `[x]`.
+  - `todo.md:44` AUDIT M1 still `[ ]` — duplicate of closed `[x]` at line 32. Mark `[x]`.
+- **HOPED-FOR (13+ days):** Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string — drain target Beta-500 before 2026-07-01.
+
+**Action:** HP — 4 housekeeping tasks: run `node scripts/refresh-ledger.mjs`; mark todo lines 37, 88, 44 `[x]`. (Flagged every run since midnight; needs HP pickup.)
+
+---
+
 ## 2026-06-01 09:06 UTC
 
 **Status:** DRIFT (carry-over — 06:04 actions still pending; no new findings)
