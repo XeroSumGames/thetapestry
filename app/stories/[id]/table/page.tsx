@@ -6016,7 +6016,7 @@ export default function TablePage() {
 
                 {/* ── FIRE FROM COVER: both actions, fire weapon + keep cover defense ── */}
                 {activeEntry.has_cover && w ? (
-                  <button onClick={has2Actions ? () => {
+                  <button onClick={(has2Actions && !isBroken && !outOfAmmo) ? () => {
                     const rapid = charEntry?.character.data?.rapid ?? {}
                     const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
                     const attrKey = isMelee ? 'PHY' : 'DEX'
@@ -6027,8 +6027,9 @@ export default function TablePage() {
                     const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
                     actionCostRef.current = 2
                     handleRollRequest(`${activeEntry.character_name} - Fire from Cover (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits })
-                  } : undefined} disabled={!has2Actions}
-                    style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Fire from Cover</button>
+                  } : undefined} disabled={!has2Actions || isBroken || outOfAmmo}
+                    title={isBroken ? `${w.name} is Broken - repair via Upkeep Check` : outOfAmmo ? `${w.name} is empty - Reload via Ready Weapon` : undefined}
+                    style={(has2Actions && !isBroken && !outOfAmmo) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Fire from Cover{isBroken ? ' - Broken' : outOfAmmo ? ' - empty' : ''}</button>
                 ) : null}
 
                 {/* ── GRAPPLE: Opposed Unarmed Combat check ── */}
@@ -6069,7 +6070,7 @@ export default function TablePage() {
 
                 {/* ── RAPID FIRE: -1 CMod first shot, -3 CMod second. Both actions: -2/-4 ── */}
                 {w && !isMelee ? (
-                  <button onClick={has2Actions ? () => {
+                  <button onClick={(has2Actions && !isBroken && !outOfAmmo) ? () => {
                     clearAimIfActive(activeEntry.id)
                     const rapid = charEntry?.character.data?.rapid ?? {}
                     const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
@@ -6080,8 +6081,9 @@ export default function TablePage() {
                     const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
                     actionCostRef.current = 2
                     handleRollRequest(`${activeEntry.character_name} - Rapid Fire (${w.name}) [-1 CMod, then -3]`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) - 1, traits: w.traits })
-                  } : undefined} disabled={!has2Actions}
-                    style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Rapid Fire</button>
+                  } : undefined} disabled={!has2Actions || isBroken || outOfAmmo}
+                    title={isBroken ? `${w.name} is Broken - repair via Upkeep Check` : outOfAmmo ? `${w.name} is empty - Reload via Ready Weapon` : undefined}
+                    style={(has2Actions && !isBroken && !outOfAmmo) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Rapid Fire{isBroken ? ' - Broken' : outOfAmmo ? ' - empty' : ''}</button>
                 ) : (
                   <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Rapid Fire</button>
                 )}
