@@ -8,6 +8,7 @@ import Link from 'next/link'
 import NotificationBell from './NotificationBell'
 import MessagesBell from './MessagesBell'
 import BugReportButton from './BugReportButton'
+import RecorderToggleButton from './RecorderToggleButton'
 
 // Left sidebar - restructured 2026-04-22 per user spec:
 //
@@ -48,6 +49,7 @@ export default function Sidebar() {
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
   const [onlineCount, setOnlineCount] = useState(0)
   // Thriver-only roster of currently-online users. Surfaces as a hover
@@ -68,6 +70,7 @@ export default function Sidebar() {
       if (!user) { setLoaded(true); return }
       const { data: profile } = await supabase.from('profiles').select('username, role, avatar_url').eq('id', user.id).single()
       if (!profile) { setLoaded(true); return }
+      setUserId(user.id)
       setUsername(profile.username)
       setAvatarUrl((profile as any).avatar_url ?? null)
       setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
@@ -199,6 +202,12 @@ export default function Sidebar() {
                   notify_bug_report trigger which emails Xero via the
                   existing call_notify_thriver path. */}
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><BugReportButton /></div>
+              {/* Recorder toggle - Thriver-only diagnostic tool */}
+              {roleIsThriver(userRole) && userId && (
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                  <RecorderToggleButton userId={userId} />
+                </div>
+              )}
             </div>
           </>
         )}

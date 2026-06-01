@@ -218,6 +218,10 @@ export default function PlaytestRecorder() {
         origLog.call(console, `[playtest] dumped → ${name}`)
       } else if (k === 'm') {
         e.preventDefault()
+        if (!getRecorder()?.enabled) {
+          alert('Recorder is off - mark not saved. Click the ⏺ button in the sidebar to start recording.')
+          return
+        }
         const label = window.prompt('Mark this moment - what happened?')
         if (label) {
           record('mark', { label, path: window.location.pathname })

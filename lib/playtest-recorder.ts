@@ -132,6 +132,23 @@ export function writeCampaignEnabled(campaignId: string, enabled: boolean) {
   } catch { /* quota / no storage */ }
 }
 
+// Per-user (sidebar chrome) persisted-enabled accessors. Separate key prefix
+// so a Thriver may have both a chrome toggle AND a per-campaign table toggle.
+const USER_ENABLED_KEY_PREFIX = 'tapestry_recorder_user_enabled_'
+
+export function readUserEnabled(userId: string): boolean {
+  if (typeof window === 'undefined') return false
+  try { return localStorage.getItem(USER_ENABLED_KEY_PREFIX + userId) === '1' } catch { return false }
+}
+
+export function writeUserEnabled(userId: string, enabled: boolean) {
+  if (typeof window === 'undefined') return
+  try {
+    if (enabled) localStorage.setItem(USER_ENABLED_KEY_PREFIX + userId, '1')
+    else localStorage.removeItem(USER_ENABLED_KEY_PREFIX + userId)
+  } catch { /* quota / no storage */ }
+}
+
 // Start a periodic flush so a browser crash mid-session loses ≤60s of
 // trailing context instead of everything since the last error/mark.
 // Idempotent: if a timer is already running, this no-ops. PlaytestRecorder
