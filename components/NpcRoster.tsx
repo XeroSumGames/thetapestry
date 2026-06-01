@@ -249,7 +249,7 @@ interface Props {
   combatActive?: boolean
   initiativeNpcIds?: Set<string>
   initiativeNpcOrder?: string[]   // NPC ids in turn order; first = currently acting
-  onAddToCombat?: (npcs: CampaignNpc[]) => void
+  onAddToCombat?: (npcs: CampaignNpc[], hiddenFromPlayers?: boolean) => void
   pcEntries?: PCEntry[]
   onViewNpc?: (npc: CampaignNpc) => void
   viewingNpcIds?: Set<string>
@@ -671,6 +671,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   const [showCombatPicker, setShowCombatPicker] = useState(false)
   const [combatPickerIds, setCombatPickerIds] = useState<Set<string>>(new Set())
+  const [combatPickerHidden, setCombatPickerHidden] = useState(false)
   // Multi-select mode for cross-folder bulk Hide/Reveal. Folder-level
   // and global Show-All shipped earlier - this is "I want to hide
   // these 7 NPCs scattered across 3 folders in one click." Clicking
@@ -694,9 +695,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   function handleAddToCombat() {
     const selected = npcs.filter(n => combatPickerIds.has(n.id))
-    if (selected.length > 0 && onAddToCombat) onAddToCombat(selected)
+    if (selected.length > 0 && onAddToCombat) onAddToCombat(selected, combatPickerHidden)
     setShowCombatPicker(false)
     setCombatPickerIds(new Set())
+    setCombatPickerHidden(false)
   }
 
   async function handleRelationshipChange(characterId: string, cmod: number) {
@@ -2200,8 +2202,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 </label>
               ))}
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={combatPickerHidden} onChange={e => setCombatPickerHidden(e.target.checked)} style={{ accentColor: '#EF9F27' }} />
+              <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif' }}>Hidden from players (no initiative entry, token invisible)</span>
+            </label>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setShowCombatPicker(false)} style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowCombatPicker(false); setCombatPickerHidden(false) }} style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleAddToCombat} disabled={combatPickerIds.size === 0}
                 style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: combatPickerIds.size === 0 ? 'not-allowed' : 'pointer', opacity: combatPickerIds.size === 0 ? 0.5 : 1 }}>
                 Add {combatPickerIds.size > 0 ? `(${combatPickerIds.size})` : ''}

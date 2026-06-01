@@ -82,3 +82,11 @@ export function campaignVehiclesOnly(campaignId: string) {
 export function campaignInitiativeOrder(campaignId: string) {
   return db().from('initiative_order').select('character_id,npc_id,character_name,is_active').eq('campaign_id', campaignId)
 }
+/** Reveal a hidden initiative entry (GM-only action - no separate RLS needed). */
+export function revealInitiativeEntry(id: string) {
+  return db().from('initiative_order').update({ hidden_from_players: false }).eq('id', id)
+}
+/** Make a scene token visible by npc_id (Reveal hidden NPC flow). */
+export function makeTokenVisibleByNpc(sceneId: string, npcId: string) {
+  return db().from('scene_tokens').update({ is_visible: true }).eq('scene_id', sceneId).eq('npc_id', npcId)
+}

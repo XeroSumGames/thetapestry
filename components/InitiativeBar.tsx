@@ -95,6 +95,8 @@ export interface InitiativeBarProps {
   onAddNPC: (name: string, npcId?: string | null) => void | Promise<void>
   onGrantAction: (entry: any) => void | Promise<void>
   onSkipTurn: (entry: any) => void | Promise<void>
+  /** Reveal a hidden NPC: sets hidden_from_players=false + token visible. GM only. */
+  onRevealHidden?: (entry: any) => void | Promise<void>
   /** Current combat round number - appended to the "INITIATIVE"
    *  label as "INITIATIVE · ROUND N" so round + initiative read
    *  as one cohesive header instead of two stacked rows. */
@@ -115,6 +117,7 @@ function InitiativeBarImpl({
   onAddNPC,
   onGrantAction,
   onSkipTurn,
+  onRevealHidden,
 }: InitiativeBarProps) {
   // Toolbar UI state - fully owned by the bar.
   const [showAddPC, setShowAddPC] = useState(false)
@@ -207,6 +210,9 @@ function InitiativeBarImpl({
     }
   }
 
+  // True when the active entry is an NPC hidden from players.
+  const activeIsHidden = !isGM && !!(active?.hidden_from_players)
+
   // Filter out ONLY truly-dead combatants (status='dead' or fully-elapsed
   // death countdown). Mortally-wounded and incapacitated stay visible
   // with their status icons. Skip-walk in nextTurn handles act-eligibility.
@@ -230,6 +236,9 @@ function InitiativeBarImpl({
     return true
   })
 
+  // Players only see non-hidden entries; GM sees all (with HIDDEN chip).
+  const visibleAlive = isGM ? alive : alive.filter(e => !e.hidden_from_players)
+
   // PCs not currently in initiative - used by the "+ PC" picker.
   const inInitCharIds = new Set(initiativeOrder.filter(e => e.character_id).map(e => e.character_id))
   const addablePCs = entries.filter(e => !inInitCharIds.has(e.character.id))
@@ -251,7 +260,7 @@ function InitiativeBarImpl({
               title={
                 isGM
                   ? (pillStuck ? `${active.character_name} can't act - click to advance past them` : `Click to advance past ${active.character_name}`)
-                  : `Current turn: ${active.character_name}`
+                  : activeIsHidden ? 'GM is taking a turn' : `Current turn: ${active.character_name}`
               }
               style={{
                 fontSize: '13px',
@@ -267,12 +276,21 @@ function InitiativeBarImpl({
                 whiteSpace: 'nowrap',
                 cursor: isGM ? 'pointer' : 'default',
               }}>
-              → {compactName(active.character_name)}{pillStuck ? ' ⚠' : ''}
+              → {activeIsHidden ? 'Waiting...' : compactName(active.character_name)}{pillStuck ? ' ⚠' : ''}
             </div>
           )}
         </div>
 
-        {alive.map((entry, idx) => {
+        {/* "Waiting..." placeholder card on player view when the active entry is hidden */}
+        {activeIsHidden && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #7fc458', borderRadius: '3px', flexShrink: 0, opacity: 0.7 }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Waiting...</span>
+            <span style={{ fontSize: '13px', letterSpacing: '2px' }}>
+              <span style={{ color: '#7fc458' }}>●</span><span style={{ color: '#7fc458' }}>●</span>
+            </span>
+          </div>
+        )}
+        {visibleAlive.map((entry, idx) => {
           // Green = active, Red = already acted, Yellow = waiting
           const hasActed = !entry.is_active && entry.actions_remaining != null && entry.actions_remaining <= 0
           const borderColor = entry.is_active ? '#7fc458' : hasActed ? '#c0392b' : '#EF9F27'
@@ -335,9 +353,19 @@ function InitiativeBarImpl({
                   )}
                 </div>
               )}
-              <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+              <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.hidden_from_players ? '#9a8a6a' : (entry.is_active ? '#f5f2ee' : '#d4cfc9'), fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', opacity: entry.hidden_from_players ? 0.8 : 1 }}>
                 {compactName(entry.character_name)}
               </span>
+              {/* GM-only HIDDEN chip + Reveal button */}
+              {isGM && entry.hidden_from_players && (
+                <>
+                  <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>HIDDEN</span>
+                  {onRevealHidden && (
+                    <button onClick={() => onRevealHidden(entry)}
+                      style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Reveal to players">👁</button>
+                  )}
+                </>
+              )}
               <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
               <span style={{ fontSize: '13px', letterSpacing: '2px' }}>
                 {Array.from({ length: 2 }).map((_, i) => {
@@ -354,7 +382,7 @@ function InitiativeBarImpl({
               )}
               {statusIcons}
               {/* Defer - GM can defer anyone, players can defer their own */}
-              {(isGM || entry.user_id === userId) && idx < initiativeOrder.length - 1 && (
+              {(isGM || entry.user_id === userId) && idx < visibleAlive.length - 1 && (
                 <button onClick={() => onDefer(entry.id)}
                   style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Defer">↓</button>
               )}

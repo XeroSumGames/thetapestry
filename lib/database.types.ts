@@ -1698,6 +1698,7 @@ export type Database = {
           defense_bonus: number
           grappled_by: string | null
           has_cover: boolean
+          hidden_from_players: boolean
           id: string
           inspired_this_round: boolean
           is_active: boolean | null
@@ -1724,6 +1725,7 @@ export type Database = {
           defense_bonus?: number
           grappled_by?: string | null
           has_cover?: boolean
+          hidden_from_players?: boolean
           id?: string
           inspired_this_round?: boolean
           is_active?: boolean | null
@@ -1750,6 +1752,7 @@ export type Database = {
           defense_bonus?: number
           grappled_by?: string | null
           has_cover?: boolean
+          hidden_from_players?: boolean
           id?: string
           inspired_this_round?: boolean
           is_active?: boolean | null
@@ -3766,6 +3769,14 @@ export type Database = {
           p_scene_id: string
           p_target_x: number
           p_target_y: number
+        }
+        Returns: undefined
+      }
+      toggle_wall_segment_door: {
+        Args: {
+          p_scene_id: string
+          p_segment_id: string
+          p_open: boolean
         }
         Returns: undefined
       }

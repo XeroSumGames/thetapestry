@@ -72,7 +72,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
-import { sceneTokenPositions } from '../../../../lib/data/tactical'
+import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc } from '../../../../lib/data/tactical'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { useSceneNav } from './useSceneNav'
 import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../lib/tactical-view'
@@ -2792,7 +2792,7 @@ export default function TablePage() {
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
   }
 
-  async function addNpcsToCombat(npcsToAdd: any[]) {
+  async function addNpcsToCombat(npcsToAdd: any[], hiddenFromPlayers?: boolean) {
     const rows = npcsToAdd.map(n => ({
       campaign_id: id,
       character_name: n.name,
@@ -2805,6 +2805,7 @@ export default function TablePage() {
       is_active: false,
       is_npc: true,
       actions_remaining: 2,
+      hidden_from_players: hiddenFromPlayers ? true : false,
     }))
     if (rows.length > 0) {
       await supabase.from('initiative_order').insert(rows)
@@ -2931,6 +2932,21 @@ export default function TablePage() {
     }
     await removeFromInitiative(entry.id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+  }
+
+  async function handleRevealHidden(entry: InitiativeEntry) {
+    if (!gmLike) return
+    await revealInitiativeEntry(entry.id)
+    if (entry.npc_id) {
+      const sceneId = await activeSceneId(supabase, id)
+      if (sceneId) await makeTokenVisibleByNpc(sceneId, entry.npc_id)
+    }
+    await insertRollLog({
+      campaign_id: id, user_id: userId, character_name: entry.character_name,
+      label: `${entry.character_name} reveals themselves!`,
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action,
+    })
+    await loadInitiative(id)
   }
 
   // ── TacticalMap callbacks - stable identity, fresh closures ──
@@ -5644,6 +5660,7 @@ export default function TablePage() {
             onAddNPC={addNPC}
             onGrantAction={handleGrantAction}
             onSkipTurn={handleSkipTurn}
+            onRevealHidden={handleRevealHidden}
             combatRound={combatRound}
           />
           {/* Action buttons - shown for active combatant or GM */}
