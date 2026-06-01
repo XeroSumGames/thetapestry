@@ -335,7 +335,14 @@ function InitiativeBarImpl({
           }
 
           return (
-            <div key={entry.id} style={{
+            // E2E hooks (combat-flow Phase B, 2026-05-31): per-row testid keyed
+            // on initiative_order.id; the active row also carries
+            // aria-current="true" so the spec can find it without computing the
+            // rotation (it keeps its per-id testid for ordering assertions).
+            <div key={entry.id}
+              data-testid={`initiative-row-${entry.id}`}
+              aria-current={entry.is_active ? 'true' : undefined}
+              style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '4px 10px',
               background: bgColor,

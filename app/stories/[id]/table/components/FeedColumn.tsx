@@ -114,7 +114,14 @@ export function FeedColumn({
               const isDiceRow = (r.die1 ?? 0) > 0 || (r.die2 ?? 0) > 0
               const rollerPc = isDiceRow ? entries.find(e => e.character.name === r.character_name) : null
               return (
-                <div key={r.id} style={{ position: 'relative' }}>
+                // E2E hooks (combat-flow Phase B, 2026-05-31): per-row testid
+                // keyed on roll_log.id; dice-result rows (attack/skill rolls)
+                // also get the roll-feed-attack-result class so the spec filters
+                // them without depending on label text.
+                <div key={r.id}
+                  data-testid={`roll-feed-row-${r.id}`}
+                  className={isDiceRow ? 'roll-feed-attack-result' : undefined}
+                  style={{ position: 'relative' }}>
                   <RollEntryCard
                     r={r as any}
                     expandedRollIds={rollsFeed.expandedRollIds}
@@ -170,7 +177,12 @@ export function FeedColumn({
             const isDiceRow = (r.die1 ?? 0) > 0 || (r.die2 ?? 0) > 0
             const rollerPc = isDiceRow ? entries.find(e => e.character.name === r.character_name) : null
             return (
-              <div key={`roll-${r.id}`} style={{ position: 'relative' }}>
+              // E2E hooks (combat-flow Phase B, 2026-05-31): same per-row testid
+              // + attack-result class as the combat/logs tab above.
+              <div key={`roll-${r.id}`}
+                data-testid={`roll-feed-row-${r.id}`}
+                className={isDiceRow ? 'roll-feed-attack-result' : undefined}
+                style={{ position: 'relative' }}>
                 <RollEntryCard
                   r={r as any}
                   expandedRollIds={rollsFeed.expandedRollIds}
