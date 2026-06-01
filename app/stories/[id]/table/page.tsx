@@ -5701,6 +5701,12 @@ export default function TablePage() {
               npcForWeapon?.skills?.weapon?.qty ??
               null
             const outOfThrows = !!w && w.category === 'explosive' && throwQty !== null && throwQty <= 0
+            // Broken gate - canon (/rules/combat/weapon-repair + /rules/equipment/
+            // item-condition): "a Broken weapon can't be used at all." Block every
+            // weapon-fire action on the readied weapon until it's repaired via
+            // Upkeep. Mirrors the ammo gate. Unarmed has no condition, so the
+            // melee/unarmed fallbacks (Charge, Subdue) stay available.
+            const isBroken = !!weaponData && weaponData.condition === 'Broken'
             const has2Actions = (activeEntry.actions_remaining ?? 0) >= 2
             const isGrappled = !!activeEntry.grappled_by
             const isGrappling = initiativeOrder.some(e => e.grappled_by === activeEntry.character_name)
@@ -5781,6 +5787,7 @@ export default function TablePage() {
                 {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
                   if (!w || !weaponData) { alert('No weapon readied.'); return }
+                  if (isBroken) { alert(`${w.name} is Broken and can't be used. Repair it (Upkeep Check) before firing.`); return }
                   if (outOfAmmo) { alert(`${w.name} is empty. Reload via Ready Weapon before firing again.`); return }
                   if (outOfThrows) { alert(`${w.name} - none left to throw.`); return }
                   const rapid = charEntry?.character.data?.rapid ?? {}
@@ -5831,10 +5838,10 @@ export default function TablePage() {
                   }
                   handleRollRequest(`${activeEntry.character_name} - Attack (${w.name})`, amod, smod, weaponCtx)
                 }}
-                  style={(w && !outOfAmmo && !outOfThrows) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
-                  disabled={!w || outOfAmmo || outOfThrows}
-                  title={outOfAmmo ? `${w?.name ?? 'Weapon'} is empty - Reload via Ready Weapon` : outOfThrows ? `${w?.name ?? 'Weapon'} - none left to throw` : undefined}>
-                  Attack{w ? ` (${w.name})` : ''}{outOfAmmo ? ' - empty, Reload' : ''}{outOfThrows ? ' - none left' : ''}
+                  style={(w && !isBroken && !outOfAmmo && !outOfThrows) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
+                  disabled={!w || isBroken || outOfAmmo || outOfThrows}
+                  title={isBroken ? `${w?.name ?? 'Weapon'} is Broken - repair via Upkeep Check` : outOfAmmo ? `${w?.name ?? 'Weapon'} is empty - Reload via Ready Weapon` : outOfThrows ? `${w?.name ?? 'Weapon'} - none left to throw` : undefined}>
+                  Attack{w ? ` (${w.name})` : ''}{isBroken ? ' - Broken' : ''}{outOfAmmo ? ' - empty, Reload' : ''}{outOfThrows ? ' - none left' : ''}
                 </button>
 
                 {/* ── CHARGE: both actions, melee/unarmed attack (always available) ── */}
