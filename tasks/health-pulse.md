@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-01 00:06 UTC
+
+**Status:** DRIFT (carry-over — 21:06 actions still pending)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [822 passed, 45 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- **21:06 carry-overs (3 HP actions, unresolved):**
+  - Confidence Ledger: debug-handoff.md §3 still shows 738/41 → live 822/45. Run `node scripts/refresh-ledger.mjs`.
+  - "6 mechanics" parent todo still `[ ]` — actually **6 of 6 done** (5 code-shipped + Conditions Phase-2 = no-real-work per verify-first finding). Mark `[x]`.
+  - #2 BLOCKER parent todo still `[ ]` despite all 8 sub-flows closed (cross-user RLS + trade RPC). Mark `[x]`.
+- **New since 21:06:** 1 commit `a7af4fa` docs(playtest) grapple modal routing to HP — properly filed `[ ]` in todo.
+- **HOPED-FOR (unchanged):** Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string — 13+ days, drain target Beta-500 before 2026-07-01. No immediate action.
+
+**Action:** HP — run refresh-ledger.mjs, mark "6 mechanics" `[x]`, mark #2 BLOCKER parent `[x]`.
+
+---
+
 ## 2026-05-31 21:06 UTC
 
 **Status:** DRIFT (carry-over — 18:06 actions not yet taken)
