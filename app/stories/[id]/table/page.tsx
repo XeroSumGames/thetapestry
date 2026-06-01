@@ -718,6 +718,7 @@ export default function TablePage() {
   const [grappleResult, setGrappleResult] = useState<{
     attackerName: string; defenderName: string
     aDie1: number; aDie2: number; aTotal: number; aOutcome: string
+    aCmod: number  // combined CMod (manual + Insight +3) - drives the result-line breakdown
     aDiceRolled?: number[]  // populated when attacker spent a 3d6 Insight Die - surfaces all three dice in the result card
     dDie1: number; dDie2: number; dTotal: number; dOutcome: string
     result: 'grappled' | 'failed' | 'no_victor'
@@ -8636,8 +8637,6 @@ export default function TablePage() {
           return 'Dire Failure'
         }
 
-        function isSuccess(outcome: string) { return outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight' }
-
         // Outcome tier - opposed-check ordering. Higher tier wins; same
         // tier ties. Per Xero's reading: Wild Success > Success and
         // Dire Failure < Failure (so a Failure beats a Dire Failure
@@ -8760,7 +8759,7 @@ export default function TablePage() {
 
           setGrappleResult({
             attackerName: active.character_name, defenderName: targetEntry.character_name,
-            aDie1, aDie2, aTotal, aOutcome, aDiceRolled,
+            aDie1, aDie2, aTotal, aOutcome, aCmod: totalCmod, aDiceRolled,
             dDie1, dDie2, dTotal, dOutcome,
             result, rpTarget: attackerWins ? targetEntry.character_name : defenderWins ? active.character_name : null,
             insightSpent,
@@ -8770,75 +8769,56 @@ export default function TablePage() {
           await consumeAction(active.id)
         }
 
+        // Reset every grapple-flow state and close. Used by the shell's
+        // Cancel (pre-roll) and Close (post-roll) paths.
+        const closeGrapple = () => {
+          setShowGrappleModal(false)
+          setGrappleResult(null)
+          setGrappleTarget(null)
+          setGrappleInsight('none')
+          setGrappleCmod('0')
+        }
+
+        // Shell `result` shape - attacker dice/total drive the top dice
+        // tiles; the opposed comparison + verdict live in renderOutcome,
+        // which reads the full grappleResult from closure (mirrors the
+        // Distract modal's renderOutcome pattern).
+        const grappleRollResult: SharedRollResult | null = grappleResult ? {
+          die1: grappleResult.aDie1,
+          die2: grappleResult.aDie2,
+          diceRolled: grappleResult.aDiceRolled,
+          amod: aPhyMod,
+          smod: aUnarmed,
+          cmod: grappleResult.aCmod,
+          total: grappleResult.aTotal,
+          outcome: grappleResult.aOutcome,
+        } : null
+
         return (
-          <div onClick={() => { if (!grappleResult) { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px' }}>
-              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Grapple - Opposed Check</div>
-              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{active.character_name}</div>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem' }}>
-                PHY {aPhyMod >= 0 ? '+' : ''}{aPhyMod} · Unarmed {aUnarmed >= 0 ? '+' : ''}{aUnarmed}
-              </div>
-
-              {grappleResult ? (
-                <>
-                  {/* Results */}
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
-                    {/* Attacker roll */}
-                    <div style={{ flex: 1, padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                      <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Attacker</div>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{grappleResult.attackerName}</div>
-                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
-                        {/* Show three dice when Insight Die 3d6 was spent, two otherwise */}
-                        {Array.isArray(grappleResult.aDiceRolled) && grappleResult.aDiceRolled.length > 0
-                          ? `${grappleResult.aDiceRolled.join(' + ')} = ${grappleResult.aTotal}`
-                          : `${grappleResult.aDie1} + ${grappleResult.aDie2} = ${grappleResult.aTotal}`}
-                      </div>
-                      {grappleResult.insightSpent && (
-                        <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '2px' }}>Insight Die spent</div>
-                      )}
-                      <div style={{ fontSize: '13px', color: isSuccess(grappleResult.aOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.aOutcome}</div>
-                    </div>
-                    {/* Defender roll */}
-                    <div style={{ flex: 1, padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                      <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Defender</div>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{grappleResult.defenderName}</div>
-                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
-                        {grappleResult.dDie1} + {grappleResult.dDie2} = {grappleResult.dTotal}
-                      </div>
-                      <div style={{ fontSize: '13px', color: isSuccess(grappleResult.dOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.dOutcome}</div>
-                    </div>
-                  </div>
-
-                  {/* Result banner */}
-                  <div style={{
-                    padding: '10px', borderRadius: '3px', textAlign: 'center', marginBottom: '1rem',
-                    fontSize: '16px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase',
-                    background: grappleResult.result === 'grappled' ? '#1a2e10' : grappleResult.result === 'failed' ? '#2a1210' : '#242424',
-                    border: `1px solid ${grappleResult.result === 'grappled' ? '#2d5a1b' : grappleResult.result === 'failed' ? '#c0392b' : '#3a3a3a'}`,
-                    color: grappleResult.result === 'grappled' ? '#7fc458' : grappleResult.result === 'failed' ? '#f5a89a' : '#d4cfc9',
-                  }}>
-                    {grappleResult.result === 'grappled' && `${grappleResult.defenderName} is Grappled!`}
-                    {grappleResult.result === 'failed' && 'Grapple Failed!'}
-                    {grappleResult.result === 'no_victor' && 'No Clear Victor'}
-                  </div>
-                  {grappleResult.rpTarget && (
-                    <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
-                      {grappleResult.rpTarget} takes 1 RP damage
-                    </div>
-                  )}
-
-                  <button onClick={() => { setShowGrappleModal(false); setGrappleResult(null); setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
-                    style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    Close
-                  </button>
-                </>
-              ) : !grappleTarget ? (
-                <>
-                  <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Select Target (Engaged)</div>
+          <RollModal
+            open={showGrappleModal}
+            onClose={closeGrapple}
+            title={active.character_name}
+            eyebrow="Grapple"
+            accent="#c0392b"
+            dimBackdrop={false}
+            subtitle={`PHY ${aPhyMod >= 0 ? '+' : ''}${aPhyMod} · Unarmed ${aUnarmed >= 0 ? '+' : ''}${aUnarmed}`}
+            rollFormula="2d6 + PHY + Unarmed + CMod"
+            amod={aPhyMod}
+            smod={aUnarmed}
+            cmod={parseInt(grappleCmod, 10) || 0}
+            setCmod={grappleResult ? undefined : (n) => setGrappleCmod(String(n))}
+            userInsightDice={charEntry?.liveState?.insight_dice ?? 0}
+            preRollInsight={grappleInsight}
+            setPreRollInsight={setGrappleInsight}
+            preRollExtras={!grappleResult ? (
+              !grappleTarget ? (
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '6px' }}>Select Target (Engaged)</div>
                   {engagedTargets.length === 0 ? (
                     <div style={{ padding: '1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>No targets within Engaged range</div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {engagedTargets.map(target => (
                         <button key={target.id} onClick={() => { setGrappleTarget(target); setGrappleInsight('none'); setGrappleCmod('0') }}
                           style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: target.is_npc ? '#7fc458' : '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}>
@@ -8847,60 +8827,66 @@ export default function TablePage() {
                       ))}
                     </div>
                   )}
-                  <button onClick={() => { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
-                    style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    Cancel
-                  </button>
-                </>
+                </div>
               ) : (
-                <>
-                  {/* Target confirmation + optional Insight Die spend before rolling */}
-                  <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Target</div>
-                  <div style={{ padding: '8px 12px', marginBottom: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: grappleTarget.is_npc ? '#7fc458' : '#c0392b' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>Target</span>
+                    <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
+                      style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', padding: 0 }}>Change</button>
+                  </div>
+                  <div style={{ padding: '8px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: grappleTarget.is_npc ? '#7fc458' : '#c0392b' }}>
                     {grappleTarget.character_name}{grappleTarget.is_npc ? ' (NPC)' : ''}
                   </div>
-                  {/* Conditional Modifier - manual numeric mod that stacks on
-                      top of PHY + Unarmed + Insight-Die bonus. Mirrors the
-                      input on the standard attack modal so GMs and players
-                      have a consistent place to add ad-hoc CMods (e.g. "+2
-                      for high ground", "-1 prone target"). */}
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Conditional Modifier</div>
-                    <input type="number" value={grappleCmod} onChange={e => setGrappleCmod(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') executeGrapple(grappleTarget!, grappleInsight) }}
-                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+                </div>
+              )
+            ) : null}
+            onRoll={() => { if (grappleTarget) executeGrapple(grappleTarget, grappleInsight) }}
+            rollDisabled={!grappleTarget}
+            rollLabel={grappleInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll Grapple'}
+            result={grappleRollResult}
+            renderOutcome={() => {
+              const gr = grappleResult!
+              const bannerBg = gr.result === 'grappled' ? '#1a2e10' : gr.result === 'failed' ? '#2a1210' : '#242424'
+              const bannerBorder = gr.result === 'grappled' ? '#2d5a1b' : gr.result === 'failed' ? '#c0392b' : '#3a3a3a'
+              const bannerColor = gr.result === 'grappled' ? '#7fc458' : gr.result === 'failed' ? '#f5a89a' : '#d4cfc9'
+              return (
+                <>
+                  {/* Attacker math line (the dice tiles above show the same dice). */}
+                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '4px' }}>
+                    [{Array.isArray(gr.aDiceRolled) && gr.aDiceRolled.length > 0 ? gr.aDiceRolled.join('+') : `${gr.aDie1}+${gr.aDie2}`}]
+                    {aPhyMod !== 0 && <span style={{ color: aPhyMod > 0 ? '#7fc458' : '#c0392b' }}> {aPhyMod > 0 ? '+' : ''}{aPhyMod} PHY</span>}
+                    {aUnarmed !== 0 && <span style={{ color: aUnarmed > 0 ? '#7fc458' : '#c0392b' }}> {aUnarmed > 0 ? '+' : ''}{aUnarmed} Unarmed</span>}
+                    {gr.aCmod !== 0 && <span style={{ color: gr.aCmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {gr.aCmod > 0 ? '+' : ''}{gr.aCmod} CMod</span>}
+                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {gr.aTotal}</span>
+                    <span style={{ color: outcomeColor(gr.aOutcome), fontWeight: 700 }}>  ·  {gr.aOutcome}</span>
                   </div>
-                  {/* Insight Die - PC attackers only, must have at least 1 die. Same
-                      two options as the main attack modal: 3d6 keep-all, or +3 CMod
-                      on 2d6. See grapple flow comment above. */}
-                  {charEntry?.liveState && charEntry.liveState.insight_dice >= 1 && (
-                    <div style={{ marginBottom: '1rem', padding: '8px', background: '#0f2010', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
-                      <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>
-                        Spend Insight Die? ({charEntry.liveState.insight_dice} available)
-                      </div>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button onClick={() => setGrappleInsight(grappleInsight === '3d6' ? 'none' : '3d6')}
-                          style={{ flex: 1, padding: '8px 4px', background: grappleInsight === '3d6' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${grappleInsight === '3d6' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          Roll 3d6<br /><span style={{ fontSize: '13px', color: grappleInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
-                        </button>
-                        <button onClick={() => setGrappleInsight(grappleInsight === '+3cmod' ? 'none' : '+3cmod')}
-                          style={{ flex: 1, padding: '8px 4px', background: grappleInsight === '+3cmod' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${grappleInsight === '+3cmod' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          +3 CMod<br /><span style={{ fontSize: '13px', color: grappleInsight === '+3cmod' ? '#7fc458' : '#cce0f5' }}>Added to roll</span>
-                        </button>
-                      </div>
+                  {gr.insightSpent && (
+                    <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '6px' }}>Insight Die spent</div>
+                  )}
+                  {/* Defender opposed roll. */}
+                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '1rem' }}>
+                    <span style={{ color: '#888', textTransform: 'uppercase', letterSpacing: '.06em' }}>vs {gr.defenderName}: </span>
+                    {gr.dDie1}+{gr.dDie2} = <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{gr.dTotal}</span>
+                    <span style={{ color: outcomeColor(gr.dOutcome), fontWeight: 700 }}>  ·  {gr.dOutcome}</span>
+                  </div>
+                  {/* Verdict banner. */}
+                  <div style={{ padding: '10px', borderRadius: '3px', textAlign: 'center', marginBottom: gr.rpTarget ? '8px' : '1rem', fontSize: '16px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', background: bannerBg, border: `1px solid ${bannerBorder}`, color: bannerColor }}>
+                    {gr.result === 'grappled' && `${gr.defenderName} is Grappled!`}
+                    {gr.result === 'failed' && 'Grapple Failed!'}
+                    {gr.result === 'no_victor' && 'No Clear Victor'}
+                  </div>
+                  {gr.rpTarget && (
+                    <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '1rem' }}>
+                      {gr.rpTarget} takes 1 RP damage
                     </div>
                   )}
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
-                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Back</button>
-                    <button onClick={() => executeGrapple(grappleTarget, grappleInsight)}
-                      style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      🎲 {grappleInsight === '3d6' ? 'Roll 3d6' : 'Roll Grapple'}
-                    </button>
-                  </div>
                 </>
-              )}
-            </div>
-          </div>
+              )
+            }}
+            postRollCloseLabel="Close"
+            onPostRollClose={closeGrapple}
+          />
         )
       })()}
 
