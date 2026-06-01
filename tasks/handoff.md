@@ -173,6 +173,47 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
+# Session state - 2026-05-31 (Hunt & Peck: 4 playtest findings from Puffer Fish routing)
+
+## Current HEAD: `d9f6dee` (verify with `git rev-parse --short HEAD`). Tests: verify with `npm test`. All guardrails green. Working tree has untracked CRB-rewrite files (untouched; do not commit). Everything ships to main (Vercel = live/dev env).
+
+## What shipped this session (2026-05-31, Hunt & Peck)
+
+Four findings from the 2026-05-31 playtest, routed from Puffer Fish:
+
+- **`b2e7663`** fix(tactical): player door/window toggle silently no-oped causing LoS desync. `toggle_wall_segment_door(p_scene_id, p_segment_id, p_open)` SECURITY DEFINER RPC added (`sql/toggle-wall-segment-door-2026-05-31.sql`, applied live); `toggleWallSegmentDoor` seam fn in `lib/data/tactical.ts`; player click-handler routes through RPC. GM bulk-authoring path unchanged. E2E net (`e2e/wall-segment-door-cross-client.spec.ts`) green.
+
+- **`544b4eb`** feat(combat): grapple canon expansion - defender action loss + grappler Subdue. Two canon changes: (A) successful grapple -> `consumeAction(targetEntry.id)` fires on the defender (auto-advances turn at 0); (B) `isGrappling` block now shows Subdue button (opens roll modal at 100% RP against grappled target, no release) + Release button alongside. Canon prose updated at `app/rules/combat/combat-rounds/page.tsx`. E2E net queued (Playwright lane).
+
+- **`ac27b8a`** feat(combat): hidden-NPC-in-initiative. `initiative_order.hidden_from_players boolean NOT NULL DEFAULT false` column added (`ed1f76e`, applied live); DB types updated. NpcRoster combat picker gets "Hidden from players" checkbox. InitiativeBar: non-GM sees filtered list + "Waiting..." placeholder on hidden-active turn; GM sees full list with amber HIDDEN chip + 👁 Reveal button. Reveal writes `hidden_from_players=false`, makes scene_token visible, posts reveal roll_log row. Seam fns `revealInitiativeEntry` + `makeTokenVisibleByNpc` in `lib/data/tactical.ts`. E2E net queued (Playwright lane).
+
+- **`d9f6dee`** feat(sidebar): ⏺ recorder toggle in user-header chrome (Thriver-only). New `components/RecorderToggleButton.tsx`; new `readUserEnabled`/`writeUserEnabled` in `lib/playtest-recorder.ts` (key prefix `tapestry_recorder_user_enabled_<userId>`). Sidebar passes `userId` to the button (5th icon cell, Thriver-gated). Ctrl+Shift+M now alerts instead of silent drop when recorder is off. `/table` Record button untouched (Phase A coexistence).
+
+**Test plan:** `tasks/playtest-findings-2026-05-31-testplan.md`
+
+## OPEN HP queue - next up
+
+1. **[QUEUED] grapple modal migration (Finding #5 - polish).** Grapple still uses hand-rolled inline JSX modal (`app/stories/[id]/table/page.tsx:8559+`). Migrate to `RollModal` shell per `tasks/modal-redesign-spec-2026-05-24.md`. Finding: `tasks/finding-grapple-old-modal-2026-05-31.md`. Not a table-blocker; visual brand inconsistency only.
+2. **[QUEUED] 4 combat-flow data-testids (E2E unblock, Xero-approved 2026-05-30).** `initiative-row-<entryId>`, `initiative-row-active`, `roll-feed-row-<rollId>`, `roll-feed-attack-result` - one additive commit, no behavior change. Per `tasks/e2e-combat-flow-plan-2026-05-30.md`.
+3. **[QUEUED] AUDIT M1** - add `prepareUpload('tactical-maps', file)` at `app/scene-controls-popout/page.tsx:316` + register bucket in `lib/safe-upload.ts`. ~15 min.
+4. **[QUEUED] 6 mechanics still owe code for 9/1 KS** - full list + priority order in `tasks/hp-pickup-mechanics-to-wire-2026-05-31.md`. Priority: Rest/heal finish -> Vehicles-as-Cover RDM bonus -> Item Condition/Upkeep completeness -> Conditions Phase-2 -> env damage trio -> Travel Times.
+5. **[ROUTED OBSERVATION] stuck-click clusters on canvas** (low-priority UX investigation) - 2 clusters in 2026-05-31 playtest recorder dump. See todo.md for full context.
+6. **[PENDING XERO] Vehicle damage logging** - 2 log entries wanted; awaiting pick on UX (apply-damage field vs per-click log).
+7. **[AUDIT M3] console.* sweep** - top 4 files: table-page 51, useRollResolution 19, campaign-clock 17, CampaignCommunity 10.
+8. **[AUDIT M5 / MEDIUM] realtime-wrap bypass sweep** - ~14 direct `supabase.channel(...)` sites outside `lib/realtime/*`. Finding: `tasks/finding-realtime-wrap-bypass-2026-05-30.md`. Path B stopgap first (~70 min), then guardrail script.
+9. **[KS IMPRESSION] F1-F6** - cold-`/` landing, publiclanding copy, GM first-action UX. F1 (decision memo `tasks/f1-cold-root-decision-memo-2026-05-30.md`) backburned by Xero 2026-05-30; F2 content awaiting Xero.
+
+## GOTCHAS (read before building)
+
+- **Todo lags the code - VERIFY vs code first.** Grep/git log before quoting scope.
+- **LOC ratchets:** `TacticalMap.tsx`, `page.tsx`, `app/vehicle/page.tsx` are god-components with LOC ceilings. Run `node scripts/check-arch.mjs` before shipping to them. `--save` only ratchets DOWN; `--save --force` re-baselines up (use sparingly; burned 2026-05-31 when finding #1 needed it twice - once for TacticalMap growth, once for page.tsx growth from finding #3).
+- **Seam constraint:** `.from(` calls must live in `lib/data/**`. Inline `.from()` in components fails the arch gate. Always add seam fns to `lib/data/tactical.ts` (or appropriate data lib) before using in components/pages.
+- **`lib/database.types.ts` is manual.** New DB columns/RPCs must be added there manually (no auto-generation workflow). Burned on `toggle_wall_segment_door` + `hidden_from_players` both in this session.
+- **Live-DB write = bright line:** confirm intent. `npx supabase db query --linked -f sql/<file>.sql`.
+- **Multi-lane:** fetch+rebase before every push.
+
+---
+
 # Session state - 2026-05-28 (Hunt & Peck: tactical-map render rewrite + vehicle/cargo UX)
 
 ## Current HEAD: `da7100b` (verify with `git rev-parse --short HEAD`). 707/707 tests (40 files). All guardrails green. Working tree clean. Everything ships to main (Vercel = live/dev env).
