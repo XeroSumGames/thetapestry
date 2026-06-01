@@ -11,10 +11,12 @@
 -- can zero or restore WP (gm_apply_damage RPC, manual dot-clicks, rest,
 -- streaming heals) keeps it correct - no per-call-site hooks.
 --
--- DRAFT for review (2026-05-31). NOT YET APPLIED. Apply with:
+-- APPLIED LIVE 2026-06-01 (Xero-authorized). Verified in catalog: column
+-- recovering_from_mortal_wound (boolean, default false) on character_states,
+-- function trg_maintain_mortal_recovery_flag, trigger
+-- maintain_mortal_recovery_flag all present. Mirrored into
+-- sql/_baseline/schema.sql. Applied with:
 --   npx supabase db query --linked -f sql/character-state-mortal-recovery-flag-2026-05-31.sql
--- then verify in pg_proc / information_schema and mirror into
--- sql/_baseline/schema.sql.
 --
 -- Backward-compatible: additive column with a default; the BEFORE UPDATE
 -- trigger only ever touches the new column. No em/en-dashes (live function

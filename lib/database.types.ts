@@ -756,6 +756,7 @@ export type Database = {
           insight_dice: number
           kicked: boolean
           morality: number
+          recovering_from_mortal_wound: boolean
           rp_current: number
           rp_max: number
           stress: number
@@ -781,6 +782,7 @@ export type Database = {
           insight_dice?: number
           kicked?: boolean
           morality?: number
+          recovering_from_mortal_wound?: boolean
           rp_current?: number
           rp_max?: number
           stress?: number
@@ -806,6 +808,7 @@ export type Database = {
           insight_dice?: number
           kicked?: boolean
           morality?: number
+          recovering_from_mortal_wound?: boolean
           rp_current?: number
           rp_max?: number
           stress?: number

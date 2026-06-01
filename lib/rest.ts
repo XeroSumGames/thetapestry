@@ -24,6 +24,14 @@ export interface RestState {
   death_countdown?: number | null
   /** 'sickness' = Sick state (half-max RP cap); 'wound' / null otherwise. */
   infection_state?: string | null
+  /**
+   * Persistent flag (maintained by a BEFORE-UPDATE trigger on
+   * character_states): true from the moment WP hits 0 until WP is fully
+   * restored to wp_max. This is what keeps the slow 1-WP/2-day regen going
+   * through stabilisation, instead of flipping back to fast the instant WP
+   * rises above 0 (Gap C). Preferred over the live-state heuristic below.
+   */
+  recovering_from_mortal_wound?: boolean
 }
 
 export interface RestRecovery {
@@ -53,7 +61,10 @@ export function computeRestRecovery(s: RestState, hours: number, restful: boolea
   const totalHours = Math.max(0, Math.floor(hours))
   const totalDays = totalHours / 24
 
-  const wasMortal = s.wp_current === 0 || s.death_countdown != null
+  // Prefer the persistent recovering flag (set on WP=0, cleared at wp_max);
+  // fall back to the live-state heuristic for rows written before the trigger
+  // existed or when the flag isn't loaded.
+  const wasMortal = s.recovering_from_mortal_wound === true || s.wp_current === 0 || s.death_countdown != null
   const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
   const newWP = Math.min(s.wp_max, s.wp_current + wpHeal)
 

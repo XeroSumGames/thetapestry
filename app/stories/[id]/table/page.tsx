@@ -968,6 +968,10 @@ export default function TablePage() {
         // undefined.
         death_countdown: s.death_countdown ?? null,
         incap_rounds: s.incap_rounds ?? null,
+        // Persistent post-mortal recovery flag (Gap C) - keeps the Rest
+        // modal on the slow 1-WP/2-day track until the PC is back at wp_max,
+        // even after they stabilise above 0 WP.
+        recovering_from_mortal_wound: !!s.recovering_from_mortal_wound,
         // Infection fields - surfaced so the pending-Lasting-Damage
         // auto-open useEffect can detect rows that need a check rolled,
         // and so CharacterCard's existing infection_state branches

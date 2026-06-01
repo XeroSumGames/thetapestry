@@ -215,6 +215,7 @@ CREATE TABLE public.character_states (
   cdp integer NOT NULL DEFAULT 0,
   death_countdown integer,
   incap_rounds integer,
+  recovering_from_mortal_wound boolean NOT NULL DEFAULT false,
   kicked boolean NOT NULL DEFAULT false,
   infection_state text,
   infection_days_left smallint,
@@ -3103,6 +3104,8 @@ CREATE TRIGGER trg_bug_reports_notify AFTER INSERT ON public.bug_reports FOR EAC
 
 CREATE TRIGGER trg_bug_reports_touch BEFORE UPDATE ON public.bug_reports FOR EACH ROW EXECUTE FUNCTION bug_reports_touch_updated_at();
 
+CREATE TRIGGER maintain_mortal_recovery_flag BEFORE UPDATE OF wp_current ON public.character_states FOR EACH ROW EXECUTE FUNCTION trg_maintain_mortal_recovery_flag();
+
 CREATE TRIGGER on_campaign_invitation_insert AFTER INSERT ON public.campaign_invitations FOR EACH ROW EXECUTE FUNCTION notify_campaign_invitation();
 
 CREATE TRIGGER on_campaign_invitation_response AFTER UPDATE ON public.campaign_invitations FOR EACH ROW EXECUTE FUNCTION handle_campaign_invitation_response();
@@ -5284,6 +5287,21 @@ BEGIN
   WHERE s.world_community_id = NEW.id
     -- Don't notify the editor themselves about their own change.
     AND s.user_id IS DISTINCT FROM NEW.published_by;
+  RETURN NEW;
+END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.trg_maintain_mortal_recovery_flag()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  IF NEW.wp_current = 0 THEN
+    NEW.recovering_from_mortal_wound := true;
+  ELSIF NEW.wp_current >= NEW.wp_max THEN
+    NEW.recovering_from_mortal_wound := false;
+  END IF;
   RETURN NEW;
 END;
 $function$

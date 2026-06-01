@@ -35,6 +35,20 @@ describe('computeRestRecovery', () => {
       expect(r.wpHeal).toBe(1) // floor(2/2)
     })
 
+    it('Gap C: a stabilised PC (WP>0) still heals slow while recovering_from_mortal_wound is set', () => {
+      // wp_current=2 (stabilised, above 0, no death countdown) but the
+      // persistent flag is still true -> must stay on the 1-WP/2-day track.
+      const r = computeRestRecovery({ ...base, wp_current: 2, recovering_from_mortal_wound: true }, 96, false)
+      expect(r.wasMortal).toBe(true)
+      expect(r.wpHeal).toBe(2) // floor(4/2), NOT 4
+    })
+
+    it('a fully-recovered PC (flag cleared, WP>0) heals fast again', () => {
+      const r = computeRestRecovery({ ...base, wp_current: 5, recovering_from_mortal_wound: false }, 48, false)
+      expect(r.wasMortal).toBe(false)
+      expect(r.wpHeal).toBe(2) // floor(2 days) at 1/day
+    })
+
     it('clamps WP to wp_max', () => {
       const r = computeRestRecovery({ ...base, wp_current: 9 }, 240, false) // 10 days -> +10
       expect(r.newWP).toBe(10)

@@ -89,6 +89,10 @@ export interface LiveState {
   cdp: number
   death_countdown?: number | null
   incap_rounds?: number | null
+  // Persistent post-mortal recovery flag (Gap C) - true from WP=0 until
+  // back at wp_max; maintained by a DB trigger. Drives the Rest modal's
+  // slow-heal rate for stabilised-but-not-fully-healed patients.
+  recovering_from_mortal_wound?: boolean
   // Infection (canon: /rules/combat/infection). DB columns are typed in
   // database.types.ts; infection_state / infection_severity are free-text
   // string | null in the schema ('wound' | 'sickness', 'auto' | manual).

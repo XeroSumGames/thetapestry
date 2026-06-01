@@ -49,7 +49,17 @@ GM-driven; best on the table page after the Vercel deploy lands.
       (the modal only writes wp/rp/stress).
 - [ ] A 0-hour apply is a no-op (closes, no feed row).
 
-## Known gap (not in this ship)
-- Gap C (post-mortal slow regen persisting to wp_max) is NOT in this commit -
-  a stabilised-but-not-full PC still flips to the fast 1/day rate. SQL drafted
-  at `sql/character-state-mortal-recovery-flag-2026-05-31.sql`, awaiting go.
+## C - post-mortal slow regen (shipped 2026-06-01, live DB change)
+- [ ] Take a PC to mortal (WP = 0). The DB trigger sets
+      `recovering_from_mortal_wound = true`.
+- [ ] Stabilise + heal them ABOVE 0 (e.g. WP = 2) but not to full. Open Rest,
+      enter several days: WP still heals at the SLOW 1-per-2-days rate (preview
+      reads "1 per 2 days"), NOT the fast 1/day - the flag persists through
+      stabilisation.
+- [ ] Rest them all the way to wp_max. Once full, the trigger clears the flag;
+      the NEXT rest (after taking a little WP damage) heals at the fast 1/day
+      rate again.
+- [ ] A PC who was never mortal heals fast (1/day) as always - flag stays false.
+- Note: the flag is maintained by a BEFORE-UPDATE trigger on character_states,
+  so it stays correct no matter which path changes WP (gm_apply_damage, manual
+  dot-clicks, rest, streaming heals).

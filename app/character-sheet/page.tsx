@@ -49,7 +49,7 @@ export default function CharacterSheetPage() {
 
       // Load live state if in a campaign
       if (campaignId) {
-        const { data: state } = await supabase.from('character_states').select('id,wp_current,wp_max,rp_current,rp_max,stress,insight_dice,morality,cdp,death_countdown,incap_rounds,infection_state,infection_days_left,infection_lasting_risk,infection_started_at,infection_infected_by,infection_severity,infection_pending_lasting_check').eq('campaign_id', campaignId).eq('character_id', characterId).maybeSingle()
+        const { data: state } = await supabase.from('character_states').select('id,wp_current,wp_max,rp_current,rp_max,stress,insight_dice,morality,cdp,death_countdown,incap_rounds,recovering_from_mortal_wound,infection_state,infection_days_left,infection_lasting_risk,infection_started_at,infection_infected_by,infection_severity,infection_pending_lasting_check').eq('campaign_id', campaignId).eq('character_id', characterId).maybeSingle()
         if (state) {
           setStateId(state.id)
           setLiveState({
