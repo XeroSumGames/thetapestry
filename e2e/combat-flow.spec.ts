@@ -468,4 +468,148 @@ test.describe('Ch9 / #10 - Combat-flow Phase C (deterministic damage via gm_appl
       await plCtx.close()
     }
   })
+
+  // PHASE C v3 - the wound-infection-warning SIBLING ROW bridge
+  // (sql/gm-apply-damage-rpc-v3-bridge-2026-05-31.sql; 2026-05-31 playtest
+  // confirmed it fires in real combat). When p_infection_risk=true AND
+  // target='pc' AND damage crosses to WP=0, the RPC inserts a SECOND roll_log
+  // row with outcome='wound_infection_warning' that mirrors the exact shape
+  // maybeLogWoundInfection emits client-side - so the existing orange RollsFeed
+  // banner renders without any client-side wiring (atomic + dedup + works for
+  // GM-applied damage just like it does for in-combat attacks). The RPC's
+  // return jsonb mirrors the flag in 'wound_infection_warning' (boolean).
+  //
+  // Dedup behavior (per SQL comments) - call twice in the same combat -> only
+  // ONE warning row, second call returns false - is documented by the SQL but
+  // NOT covered here: a second mortal-wound call to a PC at wp_current=0
+  // doesn't re-cross zero so the flag wouldn't fire on its own merit
+  // (independent of dedup). A faithful dedup test would need to restore wp
+  // between calls, which adds RLS complications. Deferred.
+  test('v3 bridge: infection_risk + PC mortal-wound inserts a sibling wound_infection_warning row mirroring maybeLogWoundInfection shape', async ({ browser }) => {
+    const gmCtx = await browser.newContext({ storageState: AUTH.gm })
+    const plCtx = await browser.newContext({ storageState: AUTH.marv })
+    const gm = await gmCtx.newPage()
+    const pl = await plCtx.newPage()
+    let campaignId: string | null = null
+    let gmCreds: SupaCreds | null = null
+    try {
+      const gmAnonP = captureAnonKey(gm)
+      const plAnonP = captureAnonKey(pl)
+      gmCreds = await resolveCreds(gm, gmAnonP)
+      const plCreds = await resolveCreds(pl, plAnonP)
+      expect(gmCreds && plCreds, 'could not resolve gm + marv creds').toBeTruthy()
+
+      const setup = await setupThrowawayWithMarvPc({
+        gm, pl, gmCreds: gmCreds!, plCreds: plCreds!, name: `${RUN} Combat C3 bridge`,
+      })
+      campaignId = setup.campaignId
+
+      // Resolve marv's character name - the sibling row's character_name +
+      // label both reference it, so we assert against the actual value.
+      const charRow = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/characters?id=eq.${MARV_CHAR}&select=name`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ name: string }>
+      const targetName = charRow?.[0]?.name
+      expect(targetName, 'could not resolve marv character name').toBeTruthy()
+
+      // Anchor the dedup window: a combat_start roll_log row mirrors what real
+      // combat would have set down. Optional for dedup correctness here (the
+      // RPC falls back to epoch when no combat_start row exists), but matches
+      // the real playtest shape exactly.
+      const csIns = await gm.request.post(
+        `${SUPABASE_URL}/rest/v1/roll_log`,
+        {
+          headers: { ...H(gmCreds!), 'Content-Type': 'application/json' },
+          data: {
+            campaign_id: campaignId, character_name: 'Combat',
+            label: 'combat started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+            outcome: 'combat_start',
+          },
+        },
+      )
+      expect(csIns.ok(), `combat_start seed insert failed: ${csIns.status()} ${await csIns.text()}`).toBe(true)
+
+      // Read marv's wp_current so we send exactly the remaining wp - the RPC
+      // crosses to zero deterministically without depending on any cap.
+      const stRow = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/character_states?campaign_id=eq.${campaignId}&character_id=eq.${MARV_CHAR}&select=wp_current`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ wp_current: number }>
+      const wpRemaining = stRow?.[0]?.wp_current
+      expect(wpRemaining > 0, 'marv should start with wp_current > 0').toBe(true)
+
+      // Fire the RPC with the flag - this is the exact call shape an
+      // end-of-combat GM "apply mortal-wound damage" UI would make.
+      const rpc = await gm.request.post(
+        `${SUPABASE_URL}/rest/v1/rpc/gm_apply_damage`,
+        {
+          headers: { ...H(gmCreds!), 'Content-Type': 'application/json' },
+          data: { p_campaign_id: campaignId, p_target_kind: 'pc', p_target_id: MARV_CHAR, p_wp_damage: wpRemaining, p_infection_risk: true },
+        },
+      )
+      expect(rpc.ok(), `gm_apply_damage v3 RPC failed: ${rpc.status()} ${await rpc.text()}`).toBe(true)
+
+      // RPC return jsonb mirrors the flag - 'wound_infection_warning' = true
+      // when the gate fired AND the warning was actually inserted (i.e. not
+      // dedup'd this time).
+      const rpcBody = await rpc.json() as Record<string, any>
+      expect(
+        rpcBody?.wound_infection_warning,
+        'RPC return jsonb must mirror wound_infection_warning=true when the gate fires + warning was inserted',
+      ).toBe(true)
+
+      // The damage row's damage_json.infection_risk flag (the v2 contract,
+      // still honored under v3) lands as before.
+      const dmgRows = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/roll_log?campaign_id=eq.${campaignId}&damage_json->>via=eq.gm_apply&select=damage_json&order=created_at.desc&limit=1`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ damage_json: Record<string, any> }>
+      expect(dmgRows?.[0]?.damage_json?.infection_risk, 'damage row should carry damage_json.infection_risk=true').toBe(true)
+
+      // SIBLING wound_infection_warning row exists with the maybeLogWound
+      // Infection shape - same character_name, the canonical label string,
+      // outcome='wound_infection_warning', all die/mod/total fields zeroed.
+      // The existing orange RollsFeed banner (RollsFeed.tsx:433-447) keys on
+      // outcome === 'wound_infection_warning' + label / character_name, so
+      // matching the shape here means the banner renders for any client whose
+      // RollsFeed picks up this row via realtime.
+      await expect.poll(
+        async () => {
+          const r = await gm.request.get(
+            `${SUPABASE_URL}/rest/v1/roll_log?campaign_id=eq.${campaignId}&outcome=eq.wound_infection_warning&select=character_name,label,die1,die2,amod,smod,cmod,total`,
+            { headers: H(gmCreds!) },
+          )
+          const rows = await r.json().catch(() => []) as Array<any>
+          return rows?.length ?? 0
+        },
+        { timeout: 8_000, message: 'v3 RPC should insert exactly one wound_infection_warning sibling row' },
+      ).toBe(1)
+
+      const warnRows = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/roll_log?campaign_id=eq.${campaignId}&outcome=eq.wound_infection_warning&select=character_name,label,die1,die2,amod,smod,cmod,total`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ character_name: string; label: string; die1: number; die2: number; amod: number; smod: number; cmod: number; total: number }>
+      const w = warnRows[0]
+      expect(w.character_name, 'sibling row character_name should match the target PC name').toBe(targetName)
+      expect(
+        w.label,
+        'sibling row label should mirror maybeLogWoundInfection: "<name> is wounded and may have to deal with infection"',
+      ).toBe(`${targetName} is wounded and may have to deal with infection`)
+      expect({
+        die1: w.die1, die2: w.die2, amod: w.amod, smod: w.smod, cmod: w.cmod, total: w.total,
+      }, 'sibling row die/mod/total fields should all be zero (maybeLogWoundInfection shape)').toEqual({
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+      })
+    } finally {
+      if (campaignId && gmCreds) {
+        await gm.request.delete(
+          `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}`,
+          { headers: H(gmCreds) },
+        ).catch(() => {})
+      }
+      await gmCtx.close()
+      await plCtx.close()
+    }
+  })
 })
