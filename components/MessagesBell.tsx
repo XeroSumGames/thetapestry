@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { wrapDbChange } from '../lib/sentry-realtime'
 import { useBellDropdown } from '../lib/hooks/useBellDropdown'
 
 interface ConvItem {
@@ -122,13 +123,13 @@ export default function MessagesBell() {
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-      }, () => loadConversations(uid))
+      }, wrapDbChange('messages', () => loadConversations(uid)))
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'conversation_participants',
         filter: `user_id=eq.${uid}`,
-      }, () => loadConversations(uid))
+      }, wrapDbChange('conversation_participants', () => loadConversations(uid)))
       .subscribe(),
   })
 

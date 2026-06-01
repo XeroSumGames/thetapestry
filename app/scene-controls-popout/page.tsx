@@ -25,6 +25,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
+import { wrapDbChange } from '../../lib/sentry-realtime'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { createSceneControlsBus, type SceneControlsBus } from '../../lib/scene-controls-bus'
 import { ModalBackdrop, Z_INDEX } from '../../lib/style-helpers'
@@ -138,7 +139,7 @@ export default function SceneControlsPopoutPage() {
     // Live: any tactical_scenes change refreshes our copy so DB writes
     // from the main window flow back here.
     const channel = supabase.channel(`tactical_popout_${campaignId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${campaignId}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('tactical_scenes', () => load()))
       .subscribe()
     return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [supabase, campaignId])

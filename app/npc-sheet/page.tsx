@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { wrapBroadcast, wrapDbChange } from '../../lib/sentry-realtime'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import NpcCard from '../../components/NpcCard'
@@ -84,16 +85,16 @@ export default function NpcSheetPage() {
       if (data) setNpc(data as CampaignNpc)
     }
     const postgresCh = supabase.channel(`npcsheet_${npcId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaign_npcs', filter: `id=eq.${npcId}` }, (payload: any) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaign_npcs', filter: `id=eq.${npcId}` }, wrapDbChange('campaign_npcs', (payload: any) => {
         if (payload.new) setNpc(payload.new as CampaignNpc)
-      })
+      }))
       .subscribe((status: string) => { if (status === 'SUBSCRIBED') void refetchNpc() })
     const broadcastCh = campaignId
       ? supabase.channel(`initiative_${campaignId}`)
-          .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
+          .on('broadcast', { event: 'npc_damaged' }, wrapBroadcast('npc_damaged', (msg: any) => {
             const { npcId: n, patch } = msg.payload ?? {}
             if (n === npcId && patch) setNpc(prev => prev ? ({ ...prev, ...patch } as CampaignNpc) : prev)
-          })
+          }))
           .subscribe((status: string) => { if (status === 'SUBSCRIBED') void refetchNpc() })
       : null
     function handleVisibility() { if (!document.hidden) void refetchNpc() }

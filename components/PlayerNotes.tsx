@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, type ReactNode } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { wrapBroadcast, wrapDbChange } from '../lib/sentry-realtime'
 import { getCachedAuth } from '../lib/auth-cache'
 import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
 import { openPopout } from '../lib/popout'
@@ -47,8 +48,8 @@ export default function PlayerNotes({ campaignId, header }: { campaignId: string
     // Supabase often drops the event on this client. GmNotes emits an
     // explicit broadcast on every share toggle as a reliable fallback.
     const channel = supabase.channel(`gm_notes_share_${campaignId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_notes', filter: `campaign_id=eq.${campaignId}` }, () => loadShared())
-      .on('broadcast', { event: 'gm_notes_updated' }, () => loadShared())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_notes', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_notes', () => loadShared()))
+      .on('broadcast', { event: 'gm_notes_updated' }, wrapBroadcast('gm_notes_updated', () => loadShared()))
       // Catch-up reloads. The gm_notes_updated broadcast is fire-and-forget,
       // so a client that dropped/late-joined/backgrounded never reloads and
       // shows stale shared notes until refresh. Reload on SUBSCRIBED

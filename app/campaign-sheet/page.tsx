@@ -16,6 +16,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
+import { wrapBroadcast, wrapDbChange } from '../../lib/sentry-realtime'
 import { insertRollLog } from '../../lib/data/roll-log'
 import { getCampaignClock } from '../../lib/data/campaigns'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -268,31 +269,31 @@ export default function CampaignSheetPage() {
       scheduleRefetch()
     }
     const broadcastCh = supabase.channel(`campaign_clock_${campaignId}`)
-      .on('broadcast', { event: 'clock_advanced' }, (msg: any) => {
+      .on('broadcast', { event: 'clock_advanced' }, wrapBroadcast('clock_advanced', (msg: any) => {
         const next = msg?.payload?.clock as ClockState | undefined
         if (next) setClockState(next)
         scheduleRefetch()
-      })
-      .on('broadcast', { event: 'clock_set' }, (msg: any) => {
+      }))
+      .on('broadcast', { event: 'clock_set' }, wrapBroadcast('clock_set', (msg: any) => {
         const next = msg?.payload?.clock as ClockState | undefined
         if (next) setClockState(next)
-      })
+      }))
       .subscribe((status: string) => { if (status === 'SUBSCRIBED') void catchUp() })
     const pgCh = supabase.channel(`campaign_pg_${campaignId}`)
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${campaignId}` },
-        (payload: any) => {
+        wrapDbChange('campaigns', (payload: any) => {
           const cl = payload?.new?.clock as ClockState | undefined
           if (cl && typeof cl.canon_day === 'number') setClockState({ canon_day: cl.canon_day, hour: cl.hour })
           const veh = payload?.new?.vehicles
           if (Array.isArray(veh)) loadVehicles()
-        })
+        }))
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${campaignId}` },
-        () => { scheduleRefetch() })
+        wrapDbChange('character_states', () => { scheduleRefetch() }))
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'campaign_events', filter: `campaign_id=eq.${campaignId}` },
-        () => { scheduleRefetch() })
+        wrapDbChange('campaign_events', () => { scheduleRefetch() }))
       .subscribe((status: string) => { if (status === 'SUBSCRIBED') void catchUp() })
     function handleVisibility() { if (!document.hidden) void catchUp() }
     document.addEventListener('visibilitychange', handleVisibility)

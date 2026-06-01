@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { wrapBroadcast } from '../lib/sentry-realtime'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel, getCategoryFilter } from '../lib/pin-categories'
@@ -166,7 +167,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   useEffect(() => {
     loadPins(); loadScenes()
     const ch = supabase.channel(`campaign_pins_${campaignId}`)
-    ch.on('broadcast', { event: 'pins_changed' }, () => { void loadPins() })
+    ch.on('broadcast', { event: 'pins_changed' }, wrapBroadcast('pins_changed', () => { void loadPins() }))
     // Catch-up reloads. The pins_changed broadcast is fire-and-forget with
     // no delivery guarantee, so a client that was disconnected, subscribed
     // late, or dropped the packet never reloads and shows a stale pin set

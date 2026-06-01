@@ -31,6 +31,7 @@ import { memo, useEffect, useRef, useState, useCallback } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'
+import { wrapDbChange } from '../lib/sentry-realtime'
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -146,7 +147,7 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'chat_messages',
         filter: `campaign_id=eq.${campaignId}`,
-      }, () => { refetch() })
+      }, wrapDbChange('chat_messages', () => { refetch() }))
       .subscribe()
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)

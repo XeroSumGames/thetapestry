@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
+import { wrapDbChange } from '../lib/sentry-realtime'
 import { useBellDropdown } from '../lib/hooks/useBellDropdown'
 
 interface Notification {
@@ -66,11 +67,11 @@ export default function NotificationBell() {
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${uid}`,
-      }, (payload: any) => {
+      }, wrapDbChange('notifications', (payload: any) => {
         const newNotif = payload.new as Notification
         setNotifications(prev => [newNotif, ...prev].slice(0, 10))
         setUnreadCount(prev => prev + 1)
-      })
+      }))
       .subscribe(),
   })
 

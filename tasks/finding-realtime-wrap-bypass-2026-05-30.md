@@ -1,5 +1,19 @@
 # Finding - Realtime wrap-invariant bypass (~14 sites)
 
+> **STATUS: Path B SHIPPED 2026-06-01 (HP).** All inbound realtime handlers
+> at the bypass sites are now wrapped with `wrapBroadcast` / `wrapDbChange`,
+> so a thrown handler reports to Sentry with `realtime_kind` + `realtime_event`
+> tags. Sites covered: RollsFeed, TableChat, PlayerNotes, campaign-sheet (5
+> handlers), character-sheet (2, + the realtime liveState mapper now also
+> carries recovering_from_mortal_wound), npc-sheet (2), CampaignMap (6
+> handlers / 4 channels), CampaignPins, scene-controls-popout, MessagesBell
+> (2), NotificationBell (1). **Send-only sites are exempt** (no inbound
+> handler to wrap): GmNotes:494, campaign-clock.ts x3 (all `ch.send`), and the
+> presence-only channels. No behavior change. **Still open:** the regression
+> guardrail `scripts/check-realtime-wrap.mjs` (below) - now unblocked since the
+> gap is closed; and Path A (migrate to the hooks) as the Grand Re-Arch finish
+> line (not urgent).
+
 **Discovered by:** stability-audit M5 invariant check, 2026-05-30. **Lane:**
 audit (Puffer); migration belongs to **Hunt & Peck** (the bypassing files
 are all `app/`, `components/`, `lib/`-non-realtime).

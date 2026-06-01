@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { wrapDbChange } from '../../lib/sentry-realtime'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useSearchParams } from 'next/navigation'
@@ -76,7 +77,7 @@ export default function CharacterSheetPage() {
     // Realtime sync on character_states
     if (!campaignId || !characterId) return
     const channel = supabase.channel(`charsheet_${characterId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'character_states', filter: `character_id=eq.${characterId}` }, (payload: any) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'character_states', filter: `character_id=eq.${characterId}` }, wrapDbChange('character_states', (payload: any) => {
         const s = payload.new
         if (s) {
           setLiveState({
@@ -86,6 +87,7 @@ export default function CharacterSheetPage() {
             stress: s.stress, insight_dice: s.insight_dice,
             morality: s.morality, cdp: s.cdp ?? 0,
             death_countdown: s.death_countdown, incap_rounds: s.incap_rounds,
+            recovering_from_mortal_wound: !!s.recovering_from_mortal_wound,
             infection_state: s.infection_state ?? null,
             infection_days_left: s.infection_days_left ?? null,
             infection_lasting_risk: !!s.infection_lasting_risk,
@@ -95,10 +97,10 @@ export default function CharacterSheetPage() {
             infection_pending_lasting_check: !!s.infection_pending_lasting_check,
           })
         }
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${characterId}` }, (payload: any) => {
+      }))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${characterId}` }, wrapDbChange('characters', (payload: any) => {
         if (payload.new) setCharacter(payload.new)
-      })
+      }))
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [campaignId, characterId])

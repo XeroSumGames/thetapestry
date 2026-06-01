@@ -4,6 +4,7 @@ import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { osrmCoordsParam, waypointLabel, parseLatLng } from '../lib/campaign-route'
+import { wrapBroadcast, wrapDbChange } from '../lib/sentry-realtime'
 import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import { useHiddenPins } from '../lib/use-hidden-pins'
 
@@ -949,8 +950,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       //     the sidebar list but NOT the map markers until refresh.
       //     Adding the broadcast listener closes the gap.
       pinsChannelRef.current = supabase.channel(`campaign_pins_${campaignId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
-        .on('broadcast', { event: 'pins_changed' }, () => loadPins())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_pins', () => loadPins()))
+        .on('broadcast', { event: 'pins_changed' }, wrapBroadcast('pins_changed', () => loadPins()))
         // Catch-up reload on (re)subscribe: the pins_changed broadcast is
         // fire-and-forget, so a client that dropped/late-joined never reloads
         // and shows stale markers until refresh. Reloading on SUBSCRIBED (and
@@ -959,20 +960,20 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         .subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadPins() })
 
       npcsMapChannelRef.current = supabase.channel(`campaign_npcs_map_${campaignId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_npcs_map', () => loadPins()))
         .subscribe()
 
       // Ping broadcast channel - receive only. The sender draws its
       // own ping locally before the broadcast goes out (zero-latency
       // self-feedback) so we don't echo it back here.
       const pingCh = supabase.channel(`campaign_ping_${campaignId}`)
-        .on('broadcast', { event: 'cm_ping' }, (msg: any) => {
+        .on('broadcast', { event: 'cm_ping' }, wrapBroadcast('cm_ping', (msg: any) => {
           const p = msg?.payload ?? {}
           const lat = typeof p.lat === 'number' ? p.lat : p.payload?.lat
           const lng = typeof p.lng === 'number' ? p.lng : p.payload?.lng
           const color = p.color ?? p.payload?.color ?? '#ff3a1d'
           if (typeof lat === 'number' && typeof lng === 'number') dropPing(lat, lng, color)
-        })
+        }))
         .subscribe()
       pingChannelRef.current = pingCh
 
@@ -981,7 +982,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // coords and switches their tile layer to match. One-shot.
       // (Self-receive is OK and ignored - the GM is already there.)
       const viewCh = supabase.channel(`campaign_view_share_${campaignId}`)
-        .on('broadcast', { event: 'cm_view_share' }, (msg: any) => {
+        .on('broadcast', { event: 'cm_view_share' }, wrapBroadcast('cm_view_share', (msg: any) => {
           if (isGM) return // GMs ignore their own share echo + other GMs' shares
           const p = msg?.payload ?? {}
           const lat = typeof p.lat === 'number' ? p.lat : null
@@ -995,8 +996,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           map.flyTo([lat, lng], zoom, { duration: 0.6 })
           setSharedToast('GM shared a view')
           window.setTimeout(() => setSharedToast(null), 2500)
-        })
-        .on('broadcast', { event: 'cm_route_share' }, (msg: any) => {
+        }))
+        .on('broadcast', { event: 'cm_route_share' }, wrapBroadcast('cm_route_share', (msg: any) => {
           // Players (and other GMs) receive a shared route and draw it.
           const p = msg?.payload ?? {}
           const coords = Array.isArray(p.coords) ? p.coords as [number, number][] : null
@@ -1033,7 +1034,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           }
           setSharedToast('GM shared a route')
           window.setTimeout(() => setSharedToast(null), 2500)
-        })
+        }))
         .subscribe()
       viewShareChannelRef.current = viewCh
     }

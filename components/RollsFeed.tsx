@@ -28,6 +28,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { compactRollSummary, actionDetail, outcomeColor, formatTime } from '../lib/roll-helpers'
+import { wrapDbChange } from '../lib/sentry-realtime'
 
 export interface DamageResult {
   rollWP: number
@@ -229,7 +230,7 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'roll_log',
         filter: `campaign_id=eq.${campaignId}`,
-      }, () => { refetch() })
+      }, wrapDbChange('rolls_roll_log', () => { refetch() }))
       .subscribe()
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
