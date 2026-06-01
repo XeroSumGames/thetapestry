@@ -4,6 +4,24 @@ Source for Xero to paste into HP. This doc is the durable copy.
 
 ---
 
+> **VERIFY-FIRST SWEEP 2026-05-31 (Puffer): 5 of 6 items already SHIPPED.**
+> Full audit: [tasks/canon-extract-mechanics-status-2026-05-31.md](canon-extract-mechanics-status-2026-05-31.md).
+>
+> | # | Status | Action |
+> |---|---|---|
+> | 1 Rest finish | PARTIAL - 3 gaps + 1 verify | ship per [canon-extract-rest-2026-05-31.md](canon-extract-rest-2026-05-31.md) |
+> | 2 Vehicles-as-Cover RDM | **SHIPPED** `f264f7b` (12 tests) | mark DONE |
+> | 3 Item Condition + Upkeep | **SHIPPED** `724a1e2` (33 tests) | spot-check Broken-weapon-refuses-fire, then DONE |
+> | 4 Falling/Drowning/Subsistence | **SHIPPED** `1b5b958` + clock drainer (28 tests) | mark DONE |
+> | 5 Travel Times | **SHIPPED** `e7b1e56` (10 tests) | verify route-planner uses it, then DONE |
+> | 6 Conditions Phase-2 | WRONG PREMISE (deferred post-KS) | no action |
+>
+> Net HP pickup: **#1 Rest finish ONLY** + 3 small verify passes.
+> The per-item text BELOW is the historical pre-verify-first brief -
+> read alongside the audit doc.
+
+---
+
 ```
 HP pickup - "need real code" mechanics for 9/1 KS
 
