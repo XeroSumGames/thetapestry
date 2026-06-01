@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'
 import { advance as advanceClock } from '../lib/campaign-clock'
+import { computeRestRecovery } from '../lib/rest'
 import { fallingDamage, drowningDamage } from '../lib/env-damage'
 import { travelPushCost } from '../lib/travel'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -220,6 +221,12 @@ function CharacterCardImpl({
   const [restHours, setRestHours] = useState(0)
   const [restDays, setRestDays] = useState(0)
   const [restWeeks, setRestWeeks] = useState(0)
+  // Stress Cooling Off (canon /rules/combat/stress #cooling-off): -1 Stress
+  // per 8 uninterrupted in-game hours free from threat while doing something
+  // the character enjoys. GM judgement - this toggle affirms the rest met
+  // those gates. Default ON (the common case); GM flips it OFF if combat /
+  // threat / un-enjoyable labour interrupted the window.
+  const [restRestful, setRestRestful] = useState(true)
 
   // Weapon local state
   const [weaponPrimary, setWeaponPrimary] = useState(c.data?.weaponPrimary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
@@ -1210,16 +1217,26 @@ function CharacterCardImpl({
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
             </div>
+            {/* Cooling-Off gate - only relevant at 8h+ (canon minimum per pip). */}
             {(() => {
               const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
-              const totalDays = totalHours / 24
-              const wasMortal = localState.wp_current === 0 || localState.death_countdown != null
-              const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
-              const rpHeal = totalHours
+              return totalHours >= 8 ? (
+                <button onClick={() => setRestRestful(v => !v)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', marginBottom: '1rem', padding: '8px', background: '#242424', border: `1px solid ${restRestful ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: '14px', color: restRestful ? '#7fc458' : '#888' }}>{restRestful ? '☑' : '☐'}</span>
+                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Uninterrupted &amp; enjoyable (free from threat) - enables Stress cooling off</span>
+                </button>
+              ) : null
+            })()}
+            {(() => {
+              const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
+              const r = computeRestRecovery(localState, totalHours, restRestful)
+              const rpCap = r.isSick ? Math.floor(localState.rp_max / 2) : localState.rp_max
               return totalHours > 0 ? (
                 <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', padding: '8px', background: '#242424', borderRadius: '3px' }}>
-                  <div>WP healed: <span style={{ color: '#c0392b', fontWeight: 700 }}>+{wpHeal}</span> ({wasMortal ? '1 per 2 days' : '1 per day'})</div>
-                  <div>RP recovered: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>+{rpHeal}</span> (1 per hour)</div>
+                  <div>WP healed: <span style={{ color: '#c0392b', fontWeight: 700 }}>+{r.wpHeal}</span> ({r.wasMortal ? '1 per 2 days' : '1 per day'})</div>
+                  <div>RP recovered: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>+{r.rpGain}</span> (1 per hour{r.isSick ? `, sick cap ${rpCap}` : ''})</div>
+                  {r.stressDrop > 0 && <div>Stress reduced: <span style={{ color: '#EF9F27', fontWeight: 700 }}>-{r.stressDrop}</span> (1 per 8h)</div>}
                 </div>
               ) : null
             })()}
@@ -1229,14 +1246,14 @@ function CharacterCardImpl({
               <button onClick={async () => {
                 const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
                 if (totalHours <= 0) { setShowRestModal(false); return }
-                const totalDays = totalHours / 24
-                const wasMortal = localState.wp_current === 0 || localState.death_countdown != null
-                const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
-                const rpHeal = totalHours
-                const newWP = Math.min(localState.wp_max, localState.wp_current + wpHeal)
-                const newRP = Math.min(localState.rp_max, localState.rp_current + rpHeal)
+                // All four-track recovery math lives in lib/rest.ts (pure,
+                // unit-tested). WP rate, sick RP cap, and Stress cooling-off
+                // are computed there so the preview + apply never diverge.
+                const { wpHeal, newWP, rpGain, newRP, stressDrop, newStress, wasMortal, isSick } =
+                  computeRestRecovery(localState, totalHours, restRestful)
                 onStatUpdate?.(localState.id, 'wp_current', newWP)
                 onStatUpdate?.(localState.id, 'rp_current', newRP)
+                if (stressDrop > 0) onStatUpdate?.(localState.id, 'stress', newStress)
                 // Advance the campaign clock by the rested duration so all the
                 // time-based drainers fire (pending heals, rations, subsistence,
                 // infection) and a System "Time advances Nh" row shows in feed.
@@ -1248,7 +1265,7 @@ function CharacterCardImpl({
                     const { user } = await getCachedAuth()
                     if (user) {
                       const hoursText = totalHours === 1 ? '1 hour' : `${totalHours} hours`
-                      const recovered = `+${rpHeal} RP, +${wpHeal} WP`
+                      const recovered = [`+${rpGain} RP`, `+${wpHeal} WP`, stressDrop > 0 ? `-${stressDrop} Stress` : null].filter(Boolean).join(', ')
                       await insertRollLog({
                         campaign_id: campaignIdProp,
                         user_id: user.id,
@@ -1256,7 +1273,7 @@ function CharacterCardImpl({
                         label: `${c.name} rested ${hoursText} (${recovered})`,
                         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
                         outcome: 'rest',
-                        damage_json: { characterId: c.id, hours: totalHours, wpHeal, rpHeal, wasMortal },
+                        damage_json: { characterId: c.id, hours: totalHours, wpHeal, rpHeal: rpGain, stressDrop, wasMortal, wasSick: isSick },
                       })
                     }
                   } catch (e) {
@@ -1264,7 +1281,7 @@ function CharacterCardImpl({
                   }
                 }
                 setShowRestModal(false)
-                setRestHours(0); setRestDays(0); setRestWeeks(0)
+                setRestHours(0); setRestDays(0); setRestWeeks(0); setRestRestful(true)
               }}
                 style={{ flex: 2, padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Apply Healing</button>
             </div>
