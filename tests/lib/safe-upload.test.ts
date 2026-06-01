@@ -73,6 +73,20 @@ describe('prepareUpload', () => {
     expect(prepareUpload('module-covers', f('cover.png', at5mb + 1)).ok).toBe(false)
   })
 
+  it('tactical-maps has 25 MB cap (GM scene backgrounds run large)', () => {
+    const at25mb = 25 * 1024 * 1024
+    expect(prepareUpload('tactical-maps', f('map.png', at25mb)).ok).toBe(true)
+    expect(prepareUpload('tactical-maps', f('map.png', at25mb + 1)).ok).toBe(false)
+  })
+
+  it('tactical-maps allows image extensions only (no PDFs)', () => {
+    expect(prepareUpload('tactical-maps', f('map.png')).ok).toBe(true)
+    expect(prepareUpload('tactical-maps', f('map.jpg')).ok).toBe(true)
+    expect(prepareUpload('tactical-maps', f('map.webp')).ok).toBe(true)
+    expect(prepareUpload('tactical-maps', f('handout.pdf')).ok).toBe(false)
+    expect(prepareUpload('tactical-maps', f('vector.svg')).ok).toBe(false)
+  })
+
   it('rejects SVG (script-execution risk)', () => {
     const r = prepareUpload('pin-attachments', f('vector.svg'))
     expect(r.ok).toBe(false)

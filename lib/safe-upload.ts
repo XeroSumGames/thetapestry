@@ -29,6 +29,11 @@ const BUCKETS: Record<string, BucketRule> = {
   'pin-attachments':     { maxBytes: 10 * 1024 * 1024, extToCt: IMAGE_EXT },
   'war-stories':         { maxBytes: 10 * 1024 * 1024, extToCt: IMAGE_EXT },
   'module-covers':       { maxBytes: 5 * 1024 * 1024,  extToCt: IMAGE_EXT },
+  // tactical-maps holds GM-authored scene backgrounds (room scans, city
+  // blocks, large outdoor maps). Sized higher than other image buckets
+  // because high-res GM maps run 5-20 MB; capped at 25 to prevent abuse
+  // without strangling legitimate use. Stability-audit M1 (2026-05-30).
+  'tactical-maps':       { maxBytes: 25 * 1024 * 1024, extToCt: IMAGE_EXT },
 }
 
 const MAX_STEM_LEN = 80

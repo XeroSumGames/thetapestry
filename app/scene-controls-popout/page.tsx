@@ -29,6 +29,7 @@ import { getCachedAuth } from '../../lib/auth-cache'
 import { createSceneControlsBus, type SceneControlsBus } from '../../lib/scene-controls-bus'
 import { ModalBackdrop, Z_INDEX } from '../../lib/style-helpers'
 import { gridToCoverMap } from '../../lib/tactical-grid'
+import { prepareUpload } from '../../lib/safe-upload'
 
 interface Scene {
   id: string
@@ -373,9 +374,20 @@ export default function SceneControlsPopoutPage() {
     if (!scene) return
     setError('')
     setUploadDone(false)
+    // Hardening per stability-audit M1 (2026-05-30): validate size + MIME +
+    // sanitize filename through the shared safe-upload pipeline BEFORE we
+    // commit any UI state to "uploading." Rejects oversize, SVG, and
+    // non-whitelisted MIME types with a user-visible reason. The sanitized
+    // filename comes back from prepareUpload, so we use that instead of the
+    // local regex sweep below.
+    const check = prepareUpload('tactical-maps', file)
+    if (!check.ok) {
+      setError(check.reason)
+      return
+    }
     setUploadPct(0)
     setUploading(true)
-    const path = `${campaignId}/${scene.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`
+    const path = `${campaignId}/${scene.id}/${Date.now()}-${check.filename}`
     try {
       // Preferred path: real byte-progress so the GM sees "how much" uploaded.
       await uploadWithProgress('tactical-maps', path, file, pct => setUploadPct(pct))
