@@ -5710,12 +5710,27 @@ export default function TablePage() {
                       style={actBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Break Free</button>
                   </>
                 )}
-                {/* ── GRAPPLING STATE: only Release available ── */}
+                {/* ── GRAPPLING STATE: Subdue + Release available ── */}
                 {isGrappling && grappledTarget && (
                   <>
                     <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
                       Grappling {grappledTarget.character_name}
                     </span>
+                    <button onClick={() => {
+                      clearAimIfActive(activeEntry.id)
+                      const rapid = charEntry?.character.data?.rapid ?? {}
+                      const npcAtkr = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                      const wName = isMelee && w ? w.name : 'Unarmed'
+                      const wDmg = isMelee && w ? w.damage : '1d3'
+                      const amod = npcAtkr ? (npcAtkr.physicality ?? 0) : (rapid.PHY ?? 0)
+                      const skillName = isMelee && w ? 'Melee Combat' : 'Unarmed Combat'
+                      const smod = npcAtkr
+                        ? (Array.isArray(npcAtkr.skills?.entries) ? npcAtkr.skills.entries.find((s: any) => s.name === skillName)?.level ?? 0 : 0)
+                        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
+                      setTargetName(grappledTarget.character_name)
+                      handleRollRequest(`${activeEntry.character_name} - Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, conditionCmod: 0 })
+                    }}
+                      style={actBtn('#2a1210', '#f5a89a', '#5a1d1d')}>Subdue</button>
                     <button onClick={async () => {
                       await supabase.from('initiative_order').update({ grappled_by: null }).eq('id', grappledTarget.id)
                       await insertRollLog({
@@ -8701,6 +8716,8 @@ export default function TablePage() {
               const newRP = Math.max(0, (defNpc.rp_current ?? defNpc.rp_max ?? 6) - 1)
               await supabase.from('campaign_npcs').update({ rp_current: newRP }).eq('id', defNpc.id)
             }
+            // Canon: defender loses 1 action on a successful grapple (knocked off balance)
+            await consumeAction(targetEntry.id)
           } else if (defenderWins) {
             // Attacker takes 1 RP
             if (charEntry?.liveState) {

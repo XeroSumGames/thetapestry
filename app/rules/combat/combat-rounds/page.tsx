@@ -23,7 +23,7 @@ const COMBAT_ACTIONS: Array<[string, string, string]> = [
   ['Dice Check', '1', 'Use to make any Attribute or Skill check.'],
   ['Distract', '1', 'Steal 1 Combat Action from a target via an Opposed Check (skill or attribute as agreed). On Wild Success, steal 2 actions.'],
   ['Fire from Cover', '2', "Attack from cover; keep the cover's defensive bonus."],
-  ['Grapple', '1', 'Opposed Physicality + Unarmed Combat. Winner restrains or takes 1 RP from the loser.'],
+  ['Grapple', '1', 'Opposed Physicality + Unarmed Combat. Winner restrains and takes 1 RP from the loser. On a successful grapple, the defender also loses 1 action this round. While maintaining a grapple, the grappler may spend an action to Subdue the pinned defender (Unarmed Combat or wielded melee weapon at 100% RP) - the grappled defender has no defensive roll while pinned. Release ends the grapple and frees the defender.'],
   ['Inspire', '1', 'Grant +1 Combat Action to an ally. Once per round.'],
   ['Move', '1', 'Move up to 1 Range Band per Move action.'],
   ['Rapid Fire', '2', 'Two shots from a Ranged Weapon (Table 17). −1 CMod on first, −3 CMod on second. As a single Combat Action: −2 first / −4 second.'],
