@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-01 21:04 UTC
+
+**Status:** DRIFT (carry-over — 7th consecutive run since 00:06; development active since 18:07)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed, 47 files] (+10 tests, +1 file since 18:07)
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all SUCCESS (verified via GitHub MCP — first run with real CI data after 6 skipped runs)
+
+**Drift:**
+- **4 carry-overs (unresolved 7 runs — active commits added 10 tests but housekeeping skipped):**
+  - Confidence Ledger: debug-handoff.md §3 says 738/41 → live now 853/47 (+115 tests, +6 files). Run `node scripts/refresh-ledger.mjs`.
+  - `todo.md:37` "6 mechanics still owe real code" still `[ ]` — all 6 shipped. Mark `[x]`.
+  - `todo.md:88` #2 BLOCKER parent still `[ ]` — all sub-flows closed + verified. Mark `[x]`.
+  - `todo.md:44` AUDIT M1 still `[ ]` — `prepareUpload('tactical-maps')` confirmed at `:384`. Mark `[x]`.
+- **HOPED-FOR (15+ days):** Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string — drain target Beta-500 before 2026-07-01.
+
+**Action:** HP — 4 housekeeping tasks flagged every run since midnight (7 runs). Run `node scripts/refresh-ledger.mjs`; mark todo lines `[x]`. CI is clean.
+
+---
+
 ## 2026-06-01 18:07 UTC
 
 **Status:** DRIFT (carry-over — 6th consecutive run since 00:06; no new findings)
