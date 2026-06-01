@@ -76,10 +76,10 @@ async function setupThrowawayWithMarv(opts: {
 test.describe('Tactical map - wall-segment door + window cross-client propagation', () => {
   test.skip(!canAuth('gm') || !canAuth('marv'), 'needs gm + marv sessions/creds')
 
-  // PARKED: HP has not shipped toggle_wall_segment_door yet. Un-fixme when the
-  // RPC is verified live in pg_proc; the spec then proves the cross-client
-  // propagation works (or fails red = regression).
-  test.fixme(true, 'parked until HP ships toggle_wall_segment_door RPC - tasks/finding-wall-segment-doors-player-write-2026-05-31.md')
+  // HP shipped the toggle_wall_segment_door SECURITY DEFINER RPC in b2e7663
+  // (applied live; lib/data/tactical.ts exports the typed builder). Un-fixme'd
+  // 2026-05-31: the spec is now the live regression net for the cross-client
+  // door/window propagation that this morning's playtest exposed.
 
   test('player toggles a door + window segment -> DB reflects + GM tactical_scenes refetches via realtime', async ({ browser }) => {
     const gmCtx = await browser.newContext({ storageState: AUTH.gm })
