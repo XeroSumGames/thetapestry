@@ -6,7 +6,7 @@ import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-cont
 import {
   campaignScenes, insertScene, updateScene, deactivateOtherScenes, deactivateAllScenes,
   sceneTokens, updateToken, insertTokens, deleteToken, deleteTokensForScene, campaignVehiclesOnly,
-  campaignInitiativeOrder,
+  campaignInitiativeOrder, toggleWallSegmentDoor,
 } from '../lib/data/tactical'
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
@@ -2778,7 +2778,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             wallsLocalRef.current = next
             return next
           })
-          scheduleWallsPersist()
+          // RPC is membership-gated; works for players, not isGM-only like scheduleWallsPersist
+          toggleWallSegmentDoor(scene.id, targetId, nextOpen).then(({ error }) => {
+            if (error) console.error('[TM] door toggle RPC failed:', error.message)
+          })
           // Toast - render midpoint of the segment.
           const midX = (bestSeg.x1 + bestSeg.x2) / 2
           const midY = (bestSeg.y1 + bestSeg.y2) / 2

@@ -25,6 +25,16 @@ export function insertScene(row: Insert<'tactical_scenes'>) {
 export function updateScene(id: string, patch: Update<'tactical_scenes'>) {
   return db().from('tactical_scenes').update(patch).eq('id', id)
 }
+/** Toggle a single door/window segment open or closed. Works for any campaign
+ *  member (not just the GM) - the RPC enforces membership server-side.
+ *  Replaces the player-side scheduleWallsPersist() which was gated on isGM. */
+export function toggleWallSegmentDoor(sceneId: string, segmentId: string, open: boolean) {
+  return db().rpc('toggle_wall_segment_door', {
+    p_scene_id:   sceneId,
+    p_segment_id: segmentId,
+    p_open:       open,
+  })
+}
 /** Deactivate every OTHER scene in the campaign (on activate-by-create). */
 export function deactivateOtherScenes(campaignId: string, exceptId: string) {
   return db().from('tactical_scenes').update({ is_active: false }).eq('campaign_id', campaignId).neq('id', exceptId)
