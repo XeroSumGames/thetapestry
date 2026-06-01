@@ -1,5 +1,17 @@
 # Lessons Learned
 
+## `test.fixme` + same-session un-fixme is the cleanest "expect-fail until shipped" pattern across lanes (2026-05-31)
+
+When Puffer routes a real bug to HP with full spec, E2E can write the deterministic regression spec immediately and mark it `test.fixme` ("parked"). The spec then sits in the suite as a documented contract for what the fix has to satisfy. When HP ships the fix in the same session, E2E un-fixmes it and runs - green pass IS the cross-lane verification. No "I'll write the spec when the fix lands" hand-off, no waiting room. Tonight: the wall-segment door bug was routed by Puffer at `ed1f76e`, HP shipped the RPC at `b2e7663`, E2E parked the spec at `463cd98` and un-fixme'd at `9b96cf9` - all within hours. The spec IS the regression net the moment the bug is closed.
+
+## RPC contracts that mirror existing client-side insert shapes exactly are the cleanest bridges - assert field-by-field equality (2026-05-31)
+
+The `gm_apply_damage` v3 bridge inserts a sibling `wound_infection_warning` roll_log row whose payload matches `maybeLogWoundInfection`'s client-side shape literally. The E2E spec just asserts field-by-field equality between the two paths; there's nothing else to wire because the contract IS the shape. If the bridge ever drifts, the assertion fails on the specific field. Future bridges (server-side row inserts that replace client-side ones) should do the same: copy the existing insert payload exactly, write the test as field-by-field assertion. Don't paraphrase the contract in prose; let the test BE the contract.
+
+## Use `[~]` (in-progress) with explicit "HP SHIPPED, E2E QUEUED" sub-bullets when one lane shipped and another hasn't verified (2026-05-31)
+
+When work crosses lanes, `[ ]` (not started) becomes a lie the moment one lane ships their half, and `[x]` (fully done) becomes a lie until every lane has closed. `[~]` with sub-bullets ("HP SHIPPED 544b4eb 2026-05-31 / E2E QUEUED - verification spec pending") tracks the real state honestly. Search-grep stays accurate, dashboard counts stay accurate, the next person reading the todo doesn't have to chase commit hashes to find out what "done" means. Apply on any item routed cross-lane.
+
 ## Any gameplay action that modifies GM-authored data needs a membership-gated RPC, not a direct table UPDATE (2026-05-31)
 
 Wall-segment door toggles were silently dropped for players because `scheduleWallsPersist()` started with `if (!scene || !isGM) return`. The player saw the door open locally (optimistic state update worked), but no DB write fired, so every other client still saw the door closed - LoS desync at the table. The same bug class hit `gm_apply_damage` before the RPC pattern was established; Xero called it out as recurring ("we have been over this before"). Fix: SECURITY DEFINER RPC `toggle_wall_segment_door(p_scene_id, p_segment_id, p_open)` that validates campaign membership then does a targeted `jsonb_set` on the one segment. Any member can call it; the body enforces the authz check. Covers door AND window segments (same code path). Rule: any gameplay mechanic that writes to a column that was originally GM-only must go through a membership-gated RPC. Direct `UPDATE tactical_scenes SET walls = ...` from a player client will be silently rejected by RLS.
