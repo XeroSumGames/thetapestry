@@ -22,6 +22,7 @@ import {
   campaignPins, pinCoords, getCharacterData, updateCharacterData, eventAuthorUsernames, recruitRolls,
 } from '../lib/data/community'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
+import { reportSupabaseError } from '../lib/supabase-errors'
 import { isGroupStage, communityDisplayName, combinedMemberCount, shouldPromoteToCommunity, communityRemovalPrompt, COMMUNITY_THRESHOLD } from '../lib/community-stage'
 import CommunityPromoteBanner from './CommunityPromoteBanner'
 import {
@@ -443,7 +444,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (!force && stockpileLoadedFor.has(communityId)) return
     const { data, error } = await stockpileItems(communityId)
     if (error) {
-      console.error('[stockpile] load failed:', error.message)
+      reportSupabaseError(error, 'stockpile-load')
       return
     }
     setStockpileByCommunity(prev => ({ ...prev, [communityId]: (data ?? []) as StockpileRow[] }))
@@ -549,8 +550,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       // (jsonb -> equality on a sub-key is awkward via .eq).
       recruitRolls(campaignId),
     ])
-    if (moraleRes.error) console.error('[community-dashboard] morale fetch:', moraleRes.error.message)
-    if (recruitRes.error) console.error('[community-dashboard] recruits fetch:', recruitRes.error.message)
+    if (moraleRes.error) reportSupabaseError(moraleRes.error, 'community-dashboard:morale')
+    if (recruitRes.error) reportSupabaseError(recruitRes.error, 'community-dashboard:recruits')
     setDashboardMorale(prev => ({ ...prev, [communityId]: (moraleRes.data ?? []) as any }))
     const recruits: RecruitRow[] = []
     for (const row of (recruitRes.data ?? []) as any[]) {
@@ -604,10 +605,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // blips don't read as "the campaign has no communities/NPCs/PCs/pins"
     // - gracefully degrade to empty arrays for whichever path failed,
     // but make the failure visible in the console.
-    if (comsRes.error) console.error('[CampaignCommunity] communities fetch:', comsRes.error.message)
-    if (npcsRes.error) console.error('[CampaignCommunity] npcs fetch:', npcsRes.error.message)
-    if (charsRes.error) console.error('[CampaignCommunity] members fetch:', charsRes.error.message)
-    if (pinsRes.error) console.error('[CampaignCommunity] pins fetch:', pinsRes.error.message)
+    if (comsRes.error) reportSupabaseError(comsRes.error, 'CampaignCommunity:communities')
+    if (npcsRes.error) reportSupabaseError(npcsRes.error, 'CampaignCommunity:npcs')
+    if (charsRes.error) reportSupabaseError(charsRes.error, 'CampaignCommunity:members')
+    if (pinsRes.error) reportSupabaseError(pinsRes.error, 'CampaignCommunity:pins')
     const coms = (comsRes.data ?? []) as Community[]
     setCommunities(coms)
     setNpcs((npcsRes.data ?? []) as NpcOption[])
@@ -1334,7 +1335,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           recruitment_type: 'founder',
           joined_at: new Date().toISOString(),
         }).select().single()
-        if (enrollErr) console.error('[campaign-community] founder auto-enroll failed:', enrollErr.message)
+        if (enrollErr) reportSupabaseError(enrollErr, 'campaign-community:founder-enroll')
         if (founderRow) {
           setMembers(prev => ({ ...prev, [newComm.id]: [founderRow as Member] }))
           // Progression log: founding event + leader appointment in one entry.
