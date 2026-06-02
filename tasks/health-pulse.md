@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-02 09:04 UTC
+
+**Status:** DRIFT (carry-over — 9th consecutive run; 1 new stale-as-done found; characters RLS BLOCKER now 9 days unaddressed)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed, 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all SUCCESS
+
+**Drift:**
+- **Confidence Ledger stale:** debug-handoff.md §3 says 738/41 → live 853/47. Run `node scripts/refresh-ledger.mjs`.
+- **`todo.md:42` NEW stale-as-done:** Conditions Phase-2 body says "Pickup #4 marked DONE" but checkbox is `[ ]`. Mark `[x]`.
+- **`todo.md:43` 6 mechanics partial:** items 1 (Rest - `5ba32d1`/`bb67398`) + 2 (Vehicles-as-Cover RDM - `f264f7b` 2026-06-01) shipped. 4 remain (Upkeep, Env Damage, Travel, Conditions). Update or split item.
+- **`todo.md:50` AUDIT M1 duplicate:** stale `[ ]` — shipped + `[x]` at line 32. Delete or mark `[x]`.
+- **`todo.md:95` characters RLS BLOCKER:** 9 days, 0 fix commits. Risk Register RED. GM loot/award/ration silently loses data for non-Thriver GMs. Pre-Beta-500 blocker.
+- **`todo.md:150` img_scale visual confirm:** "awaiting Xero's 2-client eyeball" — 12-check gate ran ALL-PASS 2026-05-30 per debug-handoff §1. Mark done or update to track viewport-follow verify separately.
+- **HOPED-FOR (>16 days):** Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string — drain target Beta-500 before 2026-07-01.
+
+**Action:** characters RLS (line 95) is the only LIVE pre-beta BLOCKER — 9 days no fix. Everything else is housekeeping.
+
+---
+
 ## 2026-06-02 06:05 UTC
 
 **Status:** DRIFT (carry-over — 8th consecutive run; same 4 housekeeping items unresolved + 1 new stale-as-done)
