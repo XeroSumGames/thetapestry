@@ -8,6 +8,35 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-06-02 16:23 UTC - weekly audit
+
+**Sections with findings:** npm audit (carry-over), file uploads (minor new), dependency drift
+
+**Closed since last audit (2026-05-26):**
+- `app/scene-controls-popout/page.tsx` tactical-maps upload now uses `prepareUpload` (size + MIME + sanitization, per stability-audit M1 2026-05-30) - FIXED
+
+### npm audit (moderate+)
+
+- `postcss` <8.5.10 — moderate — CVSS 6.1 — "XSS via unescaped `</style>` in CSS stringify output" — bundled in `node_modules/next/node_modules/postcss` — fix: breaking (no viable non-breaking path) — **carry-over, low runtime risk** (build-time CSS; no user-supplied CSS processed at runtime)
+- `next` 9.3.4-canary.0 - 16.3.0-canary.5 — moderate — via postcss — isDirect: true — fix: breaking major downgrade — hold
+- `@sentry/nextjs` >=6.3.6 — moderate — via next — isDirect: true — fix: breaking — hold
+
+### File uploads
+
+- `app/account/page.tsx:102` — avatar upload: no explicit pre-flight size check before calling `resizeImage`. Browser `accept="image/*"` hint is bypassable; canvas resize in `resizeImage` provides implicit guard but no user-visible error for oversized files. All other upload paths use `prepareUpload` with explicit size cap. Inconsistency, low severity (output is always a 256px JPEG, Supabase bucket also enforces limits).
+
+### Dependency drift
+
+- `@supabase/ssr` — 0.9.0 → 0.10.3 (minor; carry-over) — advisory, no known CVEs
+- `react` / `react-dom` — 19.2.4 → 19.2.7 (patch) — advisory, routine patch behind
+
+**Top 3 priorities:**
+1. `postcss`/`next`/`@sentry/nextjs` moderates — no non-breaking fix path available; monitor next.js releases for postcss 8.5.10+ bundle. Re-check weekly.
+2. `app/account/page.tsx:102` — add explicit file size check (e.g. 5 MB cap) + `image/*` content-type pre-validation before calling `resizeImage`, consistent with `prepareUpload` pattern.
+3. `@supabase/ssr` 0.9.0 → 0.10.3 — review changelog; minor bump is low risk.
+
+---
+
 ## 2026-05-26 16:23 UTC - weekly audit
 
 **Sections with findings:** npm audit, file uploads, dependency drift
