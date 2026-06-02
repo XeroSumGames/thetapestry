@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-02 15:10 UTC
+
+**Status:** DRIFT (carry-over — 11th consecutive run; 1 new stale-todo finding)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all SUCCESS (last: 2026-06-02T12:08Z)
+
+**Drift:**
+- **Carry-over (unresolved since 06:05+):** Confidence Ledger stale (debug-handoff §3 says 738/41 → live 853/47); stale `[ ]` todos at lines 43/50/95/150; HOPED-FOR >14 days (Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string).
+- **NEW: `todo.md` E2E vehicle-check spec** — `e2e/vehicle-maintenance-checks.spec.ts` exists covering install+gather. Partially satisfies the `[ROUTED -> E2E lane] deterministic vehicle-check regression spec` open todo. Driving/brew/navigate/attack slice still open; partial stale-as-open (not marking done, just flagging partial coverage).
+- **INFRA NOTE:** `npm ci --silent` left vitest absent in this sandbox run; a second plain `npm ci` restored it. CI (which uses its own env) ran green — no gate impact, but worth knowing if the silent flag ever runs in a new-clone context.
+
+**Action:** same as 12:04 — run `node scripts/refresh-ledger.mjs`; mark todo lines 43/50/95/150 `[x]` or update. No live blockers.
+
+---
+
 ## 2026-06-02 12:04 UTC
 
 **Status:** DRIFT (carry-over x10 — 5 stale todos, 1 ledger drift; CORRECTION: prev runs mis-labelled characters RLS as live blocker — it is stale-as-done)
