@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-02 12:04 UTC
+
+**Status:** DRIFT (carry-over x10 — 5 stale todos, 1 ledger drift; CORRECTION: prev runs mis-labelled characters RLS as live blocker — it is stale-as-done)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all SUCCESS
+
+**Drift:**
+- **Confidence Ledger stale:** debug-handoff §3 says 738/41 → live 853/47. Run `node scripts/refresh-ledger.mjs`.
+- **`todo.md:95` #2 BLOCKER parent `[ ]` — stale-as-done (CORRECTION).** All 3 sub-items are `[x]`. debug-handoff §1 confirms `characters` cross-user writes GREEN (all 8 flows resolved 2026-05-25, e866df0). Previous runs flagged this as "live blocker 9 days no fix" — incorrect; fix shipped 2026-05-24/25. Mark parent `[x]`.
+- **`todo.md:43` "6 mechanics still owe real code" `[ ]`** — Rest (`5ba32d1`/`bb67398`) + Vehicles-as-Cover (`f264f7b` 2026-06-01) shipped. 4 remain (Upkeep, Env Damage, Travel, Conditions). Update or split item.
+- **`todo.md:50` AUDIT M1 `[ ]` — stale-as-done.** `prepareUpload('tactical-maps')` confirmed at `app/scene-controls-popout/page.tsx:384`. Mark `[x]`.
+- **`todo.md:150` img_scale visual confirm `[ ]` — stale-as-done.** "awaiting Xero's 2-client eyeball" — 12-check gate ran ALL-PASS 2026-05-30 (debug-handoff §1 TacticalMap GREEN). Mark `[x]`.
+- **HOPED-FOR (>14 days):** Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string — drain target Beta-500 before 2026-07-01.
+
+**Action:** HP housekeeping — 4 stale `[ ]` todos to mark `[x]` + update the "6 mechanics" item + run `refresh-ledger.mjs`. No live blockers.
+
+---
+
 ## 2026-06-02 09:04 UTC
 
 **Status:** DRIFT (carry-over — 9th consecutive run; 1 new stale-as-done found; characters RLS BLOCKER now 9 days unaddressed)
