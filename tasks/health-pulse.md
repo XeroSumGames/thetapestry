@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-02 06:05 UTC
+
+**Status:** DRIFT (carry-over — 8th consecutive run; same 4 housekeeping items unresolved + 1 new stale-as-done)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed, 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all SUCCESS (verified via GitHub MCP)
+
+**Drift:**
+- **4 carry-overs (unresolved 8 consecutive runs, no code changes since 21:04):**
+  - Confidence Ledger: debug-handoff.md §3 says 738/41 → live 853/47. Run `node scripts/refresh-ledger.mjs`.
+  - `todo.md:43` "6 mechanics still owe real code" still `[ ]` — Rest shipped; verify remaining 5.
+  - `todo.md:95` #2 BLOCKER parent still `[ ]` — all 8 sub-flows CLOSED + GREEN in debug-handoff.
+  - `todo.md:50` AUDIT M1 still `[ ]` — confirmed shipped at `b01b561` (`prepareUpload` at `:384`).
+- **NEW stale-as-done: `todo.md:150`** img_scale todo says "awaiting Xero's 2-client VISUAL eyeball" — the 12-check 2-client gate ran ALL-PASS on 2026-05-30 (debug-handoff §1 TacticalMap entry). Condition satisfied; mark `[x]` or update to track the FOLLOW-UP (fit-to-panel-width) separately.
+- **HOPED-FOR (16+ days):** Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string — drain target Beta-500 before 2026-07-01.
+
+**Action:** HP — `node scripts/refresh-ledger.mjs`; mark todo lines 43, 95, 50, 150 `[x]` or update. (8 runs, escalating.)
+
+---
+
 ## 2026-06-01 21:04 UTC
 
 **Status:** DRIFT (carry-over — 7th consecutive run since 00:06; development active since 18:07)
