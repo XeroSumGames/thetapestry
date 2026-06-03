@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-03 06:07 UTC
+
+**Status:** DRIFT (carry-over — 15th consecutive run; no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all SUCCESS (last: 2026-06-03T00:07Z)
+
+**Drift:**
+- Carry-over (unresolved since prior runs): Confidence Ledger stale (§3 says 738/41 → live 853/47); stale `[ ]` todos at lines 43/50/95/150; HOPED-FOR >14 days (Tier-2 Recruit / Advantages / FI Insight Die / Stress 12-string).
+- No new findings this run — action from 12:04 entry still stands.
+
+**Action:** run `node scripts/refresh-ledger.mjs`; mark todo lines 43/50/95/150 `[x]` or update. No live blockers.
+
+---
+
 ## 2026-06-03 00:06 UTC
 
 **Status:** DRIFT (carry-over — 14th consecutive run; no new findings)
