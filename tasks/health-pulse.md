@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-03 12:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed, 47 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all pass (latest: 2026-06-03T09:05)
+
+**Drift:**
+- HOPED-FOR (4 days old, no playtest update since 2026-05-30 drain pass):
+  - Tier-2 Recruit: Phase A approach flags, Phase B morale-tick drainer + Escape Pending, Phase C modal locked-approach gates — no git activity in last 3 days on recruit area
+  - P3 Q4-b Advantages: schema + library + GM grant dialog + player tab + Use button + Award-on-feed + C3 broadcast — no git activity in last 3 days on advantages area
+  - FI streamline: Insight Die spend + single-modal flow — no git activity in last 3 days
+  - Stress Check 12-string narrative lock + narrative polish (HEAL/UNJAM/REPAIR/Stabilize/Gut Instinct/Group Check/FI/DRIVE/BREW/NAVIGATE) — no git activity in last 3 days
+- Stale-todo (shipped evidence found): AUDIT M1 (`app/scene-controls-popout/page.tsx`) — `prepareUpload('tactical-maps', file)` already at :384 AND `tactical-maps` registered in `lib/safe-upload.ts` BUCKETS. Todo appears fully shipped; audit-correction needed in todo.md.
+
+**Action:** next Beta-500 dry-run playtest is the drain gate for the 4 HOPED-FOR items; mark AUDIT M1 done in todo.md.
+
+---
+
 ## 2026-06-03 09:04 UTC
 
 **Status:** DRIFT (carry-over — 16th consecutive run; no new findings)
