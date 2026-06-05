@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-05 21:06 UTC
+
+**Status:** DRIFT (carry-over — 33rd consecutive run; no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all SUCCESS (latest: 2026-06-05T18:06Z)
+
+**Drift:**
+- Carry-over (>17 days): 4 HOPED-FOR items (Tier-2 Recruit / P3 Q4-b Advantages / FI Insight Die spend / Stress 12-string narrative polish) — drain target is Beta-500 dry-run before 2026-07-01.
+- Carry-over: AUDIT M1 `[ ]` todo stale-as-shipped — `prepareUpload('tactical-maps', file)` wired at `scene-controls-popout:384`. Mark `[x]`.
+- Carry-over: `#2 BLOCKER characters cross-user write` `[ ]` todo stale-as-shipped — debug-handoff marks GREEN (all 8 flows resolved 2026-05-25). Mark `[x]`.
+
+**Action:** close 2 stale todos (AUDIT M1 + #2 BLOCKER characters); schedule Beta-500 dry-run playtest to drain HOPED-FOR list.
+
+---
+
 ## 2026-06-05 18:05 UTC
 
 **Status:** DRIFT (carry-over — 32nd consecutive run; no new findings)
