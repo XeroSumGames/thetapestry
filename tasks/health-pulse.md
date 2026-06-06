@@ -6,6 +6,22 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-06 09:04 UTC
+
+**Status:** DRIFT (carry-over — 35th consecutive run; no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** gh CLI not in sandbox — skipped
+
+**Drift:** carry-over from 06:05 entry — 6 HOPED-FOR items still unplaytested (>7 days); 2 stale todos (#2 BLOCKER characters + AUDIT M1) still marked `[ ]` despite being shipped/resolved.
+
+**Action:** same as 06:05 — schedule Beta-500 dry-run; close the 2 stale todos.
+
+---
+
 ## 2026-06-06 06:05 UTC
 
 **Status:** DRIFT
