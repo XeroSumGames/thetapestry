@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-06 12:06 UTC
+
+**Status:** DRIFT (carry-over — 36th consecutive run; no new findings; 2 stale todos now code-confirmed shipped)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all success (MCP GitHub; gh CLI not in sandbox)
+
+**Drift:**
+- HOPED-FOR (>18 days, no playtest coverage): Tier-2 Recruit (Phase A/B/C), P3 Q4-b Advantages (grant/use/feed), FI streamline (Insight Die + single-modal), Stress Check 12-string narrative lock. Target: next Beta-500 dry-run before 2026-07-01.
+- **STALE TODO #1 — AUDIT M1 confirmed shipped:** `app/scene-controls-popout/page.tsx:384` already calls `prepareUpload('tactical-maps', file)` and `tactical-maps` is registered. Todo `[ ]` is stale — needs `[x]` in `tasks/todo.md`.
+- **STALE TODO #2 — #2 BLOCKER characters RLS confirmed shipped:** `give_item_to_character` RPC is wired at `table/page.tsx:6930`; debug-handoff confirms GREEN (all 8 flows resolved 2026-05-25). Todo `[ ]` is stale — needs `[x]` in `tasks/todo.md`.
+
+**Action:** Mark AUDIT M1 and #2 BLOCKER characters todos done in `tasks/todo.md`; then HOPED-FOR items need next playtest to drain.
+
+---
+
 ## 2026-06-06 09:04 UTC
 
 **Status:** DRIFT (carry-over — 35th consecutive run; no new findings)
