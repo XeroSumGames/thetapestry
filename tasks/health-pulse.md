@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-06 15:05 UTC
+
+**Status:** DRIFT (carry-over — 37th consecutive run; no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high/critical]
+
+**CI:** last 5 runs all success (latest: 2026-06-06T12:07Z, via GitHub MCP)
+
+**Drift:**
+- HOPED-FOR (>19 days, no playtest signal): Tier-2 Recruit (A/B/C), P3 Q4-b Advantages, FI Insight Die spend, Stress 12-string narrative lock. Drain target: Beta-500 dry-run before 2026-07-01.
+- Stale `[ ]` AUDIT M1: `prepareUpload('tactical-maps')` wired at `scene-controls-popout/page.tsx:384`. Mark `[x]`.
+- Stale `[ ]` #2 BLOCKER characters: all 8 flows shipped + verified (debug-handoff GREEN). Mark `[x]`.
+
+**Action:** close 2 stale todos (AUDIT M1 + #2 BLOCKER); schedule Beta-500 dry-run to drain HOPED-FOR.
+
+---
+
 ## 2026-06-06 12:06 UTC
 
 **Status:** DRIFT (carry-over — 36th consecutive run; no new findings; 2 stale todos now code-confirmed shipped)
