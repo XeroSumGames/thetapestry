@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-06 06:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest: 2026-06-06T00:07Z)
+
+**Drift:**
+- HOPED-FOR items - all 6 still unplaytested, >7 days since 2026-05-30 drain pass:
+  - Tier-2 Recruit (Phase A/B/C approach flags, morale-tick, locked-approach gates)
+  - P3 Q4-b Advantages (GM grant dialog, player tab, Use button, Award-on-feed, C3 broadcast)
+  - FI streamline (Insight Die spend + single-modal flow - no multi-player table hit)
+  - Stress Check 12-string narrative lock (unit-tested, never playtested as a set)
+  - Vehicle popout broadcasts (Phase B - awaiting full ride at next playtest)
+  - Combat-flow Phase B (initiative-bar ordering + action decrement - awaiting 4 HP testids)
+- Stale todo item 28: `img_scale` fix CODE SHIPPED 2026-05-27 — awaiting Xero 2-client visual eyeball for 10 days. Close it or confirm it's still pending.
+
+**Action:** Schedule Beta-500 dry-run to drain HOPED-FOR list (target ≤7/1). Close todo item 28 if the visual eyeball already happened.
+
+---
+
 ## 2026-06-06 00:06 UTC
 
 **Status:** DRIFT (carry-over — 34th consecutive run; no new findings)
