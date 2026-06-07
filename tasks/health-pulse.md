@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-07 09:05 UTC
+
+**Status:** DRIFT (carry-over run 42)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (most recent 2026-06-07T06:08:14Z via GitHub MCP)
+
+**Drift:**
+- **HOPED-FOR >18d unplaytested (debug-handoff §3):** Tier-2 Recruit (Phase A/B/C approach flags + morale-tick drainer + modal gates), P3 Q4-b Advantages (unit-tested, never 2-client playtested), FI streamline (Insight Die spend + single-modal flow), Stress Check 12-string narrative lock + narrative polish across 10 roll types. No git activity on any of these surfaces in the last 3 days. Fresh drain target is Beta-500 dry-run before 2026-07-01.
+- **Stale-as-open #1 (todo.md L50):** `[MEDIUM][HP] AUDIT M1 - close security carry-over` — `prepareUpload('tactical-maps', file)` IS wired at `app/scene-controls-popout/page.tsx:384`; a separate todo entry (L31) explicitly marks AUDIT M1 SHIPPED. Checkbox needs `[x]`.
+- **Stale-as-open #2 (todo.md L95):** `#2 BLOCKER - characters cross-user write data-loss CLASS` parent checkbox open — all sub-entries show `[x]` shipped (GM policy, RPC, client rewire, E2E un-fixme). Parent checkbox needs `[x]`.
+
+**Action:** HOPED-FOR items now >18 days without playtest signal — flag for Xero: schedule a Beta-500 dry-run session soon to drain these or accept them as untested pre-KS risk. Stale todos are cosmetic; update checkboxes when convenient.
+
+---
+
 ## 2026-06-07 06:07 UTC
 
 **Status:** DRIFT (carry-over — 41st consecutive run; no new findings)
