@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-09 18:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [0 high, 0 critical]
+
+**CI:** last 5 runs all pass (latest 16:26 UTC)
+
+**Drift:**
+- HOPED-FOR >21d (no playtest evidence): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal flow), Stress Check 12-string narrative lock. Fresh drain target: Beta-500 dry-run before 2026-07-01.
+- AUDIT M1 stale-open: `scene-controls-popout/page.tsx` `prepareUpload('tactical-maps')` IS SHIPPED (line 384). Close the todo.
+- **NEW (security-audit 2026-06-09 16:23 UTC):** `app/gm-notes-popout/page.tsx:694` — `dangerouslySetInnerHTML` with prop-passed `title`; no live XSS today (all callers use static strings), but API is a trap if a DB value ever flows in. Fix: replace with React text node + sibling span. Logged in `tasks/security-audit.md`.
+
+**Action:** close AUDIT M1 todo (already shipped); review gm-notes-popout XSS trap before next caller adds a DB-sourced title string.
+
+---
+
 ## 2026-06-09 15:06 UTC
 
 **Status:** DRIFT (carry-over run 57)
