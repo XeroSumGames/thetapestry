@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-09 12:09 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all pass (latest: 2026-06-09T09:08 UTC)
+
+**Drift:**
+- HOPED-FOR - Tier-2 Recruit (Phase A/B/C) - no git touch in 3+ days, no playtest signal. Still unverified.
+- HOPED-FOR - P3 Q4-b Advantages (GM grant dialog + player tab + Use button + C3 broadcast) - no git touch in 3+ days. Unit-tested only.
+- HOPED-FOR - FI streamline Phase 2/3 (single-modal flow + Insight Die spend) - no git touch in 3+ days. No multi-player table coverage.
+- HOPED-FOR - Stress Check 12-string narrative lock (across 10 roll types) - no git touch in 3+ days. Unit-tested only.
+- STALE-OPEN todo `[MEDIUM][HP] AUDIT M1` - `prepareUpload('tactical-maps', file)` is live at `app/scene-controls-popout/page.tsx:384` AND `tactical-maps` is registered in `lib/safe-upload.ts:36`. Both halves of the fix are shipped. Mark done.
+
+**Action:** Mark AUDIT M1 todo done (already shipped). HOPED-FOR drain target = next Beta-500 dry-run playtest before 2026-07-01.
+
+---
+
 ## 2026-06-09 09:06 UTC
 
 **Status:** DRIFT (carry-over run 56)
