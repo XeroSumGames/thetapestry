@@ -8,6 +8,39 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-06-09 16:23 UTC - weekly audit
+
+**Sections with findings:** npm audit (carry-over), XSS pattern (new), file uploads (carry-over), dependency drift
+
+**Closed since last audit (2026-06-02):**
+- Nothing closed. Previous items remain open.
+
+### npm audit (moderate+)
+
+- `postcss` <8.5.10 — moderate — CVSS 6.1 — "XSS via unescaped `</style>` in CSS stringify output" — transitive via `next` — fix: breaking — **carry-over, low runtime risk** (build-time only; app does not process user-supplied CSS at runtime)
+- `next` 9.3.4-canary.0 - 16.3.0-canary.5 — moderate — via postcss — isDirect: true — fix: breaking major downgrade — hold
+- `@sentry/nextjs` >=6.3.6 — moderate — via next — isDirect: true — fix: breaking — hold
+
+### Injection / XSS patterns
+
+- `app/gm-notes-popout/page.tsx:694` — **NEW** — `dangerouslySetInnerHTML={{ __html: \`${title} <span ...>\` }}` in `Section` component, `title` is an unescaped prop — all current callers pass static strings ("Plot Beats & Notes", "Tactical Scenes", "NPCs", "Pins") so no live XSS vector today, but component API accepts any string; if any future caller passes a user-sourced DB value (e.g. a note category name) this becomes stored XSS — harden by rendering title as a text node + a separate static span, or sanitize with DOMPurify before HTML interpolation
+
+### File uploads
+
+- `app/account/page.tsx:102` — avatar upload: **carry-over** — no explicit file type/extension whitelist before `resizeImage`; browser `accept="image/*"` is bypassable; canvas render acts as implicit guard but no typed rejection; all other upload paths use `prepareUpload` — low severity (output is always `contentType: 'image/jpeg'`, canvas fails gracefully for non-images, Supabase bucket enforces limits)
+
+### Dependency drift
+
+- `@supabase/ssr` — 0.9.0 → 0.12.0 (3 minor versions behind, was 0.10.3 at last audit — drifting) — advisory, review changelog before bump
+- `react` / `react-dom` — 19.2.4 → 19.2.7 (patch) — carry-over, routine
+
+**Top 3 priorities:**
+1. `app/gm-notes-popout/page.tsx:694` — dangerouslySetInnerHTML with prop-passed `title`. No live XSS today but the API is a trap. Replace with `<span>{title}</span>` + separate `<span style="color:#5a5550"> · {count}</span>` as sibling React elements — eliminates the risk without visual change.
+2. `app/account/page.tsx:102` — carry-over: add explicit MIME/extension pre-check before `resizeImage` (e.g. `if (!/^image\/(jpeg|jpg|png|gif|webp)$/.test(file.type)) return`) to match `prepareUpload` pattern used everywhere else.
+3. `@supabase/ssr` 0.9.0 → 0.12.0 — 3 minor versions of drift; review changelog and bump in a low-traffic window. Last two audits deferred this.
+
+---
+
 ## 2026-06-02 16:23 UTC - weekly audit
 
 **Sections with findings:** npm audit (carry-over), file uploads (minor new), dependency drift
