@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-09 21:07 UTC
+
+**Status:** DRIFT (carry-over run 59)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [0 high, 0 critical]
+
+**CI:** last 5 runs all pass (latest 18:08 UTC)
+
+**Drift:**
+- HOPED-FOR >21d: Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal flow), Stress Check 12-string narrative lock. 0 recent commits. Drain target: Beta-500 dry-run before 2026-07-01.
+- AUDIT M1 stale-open: `prepareUpload('tactical-maps')` shipped at `scene-controls-popout/page.tsx:384`. Flip checkbox.
+- gm-notes XSS trap carry-over: `app/gm-notes-popout/page.tsx:694` dangerouslySetInnerHTML — flagged NEW in 18:06 run + security-audit 2026-06-09. No live vector today; fix before any caller passes a DB-sourced title.
+
+**Action:** carry-over — no new findings. Prioritize gm-notes XSS fix (Hunt & Peck) + Beta-500 dry-run to drain HOPED-FOR.
+
+---
+
 ## 2026-06-09 18:06 UTC
 
 **Status:** DRIFT
