@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-09 15:06 UTC
+
+**Status:** DRIFT (carry-over run 57)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all pass (latest 2026-06-09T12:10:00Z)
+
+**Drift:**
+- **HOPED-FOR >21d (debug-handoff §3):** Tier-2 Recruit (Phase A/B/C), P3 Q4-b Advantages, FI Insight Die spend + single-modal flow, Stress Check 12-string narrative lock. 0 commits in last 3 days. Drain target: Beta-500 dry-run before 2026-07-01.
+- **Stale-as-open (todo.md):** `AUDIT M1` — `prepareUpload('tactical-maps')` live at `scene-controls-popout/page.tsx:384` + `tactical-maps` registered in `lib/safe-upload.ts:36`. Mark done.
+
+**Action:** same carry-over — schedule Beta-500 dry-run before 7/1 to drain HOPED-FOR; flip AUDIT M1 checkbox when convenient.
+
+---
+
 ## 2026-06-09 12:09 UTC
 
 **Status:** DRIFT
