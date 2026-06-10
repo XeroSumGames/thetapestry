@@ -53,8 +53,21 @@ uses. Verify on the live site (prod) after the Vercel deploy.
       Stress row (NPCs don't track Stress). If the NPC was the active combatant
       and gets incapped, the turn auto-advances.
 
+## 7. Break Free (Phase 2b, commit `e5c1b61`)
+- [ ] As the GRABBED defender, on your turn the action bar shows **Break Free**.
+      Click it -> modal eyebrow "BREAK FREE", shows the grappler as a fixed
+      "Held by" target (no picker/Change), Roll button "Break Free".
+- [ ] Opposed roll: YOU (breaker) `2d6+PHY+Unarmed` vs the grappler
+      `2d6+PHY+max(Unarmed,Athletics)`. Insight Die + CMod available to you.
+- [ ] **Breaker wins** -> "X breaks free!" (green); `grappled_by` clears; you're
+      free; the grappler loses NO action (they contested reactively); no RP.
+- [ ] **Breaker loses (grappler wins OR a tie)** -> "X is still held!" (red);
+      you take **1 RP**; you stay grappled.
+- [ ] Either way, the breaker spends 1 action; the grappler does not.
+- [ ] If your failed-escape 1 RP drops you to 0 -> you incap (Lights Out + Stress
+      pip), actions zero. Confirm on both clients.
+
 ## Not in this phase (don't expect)
-- Break Free is still the OLD behavior (reopens the grapple modal) - Phase 2b.
 - "Lose next action whenever it falls" carryover when the defender has 0 actions
   left this round - Phase 3 (needs the `pending_action_loss` column).
 - Standalone Subdue (combat-action row 33) still deals full WP - separate pickup.
