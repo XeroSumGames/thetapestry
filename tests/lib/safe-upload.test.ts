@@ -87,6 +87,20 @@ describe('prepareUpload', () => {
     expect(prepareUpload('tactical-maps', f('vector.svg')).ok).toBe(false)
   })
 
+  it('account-avatars has 5 MB cap', () => {
+    const at5mb = 5 * 1024 * 1024
+    expect(prepareUpload('account-avatars', f('me.jpg', at5mb)).ok).toBe(true)
+    expect(prepareUpload('account-avatars', f('me.jpg', at5mb + 1)).ok).toBe(false)
+  })
+
+  it('account-avatars allows image extensions only, blocks SVG', () => {
+    expect(prepareUpload('account-avatars', f('me.png')).ok).toBe(true)
+    expect(prepareUpload('account-avatars', f('me.jpg')).ok).toBe(true)
+    expect(prepareUpload('account-avatars', f('me.webp')).ok).toBe(true)
+    expect(prepareUpload('account-avatars', f('me.svg')).ok).toBe(false)
+    expect(prepareUpload('account-avatars', f('me.pdf')).ok).toBe(false)
+  })
+
   it('rejects SVG (script-execution risk)', () => {
     const r = prepareUpload('pin-attachments', f('vector.svg'))
     expect(r.ok).toBe(false)

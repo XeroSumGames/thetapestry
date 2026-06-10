@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { resizeImage } from '../../lib/image-utils'
+import { prepareUpload } from '../../lib/safe-upload'
 
 interface ProfileRow {
   id: string
@@ -102,8 +103,19 @@ export default function AccountPage() {
 
   async function handleAvatarUpload(file: File) {
     if (!userId || !file) return
-    setAvatarUploading(true)
     setAvatarMessage('')
+    // Validate size + MIME at the boundary BEFORE touching resizeImage
+    // (decoding hostile input). Security-audit 2026-06-02 carry-over:
+    // every other upload path goes through safe-upload; avatar was the
+    // last hold-out. The 5 MB cap + IMAGE_EXT whitelist live in
+    // lib/safe-upload.ts BUCKETS['account-avatars']. SVG remains blocked
+    // by virtue of the IMAGE_EXT map (no svg key).
+    const check = prepareUpload('account-avatars', file)
+    if (!check.ok) {
+      setAvatarMessage(check.reason)
+      return
+    }
+    setAvatarUploading(true)
     try {
       // Resize to 256px max edge so avatars are tiny + load fast on
       // the sidebar. resizeImage returns a JPEG data URL; convert

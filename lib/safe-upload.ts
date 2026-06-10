@@ -34,6 +34,12 @@ const BUCKETS: Record<string, BucketRule> = {
   // because high-res GM maps run 5-20 MB; capped at 25 to prevent abuse
   // without strangling legitimate use. Stability-audit M1 (2026-05-30).
   'tactical-maps':       { maxBytes: 25 * 1024 * 1024, extToCt: IMAGE_EXT },
+  // account-avatars holds user profile pictures. The resizeImage step
+  // downsamples to 256px JPEG so the stored object is always tiny, but
+  // we still cap the raw upload size + MIME at the boundary so we don't
+  // even start decoding hostile input. Security-audit 2026-06-02
+  // carry-over (closed 2026-06-10).
+  'account-avatars':     { maxBytes: 5 * 1024 * 1024,  extToCt: IMAGE_EXT },
 }
 
 const MAX_STEM_LEN = 80

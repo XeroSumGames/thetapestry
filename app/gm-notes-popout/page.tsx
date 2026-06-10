@@ -689,10 +689,10 @@ function chipStyle(bg: string, color: string, border: string): React.CSSProperti
 function Section({ title, count, emptyText, children }: { title: string; count: number; emptyText: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '24px' }}>
-      <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: `${title} <span style="color:#5a5550">· ${count}</span>` }}
-      />
+      <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
+        <span>{title}</span>
+        <span style={{ color: '#5a5550' }}> · {count}</span>
+      </div>
       {count === 0 ? (
         <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', padding: '8px 0' }}>{emptyText}</div>
       ) : (
