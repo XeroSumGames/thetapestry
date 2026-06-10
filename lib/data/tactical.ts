@@ -90,6 +90,10 @@ export function revealInitiativeEntry(id: string) {
 export function setInitiativeActions(id: string, actions: number) {
   return db().from('initiative_order').update({ actions_remaining: actions }).eq('id', id)
 }
+/** Set (or clear, with null) the grappled_by hold on an initiative entry. */
+export function setGrappledBy(id: string, by: string | null) {
+  return db().from('initiative_order').update({ grappled_by: by }).eq('id', id)
+}
 /** Make a scene token visible by npc_id (Reveal hidden NPC flow). */
 export function makeTokenVisibleByNpc(sceneId: string, npcId: string) {
   return db().from('scene_tokens').update({ is_visible: true }).eq('scene_id', sceneId).eq('npc_id', npcId)

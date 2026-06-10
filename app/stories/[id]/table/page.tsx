@@ -72,7 +72,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
-import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions } from '../../../../lib/data/tactical'
+import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy } from '../../../../lib/data/tactical'
 import { applyDamageToPc, applyDamageToNpc } from '../../../../lib/data/combat'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { useSceneNav } from './useSceneNav'
@@ -5745,7 +5745,19 @@ export default function TablePage() {
                     <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
                       Grappled by {activeEntry.grappled_by}
                     </span>
-                    <button onClick={() => { setGrappleMode('grapple'); setGrappleResult(null); setShowGrappleModal(true) }}
+                    <button onClick={() => {
+                      // Break Free = the held defender's escape attempt. Opposed
+                      // check vs the grappler (who contests reactively, no action).
+                      // Target is the grappler, so no picker.
+                      const grappler = initiativeOrder.find(e => e.character_name === activeEntry.grappled_by)
+                      if (!grappler) return
+                      setGrappleMode('breakfree')
+                      setGrappleResult(null)
+                      setGrappleTarget(grappler)
+                      setGrappleInsight('none')
+                      setGrappleCmod('0')
+                      setShowGrappleModal(true)
+                    }}
                       style={actBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Break Free</button>
                   </>
                 )}
@@ -8795,6 +8807,51 @@ export default function TablePage() {
             return
           }
 
+          // BREAK FREE branch: the grappled defender (active) spends an action
+          // to escape; targetEntry is the grappler, who contests REACTIVELY -
+          // no action cost to them. The breaker must WIN the opposed check to
+          // slip free. Any non-win (grappler win OR a tie) is a failed struggle
+          // that costs the breaker 1 RP and the hold persists (Xero's binary
+          // win/lose framing - a tie counts as failing to break free).
+          if (grappleMode === 'breakfree') {
+            const escaped = attackerWins
+            if (escaped) {
+              await setGrappledBy(active.id, null)
+              await loadInitiative(id)
+            } else {
+              // Failed struggle: 1 RP to the breaker, via the shared apply-damage
+              // path so a breaker already at 1 RP incaps correctly.
+              const bfCtx = { campaignId: id, userId, attackerName: targetEntry.character_name, defenderName: active.character_name }
+              if (charEntry?.liveState) {
+                const ls = charEntry.liveState
+                const { patch, transition } = await applyDamageToPc(charEntry.stateId, { wp_current: ls.wp_current, rp_current: ls.rp_current, stress: ls.stress ?? 0, phyMod: aPhyMod }, { wp: 0, rp: 1 }, bfCtx)
+                setEntries(prev => prev.map(e => e.stateId === charEntry.stateId ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
+                if (transition.becameIncap) await setInitiativeActions(active.id, 0)
+              } else if (npcAttacker) {
+                const { patch, transition } = await applyDamageToNpc(npcAttacker.id, { wp_current: npcAttacker.wp_current ?? npcAttacker.wp_max ?? 10, rp_current: npcAttacker.rp_current ?? npcAttacker.rp_max ?? 6, phyMod: (npcAttacker.physicality ?? 0) }, { wp: 0, rp: 1 }, bfCtx)
+                setCampaignNpcs(prev => prev.map((n: any) => n.id === npcAttacker.id ? { ...n, ...patch } : n))
+                setRosterNpcs(prev => prev.map((n: any) => n.id === npcAttacker.id ? { ...n, ...patch } : n))
+                if (transition.becameIncap) await setInitiativeActions(active.id, 0)
+              }
+            }
+            await insertRollLog({
+              campaign_id: id, user_id: userId, character_name: active.character_name,
+              label: `${active.character_name} - Break Free from ${targetEntry.character_name}${escaped ? ' (escapes!)' : ' (held - 1 RP)'}${insightSpent ? (insightMode === '3d6' ? ' (3d6 Insight)' : ' (+3 CMod Insight)') : ''}`,
+              die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aUnarmed, cmod: totalCmod,
+              total: aTotal, outcome: escaped ? OUTCOME.Grappled : OUTCOME.GrappleFailed,
+            })
+            setGrappleResult({
+              attackerName: active.character_name, defenderName: targetEntry.character_name,
+              aDie1, aDie2, aTotal, aOutcome, aCmod: totalCmod, aDiceRolled,
+              dDie1, dDie2, dTotal, dOutcome,
+              result: escaped ? 'grappled' : 'failed',
+              rpTarget: escaped ? null : active.character_name,
+              insightSpent, mode: 'breakfree',
+            })
+            await consumeAction(active.id)
+            return
+          }
+
           // Apply effects
           if (attackerWins) {
             // Target is grappled, take 1 RP
@@ -8855,6 +8912,10 @@ export default function TablePage() {
           setGrappleMode('grapple')
         }
         const isSubdue = grappleMode === 'subdue'
+        const isBreakFree = grappleMode === 'breakfree'
+        // Subdue + Break Free both target a fixed opponent (the pinned defender /
+        // the grappler) - no picker, no "Change".
+        const isFixedTarget = grappleMode !== 'grapple'
 
         // Shell `result` shape - attacker dice/total drive the top dice
         // tiles; the opposed comparison + verdict live in renderOutcome,
@@ -8876,7 +8937,7 @@ export default function TablePage() {
             open={showGrappleModal}
             onClose={closeGrapple}
             title={active.character_name}
-            eyebrow={isSubdue ? 'Subdue' : 'Grapple'}
+            eyebrow={isSubdue ? 'Subdue' : isBreakFree ? 'Break Free' : 'Grapple'}
             accent="#c0392b"
             dimBackdrop={false}
             subtitle={`PHY ${aPhyMod >= 0 ? '+' : ''}${aPhyMod} · Unarmed ${aUnarmed >= 0 ? '+' : ''}${aUnarmed}`}
@@ -8908,9 +8969,9 @@ export default function TablePage() {
               ) : (
                 <div style={{ marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>{isSubdue ? 'Pinned' : 'Target'}</span>
-                    {/* No "Change" in subdue mode - the target is the held defender. */}
-                    {!isSubdue && (
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>{isSubdue ? 'Pinned' : isBreakFree ? 'Held by' : 'Target'}</span>
+                    {/* No "Change" when the target is fixed (subdue's pinned foe / break-free's grappler). */}
+                    {!isFixedTarget && (
                       <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
                         style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', padding: 0 }}>Change</button>
                     )}
@@ -8923,7 +8984,7 @@ export default function TablePage() {
             ) : null}
             onRoll={() => { if (grappleTarget) executeGrapple(grappleTarget, grappleInsight) }}
             rollDisabled={!grappleTarget}
-            rollLabel={grappleInsight === '3d6' ? '🎲 Roll 3d6' : (isSubdue ? '🎲 Roll Subdue' : '🎲 Roll Grapple')}
+            rollLabel={grappleInsight === '3d6' ? '🎲 Roll 3d6' : (isSubdue ? '🎲 Roll Subdue' : isBreakFree ? '🎲 Break Free' : '🎲 Roll Grapple')}
             result={grappleRollResult}
             renderOutcome={() => {
               const gr = grappleResult!
@@ -8954,6 +9015,8 @@ export default function TablePage() {
                   <div style={{ padding: '10px', borderRadius: '3px', textAlign: 'center', marginBottom: gr.rpTarget ? '8px' : '1rem', fontSize: '16px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', background: bannerBg, border: `1px solid ${bannerBorder}`, color: bannerColor }}>
                     {gr.mode === 'subdue'
                       ? (gr.result === 'grappled' ? `${gr.defenderName} is Subdued!` : `${gr.defenderName} slips the choke`)
+                      : gr.mode === 'breakfree'
+                      ? (gr.result === 'grappled' ? `${gr.attackerName} breaks free!` : `${gr.attackerName} is still held!`)
                       : (<>
                           {gr.result === 'grappled' && `${gr.defenderName} is Grappled!`}
                           {gr.result === 'failed' && 'Grapple Failed!'}
