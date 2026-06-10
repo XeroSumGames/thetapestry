@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-10 18:10 UTC
+
+**Status:** DRIFT (run 65 — 2 carry-over findings RESOLVED since run 64; 4 HOPED-FOR remain)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [855 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-10T17:12Z)
+
+**Drift:**
+- HOPED-FOR >22d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal), Stress Check 12-string narrative lock. 0 commits to these areas in 3 days. Drain target: Beta-500 dry-run before 2026-07-01.
+
+**Resolved since run 64:**
+- gm-notes XSS trap: FIXED `03453dd` — dangerouslySetInnerHTML replaced with React fragment; avatar upload now routes through `prepareUpload`. +2 tests.
+- AUDIT M1 stale-open: CLOSED `207f624` — duplicate todo entry checked off.
+
+**Action:** schedule Beta-500 dry-run — the 4 HOPED-FOR items are 22d old, Beta-500 target is 2026-07-01, and a playtest is the only drain path.
+
+---
+
 ## 2026-06-10 15:12 UTC
 
 **Status:** DRIFT (carry-over run 64 — same findings as runs 55-63, no resolution)
