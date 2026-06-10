@@ -86,6 +86,10 @@ export function campaignInitiativeOrder(campaignId: string) {
 export function revealInitiativeEntry(id: string) {
   return db().from('initiative_order').update({ hidden_from_players: false }).eq('id', id)
 }
+/** Set an initiative entry's remaining actions (e.g. zero them on incap/mortal). */
+export function setInitiativeActions(id: string, actions: number) {
+  return db().from('initiative_order').update({ actions_remaining: actions }).eq('id', id)
+}
 /** Make a scene token visible by npc_id (Reveal hidden NPC flow). */
 export function makeTokenVisibleByNpc(sceneId: string, npcId: string) {
   return db().from('scene_tokens').update({ is_visible: true }).eq('scene_id', sceneId).eq('npc_id', npcId)

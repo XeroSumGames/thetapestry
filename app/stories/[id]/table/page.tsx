@@ -72,7 +72,8 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
-import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc } from '../../../../lib/data/tactical'
+import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions } from '../../../../lib/data/tactical'
+import { applyDamageToPc, applyDamageToNpc } from '../../../../lib/data/combat'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { useSceneNav } from './useSceneNav'
 import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../lib/tactical-view'
@@ -703,6 +704,11 @@ export default function TablePage() {
   const groupCheckPayloadRef = useRef<{ participants: string[]; skill: string } | null>(null)
   const [showReadyWeaponModal, setShowReadyWeaponModal] = useState(false)
   const [showGrappleModal, setShowGrappleModal] = useState(false)
+  // The grapple modal serves three opposed-check moves that share the same
+  // PHY+Unarmed vs PHY+(Unarmed|Athletics) roll: 'grapple' (restrain),
+  // 'subdue' (the choke on a pinned defender - 1 WP + (1d3+PHY+Unarmed) RP),
+  // and 'breakfree' (defender escapes; grappler contests reactively).
+  const [grappleMode, setGrappleMode] = useState<'grapple' | 'subdue' | 'breakfree'>('grapple')
   // Two-step grapple flow: click a target → confirm + optionally spend
   // an Insight Die (3d6 or +3 CMod) → roll. Previously the click rolled
   // instantly which meant there was no window to spend insight - all
@@ -724,6 +730,11 @@ export default function TablePage() {
     result: 'grappled' | 'failed' | 'no_victor'
     rpTarget: string | null
     insightSpent?: boolean
+    // Which move produced this result - drives the verdict banner copy.
+    mode?: 'grapple' | 'subdue' | 'breakfree'
+    // Subdue-only: WP + RP dealt on a successful choke (for the result line).
+    subWP?: number
+    subRP?: number
   } | null>(null)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
@@ -5734,7 +5745,7 @@ export default function TablePage() {
                     <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
                       Grappled by {activeEntry.grappled_by}
                     </span>
-                    <button onClick={() => { setGrappleResult(null); setShowGrappleModal(true) }}
+                    <button onClick={() => { setGrappleMode('grapple'); setGrappleResult(null); setShowGrappleModal(true) }}
                       style={actBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Break Free</button>
                   </>
                 )}
@@ -5745,18 +5756,18 @@ export default function TablePage() {
                       Grappling {grappledTarget.character_name}
                     </span>
                     <button onClick={() => {
+                      // Subdue = the choke on the pinned defender. Opposed
+                      // Unarmed Combat (fists only - no melee substitution) via
+                      // the grapple modal in subdue mode; on a hold it deals
+                      // 1 WP + (1d3+PHY+Unarmed) RP. Target is the already-held
+                      // defender, so no picker.
                       clearAimIfActive(activeEntry.id)
-                      const rapid = charEntry?.character.data?.rapid ?? {}
-                      const npcAtkr = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
-                      const wName = isMelee && w ? w.name : 'Unarmed'
-                      const wDmg = isMelee && w ? w.damage : '1d3'
-                      const amod = npcAtkr ? (npcAtkr.physicality ?? 0) : (rapid.PHY ?? 0)
-                      const skillName = isMelee && w ? 'Melee Combat' : 'Unarmed Combat'
-                      const smod = npcAtkr
-                        ? (Array.isArray(npcAtkr.skills?.entries) ? npcAtkr.skills.entries.find((s: any) => s.name === skillName)?.level ?? 0 : 0)
-                        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
-                      setTargetName(grappledTarget.character_name)
-                      handleRollRequest(`${activeEntry.character_name} - Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, conditionCmod: 0 })
+                      setGrappleMode('subdue')
+                      setGrappleResult(null)
+                      setGrappleTarget(grappledTarget)
+                      setGrappleInsight('none')
+                      setGrappleCmod('0')
+                      setShowGrappleModal(true)
                     }}
                       style={actBtn('#2a1210', '#f5a89a', '#5a1d1d')}>Subdue</button>
                     <button onClick={async () => {
@@ -6037,7 +6048,7 @@ export default function TablePage() {
                 ) : null}
 
                 {/* ── GRAPPLE: Opposed Unarmed Combat check ── */}
-                <button onClick={() => { setGrappleResult(null); setShowGrappleModal(true) }}
+                <button onClick={() => { setGrappleMode('grapple'); setGrappleResult(null); setShowGrappleModal(true) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Grapple</button>
 
                 {/* ── INSPIRE - opens social-target picker (no roll, auto-applies) ── */}
@@ -8733,6 +8744,57 @@ export default function TablePage() {
           const defenderWins = dTier > aTier
           const result = attackerWins ? 'grappled' as const : defenderWins ? 'failed' as const : 'no_victor' as const
 
+          // SUBDUE branch: the choke on a pinned defender. The opposed roll
+          // above already decided it (attackerWins = grappler holds the choke;
+          // a defender win = "too slippery to hold"). On a hold, deal
+          // 1 WP + (1d3 + PHY AMod + Unarmed SMod) RP through the centralized
+          // applyDamageTransition so incap/mortal/Stress fire EXACTLY as a
+          // weapon hit would (SMOKE-1: one decision path, no divergence).
+          // RP-heavy on purpose - the point is to drop them to incap.
+          if (grappleMode === 'subdue') {
+            const held = attackerWins
+            let subWP = 0, subRP = 0
+            if (held) {
+              const d3 = Math.floor(Math.random() * 3) + 1
+              subWP = 1
+              subRP = d3 + aPhyMod + aUnarmed
+              // DB write + mortal/incap/Stress feed rows live in lib/data/combat
+              // (one home, no inline .from in this god-component); we keep the
+              // optimistic setState + nextTurn here since they need React state.
+              const dmgCtx = { campaignId: id, userId, attackerName: active.character_name, defenderName: targetEntry.character_name }
+              if (defCharEntry?.liveState) {
+                const ls = defCharEntry.liveState
+                const { patch, transition } = await applyDamageToPc(defCharEntry.stateId, { wp_current: ls.wp_current, rp_current: ls.rp_current, stress: ls.stress ?? 0, phyMod: dPhyMod }, { wp: subWP, rp: subRP }, dmgCtx)
+                setEntries(prev => prev.map(e => e.stateId === defCharEntry.stateId ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
+                if (transition.becameMortal || transition.becameIncap) await setInitiativeActions(targetEntry.id, 0)
+              } else if (defNpc) {
+                const { patch, transition } = await applyDamageToNpc(defNpc.id, { wp_current: defNpc.wp_current ?? defNpc.wp_max ?? 10, rp_current: defNpc.rp_current ?? defNpc.rp_max ?? 6, phyMod: (defNpc.physicality ?? 0) }, { wp: subWP, rp: subRP }, dmgCtx)
+                setCampaignNpcs(prev => prev.map((n: any) => n.id === defNpc.id ? { ...n, ...patch } : n))
+                setRosterNpcs(prev => prev.map((n: any) => n.id === defNpc.id ? { ...n, ...patch } : n))
+                if (transition.becameMortal || transition.becameIncap) {
+                  const ie = initiativeOrder.find(e => e.npc_id === defNpc.id)
+                  if (ie) { await setInitiativeActions(ie.id, 0); if (ie.is_active) await nextTurn() }
+                }
+              }
+            }
+            await insertRollLog({
+              campaign_id: id, user_id: userId, character_name: active.character_name,
+              label: `${active.character_name} - Subdue ${targetEntry.character_name}${held ? ` (1 WP + ${subRP} RP)` : ' (slips the choke)'}${insightSpent ? (insightMode === '3d6' ? ' (3d6 Insight)' : ' (+3 CMod Insight)') : ''}`,
+              die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aUnarmed, cmod: totalCmod,
+              total: aTotal, outcome: held ? OUTCOME.Grappled : OUTCOME.GrappleNoVictor,
+            })
+            setGrappleResult({
+              attackerName: active.character_name, defenderName: targetEntry.character_name,
+              aDie1, aDie2, aTotal, aOutcome, aCmod: totalCmod, aDiceRolled,
+              dDie1, dDie2, dTotal, dOutcome,
+              result: held ? 'grappled' : 'no_victor',
+              rpTarget: held ? targetEntry.character_name : null,
+              insightSpent, mode: 'subdue', subWP: held ? subWP : 0, subRP: held ? subRP : 0,
+            })
+            await consumeAction(active.id)
+            return
+          }
+
           // Apply effects
           if (attackerWins) {
             // Target is grappled, take 1 RP
@@ -8790,7 +8852,9 @@ export default function TablePage() {
           setGrappleTarget(null)
           setGrappleInsight('none')
           setGrappleCmod('0')
+          setGrappleMode('grapple')
         }
+        const isSubdue = grappleMode === 'subdue'
 
         // Shell `result` shape - attacker dice/total drive the top dice
         // tiles; the opposed comparison + verdict live in renderOutcome,
@@ -8812,7 +8876,7 @@ export default function TablePage() {
             open={showGrappleModal}
             onClose={closeGrapple}
             title={active.character_name}
-            eyebrow="Grapple"
+            eyebrow={isSubdue ? 'Subdue' : 'Grapple'}
             accent="#c0392b"
             dimBackdrop={false}
             subtitle={`PHY ${aPhyMod >= 0 ? '+' : ''}${aPhyMod} · Unarmed ${aUnarmed >= 0 ? '+' : ''}${aUnarmed}`}
@@ -8844,9 +8908,12 @@ export default function TablePage() {
               ) : (
                 <div style={{ marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>Target</span>
-                    <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
-                      style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', padding: 0 }}>Change</button>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>{isSubdue ? 'Pinned' : 'Target'}</span>
+                    {/* No "Change" in subdue mode - the target is the held defender. */}
+                    {!isSubdue && (
+                      <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
+                        style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', padding: 0 }}>Change</button>
+                    )}
                   </div>
                   <div style={{ padding: '8px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: grappleTarget.is_npc ? '#7fc458' : '#c0392b' }}>
                     {grappleTarget.character_name}{grappleTarget.is_npc ? ' (NPC)' : ''}
@@ -8856,7 +8923,7 @@ export default function TablePage() {
             ) : null}
             onRoll={() => { if (grappleTarget) executeGrapple(grappleTarget, grappleInsight) }}
             rollDisabled={!grappleTarget}
-            rollLabel={grappleInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll Grapple'}
+            rollLabel={grappleInsight === '3d6' ? '🎲 Roll 3d6' : (isSubdue ? '🎲 Roll Subdue' : '🎲 Roll Grapple')}
             result={grappleRollResult}
             renderOutcome={() => {
               const gr = grappleResult!
@@ -8885,13 +8952,19 @@ export default function TablePage() {
                   </div>
                   {/* Verdict banner. */}
                   <div style={{ padding: '10px', borderRadius: '3px', textAlign: 'center', marginBottom: gr.rpTarget ? '8px' : '1rem', fontSize: '16px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', background: bannerBg, border: `1px solid ${bannerBorder}`, color: bannerColor }}>
-                    {gr.result === 'grappled' && `${gr.defenderName} is Grappled!`}
-                    {gr.result === 'failed' && 'Grapple Failed!'}
-                    {gr.result === 'no_victor' && 'No Clear Victor'}
+                    {gr.mode === 'subdue'
+                      ? (gr.result === 'grappled' ? `${gr.defenderName} is Subdued!` : `${gr.defenderName} slips the choke`)
+                      : (<>
+                          {gr.result === 'grappled' && `${gr.defenderName} is Grappled!`}
+                          {gr.result === 'failed' && 'Grapple Failed!'}
+                          {gr.result === 'no_victor' && 'No Clear Victor'}
+                        </>)}
                   </div>
                   {gr.rpTarget && (
                     <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '1rem' }}>
-                      {gr.rpTarget} takes 1 RP damage
+                      {gr.mode === 'subdue'
+                        ? `${gr.defenderName} takes ${gr.subWP ?? 1} WP + ${gr.subRP ?? 0} RP`
+                        : `${gr.rpTarget} takes 1 RP damage`}
                     </div>
                   )}
                 </>
