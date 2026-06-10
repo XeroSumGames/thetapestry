@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-10 06:11 UTC
+
+**Status:** DRIFT (carry-over run 61 — same findings as runs 55-60, no resolution)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 4 runs all success (2026-06-10T00:13 / 2026-06-09T21:10 / 18:08 / 16:26)
+
+**Drift:**
+- HOPED-FOR >21d (no playtest evidence since 2026-05-30 drain pass): Tier-2 Recruit flow, P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal), Stress Check 12-string narrative set. No git touches in last 3 days on any of these paths. Fresh drain target: next Beta-500 dry-run before 2026-07-01.
+- AUDIT M1 stale-open: `app/scene-controls-popout/page.tsx:384` already has `prepareUpload('tactical-maps', file)` — todo item should be closed. No action needed in code; todo needs a human strike-through.
+- gm-notes XSS carry-over (flagged 2026-06-09 security audit): `dangerouslySetInnerHTML` with no DOMPurify/sanitize still present in gm-notes component. Unresolved.
+
+**Action:** no new fires; persistent drift unchanged. Next needed move: schedule Beta-500 dry-run to drain HOPED-FOR backlog + close AUDIT M1 todo manually.
+
+---
+
 ## 2026-06-10 00:12 UTC
 
 **Status:** DRIFT (carry-over run 60)
