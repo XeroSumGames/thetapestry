@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-10 12:13 UTC
+
+**Status:** DRIFT (carry-over run 63 — same findings as runs 55-62, no resolution)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [853 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-10T09:09Z)
+
+**Drift:**
+- HOPED-FOR >21d: Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal), Stress Check 12-string narrative lock. 0 commits to these areas in 3 days. Drain target: Beta-500 dry-run before 2026-07-01.
+- AUDIT M1 stale-open: `prepareUpload('tactical-maps')` already shipped at `scene-controls-popout/page.tsx:384`. Todo checkbox needs manual close — no code work needed.
+- gm-notes XSS carry-over: `app/gm-notes-popout/page.tsx:694` dangerouslySetInnerHTML still present (no sanitizer). No live vector today; fix before any DB-sourced title reaches this path.
+
+**Action:** carry-over — no new fires. Priority: gm-notes XSS fix (Hunt & Peck) + close AUDIT M1 todo + schedule Beta-500 dry-run to drain HOPED-FOR backlog.
+
+---
+
 ## 2026-06-10 09:09 UTC
 
 **Status:** DRIFT (carry-over run 62 — same findings as runs 55-61, no resolution)
