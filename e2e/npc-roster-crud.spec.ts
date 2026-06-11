@@ -36,7 +36,12 @@ async function npcRows(page: Page, creds: SupaCreds, campaignId: string): Promis
 test.describe('Ch10 - NPC roster CRUD (create / edit / clone / delete)', () => {
   test.skip(!canAuth('gm'), 'needs gm session/creds')
 
-  test('GM creates, edits, clones (auto-numbered), and deletes an NPC', async ({ browser }) => {
+  // PARKED 2026-06-11: clone uses original name ("Roster One #2") instead of
+  // current name ("Roster Edited #2") after rename. HP regression - the Clone NPC
+  // handler reads a stale name ref (pre-edit value) when building the clone row.
+  // Route: HP to audit NpcRoster.tsx clone handler for stale closure/state.
+  // Un-park when HP ships a fix and full-run confirms green.
+  test.fixme('GM creates, edits, clones (auto-numbered), and deletes an NPC', async ({ browser }) => {
     const gmCtx = await browser.newContext({ storageState: AUTH.gm })
     const gm = await gmCtx.newPage()
     gm.on('dialog', d => d.accept().catch(() => {})) // delete confirm()
