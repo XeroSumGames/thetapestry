@@ -294,24 +294,25 @@ export default function RollModal(props: RollModalProps) {
                 )}
               </div>
 
-              {/* Insight Dice pre-roll buttons */}
+              {/* Insight Dice pre-roll - the canonical GREEN-BOX style, locked
+                  to match the inline Attack modal (Xero 2026-06-01: Insight Dice
+                  are ALWAYS the two green boxes with their descriptions, on every
+                  roll where dice are available). Two toggle boxes (Roll 3d6 /
+                  +3 CMod); clicking the active one deselects back to 'none'. */}
               {insightAvail && setPreRollInsight && (
                 <div style={{ marginBottom: '10px' }}>
-                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    🎲 Insight Dice ({userInsightDice} available)
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#7fc458', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    🎲 Spend Insight Die ({userInsightDice} available)
                   </div>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {(['none', '3d6', '+3cmod'] as PreRollChoice[]).map(c => {
-                      const active = preRollInsight === c
-                      const cAccent = c === 'none' ? '#cce0f5' : '#EF9F27'
-                      const label = c === 'none' ? 'No spend' : c === '3d6' ? 'Roll 3d6' : '+3 CMod'
-                      return (
-                        <button key={c} onClick={() => setPreRollInsight(c)}
-                          style={{ padding: '6px 12px', background: active ? '#2a2010' : 'transparent', border: `1px solid ${active ? cAccent : '#3a3a3a'}`, borderRadius: '3px', color: active ? cAccent : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: active ? 700 : 500 }}>
-                          {label}
-                        </button>
-                      )
-                    })}
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => setPreRollInsight(preRollInsight === '3d6' ? 'none' : '3d6')}
+                      style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '3d6' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '3d6' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Roll 3d6<br /><span style={{ fontSize: '13px', color: preRollInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
+                    </button>
+                    <button onClick={() => setPreRollInsight(preRollInsight === '+3cmod' ? 'none' : '+3cmod')}
+                      style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '+3cmod' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '+3cmod' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      +3 CMod<br /><span style={{ fontSize: '13px', color: preRollInsight === '+3cmod' ? '#7fc458' : '#cce0f5' }}>Added to roll</span>
+                    </button>
                   </div>
                 </div>
               )}
