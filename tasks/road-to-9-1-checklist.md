@@ -15,7 +15,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 - [ ] **Demo content decision** - which free modules ship Day 1 (Empty / The Arena / District Zero / other).
 - [ ] **Gated content surface** - which paid modules (Minnie / Chased) are browsable in `/rumors` so backers see depth coming.
 - [x] **Observability B** - CLOSED 2026-06-11. Sentry alert rule live on `thetapestry` project: WHEN new issue created / resolved / escalates / unresolved -> Notify on preferred channel (email to xerosumstudio@gmail.com) with 5-min throttle. Test alert "THETAPESTRY-E - Test Issue" delivered to inbox 2026-06-11 15:01 UTC. Production-error signal now routes to a human.
-- [ ] **Backup cadence** - confirm Supabase tier backup schedule (or decide PITR/Pro upgrade).
+- [x] **Backup cadence** - CLOSED 2026-06-11. Supabase project confirmed on **Pro** tier. PITR (point-in-time recovery) is included with Pro - 7-day window, restore to any second. Covers Beta-500 (7/1) and KS launch (9/1). No upgrade or migration needed; the data-loss-risk story is closed.
 - [ ] **Moderation capacity** - process decision: can 2 people clear `/moderate` at 500 users + a user report/abuse path.
 - [ ] **KS link target** - what does the Kickstarter "play the VTT" button point to (live signup / guided demo / Arena).
 - [ ] **4-surface eyes-on verdict** - your taste call on `/publiclanding` / cold `/` / signup / new-GM dashboard against "would a backer fund this."

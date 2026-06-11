@@ -78,7 +78,7 @@ them done, the entire workflow flows linearly until 9/1.
 | # | Item | Time | What it unblocks |
 |---|---|---|---|
 | 1 | ~~**Observability B** - Sentry alert rule + test~~ **DONE 2026-06-11** | ~5 min | ~~incident-response story~~ CLOSED. Alert delivered to inbox; rule live with 5-min throttle. |
-| 2 | **Backup cadence** - Supabase tier review or PITR/Pro upgrade decision | ~15 min | data-loss-risk story; Beta-500 readiness gate |
+| 2 | ~~**Backup cadence** - Supabase tier review or PITR/Pro upgrade decision~~ **DONE 2026-06-11** | ~15 min | ~~data-loss-risk story~~ CLOSED. Already on Supabase Pro; 7-day PITR included. |
 | 3 | **Demo content** - which free modules ship Day 1 | ~15 min | KS marketing copy + new-GM flow + `/rumors` gated content design |
 | 4 | **F1 cold-`/` routing** - decide A/B/C/D from the memo | ~15-30 min | HP F4 (cold-`/` polish), F5 (new-GM pull), F6 (WelcomeModal dedup) all blocked behind this |
 
