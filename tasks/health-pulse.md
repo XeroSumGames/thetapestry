@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-11 15:10 UTC
+
+**Status:** DRIFT (run 71 — carry-over + 1 new stale-todo; gates + CI all green)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [859 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-11T15:04Z)
+
+**Drift:**
+- HOPED-FOR >13d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal), Stress Check 12-string narrative lock. 0 commits to these areas. Drain target: Beta-500 dry-run before 2026-07-01.
+- `combat-flow Phase A "Start Combat"` E2E regression still open (routed HP 2026-06-01, 10d). No new fix commits.
+- Conditions Phase-2 stale checkbox still `- [ ]` (carry-over from run 70; text says "Pickup #4 marked DONE").
+- **NEW stale-todo:** `todo.md` line 113 `[OP] observability B` still `- [ ]` but commit `622c314` ("Observability B CLOSED - Sentry alert rule live + test confirmed") shows it shipped. Audit-correction: tick the box.
+
+**Action:** Tick 2 stale-open boxes in todo.md (Conditions Phase-2 + Observability B). Then: schedule Beta-500 dry-run (20 days to 7/1) — only path to drain the 4 HOPED-FOR items.
+
+---
+
 ## 2026-06-11 12:15 UTC
 
 **Status:** DRIFT (run 70 — carry-over + 1 new stale-todo; gates + CI all green)
