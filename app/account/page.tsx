@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../lib/login-redirect'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { resizeImage } from '../../lib/image-utils'
 import { prepareUpload } from '../../lib/safe-upload'
@@ -84,7 +85,7 @@ export default function AccountPage() {
   useEffect(() => {
     (async () => {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       setUserId(user.id)
       setAuthEmail(user.email ?? '')
       setEmailDraft(user.email ?? '')

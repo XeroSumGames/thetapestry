@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../../lib/login-redirect'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { ATTRIBUTE_LABELS, AttributeName, normalizeRations, formatRations } from '../../../lib/xse-schema'
@@ -22,7 +23,7 @@ export default function CharacterViewPage() {
   useEffect(() => {
     async function load() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       const isThriver = roleIsThriver(profile)
       let query = supabase.from('characters').select('id, name, data').eq('id', id)

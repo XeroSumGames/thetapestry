@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { notFound, useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../../lib/login-redirect'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { SETTING_PINS, type SettingPin } from '../../../lib/setting-pins'
 import {
@@ -101,7 +102,7 @@ export default function SettingHubPage() {
   useEffect(() => {
     async function init() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       setAuthChecked(true)
       await Promise.all([loadCommunities(), loadFeeds()])
     }

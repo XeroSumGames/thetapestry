@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../../lib/login-redirect'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
@@ -107,7 +108,7 @@ export default function CampaignPage() {
   useEffect(() => {
     async function load() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       setUserId(user.id)
 
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()

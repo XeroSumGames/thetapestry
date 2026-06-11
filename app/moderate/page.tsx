@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../lib/login-redirect'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { SURVIVOR, THRIVER, isThriver as roleIsThriver } from '../../lib/auth/roles'
@@ -220,7 +221,7 @@ export default function ModerationPage() {
   useEffect(() => {
     async function check() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       // Cache role for the banner gate. Not a hard block - the page
       // still loads so the user can see the empty state alongside
       // the banner, but at least they know why.

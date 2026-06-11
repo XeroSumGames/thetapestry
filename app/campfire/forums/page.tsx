@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../../lib/login-redirect'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { logEvent } from '../../../lib/events'
@@ -113,7 +114,7 @@ export default function ForumsIndexPage() {
   useEffect(() => {
     async function init() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       setMyId(user.id)
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
       setIsThriver(roleIsThriver(profile))

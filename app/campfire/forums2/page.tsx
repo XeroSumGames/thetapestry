@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../../lib/login-redirect'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { aggregateReactions, type ReactionAggregate } from '../../../components/ReactionButtons'
@@ -66,7 +67,7 @@ export default function Forums2Page() {
   useEffect(() => {
     async function init() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       setMyId(user.id)
       await loadThreads()
     }

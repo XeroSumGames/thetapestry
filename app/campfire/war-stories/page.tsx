@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../../lib/login-redirect'
 import { prepareUpload } from '../../../lib/safe-upload'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
@@ -118,7 +119,7 @@ export default function WarStoriesPage() {
   useEffect(() => {
     async function init() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       setMyId(user.id)
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
       setIsThriver(roleIsThriver(profile))

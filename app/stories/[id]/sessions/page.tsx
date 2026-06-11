@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../../../lib/login-redirect'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import StoryActionBar from '../../../../components/StoryActionBar'
@@ -69,7 +70,7 @@ export default function SessionHistoryPage() {
   useEffect(() => {
     async function load() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
 
       const { data: camp } = await supabase.from('campaigns').select('name, gm_user_id, invite_code').eq('id', id).single()
       if (!camp || camp.gm_user_id !== user.id) { router.push('/dashboard'); return }

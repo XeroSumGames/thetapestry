@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../lib/login-redirect'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useRouter } from 'next/navigation'
@@ -59,7 +60,7 @@ export default function LoggingPage() {
   useEffect(() => {
     async function load() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (!roleIsThriver(profile)) { router.push('/dashboard'); return }
 

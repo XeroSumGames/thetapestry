@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { loginPathForCurrent } from '../../lib/login-redirect'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { renderRichText } from '../../lib/rich-text'
 import { wrapDbChange } from '../../lib/sentry-realtime'
@@ -60,7 +61,7 @@ export default function MessagesPage() {
   useEffect(() => {
     async function init() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
+      if (!user) { router.push(loginPathForCurrent()); return }
       setMyId(user.id)
       await loadConversations(user.id)
 
