@@ -4914,20 +4914,25 @@ export default function TablePage() {
   async function spendInsightDie(rerollDie: 'die1' | 'die2' | 'both') {
     if (!rollResult || !userId) return
     const myEntry = entries.find(e => e.userId === userId)
-    if (!myEntry?.liveState) return
+    // Reroll spends from the ROLLER's pool (the PC the roll is attributed to),
+    // not the viewer's - so a GM rerolling for a PC draws the PC's dice. Falls
+    // back to the viewer for self-rolls. Mirrors insightHolder in the hook.
+    const rerollFirst = rollResult.label.includes(' - ') ? rollResult.label.split(' - ')[0] : null
+    const insightHolder = (rerollFirst ? entries.find(e => e.character.name === rerollFirst) : null) ?? myEntry
+    if (!insightHolder?.liveState) return
 
     const cost = rerollDie === 'both' ? 2 : 1
-    if (myEntry.liveState.insight_dice < cost) return
+    if (insightHolder.liveState.insight_dice < cost) return
 
     setRolling(true)
 
-    const newInsight = myEntry.liveState.insight_dice - cost
-    await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+    const newInsight = insightHolder.liveState.insight_dice - cost
+    await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', insightHolder.stateId)
 
     const newDie1 = rerollDie === 'die2' ? rollResult.die1 : rollD6()
     const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
     const rerollLabelParts = rollResult.label.split(' - ')
-    const characterName = rerollLabelParts.length > 1 ? rerollLabelParts[0] : (myEntry.character.name ?? 'Unknown')
+    const characterName = rerollLabelParts.length > 1 ? rerollLabelParts[0] : (insightHolder.character.name ?? 'Unknown')
 
     // Pre-compute outcome WITHOUT writing the log yet - the original code
     // saved once now, then again at the bottom with damage_json populated,
@@ -4957,7 +4962,7 @@ export default function TablePage() {
       const targetDefBonus2 = targetInitEntry?.defense_bonus ?? 0
       const defensiveMod = targetObjectReroll ? 0 : ((isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus2)
 
-      const attackerPhy = myEntry.character.data?.rapid?.PHY ?? 0
+      const attackerPhy = insightHolder.character.data?.rapid?.PHY ?? 0
       const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? rollResult.smod : 0
       const { finalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
@@ -5025,7 +5030,7 @@ export default function TablePage() {
     // confused the prefix-strip in the expanded render too.
     const { insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName || null, rerollDamage)
     if (insightAwarded) {
-      await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', insightHolder.stateId)
     }
     // Drain queued wound-infection warnings - reroll-path parallel of
     // the executeRoll drain (see comment there). Warning row's
@@ -5254,6 +5259,16 @@ export default function TablePage() {
   })()
   const myEntry = entries.find(e => e.userId === userId) ?? null
   const myInsightDice = myEntry?.liveState?.insight_dice ?? 0
+  // The attack modal's Insight option belongs to the ROLLER (the active PC the
+  // roll is attributed to), not the viewer - so a GM rolling for a PC sees +
+  // spends the PC's pool. Resolve from the pending roll's label first-part;
+  // fall back to the viewer for self-rolls. Mirrors insightHolder in
+  // useRollResolution so display + spend agree on whose dice these are.
+  const rollerInsightDice = (() => {
+    const first = pendingRoll?.label?.includes(' - ') ? pendingRoll.label.split(' - ')[0] : null
+    const roller = (first ? entries.find(e => e.character.name === first) : null) ?? myEntry
+    return roller?.liveState?.insight_dice ?? 0
+  })()
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Carlito, sans-serif', background: '#0f0f0f' }}>
@@ -8129,10 +8144,10 @@ export default function TablePage() {
                   <input type="number" value={cmod} onChange={e => setCmod(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') executeRoll() }} autoFocus
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 </div>
-                {myInsightDice > 0 && (
+                {rollerInsightDice > 0 && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '13px', color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
-                      Spend Insight Die ({myInsightDice} available)
+                      Spend Insight Die ({rollerInsightDice} available)
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={() => setPreRollInsight(preRollInsight === '3d6' ? 'none' : '3d6')}

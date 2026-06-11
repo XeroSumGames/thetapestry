@@ -133,6 +133,13 @@ export function useRollResolution(deps: RollResolutionDeps) {
     const characterName = firstPartIsKnownName
       ? firstPart
       : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
+    // Insight Dice belong to the ROLLER (the character the roll is attributed
+    // to - the active combatant on an attack), not the viewer. Without this, a
+    // GM rolling an attack FOR a PC spent/showed the GM's own (often zero)
+    // pool, so the Insight option vanished (Xero, live 2026-06-01: Cree had no
+    // insight option on a GM-rolled unarmed attack). Falls back to myEntry for
+    // self-rolls, where roller == viewer anyway.
+    const insightHolder = entries.find(e => e.character.name === characterName) ?? myEntry
     // CMod is itemized by source (3c). The modal field holds the auto-computed
     // net (from computeAttackCmod) plus any manual GM tweak; range / sick /
     // insight are layered on here. Each non-zero source becomes its own labeled
@@ -173,7 +180,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
     // otherwise read as d2+d3, misleadingly as one die).
     let insightDiceRolled: number[] | undefined
 
-    if (preRollInsight === '3d6' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
+    if (preRollInsight === '3d6' && insightHolder?.liveState && insightHolder.liveState.insight_dice >= 1) {
       // Per SRD: roll 3d6 and KEEP ALL THREE dice (playtest #6 - do NOT
       // drop lowest). Fit into the existing die1/die2 storage columns by
       // putting the first die in die1 and the sum of the other two in
@@ -188,14 +195,14 @@ export function useRollResolution(deps: RollResolutionDeps) {
       die2 = d2 + d3
       insightDie3 = d3
       insightDiceRolled = [d1, d2, d3]  // surfaced in rollResult so the modal shows all 3 dice boxes
-      const newInsight = myEntry.liveState.insight_dice - 1
-      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      const newInsight = insightHolder.liveState.insight_dice - 1
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', insightHolder.stateId)
       preRollSpent = true
-    } else if (preRollInsight === '+3cmod' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
+    } else if (preRollInsight === '+3cmod' && insightHolder?.liveState && insightHolder.liveState.insight_dice >= 1) {
       die1 = rollD6()
       die2 = rollD6()
-      const newInsight = myEntry.liveState.insight_dice - 1
-      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      const newInsight = insightHolder.liveState.insight_dice - 1
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', insightHolder.stateId)
       preRollSpent = true
     } else {
       die1 = rollD6()
@@ -247,10 +254,10 @@ export function useRollResolution(deps: RollResolutionDeps) {
     const isNPCRoll = isHighLow && pendingRoll.label.includes(' - ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
     const npcType = isNPCRoll ? (rosterNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? campaignNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? '') : ''
     const insightAwarded = isHighLow && !(isNPCRoll && npcType !== 'antagonist')
-    if (insightAwarded && myEntry?.liveState) {
-      const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
+    if (insightAwarded && insightHolder?.liveState) {
+      const currentInsight = preRollSpent ? insightHolder.liveState.insight_dice - 1 : insightHolder.liveState.insight_dice
       const newInsight = currentInsight + 1
-      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', insightHolder.stateId)
     }
 
     // Throw-time consumable decrement. Explosives (Grenade, Molotov,
