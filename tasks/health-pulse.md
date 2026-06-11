@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-11 12:15 UTC
+
+**Status:** DRIFT (run 70 — carry-over + 1 new stale-todo; gates + CI all green)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [859 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-11T09:11Z)
+
+**Drift:**
+- HOPED-FOR >12d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal), Stress Check 12-string narrative lock. 0 commits to these areas. Drain target: Beta-500 dry-run before 2026-07-01.
+- `combat-flow Phase A "Start Combat"` E2E regression still open (routed HP 2026-06-01, 10d). Recent combat commits (Subdue, Break Free, Insight Dice, strike-the-grappler, chat ping) did not touch this.
+- **NEW stale-todo:** `todo.md` Conditions Phase-2 item (`[VERIFY-FIRST FINDING 2026-05-31]`) self-describes as "Pickup #4 marked DONE" but checkbox is still `- [ ]`. Audit-correction: tick the box or remove the entry.
+
+**Action:** HP: tick/remove the Conditions Phase-2 done-item. Then: schedule Beta-500 dry-run (19 days to 7/1) — only a playtest drains the 4 HOPED-FOR items.
+
+---
+
 ## 2026-06-11 09:12 UTC
 
 **Status:** DRIFT (run 69 — carry-over; gates + CI all green)
