@@ -646,25 +646,31 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   }
 
   async function handleClone(npc: CampaignNpc) {
-    const baseName = npc.name.replace(/\s*#\d+$/, '')
-    const existing = npcs.filter(n => n.name === baseName || n.name.startsWith(baseName + ' #'))
+    // Fetch fresh rows to guard against stale render state after a recent rename:
+    // if the user renames then immediately clones, the DB update may not yet be
+    // reflected in the React state captured by this closure.
+    const { data: freshRows } = await npcsForRoster(campaignId)
+    const all = (freshRows ?? []) as CampaignNpc[]
+    const current = all.find(n => n.id === npc.id) ?? npc
+    const baseName = current.name.replace(/\s*#\d+$/, '')
+    const existing = all.filter(n => n.name === baseName || n.name.startsWith(baseName + ' #'))
     const num = existing.length + 1
     const cloneName = `${baseName} #${num}`
     // Insert right after the source NPC - bump everything below down
-    const srcSort = npc.sort_order ?? 0
-    const below = npcs.filter(n => (n.sort_order ?? 0) > srcSort)
+    const srcSort = current.sort_order ?? 0
+    const below = all.filter(n => (n.sort_order ?? 0) > srcSort)
     if (below.length > 0) {
       await Promise.all(below.map(n =>
         updateCampaignNpc(n.id, { sort_order: (n.sort_order ?? 0) + 1 })
       ))
     }
     await insertCampaignNpcs({
-      campaign_id: campaignId, name: cloneName, portrait_url: npc.portrait_url,
-      reason: npc.reason, acumen: npc.acumen, physicality: npc.physicality,
-      influence: npc.influence, dexterity: npc.dexterity, skills: npc.skills,
-      notes: npc.notes, npc_type: npc.npc_type, status: 'active',
-      wp_max: npc.wp_max, rp_max: npc.rp_max, wp_current: npc.wp_max, rp_current: npc.rp_max,
-      equipment: npc.equipment, sort_order: srcSort + 1,
+      campaign_id: campaignId, name: cloneName, portrait_url: current.portrait_url,
+      reason: current.reason, acumen: current.acumen, physicality: current.physicality,
+      influence: current.influence, dexterity: current.dexterity, skills: current.skills,
+      notes: current.notes, npc_type: current.npc_type, status: 'active',
+      wp_max: current.wp_max, rp_max: current.rp_max, wp_current: current.wp_max, rp_current: current.rp_max,
+      equipment: current.equipment, sort_order: srcSort + 1,
     })
     await loadNpcs()
   }
