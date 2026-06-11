@@ -21,6 +21,7 @@ import { getWeaponByName, getTraitValue, CONDITION_CMOD, weaponCausesWoundInfect
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../../lib/damage'
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../../lib/table-roll-context'
 import { insertRollLog } from '../../../../../lib/data/roll-log'
+import { setGrappledBy } from '../../../../../lib/data/tactical'
 import { trace } from '../../../../../lib/playtest-recorder'
 import { queuePendingHeal } from '../../../../../lib/campaign-clock'
 import { resolveFirstImpression } from '../../../../../lib/first-impression-resolver'
@@ -331,6 +332,23 @@ export function useRollResolution(deps: RollResolutionDeps) {
     const isGrenadeFumble = !!pendingRoll.weapon &&
       getTraitValue(pendingRoll.weapon.traits ?? [], 'Blast Radius') !== null &&
       (outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight')
+
+    // Strike-the-grappler release (canon /rules/combat/combat-rounds): a
+    // successful hit on a combatant who is grappling someone breaks their hold
+    // and frees the defender - regardless of how much damage lands. Gated on a
+    // genuine hit (not a grenade fumble), so a missed swing never frees anyone.
+    if (combatActive && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
+      const heldEntry = initiativeOrder.find(e => e.grappled_by === targetName)
+      if (heldEntry) {
+        await setGrappledBy(heldEntry.id, null)
+        await insertRollLog({
+          campaign_id: id, user_id: userId, character_name: 'System',
+          label: `${targetName} is struck and releases ${heldEntry.character_name}`,
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action,
+        })
+        await loadInitiative(id)
+      }
+    }
 
     if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight' || isGrenadeFumble)) {
       const weapon = pendingRoll.weapon
