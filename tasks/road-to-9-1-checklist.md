@@ -25,7 +25,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## HP (app code)
 
-- [ ] **F1 WIRE (Xero approved Option A 2026-06-11)** - server-side redirect anon `/` -> `/publiclanding`. **Surface:** `app/page.tsx` (currently a thin sync re-export of `dashboard/page`). **Shape:** make `Home()` async, fetch the server-side auth user, `redirect('/publiclanding')` if no user, otherwise render `<DashboardPage />`. Mirror the existing server-auth pattern used elsewhere in the app for the supabase client import. Exempt routes: `/login`, `/signup`, `/publiclanding`, `/press` are their own pages; the redirect only fires on bare `/`. One commit, one file change. Memo: [tasks/f1-cold-root-decision-memo-2026-05-30.md](f1-cold-root-decision-memo-2026-05-30.md).
+- [x] **F1 WIRE** - SHIPPED `c588ce0` 2026-06-11 (HP, same session Xero locked Option A). Server-side redirect anon `/` -> `/publiclanding` live in `app/page.tsx`. F4 / F5 / F6 are now unblocked.
 - [ ] **F4** - cold-`/` ghost-map landing polish: clear value-prop + get-in CTA (not a dead-end). NOTE: F1 redirect (above) means anon visitors don't reach the ghost-map at all - F4 only applies to logged-in cold landings, scope likely shrinks dramatically.
 - [ ] **F5** - new-GM first-action pull: "create your first campaign / run a free module" (not stalled on empty dashboard).
 - [ ] **F6** - single-source WelcomeModal <-> `/firsttimers` duplicated onboarding copy.
