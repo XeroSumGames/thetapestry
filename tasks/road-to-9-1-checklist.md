@@ -8,7 +8,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## XERO ONLY (decisions + content - lanes are blocked on these)
 
-- [ ] **F1** - pick cold-`/` routing: A (redirect anon to `/publiclanding`) / B / C / D. Memo: [tasks/f1-cold-root-decision-memo-2026-05-30.md](f1-cold-root-decision-memo-2026-05-30.md).
+- [x] **F1** - DECISION LOCKED 2026-06-11: **Option A** - server-side redirect anon visitors from `/` to `/publiclanding`. Memo: [tasks/f1-cold-root-decision-memo-2026-05-30.md](f1-cold-root-decision-memo-2026-05-30.md). Routes to HP for the one-commit wire (see HP section).
 - [ ] **F2 copy** - real text for `/publiclanding` "What is Tapestry?" + "Who is it for?" + bottom CTA. Replace 4 `[PLACEHOLDER]` blocks.
 - [ ] **F2 assets** - 3 screenshots or 30-60s video loop for `/publiclanding` "What it looks like" cards (In-session table / Character sheet / Community dashboard).
 - [ ] **F2 press** - real copy for `/press` (5 `[PLACEHOLDER]` blocks + founder bio + screenshots + logo ZIP).
@@ -16,7 +16,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 - [x] **Gated content surface** - RESOLVED 2026-06-11 alongside Demo content decision. Paid: Minnie + Chased browsable in `/rumors`. Wiring is HP work in Week 2 against this decision.
 - [x] **Observability B** - CLOSED 2026-06-11. Sentry alert rule live on `thetapestry` project: WHEN new issue created / resolved / escalates / unresolved -> Notify on preferred channel (email to xerosumstudio@gmail.com) with 5-min throttle. Test alert "THETAPESTRY-E - Test Issue" delivered to inbox 2026-06-11 15:01 UTC. Production-error signal now routes to a human.
 - [x] **Backup cadence** - CLOSED 2026-06-11. Supabase project confirmed on **Pro** tier. PITR (point-in-time recovery) is included with Pro - 7-day window, restore to any second. Covers Beta-500 (7/1) and KS launch (9/1). No upgrade or migration needed; the data-loss-risk story is closed.
-- [ ] **Spend Cap decision (Beta-500 prereq)** - Pro tier's default Spend Cap turns the project UNRESPONSIVE if monthly usage exceeds included quota. Catastrophic during a live KS demo. Surfaced 2026-06-11 from the Supabase billing screen warning. Recommendation: disable before 7/1 (Pro overage rates are metered + reasonable, worst-case bad month ~$30-80 over). Org Settings -> Cost Control -> Spend Cap toggle OFF. Awaiting Xero decision: turn off now / turn off before 7/1 / keep on + accept outage risk.
+- [x] **Spend Cap (Beta-500 prereq)** - CLOSED 2026-06-11. Verified disabled in Supabase Billing -> Cost Control: "Spend cap is disabled / You will be charged for usage beyond the included quota." Projected June 11 - July 7 invoice: $25 Pro + ~$6 overage = $31.34. Platform stays up if usage spikes during Beta-500 / KS demo windows; overage charges remain metered + predictable.
 - [ ] **Moderation capacity** - process decision: can 2 people clear `/moderate` at 500 users + a user report/abuse path.
 - [ ] **KS link target** - what does the Kickstarter "play the VTT" button point to (live signup / guided demo / Arena).
 - [ ] **4-surface eyes-on verdict** - your taste call on `/publiclanding` / cold `/` / signup / new-GM dashboard against "would a backer fund this."
@@ -25,7 +25,8 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## HP (app code)
 
-- [ ] **F4** - cold-`/` ghost-map landing polish: clear value-prop + get-in CTA (not a dead-end).
+- [ ] **F1 WIRE (Xero approved Option A 2026-06-11)** - server-side redirect anon `/` -> `/publiclanding`. **Surface:** `app/page.tsx` (currently a thin sync re-export of `dashboard/page`). **Shape:** make `Home()` async, fetch the server-side auth user, `redirect('/publiclanding')` if no user, otherwise render `<DashboardPage />`. Mirror the existing server-auth pattern used elsewhere in the app for the supabase client import. Exempt routes: `/login`, `/signup`, `/publiclanding`, `/press` are their own pages; the redirect only fires on bare `/`. One commit, one file change. Memo: [tasks/f1-cold-root-decision-memo-2026-05-30.md](f1-cold-root-decision-memo-2026-05-30.md).
+- [ ] **F4** - cold-`/` ghost-map landing polish: clear value-prop + get-in CTA (not a dead-end). NOTE: F1 redirect (above) means anon visitors don't reach the ghost-map at all - F4 only applies to logged-in cold landings, scope likely shrinks dramatically.
 - [ ] **F5** - new-GM first-action pull: "create your first campaign / run a free module" (not stalled on empty dashboard).
 - [ ] **F6** - single-source WelcomeModal <-> `/firsttimers` duplicated onboarding copy.
 - [ ] **4 combat-flow testids** (XERO APPROVED, queued in active-lanes): `initiative-row-<id>`, `initiative-row-active`, `roll-feed-row-<id>`, `roll-feed-attack-result`.
