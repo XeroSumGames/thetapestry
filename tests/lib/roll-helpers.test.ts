@@ -105,6 +105,24 @@ describe('compactRollSummary', () => {
     expect(compactRollSummary({ label, character_name: 'Cree Hask', outcome: 'wound_infection_warning' })).toBe(label)
   })
 
+  // Grapple-family (Subdue choke + Break Free) - sentence forms, name not repeated.
+  it('subdue choke (lands) reads as a sentence with the damage', () => {
+    expect(compactRollSummary({ label: 'Vera Oakes - Subdue Cree Blaine (1 WP + 2 RP)', character_name: 'Vera Oakes', outcome: 'Grappled!' }))
+      .toBe('Vera Oakes subdues Cree Blaine (1 WP, 2 RP)')
+  })
+  it('subdue choke (slips) flips to the defender slipping the choke', () => {
+    expect(compactRollSummary({ label: 'Vera Oakes - Subdue Cree Blaine (slips the choke)', character_name: 'Vera Oakes', outcome: 'No clear victor' }))
+      .toBe("Cree Blaine slips Vera Oakes's choke")
+  })
+  it('break free (escapes)', () => {
+    expect(compactRollSummary({ label: 'Cree Blaine - Break Free from Vera Oakes (escapes!)', character_name: 'Cree Blaine', outcome: 'Grappled!' }))
+      .toBe('Cree Blaine breaks free from Vera Oakes')
+  })
+  it('break free (held) costs 1 RP', () => {
+    expect(compactRollSummary({ label: 'Cree Blaine - Break Free from Vera Oakes (held - 1 RP)', character_name: 'Cree Blaine', outcome: 'Failed - 1 RP' }))
+      .toBe('Cree Blaine fails to break free from Vera Oakes (1 RP)')
+  })
+
   it('returns label verbatim for weapon_malfunction', () => {
     const label = "Marcus's Carbine jams"
     expect(compactRollSummary({ label, character_name: 'Marcus', outcome: 'weapon_malfunction' })).toBe(label)

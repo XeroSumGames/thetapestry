@@ -600,6 +600,28 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     // Fallback for any future grapple outcome we haven't handled.
     return `${r.character_name} attempts to grapple with ${tgt}`
   }
+  // Subdue (the grapple choke) + Break Free share the grapple-family outcome
+  // strings ('Grappled!' / 'Failed - 1 RP' / 'No clear victor'), which the
+  // standalone Subdue attack never uses - so guarding on the outcome keeps
+  // this branch off the normal attack path (handled above with target_name).
+  const isGrappleFamilyOutcome = r.outcome === 'Grappled!' || r.outcome === 'Failed - 1 RP' || r.outcome === 'No clear victor'
+  if (isGrappleFamilyOutcome) {
+    // "<grappler> - Subdue <target> (1 WP + N RP)" / "(slips the choke)".
+    const subdueMatch = suffix.match(/^Subdue\s+(.+?)\s+\(([^)]+)\)/)
+    if (subdueMatch) {
+      const tgt = subdueMatch[1].trim()
+      const detail = subdueMatch[2].trim()
+      if (r.outcome === 'No clear victor') return `${tgt} slips ${r.character_name}'s choke`
+      return `${r.character_name} subdues ${tgt} (${detail.replace(' + ', ', ')})`
+    }
+    // "<breaker> - Break Free from <grappler> (escapes!|held - 1 RP)".
+    const breakFreeMatch = suffix.match(/^Break Free from\s+(.+?)\s+\(([^)]+)\)/)
+    if (breakFreeMatch) {
+      const grappler = breakFreeMatch[1].trim()
+      if (r.outcome === 'Grappled!') return `${r.character_name} breaks free from ${grappler}`
+      return `${r.character_name} fails to break free from ${grappler} (1 RP)`
+    }
+  }
   // Special narrative checks - Perception, Gut Instinct, First Impression.
   // Reads as a sentence rather than the mechanical "Name - Check" form,
   // per playtest feedback ("Cree Hask successfully uses Perception"
