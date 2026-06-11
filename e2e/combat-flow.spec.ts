@@ -471,6 +471,99 @@ test.describe('Ch9 / #10 - Combat-flow Phase C (deterministic damage via gm_appl
     }
   })
 
+  // PHASE C v4 - DOM assertion: orange "🩸 Wound Infection Warning" banner renders
+  // on marv's RollsFeed after gm_apply_damage fires the sibling row (v3 bridge).
+  // Companion to the v3 DB-shape test above; this one opens both browser contexts
+  // so the realtime subscription is live before the RPC fires.
+  test('v4 DOM: infection_risk mortal-wound -> 🩸 Wound Infection Warning banner visible on owner client (marv) within realtime SLA', async ({ browser }) => {
+    const gmCtx = await browser.newContext({ storageState: AUTH.gm })
+    const plCtx = await browser.newContext({ storageState: AUTH.marv })
+    const gm = await gmCtx.newPage()
+    const pl = await plCtx.newPage()
+    let campaignId: string | null = null
+    let gmCreds: SupaCreds | null = null
+    try {
+      const gmAnonP = captureAnonKey(gm)
+      const plAnonP = captureAnonKey(pl)
+      gmCreds = await resolveCreds(gm, gmAnonP)
+      const plCreds = await resolveCreds(pl, plAnonP)
+      expect(gmCreds && plCreds, 'could not resolve gm + marv creds').toBeTruthy()
+
+      const setup = await setupThrowawayWithMarvPc({
+        gm, pl, gmCreds: gmCreds!, plCreds: plCreds!, name: `${RUN} Combat C4 dom`,
+      })
+      campaignId = setup.campaignId
+
+      const charRow = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/characters?id=eq.${MARV_CHAR}&select=name`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ name: string }>
+      const targetName = charRow?.[0]?.name
+      expect(targetName, 'could not resolve marv character name').toBeTruthy()
+
+      // Both clients open the table page so the realtime subscription is live.
+      await Promise.all([
+        gm.goto(`/stories/${campaignId}/table`, { waitUntil: 'domcontentloaded' }),
+        pl.goto(`/stories/${campaignId}/table`, { waitUntil: 'domcontentloaded' }),
+      ])
+      await gm.waitForTimeout(2000)
+
+      // Anchor the dedup window with a combat_start row (mirrors real combat).
+      await gm.request.post(
+        `${SUPABASE_URL}/rest/v1/roll_log`,
+        {
+          headers: { ...H(gmCreds!), 'Content-Type': 'application/json' },
+          data: { campaign_id: campaignId, character_name: 'Combat', label: 'combat started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start' },
+        },
+      )
+
+      // Read marv's wp_current and fire a mortal-wound RPC with infection_risk=true.
+      const stRow = await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/character_states?campaign_id=eq.${campaignId}&character_id=eq.${MARV_CHAR}&select=wp_current`,
+        { headers: H(gmCreds!) },
+      )).json() as Array<{ wp_current: number }>
+      const wpRemaining = stRow?.[0]?.wp_current
+      expect(wpRemaining > 0, 'marv should start with wp_current > 0').toBe(true)
+
+      const rpc = await gm.request.post(
+        `${SUPABASE_URL}/rest/v1/rpc/gm_apply_damage`,
+        {
+          headers: { ...H(gmCreds!), 'Content-Type': 'application/json' },
+          data: { p_campaign_id: campaignId, p_target_kind: 'pc', p_target_id: MARV_CHAR, p_wp_damage: wpRemaining, p_infection_risk: true },
+        },
+      )
+      expect(rpc.ok(), `gm_apply_damage v4 DOM RPC failed: ${rpc.status()} ${await rpc.text()}`).toBe(true)
+
+      // Marv's RollsFeed should show the orange banner within realtime SLA.
+      // The banner is keyed on outcome='wound_infection_warning' in RollsFeed.tsx.
+      await expect(
+        pl.getByText('🩸 Wound Infection Warning').first(),
+        'marv RollsFeed did not render orange infection-warning banner within 15s SLA',
+      ).toBeVisible({ timeout: 15_000 })
+
+      // Label line below the banner heading shows marv's character name.
+      await expect(
+        pl.getByText(`${targetName} is wounded and may have to deal with infection`).first(),
+        'marv RollsFeed infection banner label does not match expected text',
+      ).toBeVisible({ timeout: 5_000 })
+
+      // GM also sees it (campaign-wide realtime feed).
+      await expect(
+        gm.getByText('🩸 Wound Infection Warning').first(),
+        'GM RollsFeed did not render orange infection-warning banner',
+      ).toBeVisible({ timeout: 5_000 })
+    } finally {
+      if (campaignId && gmCreds) {
+        await gm.request.delete(
+          `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}`,
+          { headers: H(gmCreds) },
+        ).catch(() => {})
+      }
+      await gmCtx.close()
+      await plCtx.close()
+    }
+  })
+
   // PHASE C v3 - the wound-infection-warning SIBLING ROW bridge
   // (sql/gm-apply-damage-rpc-v3-bridge-2026-05-31.sql; 2026-05-31 playtest
   // confirmed it fires in real combat). When p_infection_risk=true AND
