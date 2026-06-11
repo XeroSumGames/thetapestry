@@ -1667,19 +1667,21 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return
       }
 
-      // Active combatant glow - pure white. Pre-fix this used the
-      // friendly-disposition green (#7fc458), which was indistinguishable
-      // from a friendly NPC's own border color and confused the GM about
-      // who actually had the turn. White is the only ring that doesn't
-      // collide with any disposition / faction color.
+      // Active combatant marker - GOLD (turn-spotlight) glow + ring + a
+      // downward pointer arrow (drawn below). Replaces the old thin white
+      // ring, which vanished into bright portraits + got lost among the
+      // range rings (Xero, live session 2026-06-01: "hard to tell it's
+      // Avery"). Gold reads as "your turn" and, like the old white, doesn't
+      // collide with the green disposition / red selected highlight; the
+      // dark-backed ring + arrow keep it legible on ANY background or color.
       const isActive = activeEntry && (
         (t.character_id && activeEntry.character_id === t.character_id) ||
         (t.npc_id && activeEntry.npc_id === t.npc_id) ||
         (t.name === activeEntry.character_name)
       )
       if (isActive) {
-        ctx.shadowColor = '#ffffff'
-        ctx.shadowBlur = 12
+        ctx.shadowColor = '#ffc61f'
+        ctx.shadowBlur = 20
       }
 
       // Selected highlight
@@ -1956,15 +1958,28 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.arc(cx, cy, radius, 0, Math.PI * 2)
           // Brighten the stored disposition color at render time so
           // legacy tokens get the vivid palette without a DB rewrite.
-          ctx.strokeStyle = isActive ? '#ffffff' : selectedToken === t.id ? '#f5f2ee' : vividTokenBorder(t.color)
-          ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 2
-          ctx.stroke()
+          if (isActive) {
+            // Dark backing ring (reads on any portrait) + bold gold ring.
+            ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 6; ctx.stroke()
+            ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+            ctx.strokeStyle = '#ffc61f'; ctx.lineWidth = 3.5; ctx.stroke()
+          } else {
+            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : vividTokenBorder(t.color)
+            ctx.lineWidth = selectedToken === t.id ? 3 : 2
+            ctx.stroke()
+          }
         } else {
           ctx.fillStyle = t.is_visible ? vividTokenBorder(t.color) : 'rgba(192,57,43,0.3)'
           ctx.fill()
-          ctx.strokeStyle = isActive ? '#ffffff' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
-          ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
-          ctx.stroke()
+          if (isActive) {
+            ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 6; ctx.stroke()
+            ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+            ctx.strokeStyle = '#ffc61f'; ctx.lineWidth = 3.5; ctx.stroke()
+          } else {
+            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
+            ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
+            ctx.stroke()
+          }
           ctx.fillStyle = '#f5f2ee'
           ctx.font = `bold ${Math.max(10, radius * 0.8)}px Carlito`
           ctx.textAlign = 'center'
@@ -1989,6 +2004,28 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
+
+      // Active-combatant turn pointer: a gold downward arrow hovering just
+      // above the token, pointing at whoever has the turn. Shape-based, so
+      // it's unmistakable regardless of background or token color (the ring
+      // alone could still get lost on a busy map). Only PC/NPC combatants
+      // are ever isActive, so objects never get one.
+      if (isActive) {
+        const gap = Math.max(5, radius * 0.4)
+        const aw = Math.max(7, radius * 0.55)   // half-width of the arrow
+        const ah = Math.max(8, radius * 0.6)    // height of the arrow
+        const tipY = cy - radius - gap          // point sits just above the ring
+        ctx.beginPath()
+        ctx.moveTo(cx - aw, tipY - ah)
+        ctx.lineTo(cx + aw, tipY - ah)
+        ctx.lineTo(cx, tipY)
+        ctx.closePath()
+        ctx.fillStyle = '#ffc61f'
+        ctx.fill()
+        ctx.lineWidth = 1.5
+        ctx.strokeStyle = '#1a1a1a'
+        ctx.stroke()
+      }
 
       // Dead or mortally wounded - red combat X for everyone (PCs, NPCs,
       // destroyed objects). Previously objects got a subtle dark-crack
