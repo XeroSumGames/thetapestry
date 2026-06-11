@@ -1871,10 +1871,21 @@ export function useRollResolution(deps: RollResolutionDeps) {
     // emit AFTER saveRollToLog so the attack row appears above the
     // warning in the feed (oldest-first). maybeLogWoundInfection's
     // internal dedup handles the cross-target / cross-combat checks.
+    //
+    // Parallelized 2026-06-11 (AUDIT L1). Race-safety analysis:
+    // - Each call's `woundInfectionLoggedRef.current.add(name)` happens
+    //   BEFORE its await, so concurrent calls for the SAME name (which
+    //   can't happen here - Set ensures unique names - but still) would
+    //   short-circuit the second one.
+    // - The rollsFeed snapshot is read-only and identical across the
+    //   parallel calls. Two fresh targets both pass the alreadyWarned
+    //   check and both insert; same outcome as the old serial path.
+    // - Cross-combat / repeat-target dedup via the ref blocks re-emits
+    //   on the next drain regardless of ordering.
     if (pendingWoundInfectionRef.current.size > 0) {
       const names = Array.from(pendingWoundInfectionRef.current)
       pendingWoundInfectionRef.current.clear()
-      for (const n of names) await maybeLogWoundInfection(n)
+      await Promise.all(names.map(n => maybeLogWoundInfection(n)))
     }
     // Lasting Wound announcement row. Mirrors the wound-infection
     // warning + weapon-malfunction pattern: emit AFTER saveRollToLog
