@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { renderRichText } from '../../lib/rich-text'
+import { wrapDbChange } from '../../lib/sentry-realtime'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Participant {
@@ -194,14 +195,14 @@ export default function MessagesPage() {
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages',
         filter: `conversation_id=eq.${convId}`,
-      }, (payload: any) => {
+      }, wrapDbChange('messages:INSERT', (payload: any) => {
         setMessages(prev => {
           if (prev.find(m => m.id === payload.new.id)) return prev
           return [...prev, payload.new as Message]
         })
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
         if (myId) markRead(convId, myId)
-      })
+      }))
       .subscribe()
   }
 
