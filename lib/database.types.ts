@@ -85,6 +85,60 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          campaign_id: string | null
+          client_ip: string | null
+          id: number
+          occurred_at: string
+          operation: string
+          reason: string | null
+          recovered_at: string | null
+          recovery_attempted: boolean
+          row_id: string
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          campaign_id?: string | null
+          client_ip?: string | null
+          id?: number
+          occurred_at?: string
+          operation: string
+          reason?: string | null
+          recovered_at?: string | null
+          recovery_attempted?: boolean
+          row_id: string
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          campaign_id?: string | null
+          client_ip?: string | null
+          id?: number
+          occurred_at?: string
+          operation?: string
+          reason?: string | null
+          recovered_at?: string | null
+          recovery_attempted?: boolean
+          row_id?: string
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           created_at: string
@@ -1709,6 +1763,7 @@ export type Database = {
           last_attack_target: string | null
           npc_id: string | null
           npc_type: string | null
+          pending_action_loss: boolean
           portrait_url: string | null
           roll: number
           turn_number: number | null
@@ -1736,6 +1791,7 @@ export type Database = {
           last_attack_target?: string | null
           npc_id?: string | null
           npc_type?: string | null
+          pending_action_loss?: boolean
           portrait_url?: string | null
           roll: number
           turn_number?: number | null
@@ -1763,6 +1819,7 @@ export type Database = {
           last_attack_target?: string | null
           npc_id?: string | null
           npc_type?: string | null
+          pending_action_loss?: boolean
           portrait_url?: string | null
           roll?: number
           turn_number?: number | null
@@ -2550,6 +2607,7 @@ export type Database = {
           suspended: boolean
           suspended_reason: string | null
           suspended_until: string | null
+          tableau_role: string | null
           username: string
         }
         Insert: {
@@ -2562,6 +2620,7 @@ export type Database = {
           suspended?: boolean
           suspended_reason?: string | null
           suspended_until?: string | null
+          tableau_role?: string | null
           username: string
         }
         Update: {
@@ -2574,6 +2633,7 @@ export type Database = {
           suspended?: boolean
           suspended_reason?: string | null
           suspended_until?: string | null
+          tableau_role?: string | null
           username?: string
         }
         Relationships: []
@@ -2669,6 +2729,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roll_log_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
           {
@@ -3103,11 +3170,13 @@ export type Database = {
           grid_rows: number | null
           has_grid: boolean
           id: string
-          img_scale: number
+          img_scale: number | null
           is_active: boolean | null
           is_locked: boolean
           lighting_mode: string
           name: string
+          natural_h: number | null
+          natural_w: number | null
           reveal_state: Json
           show_grid: boolean
           source_module_id: string | null
@@ -3128,11 +3197,13 @@ export type Database = {
           grid_rows?: number | null
           has_grid?: boolean
           id?: string
-          img_scale?: number
+          img_scale?: number | null
           is_active?: boolean | null
           is_locked?: boolean
           lighting_mode?: string
           name?: string
+          natural_h?: number | null
+          natural_w?: number | null
           reveal_state?: Json
           show_grid?: boolean
           source_module_id?: string | null
@@ -3153,11 +3224,13 @@ export type Database = {
           grid_rows?: number | null
           has_grid?: boolean
           id?: string
-          img_scale?: number
+          img_scale?: number | null
           is_active?: boolean | null
           is_locked?: boolean
           lighting_mode?: string
           name?: string
+          natural_h?: number | null
+          natural_w?: number | null
           reveal_state?: Json
           show_grid?: boolean
           source_module_id?: string | null
@@ -3729,9 +3802,37 @@ export type Database = {
           visit_count: number
         }[]
       }
+      give_item_to_character: {
+        Args: {
+          p_giver_id: string
+          p_item_custom: boolean
+          p_item_name: string
+          p_qty: number
+          p_target_id: string
+        }
+        Returns: undefined
+      }
+      gm_apply_damage: {
+        Args: {
+          p_campaign_id: string
+          p_infection_risk?: boolean
+          p_target_id: string
+          p_target_kind: string
+          p_wp_damage: number
+        }
+        Returns: Json
+      }
       increment_portrait_counter: { Args: { g: string }; Returns: number }
       is_thriver: { Args: never; Returns: boolean }
       is_user_suspended: { Args: never; Returns: boolean }
+      loot_npc_equipment_item: {
+        Args: {
+          p_character_id: string
+          p_npc_id: string
+          p_weapon_slot: string
+        }
+        Returns: Json
+      }
       loot_npc_item: {
         Args: {
           p_character_id: string
@@ -3776,11 +3877,7 @@ export type Database = {
         Returns: undefined
       }
       toggle_wall_segment_door: {
-        Args: {
-          p_scene_id: string
-          p_segment_id: string
-          p_open: boolean
-        }
+        Args: { p_open: boolean; p_scene_id: string; p_segment_id: string }
         Returns: undefined
       }
       update_vehicle_in_campaign: {

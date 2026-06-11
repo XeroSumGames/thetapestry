@@ -153,6 +153,7 @@ export interface InitiativeEntry {
   coordinate_target: string | null
   coordinate_bonus: number
   grappled_by: string | null
+  pending_action_loss: boolean
 }
 
 export const MAX_PLAYER_SLOTS = 9

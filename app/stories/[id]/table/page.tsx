@@ -72,7 +72,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
-import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy } from '../../../../lib/data/tactical'
+import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy, setInitiativePendingActionLoss } from '../../../../lib/data/tactical'
 import { applyDamageToPc, applyDamageToNpc } from '../../../../lib/data/combat'
 import { playChatPing } from '../../../../lib/sound'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
@@ -2381,8 +2381,8 @@ export default function TablePage() {
 
   // Activate a combatant - handles winded (1 action instead of 2)
   function activateUpdate(entry: InitiativeEntry) {
-    const actions = entry.winded ? 1 : 2
-    return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, last_attack_target: null, coordinate_target: entry.coordinate_target, coordinate_bonus: entry.coordinate_bonus }
+    const actions = (entry.winded || entry.pending_action_loss) ? 1 : 2
+    return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, pending_action_loss: false, last_attack_target: null, coordinate_target: entry.coordinate_target, coordinate_bonus: entry.coordinate_bonus }
   }
 
   // Clear aim if next action isn't Attack (called before non-attack actions)
@@ -8898,8 +8898,14 @@ export default function TablePage() {
               const newRP = Math.max(0, (defNpc.rp_current ?? defNpc.rp_max ?? 6) - 1)
               await supabase.from('campaign_npcs').update({ rp_current: newRP }).eq('id', defNpc.id)
             }
-            // Canon: defender loses 1 action on a successful grapple (knocked off balance)
-            await consumeAction(targetEntry.id)
+            // Canon: defender loses 1 action on a successful grapple.
+            // If they still have actions, consume now; otherwise carry to next turn.
+            if ((targetEntry.actions_remaining ?? 0) >= 1) {
+              await consumeAction(targetEntry.id)
+            } else {
+              await setInitiativePendingActionLoss(targetEntry.id, true)
+              setInitiativeOrder(prev => prev.map(e => e.id === targetEntry.id ? { ...e, pending_action_loss: true } : e))
+            }
           } else if (defenderWins) {
             // Attacker takes 1 RP
             if (charEntry?.liveState) {

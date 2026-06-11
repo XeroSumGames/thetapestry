@@ -94,6 +94,10 @@ export function setInitiativeActions(id: string, actions: number) {
 export function setGrappledBy(id: string, by: string | null) {
   return db().from('initiative_order').update({ grappled_by: by }).eq('id', id)
 }
+/** Mark (or clear) action-loss debt for next turn (grapple carryover). */
+export function setInitiativePendingActionLoss(id: string, val: boolean) {
+  return db().from('initiative_order').update({ pending_action_loss: val }).eq('id', id)
+}
 /** Make a scene token visible by npc_id (Reveal hidden NPC flow). */
 export function makeTokenVisibleByNpc(sceneId: string, npcId: string) {
   return db().from('scene_tokens').update({ is_visible: true }).eq('scene_id', sceneId).eq('npc_id', npcId)
