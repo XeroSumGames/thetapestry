@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-11 00:11 UTC
+
+**Status:** DRIFT (run 67 — carry-over; gates + CI all green, same 4 HOPED-FOR + Phase A still open)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [855 passed / 47 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-10T21:11Z)
+
+**Drift:**
+- HOPED-FOR >23d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal), Stress Check 12-string narrative lock. 0 commits to these areas since run 66. Drain target: Beta-500 dry-run before 2026-07-01.
+- `combat-flow Phase A "Start Combat"` E2E regression still open (routed to HP 2026-06-01, 10d). No new commits since run 66.
+
+**Action:** same as run 66 — schedule the Beta-500 dry-run; 20 days to 7/1. The 4 HOPED-FOR items can only drain at the table.
+
+---
+
 ## 2026-06-10 21:09 UTC
 
 **Status:** DRIFT (run 66 — carry-over; 4 HOPED-FOR remain; gates + CI all green)
