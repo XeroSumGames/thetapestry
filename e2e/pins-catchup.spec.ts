@@ -30,15 +30,7 @@ const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.acc
 test.describe('Realtime catch-up - pins reload on tab-return (broadcast-only sub)', () => {
   test.skip(!canAuth('gm') || !canAuth('marv'), 'needs gm + marv sessions/creds')
 
-  // PARKED 2026-06-11: "Uncategorized" folder never appears after visibilitychange
-  // catch-up fires. The catch-up loadPins() either does not run or the CampaignPins
-  // panel doesn't render the result. Likely caused by HP's 29dc618 chat-ping commit
-  // (feat(table): chat ping + 3x Chat-tab flash) changing the active-tab default,
-  // displacing the Pins tab click or intercepting focus before the panel mounts.
-  // Route: HP to check CampaignPins tab activation + visibilitychange handler in
-  // the context of the new chat-ping tab-flash logic.
-  // Un-park when HP ships a fix and full-run confirms green.
-  test.fixme('a pin the player MISSED (no broadcast) converges after a visibilitychange catch-up', async ({ browser }) => {
+  test('a pin the player MISSED (no broadcast) converges after a visibilitychange catch-up', async ({ browser }) => {
     const gmCtx = await browser.newContext({ storageState: AUTH.gm })
     const plCtx = await browser.newContext({ storageState: AUTH.marv })
     const gm = await gmCtx.newPage()
@@ -58,6 +50,14 @@ test.describe('Realtime catch-up - pins reload on tab-return (broadcast-only sub
       // Player opens the table; CampaignPins mounts (gmTab defaults to 'pins')
       // and loads. Wait for its initial pins fetch so the upcoming insert is
       // guaranteed MISSED by the initial load (and by the SUBSCRIBED catch-up).
+      //
+      // Race guard: if The Arena has active combat, loadInitiative fires and
+      // setCombatActive(true) triggers the [combatActive,showTacticalMap] effect
+      // which auto-switches gmTab to 'npcs', unmounting CampaignPins and removing
+      // its visibilitychange handler. We click 'Pins' AFTER the 1500ms settle so
+      // the combat state has already loaded, the auto-switch has already fired,
+      // and the second click re-mounts CampaignPins with a fresh handler THAT STAYS
+      // registered (the effect deps haven't changed, so it won't re-fire).
       const initialLoad = pl.waitForResponse(
         r => r.url().includes('/rest/v1/campaign_pins') && r.request().method() === 'GET',
         { timeout: 30_000 },
@@ -66,6 +66,9 @@ test.describe('Realtime catch-up - pins reload on tab-return (broadcast-only sub
       await pl.getByRole('button', { name: 'Pins' }).first().click().catch(() => {})
       await initialLoad
       await pl.waitForTimeout(1500)
+      // Second click: ensures CampaignPins is mounted AFTER combat state settles.
+      await pl.getByRole('button', { name: 'Pins' }).first().click().catch(() => {})
+      await pl.waitForTimeout(400)
 
       await expect(pl.getByText(pinName), 'pin somehow present before it was created').toHaveCount(0)
 
