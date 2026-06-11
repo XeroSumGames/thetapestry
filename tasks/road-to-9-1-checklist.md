@@ -8,7 +8,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## XERO ONLY (decisions + content - lanes are blocked on these)
 
-- [x] **F1** - DECISION LOCKED 2026-06-11: **Option A** - server-side redirect anon visitors from `/` to `/publiclanding`. Memo: [tasks/f1-cold-root-decision-memo-2026-05-30.md](f1-cold-root-decision-memo-2026-05-30.md). Routes to HP for the one-commit wire (see HP section).
+- [~] **F1** - DECISION still Option A but DEFERRED 2026-06-11. Xero pulled `/publiclanding` entirely and reverted the redirect ("let's leave it as open and free until I start distributing invites"). The decision logic is unchanged - when invites start and the new pitch is written, re-ship the same redirect. See [tasks/f1-cold-root-decision-memo-2026-05-30.md](f1-cold-root-decision-memo-2026-05-30.md) when the time comes.
 - [ ] **F2 copy** - real text for `/publiclanding` "What is Tapestry?" + "Who is it for?" + bottom CTA. Replace 4 `[PLACEHOLDER]` blocks.
 - [ ] **F2 assets** - 3 screenshots or 30-60s video loop for `/publiclanding` "What it looks like" cards (In-session table / Character sheet / Community dashboard).
 - [ ] **F2 press** - real copy for `/press` (5 `[PLACEHOLDER]` blocks + founder bio + screenshots + logo ZIP).
@@ -25,7 +25,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## HP (app code)
 
-- [x] **F1 WIRE** - SHIPPED `c588ce0` 2026-06-11 (HP, same session Xero locked Option A). Server-side redirect anon `/` -> `/publiclanding` live in `app/page.tsx`. F4 / F5 / F6 are now unblocked.
+- [~] **F1 WIRE** - REVERTED 2026-06-11. Originally shipped `c588ce0` (HP server-side redirect) but Xero pulled `/publiclanding` entirely the same day ("open and free until invites start"). The redirect logic was removed in the revert commit; `app/page.tsx` is back to the thin sync re-export of `dashboard/page`. F4 / F5 / F6 are back to their original scopes (anons reach the dashboard ghost-map). When the new pitch is ready + invites start, re-ship the same one-line redirect.
 - [ ] **F4** - cold-`/` ghost-map landing polish: clear value-prop + get-in CTA (not a dead-end). NOTE: F1 redirect (above) means anon visitors don't reach the ghost-map at all - F4 only applies to logged-in cold landings, scope likely shrinks dramatically.
 - [ ] **F5** - new-GM first-action pull: "create your first campaign / run a free module" (not stalled on empty dashboard).
 - [ ] **F6** - single-source WelcomeModal <-> `/firsttimers` duplicated onboarding copy.

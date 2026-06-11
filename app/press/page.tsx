@@ -1,6 +1,5 @@
 // /press - Press kit. Public-readable, sidebar-suppressed. Built for
-// reviewers, YouTubers, and bloggers who land here from outreach or
-// from /publiclanding's footer.
+// reviewers, YouTubers, and bloggers who land here from outreach.
 //
 // DRAFT (2026-05-20; date refs reconciled 2026-05-30). Placeholder
 // copy + asset links. Real assets + founder bio + final messaging
@@ -36,8 +35,8 @@ export default function PressKitPage() {
           <div style={{ fontSize: '15px', color: DIM, marginBottom: '1rem' }}>
             A platform for the DistemperVerse - currently in beta.
           </div>
-          <Link href="/publiclanding" style={{ fontSize: '13px', color: DIM, textDecoration: 'underline' }}>
-            &larr; Back to landing
+          <Link href="/" style={{ fontSize: '13px', color: DIM, textDecoration: 'underline' }}>
+            &larr; Back to home
           </Link>
         </header>
 
@@ -173,7 +172,7 @@ export default function PressKitPage() {
 
         {/* Footer */}
         <footer style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: `1px solid ${BORDER}`, fontSize: '13px', color: '#888', textAlign: 'center' }}>
-          <Link href="/publiclanding" style={{ color: DIM, marginRight: '1rem' }}>Landing</Link>
+          <Link href="/" style={{ color: DIM, marginRight: '1rem' }}>Home</Link>
           <Link href="/rules" style={{ color: DIM }}>Public Rules</Link>
           <div style={{ marginTop: '0.5rem' }}>The Tapestry - Distemper. (c) 2026.</div>
         </footer>

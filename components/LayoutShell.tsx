@@ -8,13 +8,13 @@ import Sidebar from './Sidebar'
 import GlobalPresence from './GlobalPresence'
 
 // Pages that ghosts (unauthenticated users) can view
-const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random', '/campfire', '/publiclanding', '/press']
+const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random', '/campfire', '/press']
 // Path prefixes that ghosts can view (matches the path AND any subpath).
 // Used for the SRD rules viewer where every section gets its own subroute.
 const PUBLIC_PREFIXES = ['/rules']
 
 // Pages that always hide the sidebar
-const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/publiclanding', '/press']
+const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/press']
 // Pages that use their own full-width layout (popouts + the table view).
 // CONVENTION: any new popout route should end in `-sheet` or `-popout`
 // (or live under `/popout/...`) so it's auto-included here without an edit.
