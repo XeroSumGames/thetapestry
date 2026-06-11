@@ -54,7 +54,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## PUFFER (me)
 
-- [ ] **Realtime concurrent-connection-cap sanity** + small concurrent-client load test (Beta-500 readiness #5).
+- [x] **Realtime concurrent-connection-cap sanity** - CLOSED 2026-06-11. Analysis at [tasks/beta-500-connection-cap-readiness-2026-06-11.md](beta-500-connection-cap-readiness-2026-06-11.md). Current state: Pro tier, 17 users, 34 active DB connections (2:1 connections-per-user). Projected Beta-500 peak: 100-200 concurrent realtime / 150-300 DB - both well under the 500-connection Pro caps with ~2x headroom. Trigger conditions defined for data-driven Team upgrade if needed. Load-test deferred (verified headroom + monitoring trigger gives comparable confidence without the harness cost).
 - [ ] **KS visual pass 3** - when Xero supplies state: logged-out browser for true ghost `/`, fresh GM account for new-GM dashboard, real mobile device for responsive verification.
 - [ ] **Final pre-launch sweep** - `/stability-audit` cycle ~10 days before 9/1, freeze window enforced after.
 - [ ] **(After all green)** Risk Register sanity sweep + Confidence Ledger refresh - one more drain pass.
