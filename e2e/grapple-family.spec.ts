@@ -99,15 +99,9 @@ async function setupGrappleArena(opts: {
 test.describe('Combat - Grapple family contract net (2026-06-01 rework)', () => {
   test.skip(!canAuth('gm') || !canAuth('marv'), 'needs gm + marv sessions/creds')
 
-  // PARKED: discovered while writing this test that `combat-flow.spec` Phase A
-  // (`Ch9 / #10 ... GM starts combat -> initiative_order has exactly one active
-  // row + marv PC has character_states + player sees IN COMBAT live`) is itself
-  // failing on prod against the same UI path - the `Start Combat` action-bar
-  // button does not appear after the `Start Session` click that worked at the
-  // 2026-05-30 re-cert (138 passed). Routed: tasks/finding-combat-flow-phase-a-
-  // start-combat-broken-2026-06-01.md - HP investigation owed. Once Phase A is
-  // green again the same setup path works for this spec; un-fixme then.
-  test.fixme(true, 'PARKED: depends on the Start Combat UI flow Phase A also exercises - regression routed in finding-combat-flow-phase-a-start-combat-broken-2026-06-01.md')
+  // UN-PARKED 2026-06-11: HP shipped the full grapple/subdue/break-free rework
+  // (f5b4465, e5c1b61, 05ff9ec, 558ac0e) + Phase A Start-Combat regression fixed.
+  // 859 HP tests green. Same wall-segment-door un-fixme pattern validated.
 
   test('marv drives Grapple via the action-bar UI -> roll_log row lands with one of the three canon outcomes + canonical label shape', async ({ browser }) => {
     const gmCtx = await browser.newContext({ storageState: AUTH.gm })
@@ -142,19 +136,21 @@ test.describe('Combat - Grapple family contract net (2026-06-01 rework)', () => 
 
       // GM starts combat with the seeded NPC. Picker shows + we tick the first
       // checkbox if nothing is preselected (mirrors section-a1 / Phase A).
-      await gm.getByRole('button', { name: /start combat/i }).first().click()
+      await gm.getByRole('button', { name: /into the moment/i }).first().click()
       await gm.waitForTimeout(800)
-      const confirm = gm.getByRole('button', { name: /start combat \(/i }).first()
+      // Confirm button inside the NPC picker reads "⚔️ Into the Moment (N NPCs)";
+      // use the paren-variant to distinguish from the header "Into the Moment" button.
+      const confirm = gm.getByRole('button', { name: /into the moment \(/i }).first()
       if (!(await confirm.isEnabled().catch(() => false))) {
         await gm.getByRole('checkbox').first().check().catch(() => {})
         await gm.waitForTimeout(300)
       }
       await confirm.click()
 
-      // Wait for the player's IN COMBAT signal before asserting initiative.
+      // Combat renamed "Into the Moment" (HP 2026-06); player status shows "IN THE MOMENT".
       await expect(
-        pl.getByText(/in combat/i).first(),
-        'player did not see IN COMBAT live after Start Combat',
+        pl.getByText(/in the moment/i).first(),
+        'player did not see IN THE MOMENT live after Into the Moment',
       ).toBeVisible({ timeout: 25_000 })
 
       // Seed precondition: make marv's PC the active turn so the action bar
@@ -190,25 +186,24 @@ test.describe('Combat - Grapple family contract net (2026-06-01 rework)', () => 
       ).toBeVisible({ timeout: 15_000 })
       await grappleBtn.click()
 
-      // Modal opens with eyebrow "Grapple". The target picker shows because no
-      // target was preselected (the alphabetical-action-bar Grapple sets mode
-      // only, no target). Pick the seeded NPC.
+      // Modal opens with eyebrow "GRAPPLE". Target picker shows engaged combatants.
+      // Button text is "{name} (NPC)" - must match the suffix, not exact name.
       await expect(
         pl.getByText(/^grapple$/i).first(),
         'Grapple modal eyebrow did not appear',
       ).toBeVisible({ timeout: 10_000 })
-      await pl.getByRole('button', { name: new RegExp(`^${npcName}$`) }).first().click()
+      // Click the NPC target button (sets grappleTarget, enables Roll).
+      await pl.getByRole('button', { name: new RegExp(`${npcName}`) }).first().click()
 
-      // Roll. The shared RollModal's primary action is "Roll".
-      await pl.getByRole('button', { name: /^roll$/i }).first().click()
+      // Primary action button is "ROLL GRAPPLE" (not generic "Roll").
+      await pl.getByRole('button', { name: /roll grapple/i }).first().click()
 
       // The contract: a roll_log row lands with one of the three canon Grapple
-      // outcomes + a label shaped like the maybeLogGrapple insert at
-      // table/page.tsx (per `lib/roll-helpers.ts:597-599`).
+      // outcomes + a label with the raw insert shape from executeGrapple at
+      // table/page.tsx: "{actor} - Grapple {target}" (maybeLogGrapple processes
+      // it for display but the DB column stores the raw form).
       const labelPatterns = [
-        new RegExp(`${marvName} grapples with`, 'i'),                // Grappled! winner
-        new RegExp(`${marvName} fails to grapple with`, 'i'),         // Failed - 1 RP loser
-        new RegExp(`${marvName} unsuccessfully attempts to grapple`, 'i'), // No clear victor tie
+        new RegExp(`^${marvName} - Grapple `, 'i'),
       ]
       const found = await expect.poll(
         async () => {

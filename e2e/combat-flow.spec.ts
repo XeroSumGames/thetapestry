@@ -134,21 +134,23 @@ test.describe('Ch9 / #10 - Combat-flow Phase A (Start Combat -> initiative_order
       await gm.getByRole('button', { name: /start session/i }).first().click().catch(() => {})
       await gm.waitForTimeout(1500)
 
-      // Start Combat picker (mirror section-a1). The confirm button reads
-      // "Start Combat (N NPCs)"; if nothing is preselected, tick the first NPC.
-      await gm.getByRole('button', { name: /start combat/i }).first().click()
+      // Button was renamed "⚔️ Into the Moment" (HP 2026-06); confirm button reads
+      // "⚔️ Into the Moment (N NPCs)"; if nothing is preselected, tick the first NPC.
+      await gm.getByRole('button', { name: /into the moment/i }).first().click()
       await gm.waitForTimeout(800)
-      const confirm = gm.getByRole('button', { name: /start combat \(/i }).first()
+      // Confirm button reads "⚔️ Into the Moment (N NPCs)"; paren-variant distinguishes
+      // it from the header "Into the Moment" button still visible behind the modal.
+      const confirm = gm.getByRole('button', { name: /into the moment \(/i }).first()
       if (!(await confirm.isEnabled().catch(() => false))) {
         await gm.getByRole('checkbox').first().check().catch(() => {})
         await gm.waitForTimeout(300)
       }
       await confirm.click()
 
-      // (a) Player sees IN COMBAT live - cross-context realtime, no reload.
+      // Combat renamed "Into the Moment" (HP 2026-06); player status shows "IN THE MOMENT".
       await expect(
-        pl.getByText(/in combat/i).first(),
-        'player did not see IN COMBAT live after GM Start Combat',
+        pl.getByText(/in the moment/i).first(),
+        'player did not see IN THE MOMENT live after GM Into the Moment',
       ).toBeVisible({ timeout: 25_000 })
 
       // (b) initiative_order: exactly one is_active=true (the active turn).
