@@ -14,7 +14,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 - [ ] **F2 press** - real copy for `/press` (5 `[PLACEHOLDER]` blocks + founder bio + screenshots + logo ZIP).
 - [ ] **Demo content decision** - which free modules ship Day 1 (Empty / The Arena / District Zero / other).
 - [ ] **Gated content surface** - which paid modules (Minnie / Chased) are browsable in `/rumors` so backers see depth coming.
-- [ ] **Observability B** - Sentry -> thetapestry -> Alerts -> Create Alert Rule + send test. ~5 min. Playbook Section 5 of [tasks/ops-uptime-monitor-setup-2026-05-29.md](ops-uptime-monitor-setup-2026-05-29.md).
+- [x] **Observability B** - CLOSED 2026-06-11. Sentry alert rule live on `thetapestry` project: WHEN new issue created / resolved / escalates / unresolved -> Notify on preferred channel (email to xerosumstudio@gmail.com) with 5-min throttle. Test alert "THETAPESTRY-E - Test Issue" delivered to inbox 2026-06-11 15:01 UTC. Production-error signal now routes to a human.
 - [ ] **Backup cadence** - confirm Supabase tier backup schedule (or decide PITR/Pro upgrade).
 - [ ] **Moderation capacity** - process decision: can 2 people clear `/moderate` at 500 users + a user report/abuse path.
 - [ ] **KS link target** - what does the Kickstarter "play the VTT" button point to (live signup / guided demo / Arena).
