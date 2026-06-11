@@ -4983,7 +4983,7 @@ export default function TablePage() {
       const attackerPhy = insightHolder.character.data?.rapid?.PHY ?? 0
       const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? rollResult.smod : 0
-      const { finalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
+      const { finalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP + unarmedBonus, weapon.rpPercent, defensiveMod, { wpPercent: weapon.wpPercent })
 
       rerollDamage = { base: dmg.base, diceRoll: dmg.diceRoll, diceDesc: dmg.diceDesc, phyBonus: dmg.phyBonus, totalWP: dmg.totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
@@ -6181,7 +6181,7 @@ export default function TablePage() {
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === skillName)?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
-                  handleRollRequest(`${activeEntry.character_name} - Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, conditionCmod: 0 })
+                  handleRollRequest(`${activeEntry.character_name} - Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, wpPercent: 50, conditionCmod: 0 })
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
 

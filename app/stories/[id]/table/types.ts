@@ -57,6 +57,9 @@ export interface WeaponContext {
   weaponName: string
   damage: string
   rpPercent: number
+  /** WP percent applied after DM. Canon Subdue is non-lethal: full RP,
+   *  50% WP. Undefined / 100 = lethal canon (every other attack). */
+  wpPercent?: number
   conditionCmod: number
   traitCmod?: number
   traitLabel?: string

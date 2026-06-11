@@ -511,6 +511,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         rpFromRaw: isStun,
         armor: armorPieces,
         attackerCategory,
+        wpPercent: weapon.wpPercent,
       })
       trace('damage-calc', {
         weapon: weapon.weaponName,

@@ -74,6 +74,53 @@ describe('calculateDamage', () => {
     const result = calculateDamage(10, 50, 0, { armor })
     expect(result.mitigated).toBe(0)
   })
+
+  // wpPercent (Subdue non-lethal) - canon: full RP, 50% WP. Default 100
+  // is lethal and matches every existing call site.
+  it('wpPercent halves finalWP for non-lethal Subdue', () => {
+    // raw 10, DM 2 -> woundedWP 8. wpPercent 50 -> finalWP 4. RP is still
+    // 100% of woundedWP (not finalWP), so finalRP 8.
+    const result = calculateDamage(10, 100, 2, { wpPercent: 50 })
+    expect(result.finalWP).toBe(4)
+    expect(result.finalRP).toBe(8)
+    expect(result.mitigated).toBe(2)
+  })
+
+  it('wpPercent default of 100 (or undefined) preserves lethal canon', () => {
+    expect(calculateDamage(10, 100, 2).finalWP).toBe(8)
+    expect(calculateDamage(10, 100, 2, {}).finalWP).toBe(8)
+    expect(calculateDamage(10, 100, 2, { wpPercent: 100 }).finalWP).toBe(8)
+  })
+
+  it('wpPercent floors odd-WP cases (5 -> floor(5*0.5) = 2)', () => {
+    // raw 7, DM 2 -> woundedWP 5. wpPercent 50 -> floor(2.5) = 2.
+    expect(calculateDamage(7, 100, 2, { wpPercent: 50 }).finalWP).toBe(2)
+  })
+
+  it('wpPercent does NOT reduce RP - canon says full RP, 50% WP', () => {
+    // Subdue against a target with 0 DM: raw 6, woundedWP 6.
+    // wpPercent 50 -> finalWP 3. rpPercent 100 -> finalRP 6.
+    const result = calculateDamage(6, 100, 0, { wpPercent: 50 })
+    expect(result.finalWP).toBe(3)
+    expect(result.finalRP).toBe(6)
+  })
+
+  it('wpPercent + rpFromRaw (Stun-flavored Subdue, hypothetical)', () => {
+    // raw 8, DM 2 -> woundedWP 6. wpPercent 50 -> finalWP 3.
+    // rpFromRaw + rpPercent 100 -> finalRP = floor(8 * 1.0) = 8.
+    const result = calculateDamage(8, 100, 2, { wpPercent: 50, rpFromRaw: true })
+    expect(result.finalWP).toBe(3)
+    expect(result.finalRP).toBe(8)
+  })
+
+  it('wpPercent stacks with armor mitigation', () => {
+    // raw 12, DM 2 + armor 3 = mitigated 5 -> woundedWP 7.
+    // wpPercent 50 -> finalWP 3. RP = floor(7 * 1.0) = 7.
+    const result = calculateDamage(12, 100, 2, { wpPercent: 50, armor: [{ dm: 3 }] })
+    expect(result.finalWP).toBe(3)
+    expect(result.finalRP).toBe(7)
+    expect(result.mitigated).toBe(5)
+  })
 })
 
 describe('rollDamage', () => {

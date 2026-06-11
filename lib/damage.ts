@@ -87,6 +87,9 @@ export function calculateDamage(
     rpFromRaw?: boolean
     armor?: ArmorPiece[]
     attackerCategory?: AttackerCategory
+    /** WP percent applied after DM. Canon Subdue is non-lethal: full RP,
+     *  50% WP. Default 100 = no scaling, lethal canon. */
+    wpPercent?: number
   }
 ): {
   finalWP: number
@@ -99,8 +102,13 @@ export function calculateDamage(
     return sum + Math.max(0, piece.dm)
   }, 0)
   const mitigated = Math.max(0, defensiveModifier) + armorDm
-  const finalWP = Math.max(0, rawWP - mitigated)
-  const rpSource = options?.rpFromRaw ? rawWP : finalWP
+  // Subdue / non-lethal weapons scale finalWP after DM. RP source uses
+  // the SAME post-DM WP value (or rawWP if rpFromRaw / Stun) so the
+  // non-lethal flag never reduces RP - canon says full RP, 50% WP.
+  const wpScale = (options?.wpPercent ?? 100) / 100
+  const woundedWP = Math.max(0, rawWP - mitigated)
+  const finalWP = Math.floor(woundedWP * wpScale)
+  const rpSource = options?.rpFromRaw ? rawWP : woundedWP
   const finalRP = Math.floor(rpSource * (rpPercent / 100))
   // Diagnostic - playtest 2026-05-11 belt-and-suspenders trace inside
   // calculateDamage itself, so the math is captured no matter which
@@ -116,6 +124,7 @@ export function calculateDamage(
     finalWP, finalRP,
     rpFromRaw: !!options?.rpFromRaw,
     attackerCategory: options?.attackerCategory ?? null,
+    wpPercent: options?.wpPercent ?? 100,
   })
   return { finalWP, finalRP, mitigated }
 }
