@@ -31,12 +31,12 @@ test.describe('Section A1 - combat start GM -> player', () => {
       await gm.getByRole('button', { name: /start session/i }).first().click().catch(() => {})
       await gm.waitForTimeout(1200)
 
-      // GM opens the Start Combat picker, then confirms with the NPC set.
-      await gm.getByRole('button', { name: /start combat/i }).first().click()
+      // GM opens the Into the Moment picker (HP 2026-06 rename: Start Combat -> Into the Moment).
+      await gm.getByRole('button', { name: /into the moment/i }).first().click()
       await gm.waitForTimeout(800)
-      // The picker's confirm button reads "Start Combat (N NPCs)". If nothing is
-      // pre-selected, select the first NPC checkbox first.
-      const confirm = gm.getByRole('button', { name: /start combat \(/i }).first()
+      // Confirm button reads "Into the Moment (N NPCs)"; paren-variant distinguishes
+      // it from the header button which lacks the count.
+      const confirm = gm.getByRole('button', { name: /into the moment \(/i }).first()
       if (!(await confirm.isEnabled().catch(() => false))) {
         await gm.getByRole('checkbox').first().check().catch(() => {})
         await gm.waitForTimeout(300)
@@ -44,12 +44,10 @@ test.describe('Section A1 - combat start GM -> player', () => {
       await confirm.click()
       started = true
 
-      // Player reflects IN COMBAT live, no reload. 25s (the suite's RT norm, not
-      // the old tight 10s): under full-run load The Arena's combat channel carries
-      // heavy concurrent start/end churn, and the IN-COMBAT broadcast can take a
-      // beat to land - the 10s missed all retries in a 10.5-min full run while the
-      // spec passes in ~36s standalone (load flake, not a regression).
-      await expect(pl.getByText(/in combat/i).first()).toBeVisible({ timeout: 25_000 })
+      // Player reflects IN THE MOMENT live (HP 2026-06 rename: IN COMBAT -> IN THE MOMENT).
+      // 25s SLA: under full-run load The Arena's combat channel carries heavy concurrent
+      // start/end churn; this missed all retries in a 10.5-min full run at 10s.
+      await expect(pl.getByText(/in the moment/i).first()).toBeVisible({ timeout: 25_000 })
     } finally {
       if (started) {
         await gm.getByRole('button', { name: /end combat/i }).first().click().catch(() => {})
