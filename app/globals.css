@@ -161,3 +161,13 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* Chat-tab notification: flashes the feed's "Chat" tab when a new message
+   arrives from someone else. Starts + ends at the normal state so the tab
+   settles back cleanly after the (3x) run. */
+@keyframes chatTabPulse {
+  0%, 100% { background-color: transparent; color: #cce0f5; box-shadow: none; }
+  50%      { background-color: #1f3a26; color: #8fe27a; box-shadow: 0 0 10px rgba(127,196,88,0.6) inset; }
+}
+.chat-tab-pulse {
+  animation: chatTabPulse 0.45s ease-in-out 3;
+}

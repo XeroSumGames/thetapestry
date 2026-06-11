@@ -74,6 +74,7 @@ import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy } from '../../../../lib/data/tactical'
 import { applyDamageToPc, applyDamageToNpc } from '../../../../lib/data/combat'
+import { playChatPing } from '../../../../lib/sound'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { useSceneNav } from './useSceneNav'
 import { shouldFollowSharedTactical, shouldRenderTactical } from '../../../../lib/tactical-view'
@@ -853,6 +854,23 @@ export default function TablePage() {
     setFeedTab,
     scrollFeedToBottom: () => { rollsFeed.rollFeedRef.current?.scrollTo(0, rollsFeed.rollFeedRef.current.scrollHeight) },
   })
+  // Incoming-chat notification: ping + flash the feed's "Chat" tab 3x when a
+  // NEW message from someone else lands (messages are newest-first). Skips the
+  // first populate (page load) and the viewer's own sends.
+  const [chatPulse, setChatPulse] = useState(0)
+  const lastChatIdRef = useRef<string | null>(null)
+  const chatInitRef = useRef(false)
+  useEffect(() => {
+    const newest = chat.messages[0]
+    if (!newest) return
+    if (!chatInitRef.current) { chatInitRef.current = true; lastChatIdRef.current = newest.id; return }
+    if (newest.id === lastChatIdRef.current) return
+    lastChatIdRef.current = newest.id
+    if (newest.user_id !== userId) {
+      playChatPing()
+      setChatPulse(p => p + 1)
+    }
+  }, [chat.messages, userId])
   const [whisperTarget, setWhisperTarget] = useState<{ userId: string; characterName: string } | null>(null)
   // Gut Instinct GM detail prompt. When a player (or GM-on-behalf-of-player)
   // resolves a Gut Instinct roll, the rolling client broadcasts
@@ -6467,6 +6485,7 @@ export default function TablePage() {
           gmLike={gmLike}
           feedTab={feedTab}
           setFeedTab={setFeedTab}
+          chatPulse={chatPulse}
           sessionStatus={sessionStatus}
           sessionActing={sessionActing}
           startSession={startSession}

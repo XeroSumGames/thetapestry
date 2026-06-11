@@ -22,6 +22,8 @@ interface FeedColumnProps {
   gmLike: boolean
   feedTab: 'rolls' | 'chat' | 'both' | 'map'
   setFeedTab: any
+  /** Increments on each incoming chat message - flashes the Chat tab. */
+  chatPulse: number
   sessionStatus: string
   sessionActing: boolean
   startSession: () => void
@@ -44,7 +46,7 @@ interface FeedColumnProps {
 }
 
 export function FeedColumn({
-  campaignId, myUsername, isGM, gmLike, feedTab, setFeedTab, sessionStatus, sessionActing, startSession,
+  campaignId, myUsername, isGM, gmLike, feedTab, setFeedTab, chatPulse, sessionStatus, sessionActing, startSession,
   rollsFeed, chat, entries, userId, campaign, setFeedScrollContainer, feedScrollEl,
   whisperTarget, setWhisperTarget,
   setGrantPcId, setGrantSkill, setGrantCmod, setGrantDescription, setGrantSourceRollLogId, setGrantError, setShowGrantAdvantage,
@@ -65,7 +67,11 @@ export function FeedColumn({
       </div>
       <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
         {(['rolls', 'chat', 'both'] as const).map(tab => (
-          <button key={tab} onClick={() => setFeedTab(tab)}
+          // The Chat tab keys on chatPulse so an incoming message remounts it
+          // and replays the flash animation (CSS animations don't restart on
+          // their own). Other tabs key on their stable name.
+          <button key={tab === 'chat' ? `chat-${chatPulse}` : tab} onClick={() => setFeedTab(tab)}
+            className={tab === 'chat' && chatPulse > 0 ? 'chat-tab-pulse' : undefined}
             style={{ flex: 1, padding: '8px 0', background: feedTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: feedTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: feedTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {tab === 'rolls' ? 'Logs' : tab === 'chat' ? 'Chat' : 'Both'}
           </button>
