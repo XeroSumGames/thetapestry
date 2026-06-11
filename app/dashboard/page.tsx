@@ -6,7 +6,9 @@ import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useRouter } from 'next/navigation'
 import { trackGhostConversion } from '../../lib/events'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import WelcomeModal from '../../components/WelcomeModal'
+import { countGmCampaigns } from '../../lib/data/campaigns'
 
 const MapView = dynamic(() => import('../../components/MapView'), { ssr: false })
 
@@ -31,6 +33,7 @@ export default function DashboardPage() {
   const [acting, setActing] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [hasCampaigns, setHasCampaigns] = useState(true)
   const router = useRouter()
   const supabase = createClient()
 
@@ -48,6 +51,8 @@ export default function DashboardPage() {
         // available as a re-readable reference page.
         if (!profile.onboarded) setShowWelcome(true)
         setUsername(profile.username)
+        const { count } = await countGmCampaigns(user.id)
+        setHasCampaigns((count ?? 0) > 0)
         if (roleIsThriver(profile)) {
           const { data: rawRumors } = await supabase
             .from('map_pins')
@@ -88,6 +93,60 @@ export default function DashboardPage() {
   if (!username) return (
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
       <MapView embedded showSidebar />
+    </div>
+  )
+
+  // New-but-authed: logged-in, onboarded, no campaigns yet. Show the first-action
+  // pull instead of the world map so a new GM lands on something actionable.
+  // WelcomeModal still renders on top when !onboarded (brand-new users see both).
+  if (!hasCampaigns) return (
+    <div style={{ flex: 1, background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif' }}>
+      <div style={{ maxWidth: '680px', width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '36px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1, marginBottom: '10px' }}>
+            Your Story Starts Here
+          </div>
+          <div style={{ fontSize: '16px', color: '#cce0f5', lineHeight: 1.6 }}>
+            Create your first story or run a free module - get to the table in under two minutes.
+          </div>
+        </div>
+
+        {/* Primary CTA */}
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <Link href="/stories/new" style={{ display: 'inline-block', padding: '14px 48px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '16px', letterSpacing: '.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            Create Your First Story
+          </Link>
+        </div>
+
+        {/* Free modules */}
+        <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '2rem' }}>
+          <div style={{ fontSize: '13px', letterSpacing: '.15em', textTransform: 'uppercase', color: '#7a7a7a', textAlign: 'center', marginBottom: '1.25rem' }}>
+            Or run a free module
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            {([
+              { name: 'Empty', tagline: 'Blank sandbox - build your own world', badge: 'Tutorial' },
+              { name: 'The Basement', tagline: 'A grim starter dungeon for new GMs', badge: 'Free' },
+              { name: 'The Arena', tagline: "Denver's deadly gladiatorial circuit", badge: 'Free' },
+            ] as const).map(m => (
+              <Link key={m.name} href="/stories/new" style={{ display: 'block', padding: '1rem', background: '#161616', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', transition: 'border-color 0.15s' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee' }}>{m.name}</div>
+                  <div style={{ fontSize: '13px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', letterSpacing: '.06em' }}>{m.badge}</div>
+                </div>
+                <div style={{ fontSize: '13px', color: '#8a8a8a', lineHeight: 1.5 }}>{m.tagline}</div>
+              </Link>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '13px', color: '#5a5a5a' }}>
+            All three modules are available in the module picker on the next screen.
+          </div>
+        </div>
+      </div>
+
+      {showWelcome && (
+        <WelcomeModal username={username} onClose={() => setShowWelcome(false)} />
+      )}
     </div>
   )
 

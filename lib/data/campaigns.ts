@@ -15,3 +15,8 @@ import { db } from './db'
 export function getCampaignClock(id: string) {
   return db().from('campaigns').select('clock').eq('id', id).maybeSingle()
 }
+
+/** Count of GM-owned campaigns for a user. Returns {count, error}. */
+export function countGmCampaigns(userId: string) {
+  return db().from('campaigns').select('id', { count: 'exact', head: true }).eq('gm_user_id', userId)
+}

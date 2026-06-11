@@ -1,6 +1,7 @@
 'use client'
 import { useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { ONBOARDING_SECTIONS } from '../lib/onboarding-sections'
 
 // First-visit welcome popup. Shown on /dashboard when
 // profiles.onboarded = false; any dismissal (CTA, X, backdrop, ESC)
@@ -121,54 +122,24 @@ export default function WelcomeModal({ username, onClose }: Props) {
 
         <div style={{ padding: '0 1.75rem' }}>
 
-          <div style={sectionWrap}>
-            <div style={emoji}>🧬</div>
-            <div>
-              <div style={sectionTitle}>Create Your Survivor</div>
-              <div style={sectionBody}>
-                <p style={{ marginBottom: '0.6rem' }}>Build a character through Backstory Generation - spend Character Development Points across the chapters of their life, defining where they grew up, what they learned, and how they made their way before and after.</p>
-                <p>Experienced players can use the Quick Character Generator to spend 20 CDP and customize directly. Every character has a story before the story begins; here is where you write yours.</p>
+          {ONBOARDING_SECTIONS.map(s => (
+            <div key={s.title} style={sectionWrap}>
+              <div style={emoji}>{s.emoji}</div>
+              <div>
+                <div style={sectionTitle}>{s.title}</div>
+                <div style={sectionBody}>
+                  {s.body.map((p, i) => (
+                    <p key={i} style={i < s.body.length - 1 || s.list ? { marginBottom: '0.6rem' } : {}}>{p}</p>
+                  ))}
+                  {s.list && (
+                    <ul style={{ paddingLeft: '1.2rem', margin: '0', lineHeight: 1.9 }}>
+                      {s.list.map(item => <li key={item}>{item}</li>)}
+                    </ul>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-
-          <div style={sectionWrap}>
-            <div style={emoji}>🗺️</div>
-            <div>
-              <div style={sectionTitle}>The World Map</div>
-              <div style={sectionBody}>
-                <p style={{ marginBottom: '0.6rem' }}>The interactive map is the backbone of the living, breathing Tapestry. Players and GMs drop pins to mark locations, leave notes, and submit Rumors for others to substantiate.</p>
-                <p>It is here that groups can write the story of this dark new world and shape the history yet to come.</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={sectionWrap}>
-            <div style={emoji}>🔥</div>
-            <div>
-              <div style={sectionTitle}>The Campfire</div>
-              <div style={sectionBody}>
-                <p style={{ marginBottom: '0.6rem' }}>The Campfire is the post-apocalyptic equivalent of the town notice board - where survivors gather to share what they&apos;ve heard, warn others, and find people to travel with. Inside you&apos;ll find:</p>
-                <ul style={{ paddingLeft: '1.2rem', margin: '0', lineHeight: 1.9 }}>
-                  <li>Looking for Group - players seeking a game, GMs seeking players</li>
-                  <li>Rumors from the map - pins surface here with extra detail</li>
-                  <li>War Stories - write-ups and fiction from sessions past</li>
-                  <li>World events - updates from the publisher and the world itself</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div style={sectionWrap}>
-            <div style={emoji}>🎲</div>
-            <div>
-              <div style={sectionTitle}>Play at The Table</div>
-              <div style={sectionBody}>
-                <p style={{ marginBottom: '0.6rem' }}>The Story Table is The Tapestry&apos;s purpose-built virtual tabletop for Distemper.</p>
-                <p>Run sessions, share artifacts and custom maps, roll dice through your character sheet, and track the party in real time.</p>
-              </div>
-            </div>
-          </div>
+          ))}
 
           {/* External links */}
           <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1.5rem', marginBottom: '1.5rem', display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
