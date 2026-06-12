@@ -155,7 +155,15 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     }
   }, [])
 
-  if (!checked) return <div style={{ flex: 1, background: '#0f0f0f' }} />
+  if (!checked) {
+    // Sidebar-free public pages (login, signup, press, firsttimers) render
+    // identically regardless of auth state - no need to blank-screen them
+    // while the getCachedAuth round-trip completes.
+    if (NO_SIDEBAR_PAGES.includes(pathname)) {
+      return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner /><GlobalPresence />{children}</div>
+    }
+    return <div style={{ flex: 1, background: '#0f0f0f' }} />
+  }
 
   // Redirect unauthenticated users to login for protected pages.
   // Preserve the current path (with any query string) as a `?redirect=` param
