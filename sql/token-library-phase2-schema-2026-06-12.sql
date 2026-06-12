@@ -31,7 +31,8 @@ ALTER TABLE public.portrait_bank
 -- 5. Storage: allow authenticated users to INSERT to their own private/ prefix
 --    Existing Thriver INSERT policy (if any) remains untouched.
 --    Non-Thriver authenticated users can only write to private/{uid}/...
-CREATE POLICY IF NOT EXISTS "authenticated_upload_private_portraits"
+DROP POLICY IF EXISTS "authenticated_upload_private_portraits" ON storage.objects;
+CREATE POLICY "authenticated_upload_private_portraits"
 ON storage.objects
 FOR INSERT TO authenticated
 WITH CHECK (
@@ -40,7 +41,8 @@ WITH CHECK (
 );
 
 -- Also allow SELECT on own private portraits (needed if bucket is not fully public)
-CREATE POLICY IF NOT EXISTS "authenticated_read_own_private_portraits"
+DROP POLICY IF EXISTS "authenticated_read_own_private_portraits" ON storage.objects;
+CREATE POLICY "authenticated_read_own_private_portraits"
 ON storage.objects
 FOR SELECT TO authenticated
 USING (
