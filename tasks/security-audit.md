@@ -1,4 +1,4 @@
-# Security Audit Log
+﻿# Security Audit Log
 
 Weekly autonomous deep-scan (Tuesdays 16:23 UTC). Newest first. Silent runs (clean) are NOT logged here - absence = clean.
 
@@ -13,31 +13,32 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 **Sections with findings:** npm audit (carry-over), XSS pattern (new), file uploads (carry-over), dependency drift
 
 **Closed since last audit (2026-06-02):**
-- Nothing closed. Previous items remain open.
+- `app/gm-notes-popout/page.tsx:694` dangerouslySetInnerHTML XSS trap - **FIXED `03453dd` 2026-06-10** (replaced with React fragment children).
+- `app/account/page.tsx:102` avatar upload missing pre-flight - **FIXED `03453dd` 2026-06-10** (routes through `prepareUpload('account-avatars', ...)`; 5 MB cap + image-only + SVG blocked).
 
 ### npm audit (moderate+)
 
-- `postcss` <8.5.10 — moderate — CVSS 6.1 — "XSS via unescaped `</style>` in CSS stringify output" — transitive via `next` — fix: breaking — **carry-over, low runtime risk** (build-time only; app does not process user-supplied CSS at runtime)
-- `next` 9.3.4-canary.0 - 16.3.0-canary.5 — moderate — via postcss — isDirect: true — fix: breaking major downgrade — hold
-- `@sentry/nextjs` >=6.3.6 — moderate — via next — isDirect: true — fix: breaking — hold
+- `postcss` <8.5.10 â€” moderate â€” CVSS 6.1 â€” "XSS via unescaped `</style>` in CSS stringify output" â€” transitive via `next` â€” fix: breaking â€” **carry-over, low runtime risk** (build-time only; app does not process user-supplied CSS at runtime)
+- `next` 9.3.4-canary.0 - 16.3.0-canary.5 â€” moderate â€” via postcss â€” isDirect: true â€” fix: breaking major downgrade â€” hold
+- `@sentry/nextjs` >=6.3.6 â€” moderate â€” via next â€” isDirect: true â€” fix: breaking â€” hold
 
 ### Injection / XSS patterns
 
-- `app/gm-notes-popout/page.tsx:694` — **NEW** — `dangerouslySetInnerHTML={{ __html: \`${title} <span ...>\` }}` in `Section` component, `title` is an unescaped prop — all current callers pass static strings ("Plot Beats & Notes", "Tactical Scenes", "NPCs", "Pins") so no live XSS vector today, but component API accepts any string; if any future caller passes a user-sourced DB value (e.g. a note category name) this becomes stored XSS — harden by rendering title as a text node + a separate static span, or sanitize with DOMPurify before HTML interpolation
+- `app/gm-notes-popout/page.tsx:694` â€” **NEW** â€” `dangerouslySetInnerHTML={{ __html: \`${title} <span ...>\` }}` in `Section` component, `title` is an unescaped prop â€” all current callers pass static strings ("Plot Beats & Notes", "Tactical Scenes", "NPCs", "Pins") so no live XSS vector today, but component API accepts any string; if any future caller passes a user-sourced DB value (e.g. a note category name) this becomes stored XSS â€” harden by rendering title as a text node + a separate static span, or sanitize with DOMPurify before HTML interpolation
 
 ### File uploads
 
-- `app/account/page.tsx:102` — avatar upload: **carry-over** — no explicit file type/extension whitelist before `resizeImage`; browser `accept="image/*"` is bypassable; canvas render acts as implicit guard but no typed rejection; all other upload paths use `prepareUpload` — low severity (output is always `contentType: 'image/jpeg'`, canvas fails gracefully for non-images, Supabase bucket enforces limits)
+- `app/account/page.tsx:102` â€” avatar upload: **carry-over** â€” no explicit file type/extension whitelist before `resizeImage`; browser `accept="image/*"` is bypassable; canvas render acts as implicit guard but no typed rejection; all other upload paths use `prepareUpload` â€” low severity (output is always `contentType: 'image/jpeg'`, canvas fails gracefully for non-images, Supabase bucket enforces limits)
 
 ### Dependency drift
 
-- `@supabase/ssr` — 0.9.0 → 0.12.0 (3 minor versions behind, was 0.10.3 at last audit — drifting) — advisory, review changelog before bump
-- `react` / `react-dom` — 19.2.4 → 19.2.7 (patch) — carry-over, routine
+- `@supabase/ssr` â€” 0.9.0 â†’ 0.12.0 (3 minor versions behind, was 0.10.3 at last audit â€” drifting) â€” advisory, review changelog before bump
+- `react` / `react-dom` â€” 19.2.4 â†’ 19.2.7 (patch) â€” carry-over, routine
 
 **Top 3 priorities:**
-1. `app/gm-notes-popout/page.tsx:694` — dangerouslySetInnerHTML with prop-passed `title`. No live XSS today but the API is a trap. Replace with `<span>{title}</span>` + separate `<span style="color:#5a5550"> · {count}</span>` as sibling React elements — eliminates the risk without visual change.
-2. `app/account/page.tsx:102` — carry-over: add explicit MIME/extension pre-check before `resizeImage` (e.g. `if (!/^image\/(jpeg|jpg|png|gif|webp)$/.test(file.type)) return`) to match `prepareUpload` pattern used everywhere else.
-3. `@supabase/ssr` 0.9.0 → 0.12.0 — 3 minor versions of drift; review changelog and bump in a low-traffic window. Last two audits deferred this.
+1. `app/gm-notes-popout/page.tsx:694` â€” dangerouslySetInnerHTML with prop-passed `title`. No live XSS today but the API is a trap. Replace with `<span>{title}</span>` + separate `<span style="color:#5a5550"> Â· {count}</span>` as sibling React elements â€” eliminates the risk without visual change.
+2. `app/account/page.tsx:102` â€” carry-over: add explicit MIME/extension pre-check before `resizeImage` (e.g. `if (!/^image\/(jpeg|jpg|png|gif|webp)$/.test(file.type)) return`) to match `prepareUpload` pattern used everywhere else.
+3. `@supabase/ssr` 0.9.0 â†’ 0.12.0 â€” 3 minor versions of drift; review changelog and bump in a low-traffic window. Last two audits deferred this.
 
 ---
 
@@ -50,23 +51,23 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ### npm audit (moderate+)
 
-- `postcss` <8.5.10 — moderate — CVSS 6.1 — "XSS via unescaped `</style>` in CSS stringify output" — bundled in `node_modules/next/node_modules/postcss` — fix: breaking (no viable non-breaking path) — **carry-over, low runtime risk** (build-time CSS; no user-supplied CSS processed at runtime)
-- `next` 9.3.4-canary.0 - 16.3.0-canary.5 — moderate — via postcss — isDirect: true — fix: breaking major downgrade — hold
-- `@sentry/nextjs` >=6.3.6 — moderate — via next — isDirect: true — fix: breaking — hold
+- `postcss` <8.5.10 â€” moderate â€” CVSS 6.1 â€” "XSS via unescaped `</style>` in CSS stringify output" â€” bundled in `node_modules/next/node_modules/postcss` â€” fix: breaking (no viable non-breaking path) â€” **carry-over, low runtime risk** (build-time CSS; no user-supplied CSS processed at runtime)
+- `next` 9.3.4-canary.0 - 16.3.0-canary.5 â€” moderate â€” via postcss â€” isDirect: true â€” fix: breaking major downgrade â€” hold
+- `@sentry/nextjs` >=6.3.6 â€” moderate â€” via next â€” isDirect: true â€” fix: breaking â€” hold
 
 ### File uploads
 
-- `app/account/page.tsx:102` — avatar upload: no explicit pre-flight size check before calling `resizeImage`. Browser `accept="image/*"` hint is bypassable; canvas resize in `resizeImage` provides implicit guard but no user-visible error for oversized files. All other upload paths use `prepareUpload` with explicit size cap. Inconsistency, low severity (output is always a 256px JPEG, Supabase bucket also enforces limits).
+- `app/account/page.tsx:102` â€” avatar upload: no explicit pre-flight size check before calling `resizeImage`. Browser `accept="image/*"` hint is bypassable; canvas resize in `resizeImage` provides implicit guard but no user-visible error for oversized files. All other upload paths use `prepareUpload` with explicit size cap. Inconsistency, low severity (output is always a 256px JPEG, Supabase bucket also enforces limits).
 
 ### Dependency drift
 
-- `@supabase/ssr` — 0.9.0 → 0.10.3 (minor; carry-over) — advisory, no known CVEs
-- `react` / `react-dom` — 19.2.4 → 19.2.7 (patch) — advisory, routine patch behind
+- `@supabase/ssr` â€” 0.9.0 â†’ 0.10.3 (minor; carry-over) â€” advisory, no known CVEs
+- `react` / `react-dom` â€” 19.2.4 â†’ 19.2.7 (patch) â€” advisory, routine patch behind
 
 **Top 3 priorities:**
-1. `postcss`/`next`/`@sentry/nextjs` moderates — no non-breaking fix path available; monitor next.js releases for postcss 8.5.10+ bundle. Re-check weekly.
-2. `app/account/page.tsx:102` — add explicit file size check (e.g. 5 MB cap) + `image/*` content-type pre-validation before calling `resizeImage`, consistent with `prepareUpload` pattern.
-3. `@supabase/ssr` 0.9.0 → 0.10.3 — review changelog; minor bump is low risk.
+1. `postcss`/`next`/`@sentry/nextjs` moderates â€” no non-breaking fix path available; monitor next.js releases for postcss 8.5.10+ bundle. Re-check weekly.
+2. `app/account/page.tsx:102` â€” add explicit file size check (e.g. 5 MB cap) + `image/*` content-type pre-validation before calling `resizeImage`, consistent with `prepareUpload` pattern.
+3. `@supabase/ssr` 0.9.0 â†’ 0.10.3 â€” review changelog; minor bump is low risk.
 
 ---
 
@@ -84,22 +85,22 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ### npm audit (moderate+)
 
-- `postcss` <8.5.10 — moderate — CVSS 6.1 — "XSS via unescaped `</style>` in CSS stringify output" — transitive via `next` — fix: breaking (downgrade next to 9.3.3, not viable) — **carry-over, low runtime risk** (build-time CSS only; app does not process user-supplied CSS at runtime)
-- `next` 9.3.4-canary.0 - 16.3.0-canary.5 — moderate — via postcss — isDirect: true — fix: breaking major downgrade — hold
-- `@sentry/nextjs` >=6.3.6 — moderate — via next — isDirect: true — fix: breaking (6.3.5 downgrade) — hold
+- `postcss` <8.5.10 â€” moderate â€” CVSS 6.1 â€” "XSS via unescaped `</style>` in CSS stringify output" â€” transitive via `next` â€” fix: breaking (downgrade next to 9.3.3, not viable) â€” **carry-over, low runtime risk** (build-time CSS only; app does not process user-supplied CSS at runtime)
+- `next` 9.3.4-canary.0 - 16.3.0-canary.5 â€” moderate â€” via postcss â€” isDirect: true â€” fix: breaking major downgrade â€” hold
+- `@sentry/nextjs` >=6.3.6 â€” moderate â€” via next â€” isDirect: true â€” fix: breaking (6.3.5 downgrade) â€” hold
 
 ### File uploads
 
-- `app/scene-controls-popout/page.tsx:316` — `uploadBackground` — tactical-maps bucket: **no size limit, no content-type check** — filename sanitized via regex but any file type accepted — `tactical-maps` bucket not registered in `lib/safe-upload.ts` BUCKETS whitelist — carry-over from 2026-05-19; GM-only page (auth-gated by `gm_user_id === user.id`) so exposure is bounded but inconsistent with `prepareUpload` pattern used everywhere else
+- `app/scene-controls-popout/page.tsx:316` â€” `uploadBackground` â€” tactical-maps bucket: **no size limit, no content-type check** â€” filename sanitized via regex but any file type accepted â€” `tactical-maps` bucket not registered in `lib/safe-upload.ts` BUCKETS whitelist â€” carry-over from 2026-05-19; GM-only page (auth-gated by `gm_user_id === user.id`) so exposure is bounded but inconsistent with `prepareUpload` pattern used everywhere else
 
 ### Dependency drift
 
-- `@supabase/ssr` — installed 0.9.0 → latest 0.10.3 (minor; Supabase client API updates) — advisory, no known CVEs
+- `@supabase/ssr` â€” installed 0.9.0 â†’ latest 0.10.3 (minor; Supabase client API updates) â€” advisory, no known CVEs
 
 **Top 3 priorities:**
-1. `app/scene-controls-popout/page.tsx:316` — add `prepareUpload('tactical-maps', file)` guard + register `tactical-maps` in `lib/safe-upload.ts` with appropriate size/ext limits. Same pattern as war-stories and session-attachments.
-2. `postcss` / `next` / `@sentry/nextjs` moderates — no action until next.js has a non-breaking fix path; re-check weekly.
-3. `@supabase/ssr` 0.9.0 → 0.10.3 — evaluate changelog before minor bump; low urgency.
+1. `app/scene-controls-popout/page.tsx:316` â€” add `prepareUpload('tactical-maps', file)` guard + register `tactical-maps` in `lib/safe-upload.ts` with appropriate size/ext limits. Same pattern as war-stories and session-attachments.
+2. `postcss` / `next` / `@sentry/nextjs` moderates â€” no action until next.js has a non-breaking fix path; re-check weekly.
+3. `@supabase/ssr` 0.9.0 â†’ 0.10.3 â€” evaluate changelog before minor bump; low urgency.
 
 ---
 
