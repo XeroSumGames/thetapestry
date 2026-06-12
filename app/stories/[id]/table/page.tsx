@@ -948,7 +948,7 @@ export default function TablePage() {
     const userIds = filteredStates.map((s: any) => s.user_id)
 
     const [{ data: chars, error: charsErr }, { data: profiles, error: profilesErr }] = await Promise.all([
-      supabase.from('characters').select('id, name, created_at, data').in('id', charIds),
+      supabase.from('characters').select('id, name, created_at, data, portrait_url').in('id', charIds),
       supabase.from('profiles').select('id, username').in('id', userIds),
     ])
     if (charsErr) console.error('[loadEntries] characters query error:', charsErr.message)
@@ -1698,7 +1698,7 @@ export default function TablePage() {
     const freshMembers = (rawMembers ?? []).filter((m: any) => !kickedCharIds.has(m.character_id))
     const charIds = freshMembers.map((m: any) => m.character_id)
     const { data: freshChars } = charIds.length > 0
-      ? await supabase.from('characters').select('id, name, data').in('id', charIds)
+      ? await supabase.from('characters').select('id, name, data, portrait_url').in('id', charIds)
       : { data: [] }
     const charMap = Object.fromEntries((freshChars ?? []).map((c: any) => [c.id, c]))
 
@@ -5178,7 +5178,7 @@ export default function TablePage() {
   }
 
   function getCharPhoto(entry: TableEntry): string | null {
-    return entry.character?.data?.photoDataUrl ?? null
+    return entry.character?.portrait_url ?? entry.character?.data?.photoDataUrl ?? null
   }
 
   if (loading || !campaign) return (

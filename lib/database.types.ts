@@ -894,6 +894,7 @@ export type Database = {
           data: Json
           id: string
           name: string
+          portrait_url: string | null
           updated_at: string | null
           user_id: string
         }
@@ -902,6 +903,7 @@ export type Database = {
           data: Json
           id?: string
           name: string
+          portrait_url?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -910,6 +912,7 @@ export type Database = {
           data?: Json
           id?: string
           name?: string
+          portrait_url?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -2554,6 +2557,7 @@ export type Database = {
           created_by: string | null
           gender: string
           id: string
+          is_private: boolean
           number: number
           url_256: string
           url_32: string
@@ -2564,6 +2568,7 @@ export type Database = {
           created_by?: string | null
           gender: string
           id?: string
+          is_private?: boolean
           number: number
           url_256: string
           url_32: string
@@ -2574,6 +2579,7 @@ export type Database = {
           created_by?: string | null
           gender?: string
           id?: string
+          is_private?: boolean
           number?: number
           url_256?: string
           url_32?: string

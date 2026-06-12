@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { wrapDbChange } from '../../lib/sentry-realtime'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -7,6 +7,8 @@ import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useSearchParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../components/CharacterCard'
 import ProgressionLog, { LogEntry } from '../../components/ProgressionLog'
+import { resizeImage } from '../../lib/image-utils'
+import { uploadCharacterPortrait, removeCharacterPortrait } from '../../lib/data/character-portrait'
 
 export default function CharacterSheetPage() {
   const supabase = createClient()
@@ -23,6 +25,9 @@ export default function CharacterSheetPage() {
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
   const [notesSaving, setNotesSaving] = useState(false)
+  const [portraitUploading, setPortraitUploading] = useState(false)
+  const [portraitError, setPortraitError] = useState<string | null>(null)
+  const portraitInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function load() {
@@ -31,8 +36,8 @@ export default function CharacterSheetPage() {
       if (!user) { setLoading(false); return }
       setUserId(user.id)
 
-      // Load character
-      const { data: char } = await supabase.from('characters').select('id,user_id,name,created_at,data').eq('id', characterId).single()
+      // Load character - include portrait_url for the map-token flow
+      const { data: char } = await supabase.from('characters').select('id,user_id,name,created_at,data,portrait_url').eq('id', characterId).single()
       if (!char) { setLoading(false); return }
       setCharacter(char)
       setNotes(char.data?.session_notes ?? '')
@@ -105,6 +110,36 @@ export default function CharacterSheetPage() {
     return () => { supabase.removeChannel(channel) }
   }, [campaignId, characterId])
 
+  // Upload a portrait to the character-portraits bucket and sync to
+  // characters.portrait_url so the table page can use it as a map token.
+  async function handlePortraitUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !character || !userId) return
+    if (!file.type.startsWith('image/')) { setPortraitError('Not an image file.'); return }
+    setPortraitError(null)
+    setPortraitUploading(true)
+    try {
+      const dataUrl = await resizeImage(file, 256)
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
+      const result = await uploadCharacterPortrait(supabase, blob, userId, character.id, character.data)
+      if ('error' in result) { setPortraitError(result.error); setPortraitUploading(false); return }
+      setCharacter({ ...character, portrait_url: result.publicUrl, data: { ...character.data, photoDataUrl: result.publicUrl } })
+    } catch (err: any) {
+      setPortraitError(err?.message ?? 'Upload failed')
+    }
+    setPortraitUploading(false)
+  }
+
+  async function handlePortraitRemove() {
+    if (!character) return
+    await removeCharacterPortrait(supabase, character.id, character.data)
+    setCharacter({ ...character, portrait_url: null, data: { ...character.data, photoDataUrl: '' } })
+  }
+
+  const portraitUrl = character?.portrait_url ?? character?.data?.photoDataUrl ?? null
+
   if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
   if (!character) return <div style={{ background: '#0f0f0f', color: '#f5a89a', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Character not found.</div>
 
@@ -134,6 +169,41 @@ export default function CharacterSheetPage() {
           ch.close()
         } : undefined}
       />
+
+      {/* Portrait / Map Token - owner or GM can set the photo used as the
+          map token when the GM places this PC on the tactical scene. */}
+      {(isMySheet || isGM) && (
+        <div style={{ marginTop: '16px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
+          <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Portrait / Map Token</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            {portraitUrl
+              ? <img src={portraitUrl} alt="Portrait" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '50%', border: '2px solid #3a3a3a', flexShrink: 0 }} />
+              : <div style={{ width: '72px', height: '72px', borderRadius: '50%', border: '1px dashed #3a3a3a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: '#5a5550', flexShrink: 0 }}>No photo</div>
+            }
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+                This photo appears as the map token when placed on the tactical scene.
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => portraitInputRef.current?.click()}
+                  disabled={portraitUploading}
+                  style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: portraitUploading ? 'wait' : 'pointer', opacity: portraitUploading ? 0.5 : 1 }}>
+                  {portraitUploading ? 'Uploading...' : (portraitUrl ? 'Replace photo' : 'Upload photo')}
+                </button>
+                {portraitUrl && (
+                  <button onClick={handlePortraitRemove} disabled={portraitUploading}
+                    style={{ padding: '6px 14px', background: '#2a1210', border: '1px solid #5a2418', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Remove
+                  </button>
+                )}
+              </div>
+              {portraitError && <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>{portraitError}</div>}
+              <input ref={portraitInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePortraitUpload} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Session Notes */}
       <div style={{ marginTop: '16px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>

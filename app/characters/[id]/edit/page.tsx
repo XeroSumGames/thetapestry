@@ -123,9 +123,14 @@ export default function EditCharacterPage() {
     setSaving(true)
     setSaveError('')
     const character = buildCharacter(state)
+    // Sync portrait_url column whenever a photo URL is set. Both storage
+    // URLs (https://) and base64 data URLs work as token portraits on the
+    // map. portrait_url is the canonical source; data.photoDataUrl is the
+    // legacy fallback for rows not yet touched by the migration tool.
+    const portraitUrl = state.photoDataUrl || null
     const { error } = await supabase
       .from('characters')
-      .update({ name: character.name || characterName, data: character })
+      .update({ name: character.name || characterName, data: character, portrait_url: portraitUrl })
       .eq('id', id)
     if (error) { setSaveError(error.message); setSaving(false); return }
     setSaved(true)

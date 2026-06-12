@@ -21,7 +21,7 @@ export interface TableEntry {
   stateId: string
   userId: string
   username: string
-  character: { id: string; name: string; created_at: string; data: any }
+  character: { id: string; name: string; created_at: string; data: any; portrait_url: string | null }
   liveState: LiveState
 }
 

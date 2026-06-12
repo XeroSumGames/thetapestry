@@ -26,7 +26,7 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
   useEffect(() => {
     (async () => {
       setLoading(true)
-      let q = supabase.from('portrait_bank').select('id, number, gender, url_256, url_56').order('created_at', { ascending: false }).limit(200)
+      let q = supabase.from('portrait_bank').select('id, number, gender, url_256, url_56').eq('is_private', false).order('created_at', { ascending: false }).limit(200)
       if (filter !== 'all') q = q.eq('gender', filter)
       const { data } = await q
       setPortraits((data ?? []) as PortraitRow[])

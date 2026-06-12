@@ -119,7 +119,7 @@ export function findRelationship(npcId: string, characterId: string) {
 // --- portrait_bank / campaign_portrait_usage --------------------------------
 
 export function portraitBankByGender(gender: string) {
-  return db().from('portrait_bank').select('url_256').eq('gender', gender)
+  return db().from('portrait_bank').select('url_256').eq('gender', gender).eq('is_private', false)
 }
 export function portraitUsage(campaignId: string, gender: string) {
   return db().from('campaign_portrait_usage').select('portrait_url').eq('campaign_id', campaignId).eq('gender', gender)
