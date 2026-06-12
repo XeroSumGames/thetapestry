@@ -131,6 +131,66 @@ export function insertPortraitUsage(campaignId: string, portraitUrl: string, gen
   return db().from('campaign_portrait_usage').insert({ campaign_id: campaignId, portrait_url: portraitUrl, gender })
 }
 
+// Pick one portrait per NPC in a batch, same dedup logic as single-NPC
+// GENERATE: unused-first within the campaign, cycle-resets when exhausted,
+// no repeat within the batch itself. Returns one URL per entry (null if the
+// bank is empty for that gender). Logs all picks to campaign_portrait_usage
+// in a single insert.
+export async function pickPortraitsForBatch(
+  campaignId: string,
+  genders: Array<'man' | 'woman'>,
+): Promise<Array<string | null>> {
+  if (genders.length === 0) return []
+  try {
+    const [manBank, womanBank, manUsed, womanUsed] = await Promise.all([
+      portraitBankByGender('man'),
+      portraitBankByGender('woman'),
+      portraitUsage(campaignId, 'man'),
+      portraitUsage(campaignId, 'woman'),
+    ])
+    const bankMap: Record<string, string[]> = {
+      man: (manBank.data ?? []).map((r: any) => r.url_256),
+      woman: (womanBank.data ?? []).map((r: any) => r.url_256),
+    }
+    const usedMap: Record<string, Set<string>> = {
+      man: new Set((manUsed.data ?? []).map((r: any) => r.portrait_url)),
+      woman: new Set((womanUsed.data ?? []).map((r: any) => r.portrait_url)),
+    }
+    const resetGenders = new Set<string>()
+    const batchPicked = new Set<string>()
+    const results: Array<string | null> = []
+    const toInsert: Array<{ campaign_id: string; portrait_url: string; gender: string }> = []
+
+    for (const gender of genders) {
+      const bank = bankMap[gender]
+      if (!bank || bank.length === 0) { results.push(null); continue }
+      const used = usedMap[gender]
+      let candidates = bank.filter(u => !used.has(u) && !batchPicked.has(u))
+      if (candidates.length === 0) {
+        // Cycle exhausted - reset this gender and start fresh
+        resetGenders.add(gender)
+        used.clear()
+        candidates = bank.filter(u => !batchPicked.has(u))
+        if (candidates.length === 0) candidates = bank
+      }
+      const url = candidates[Math.floor(Math.random() * candidates.length)]
+      results.push(url)
+      batchPicked.add(url)
+      used.add(url)
+      toInsert.push({ campaign_id: campaignId, portrait_url: url, gender })
+    }
+
+    // Reset exhausted genders first, then log all new picks
+    await Promise.all([...resetGenders].map(g => deletePortraitUsage(campaignId, g)))
+    if (toInsert.length > 0) {
+      await db().from('campaign_portrait_usage').insert(toInsert)
+    }
+    return results
+  } catch {
+    return genders.map(() => null)
+  }
+}
+
 // --- world_npcs (publish / import marketplace) ------------------------------
 
 /** Source campaign-npc ids already published to the world (dedupe publish). */
