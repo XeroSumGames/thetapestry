@@ -306,6 +306,7 @@ export default function TablePage() {
     if (selectedEntry) setSelectedVehicleId(null)
   }, [selectedEntry])
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
+  const [pendingAdvantage, setPendingAdvantage] = useState<Advantage | null>(null)
   // Dedicated <RollModal> state for Stabilize - migrated off pendingRoll
   // 2026-05-20 (Phase 1 of tasks/spec-stabilize-migration.md). The legacy
   // executeRoll Stabilize branch (around L6140) is now unreachable from
@@ -1474,28 +1475,14 @@ export default function TablePage() {
   // GM Advantages tab + folded into the player Notes tab). Consume records a
   // shared-feed roll_log entry so the whole campaign sees the redemption;
   // optimistic local removal, realtime reconciles. Delete is GM-only (mistakes).
-  async function handleUseAdvantage(a: Advantage) {
+  function handleUseAdvantage(a: Advantage) {
+    // Deferred consumption: open the matching skill roll modal with the
+    // advantage's CMod pre-seeded. Actual DB consume fires in closeRollModal
+    // only if the player rolls (cancel = advantage NOT consumed).
     setUseInFlight(prev => new Set(prev).add(a.id))
-    const { error } = await consumeAdvantage(supabase, a.id, null)
-    if (error) {
-      alert(`Use failed: ${error}`)
-      setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
-      return
-    }
-    const sign = a.cmod_delta > 0 ? `+${a.cmod_delta}` : `${a.cmod_delta}`
-    const holder = entries.find(e => e.character.id === a.character_id)
-    const holderName = holder?.character.name ?? 'Unknown PC'
-    const holderUserId = holder?.userId ?? userId
-    try {
-      await insertRollLog({
-        campaign_id: id, user_id: holderUserId, character_name: holderName,
-        label: `${holderName} used their ${sign} ${a.skill_name} advantage (${a.description})`,
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'advantage_used',
-      })
-      void rollsFeed.refetch()
-    } catch (e) { console.error('[advantages] feed broadcast failed', e) }
-    setAdvantages(prev => prev.filter(x => x.id !== a.id))
-    setUseInFlight(prev => { const n = new Set(prev); n.delete(a.id); return n })
+    setPendingAdvantage(a)
+    handleRollRequest(a.skill_name, 0, 0)
+    setCmod(String(a.cmod_delta))
   }
   async function handleDeleteAdvantage(a: Advantage) {
     const holder = entries.find(e => e.character.id === a.character_id)
@@ -5116,6 +5103,9 @@ export default function TablePage() {
     const wasWeaponAttack = !!pendingRoll?.weapon
     setPendingRoll(null)
     setRollResult(null)
+    const localPendingAdvantage = pendingAdvantage
+    if (localPendingAdvantage) setUseInFlight(prev => { const n = new Set(prev); n.delete(localPendingAdvantage.id); return n })
+    setPendingAdvantage(null)
 
     trace('closeRollModal', {
       gate: true,
@@ -5171,6 +5161,28 @@ export default function TablePage() {
       } else {
         trace('closeRollModal', { note: 'no active entry found' })
       }
+    }
+    // Consume a pending advantage if the player actually rolled. Deferred
+    // from handleUseAdvantage so cancelling the modal does NOT burn the
+    // advantage. Feed broadcast mirrors the original Use path.
+    if (didRoll && localPendingAdvantage) {
+      const holder = entries.find(e => e.character.id === localPendingAdvantage.character_id)
+      const holderUserId = holder?.userId ?? userId
+      const holderName = holder?.character.name ?? 'Unknown PC'
+      const sign = localPendingAdvantage.cmod_delta > 0 ? `+${localPendingAdvantage.cmod_delta}` : `${localPendingAdvantage.cmod_delta}`
+      void (async () => {
+        const { error } = await consumeAdvantage(supabase, localPendingAdvantage.id, null)
+        if (error) { console.error('[advantages] consume failed after roll', error); return }
+        try {
+          await insertRollLog({
+            campaign_id: id, user_id: holderUserId, character_name: holderName,
+            label: `${holderName} used their ${sign} ${localPendingAdvantage.skill_name} advantage (${localPendingAdvantage.description})`,
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'advantage_used',
+          })
+          void rollsFeed.refetch()
+        } catch (e) { console.error('[advantages] feed broadcast failed', e) }
+        setAdvantages(prev => prev.filter(x => x.id !== localPendingAdvantage.id))
+      })()
     }
     // Drain the wound-infection check queue (populated by endCombat).
     // Whether the player rolled or cancelled, advance to the next
