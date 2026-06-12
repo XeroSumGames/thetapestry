@@ -173,6 +173,34 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
+# Session state - 2026-06-12 (Puffer: Advantages PLAYTESTED + FI Insight Die doc)
+
+## Current HEAD: `4be39cf` (verify with `git rev-parse --short HEAD`). Tests: 875 vitest green. All guardrails green. Working tree has 8 untracked H&P SQL + spec files (not Puffer's to commit). Everything ships to main (Vercel = live/dev env).
+
+## What shipped this session (2026-06-12, Puffer lane)
+
+- **`0f8e893`** feat(advantages): Use button now opens the matching skill roll modal. `handleUseAdvantage` rewritten - sets `pendingAdvantage` state, calls `handleRollRequest(a.skill_name, 0, 0)`, seeds CMod with `a.cmod_delta`. `closeRollModal` snapshots + clears `pendingAdvantage`; on `didRoll=true` fires `consumeAdvantage` + feed broadcast; on cancel advantage is NOT consumed. Button shows loading state while modal is open. **Live-verified**: Xero granted at 21:56:58, Tony used at 21:57:03, roll modal opened with target dropdown, rolled + Done, `didRoll:true wasWeaponAttack:false cost:1` clean, nextTurn correct. Full grant->use->consume loop confirmed.
+- **`4be39cf`** docs(puffer): debug-handoff.md HOPED-FOR rewritten - Advantages drained to PLAYTESTED RECENTLY; FI Insight Die bullet rewritten to distinguish EARN path (rolling doubles -> `insight_dice +1`, never fired in live play) from SPEND path (green-box +3 CMod / Roll 3d6, confirmed working in Session 63). todo.md Advantages item marked shipped.
+
+H&P also shipped between the last Puffer session and now:
+- **`1f6fed8`** feat(token-library): Phase 2 bulk upload tab + private portrait schema
+- **`c455a25`** fix(sql): use DROP/CREATE instead of CREATE IF NOT EXISTS for policies
+
+## STILL HOPED-FOR (block on Beta-500 7/1 dry-run coverage)
+
+1. **FI Insight Die AWARD path** - `useRollResolution.ts:264` `insight_dice +1` has NEVER fired in live play. Trigger: any 2d6 roll hits 1+1 (Low Insight) or 6+6 (High Insight). ~36 rolls expected per event at 2.8% each. Session 63 had 3 FI rolls; none hit. No code action owed - just needs a live session where doubles come up.
+2. **Stress Check 12-string narrative** - Stabilize strings confirmed Session 63, but HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE not captured. Drain target: Beta-500 full dry-run before 7/1.
+
+## OPEN Puffer queue
+
+1. **`check-realtime-wrap.mjs` regression guardrail** (todo.md FOLLOW-UP) - Path B closed the gap (all inbound realtime handlers wrapped). Guardrail can now be added to pre-commit without breaking anything. Lint: `supabase\.channel\(` outside `lib/realtime/*` + allowlist for exempt sites (send-only: GmNotes:494, campaign-clock.ts x3; presence: table page :1316, Sidebar:85; lib/realtime/* internals). Low urgency; improves infra discipline.
+2. **Grapple Phase 4** - modal polish + deferred `executeRoll` consolidation onto `applyDamageToPc/Npc`. Phase 3 (`054b3d9`) already applied `pending_action_loss` column live. H&P owns this; Puffer tracks it.
+
+## Untracked SQL + spec files in working tree (H&P lane - do NOT commit from Puffer)
+`sql/demote-pesky-larue-2026-06-12.sql`, `sql/lookup-pesky-larue-2026-06-12.sql`, `sql/lookup-vera-jarn-2026-06-12.sql`, `sql/update-vera-jarn-tokens-2026-06-12.sql`, `sql/verify-new-columns-2026-06-12.sql`, `sql/verify-pesky-larue-2026-06-12.sql`, `tasks/spec-token-library-phase2-mass-upload.md`, `tasks/token-library-phase1-testplan.md`.
+
+---
+
 # Session state - 2026-06-11 (E2E / Playwright: Phase B initiative-bar + turn-advance GREEN)
 
 ## Current HEAD: `5d9773f` (verify with `git rev-parse --short HEAD`). Tests: 875 vitest green (verify with `npm test`). All guardrails green. Working tree clean. Everything ships to main (Vercel = live/dev env).
