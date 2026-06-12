@@ -1,0 +1,121 @@
+GM GUIDE: SETTING UP A TACTICAL SCENE
+=====================================
+Building a battle map and driving the MAP SETUP controls.
+V2.0 (Last updated: 2026-06-12)
+
+
+WHAT THIS COVERS
+----------------
+Everything a GM does to stand up a tactical scene: creating it, dropping a battle-map image on it, sizing the grid, and every button in the MAP SETUP panel. Combat itself, fog of war, and token actions are covered in docs/tactical-map-guide.txt.
+
+
+OPENING MAP SETUP
+-----------------
+From the Table, switch to the Tactical Map, then click "Map Setup" in the header.
+
+MAP SETUP opens as a small floating panel pinned inside the page. Drag its titlebar to reposition it; it remembers where you left it. The X in its corner closes it. Because it floats over the map instead of in a separate browser window, it can't get buried or lost.
+
+Everything below lives in that panel.
+
+[screenshot: Map Setup panel floating over a tactical scene]
+
+
+CREATING YOUR FIRST SCENE
+-------------------------
+The first time you open the Tactical Map in a Story with no scenes, a "New Scene" box opens on its own. It asks for one thing: a Name. Type it and click Create.
+
+The new scene starts as a blank 20-by-15 grid at 3 feet per cell. Don't worry about getting the size right here. You tune all of it in MAP SETUP afterward.
+
+To add more scenes later, use "+ New Map" at the top of the panel (see below).
+
+
+THE PANEL, TOP TO BOTTOM
+------------------------
+
++ NEW MAP
+  Creates a fresh blank scene and switches everyone to it. Use one scene per encounter, per building floor, or per location. Click once and wait a beat. The new scene arrives named "New Map"; rename it in the Scene Name field.
+
+SCENE DROPDOWN
+  Lists every scene in the Story. Pick one to make it active. Switching scenes pushes the change to all connected players, so they follow you to the new map.
+
+SCENE NAME
+  Renames the active scene. The change saves when you click away or press Enter. Name scenes for what they are ("Costco Loading Dock", "Second Floor") so the dropdown stays readable.
+
+UPLOAD MAP
+  Uploads a battle-map image (JPG, PNG, etc.) as the scene background. A progress bar shows how much has uploaded; you'll see "Map Uploaded" when it lands. The image becomes the floor your grid and tokens sit on.
+
+REUSE MAP
+  Appears only if you've uploaded backgrounds to other scenes. Pick one to stamp that same image onto the current scene without re-uploading. Handy for recurring locations or a map you use across Stories.
+
+PLACE TOKENS
+  Auto-places every combatant in the current initiative onto the grid. Use it right after starting combat to drop everyone on the board at once instead of dragging them in one at a time.
+
+ZOOM
+  Minus / percentage / plus. Scales the on-screen view from 25% to 400%. This is your view only; it doesn't change the scene for players.
+
+
+THE GRID
+--------
+
+GRID ON / OFF
+  Shows or hides the grid overlay. Turn it off for theater-of-the-mind framing or a map image that already has its own grid printed on it.
+
+GRID COLOR
+  Seven options: White, Black, Grey, Red, Blue, Yellow, or Green. Pick whatever reads cleanly against your background image.
+
+GRID OPACITY
+  Slider from faint to solid. Drop it low so the grid guides placement without fighting the art.
+
+FIT TO MAP
+  Zooms and centers the view so the whole scene fills your screen. Use it after uploading a background or resizing the grid.
+
+COLS / ROWS
+  The grid's width and height in cells. Bump these to match your battle map. A warehouse might be 30 by 20; a single room might be 10 by 10.
+
+CELL (FT)
+  How many feet one cell represents. Default is 3. This drives every range calculation in combat, so set it to match your map's real scale. A 5-foot-square dungeon map should read 5 here.
+
+CELL (PX)
+  How many pixels each cell is drawn at on screen. Default is 35. Raise it to make a small map easier to click; lower it to fit a huge grid in view. This is cosmetic and doesn't touch ranges.
+
+
+THE VIEW AND THE BACKGROUND
+
+FIT TO SCREEN
+  Re-fits the current scene to your view. Reach for it any time the map has drifted off-center or you've zoomed yourself into a corner.
+
+LOCK MAP / UNLOCK MAP
+  When unlocked, the background image has corner handles you can drag to resize and align it under the grid. Once it's lined up, LOCK MAP so you can't nudge it by accident while moving tokens. Lock it before you run the encounter.
+
+SHOW RANGES / HIDE RANGES
+  Toggles the colored range circles that appear around a selected token (melee, movement, weapon reach). On is the usual choice; hide them for a cleaner board during narration.
+
+DELETE MAP
+  Appears only when a background is set. Removes the image but keeps the scene, its grid, and its tokens. Use it to swap art: delete, then Upload Map again.
+
+DELETE SCENE
+  Removes the scene and every token on it. Asks for confirmation first. This can't be undone.
+
+
+A CLEAN SETUP FLOW
+------------------
+A reliable order of operations for a new encounter:
+
+  1. Click "+ New Map" and rename it in Scene Name.
+  2. Upload Map (or Reuse Map) to set the background.
+  3. Unlock Map, drag the image's corners to line it up under the grid, then Lock Map.
+  4. Set Cols / Rows to match the map's footprint.
+  5. Set Cell (ft) to the map's real scale so ranges are honest.
+  6. Adjust Grid color and opacity until the grid reads cleanly.
+  7. Fit to Map.
+
+When combat starts, the scene auto-shares to players, and Place Tokens drops everyone on the board.
+
+
+NOTES
+-----
+  - MAP SETUP is GM-only. Players never see the panel.
+  - Cell (ft) is the one setting that affects rules. Cols, Rows, Cell (px), zoom, grid color, and opacity are all presentation.
+  - Your view controls (zoom, fit) are yours alone. Players frame their own view. To push your scroll and zoom to everyone at once, use SHARE VIEW on the tactical map's zoom controls (a separate one-shot snap; afterward players can still pan and zoom).
+  - Each PC token carries its own Sight slider on the token's info panel (not in MAP SETUP). Default is 30 cells, adjustable 0 to 50. That radius is what clears fog of war around the character. See docs/tactical-map-guide.txt for the fog rules in full.
+  - Everything in the panel saves to the scene, so a scene you set up today is exactly as you left it next session.
