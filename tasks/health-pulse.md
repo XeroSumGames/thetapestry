@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-12 21:09 UTC
+
+**Status:** DRIFT (carry-over; gates/CI/audit all green)
+
+**Gates:** font-sizes [OK], role-literals [OK — 333 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-12T21:05Z)
+
+**Since 18:10 UTC (positive):**
+- Session 63 HOPED-FOR drain landed (`5ea75ac`/`84cae1e`): Tier-2 Recruit, FI single-modal, Stabilize cascade → PLAYTESTED. Stale checklist items F4/F5/F6 + testids closed.
+- Fixes shipped: recorder auto-download on beforeunload, SNAPSHOT GM Tools button, FI feed success line text fix, Token Library Phase 1 E2E regression guard.
+
+**Drift (carry-over):**
+- STILL HOPED-FOR (13+ days, drain target Beta-500 dry-run ≤2026-07-01): P3 Q4-b Advantages, FI Insight Die spend (green-box paths), Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE).
+- Confidence Ledger stale: debug-handoff §3 says 738 tests / 41 files; actual 875 / 48. Run `npx tsx scripts/refresh-ledger.mjs`.
+- `scripts/check-realtime-wrap.mjs` still absent; todo.md says "now unblocked."
+- `characters` cross-user parent todo still `- [ ]`; all sub-items `[x]`; Risk Register GREEN/CLOSED — parent needs ticking.
+
+**Action:** Carry-over drift only. Run ledger refresh; tick parent todo; plan Beta-500 dry-run before 7/1.
+
+---
+
 ## 2026-06-12 18:10 UTC
 
 **Status:** DRIFT (carry-over; gates/CI/audit all green)
