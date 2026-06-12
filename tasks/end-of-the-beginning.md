@@ -105,9 +105,9 @@ shape is:
   assets.
 - **Week 4** (7/1): **Beta-500 opens.**
 - **Weeks 5-10** (7/1 -> 8/15): Active beta. HP runs modal redesign
-  A3->E + AUDIT M3/M5/L1/L2 cleanups + broadcast catch-up + UX
-  polish from beta findings. Xero writes KS campaign body copy in
-  parallel.
+  A3->E + AUDIT M3/M5/L1/L2 cleanups + broadcast catch-up + mass-upload
+  tokens + UX polish from beta findings. Xero writes KS campaign body
+  copy in parallel.
 - **Weeks 11-12** (8/15 -> 8/31): **FREEZE.** Puffer runs
   `/stability-audit` + `/pre-launch-audit` + Risk Register sweep.
   E2E full re-cert green on prod. HP polish only.
