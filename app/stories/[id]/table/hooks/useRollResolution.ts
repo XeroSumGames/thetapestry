@@ -25,6 +25,7 @@ import { setGrappledBy } from '../../../../../lib/data/tactical'
 import { applyDamageToPc, applyDamageToNpc, type DamageContext } from '../../../../../lib/data/combat'
 import { trace } from '../../../../../lib/playtest-recorder'
 import { queuePendingHeal } from '../../../../../lib/campaign-clock'
+import { reportSupabaseError } from '../../../../../lib/supabase-errors'
 import { resolveFirstImpression } from '../../../../../lib/first-impression-resolver'
 import { ARMOR, LASTING_WOUNDS, LASTING_WOUND_NARRATIVE } from '../../../../../lib/xse-schema'
 import type { CampaignNpc } from '../../../../../components/NpcRoster'
@@ -470,7 +471,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
       if (!targetEntry && !targetNpc && targetInitEntry?.is_npc && targetInitEntry.npc_id) {
         const { data: freshNpc, error: npcFetchErr } = await supabase
           .from('campaign_npcs').select('*').eq('id', targetInitEntry.npc_id).maybeSingle()
-        if (npcFetchErr) console.error('[damage] NPC fallback fetch error:', npcFetchErr.message)
+        if (npcFetchErr) reportSupabaseError(npcFetchErr, 'damage:npc-fallback-fetch')
         if (freshNpc) {
           targetNpc = freshNpc as unknown as CampaignNpc
           trace('damage', { npcResolvedViaServerFallback: freshNpc.name, note: 'local cache missed - likely RLS' })
@@ -626,7 +627,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
 
         if (newWP === 0 && currentWP > 0 && currentInsight > 0) {
           const { error: csErr, data: csData } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select()
-          if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
+          if (csErr) reportSupabaseError(csErr, 'damage:pc-character-states-update')
           else trace('damage', { pcCharacterStatesUpdateRows: csData?.length })
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
           initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: { rp_current: newRP } } })
@@ -704,7 +705,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
             })
           }
           const { error: csErr, data: csData } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId).select()
-          if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
+          if (csErr) reportSupabaseError(csErr, 'damage:pc-character-states-update')
           else trace('damage', { pcCharacterStatesUpdateRows: csData?.length })
           // Silent RLS failure pattern: no error, 0 rows affected. The
           // optimistic patch paints damage locally for a frame, then
@@ -770,7 +771,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
           .update(npcUpdate)
           .eq('id', targetNpc.id)
           .select()
-        if (npcUpdErr) console.error('[damage] campaign_npcs update error:', npcUpdErr.message)
+        if (npcUpdErr) reportSupabaseError(npcUpdErr, 'damage:campaign-npcs-update')
         else trace('damage', { campaignNpcsUpdateRows: npcUpdData?.length })
         // Direct state update for THIS client (the roller).
         const npcId = targetNpc.id
@@ -806,7 +807,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         // object tokens used to see the dice roll succeed but the barrel/crate
         // would never actually lose WP. Fixed by sql/scene-tokens-player-update-objects.sql.
         const { error: objErr, data: objData } = await supabase.from('scene_tokens').update({ wp_current: newWP }).eq('id', targetObject.id).select('id, wp_current')
-        if (objErr) console.error('[damage] scene_tokens update error:', objErr.message)
+        if (objErr) reportSupabaseError(objErr, 'damage:scene-tokens-update')
         // Silent RLS failure: no error, 0 rows affected. Without this
         // alert the barrel's wp_current never reaches 0 in the DB, the
         // object wouldn't render as destroyed, the auto-loot `.update`
@@ -845,7 +846,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
             .from('campaigns')
             .update({ vehicles: next })
             .eq('id', id)
-          if (vehErr) console.error('[damage] vehicle sync error:', vehErr.message)
+          if (vehErr) reportSupabaseError(vehErr, 'damage:vehicle-sync')
         })()
 
         // Auto-loot: when object is destroyed, give its contents to the attacker (PC or NPC)
@@ -1502,7 +1503,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
           rp_current: cappedRp,
         }
         const { error: infErr } = await supabase.from('character_states').update(updates).eq('id', targetEntry.stateId)
-        if (infErr) console.error('[infection] PC update error:', infErr.message)
+        if (infErr) reportSupabaseError(infErr, 'infection:pc-update')
         setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...updates } } : e))
       } else if (infectionState && targetNpcInf) {
         const npcRpMax: number = targetNpcInf.rp_max ?? 6
@@ -1516,7 +1517,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
           rp_current: npcCappedRp,
         }
         const { error: infErr } = await supabase.from('campaign_npcs').update(updates).eq('id', targetNpcInf.id)
-        if (infErr) console.error('[infection] NPC update error:', infErr.message)
+        if (infErr) reportSupabaseError(infErr, 'infection:npc-update')
         setCampaignNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } : n))
         setRosterNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } : n))
         setViewingNpcs(prev => prev.map(n => n.id === targetNpcInf.id ? { ...n, ...updates } as CampaignNpc : n))
@@ -1562,7 +1563,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
             .from('characters')
             .update({ data: { ...charData, lastingWounds: nextLW } })
             .eq('id', ldTargetEntry.character.id)
-          if (lwErr) console.error('[lasting-damage] PC update error:', lwErr.message)
+          if (lwErr) reportSupabaseError(lwErr, 'lasting-damage:pc-update')
           setEntries(prev => prev.map(e => e.character.id === ldTargetEntry.character.id
             ? { ...e, character: { ...e.character, data: { ...charData, lastingWounds: nextLW } } }
             : e))
@@ -1576,7 +1577,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
             .from('campaign_npcs')
             .update({ lasting_wounds: nextLW })
             .eq('id', ldTargetNpc.id)
-          if (lwNpcErr) console.error('[lasting-damage] NPC update error:', lwNpcErr.message)
+          if (lwNpcErr) reportSupabaseError(lwNpcErr, 'lasting-damage:npc-update')
           setCampaignNpcs(prev => prev.map(n => n.id === ldTargetNpc.id ? { ...n, lasting_wounds: nextLW } : n))
         }
         lastingDamageResult = `${ldPatientName} suffers a Lasting Wound: ${wound.name} [2d6=${ldSum}] (${wound.effect})`
@@ -1637,11 +1638,11 @@ export function useRollResolution(deps: RollResolutionDeps) {
         if (Object.keys(updates).length > 0) {
           if (tiTargetEntry) {
             const { error: tiErr } = await supabase.from('character_states').update(updates).eq('id', tiTargetEntry.stateId)
-            if (tiErr) console.error('[treat-infection] PC update error:', tiErr.message)
+            if (tiErr) reportSupabaseError(tiErr, 'treat-infection:pc-update')
             setEntries(prev => prev.map(e => e.stateId === tiTargetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...updates } } : e))
           } else if (tiTargetNpc) {
             const { error: tiErr } = await supabase.from('campaign_npcs').update(updates).eq('id', tiTargetNpc.id)
-            if (tiErr) console.error('[treat-infection] NPC update error:', tiErr.message)
+            if (tiErr) reportSupabaseError(tiErr, 'treat-infection:npc-update')
             setCampaignNpcs(prev => prev.map(n => n.id === tiTargetNpc.id ? { ...n, ...updates } : n))
             setRosterNpcs(prev => prev.map(n => n.id === tiTargetNpc.id ? { ...n, ...updates } : n))
             setViewingNpcs(prev => prev.map(n => n.id === tiTargetNpc.id ? { ...n, ...updates } as CampaignNpc : n))
@@ -1976,7 +1977,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
     // keeping "used X on Y → looked through the remains of Y" feed order.
     if (pendingLootLogs.length > 0) {
       const { error: lootErr } = await insertRollLog(pendingLootLogs)
-      if (lootErr) console.error('[auto-loot] log insert error:', lootErr.message)
+      if (lootErr) reportSupabaseError(lootErr, 'auto-loot:log-insert')
     }
     // Drain queued wound-infection warnings. Same pattern as auto-loot:
     // emit AFTER saveRollToLog so the attack row appears above the
@@ -2021,7 +2022,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         outcome: OUTCOME.lasting_wound_acquired,
         damage_json: { wound_name: wName, wound_effect: wEffect, wound_roll: wRoll } as any,
       })
-      if (lwLogErr) console.error('[lasting-wound] roll_log insert error:', lwLogErr.message)
+      if (lwLogErr) reportSupabaseError(lwLogErr, 'lasting-wound:roll-log-insert')
     }
     // Drain queued weapon-malfunction row. Same after-attack ordering
     // applies - malfunction is a consequence of the attack roll, so
@@ -2036,7 +2037,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
         outcome: OUTCOME.weapon_malfunction,
       })
-      if (jamErr) console.error('[weapon-malfunction] roll_log insert error:', jamErr.message)
+      if (jamErr) reportSupabaseError(jamErr, 'weapon-malfunction:roll-log-insert')
     }
 
     // First Impression branch deleted 2026-05-19 (FI streamline Phase 3).

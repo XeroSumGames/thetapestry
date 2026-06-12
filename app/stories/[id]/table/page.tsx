@@ -952,8 +952,8 @@ export default function TablePage() {
       supabase.from('characters').select('id, name, created_at, data, portrait_url').in('id', charIds),
       supabase.from('profiles').select('id, username').in('id', userIds),
     ])
-    if (charsErr) console.error('[loadEntries] characters query error:', charsErr.message)
-    if (profilesErr) console.error('[loadEntries] profiles query error:', profilesErr.message)
+    if (charsErr) reportSupabaseError(charsErr, 'loadEntries:characters-query')
+    if (profilesErr) reportSupabaseError(profilesErr, 'loadEntries:profiles-query')
 
     // The strip-then-patch pattern below renders character cards without
     // their (potentially large) photoDataUrl base64 first, then patches
@@ -1216,7 +1216,7 @@ export default function TablePage() {
       // most-recently-touched and surface "Last Run: <date>". Fire-and-
       // forget - failure here doesn't block the table view.
       supabase.from('campaigns').update({ last_accessed_at: new Date().toISOString() }).eq('id', id)
-        .then(({ error }: any) => { if (error) console.error('[table] last_accessed_at bump failed:', error.message) })
+        .then(({ error }: any) => { if (error) reportSupabaseError(error, 'table:last-accessed-at-bump') })
       setVehicles(camp.vehicles ?? [])
       const amGM = camp.gm_user_id === user.id
       setIsGM(amGM)
@@ -1621,7 +1621,7 @@ export default function TablePage() {
       .update({ [field]: value, updated_at: new Date().toISOString() })
       .eq('id', stateId)
     if (error) {
-      console.error('[handleStatUpdate] failed:', error.message)
+      reportSupabaseError(error, 'handleStatUpdate:failed')
       alert(`Stat update failed: ${error.message}`)
       void loadEntries(id)
     }
@@ -1804,8 +1804,8 @@ export default function TablePage() {
               created_at: new Date(now + 1).toISOString() },
           ]),
         ])
-        if (dropInsertErr) console.error('[confirmStartCombat] drop insert error:', dropInsertErr.message)
-        if (dropLogErr) console.error('[confirmStartCombat] drop log error:', dropLogErr.message)
+        if (dropInsertErr) reportSupabaseError(dropInsertErr, 'confirmStartCombat:drop-insert')
+        if (dropLogErr) reportSupabaseError(dropLogErr, 'confirmStartCombat:drop-log')
         const sortedDrop = (insertedDrop ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.character_name).localeCompare(String(b.character_name)))
         setInitiativeOrder(sortedDrop)
         setCombatActive(sortedDrop.length > 0)
@@ -1841,8 +1841,8 @@ export default function TablePage() {
             damage_json: { initiative: sorted, round: 1 } as any, created_at: new Date(now + 1).toISOString() },
         ]),
       ])
-      if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
-      if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
+      if (initInsertErr) reportSupabaseError(initInsertErr, 'confirmStartCombat:initiative-insert')
+      if (rollInsertErr) reportSupabaseError(rollInsertErr, 'confirmStartCombat:roll-log-insert')
       // Optimistic local state - sorted by roll desc to match loadInitiative behavior.
       const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.character_name).localeCompare(String(b.character_name)))
       setInitiativeOrder(sortedInit)
@@ -1933,7 +1933,7 @@ export default function TablePage() {
 
     // Fetch fresh initiative order from DB to avoid stale state
     const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true })
-    if (orderErr) console.error('[nextTurn] order fetch error:', orderErr.message)
+    if (orderErr) reportSupabaseError(orderErr, 'nextTurn:order-fetch')
     const order = freshOrder ?? initiativeOrder
     if (order.length === 0) { trace('nextTurn', { skipped: 'empty order' }); return }
     const currentIdx = order.findIndex((e: any) => e.is_active)
@@ -2271,8 +2271,8 @@ export default function TablePage() {
         .neq('id', nextId),
       supabase.from('initiative_order').update(activation).eq('id', nextId),
     ])
-    if (deactErr) console.error('[nextTurn] bulk deactivate error:', deactErr.message)
-    if (actErr) console.error('[nextTurn] activate error:', actErr.message)
+    if (deactErr) reportSupabaseError(deactErr, 'nextTurn:bulk-deactivate')
+    if (actErr) reportSupabaseError(actErr, 'nextTurn:activate')
     // Reconcile local state with DB truth + refresh PC liveState, then notify peers.
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
@@ -2308,7 +2308,7 @@ export default function TablePage() {
     try {
     // Re-fetch from DB to avoid stale state
     const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
-    if (freshErr) console.error('[consumeAction] fetch error:', freshErr.message)
+    if (freshErr) reportSupabaseError(freshErr, 'consumeAction:fetch')
     const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
     trace('consumeAction', {
       called: true,
@@ -2334,7 +2334,7 @@ export default function TablePage() {
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
         outcome: OUTCOME.action,
       })
-      if (actionLogErr) console.error('[consumeAction] action log insert error:', actionLogErr.message)
+      if (actionLogErr) reportSupabaseError(actionLogErr, 'consumeAction:action-log-insert')
     }
 
     // Clear aim bonus after a roll (no actionLabel = called from closeRollModal).
@@ -2353,7 +2353,7 @@ export default function TablePage() {
       .eq('id', entryId)
       .select('id, actions_remaining')
     trace('consumeAction', { update: true, entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
-    if (updErr) console.error('[consumeAction] update error:', updErr.message)
+    if (updErr) reportSupabaseError(updErr, 'consumeAction:update')
     if (!updErr && (!updData || updData.length === 0)) {
       console.error('[consumeAction] SILENT RLS FAIL - 0 rows updated, no error. entryId:', entryId)
     }
@@ -2422,7 +2422,7 @@ export default function TablePage() {
       outcome: OUTCOME.combat_end,
       damage_json: { combatants } as any,
     })
-    if (endLogErr) console.error('[endCombat] roll_log insert error:', endLogErr.message)
+    if (endLogErr) reportSupabaseError(endLogErr, 'endCombat:roll-log-insert')
     // Queue Wound Infection checks as roll modals - one per wounded
     // combatant (canon §06: one PHY check per character per combat).
     // The patient (or GM) sees each modal, can layer CMod / Insight
@@ -2476,7 +2476,7 @@ export default function TablePage() {
       .eq('outcome', OUTCOME.combat_start)
       .order('created_at', { ascending: false })
       .limit(1)
-    if (csErr) { console.error('[end-combat-infection] combat_start lookup error:', csErr.message); return }
+    if (csErr) { reportSupabaseError(csErr, 'end-combat-infection:combat-start-lookup'); return }
     const combatStartedAt: string | undefined = (combatStartRows as any[])?.[0]?.created_at
     if (!combatStartedAt) return
     const { data: warningRows, error: wErr } = await supabase
@@ -2485,7 +2485,7 @@ export default function TablePage() {
       .eq('campaign_id', id)
       .eq('outcome', OUTCOME.wound_infection_warning)
       .gte('created_at', combatStartedAt)
-    if (wErr) { console.error('[end-combat-infection] warning lookup error:', wErr.message); return }
+    if (wErr) { reportSupabaseError(wErr, 'end-combat-infection:warning-lookup'); return }
     const wounded = new Set<string>()
     for (const r of (warningRows ?? []) as any[]) {
       if (r.character_name) wounded.add(r.character_name)
@@ -2631,7 +2631,7 @@ export default function TablePage() {
       .eq('scene_id', activeScene.id)
       .in('npc_id', npcIds)
     if (existingErr) {
-      console.error('[placeFolderOnMap] select error:', existingErr.message)
+      reportSupabaseError(existingErr, 'placeFolderOnMap:select')
       // If the archived_at column doesn't exist yet, the SELECT fails
       // with a "column does not exist" message. Surface that clearly so
       // the GM knows to run the migration instead of seeing nothing.
@@ -2657,7 +2657,7 @@ export default function TablePage() {
         .from('scene_tokens')
         .update({ archived_at: null })
         .in('id', archivedIds)
-      if (unErr) { console.error('[placeFolderOnMap] unarchive error:', unErr.message); alert('Failed to restore tokens: ' + unErr.message); return }
+      if (unErr) { reportSupabaseError(unErr, 'placeFolderOnMap:unarchive'); alert('Failed to restore tokens: ' + unErr.message); return }
     }
 
     // Nothing left to insert (everything was either live already or
@@ -2721,7 +2721,7 @@ export default function TablePage() {
       color: getNpcTokenBorderColor({ disposition: n.disposition, npc_type: n.npc_type }),
     }))
     const { error } = await supabase.from('scene_tokens').insert(rows)
-    if (error) { console.error('[placeFolderOnMap] error:', error.message); alert('Failed to place tokens: ' + error.message); return }
+    if (error) { reportSupabaseError(error, 'placeFolderOnMap:insert'); alert('Failed to place tokens: ' + error.message); return }
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
@@ -2753,7 +2753,7 @@ export default function TablePage() {
       .in('npc_id', npcIds)
       .is('archived_at', null)
     if (error) {
-      console.error('[unmapFolder] error:', error.message)
+      reportSupabaseError(error, 'unmapFolder:update')
       if (error.message?.toLowerCase().includes('archived_at') || error.code === '42703') {
         alert('Database is missing the archived_at column. Run sql/scene-tokens-archived-at.sql in Supabase, then hard-refresh.')
       } else {
@@ -2821,7 +2821,7 @@ export default function TablePage() {
       is_visible: type === 'pc' || (npcId ? revealedNpcIds.has(npcId) : true),
       color: tokenColor,
     })
-    if (tokenErr) { console.error('[placeToken] error:', tokenErr.message); alert('Failed to place token: ' + tokenErr.message); return }
+    if (tokenErr) { reportSupabaseError(tokenErr, 'placeToken:insert'); alert('Failed to place token: ' + tokenErr.message); return }
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
@@ -3358,14 +3358,14 @@ export default function TablePage() {
       }).eq('id', id),
       insertSession({ campaign_id: id, session_number: newCount, started_at: startedAt })
         .select('id').single().then(({ data, error }: any) => {
-          if (error) console.error('[startSession] sessions insert failed:', error.message)
+          if (error) reportSupabaseError(error, 'startSession:sessions-insert')
           else if (data) setRollLogSession(data.id)  // stamp rolls with this session
         }),
       deleteRollLog().eq('campaign_id', id).then(({ error }: any) => {
-        if (error) console.error('[startSession] roll_log delete failed:', error.message)
+        if (error) reportSupabaseError(error, 'startSession:roll-log-delete')
       }),
       supabase.from('chat_messages').delete().eq('campaign_id', id).then(({ error }: any) => {
-        if (error) console.error('[startSession] chat_messages delete failed:', error.message)
+        if (error) reportSupabaseError(error, 'startSession:chat-messages-delete')
       }),
       // NOTE: no mass kicked=false reset - kick persists across sessions.
       // Kicked players must manually Rejoin from the story overview page.
@@ -3412,10 +3412,10 @@ export default function TablePage() {
         await Promise.all([
           supabase.from('campaigns').update({ session_status: 'idle', session_started_at: null }).eq('id', id),
           deleteRollLog().eq('campaign_id', id).then(({ error }: any) => {
-            if (error) console.error('[endSession] roll_log delete failed:', error.message)
+            if (error) reportSupabaseError(error, 'endSession:roll-log-delete')
           }),
           supabase.from('chat_messages').delete().eq('campaign_id', id).then(({ error }: any) => {
-            if (error) console.error('[endSession] chat_messages delete failed:', error.message)
+            if (error) reportSupabaseError(error, 'endSession:chat-messages-delete')
           }),
           combatActive ? Promise.all([
             insertRollLog({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Out of the Moment', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action }),
@@ -4056,7 +4056,7 @@ export default function TablePage() {
           .from('campaign_npcs')
           .update({ recruit_locked_approaches: next })
           .eq('id', recruitNpcId)
-        if (lockErr) console.error('[recruit-tier2] lock-approach update error:', lockErr.message)
+        if (lockErr) reportSupabaseError(lockErr, 'recruit-tier2:lock-approach-update')
         else {
           // Local state patch so the picker reflects the lock without a refetch.
           setCampaignNpcs(prev => prev.map(n => n.id === recruitNpcId ? { ...n, recruit_locked_approaches: next } as any : n))
@@ -4508,7 +4508,7 @@ export default function TablePage() {
       // SRD: Successful attack → -2 CMod to target's next action
       const newBonus = (targetEntry.aim_bonus ?? 0) - 2
       const { data: cfRows, error: cfErr } = await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId).select('id, aim_bonus')
-      if (cfErr) console.error('[applySocialAction] Cover Fire update error:', cfErr.message)
+      if (cfErr) reportSupabaseError(cfErr, 'applySocialAction:cover-fire-update')
       else if (!cfRows || cfRows.length === 0) console.error('[applySocialAction] SILENT RLS FAIL - Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
       else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       await consumeAction(activeEntry.id, `${activeEntry.character_name} - Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
@@ -4520,7 +4520,7 @@ export default function TablePage() {
       }
       const newActions = (targetEntry.actions_remaining ?? 0) + 1
       const { data: insRows, error: insErr } = await supabase.from('initiative_order').update({ actions_remaining: newActions, inspired_this_round: true }).eq('id', targetEntryId).select('id, actions_remaining')
-      if (insErr) console.error('[applySocialAction] Inspire update error:', insErr.message)
+      if (insErr) reportSupabaseError(insErr, 'applySocialAction:inspire-update')
       else if (!insRows || insRows.length === 0) console.error('[applySocialAction] SILENT RLS FAIL - Inspire actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
       else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       await consumeAction(activeEntry.id, `${activeEntry.character_name} - Inspire → ${targetEntry.character_name} (+1 action)`)
@@ -4749,7 +4749,7 @@ export default function TablePage() {
       outcome: OUTCOME.wound_infection_warning,
     })
     if (error) {
-      console.error('[wound-infection] roll_log insert error:', error.message)
+      reportSupabaseError(error, 'wound-infection:roll-log-insert')
       // Don't roll back the ref - even on insert failure we don't
       // want to spam retries every subsequent hit. Once-per-combat
       // stays.
@@ -4846,7 +4846,7 @@ export default function TablePage() {
         .update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() })
         .eq('id', targetEntry.stateId)
         .select('id, death_countdown, incap_rounds')
-      if (stabErr) console.error('[stabilize] character_states update error:', stabErr.message)
+      if (stabErr) reportSupabaseError(stabErr, 'stabilize:character-states-update')
       else if (!stabRows || stabRows.length === 0) console.error('[stabilize] SILENT RLS FAIL - stabilize did not persist for', targetName, '- Run sql/character-states-rls-fix.sql.')
       setEntries(prev => prev.map(e =>
         e.stateId === targetEntry.stateId
@@ -4870,7 +4870,7 @@ export default function TablePage() {
       .update({ death_countdown: null, incap_rounds: incapRounds })
       .eq('id', (targetNpc as any).id)
       .select('id, death_countdown, incap_rounds')
-    if (nstabErr) console.error('[stabilize] campaign_npcs update error:', nstabErr.message)
+    if (nstabErr) reportSupabaseError(nstabErr, 'stabilize:campaign-npcs-update')
     else if (!nstabRows || nstabRows.length === 0) console.error('[stabilize] SILENT RLS FAIL - NPC stabilize did not persist for', targetName)
     const npcPatch = { death_countdown: null, incap_rounds: incapRounds }
     setCampaignNpcs(prev => prev.map(n => n.id === (targetNpc as any).id ? { ...n, ...npcPatch } : n))
@@ -4912,7 +4912,7 @@ export default function TablePage() {
       .eq('id', targetEntryId)
       .select('id, actions_remaining')
     if (distractErr) {
-      console.error('[distract] update error:', distractErr.message)
+      reportSupabaseError(distractErr, 'distract:update')
       return distractNarrative(targetName, 0, false)
     }
     if (!distractRows || distractRows.length === 0) {
@@ -5135,7 +5135,7 @@ export default function TablePage() {
     if (didRoll && combatActive && !preConsumed) {
       // Re-fetch active entry from DB to avoid stale closure state
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
-      if (foErr) console.error('[closeRollModal] active fetch error:', foErr.message)
+      if (foErr) reportSupabaseError(foErr, 'closeRollModal:active-fetch')
       const activeEntry = freshOrder?.[0]
       trace('closeRollModal', {
         activeEntry: true,
@@ -7672,7 +7672,6 @@ export default function TablePage() {
                                   p_new_vehicle: updated as any,
                                 })
                                 if (error) {
-                                  console.error('[vehicle-asset] updateVehicle RPC failed:', error.message)
                                   reportSupabaseError(error as any, 'vehicle-asset-update')
                                 }
                               }} />
@@ -10747,7 +10746,7 @@ export default function TablePage() {
                 })
                 setGutInstinctSending(false)
                 if (error) {
-                  console.error('[gut-instinct] whisper insert error:', error.message)
+                  reportSupabaseError(error, 'gut-instinct:whisper-insert')
                   alert('Failed to send whisper: ' + error.message)
                   return
                 }

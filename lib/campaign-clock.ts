@@ -12,6 +12,7 @@
 import { createClient } from './supabase-browser'
 import { normalizeRations, LASTING_WOUNDS } from './xse-schema'
 import { OUTCOME } from './roll-outcomes'
+import { reportSupabaseError } from './supabase-errors'
 
 export interface ClockState {
   canon_day: number
@@ -67,7 +68,7 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     .update({ clock: next })
     .eq('id', campaignId)
   if (error) {
-    console.error('[campaign-clock] advance failed:', error.message)
+    reportSupabaseError(error, 'campaign-clock:advance')
     return null
   }
   // Drain pending events that should fire by the new clock. Best-
@@ -285,7 +286,7 @@ async function drainRationsConsumption(campaignId: string, prevCanonDay: number,
       .update({ data: newData })
       .eq('id', c.id)
     if (updErr) {
-      console.error('[drainRationsConsumption] failed to update character', c.id, updErr.message)
+      reportSupabaseError(updErr, 'drainRationsConsumption:update-character')
       continue
     }
     outcomes.push({
@@ -459,8 +460,8 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
       .eq('campaign_id', campaignId)
       .not('infection_state', 'is', null),
   ])
-  if (pcsRes.error) console.error('[drainInfectionDays] PC fetch:', pcsRes.error.message)
-  if (npcsRes.error) console.error('[drainInfectionDays] NPC fetch:', npcsRes.error.message)
+  if (pcsRes.error) reportSupabaseError(pcsRes.error, 'drainInfectionDays:pc-fetch')
+  if (npcsRes.error) reportSupabaseError(npcsRes.error, 'drainInfectionDays:npc-fetch')
   const pcs = (pcsRes.data ?? []) as any[]
   const npcs = (npcsRes.data ?? []) as any[]
   if (pcs.length === 0 && npcs.length === 0) return
@@ -740,7 +741,7 @@ export async function queuePendingHeal(args: {
     .insert(rows)
     .select('id')
   if (error) {
-    console.error('[campaign-clock] queuePendingHeal failed:', error.message)
+    reportSupabaseError(error, 'campaign-clock:queuePendingHeal')
     return { firstEventId: null, secondEventId: null }
   }
   const ids = (data ?? []) as any[]
@@ -785,7 +786,7 @@ export async function queueStreamingHeal(args: {
     .select('id')
     .maybeSingle()
   if (error) {
-    console.error('[campaign-clock] queueStreamingHeal failed:', error.message)
+    reportSupabaseError(error, 'campaign-clock:queueStreamingHeal')
     return null
   }
   return (data as any)?.id ?? null
@@ -801,7 +802,7 @@ export async function cancelEvent(eventId: string, reason: string): Promise<bool
     .update({ cancelled_at: new Date().toISOString(), cancelled_reason: reason })
     .eq('id', eventId)
   if (error) {
-    console.error('[campaign-clock] cancelEvent failed:', error.message)
+    reportSupabaseError(error, 'campaign-clock:cancelEvent')
     return false
   }
   return true
@@ -821,7 +822,7 @@ export async function setClock(campaignId: string, canonDay: number, hour: numbe
     .update({ clock: next })
     .eq('id', campaignId)
   if (error) {
-    console.error('[campaign-clock] setClock failed:', error.message)
+    reportSupabaseError(error, 'campaign-clock:setClock')
     return null
   }
   try {
