@@ -18,6 +18,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { wrapBroadcast, wrapDbChange } from '../../lib/sentry-realtime'
 import { insertRollLog } from '../../lib/data/roll-log'
+import { getPartyCharacterStates } from '../../lib/data/character-states'
 import { getCampaignClock } from '../../lib/data/campaigns'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { advance, readClock, queueStreamingHeal, cancelEvent, type ClockState } from '../../lib/campaign-clock'
@@ -94,10 +95,7 @@ export default function CampaignSheetPage() {
   const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadParty = useCallback(async () => {
-    const { data: states } = await supabase
-      .from('character_states')
-      .select('id, character_id, wp_current, wp_max, rp_current, rp_max, stress')
-      .eq('campaign_id', campaignId)
+    const { data: states } = await getPartyCharacterStates(campaignId)
     if (!states || states.length === 0) { setParty([]); return }
     const charIds = (states as any[]).map(s => s.character_id)
     const { data: chars } = await supabase

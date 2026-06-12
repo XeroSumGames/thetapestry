@@ -10,7 +10,7 @@
     "app/moderate/page.tsx": 1674
   },
   "seamLeakage": {
-    "fromOutsideData": 1031,
+    "fromOutsideData": 1030,
     "channelOutsideRealtime": 22
   },
   "prodConsole": 0
