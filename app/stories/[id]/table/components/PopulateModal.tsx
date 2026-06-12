@@ -11,6 +11,18 @@ import { triangleBreakdown } from '../../../../../lib/populate-triangle'
 import { generateRandomNpc } from '../../../../../lib/npc-generator'
 import { insertCampaignNpcs } from '../../../../../lib/data/campaign-npcs'
 
+// Silhouette placeholders matching the NpcRoster PORTRAIT_BANK colors.
+// Generated NPCs get a tier-colored stand-in so the roster doesn't look
+// broken after Populate - GMs can swap in real art any time.
+const mkSvg = (bg: string, color: string) =>
+  `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="${bg}"/><circle cx="32" cy="24" r="12" fill="${color}" opacity="0.6"/><ellipse cx="32" cy="52" rx="18" ry="14" fill="${color}" opacity="0.4"/></svg>`)}`
+const TIER_PORTRAIT: Record<string, string> = {
+  antagonist: mkSvg('#2a102a', '#d48bd4'),
+  foe:        mkSvg('#2a1210', '#c0392b'),
+  goon:       mkSvg('#2a2010', '#EF9F27'),
+  bystander:  mkSvg('#1a2e10', '#7fc458'),
+}
+
 interface PopulateModalProps {
   open: boolean
   onClose: () => void
@@ -111,6 +123,7 @@ export function PopulateModal({
                 status: 'active',
                 skills: { entries: npc.skillEntries, weapon: npc.weapon ?? null },
                 notes: `${npc.notes}\n\nMotivation: ${npc.motivation}\nComplication: ${npc.complication}\nWords: ${npc.words.join(', ')}`,
+                portrait_url: TIER_PORTRAIT[tier] ?? null,
                 sort_order: startSort + i,
                 folder: null,
                 hidden_from_players: true,
