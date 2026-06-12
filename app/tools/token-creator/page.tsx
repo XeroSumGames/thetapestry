@@ -3,7 +3,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
-import { uploadPrivatePortrait } from '../../../lib/data/portrait-bank'
+import { uploadPublicPortrait, uploadPrivatePortrait } from '../../../lib/data/portrait-bank'
 
 const OUTPUT_SIZE = 256
 const DISPLAY_MAX = 500 // max width/height of the source preview
@@ -578,8 +578,14 @@ export default function PortraitResizerPage() {
           renderAutoCircle(img, 32),
         ])
         if (!b256 || !b56 || !b32) throw new Error('Canvas render failed')
-        const { error: uploadErr } = await uploadPrivatePortrait(supabase, userId, item.id, b256, b56, b32, item.name, item.gender)
-        if (uploadErr) throw new Error(uploadErr)
+        if (item.gender === 'man' || item.gender === 'woman') {
+          const { error: uploadErr, number: n } = await uploadPublicPortrait(supabase, b256, b56, b32, item.gender)
+          if (uploadErr) throw new Error(uploadErr)
+          if (n != null) setCounts(prev => ({ ...prev, [item.gender as string]: n }))
+        } else {
+          const { error: uploadErr } = await uploadPrivatePortrait(supabase, userId, item.id, b256, b56, b32, item.name || 'Portrait', null)
+          if (uploadErr) throw new Error(uploadErr)
+        }
         setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'done' } : p))
       } catch (err: any) {
         setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'error', error: err?.message ?? 'unknown' } : p))
@@ -618,7 +624,7 @@ export default function PortraitResizerPage() {
       {activeTab === 'bulk' && (
         <div>
           <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Carlito, sans-serif' }}>
-            Select portrait images. Each is auto-cropped, saved to your private library, and immediately available in the NPC and character portrait pickers.
+            Select portrait images. Tag each as <strong style={{ color: '#7ab3d4' }}>M</strong> or <strong style={{ color: '#c4a7f0' }}>F</strong> to add them to the shared portrait bank (auto-numbered). Leave the tag as <strong style={{ color: '#5a5550' }}>-</strong> to save privately under your own name.
           </div>
 
           {/* Drop zone */}
@@ -679,14 +685,20 @@ export default function PortraitResizerPage() {
                           ? <img src={item.previewUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                           : <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>...</span>}
                       </div>
-                      {/* Editable name */}
-                      <input
-                        value={item.name}
-                        onChange={e => setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, name: e.target.value } : p))}
-                        disabled={item.status === 'uploading' || item.status === 'done'}
-                        placeholder="Name"
-                        style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '4px 6px', boxSizing: 'border-box' }}
-                      />
+                      {/* Name: editable for untagged (-); auto-numbered for M/F */}
+                      {item.gender === null ? (
+                        <input
+                          value={item.name}
+                          onChange={e => setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, name: e.target.value } : p))}
+                          disabled={item.status === 'uploading' || item.status === 'done'}
+                          placeholder="Name (private)"
+                          style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '4px 6px', boxSizing: 'border-box' }}
+                        />
+                      ) : (
+                        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', padding: '4px 6px' }}>
+                          Auto-numbered
+                        </div>
+                      )}
                       {/* Gender toggle */}
                       <div style={{ display: 'flex', gap: '3px' }}>
                         {(['man', 'woman', null] as const).map(g => {
