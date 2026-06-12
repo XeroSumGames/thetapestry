@@ -204,6 +204,190 @@ test.describe('Ch9 / #10 - Combat-flow Phase A (Start Combat -> initiative_order
   })
 })
 
+test.describe('Ch9 / #10 - Combat-flow Phase B (initiative-bar DOM ordering + GM turn advance)', () => {
+  test.skip(!canAuth('gm') || !canAuth('marv'), 'needs gm + marv sessions/creds')
+
+  // Covers the two Phase B assertions from tasks/e2e-combat-flow-plan-2026-05-30.md
+  // now that HP shipped the 4 data-testid hooks 2026-05-31:
+  //   (1) Both GM and player see all initiative rows in DB order
+  //       (data-testid="initiative-row-<id>", same roll-DESC ordering loadInitiative uses).
+  //   (2) GM clicking the active-turn pill advances is_active to the next combatant;
+  //       both clients update within realtime SLA (aria-current="true" shifts).
+  test('initiative rows appear in DB order on both clients; GM turn advance shifts active row on both clients', async ({ browser }) => {
+    const gmCtx = await browser.newContext({ storageState: AUTH.gm })
+    const plCtx = await browser.newContext({ storageState: AUTH.marv })
+    const gm = await gmCtx.newPage()
+    const pl = await plCtx.newPage()
+    let campaignId: string | null = null
+    let gmCreds: SupaCreds | null = null
+    try {
+      const gmAnonP = captureAnonKey(gm)
+      const plAnonP = captureAnonKey(pl)
+      gmCreds = await resolveCreds(gm, gmAnonP)
+      const plCreds = await resolveCreds(pl, plAnonP)
+      expect(gmCreds && plCreds, 'could not resolve gm + marv creds').toBeTruthy()
+
+      const setup = await setupThrowawayWithMarvPc({
+        gm, pl, gmCreds: gmCreds!, plCreds: plCreds!, name: `${RUN} Combat B`,
+      })
+      campaignId = setup.campaignId
+
+      // Seed one NPC BEFORE opening the table so the Start Combat picker sees it.
+      // We need >= 2 combatants so the turn-advance has somewhere to go.
+      const npcIns = await gm.request.post(
+        `${SUPABASE_URL}/rest/v1/campaign_npcs`,
+        {
+          headers: { ...H(gmCreds!), 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          data: { campaign_id: campaignId, name: `${RUN} PhaseB NPC` },
+        },
+      )
+      expect(npcIns.ok(), `campaign_npcs INSERT failed: ${npcIns.status()} ${await npcIns.text()}`).toBe(true)
+
+      // Open the table on both contexts.
+      await Promise.all([
+        gm.goto(`/stories/${campaignId}/table`, { waitUntil: 'domcontentloaded' }),
+        pl.goto(`/stories/${campaignId}/table`, { waitUntil: 'domcontentloaded' }),
+      ])
+      await gm.waitForTimeout(2500)
+
+      // Start session (fresh throwaway has none) then start combat.
+      await gm.getByRole('button', { name: /start session/i }).first().click().catch(() => {})
+      await gm.waitForTimeout(1500)
+      await gm.getByRole('button', { name: /into the moment/i }).first().click()
+      await gm.waitForTimeout(800)
+      const confirm = gm.getByRole('button', { name: /into the moment \(/i }).first()
+      if (!(await confirm.isEnabled().catch(() => false))) {
+        await gm.getByRole('checkbox').first().check().catch(() => {})
+        await gm.waitForTimeout(300)
+      }
+      await confirm.click()
+
+      // Wait for player to confirm combat is live (realtime SLA anchor + ensures
+      // the initiative subscription is active on the player client before we check).
+      await expect(
+        pl.getByText(/in the moment/i).first(),
+        'player did not see IN THE MOMENT after GM starts combat',
+      ).toBeVisible({ timeout: 25_000 })
+
+      // Dismiss the "New Scene" auto-modal if present (throwaway campaigns have no
+      // tactical scenes - same guard pattern as hidden-npc-initiative.spec.ts).
+      const newSceneCancel = gm.getByRole('button', { name: /^cancel$/i }).first()
+      if (await newSceneCancel.isVisible().catch(() => false)) {
+        await newSceneCancel.click()
+        await gm.waitForTimeout(400)
+      }
+
+      await gm.waitForTimeout(1500) // let initiative order settle on both clients
+
+      // --- REST: canonical initiative order (same sort loadInitiative uses). ---
+      const initResp = await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/initiative_order?campaign_id=eq.${campaignId}&order=roll.desc,character_name.asc&select=id,is_active,character_name`,
+        { headers: H(gmCreds!) },
+      )
+      const initRows = await initResp.json() as Array<{ id: string; is_active: boolean; character_name: string }>
+      expect(
+        Array.isArray(initRows) && initRows.length >= 2,
+        `expected >= 2 initiative rows for ordering check, got: ${JSON.stringify(initRows)}`,
+      ).toBe(true)
+
+      const activeEntryBefore = initRows.find(r => r.is_active)
+      expect(activeEntryBefore, 'expected exactly one is_active=true row after Start Combat').toBeTruthy()
+
+      // --- DOM: all rows present on GM client in roll-DESC order. ---
+      await expect(
+        gm.locator('[data-testid^="initiative-row-"]'),
+        'GM should see all initiative rows',
+      ).toHaveCount(initRows.length, { timeout: 10_000 })
+
+      const gmRows = gm.locator('[data-testid^="initiative-row-"]')
+      for (let i = 0; i < initRows.length; i++) {
+        await expect(
+          gmRows.nth(i),
+          `GM initiative row [${i}] should be ${initRows[i].character_name} (roll-DESC order)`,
+        ).toHaveAttribute('data-testid', `initiative-row-${initRows[i].id}`, { timeout: 5_000 })
+      }
+
+      // Exactly one active row on GM (aria-current="true" on the active initiative-row).
+      await expect(
+        gm.locator('[data-testid^="initiative-row-"][aria-current="true"]'),
+        'GM should see exactly one active initiative row',
+      ).toHaveCount(1, { timeout: 5_000 })
+      await expect(
+        gm.locator(`[data-testid="initiative-row-${activeEntryBefore!.id}"]`),
+        'GM active row should carry aria-current=true',
+      ).toHaveAttribute('aria-current', 'true', { timeout: 5_000 })
+
+      // --- DOM: player client sees the same rows in the same order. ---
+      await expect(
+        pl.locator('[data-testid^="initiative-row-"]'),
+        'player should see all initiative rows',
+      ).toHaveCount(initRows.length, { timeout: 12_000 })
+
+      const plRows = pl.locator('[data-testid^="initiative-row-"]')
+      for (let i = 0; i < initRows.length; i++) {
+        await expect(
+          plRows.nth(i),
+          `player initiative row [${i}] should be ${initRows[i].character_name}`,
+        ).toHaveAttribute('data-testid', `initiative-row-${initRows[i].id}`, { timeout: 5_000 })
+      }
+
+      await expect(
+        pl.locator('[data-testid^="initiative-row-"][aria-current="true"]'),
+        'player should see exactly one active initiative row',
+      ).toHaveCount(1, { timeout: 5_000 })
+
+      // --- GM advances the turn via the red "Next ->" button in the GM toolbar. ---
+      // The active-turn pill (div with onNextTurn) is blocked by pointer-event
+      // interception from the parent container; the actual <button> at the end
+      // of the toolbar is the reliable E2E target.
+      await gm.getByRole('button', { name: /next/i }).filter({ hasText: '→' }).click()
+
+      // REST poll: is_active flips away from the previous active entry.
+      await expect.poll(
+        async () => {
+          const r = await gm.request.get(
+            `${SUPABASE_URL}/rest/v1/initiative_order?campaign_id=eq.${campaignId}&is_active=eq.true&select=id`,
+            { headers: H(gmCreds!) },
+          )
+          const rows = await r.json().catch(() => []) as Array<{ id: string }>
+          return rows?.[0]?.id ?? null
+        },
+        { timeout: 12_000, message: `is_active should shift away from ${activeEntryBefore!.character_name} after GM turn advance` },
+      ).not.toBe(activeEntryBefore!.id)
+
+      // Fetch the new active entry ID.
+      const newActiveResp = await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/initiative_order?campaign_id=eq.${campaignId}&is_active=eq.true&select=id`,
+        { headers: H(gmCreds!) },
+      )
+      const newActiveRows = await newActiveResp.json() as Array<{ id: string }>
+      const newActiveId = newActiveRows?.[0]?.id
+      expect(newActiveId, 'expected exactly one active row after turn advance').toBeTruthy()
+      expect(newActiveId, 'new active entry should differ from previous').not.toBe(activeEntryBefore!.id)
+
+      // --- DOM: both clients reflect the new active row within realtime SLA. ---
+      await expect(
+        gm.locator(`[data-testid="initiative-row-${newActiveId}"]`),
+        'GM should reflect the new active row via aria-current',
+      ).toHaveAttribute('aria-current', 'true', { timeout: 10_000 })
+
+      await expect(
+        pl.locator(`[data-testid="initiative-row-${newActiveId}"]`),
+        'player should reflect the new active row via aria-current within 15s realtime SLA',
+      ).toHaveAttribute('aria-current', 'true', { timeout: 15_000 })
+    } finally {
+      if (campaignId && gmCreds) {
+        await gm.request.delete(
+          `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}`,
+          { headers: H(gmCreds) },
+        ).catch(() => {})
+      }
+      await gmCtx.close()
+      await plCtx.close()
+    }
+  })
+})
+
 test.describe('Ch9 / #10 - Combat-flow Phase C (deterministic damage via gm_apply_damage)', () => {
   test.skip(!canAuth('gm') || !canAuth('marv'), 'needs gm + marv sessions/creds')
 

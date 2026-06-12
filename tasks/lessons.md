@@ -1,5 +1,17 @@
 # Lessons Learned
 
+## New-Scene auto-modal fires in every throwaway campaign after combat start - dismiss it before touching the initiative bar (2026-06-11)
+
+When a throwaway campaign has no tactical scenes and "Into the Moment" starts combat, the app auto-opens a "New Scene?" modal with `position: fixed; inset: 0`. This modal is a full-screen overlay that intercepts ALL pointer events, including clicks on the initiative bar and the "Next ->" button. Symptoms: `locator.click` times out after 15s with no error about the button being missing - the button IS in the DOM, it just can't receive the click. Fix: after asserting the player sees "IN THE MOMENT", add a New-Scene-modal dismiss guard before any initiative bar interactions: `const cancel = gm.getByRole('button', { name: /^cancel$/i }).first(); if (await cancel.isVisible().catch(() => false)) { await cancel.click(); await gm.waitForTimeout(400); }`. Then add a 1500ms settle wait. Pattern established in `hidden-npc-initiative.spec.ts` and combat-flow Phase B; apply any time a throwaway campaign triggers combat.
+
+## Active-turn pill is a div with pointer-event interception - drive turn advance via the "Next ->" button (2026-06-11)
+
+The initiative-bar active-turn pill is rendered as a `div` (not a `button`), and a sibling `div` layer intercepts its pointer events (for the tooltip "Click to advance past {name}"). Clicking the pill directly via Playwright times out consistently. The reliable DOM trigger for turn advance is the red "Next ->" button in the GM toolbar (`gm.getByRole('button', { name: /next/i }).filter({ hasText: '->' })`), which calls `onNextTurn()` and is a real `button` element with no interception. Never try to click the pill div directly in E2E; always use the "Next ->" button.
+
+## Initiative bar DOM ordering sort key is `roll DESC, character_name ASC` - match the REST query to `loadInitiative()` exactly (2026-06-11)
+
+`loadInitiative()` in `app/stories/[id]/table/page.tsx` orders by `roll DESC, character_name ASC`. E2E ordering assertions must use the same sort in their REST query (`?order=roll.desc,character_name.asc`) to get the canonical order the DOM renders in. Using a different sort (e.g. default order or insertion order) produces a reference list that may not match the DOM, causing false `nth(i)` failures. Always derive the reference order from the same ORDER BY the app uses, not from insertion order or any other proxy.
+
 ## React stale-closure on async DB writes: always fetch fresh state inside mutation handlers (2026-06-11)
 
 `handleClone` in `NpcRoster.tsx` captured `npc.name` and `npcs` from the render closure. After a rename the user had just done, `updateCampaignNpc` wrote to the DB and `expect.poll` (Playwright's DB REST poll) confirmed the write faster than React's `setNpcs()` re-render propagated. So when the test clicked Clone, `handleClone` ran with the pre-rename `npc.name` in its closure - cloned "Roster One #2" instead of "Roster Edited #2". Fix: add `const { data: freshRows } = await npcsForRoster(campaignId)` as the FIRST line of `handleClone` and use `freshRows.find(n => n.id === npc.id)` for all derived fields. Rule: any mutation handler that reads state captured from a prior render AND where the state may have been changed by an immediately-preceding async write should re-fetch from the DB rather than trusting the closure. If a unit test checks the DB faster than React re-renders, closures are stale.
