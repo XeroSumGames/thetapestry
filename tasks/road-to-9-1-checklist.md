@@ -31,7 +31,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 - [x] **F6** - CLOSED 2026-06-11 (`6ba240a`). Single-sourced 4 onboarding sections into `lib/onboarding-sections.ts`; both WelcomeModal and /firsttimers now render from it. Fixed /firsttimers em-dashes, typos, stale "Coming soon."
 - [x] **4 combat-flow testids** - SHIPPED 2026-05-31. `initiative-row-<id>`, `initiative-row-active`, `roll-feed-row-<id>`, `roll-feed-attack-result` - one additive commit, no behavior change. Unblocks E2E combat-flow Phase B.
 - [ ] **Broadcast catch-up** remaining surfaces: `PlayerNotes` + `app/npc-sheet` + `app/campaign-sheet` (3 of 5; 2 shipped).
-- [ ] **`/press` first-paint** investigation - blank black on initial render until scroll. HP code check.
+- [x] **`/press` first-paint** - FIXED `63ee6c8` 2026-06-12. LayoutShell now skips the `!checked` blank-screen for `NO_SIDEBAR_PAGES`; /press (and /login, /signup) render immediately without waiting for getCachedAuth.
 - [x] **Combat math 2-client smoke** - 12-check tactical-map 2-client gate ALL-PASS 2026-05-30. **KS #1 CORE-LOOP RELIABILITY CLOSED.** (E2E baseline 140/0/0.)
 - [ ] **Mass-upload tokens** - GM has a folder of NPC/character photos and wants to bulk-create tokens in one pass (upload N images -> N tokens placed on the active scene, or N NPC portrait rows created). Xero confirmed need 2026-06-12; scope TBD (portraits-only vs map-placement vs both). Design first.
 - [ ] **Modal redesign A3 -> E** - 5 phases. Spec [tasks/modal-redesign-spec-2026-05-24.md](modal-redesign-spec-2026-05-24.md).
@@ -47,7 +47,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## E2E (Playwright)
 
-- [ ] **Combat-flow Phase B** - DOM ordering / action decrement assertions. Testids SHIPPED 2026-05-31 - this is now UNBLOCKED for E2E.
+- [x] **Combat-flow Phase B** - SHIPPED `5d9773f` 2026-06-11. Initiative-bar DOM ordering + GM turn-advance GREEN 12.4s. Two-client throwaway campaign: REST asserts chip order (roll DESC) + `aria-current` shift + both clients reflect within 15s realtime SLA.
 - [ ] **End-of-combat infection banner DOM assertion** - unblocked by `gm_apply_damage` v3 (`f4f3e9d`). ~15 min.
 - [ ] **Full re-cert as 9/1 launch gate** - `npm run test:e2e` green on prod, dashboard updated in place.
 
