@@ -577,7 +577,7 @@ export default function TablePage() {
   const [recruitStep, setRecruitStep] = useState<RecruitStep>('pick')
   const [recruitRollerId, setRecruitRollerId] = useState<string>('') // PC character id
   const [recruitNpcId, setRecruitNpcId] = useState<string>('')
-  const [recruitCommunityId, setRecruitCommunityId] = useState<string>('') // community.id, '__new__', or ''
+  const [recruitCommunityId, setRecruitCommunityId] = useState<string>('__new__') // community.id or '__new__' (Current group)
   const [recruitNewCommunityName, setRecruitNewCommunityName] = useState('')
   const [recruitApproach, setRecruitApproach] = useState<RecruitApproach>('cohort')
   const [recruitSkill, setRecruitSkill] = useState<string>('')
@@ -3773,7 +3773,7 @@ export default function TablePage() {
       }
     }
     setRecruitNpcId(autoNpcId)
-    setRecruitCommunityId('')
+    setRecruitCommunityId('__new__')
     setRecruitNewCommunityName('')
     setRecruitApproach('cohort')
     setRecruitSkill('')
@@ -3810,9 +3810,6 @@ export default function TablePage() {
     setRecruitCommunityList(commRows.map(c => ({ id: c.id, name: c.name || 'Unnamed Group', member_count: byCommId[c.id] ?? 0 })))
     setNpcCommunityMap(nextNpcMap)
     setApprenticeByCharacter(nextApprenticeMap)
-    // Auto-pick community if exactly one exists, else blank (user picks
-    // or starts the "Found a new community" branch).
-    if (commRows.length === 1) setRecruitCommunityId(commRows[0].id)
     setShowRecruit(true)
   }
 
@@ -9749,7 +9746,8 @@ export default function TablePage() {
           : []
         const allApproachesLocked = lockedApproaches.length >= 3
         const currentApproachLocked = lockedApproaches.includes(recruitApproach)
-        const hasAnyCommunity = recruitCommunityList.length > 0
+        const visibleCommunities = recruitCommunityList.filter(c => !c.name.startsWith('[E2E]') && !c.name.startsWith('E2E'))
+        const hasAnyCommunity = visibleCommunities.length > 0
         const resolvedCommunityName = recruitCommunityId === '__new__'
           ? (recruitNewCommunityName.trim() || 'a new group')
           : (recruitCommunityList.find(c => c.id === recruitCommunityId)?.name ?? '')
@@ -9814,13 +9812,16 @@ export default function TablePage() {
                   <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Community</div>
                     {hasAnyCommunity ? (
-                      <select value={recruitCommunityId} onChange={e => setRecruitCommunityId(e.target.value)}
+                      <select value={recruitCommunityId || '__new__'} onChange={e => setRecruitCommunityId(e.target.value)}
                         style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
-                        <option value="">- pick a community -</option>
-                        {recruitCommunityList.map(c => (
-                          <option key={c.id} value={c.id}>{c.name} ({c.member_count} member{c.member_count === 1 ? '' : 's'})</option>
-                        ))}
-                        <option value="__new__">+ Start a new group</option>
+                        <option value="__new__">Current group</option>
+                        {visibleCommunities.length > 0 && (
+                          <optgroup label="Existing communities">
+                            {visibleCommunities.map(c => (
+                              <option key={c.id} value={c.id}>{c.name} ({c.member_count} member{c.member_count === 1 ? '' : 's'})</option>
+                            ))}
+                          </optgroup>
+                        )}
                       </select>
                     ) : (
                       // No communities yet - auto-set to __new__ and show inline
@@ -10143,11 +10144,8 @@ export default function TablePage() {
           setStabilizeNarrativeText('')
           setStabilizeCmod(0)
         }}
-        title="Stabilize"
+        title={stabilizePending ? `${stabilizePending.medicName} stabilizes ${stabilizePending.targetName}` : 'Stabilize'}
         eyebrow="Stabilize" accent="#7fc458" dimBackdrop={false}
-        subtitle={stabilizePending
-          ? `${stabilizePending.medicName} stabilizes ${stabilizePending.targetName}`
-          : undefined}
         rollFormula="2d6 + RSN + Medicine + CMod"
         amod={stabilizePending?.amod ?? 0}
         smod={stabilizePending?.smod ?? 0}
