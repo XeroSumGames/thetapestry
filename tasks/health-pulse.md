@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-12 15:10 UTC
+
+**Status:** DRIFT (carry-over; gates/CI/audit all green)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-12T12:13Z)
+
+**Drift (all carry-over from prior runs):**
+- HOPED-FOR >27d: Tier-2 Recruit, P3 Q4-b Advantages, FI streamline (Insight Die + single-modal), Stress Check 12-string narrative polish. Drain target: Beta-500 dry-run before 2026-07-01.
+- Confidence Ledger stale: debug-handoff.md §3 says 738 tests/41 files; actual 875/48. Run `npx tsx scripts/refresh-ledger.mjs`.
+- `scripts/check-realtime-wrap.mjs` still absent; todo.md:65 says "now unblocked."
+- `characters` cross-user write parent todo (todo.md:105) still `- [ ]`; Risk Register GREEN/CLOSED 2026-05-25.
+
+**Action:** No new fires. Carry-over housekeeping: tick closed todos, refresh ledger, plan Beta-500 dry-run.
+
+---
+
 ## 2026-06-12 12:10 UTC
 
 **Status:** DRIFT (run 77 — carry-over from run 76 + new stale-open; gates/CI all green)
