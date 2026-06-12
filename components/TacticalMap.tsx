@@ -1956,17 +1956,21 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.restore()
           ctx.beginPath()
           ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-          // Brighten the stored disposition color at render time so
-          // legacy tokens get the vivid palette without a DB rewrite.
+          // All portrait tokens use a dark backing ring + vivid color ring so
+          // the border reads on any map background or portrait color.
           if (isActive) {
-            // Dark backing ring (reads on any portrait) + bold gold ring.
+            // Gold spotlight ring for the active combatant.
             ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 6; ctx.stroke()
             ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
             ctx.strokeStyle = '#ffc61f'; ctx.lineWidth = 3.5; ctx.stroke()
+          } else if (selectedToken === t.id) {
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 6; ctx.stroke()
+            ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+            ctx.strokeStyle = '#f5f2ee'; ctx.lineWidth = 3.5; ctx.stroke()
           } else {
-            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : vividTokenBorder(t.color)
-            ctx.lineWidth = selectedToken === t.id ? 3 : 2
-            ctx.stroke()
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 6; ctx.stroke()
+            ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+            ctx.strokeStyle = vividTokenBorder(t.color); ctx.lineWidth = 3.5; ctx.stroke()
           }
         } else {
           ctx.fillStyle = t.is_visible ? vividTokenBorder(t.color) : 'rgba(192,57,43,0.3)'
