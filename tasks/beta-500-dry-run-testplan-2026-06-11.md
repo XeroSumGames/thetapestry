@@ -62,34 +62,46 @@ the area where CMods and bonus chips show up.
 
 ## Section 2: ADVANTAGES
 
-### 2A. Grant
+Advantages are GM-granted bonuses tied to specific PC roll moments,
+then "used" by the player to add CMod / re-roll-flavor to a later
+roll. The flow lives entirely on the table page (`/stories/[id]/table`),
+NOT on the character sheet or campaign sheet.
 
-1. Open a PC's character sheet (click the PC name on
-   `/campaign-sheet`).
-2. Find the Advantages tab/section + open it.
-3. Click `Grant Advantage` (or the equivalent).
-4. Pick the first item from the list.
-5. Confirm the grant.
-6. Refresh the browser page.
+### 2A. Grant (you do this as GM)
 
-**Report back:** screenshot the Advantages tab BEFORE granting,
-AFTER granting, AND after the refresh. If any step had no button or
-no list, tell me which.
+1. Open the table page for the campaign you're testing.
+2. Make sure a PC has rolled something in the feed - any skill check,
+   attack, or weapon roll. If the feed is empty of rolls, run a roll
+   first (e.g., have a PC do a Perception check).
+3. Look at any dice-roll row in the roll feed (right column). Each
+   row has a small gold ⭐ in the bottom-right corner. Hover or look
+   carefully - it's small.
+4. Click the gold ⭐ on any dice row.
+5. A modal opens. Fill in skill / CMod / description.
+6. Submit.
 
-### 2B. Use
+**Report back:** screenshot the feed row with the ⭐ visible (step 3),
+screenshot the modal that opened (step 4), and screenshot whatever
+appears in the feed after step 6. If you can't find the ⭐ on any
+row, say so + tell me what view you're on.
 
-1. Switch to the player's browser tab (whoever owns the PC), or use
-   the GM-override if there's one.
-2. Open the same PC's sheet + Advantages tab.
-3. Fire a normal skill check from the table page on that PC.
-4. In the roll modal, look for any `Use Advantage` button.
-5. Click `Use Advantage` if you see it.
-6. Click `Roll`.
-7. Switch back to the GM screen + reopen the PC's Advantages tab.
+### 2B. Use (you do this as the player)
 
-**Report back:** screenshot the roll modal at Step 4 (before Use),
-the feed row after Step 6, and the GM Advantages tab after Step 7. If
-the `Use Advantage` button wasn't visible at all, say so.
+1. Stay on the same table page, in a player-controlled browser tab
+   (whichever browser/account owns the PC that received the
+   Advantage in 2A).
+2. Open the GM Tools sidebar (or whatever sidebar / tab area is
+   visible). Click the **Notes** tab.
+3. At the TOP of the Notes panel - above the notes themselves - there
+   should be an "⭐ Advantages" panel listing any pending Advantages
+   on this PC.
+4. Click `✓ Use` on the Advantage card.
+
+**Report back:** screenshot the Notes tab BEFORE clicking Use
+(showing the Advantage card), screenshot the feed afterwards
+(should have a new row reflecting the Use), and screenshot the Notes
+tab AFTER (the Advantage card should be gone, or marked consumed).
+If there's no ⭐ Advantages panel above the notes, say so.
 
 ---
 
