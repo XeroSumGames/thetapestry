@@ -83,7 +83,8 @@ import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
 import { downloadDump as recorderDownloadDump, wipeBuffer as recorderWipeBuffer, setEnabled as recorderSetEnabled, writeCampaignEnabled, trace } from '../../../../lib/playtest-recorder'
 import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } from '../../../../lib/damage'
-import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
+import { captureCampaignSnapshot, restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
+import { insertCampaignSnapshot } from '../../../../lib/data/snapshots'
 import { useStableCallback } from '../../../../lib/useStableCallback'
 import { appendProgressionEntry } from '../../../../lib/progression-log'
 import ApprenticeCreationWizard from '../../../../components/ApprenticeCreationWizard'
@@ -5576,6 +5577,24 @@ export default function TablePage() {
                   .order('created_at', { ascending: false })
                 setReloadSnapshots((data ?? []) as any)
                 setShowReloadPicker(true)
+              },
+            },
+            {
+              label: 'Snapshot',
+              onClick: async () => {
+                const ts = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+                const raw = prompt('Snapshot name:', `Quick save ${ts}`)
+                if (raw === null) return
+                const name = raw.trim() || `Quick save ${ts}`
+                try {
+                  const snap = await captureCampaignSnapshot(supabase, id, { includesCharacterStates: true })
+                  const { error } = await insertCampaignSnapshot(id, name, snap, userId, true)
+                  if (error) throw new Error(error.message)
+                  const counts = `${snap.npcs.length} NPCs · ${snap.pins.length} pins · ${snap.scenes.length} scenes`
+                  alert(`Snapshot saved: "${name}" (${counts})`)
+                } catch (err: any) {
+                  alert(`Snapshot failed: ${err?.message ?? 'unknown error'}`)
+                }
               },
             },
             {
