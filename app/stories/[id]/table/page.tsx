@@ -5671,10 +5671,12 @@ export default function TablePage() {
           ? `You're bleeding out - someone needs to Stabilize you within ${ls.death_countdown ?? '?'} round${ls.death_countdown === 1 ? '' : 's'} or you die.`
           : 'You\'re unconscious - you can\'t take actions until you come to (rest, first aid, or an ally\'s Medicine check).'
         return (
-          <div style={{ background: '#2a1210', borderBottom: '1px solid #c0392b', padding: '8px 16px', fontFamily: 'Carlito, sans-serif', color: '#f5a89a', textAlign: 'center', flexShrink: 0 }}>
-            <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a' }}>🩸 {title}</div>
-            <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>{subtitle}</div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>You can still watch the map, whisper the GM, and read the log.</div>
+          <div style={{ background: '#2a1210', borderBottom: '1px solid #c0392b', padding: '4px 16px', fontFamily: 'Carlito, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, gap: '8px', flexWrap: 'nowrap', fontSize: '13px' }}>
+            <span style={{ fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', whiteSpace: 'nowrap' }}>🩸 {title}</span>
+            <span style={{ color: '#666' }}>•</span>
+            <span style={{ color: '#d4cfc9', whiteSpace: 'nowrap' }}>{subtitle}</span>
+            <span style={{ color: '#666' }}>•</span>
+            <span style={{ color: '#cce0f5', whiteSpace: 'nowrap' }}>You can still watch the map, whisper the GM, and read the log.</span>
           </div>
         )
       })()}
