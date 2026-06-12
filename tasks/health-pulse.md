@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-12 06:09 UTC
+
+**Status:** DRIFT (run 75 — 2 new stale-open tactical-map todos; 4 HOPED-FOR carry-over; gates/CI all green)
+
+**Gates:** font-sizes [OK], role-literals [OK — 331 files], tsc [OK], tests [875 passed / 48 files] (+2 since run 74)
+
+**Audit:** npm audit [clean — 0 high, 0 critical; 3 moderate ignored]
+
+**CI:** last 5 runs all success (latest 2026-06-12T01:05Z)
+
+**Drift:**
+- HOPED-FOR >27d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die + single-modal), Stress Check 12-string narrative lock. Drain target: Beta-500 dry-run before 2026-07-01 (18 days).
+- Resolved since run 74: 3 stale-open boxes ticked (L1+L2+Observ-B via `454cbe2`) — no action needed.
+- **New stale-open (shipped, still `- [ ]` in todo.md):**
+  - `img_scale divergence FIXED + fit-to-width display model` — says "awaiting Xero's 2-client VISUAL eyeball"; that eyeball was the 12-check 2-client gate which ran ALL-PASS 2026-05-30. Gate closed; todo not ticked.
+  - `player viewport doesn't FOLLOW token MOVES` — 12-check gate Phase B (checks 9-12) explicitly verifies active-combatant + own-PC move-follow on move. Gate ALL-PASS = fix confirmed. Todo not ticked.
+
+**Action:** Tick 2 stale-open tactical-map todos in todo.md (img_scale + move-follow). Schedule Beta-500 dry-run to drain 4 HOPED-FOR before 7/1 (18 days).
+
+---
+
 ## 2026-06-12 00:09 UTC
 
 **Status:** DRIFT (run 74 — carry-over from run 73; gates/CI all green)
