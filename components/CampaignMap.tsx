@@ -1255,12 +1255,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               {shareFlash ? '✓ Shared' : '👁 Share View'}
             </button>
           )}
-          {/* SHARE ROUTE - GM-only. Visible only when a route is plotted
-              (routeDistanceMeters !== null). Broadcasts the polyline coords,
-              waypoints, distance, fallback flag, and current travel mode so
-              players can reconstruct the exact Leaflet layers. Flash green
-              ~1.5s for GM confirmation. Added 2026-05-30. */}
-          {isGM && routeDistanceMeters !== null && (
+          {/* SHARE ROUTE - visible to all users when a route is plotted.
+              Broadcasts coords, waypoints, distance, fallback flag, and travel
+              mode so the rest of the group can see the same route. */}
+          {routeDistanceMeters !== null && (
             <button type="button"
               onClick={() => {
                 const coords = routeCoordsRef.current
