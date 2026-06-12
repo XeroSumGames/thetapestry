@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-12 09:07 UTC
+
+**Status:** DRIFT (run 76 — carry-over from run 75 + new: Confidence Ledger stale; gates/CI all green)
+
+**Gates:** font-sizes [OK], role-literals [OK — 331 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-12T06:12Z)
+
+**Drift:**
+- HOPED-FOR >24d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die + single-modal), Stress Check 12-string narrative lock. Drain target: Beta-500 dry-run before 2026-07-01.
+- **Stale-open carry-over (still `- [ ]` in todo.md):** img_scale divergence + player viewport follow — both shipped + verified by the 12-check 2-client gate (2026-05-30 ALL-PASS). Flagged since run 75; untouched.
+- **NEW: Confidence Ledger stale.** `debug-handoff.md §3` says 738 tests/41 files (last refreshed 2026-05-31 via `scripts/refresh-ledger.mjs`); actual suite is **875 tests/48 files** (+137 tests, +7 files in ~12 days). Ledger is a reference doc used during triage; stale count is misleading.
+- **NEW: `scripts/check-realtime-wrap.mjs` still not created.** `todo.md` line 64 calls it "now unblocked" (Path B shipped 2026-06-01); script still absent from `scripts/`. Stays unblocked; just not built.
+
+**Action:** (1) Run `npx tsx scripts/refresh-ledger.mjs` to sync Confidence Ledger (or HP route). (2) Tick 2 stale-open tactical-map todos (img_scale + move-follow). (3) Schedule Beta-500 dry-run before 7/1 to drain 4 HOPED-FOR.
+
+---
+
 ## 2026-06-12 06:09 UTC
 
 **Status:** DRIFT (run 75 — 2 new stale-open tactical-map todos; 4 HOPED-FOR carry-over; gates/CI all green)
