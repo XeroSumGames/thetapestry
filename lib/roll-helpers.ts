@@ -667,7 +667,7 @@ export function compactRollSummary(r: { label: string; character_name: string; t
         return `${r.character_name} makes a strong First Impression${fiTarget}`
       }
       if (r.outcome === 'Success') {
-        return `${r.character_name} makes a First Impression${fiTarget}`
+        return `${r.character_name} makes a positive First Impression${fiTarget}`
       }
       if (r.outcome === 'Failure') {
         return `${r.character_name} makes a bad First Impression${fiTarget}`

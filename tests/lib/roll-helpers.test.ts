@@ -706,7 +706,7 @@ describe('compactRollSummary', () => {
     expect(compactRollSummary({
       label: 'Cree Hask - First Impression (Avery Xavier)',
       character_name: 'Cree Hask', outcome: 'Success',
-    })).toBe('Cree Hask makes a First Impression on Avery Xavier')
+    })).toBe('Cree Hask makes a positive First Impression on Avery Xavier')
   })
 
   it('first impression Failure', () => {
