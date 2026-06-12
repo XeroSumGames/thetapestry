@@ -11,7 +11,7 @@ Click "+ Add NPC" to open the modal:
 
   - Name.
   - Type: Friendly, Goon, Foe, or Antagonist. Sets baseline RAPID values.
-  - Portrait: portrait bank, upload, or library pick.
+  - Portrait: pick from the Portrait Bank, upload a new image, or pick a tier-colored silhouette as a placeholder.
   - RAPID attributes (adjustable).
   - Skills (add from dropdown, set level 0-4).
   - Weapon (primary, all categories).
@@ -24,12 +24,29 @@ Click "+ Add NPC" to open the modal:
 
 GENERATING AN NPC
 -----------------
-Click "Generate NPC" and pick a type. The system rolls a random NPC with stats, skills, weapons, personality, and a portrait. Edit afterward.
+Click "Generate NPC" and pick a type. The system rolls a random NPC with stats, skills, weapons, personality, and a portrait pulled from the public Portrait Bank.
 
 
 POPULATING A SCENE (GM)
 -----------------------
 The "Populate" tool bulk-generates a roster along the SRD's recommended distribution: 1 Antagonist, 2 Foes, 3 Goons, 4 Friendlies (the 1A:2F:3G:4B triangle).
+
+Populate pulls portraits from the public Portrait Bank, cycling through unused entries by gender. If the Bank runs short, the unfilled slots come out portrait-less; you can fill them by hand or via the silhouette placeholders.
+
+
+THE PORTRAIT BANK AND TOKEN CREATOR
+-----------------------------------
+Portraits and PC tokens share one shared library: the Portrait Bank. Players can browse and contribute through the Token Creator at /tools/token-creator.
+
+  BULK UPLOAD tab (anyone signed in)
+    Drop in multiple images at once. Each image gets a card with three buttons: M, F, and - (untagged).
+      M / F  Tag the portrait by gender. The system auto-numbers it (e.g. "NPC-MAN-001") and files it in the public bank for random NPC assignment.
+      -      Untagged. The portrait is saved privately under your own name. It won't appear in anyone else's campaign or any random NPC assignment.
+    A "Private" checkbox on each card forces public uploads out of random assignment.
+    The folder picker loads every image from a chosen folder at once - convenient when you have a stash to add.
+
+  CROP & UPLOAD tab (Admins only)
+    Drop a single image, drag a circle to crop, set quality, pick a gender, click Download. Uploads cropped versions at three sizes plus stores the original in the bank.
 
 
 CLONING
@@ -61,6 +78,8 @@ Click the card to open the full NPC sheet:
 REVEALING NPCs TO PLAYERS
 -------------------------
 Click "Show" on an NPC card to reveal them. Players see name, portrait, and type. Click "Hide" to remove visibility.
+
+When combat starts, hidden NPCs auto-flip to revealed so their initiative entries aren't anonymous. To keep an NPC hidden through combat (an ambush, a watcher), use the per-combatant Hidden chip on the initiative bar (Chapter 9). Players see "Waiting..." during a Hidden combatant's turn.
 
 A panic-hide button is available on the NPC tab header. One click hides every revealed NPC across every folder. Useful when a player walks into the room you weren't expecting.
 

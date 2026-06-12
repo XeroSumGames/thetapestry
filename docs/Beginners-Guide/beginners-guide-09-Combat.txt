@@ -19,9 +19,11 @@ STARTING COMBAT (GM)
 
 THE INITIATIVE BAR
 ------------------
-Shows everyone in turn order: portrait, name, initiative roll, and an active highlight on whoever's turn it is. The round counter sits next to the bar.
+Shows everyone in turn order: portrait, name, initiative roll, action pips, and status icons. The active combatant wears a gold ring and turn arrow on the tactical map. The round counter sits next to the bar.
 
-The GM can click X on any combatant to remove them or skip their turn.
+GM-only controls per combatant: Defer, Grant, Skip, Remove. Use Defer to push a turn down; use Grant to hand a turn to someone else.
+
+Hidden combatants render as a HIDDEN chip with a Reveal button (eye icon) for the GM. Players see "Waiting..." during a hidden combatant's turn.
 
 
 TURNS AND ROUNDS
@@ -40,16 +42,33 @@ Most actions cost 1; exceptions noted.
   CHARGE (2)          Move up to 20 ft, then make a melee or unarmed attack.
   COORDINATE          Roll Tactics. Allies within Close range get +2 CMod against a chosen target.
   DEFEND              +2 defensive bonus against the next attack.
-  GRAPPLE             Opposed check on an Engaged target. Win = target Grappled (1 RP). Tie = nothing.
+  GRAPPLE             Opposed PHY + Unarmed check on an Engaged target. See "Grappling" below.
   MOVE                Highlight cells within 9 ft. Click to move.
   RAPID FIRE (2)      Two shots: -1 CMod, then -3 CMod.
   READY WEAPON        Switch, Reload, or Unjam / Repair via a sub-modal.
   REPOSITION          Free end-of-round positioning.
   SPRINT (2)          Move 30 ft (3x normal). Requires Athletics check.
-  SUBDUE              Non-lethal: full RP damage, 50% WP damage.
+  SUBDUE              Opposed PHY + Unarmed choke against a target you have grappled. See "Grappling" below.
   TAKE COVER          +2 defense for ALL attacks this round. Once per round.
   UNARMED             Physicality + Unarmed Combat, 1d3 damage. Always available.
   STABILIZE           Roll Medicine to stop a mortally wounded ally's death countdown. Must be within 5 ft.
+
+
+GRAPPLING
+---------
+Grappling is an opposed PHY + Unarmed (or Athletics) check, run through the dedicated grapple modal. Three flows live in the same modal:
+
+  GRAPPLE     The grappler attempts the hold. On success, the target is grappled and loses an action. If they have actions left this turn, one is consumed now; if not, the loss carries to next turn.
+
+  SUBDUE      The grappler (with a target already in hand) attempts a choke. Opposed check again. On a hold, the grappled target takes 1 WP plus (1d3 + PHY AMod + Unarmed SMod) RP.
+
+  BREAK FREE  The grappled defender (it's their turn) spends an action to escape. The grappler contests reactively, free of charge. On success, the defender is free. On failure or tie, the defender takes 1 RP and the hold persists.
+
+While grappled, every attack against the grappled target gains +1 CMod automatically; it shows in the CMod breakdown.
+
+Any successful hit against the grappler (a stray shot, an ally's attack) breaks the hold. The target is released and a log row records the strike-and-release.
+
+Insight Dice can be spent on either side at any step.
 
 
 BLAST RADIUS
@@ -60,7 +79,7 @@ Grenades, RPGs, and Molotovs apply damage automatically:
   Close (30 ft)    50% damage
   Far (100 ft)     25% damage
 
-The attacker is excluded from splash.
+The attacker is excluded from splash. Throwing one decrements the stack from your inventory (these aren't tied to a clip).
 
 
 MORTAL WOUNDS
@@ -75,16 +94,14 @@ Whenever a PC enters WP=0 or RP=0, even if they're saved, they gain 1 Stress.
 
 LASTING WOUNDS
 --------------
-A PC who survives a serious injury can pick up a Lasting Wound - a permanent mark of damage that follows the character. Lasting Wounds appear as red chips on the character card.
+A PC who survives a mortal wound rolls Physicality. On a success, no Lasting Wound. On a failure, the system opens the Lasting Wound modal: 2d6 against Table 12 returns a permanent injury (Broken Rib, Mangled Hand, Concussion, etc.) with its mechanical penalty.
 
-The GM rolls for a Lasting Wound on the relevant Table 12 lookup. The wound names what it is (Broken Rib, Mangled Hand, Concussion, etc.) and what mechanical penalty it carries.
-
-Lasting Wounds heal slowly through Rest and Medicine, and faster through Evolution. The character card "Show / Hide" toggles whether players see each other's lasting wounds.
+Lasting Wounds appear as red chips on the character card. They heal slowly through Rest and Medicine, and faster through Evolution. The character card "Show / Hide" toggles whether players see each other's lasting wounds.
 
 
 INFECTION
 ---------
-Distemper-era wounds get infected. After combat, the system auto-rolls a Wound Infection check for every wounded combatant. The result either clears or escalates the wound.
+Distemper-era wounds get infected. When you end combat, the system fires a Wound Infection check for every wounded combatant - the roll modal opens automatically and walks each one through. The result either clears the infection or escalates the wound.
 
 A wound-infection-warning banner appears on the first wound of each combat as a reminder.
 
@@ -96,6 +113,35 @@ Sickness from environmental sources (bad water, exposure, contagion) follows the
 WEAPON MALFUNCTION
 ------------------
 An attack roll that comes up Low Insight (1+1) drops a weapon-malfunction log row. The weapon's condition drops a level (Pristine to Used, Used to Worn, etc.). Down at Damaged or Broken, it needs Unjam / Repair before it can be used again.
+
+
+ENVIRONMENTAL DAMAGE
+--------------------
+The "Env Dmg" button on the character card handles Falling and Drowning damage outside the combat-action flow.
+
+  FALLING   3 WP and 3 RP per 10 feet fallen.
+  DROWNING  3 WP and 3 RP per round past your hold-breath limit (6 + PHY AMod rounds).
+
+Click the button, pick Falling or Drowning, enter the distance or rounds, and the damage applies with a log row.
+
+
+TRAVEL PUSH
+-----------
+The "Travel" button on the character card applies travel-time costs.
+
+Up to 8 hours of contiguous travel is free. Past that, each additional hour costs 1 RP. The button advances the campaign clock by the hours you enter and writes the cost to the feed.
+
+
+REST AND RECOVERY
+-----------------
+The "Rest" button on the character card opens a rest modal.
+
+  - Pick Hours, Days, or Weeks of rest.
+  - WP heals at +1 per day. A PC still recovering from a mortal wound heals at half that rate - automatic, no toggle.
+  - RP recovers at +1 per hour. If the character is sick, recovery caps at half-max - automatic.
+  - For 8 or more hours, a checkbox appears: "Uninterrupted and enjoyable (free from threat)." Tick it to drop 1 Stress per 8 hours.
+
+Click "Apply Healing." The clock advances, stats update, the feed gets a single summary row.
 
 
 ENDING COMBAT (GM)

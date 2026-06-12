@@ -129,7 +129,7 @@ Three failed Morale Checks in a row collapses the community. At 2 / 3 the panel 
 
 If the third failure hits, the result panel offers a Retention Check - one immediate Morale Check using only the Mood slot. Success at any tier saves the community (consecutive failures drop to 2, one week of cushion). Failure proceeds with dissolution.
 
-Dissolution is permanent. Make a new community if you want a similar story.
+Dissolved communities are soft-archived rather than deleted. The roster, weekly history, and recruitment record all survive so you can refer back to them, but the community no longer runs checks and no new members can join.
 
 
 SKIP WEEK

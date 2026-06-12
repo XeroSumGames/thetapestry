@@ -16,11 +16,9 @@ If your Story has no scenes yet, the Create Scene modal opens automatically. If 
 
 CREATING A SCENE
 ----------------
-Click "Map Setup" in the header to open the scene controls in a separate window. New scenes start there.
+Click "Map Setup" in the header. Map Setup opens as a small floating panel pinned inside the page - drag its titlebar to reposition it; it remembers where you left it. The X closes it.
 
-  - Name (required).
-  - Grid dimensions - 20 columns x 15 rows by default.
-  - Cell size in feet - 3 ft per cell. This drives all range calculations.
+The first scene asks for a Name. Beyond that the panel exposes everything: scene dropdown, name, background upload, grid dimensions, cell size, fog tools, view controls.
 
 A new scene auto-activates and broadcasts to anyone watching the Table.
 
@@ -29,12 +27,14 @@ THE GRID
 --------
 Cells use Chebyshev distance - the greater of the X and Y deltas. A diagonal step counts as 1, not 1.4.
 
-Scene controls (in the Map Setup popout):
-  Scene dropdown   switch scenes or create a new one.
+In the Map Setup panel:
+  Scene dropdown   switch scenes or create a new one (+ New Map).
   Background       upload a JPG or PNG. Scale with the corner handles.
   Cols / Rows      grid dimensions.
   Cell (ft) / (px) feet per cell, pixel size on screen.
-  Grid color, opacity, ON/OFF.
+  Grid ON/OFF      toggle the overlay.
+  Grid color       White, Black, Grey, Red, Blue, Yellow, or Green.
+  Grid opacity     slider.
   Lock / Unlock    locks the background image.
   Fit to Map       zooms to fit the full scene.
   Edit Fog         enters fog paint mode (see below).
@@ -44,7 +44,7 @@ TOKENS
 ------
 Three kinds:
 
-  PC TOKENS      Round, blue border. Owning player drags their own; GM can drag any.
+  PC TOKENS      Round, blue border. The player's portrait IS the token. Owning player drags their own; GM can drag any.
   NPC TOKENS     Round, red border. GM-only drag. Hidden from players by default until combat starts.
   OBJECT TOKENS  Square, orange border. Multi-cell footprint for crates, vehicles, world objects.
 
@@ -68,6 +68,23 @@ The GM sees these around every selected token. Players see them only around thei
 Movement during combat costs 1 action and is bounded by the Move circle. Outside combat it's free.
 
 
+THE ACTIVE COMBATANT
+--------------------
+When combat is running, whoever's turn it is wears a gold ring around their token and a downward gold arrow above it. Easy to spot across a crowded board.
+
+
+HIDDEN NPCs IN INITIATIVE
+-------------------------
+The GM can keep an NPC hidden from players even when they're in initiative. Hidden combatants show on the GM's screen as a HIDDEN chip with an eye icon (click to Reveal). Players see a "Waiting..." placeholder during a hidden combatant's turn - no name, no portrait, no clue.
+
+Useful for an ambush where the players know something is happening but can't yet see what.
+
+
+VEHICLE COVER
+-------------
+A ranged attack against a target standing behind a vehicle takes a defense bonus automatically. The bonus scales with vehicle size, and it shows in the CMod breakdown as "Vehicle cover RDM (vehicle name, size N)" so you can see where the number came from.
+
+
 PINGING
 -------
 Hold ALT and left-click any cell to drop a ping. GM pings orange; player pings green. Visible to everyone, fades in about a second.
@@ -77,10 +94,10 @@ FOG OF WAR
 ----------
 A layer of darkness the GM paints over the tactical map. Players see fogged cells as solid black: no terrain, no tokens, no labels.
 
-Each PC token clears 6 cells of fog around itself in every direction - a circle of light that travels with the player. The circle respects walls (block), closed doors (block), open doors (pass), and windows (pass).
+Each PC token carries a Sight slider on its info panel - the radius around them that clears fog as they move. The default is 30 cells, adjustable from 0 to 50. The cleared circle respects walls (block), closed doors (block), open doors (pass), and windows (pass).
 
 ENTERING EDIT MODE
-Click "Edit Fog" in the scene controls. Three tools and two bulk actions:
+Click "Edit Fog" in the Map Setup panel. Three tools and two bulk actions:
 
   PAINT      click and drag to fog cells one at a time.
   RECTANGLE  click and drag to fog every cell inside a rectangle.
@@ -93,8 +110,10 @@ Click "Done" to exit edit mode.
 Fog stays painted across reloads, reconnects, and session boundaries. It clears only when you erase it.
 
 
-SHARING
--------
-Players see the tactical map only when the GM has shared it. Combat auto-shares. Outside combat, click "Share Map" in the Table header.
+SHARING AND VIEW
+----------------
+SHARE MAP pushes the current tactical map to all players (auto on combat start). Outside combat, click "Share Map" in the Table header.
+
+SHARE VIEW pushes your current scroll position and zoom level to all players as a one-shot snap. Use it to point everyone's camera at the same thing at the same time. They can still pan and zoom afterward.
 
 Switching scenes auto-broadcasts the switch - players follow you through.

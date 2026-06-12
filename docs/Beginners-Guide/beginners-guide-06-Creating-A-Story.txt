@@ -36,9 +36,9 @@ Lists everything about your Story:
   Share         copies the invite link to your clipboard.
   Pregens       drop-in pre-built characters seeded from the chosen setting.
   Sessions      full session history.
-  Snapshots     saved states of the campaign you can roll back to.
+  Snapshots     saved states of the campaign you can roll back to. New snapshots are also captured on demand from the Table (Chapter 7).
   Publish       publish this Story's content as a Rumor module (Chapter 14).
-  Delete        permanent, asks first.
+  Delete        permanent. Asks you to type the Story's name to confirm so a misclick can't end a campaign.
 
 The GM Tools area is inline on the page now - no separate edit page to chase.
 

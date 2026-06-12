@@ -13,16 +13,27 @@ Across the top, left to right:
   Start Session / End Session    (GM)
   Session number badge           (when active)
   Tactical Map / Campaign Map    (toggle)
-  Share Map                      (GM - pushes the tactical map to players)
+  Share Map                      (GM - shares the tactical map with players)
   Start Combat / End Combat      (GM, during active session)
   Checks dropdown                (Perception, Gut Instinct, First Impression, Group, Opposed, Recruit, Stress)
   Community dropdown             (Chapter 12)
   Vehicle dropdown               (Chapter 11)
+  GM Tools dropdown              (GM-only - see below)
   Dashboard link
   Share                          (copy invite link)
   Restore                        (GM - heal everyone)
   Sessions                       (history)
   Back / Exit
+
+
+GM TOOLS DROPDOWN
+-----------------
+A bundle of session-level utilities. Items include:
+
+  Snapshot       Captures the entire campaign state (NPCs, pins, scenes, tactical tokens, notes, character states) into a named save. The default name is "Quick save MM/DD HH:mm" but you can rename it before confirming. Snapshots are reachable from the Story page and can be restored later.
+  Reload         Refreshes the Table from the database. Useful if a sync hiccup leaves a stale state.
+  Loot           Opens the loot board (Chapter 9).
+  Recorder       Admin-only. Toggles the session recorder.
 
 
 LEFT PANEL: LOGS AND CHAT
@@ -33,7 +44,7 @@ Three views, toggled at the top of the panel:
   CHAT  In-character messaging.
   BOTH  Combined.
 
-Type a message and press Enter to send.
+Type a message and press Enter to send. Incoming chat from another player plays a soft ping and flashes the CHAT tab three times in case you were looking at LOGS.
 
 The log feed shows narrative banners for actions like First Impression, Stress, Heal, Stabilize, Drive, Brew, Navigate, Recruit. Each banner has six outcome variants for High Insight, Wild Success, Success, Failure, Dire Failure, and Low Insight.
 
@@ -54,18 +65,25 @@ The GM sees:
   Pins          campaign pins, drag to reorder, GM-shared folders.
   GM Notes      private notes, auto-saved.
   Player Notes  submissions from players.
-  Advantages    grant / award advantages to PCs (see below).
+  Advantages    grant Advantages to PCs (see below).
 
 Players see:
   NPCs          only revealed NPCs.
   Pins          only revealed pins.
   Notes         your own session notes.
-  Advantages    your active advantages.
+  Advantages    your pending Advantages.
+
+
+THE PLAYER BAR
+--------------
+Across the top of the Table, a strip shows every player in the Story with their character portrait and online status. Online players sit closest to the GM so the most-active seats are easy to find at a glance.
 
 
 STARTING A SESSION (GM)
 -----------------------
 Click "Start Session." The session counter increments and every player in the Story is notified. Until a session is active you can't roll dice or start combat.
+
+When you start combat, every NPC who was hidden flips to visible automatically so their initiative entry isn't anonymous, and their cards open in the right panel for quick reference (unless the tactical map is up, in which case the cards stay closed to keep the map clear).
 
 
 DICE ROLLING
@@ -89,7 +107,9 @@ Both Low Insight (1+1) and High Insight (6+6) grant an Insight Die in addition t
 
 FIRST IMPRESSION
 ----------------
-A single-modal flow. When you meet an NPC for the first time, click "First Impression" from the Checks dropdown or the NPC card. The modal walks pick-skill, roll, and result in one screen. The result sets a permanent CMod on your relationship with that NPC.
+A single-modal flow. When you meet an NPC for the first time, click "First Impression" from the Checks dropdown or the NPC card. The modal walks pick-skill, roll, and result in one screen.
+
+The roll's outcome sets a permanent CMod on your relationship with that NPC. From then on, every roll you make involving that NPC inherits the CMod automatically - it pre-fills as the First Impression modifier in the CMod breakdown so you can see where it's coming from. The number stays with you for the life of the relationship.
 
 You can spend an Insight Die mid-flow to upgrade the roll.
 
@@ -105,7 +125,7 @@ ADVANTAGES
 ----------
 The GM can grant an Advantage to a player at any time. An Advantage is a one-shot bonus the player can hold and spend later: a +2 on a roll, a re-roll, a skill substitution, a narrative favor.
 
-GMs grant via the Advantages tab on the right panel, or by clicking "Award" on a notable roll in the feed. Players see their Advantages in their own tab and click "Use" to spend one. Used Advantages broadcast to the feed.
+GMs grant via the Advantages tab on the right panel, or by clicking "Award" on a notable roll in the feed. Players see their pending Advantages in their own tab. Clicking "Use" on an Advantage opens the matching skill roll modal with the Advantage's bonus pre-applied. The Advantage isn't consumed until the roll actually resolves, so cancelling the modal returns it to your pool.
 
 
 ENDING A SESSION (GM)

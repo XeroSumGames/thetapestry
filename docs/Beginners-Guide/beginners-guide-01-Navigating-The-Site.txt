@@ -18,6 +18,8 @@ At the top, a green "Survivors present: N" counter appears when other players ar
       - The Campfire shortcut
       - Bug report (opens a form that emails Xero directly)
 
+    Admins (internally called Thrivers) see a fifth icon: a recorder toggle that captures session activity for QA. The recording downloads as JSON when you toggle it off.
+
   MAIN NAV (the main destinations)
     A Guide to the Tapestry  - the welcome / onboarding page.
     The World                - the global world map (Chapter 3).
@@ -36,8 +38,8 @@ At the top, a green "Survivors present: N" counter appears when other players ar
     Random Character         - produces an instant character.
     Paradigms                - pick from 12 archetypes and then customize.
 
-  TOOLS (Admins only - internally referred to as Thrivers)
-    Moderation Queue, Resize Portraits, Rescale Tactical Scenes, Logs, Copy Map Position, Publish Module from Snapshot.
+  TOOLS (Admins only)
+    Moderation Queue, Token Creator (Chapter 10), Resize Portraits, Rescale Tactical Scenes, Logs, Copy Map Position, Publish Module from Snapshot.
 
 
 THE MAIN AREA
