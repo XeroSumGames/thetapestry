@@ -291,6 +291,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [newDesc, setNewDesc] = useState('')
   const [newHomestead, setNewHomestead] = useState<string>('')
   const [creating, setCreating] = useState(false)
+  const [leaderKind, setLeaderKind] = useState<'self' | 'npc' | 'none'>('self')
+  const [leaderNpcId, setLeaderNpcId] = useState('')
 
   // Add-member form state (per community)
   const [addKind, setAddKind] = useState<'npc' | 'pc'>('npc')
@@ -1306,6 +1308,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
 
   async function handleCreate() {
     if (!newName.trim()) return
+    if (leaderKind === 'npc' && !leaderNpcId) { alert('Pick an NPC leader or change the leader option.'); return }
     setCreating(true)
     const { user } = await getCachedAuth()
     const { data, error } = await insertCommunity({
@@ -1313,16 +1316,15 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       name: newName.trim(),
       description: newDesc.trim() || null,
       homestead_pin_id: newHomestead || null,
-      leader_user_id: user?.id ?? null,
+      leader_user_id: leaderKind === 'self' ? (user?.id ?? null) : null,
+      leader_npc_id: leaderKind === 'npc' ? leaderNpcId : null,
     }).select().single()
     if (error) { setCreating(false); alert(`Create failed: ${error.message}`); return }
     const newComm = data as Community
     void logEvent('community_created', { id: newComm.id, name: newComm.name, campaign_id: campaignId })
-    // Auto-enroll the creator's PC as founding active member, so the
-    // leader shows up in the roster and starts the member-count at 1.
-    // Quietly skips if the creator doesn't have a PC in this campaign
-    // (GM-only accounts, etc.).
-    if (user?.id) {
+    // Auto-enroll only when the creator is also the leader - NPC-led and
+    // leaderless communities don't auto-attach the creating player's PC.
+    if (leaderKind === 'self' && user?.id) {
       const { data: myCm } = await myFoundingCharacter(campaignId, user.id)
       const myCharacterId = (myCm as any)?.character_id as string | undefined
       if (myCharacterId) {
@@ -1338,7 +1340,6 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         if (enrollErr) reportSupabaseError(enrollErr, 'campaign-community:founder-enroll')
         if (founderRow) {
           setMembers(prev => ({ ...prev, [newComm.id]: [founderRow as Member] }))
-          // Progression log: founding event + leader appointment in one entry.
           void appendProgressionEntry(supabase, myCharacterId, 'community', `🏛️ Founded ${newComm.name} (leader).`)
         }
       }
@@ -1346,7 +1347,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     setCreating(false)
     setCommunities(prev => [...prev, newComm])
     setOpenId(newComm.id)
-    setNewName(''); setNewDesc(''); setNewHomestead('')
+    setNewName(''); setNewDesc(''); setNewHomestead(''); setLeaderKind('self'); setLeaderNpcId('')
     setShowCreate(false)
   }
 
@@ -1631,6 +1632,23 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               <option value="">- None -</option>
               {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
+          </div>
+          <div>
+            <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Leader</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: leaderKind === 'npc' ? '6px' : 0 }}>
+              {(['self', 'npc', 'none'] as const).map(kind => (
+                <label key={kind} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9', cursor: 'pointer' }}>
+                  <input type="radio" name="leaderKind" value={kind} checked={leaderKind === kind} onChange={() => setLeaderKind(kind)} style={{ accentColor: '#c0392b' }} />
+                  {kind === 'self' ? "I'll lead it" : kind === 'npc' ? 'An NPC will lead it' : 'No leader yet'}
+                </label>
+              ))}
+            </div>
+            {leaderKind === 'npc' && (
+              <select value={leaderNpcId} onChange={e => setLeaderNpcId(e.target.value)} style={{ ...inp, appearance: 'none', marginTop: '4px' }}>
+                <option value="">- pick an NPC -</option>
+                {npcs.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+              </select>
+            )}
           </div>
           <Button tone="primary" busy={creating} disabled={!newName.trim()} onClick={handleCreate} style={{ padding: '6px' }}>
             {creating ? 'Creating…' : 'Create'}
