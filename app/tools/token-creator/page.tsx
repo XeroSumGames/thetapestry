@@ -68,6 +68,14 @@ export default function PortraitResizerPage() {
   // entry. Save writes back to entry.paths instead of incrementing
   // the counter; metadata row stays put.
   const [recropTarget, setRecropTarget] = useState<BatchEntry | null>(null)
+  // Privacy flag - when true the portrait_bank row has is_private=true,
+  // meaning it won't appear in PortraitBankPicker or random NPC assignment.
+  // Useful for GMs who want custom art for specific NPCs but don't want
+  // those portraits showing up in other campaigns.
+  const [isPrivate, setIsPrivate] = useState(false)
+  // Folder input ref - webkitdirectory can't be set as a JSX prop in TS,
+  // so we set it imperatively via ref.
+  const folderInputRef = useRef<HTMLInputElement>(null)
   // Thriver-only gate. The tool uploads into the public portrait-bank
   // bucket + bumps platform-wide counters, so signed-in randos
   // shouldn't be able to add or replace official portraits.
@@ -304,7 +312,7 @@ export default function PortraitResizerPage() {
 
       // 4. Insert metadata row
       const { error: insErr } = await supabase.from('portrait_bank').insert({
-        number: n, gender, url_256: url256, url_56: url56, url_32: url32,
+        number: n, gender, url_256: url256, url_56: url56, url_32: url32, is_private: isPrivate,
       })
       if (insErr) { setError(`Metadata insert failed: ${insErr.message}`); setUploadStatus('idle'); return }
     } catch (err: any) {
@@ -367,6 +375,12 @@ export default function PortraitResizerPage() {
       setError(`Re-upload error: ${err?.message ?? 'unknown'}`); setUploadStatus('idle')
     }
   }
+
+  // Set webkitdirectory on the hidden folder input so it opens a
+  // folder picker - can't be a JSX prop in TS without module augmentation.
+  useEffect(() => {
+    if (folderInputRef.current) folderInputRef.current.setAttribute('webkitdirectory', '')
+  }, [])
 
   // Revoke any outstanding ObjectURLs on unmount so the browser can
   // free the underlying Blobs.
@@ -462,7 +476,7 @@ export default function PortraitResizerPage() {
         const url56 = supabase.storage.from('portrait-bank').getPublicUrl(path56).data.publicUrl
         const url32 = supabase.storage.from('portrait-bank').getPublicUrl(path32).data.publicUrl
         const { error: insErr } = await supabase.from('portrait_bank').insert({
-          number: n, gender, url_256: url256, url_56: url56, url_32: url32,
+          number: n, gender, url_256: url256, url_56: url56, url_32: url32, is_private: isPrivate,
         })
         if (insErr) {
           results.failed.push({ name: file.name, error: `Metadata: ${insErr.message}` })
@@ -518,11 +532,32 @@ export default function PortraitResizerPage() {
         <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
           Pick multiple images at once. Each is auto-cropped to a centered max-radius circle, rendered at 256/56/32 px, and uploaded as <strong style={{ color: '#7ab3d4' }}>{gender === 'man' ? 'Male' : 'Female'}</strong> portraits in sequence. Switch the gender pill below before starting.
         </div>
-        <input
-          type="file" accept="image/*" multiple disabled={batchRunning}
-          onChange={e => { const files = e.target.files; if (files && files.length > 0) handleBatch(files); e.target.value = '' }}
-          style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#d4cfc9' }}
-        />
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
+          <input
+            type="file" accept="image/*" multiple disabled={batchRunning}
+            onChange={e => { const files = e.target.files; if (files && files.length > 0) handleBatch(files); e.target.value = '' }}
+            style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#d4cfc9' }}
+          />
+          <button type="button" disabled={batchRunning}
+            onClick={() => folderInputRef.current?.click()}
+            style={{ ...btnSecondary, padding: '6px 14px', fontSize: '13px', opacity: batchRunning ? 0.5 : 1, cursor: batchRunning ? 'not-allowed' : 'pointer' }}>
+            Folder...
+          </button>
+          <input ref={folderInputRef} type="file" accept="image/*" disabled={batchRunning}
+            onChange={e => { const files = e.target.files; if (files && files.length > 0) handleBatch(files); e.target.value = '' }}
+            style={{ display: 'none' }}
+          />
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '4px' }}>
+          <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)}
+            style={{ accentColor: '#c0392b', width: '15px', height: '15px' }} />
+          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            Private - keep out of random NPC assignment
+          </span>
+        </label>
+        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>
+          Unchecked = portrait goes into the shared bank (used by GENERATE / POPULATE). Checked = library-only, never auto-assigned.
+        </div>
         {batchRunning && (
           <div style={{ marginTop: '8px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
             Processing {batchProgress.done + 1} / {batchProgress.total} - {batchProgress.current}
@@ -795,6 +830,13 @@ export default function PortraitResizerPage() {
                 )
               })}
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '12px' }}>
+              <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)}
+                style={{ accentColor: '#c0392b', width: '15px', height: '15px' }} />
+              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                Private - keep out of random NPC assignment
+              </span>
+            </label>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <button type="button" onClick={handleDownload} disabled={uploadStatus === 'uploading'}
                 style={{ ...btnPrimary, opacity: uploadStatus === 'uploading' ? 0.6 : 1, cursor: uploadStatus === 'uploading' ? 'wait' : 'pointer' }}>
@@ -806,7 +848,7 @@ export default function PortraitResizerPage() {
               )}
             </div>
             <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '8px' }}>
-              Each download uploads 256/56/32px versions to the shared portrait bank for random NPC assignment.
+              {isPrivate ? 'Private - stored in your library but never auto-assigned to NPCs.' : 'Each download uploads 256/56/32px versions to the shared portrait bank for random NPC assignment.'}
             </div>
           </div>
           )}
