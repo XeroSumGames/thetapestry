@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-12 00:09 UTC
+
+**Status:** DRIFT (run 74 — carry-over from run 73; gates/CI all green)
+
+**Gates:** font-sizes [OK], role-literals [OK — 331 files], tsc [OK], tests [873 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-11T21:11Z)
+
+**Drift:**
+- HOPED-FOR >26d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die spend + single-modal), Stress Check 12-string narrative lock. Drain target: Beta-500 dry-run before 2026-07-01 (19 days).
+- **Stale-open (carry-over from run 73 — shipped, still `- [ ]`):** AUDIT L1 (`ade341e`), AUDIT L2 (`2545c89`), Observ-B (`622c314`). Still `[ ]` in todo.md lines 66, 67, 117.
+
+**Action:** Same as run 73 — tick 3 stale-open boxes in todo.md (L66, L67, L117). Schedule Beta-500 dry-run to drain 4 HOPED-FOR items before 2026-07-01.
+
+---
+
 ## 2026-06-11 21:07 UTC
 
 **Status:** DRIFT (run 73 — carry-over from run 72; gates/CI all green)
