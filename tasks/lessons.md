@@ -1,5 +1,24 @@
 # Lessons Learned
 
+## Before writing a Xero-runs testplan, grep the live code for every named UI element it cites - never fabricate button names from memory (2026-06-12)
+
+Caught 2026-06-12 mid-Beta-500-dry-run plan: I wrote "In the modal, click Charm" for the Recruit section. Xero asked what that meant. Verified after the fact: the Recruit modal has NO button labeled Charm. The actual approaches are Cohort / Conscript / Convert. I fabricated the names from imagination of how a recruit system "would" work, instead of grepping `components/CommunityProxyRecruitModal.tsx` for the actual labels.
+
+This violates two existing rules:
+- `feedback_accuracy_over_confidence`: "Always verify, never go from memory. Memory is hypothesis, not assertion."
+- `feedback_xero_just_do_steps`: testplans should remove named-UI-element asks - but even when you DO need to name something (an approach to pick, a button to click), it has to be the ACTUAL label or the plan sends Xero on a wild goose chase.
+
+Rule: **before writing a testplan that mentions any specific button, menu, modal, tab, or option by name, grep the live code for the exact string the UI renders.** If the plan says "click Cohort", `components/Foo.tsx` must contain a button/element rendering the literal text "Cohort" (or the variant 'cohort' that gets uppercased on render). If the plan says "click the Insight Die button," the live code must have a button with that label.
+
+Pre-write protocol:
+1. List every named UI element the plan asks Xero to interact with.
+2. For each one: grep the source for the literal string.
+3. If a fabricated name surfaces (the grep returns nothing), STOP. Either:
+   - Use the actual label from the code, OR
+   - Reword the step to describe the OUTCOME ("pick any of the approach buttons") instead of asking for a specific named button.
+
+If the testplan needs Xero to pick ONE specific named option (e.g. "click Cohort, not the other two"), the plan MUST cite the literal label that the UI renders + WHY that specific one matters for the test.
+
 ## Any file path I send Xero MUST be pulled into the local main checkout first - he opens local files, not GitHub URLs (2026-06-12)
 
 If I tell Xero to "read tasks/foo.md" or "open the testplan at tasks/bar.md" or "see app/baz.tsx", he opens the file from `C:\TheTapestry\...` in Notepad / Windows Explorer / his editor of choice. He does NOT go to GitHub. So whenever I write/edit a file from the puffer worktree and push it, the file is on origin/main but NOT on his disk until I run `git pull --ff-only origin main` in `C:\TheTapestry`.

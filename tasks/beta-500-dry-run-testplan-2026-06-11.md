@@ -1,5 +1,14 @@
 # Beta-500 dry-run playtest plan - 2026-06-11
 
+> **DO NOT RUN - 2026-06-12.** UI labels in this plan were written
+> partly from imagination. Caught when Xero asked "what does 'click
+> Charm' mean" - the Recruit modal has no Charm button (actual
+> approaches are Cohort / Conscript / Convert). Other sections likely
+> have similar fabrications. Puffer is doing a section-by-section UI
+> verification pass against the live code + rewriting before this
+> plan is safe to run. Until the DO NOT RUN banner is removed, treat
+> the plan as a sketch, not a script.
+
 **Format:** numbered actions only. At the end of each section, take a
 screenshot (or describe in plain English) and report back. Claude
 parses the report-back and decides what passed.
