@@ -1,5 +1,17 @@
 # Lessons Learned
 
+## Any file path I send Xero MUST be pulled into the local main checkout first - he opens local files, not GitHub URLs (2026-06-12)
+
+If I tell Xero to "read tasks/foo.md" or "open the testplan at tasks/bar.md" or "see app/baz.tsx", he opens the file from `C:\TheTapestry\...` in Notepad / Windows Explorer / his editor of choice. He does NOT go to GitHub. So whenever I write/edit a file from the puffer worktree and push it, the file is on origin/main but NOT on his disk until I run `git pull --ff-only origin main` in `C:\TheTapestry`.
+
+Caught 2026-06-12: I rewrote the Beta-500 dry-run testplan twice from puffer, committed and pushed both times, but never pulled into main. Xero's Windows Explorer showed the file timestamp from 24 hours earlier - the stale version was on his disk. He asked "what's the path?", I gave it, he opened it - he was looking at the wrong content.
+
+The rule: every time I push a commit from puffer that contains a file Xero is reasonably likely to open in the next few minutes (testplans, dry-run docs, findings he'll read, ANY doc I just told him to look at), I MUST cd into `C:\TheTapestry` and `git pull --ff-only origin main` before giving him the file path.
+
+Faster version: just pull main after every puffer push, full stop. The cost is one git command; the cost of forgetting is Xero opening a stale file and going down the wrong path. The existing memory feedback_working_directory says this for code commits; this lesson extends it to documents Xero will read.
+
+Edge case: if main has uncommitted changes from HP (different lane), pull may not FF cleanly. In that case, stash main's uncommitted, pull, restore. Or pull only the specific file: `git checkout origin/main -- tasks/foo.md`. Either way, the file Xero needs MUST be the current one before I tell him the path.
+
 ## Plans Xero runs are pure DO steps - he reports back what he saw, Claude interprets pass/fail (2026-06-12)
 
 Xero stronger correction after my first rewrite still asked him to OBSERVE specific UI signals ("chip strip shows +1 CMod (Charm)"): "i just need to be told what to do so I can report back to you. i lack the finesse to observe what you need."
