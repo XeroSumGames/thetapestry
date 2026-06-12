@@ -22,6 +22,7 @@ import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } f
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../../lib/table-roll-context'
 import { insertRollLog } from '../../../../../lib/data/roll-log'
 import { setGrappledBy } from '../../../../../lib/data/tactical'
+import { applyDamageToPc, applyDamageToNpc, type DamageContext } from '../../../../../lib/data/combat'
 import { trace } from '../../../../../lib/playtest-recorder'
 import { queuePendingHeal } from '../../../../../lib/campaign-clock'
 import { resolveFirstImpression } from '../../../../../lib/first-impression-resolver'
@@ -218,6 +219,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
     const autoNet = (autoSources.weaponCondition ?? 0) + (autoSources.aim ?? 0)
       + (autoSources.coordinate ?? 0) + (autoSources.coordinatedEffort ?? 0)
       + (autoSources.sameTarget ?? 0) + (autoSources.targetDefense ?? 0)
+      + (autoSources.grappledTarget ?? 0)
     const insightCmod = (preRollInsight === '+3cmod' && preRollSpent) ? 3 : 0
     const { terms: cmodBreakdown, total: cmodVal } = buildCmodBreakdown({
       ...autoSources,
@@ -1858,6 +1860,115 @@ export function useRollResolution(deps: RollResolutionDeps) {
       // Gut Instinct legacy broadcast retired 2026-05-23 (3c-B1) - migrated
       // to the dedicated <RollModal>'s onRoll on 2026-05-20; pendingRoll
       // never carries a 'Gut Instinct' label anymore.
+
+      // Grapple Ruling #1 stray attack: a miss against a grappled target
+      // auto-resolves a second attack against the grappler at -1 CMod.
+      // "Unintentional hit" - attacker's base amod/smod apply (their stats),
+      // but the roll is penalized (-1) and no other CMod sources are included.
+      // A stray hit also triggers Ruling #2 (grappler releases the defender).
+      if (pendingRoll.weapon && targetName && combatActive &&
+          (outcome === 'Failure' || outcome === 'Dire Failure')) {
+        const targetIE = initiativeOrder.find(e => e.character_name === targetName)
+        const grapplerName = targetIE?.grappled_by
+        if (grapplerName) {
+          const strayWeapon = pendingRoll.weapon
+          const strayW = getWeaponByName(strayWeapon.weaponName)
+          const strayIsMelee = strayW?.category === 'melee' || strayWeapon.weaponName === 'Unarmed'
+          const strayD1 = rollD6(), strayD2 = rollD6()
+          const strayCmod = -1
+          const strayTotal = strayD1 + strayD2 + pendingRoll.amod + pendingRoll.smod + strayCmod
+          const strayOutcome = getOutcome(strayTotal, strayD1, strayD2, false)
+          const strayHit = strayOutcome === 'Success' || strayOutcome === 'Wild Success' || strayOutcome === 'High Insight'
+
+          // Log the stray attack (appears below the primary miss in the feed)
+          await insertRollLog({
+            campaign_id: id, user_id: userId,
+            character_name: characterName,
+            label: `${characterName} - Stray Attack vs ${grapplerName} (${strayWeapon.weaponName})`,
+            die1: strayD1, die2: strayD2,
+            amod: pendingRoll.amod, smod: pendingRoll.smod,
+            cmod: strayCmod, total: strayTotal, outcome: strayOutcome,
+            damage_json: { note: `Missed ${targetName} (grappled) - stray swing at grappler ${grapplerName}` } as any,
+          })
+
+          if (strayHit) {
+            // Resolve grappler identity for damage application
+            const grapplerIE = initiativeOrder.find(e => e.character_name === grapplerName)
+            const grapplerEntry = entries.find(e => e.character.name === grapplerName)
+              ?? (grapplerIE?.character_id ? entries.find(e => e.character.id === grapplerIE.character_id) : undefined)
+            const grapplerNpc: CampaignNpc | null = !grapplerEntry
+              ? (grapplerIE?.is_npc
+                  ? (rosterNpcs.find(n => n.id === grapplerIE.npc_id) ?? campaignNpcs.find((n: any) => n.id === grapplerIE.npc_id))
+                  : (campaignNpcs.find((n: any) => n.name === grapplerName) ?? rosterNpcs.find(n => n.name === grapplerName)))
+              : null
+            if (grapplerEntry?.liveState || grapplerNpc) {
+              // Compute weapon damage against the grappler
+              const attackerPhy = myEntry?.character.data?.rapid?.PHY ?? 0
+              const unarmedBonus = strayWeapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
+              const strayDmg = rollDamage(strayWeapon.damage, attackerPhy, !!strayIsMelee)
+              const strayTotalWP = strayDmg.base + strayDmg.diceRoll + strayDmg.phyBonus + unarmedBonus
+              const strayTraits = strayWeapon.traits ?? []
+              const isStunWeapon = getTraitValue(strayTraits, 'Stun') !== null
+              // Grappler defense (MDM or RDM)
+              const grapplerRapid = grapplerEntry?.character.data?.rapid
+                ?? (grapplerNpc ? { PHY: grapplerNpc.physicality ?? 0, DEX: grapplerNpc.dexterity ?? 0 } : {})
+              const grapplerDefBonus = grapplerIE?.defense_bonus ?? 0
+              const grapplerDM = (strayIsMelee ? (grapplerRapid.PHY ?? 0) : (grapplerRapid.DEX ?? 0)) + grapplerDefBonus
+              // Grappler armor
+              const grapplerArmorPieces: ArmorPiece[] = []
+              const grapplerInv: any[] = grapplerEntry
+                ? (grapplerEntry.character.data?.inventory ?? [])
+                : (grapplerNpc?.inventory ?? [])
+              for (const inv of grapplerInv) {
+                if (!inv?.worn) continue
+                const ar = ARMOR.find(a => a.name === inv.name)
+                if (!ar) continue
+                grapplerArmorPieces.push({ dm: ar.dm, reactive_melee_only: ar.traits.includes('reactive_melee_only') })
+              }
+              const strayAttackerCat: AttackerCategory | undefined =
+                strayWeapon.weaponName === 'Unarmed' ? 'unarmed'
+                : strayIsMelee ? 'melee'
+                : (strayW?.category as AttackerCategory | undefined)
+              const { finalWP: strayFinalWP, finalRP: strayFinalRP } = calculateDamage(
+                strayTotalWP, strayWeapon.rpPercent, grapplerDM,
+                { rpFromRaw: isStunWeapon, armor: grapplerArmorPieces, attackerCategory: strayAttackerCat, wpPercent: strayWeapon.wpPercent },
+              )
+              const strayCtx: DamageContext = { campaignId: id, userId, attackerName: characterName, defenderName: grapplerName }
+              if (grapplerEntry?.liveState) {
+                const { patch } = await applyDamageToPc(grapplerEntry.stateId, {
+                  wp_current: grapplerEntry.liveState.wp_current,
+                  rp_current: grapplerEntry.liveState.rp_current,
+                  stress: grapplerEntry.liveState.stress ?? 0,
+                  phyMod: grapplerEntry.character.data?.rapid?.PHY ?? 0,
+                }, { wp: strayFinalWP, rp: strayFinalRP }, strayCtx)
+                setEntries(prev => prev.map(e => e.stateId === grapplerEntry.stateId ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
+                initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: grapplerEntry.stateId, patch } })
+              } else if (grapplerNpc) {
+                const { patch } = await applyDamageToNpc(grapplerNpc.id, {
+                  wp_current: grapplerNpc.wp_current ?? grapplerNpc.wp_max ?? 10,
+                  rp_current: grapplerNpc.rp_current ?? grapplerNpc.rp_max ?? 6,
+                  phyMod: grapplerNpc.physicality ?? 0,
+                }, { wp: strayFinalWP, rp: strayFinalRP }, strayCtx)
+                setCampaignNpcs(prev => prev.map(n => n.id === grapplerNpc.id ? { ...n, ...patch } : n))
+                setRosterNpcs(prev => prev.map(n => n.id === grapplerNpc.id ? { ...n, ...patch } as CampaignNpc : n))
+                initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId: grapplerNpc.id, patch } })
+              }
+              // Ruling #2: a successful hit on the grappler releases the held defender.
+              const heldByGrappler = initiativeOrder.find(e => e.grappled_by === grapplerName)
+              if (heldByGrappler) {
+                await setGrappledBy(heldByGrappler.id, null)
+                await insertRollLog({
+                  campaign_id: id, user_id: userId, character_name: 'System',
+                  label: `${grapplerName} is struck and releases ${heldByGrappler.character_name}`,
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.action,
+                })
+                await loadInitiative(id)
+                initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+              }
+            }
+          }
+        }
+      }
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack

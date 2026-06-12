@@ -253,6 +253,23 @@ describe('computeAttackCmod - itemized auto CMod for the prefill + dropdown', ()
     const { net, sources } = computeAttackCmod('Goon', { weaponName: 'Assault Rifle', conditionCmod: -1 }, ctx)
     const sum = (sources.weaponCondition ?? 0) + (sources.aim ?? 0) + (sources.coordinatedEffort ?? 0)
       + (sources.coordinate ?? 0) + (sources.sameTarget ?? 0) + (sources.targetDefense ?? 0)
+      + (sources.grappledTarget ?? 0)
     expect(net).toBe(sum)
+  })
+  it('grappled target adds +1 CMod (held target cannot dodge)', () => {
+    const ctx: AttackCmodCtx = {
+      ...baseCtx,
+      initiative: [
+        { character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 0 },
+        { character_name: 'Goon', is_active: false, grappled_by: 'Attacker' },
+      ],
+    }
+    const { net, sources } = computeAttackCmod('Goon', { weaponName: 'Assault Rifle', conditionCmod: 0 }, ctx)
+    expect(sources.grappledTarget).toBe(1)
+    expect(net).toBe(-2) // +1 grappled - 3 RDM
+  })
+  it('grappledTarget is absent (not 0) when target is NOT grappled', () => {
+    const { sources } = computeAttackCmod('Goon', { weaponName: 'Assault Rifle', conditionCmod: 0 }, baseCtx)
+    expect(sources.grappledTarget).toBeUndefined()
   })
 })

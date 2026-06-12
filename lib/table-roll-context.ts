@@ -97,6 +97,8 @@ export interface CmodSources {
   /** Vehicle-as-cover RDM bonus (CRB Ch. 08 p. 140). Ranged-only; null if no cover. */
   vehicleCover?: number
   vehicleCoverLabel?: string
+  /** +1 when the target is currently grappled (held target can't dodge). Canon ruling 2026-06-01. */
+  grappledTarget?: number
   range?: number
   sick?: number
   insight?: number
@@ -124,6 +126,7 @@ export function buildCmodBreakdown(s: CmodSources): { terms: CmodTerm[]; total: 
     { label: 'Same target CMod', value: s.sameTarget ?? 0 },
     { label: s.targetDefenseLabel || 'Target defense', value: s.targetDefense ?? 0 },
     { label: s.vehicleCoverLabel || 'Vehicle cover RDM', value: s.vehicleCover ?? 0 },
+    { label: 'Grappled target CMod', value: s.grappledTarget ?? 0 },
     { label: 'Range CMod', value: s.range ?? 0 },
     { label: 'Sick CMod', value: s.sick ?? 0 },
     { label: 'Insight CMod', value: s.insight ?? 0 },
@@ -174,6 +177,7 @@ export interface CmodInitEntry {
   coordinate_target?: string | null
   coordinate_bonus?: number | null
   defense_bonus?: number | null
+  grappled_by?: string | null
 }
 export interface CoordEffortState { participantIds: string[]; totalParticipants: number; leadCmod: number }
 
@@ -257,12 +261,15 @@ export function computeAttackCmod(
   // Vehicle-as-cover: ranged-only; defender sitting on a size-3+ vehicle's
   // footprint adds +1..+4 RDM (subtracts from attacker's to-hit).
   const cover = !isMelee ? resolveVehicleCover(targetName, ctx) : null
+  // +1 CMod vs a grappled target (held target can't dodge). Canon ruling 2026-06-01.
+  const grappledTarget = ctx.initiative.some(e => e.character_name === targetName && e.grappled_by) ? 1 : 0
   const sources: CmodSources = {
     weaponCondition, aim, coordinatedEffort, coordinate, sameTarget,
     targetDefense: -def.value, targetDefenseLabel: def.label,
     ...(cover ? { vehicleCover: -cover.bonus, vehicleCoverLabel: `Vehicle cover RDM (${cover.vehicleName}, size ${cover.size})` } : {}),
+    ...(grappledTarget ? { grappledTarget } : {}),
   }
-  const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value - (cover?.bonus ?? 0)
+  const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value - (cover?.bonus ?? 0) + grappledTarget
   return { net, sources }
 }
 
