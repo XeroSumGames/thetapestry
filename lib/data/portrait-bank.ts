@@ -10,6 +10,7 @@ export async function uploadPrivatePortrait(
   b56: Blob,
   b32: Blob,
   name: string,
+  gender: 'man' | 'woman' | null,
 ): Promise<{ error: string | null }> {
   const path256 = `private/${userId}/256/${id}.jpg`
   const path56 = `private/${userId}/56/${id}.jpg`
@@ -29,6 +30,7 @@ export async function uploadPrivatePortrait(
 
   const { error: insErr } = await supabase.from('portrait_bank').insert({
     name,
+    gender: gender ?? null,
     url_256: url256,
     url_56: url56,
     url_32: url32,

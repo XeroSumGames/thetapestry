@@ -24,6 +24,7 @@ type BulkItem = {
   id: string
   file: File
   name: string
+  gender: 'man' | 'woman' | null
   previewUrl: string | null
   status: 'previewing' | 'pending' | 'uploading' | 'done' | 'error'
   error?: string
@@ -540,6 +541,7 @@ export default function PortraitResizerPage() {
         id: crypto.randomUUID(),
         file: f,
         name: fileToDisplayName(f.name),
+        gender: null as 'man' | 'woman' | null,
         previewUrl: null,
         status: 'previewing' as const,
       }))
@@ -576,7 +578,7 @@ export default function PortraitResizerPage() {
           renderAutoCircle(img, 32),
         ])
         if (!b256 || !b56 || !b32) throw new Error('Canvas render failed')
-        const { error: uploadErr } = await uploadPrivatePortrait(supabase, userId, item.id, b256, b56, b32, item.name)
+        const { error: uploadErr } = await uploadPrivatePortrait(supabase, userId, item.id, b256, b56, b32, item.name, item.gender)
         if (uploadErr) throw new Error(uploadErr)
         setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'done' } : p))
       } catch (err: any) {
@@ -685,6 +687,21 @@ export default function PortraitResizerPage() {
                         placeholder="Name"
                         style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '4px 6px', boxSizing: 'border-box' }}
                       />
+                      {/* Gender toggle */}
+                      <div style={{ display: 'flex', gap: '3px' }}>
+                        {(['man', 'woman', null] as const).map(g => {
+                          const label = g === 'man' ? 'M' : g === 'woman' ? 'F' : '-'
+                          const active = item.gender === g
+                          return (
+                            <button key={label} type="button"
+                              disabled={item.status === 'uploading' || item.status === 'done'}
+                              onClick={() => setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, gender: g } : p))}
+                              style={{ flex: 1, padding: '3px 0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#1a1a1a', color: active ? '#f5a89a' : '#5a5550' }}>
+                              {label}
+                            </button>
+                          )
+                        })}
+                      </div>
                       {/* Status */}
                       <div style={{ fontSize: '13px', color: statusColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', minHeight: '16px' }}>
                         {item.status === 'previewing' && 'Processing...'}
