@@ -165,7 +165,26 @@ export default function PlaytestRecorder() {
     // beforeunload: full flush to localStorage so close-tab / refresh /
     // nav-away loses ≤1 event instead of up to PERIODIC_FLUSH_MS (60s)
     // of trailing context. No-ops when capture is OFF.
-    const onBeforeUnload = () => { try { flushAllNow() } catch {} }
+    //
+    // 2026-06-12: ALSO auto-trigger downloadDump on close while the
+    // recorder is armed + has events. Xero lost a playtest's logs
+    // because the tab closed without an explicit Stop click. The blob
+    // download is created + clicked synchronously inside the unload
+    // window so Chrome honors it; Firefox / Safari may block - in
+    // which case the localStorage flush still preserves the buffer
+    // for recovery. Refresh / in-app nav-away ALSO trigger the
+    // download (browsers can't distinguish from close); the cost is
+    // a stray download file the user deletes, which is much cheaper
+    // than losing a session.
+    const onBeforeUnload = () => {
+      try {
+        flushAllNow()
+        const r = getRecorder()
+        if (r?.enabled && r.buffer.length > 0) {
+          downloadDump()
+        }
+      } catch {}
+    }
     window.addEventListener('beforeunload', onBeforeUnload)
 
     // ── console.error / console.warn pass-through capture ────────────────
