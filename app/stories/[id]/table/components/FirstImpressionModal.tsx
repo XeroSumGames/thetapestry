@@ -363,38 +363,38 @@ export default function FirstImpressionModal({
               </div>
             </div>
 
-            {/* Insight Die pre-roll spend (optional). Two canonical
-                variants per SRD §05; player can pick one or neither.
-                Buttons disabled when the rolling PC has 0 Insight Dice
-                available. */}
+            {/* Insight Die pre-roll spend. Two canonical variants per
+                SRD §05; clicking the active option deselects back to
+                none. Matches the green-box style of the Attack modal. */}
             {pc && (
               <div style={{ marginBottom: '12px' }}>
-                <div style={sectionLabelStyle}>
-                  Insight Die <span style={{ color: '#5a5550', textTransform: 'none', letterSpacing: 0 }}>
-                    ({pc.insightDice} available)
-                  </span>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: pc.insightDice > 0 ? '#7fc458' : '#5a5550', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  🎲 Spend Insight Die ({pc.insightDice} available)
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {(['3d6', '+3cmod'] as const).map(opt => {
-                    const selected = preSpend === opt
-                    const disabled = pc.insightDice === 0 && !selected
-                    const label = opt === '3d6' ? 'Spend: 3d6 keep all' : 'Spend: +3 CMod'
+                    const isActive = preSpend === opt
+                    const disabled = pc.insightDice === 0
                     return (
                       <button key={opt} type="button"
-                        onClick={() => setPreSpend(prev => prev === opt ? null : opt)}
+                        onClick={() => { if (!disabled) setPreSpend(prev => prev === opt ? null : opt) }}
                         disabled={disabled}
                         style={{
-                          flex: 1, padding: '6px 10px',
-                          background: selected ? '#1a2e10' : '#242424',
-                          border: `1px solid ${selected ? '#7fc458' : '#3a3a3a'}`,
+                          flex: 1, padding: '8px 4px',
+                          background: isActive ? '#2d5a1b' : '#1a2e10',
+                          border: `1px solid ${isActive ? '#7fc458' : '#2d5a1b'}`,
                           borderRadius: '3px',
-                          color: selected ? '#7fc458' : disabled ? '#3a3a3a' : '#d4cfc9',
+                          color: '#7fc458',
                           fontSize: '13px', fontFamily: 'Carlito, sans-serif',
-                          letterSpacing: '.06em', textTransform: 'uppercase',
+                          letterSpacing: '.04em', textTransform: 'uppercase',
                           cursor: disabled ? 'not-allowed' : 'pointer',
                           opacity: disabled ? 0.4 : 1,
+                          textAlign: 'center',
                         }}>
-                        {label}
+                        {opt === '3d6' ? 'Roll 3d6' : '+3 CMod'}
+                        <br /><span style={{ fontSize: '13px', color: isActive ? '#7fc458' : '#cce0f5' }}>
+                          {opt === '3d6' ? 'Keep all 3' : 'Added to roll'}
+                        </span>
                       </button>
                     )
                   })}

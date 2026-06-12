@@ -3756,7 +3756,22 @@ export default function TablePage() {
     // picked, skipping the NPC dropdown step.
     const myEntry = entries.find(e => e.userId === userId)
     setRecruitRollerId(myEntry?.character.id ?? '')
-    setRecruitNpcId(preselectedNpcId ?? '')
+    let autoNpcId = preselectedNpcId ?? ''
+    if (!autoNpcId && myEntry) {
+      const pcTok = mapTokens.find(t => t.character_id === myEntry.character.id)
+      if (pcTok) {
+        let closest = '', closestDist = Infinity
+        for (const tok of mapTokens) {
+          if (!tok.npc_id || tok.token_type === 'object') continue
+          const npc = (campaignNpcs as any[]).find(n => n.id === tok.npc_id)
+          if (!npc || (npc.wp_current ?? npc.wp_max ?? 10) <= 0 || npc.status === 'dead') continue
+          const d = Math.hypot(tok.grid_x - pcTok.grid_x, tok.grid_y - pcTok.grid_y)
+          if (d < closestDist) { closestDist = d; closest = tok.npc_id as string }
+        }
+        if (closest) autoNpcId = closest
+      }
+    }
+    setRecruitNpcId(autoNpcId)
     setRecruitCommunityId('')
     setRecruitNewCommunityName('')
     setRecruitApproach('cohort')
@@ -9462,13 +9477,27 @@ export default function TablePage() {
           const activeIE = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
           if (activeIE?.character_id) defaultPcId = activeIE.character_id
         }
+        let defaultNpcId: string | undefined = firstImpressionNpcId || undefined
+        if (!defaultNpcId) {
+          const myEntry = entries.find(e => e.userId === userId)
+          const pcTok = myEntry ? mapTokens.find(t => t.character_id === myEntry.character.id) : null
+          if (pcTok) {
+            let closest = '', closestDist = Infinity
+            for (const tok of mapTokens) {
+              if (!tok.npc_id || tok.token_type === 'object') continue
+              const d = Math.hypot(tok.grid_x - pcTok.grid_x, tok.grid_y - pcTok.grid_y)
+              if (d < closestDist) { closestDist = d; closest = tok.npc_id as string }
+            }
+            if (closest && eligibleNpcs.some(n => n.id === closest)) defaultNpcId = closest
+          }
+        }
         return (
           <FirstImpressionModal
             isGm={gmLike}
             eligiblePcs={eligiblePcs}
             eligibleNpcs={eligibleNpcs}
             defaultPcId={defaultPcId}
-            defaultNpcId={firstImpressionNpcId || undefined}
+            defaultNpcId={defaultNpcId}
             onClose={() => { setShowSpecialCheck(null); setFirstImpressionNpcId('') }}
             onRoll={async ({ pc, npc, amod, smod, cmod, die1, die2, die3, total, outcome, insightUsed, insightDieDelta }) => {
               if (!userId) return { cmodDelta: 0, vibe: '', warnings: ['no userId'] }
@@ -9498,8 +9527,13 @@ export default function TablePage() {
                 die1, die2, die3, amod, smod, cmod, total, outcome,
                 insightUsed,
               })
-              // Refresh local revealedNpcs so the sidebar/cards reflect
-              // the new CMod without waiting for a realtime broadcast.
+              setRevealedNpcs(prev => {
+                const ex = prev.find((n: any) => n.id === npc.id)
+                if (ex) return prev.map((n: any) => n.id === npc.id
+                  ? { ...n, relationship_cmod: Math.max(-3, Math.min(3, (ex.relationship_cmod ?? 0) + result.cmodDelta)) } : n)
+                const nd = (campaignNpcs as any[]).find(n => n.id === npc.id)
+                return nd ? [...prev, { ...nd, relationship_cmod: Math.max(-3, Math.min(3, result.cmodDelta)), reveal_level: 'name_portrait' }] : prev
+              })
               if (myCharIdRef.current) {
                 void loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
               }
@@ -9710,10 +9744,10 @@ export default function TablePage() {
           <div onClick={closeRecruitModal}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
             <div onClick={e => e.stopPropagation()}
-              style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
-              <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Recruitment</div>
-              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>
-                Pick target & approach
+              style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '100%', maxWidth: '500px', maxHeight: '88vh', overflowY: 'auto' }}>
+              <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Recruitment</div>
+              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '10px' }}>
+                Pick target &amp; approach
               </div>
 
               <>
@@ -9721,10 +9755,10 @@ export default function TablePage() {
                       see everyone (they may orchestrate on behalf of
                       an absent player). Stops Percy from rolling a
                       First Impression or Recruitment Check *as* Ada. */}
-                  <div style={{ marginBottom: '12px' }}>
+                  <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
                     <select value={recruitRollerId} onChange={e => setRecruitRollerId(e.target.value)}
-                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                      style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                       <option value="">- pick a PC -</option>
                       {entries.filter(e => gmLike || e.userId === userId).map(e => (
                         <option key={e.character.id} value={e.character.id}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</option>
@@ -9733,15 +9767,15 @@ export default function TablePage() {
                   </div>
 
                   {/* Target NPC */}
-                  <div style={{ marginBottom: '12px' }}>
+                  <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target NPC</div>
                     {eligibleNpcs.length === 0 ? (
-                      <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
+                      <div style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
                         No NPCs visible on the map or in your sidebar. A GM needs to reveal one first.
                       </div>
                     ) : (
                       <select value={recruitNpcId} onChange={e => setRecruitNpcId(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                        style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         <option value="">- pick an NPC -</option>
                         {eligibleNpcs.map((n: any) => {
                           const mem = npcCommunityMap[n.id]
@@ -9750,18 +9784,18 @@ export default function TablePage() {
                       </select>
                     )}
                     {poachingNpcCommunity && (
-                      <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-                        ⚠ Poaching penalty: {pickedNpc?.name} is already in {poachingNpcCommunity.name} (−3 CMod)
+                      <div style={{ marginTop: '4px', padding: '5px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                        ⚠ Poaching: {pickedNpc?.name} is already in {poachingNpcCommunity.name} (−3 CMod)
                       </div>
                     )}
                   </div>
 
                   {/* Community */}
-                  <div style={{ marginBottom: '12px' }}>
+                  <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Community</div>
                     {hasAnyCommunity ? (
                       <select value={recruitCommunityId} onChange={e => setRecruitCommunityId(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                        style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         <option value="">- pick a community -</option>
                         {recruitCommunityList.map(c => (
                           <option key={c.id} value={c.id}>{c.name} ({c.member_count} member{c.member_count === 1 ? '' : 's'})</option>
@@ -9769,25 +9803,21 @@ export default function TablePage() {
                         <option value="__new__">+ Start a new group</option>
                       </select>
                     ) : (
-                      <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
-                        No group yet - this recruit starts one. Naming is optional; it becomes a named Community at 13 members.
+                      // No communities yet - auto-set to __new__ and show inline
+                      <div style={{ padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                        First recruit - starts a new group. Becomes a Community at 13 members.
                         {(() => { if (recruitCommunityId !== '__new__') setRecruitCommunityId('__new__'); return null })()}
                       </div>
                     )}
                     {recruitCommunityId === '__new__' && (
-                      <div style={{ marginTop: '8px', padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Group name (optional)</div>
-                        <input value={recruitNewCommunityName} onChange={e => setRecruitNewCommunityName(e.target.value)} placeholder="Leave blank - it names at 13 members"
-                          style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
-                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '6px', lineHeight: 1.4, fontStyle: 'italic' }}>
-                          A Group has no Morale Checks or public listing - those unlock when it grows into a Community at 13 members.
-                        </div>
-                      </div>
+                      <input value={recruitNewCommunityName} onChange={e => setRecruitNewCommunityName(e.target.value)}
+                        placeholder="Group name (optional - names at 13 members)"
+                        style={{ marginTop: '6px', width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                     )}
                   </div>
 
                   {/* Approach */}
-                  <div style={{ marginBottom: '12px' }}>
+                  <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
                       Approach
                       <HelpTooltip
@@ -9841,10 +9871,10 @@ export default function TablePage() {
                   </div>
 
                   {/* Skill */}
-                  <div style={{ marginBottom: '12px' }}>
+                  <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skill</div>
                     <select value={recruitSkill} onChange={e => setRecruitSkill(e.target.value)}
-                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                      style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                       <option value="">- pick a skill -</option>
                       <optgroup label={`Suggested for ${recruitApproach}`}>
                         {suggestedSkills.map(s => {
@@ -9862,7 +9892,7 @@ export default function TablePage() {
                   </div>
 
                   {/* CMod preview */}
-                  <div style={{ marginBottom: '12px', padding: '10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px' }}>
+                  <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px' }}>
                     <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>CMod stack</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -9900,31 +9930,24 @@ export default function TablePage() {
                     </div>
                   </div>
 
-                  {/* Pre-roll Insight Die - show only if the roller has ≥1 */}
+                  {/* Pre-roll Insight Die */}
                   {(() => {
                     const insightAvail = rollerEntry?.liveState?.insight_dice ?? 0
                     if (insightAvail < 1) return null
-                    const pill = (active: boolean) => ({
-                      flex: 1, padding: '8px 10px',
-                      background: active ? '#2a102a' : '#242424',
-                      border: `1px solid ${active ? '#d48bd4' : '#3a3a3a'}`,
-                      borderRadius: '3px',
-                      color: active ? '#fff' : '#d4cfc9',
-                      fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
-                    } as React.CSSProperties)
                     return (
-                      <div style={{ marginBottom: '12px', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
-                        <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Insight Die (pre-roll)</span>
-                          <span style={{ color: '#cce0f5' }}>{insightAvail} available</span>
+                      <div style={{ marginBottom: '8px' }}>
+                        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#7fc458', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                          🎲 Spend Insight Die ({insightAvail} available)
                         </div>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => setRecruitPreInsight('none')} style={pill(recruitPreInsight === 'none')}>None</button>
-                          <button onClick={() => setRecruitPreInsight('3d6')} style={pill(recruitPreInsight === '3d6')}>Roll 3d6</button>
-                          <button onClick={() => setRecruitPreInsight('+3cmod')} style={pill(recruitPreInsight === '+3cmod')}>+3 CMod</button>
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
-                          Spends 1 Insight Die. <strong>3d6</strong> keeps all three dice; <strong>+3 CMod</strong> flat-adds 3 to the total.
+                          <button onClick={() => setRecruitPreInsight(recruitPreInsight === '3d6' ? 'none' : '3d6')}
+                            style={{ flex: 1, padding: '8px 4px', background: recruitPreInsight === '3d6' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${recruitPreInsight === '3d6' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center' }}>
+                            Roll 3d6<br /><span style={{ fontSize: '13px', color: recruitPreInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
+                          </button>
+                          <button onClick={() => setRecruitPreInsight(recruitPreInsight === '+3cmod' ? 'none' : '+3cmod')}
+                            style={{ flex: 1, padding: '8px 4px', background: recruitPreInsight === '+3cmod' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${recruitPreInsight === '+3cmod' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center' }}>
+                            +3 CMod<br /><span style={{ fontSize: '13px', color: recruitPreInsight === '+3cmod' ? '#7fc458' : '#cce0f5' }}>Added to roll</span>
+                          </button>
                         </div>
                       </div>
                     )
