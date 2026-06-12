@@ -2555,10 +2555,11 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          gender: string
+          gender: string | null
           id: string
           is_private: boolean
-          number: number
+          name: string | null
+          number: number | null
           url_256: string
           url_32: string
           url_56: string
@@ -2566,10 +2567,11 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          gender: string
+          gender?: string | null
           id?: string
           is_private?: boolean
-          number: number
+          name?: string | null
+          number?: number | null
           url_256: string
           url_32: string
           url_56: string
@@ -2577,10 +2579,11 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          gender?: string
+          gender?: string | null
           id?: string
           is_private?: boolean
-          number?: number
+          name?: string | null
+          number?: number | null
           url_256?: string
           url_32?: string
           url_56?: string

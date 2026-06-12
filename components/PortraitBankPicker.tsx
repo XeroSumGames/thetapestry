@@ -1,12 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 interface PortraitRow {
   id: string
-  number: number
-  gender: 'man' | 'woman'
+  number: number | null
+  gender: string | null
+  name: string | null
   url_256: string
   url_56: string
 }
@@ -22,17 +24,39 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
   const [filter, setFilter] = useState<'man' | 'woman' | 'all'>(initialGender)
   const [portraits, setPortraits] = useState<PortraitRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    getCachedAuth().then(({ user }) => setUserId(user?.id ?? null))
+  }, [])
 
   useEffect(() => {
     (async () => {
       setLoading(true)
-      let q = supabase.from('portrait_bank').select('id, number, gender, url_256, url_56').eq('is_private', false).order('created_at', { ascending: false }).limit(200)
+      // Show public portraits + the current user's own private portraits
+      const visibilityFilter = userId
+        ? `is_private.eq.false,and(is_private.eq.true,created_by.eq.${userId})`
+        : 'is_private.eq.false'
+      let q = supabase
+        .from('portrait_bank')
+        .select('id, number, gender, name, url_256, url_56')
+        .or(visibilityFilter)
+        .order('created_at', { ascending: false })
+        .limit(200)
       if (filter !== 'all') q = q.eq('gender', filter)
       const { data } = await q
       setPortraits((data ?? []) as PortraitRow[])
       setLoading(false)
     })()
-  }, [filter, supabase])
+  }, [filter, userId, supabase])
+
+  function portraitLabel(p: PortraitRow): string {
+    if (p.name) return p.name
+    if (p.gender && p.number != null) {
+      return `NPC-${p.gender === 'man' ? 'MAN' : 'WOMAN'}-${String(p.number).padStart(3, '0')}`
+    }
+    return 'Portrait'
+  }
 
   return (
     <ModalBackdrop onClose={onClose} zIndex={10002} opacity={0.85} padding="2rem">
@@ -71,23 +95,16 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
           ) : portraits.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Carlito", sans-serif', fontSize: '13px' }}>
               No portraits in the bank yet.<br />
-              <span style={{ fontSize: '13px' }}>Thrivers can add portraits via the Create Tokens tool.</span>
+              <span style={{ fontSize: '13px' }}>Add portraits via the Create Tokens tool.</span>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: '8px' }}>
               {portraits.map(p => (
                 <button key={p.id} onClick={() => { onPick(p.url_256); onClose() }}
-                  title={`NPC-${p.gender === 'man' ? 'MAN' : 'WOMAN'}-${String(p.number).padStart(3, '0')}`}
+                  title={portraitLabel(p)}
                   style={{ padding: 0, background: '#0a0a0a', border: '2px solid transparent', borderRadius: '4px', cursor: 'pointer', overflow: 'hidden' }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = '#c0392b'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {/* Use url_256 (the high-res source) at 72px display
-                      so the picker downscales sharply instead of
-                      upscaling url_56 into a blurry mess. The 56px
-                      thumb was sized for a smaller historical grid;
-                      grid cells are 72px now and url_56 is below
-                      Retina density even on desktop. */}
                   <img src={p.url_256} alt="" width={72} height={72} loading="lazy" style={{ display: 'block', width: '100%', height: '72px', objectFit: 'cover' }} />
                 </button>
               ))}

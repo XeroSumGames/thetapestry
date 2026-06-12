@@ -3,6 +3,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
+import { uploadPrivatePortrait } from '../../../lib/data/portrait-bank'
 
 const OUTPUT_SIZE = 256
 const DISPLAY_MAX = 500 // max width/height of the source preview
@@ -18,6 +19,15 @@ const btnSecondary: React.CSSProperties = { ...btnPrimary, background: '#242424'
 const subLabel: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: '"Carlito", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }
 
 interface Circle { cx: number; cy: number; r: number } // in display coords
+
+type BulkItem = {
+  id: string
+  file: File
+  name: string
+  previewUrl: string | null
+  status: 'previewing' | 'pending' | 'uploading' | 'done' | 'error'
+  error?: string
+}
 
 // Each successful batch upload, kept around so the user can re-crop
 // any that auto-center missed. Holds the source File for re-processing
@@ -81,12 +91,23 @@ export default function PortraitResizerPage() {
   // shouldn't be able to add or replace official portraits.
   const [authChecked, setAuthChecked] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'crop' | 'bulk'>('bulk')
+  // Bulk Upload
+  const [bulkItems, setBulkItems] = useState<BulkItem[]>([])
+  const [bulkRunning, setBulkRunning] = useState(false)
+  const [bulkDropOver, setBulkDropOver] = useState(false)
+  const bulkFileInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     (async () => {
       const { user } = await getCachedAuth()
       if (!user) { setAuthChecked(true); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      setIsThriver(roleIsThriver(profile))
+      const isThriverResult = roleIsThriver(profile)
+      setIsThriver(isThriverResult)
+      setUserId(user.id)
+      if (isThriverResult) setActiveTab('crop')
       setAuthChecked(true)
     })()
   }, [supabase])
@@ -507,20 +528,186 @@ export default function PortraitResizerPage() {
     setBatchRunning(false)
   }
 
+  function fileToDisplayName(filename: string): string {
+    const noExt = filename.replace(/\.[^.]+$/, '')
+    return noExt.replace(/[_\-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  }
+
+  async function handleBulkFiles(files: FileList) {
+    const newItems: BulkItem[] = [...files]
+      .filter(f => f.type.startsWith('image/'))
+      .map(f => ({
+        id: crypto.randomUUID(),
+        file: f,
+        name: fileToDisplayName(f.name),
+        previewUrl: null,
+        status: 'previewing' as const,
+      }))
+    if (newItems.length === 0) return
+    setBulkItems(prev => [...prev, ...newItems])
+    for (const item of newItems) {
+      try {
+        const img = await loadFileAsImage(item.file)
+        const blob = await renderAutoCircle(img, 256)
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, previewUrl: url, status: 'pending' } : p))
+        } else {
+          setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'error', error: 'Preview failed' } : p))
+        }
+      } catch {
+        setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'error', error: 'Preview failed' } : p))
+      }
+    }
+  }
+
+  async function handleBulkUploadAll() {
+    if (!userId || bulkRunning) return
+    const toUpload = bulkItems.filter(i => i.status === 'pending')
+    if (toUpload.length === 0) return
+    setBulkRunning(true)
+    for (const item of toUpload) {
+      setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'uploading' } : p))
+      try {
+        const img = await loadFileAsImage(item.file)
+        const [b256, b56, b32] = await Promise.all([
+          renderAutoCircle(img, 256),
+          renderAutoCircle(img, 56),
+          renderAutoCircle(img, 32),
+        ])
+        if (!b256 || !b56 || !b32) throw new Error('Canvas render failed')
+        const { error: uploadErr } = await uploadPrivatePortrait(supabase, userId, item.id, b256, b56, b32, item.name)
+        if (uploadErr) throw new Error(uploadErr)
+        setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'done' } : p))
+      } catch (err: any) {
+        setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'error', error: err?.message ?? 'unknown' } : p))
+      }
+    }
+    setBulkRunning(false)
+  }
+
   if (!authChecked) return null
-  if (!isThriver) return (
+  if (!userId) return (
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
-      Thriver access only.
+      Sign in to upload portraits.
     </div>
   )
+
+  const pendingCount = bulkItems.filter(i => i.status === 'pending').length
 
   return (
     <div>
       <h1 style={h1Style}>Create Tokens</h1>
-      <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Carlito, sans-serif' }}>
-        Drop any image and export it as a 256×256 JPEG - ready for the NPC portrait bank.
-        Drag the circle to choose what gets captured, or resize it to zoom.
+
+      {/* Tab switcher */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
+        {isThriver && (
+          <button onClick={() => setActiveTab('crop')}
+            style={{ ...activeTab === 'crop' ? btnPrimary : btnSecondary, flex: 1, padding: '8px' }}>
+            Crop & Upload
+          </button>
+        )}
+        <button onClick={() => setActiveTab('bulk')}
+          style={{ ...activeTab === 'bulk' ? btnPrimary : btnSecondary, flex: 1, padding: '8px' }}>
+          Bulk Upload
+        </button>
       </div>
+
+      {activeTab === 'bulk' && (
+        <div>
+          <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Carlito, sans-serif' }}>
+            Select portrait images. Each is auto-cropped, saved to your private library, and immediately available in the NPC and character portrait pickers.
+          </div>
+
+          {/* Drop zone */}
+          <div
+            onDragOver={e => { e.preventDefault(); setBulkDropOver(true) }}
+            onDragEnter={e => { e.preventDefault(); setBulkDropOver(true) }}
+            onDragLeave={e => { e.preventDefault(); setBulkDropOver(false) }}
+            onDrop={e => { e.preventDefault(); setBulkDropOver(false); if (e.dataTransfer.files?.length) handleBulkFiles(e.dataTransfer.files) }}
+            onClick={() => bulkFileInputRef.current?.click()}
+            style={{
+              minHeight: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              border: `2px dashed ${bulkDropOver ? '#c0392b' : '#3a3a3a'}`,
+              background: bulkDropOver ? '#2a1210' : '#1a1a1a',
+              borderRadius: '4px', cursor: 'pointer', marginBottom: '1rem', transition: 'all 0.15s',
+            }}>
+            <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '16px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: bulkDropOver ? '#c0392b' : '#f5f2ee' }}>
+              {bulkDropOver ? 'Drop to add' : 'Drop images here'}
+            </div>
+            <div style={{ color: '#5a5550', fontSize: '13px', marginTop: '6px' }}>or click to select multiple files (JPG, PNG, WebP, GIF)</div>
+            <input ref={bulkFileInputRef} type="file" accept="image/*" multiple
+              onChange={e => { if (e.target.files?.length) { handleBulkFiles(e.target.files); e.target.value = '' } }}
+              style={{ display: 'none' }} />
+          </div>
+
+          {bulkItems.length > 0 && (
+            <>
+              {/* Action bar */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '1rem' }}>
+                <button type="button" onClick={handleBulkUploadAll}
+                  disabled={bulkRunning || pendingCount === 0}
+                  style={{ ...btnPrimary, opacity: bulkRunning || pendingCount === 0 ? 0.5 : 1, cursor: bulkRunning || pendingCount === 0 ? 'not-allowed' : 'pointer' }}>
+                  {bulkRunning ? 'Uploading...' : `Upload All (${pendingCount} pending)`}
+                </button>
+                <button type="button"
+                  disabled={bulkRunning}
+                  onClick={() => {
+                    bulkItems.forEach(i => { if (i.previewUrl) URL.revokeObjectURL(i.previewUrl) })
+                    setBulkItems([])
+                  }}
+                  style={{ ...btnSecondary, opacity: bulkRunning ? 0.5 : 1, cursor: bulkRunning ? 'not-allowed' : 'pointer' }}>
+                  Clear All
+                </button>
+                <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                  {bulkItems.filter(i => i.status === 'done').length} done
+                  {bulkItems.filter(i => i.status === 'error').length > 0 && ` · ${bulkItems.filter(i => i.status === 'error').length} failed`}
+                </span>
+              </div>
+
+              {/* Preview + name grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px' }}>
+                {bulkItems.map(item => {
+                  const statusColor = item.status === 'done' ? '#7fc458' : item.status === 'error' ? '#f5a89a' : item.status === 'uploading' ? '#7ab3d4' : '#5a5550'
+                  return (
+                    <div key={item.id} style={{ background: '#111', border: `1px solid ${item.status === 'error' ? '#c0392b' : '#2e2e2e'}`, borderRadius: '4px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {/* Preview */}
+                      <div style={{ width: '100%', aspectRatio: '1', background: '#0a0a0a', borderRadius: '3px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {item.previewUrl
+                          ? <img src={item.previewUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                          : <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>...</span>}
+                      </div>
+                      {/* Editable name */}
+                      <input
+                        value={item.name}
+                        onChange={e => setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, name: e.target.value } : p))}
+                        disabled={item.status === 'uploading' || item.status === 'done'}
+                        placeholder="Name"
+                        style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '4px 6px', boxSizing: 'border-box' }}
+                      />
+                      {/* Status */}
+                      <div style={{ fontSize: '13px', color: statusColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', minHeight: '16px' }}>
+                        {item.status === 'previewing' && 'Processing...'}
+                        {item.status === 'pending' && 'Ready'}
+                        {item.status === 'uploading' && 'Uploading...'}
+                        {item.status === 'done' && '+ Added'}
+                        {item.status === 'error' && (item.error ?? 'Error')}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'crop' && isThriver && (
+        <div>
+          <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Carlito, sans-serif' }}>
+            Drop any image and export it as a 256x256 JPEG - ready for the NPC portrait bank.
+            Drag the circle to choose what gets captured, or resize it to zoom.
+          </div>
 
       {/* Batch upload - multi-file picker that auto-centers the crop
           circle and uploads each file in sequence. Use this for cleanly-
@@ -866,6 +1053,8 @@ export default function PortraitResizerPage() {
           <li>Quality 0.85 is usually a good balance; drop to 0.70 for smaller files, or push to 1.0 for print-quality archives</li>
         </ul>
       </div>
+        </div>
+      )}
     </div>
   )
 }
