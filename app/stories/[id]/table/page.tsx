@@ -6974,7 +6974,6 @@ export default function TablePage() {
                     .eq('campaign_id', id)
                     .eq('user_id', kickUserId)
                     .select('id')
-                  console.error('[kick] rows updated:', kickData?.length ?? 0, 'error:', kickErr?.message ?? 'none')
                   if (kickErr) {
                     alert(`Kick failed: ${kickErr.message}`)
                     return
