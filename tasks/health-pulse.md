@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-12 12:10 UTC
+
+**Status:** DRIFT (run 77 — carry-over from run 76 + new stale-open; gates/CI all green)
+
+**Gates:** font-sizes [OK], role-literals [OK — 331 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical; 3 moderate ignored]
+
+**CI:** last 5 runs all success (latest 2026-06-12T09:10Z)
+
+**Drift:**
+- HOPED-FOR >27d (carry-over): Tier-2 Recruit (all phases), P3 Q4-b Advantages, FI streamline (Insight Die + single-modal), Stress Check 12-string narrative lock. Drain target: Beta-500 dry-run before 2026-07-01 (19 days).
+- Stale-open carry-over (run 75+): `img_scale divergence FIXED` + `player viewport follow` — both verified by 12-check 2-client gate (2026-05-30 ALL-PASS); still `- [ ]` in todo.md.
+- Confidence Ledger stale (carry-over run 76): debug-handoff.md §3 says 738 tests/41 files; actual is 875/48. Needs `npx tsx scripts/refresh-ledger.mjs`.
+- `scripts/check-realtime-wrap.mjs` still absent (carry-over run 76); todo.md line 65 says "now unblocked."
+- **NEW stale-open:** `characters` cross-user write parent `- [ ]` (todo.md:105) — all 4 sub-items are `[x]`, debug-handoff.md Risk Register marks it GREEN/CLOSED (all 8 flows resolved 2026-05-25). Parent checkbox not ticked.
+
+**Action:** Tick `characters` cross-user parent todo (all sub-items done). Tick 2 tactical-map todos. Run `scripts/refresh-ledger.mjs`. Plan Beta-500 dry-run before 7/1.
+
+---
+
 ## 2026-06-12 09:07 UTC
 
 **Status:** DRIFT (run 76 — carry-over from run 75 + new: Confidence Ledger stale; gates/CI all green)
