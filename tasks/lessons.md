@@ -1,5 +1,26 @@
 # Lessons Learned
 
+## Testplans must be PRESCRIPTIVE not descriptive - "DO THIS, OBSERVE THIS" not "here's what to watch for" (2026-06-12)
+
+Xero correction: "any plans need to be much more targeted and specific. DO THIS, OBSERVE THIS." Applies to playtest plans, manual testplans, dry-run docs, browser-eyeball checklists, anything that asks Xero to drive the platform. The Beta-500 dry-run testplan I wrote was descriptive ("Dry-run trigger: a PC in a community attempts to Recruit..." + "What to watch: approach lock-gates appear correctly..." + "Where to look for breakage: components/CommunityProxyRecruitModal.tsx") - too much narrative explanation, no step-by-step driving instructions.
+
+Correct shape per system being tested:
+```
+Step 1. Open campaign X.
+Step 2. Click character Y's card.
+Step 3. Click the [Recruit] button.
+   OBSERVE: modal opens with the approach picker visible.
+   PASS if modal opens. FAIL if it doesn't.
+Step 4. Click [Charm].
+   OBSERVE: the chip strip now shows "+1 CMod (Charm)".
+   PASS if chip visible. FAIL if no chip or wrong CMod.
+...
+```
+
+Every step is one concrete action + one bright-line PASS/FAIL signal. No "options," no "look for these things," no "where to debug if it breaks." If the plan needs branching (e.g. "if Wild Success, do X; if Failure, do Y"), it splits into sub-steps with their own observations, not paragraph prose.
+
+The "Where to look for breakage" + "Where to fix it" context belongs in findings docs ROUTED to lanes, not in the testplan Xero runs at the table. Two different documents, two different audiences.
+
 ## New-Scene auto-modal fires in every throwaway campaign after combat start - dismiss it before touching the initiative bar (2026-06-11)
 
 When a throwaway campaign has no tactical scenes and "Into the Moment" starts combat, the app auto-opens a "New Scene?" modal with `position: fixed; inset: 0`. This modal is a full-screen overlay that intercepts ALL pointer events, including clicks on the initiative bar and the "Next ->" button. Symptoms: `locator.click` times out after 15s with no error about the button being missing - the button IS in the DOM, it just can't receive the click. Fix: after asserting the player sees "IN THE MOMENT", add a New-Scene-modal dismiss guard before any initiative bar interactions: `const cancel = gm.getByRole('button', { name: /^cancel$/i }).first(); if (await cancel.isVisible().catch(() => false)) { await cancel.click(); await gm.waitForTimeout(400); }`. Then add a 1500ms settle wait. Pattern established in `hidden-npc-initiative.spec.ts` and combat-flow Phase B; apply any time a throwaway campaign triggers combat.
