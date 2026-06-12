@@ -465,7 +465,8 @@ CREATE TABLE public.initiative_order (
   aim_active boolean NOT NULL DEFAULT false,
   coordinate_target text,
   coordinate_bonus integer NOT NULL DEFAULT 0,
-  grappled_by text
+  grappled_by text,
+  pending_action_loss boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE public.lfg_interests (
@@ -661,13 +662,15 @@ CREATE TABLE public.player_npc_notes (
 
 CREATE TABLE public.portrait_bank (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  number integer NOT NULL,
-  gender text NOT NULL,
+  number integer,
+  gender text,
   url_256 text NOT NULL,
   url_56 text NOT NULL,
   url_32 text NOT NULL,
   created_by uuid,
-  created_at timestamp with time zone NOT NULL DEFAULT now()
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  is_private boolean NOT NULL DEFAULT false,
+  name text
 );
 
 CREATE TABLE public.portrait_counters (
@@ -1416,8 +1419,6 @@ ALTER TABLE public.player_npc_notes ADD CONSTRAINT player_npc_notes_npc_id_fkey 
 ALTER TABLE public.player_npc_notes ADD CONSTRAINT player_npc_notes_pkey PRIMARY KEY (id);
 
 ALTER TABLE public.portrait_bank ADD CONSTRAINT portrait_bank_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
-
-ALTER TABLE public.portrait_bank ADD CONSTRAINT portrait_bank_gender_check CHECK ((gender = ANY (ARRAY['man'::text, 'woman'::text])));
 
 ALTER TABLE public.portrait_bank ADD CONSTRAINT portrait_bank_gender_number_key UNIQUE (gender, number);
 
