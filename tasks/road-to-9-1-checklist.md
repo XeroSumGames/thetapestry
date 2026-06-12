@@ -26,10 +26,10 @@ Exact items, by owner. No fluff. Check off as shipped.
 ## HP (app code)
 
 - [~] **F1 WIRE** - REVERTED 2026-06-11. Originally shipped `c588ce0` (HP server-side redirect) but Xero pulled `/publiclanding` entirely the same day ("open and free until invites start"). The redirect logic was removed in the revert commit; `app/page.tsx` is back to the thin sync re-export of `dashboard/page`. F4 / F5 / F6 are back to their original scopes (anons reach the dashboard ghost-map). When the new pitch is ready + invites start, re-ship the same one-line redirect.
-- [ ] **F4** - cold-`/` ghost-map landing polish: clear value-prop + get-in CTA (not a dead-end). NOTE: F1 redirect (above) means anon visitors don't reach the ghost-map at all - F4 only applies to logged-in cold landings, scope likely shrinks dramatically.
-- [ ] **F5** - new-GM first-action pull: "create your first campaign / run a free module" (not stalled on empty dashboard).
-- [ ] **F6** - single-source WelcomeModal <-> `/firsttimers` duplicated onboarding copy.
-- [ ] **4 combat-flow testids** (XERO APPROVED, queued in active-lanes): `initiative-row-<id>`, `initiative-row-active`, `roll-feed-row-<id>`, `roll-feed-attack-result`.
+- [x] **F4** - CLOSED 2026-06-11 (`6ba240a`). Dashboard detects 0 GM campaigns and shows "Your Story Starts Here" panel with Create CTA + 3 free module tiles (Empty/Basement/Arena). Testplan: [tasks/end-of-beginning-handoff-testplan-2026-06-11.md](end-of-beginning-handoff-testplan-2026-06-11.md).
+- [x] **F5** - CLOSED 2026-06-11 (`6ba240a`). New-GM first-action pull shipped alongside F4 in the same commit.
+- [x] **F6** - CLOSED 2026-06-11 (`6ba240a`). Single-sourced 4 onboarding sections into `lib/onboarding-sections.ts`; both WelcomeModal and /firsttimers now render from it. Fixed /firsttimers em-dashes, typos, stale "Coming soon."
+- [x] **4 combat-flow testids** - SHIPPED 2026-05-31. `initiative-row-<id>`, `initiative-row-active`, `roll-feed-row-<id>`, `roll-feed-attack-result` - one additive commit, no behavior change. Unblocks E2E combat-flow Phase B.
 - [ ] **Broadcast catch-up** remaining surfaces: `PlayerNotes` + `app/npc-sheet` + `app/campaign-sheet` (3 of 5; 2 shipped).
 - [ ] **`/press` first-paint** investigation - blank black on initial render until scroll. HP code check.
 - [x] **Combat math 2-client smoke** - 12-check tactical-map 2-client gate ALL-PASS 2026-05-30. **KS #1 CORE-LOOP RELIABILITY CLOSED.** (E2E baseline 140/0/0.)
@@ -47,7 +47,7 @@ Exact items, by owner. No fluff. Check off as shipped.
 
 ## E2E (Playwright)
 
-- [ ] **Combat-flow Phase B** - DOM ordering / action decrement assertions. Unblocked the moment HP testids ship.
+- [ ] **Combat-flow Phase B** - DOM ordering / action decrement assertions. Testids SHIPPED 2026-05-31 - this is now UNBLOCKED for E2E.
 - [ ] **End-of-combat infection banner DOM assertion** - unblocked by `gm_apply_damage` v3 (`f4f3e9d`). ~15 min.
 - [ ] **Full re-cert as 9/1 launch gate** - `npm run test:e2e` green on prod, dashboard updated in place.
 
