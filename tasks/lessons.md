@@ -1,5 +1,9 @@
 # Lessons Learned
 
+## Always edit files in the puffer WORKTREE (C:\TheTapestry-puffer), not the main checkout, when committing from puffer lane (2026-06-12)
+
+Edit tool paths must start with `C:\TheTapestry-puffer\` for puffer-lane commits. If I accidentally edit `C:\TheTapestry\...` instead, the change lands in the main checkout's working tree (untracked, not on any commit). Then when I `cd C:\TheTapestry-puffer && git add && git commit`, the file in the worktree hasn't changed - the commit is empty or stale. Fix: always verify the target path before using Edit. If I realize the mistake: (1) apply the same edit to the puffer worktree file, (2) revert the main checkout file to HEAD.
+
 ## Before writing a Xero-runs testplan, grep the live code for every named UI element it cites - never fabricate button names from memory (2026-06-12)
 
 Caught 2026-06-12 mid-Beta-500-dry-run plan: I wrote "In the modal, click Charm" for the Recruit section. Xero asked what that meant. Verified after the fact: the Recruit modal has NO button labeled Charm. The actual approaches are Cohort / Conscript / Convert. I fabricated the names from imagination of how a recruit system "would" work, instead of grepping `components/CommunityProxyRecruitModal.tsx` for the actual labels.
