@@ -294,27 +294,19 @@ export default function FirstImpressionModal({
 
         {phase === 'pick' && (
           <>
-            {/* Skill picker - chip bar */}
+            {/* Skill picker */}
             <div style={{ marginBottom: '12px' }}>
               <div style={sectionLabelStyle}>Skill</div>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                {(['best', 'Manipulation', 'Streetwise', 'Psychology'] as const).map(opt => {
-                  const selected = skillChoice === opt
-                  return (
-                    <button key={opt} type="button" onClick={() => setSkillChoice(opt)}
-                      style={{
-                        flex: 1, minWidth: '110px', padding: '6px 10px',
-                        background: selected ? '#2a1210' : '#242424',
-                        border: `1px solid ${selected ? '#c0392b' : '#3a3a3a'}`,
-                        borderRadius: '3px', color: selected ? '#f5a89a' : '#d4cfc9',
-                        fontSize: '13px', fontFamily: 'Carlito, sans-serif',
-                        letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
-                      }}>
-                      {opt === 'best' ? `Best (${pc?.bestSkillName ?? 'Auto'})` : opt}
-                    </button>
-                  )
-                })}
-              </div>
+              <select value={skillChoice} onChange={e => setSkillChoice(e.target.value as typeof skillChoice)} style={inputStyle}>
+                <optgroup label="Auto">
+                  <option value="best">Best ({pc?.bestSkillName ?? 'Auto'}{pc ? ` ${signed(pc.bestSkillLevel)}` : ''})</option>
+                </optgroup>
+                <optgroup label="Social skills">
+                  <option value="Manipulation">Manipulation ({pc ? signed(pc.manipLevel) : '--'})</option>
+                  <option value="Streetwise">Streetwise ({pc ? signed(pc.streetLevel) : '--'})</option>
+                  <option value="Psychology">Psychology ({pc ? signed(pc.psychLevel) : '--'})</option>
+                </optgroup>
+              </select>
             </div>
 
             {/* PC selector - GM-only when multiple visible PCs */}
