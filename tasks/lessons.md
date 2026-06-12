@@ -1,25 +1,37 @@
 # Lessons Learned
 
-## Testplans must be PRESCRIPTIVE not descriptive - "DO THIS, OBSERVE THIS" not "here's what to watch for" (2026-06-12)
+## Plans Xero runs are pure DO steps - he reports back what he saw, Claude interprets pass/fail (2026-06-12)
 
-Xero correction: "any plans need to be much more targeted and specific. DO THIS, OBSERVE THIS." Applies to playtest plans, manual testplans, dry-run docs, browser-eyeball checklists, anything that asks Xero to drive the platform. The Beta-500 dry-run testplan I wrote was descriptive ("Dry-run trigger: a PC in a community attempts to Recruit..." + "What to watch: approach lock-gates appear correctly..." + "Where to look for breakage: components/CommunityProxyRecruitModal.tsx") - too much narrative explanation, no step-by-step driving instructions.
+Xero stronger correction after my first rewrite still asked him to OBSERVE specific UI signals ("chip strip shows +1 CMod (Charm)"): "i just need to be told what to do so I can report back to you. i lack the finesse to observe what you need."
 
-Correct shape per system being tested:
+He's right. Asking him to identify a named UI element OR judge whether a chip/modal/feed-row matches a canon spec puts technical observation on the wrong side of the conversation. He's the visionary + executor; technical observation is Claude's domain.
+
+Correct shape per testable section:
 ```
-Step 1. Open campaign X.
-Step 2. Click character Y's card.
-Step 3. Click the [Recruit] button.
-   OBSERVE: modal opens with the approach picker visible.
-   PASS if modal opens. FAIL if it doesn't.
-Step 4. Click [Charm].
-   OBSERVE: the chip strip now shows "+1 CMod (Charm)".
-   PASS if chip visible. FAIL if no chip or wrong CMod.
-...
+1. Open campaign X.
+2. Click PC Y's card.
+3. Click [Recruit].
+4. Pick the Charm approach.
+5. Click Roll.
+6. Tell me what happened at each step + screenshot anything that looked weird.
 ```
 
-Every step is one concrete action + one bright-line PASS/FAIL signal. No "options," no "look for these things," no "where to debug if it breaks." If the plan needs branching (e.g. "if Wild Success, do X; if Failure, do Y"), it splits into sub-steps with their own observations, not paragraph prose.
+That's it. Numbered actions, "report back" at the end of the section. Claude parses the free-text response and decides pass/fail against the canon spec.
 
-The "Where to look for breakage" + "Where to fix it" context belongs in findings docs ROUTED to lanes, not in the testplan Xero runs at the table. Two different documents, two different audiences.
+What to STRIP from any plan Xero will run:
+- "OBSERVE: [specific UI signal]" lines.
+- "PASS if X / FAIL if Y" lines.
+- Any ask to identify a specific named element ("the chip strip," "the preRoll extras," "the C3 broadcast").
+- Any ask to judge whether a row's narrative is "specific" or "generic" - that's a Claude call against canon, not an at-the-table call.
+- File paths, code-anchored debug pointers, where-to-look-for-breakage.
+
+What to KEEP:
+- Numbered action steps (one action per step).
+- "Report back what you saw" at the end of each section.
+- Screenshots are always valid as the report-back.
+- Plain-English context for WHY the section exists (one line max).
+
+Findings + canon-spec interpretation belong in docs ROUTED to lanes after Claude parses the report-back. Two documents, two audiences.
 
 ## New-Scene auto-modal fires in every throwaway campaign after combat start - dismiss it before touching the initiative bar (2026-06-11)
 
