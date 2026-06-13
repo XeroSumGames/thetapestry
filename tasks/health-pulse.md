@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-13 18:06 UTC
+
+**Status:** DRIFT (carry-forward — 15:09 action not yet taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-13T15:10Z)
+
+**Drift:**
+- HOPED-FOR ~21 days: Vehicle popout broadcast confirmation (Section B, target 2026-05-25 Minnie playtest). Code IS wired (`app/vehicle/page.tsx:354,1003`). Ledger caveat never closed — Puffer Fish should drain it or confirm status.
+- HOPED-FOR ~14 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). No code changes in last 3 days. Drain target: Beta-500 dry-run.
+- HOPED-FOR 1 day: FI Insight Die AWARD path (2026-06-12 — below 3-day flag; carry forward).
+- `debug-handoff.md §3` HOPED-FOR still includes combat-flow Phase B (confirmed shipped 2026-06-11 `383bc26`/`780d452`) — action flagged since 12:09, not taken.
+- **NEW stale todo:** "Vehicles-as-Cover RDM bonus not wired" — `lib/vehicle-cover.ts` exists and `lib/table-roll-context.ts:128,269` computes + injects `vehicleCover`/`vehicleCoverLabel` into roll context. Strong evidence this shipped. Audit-correction needed on the 6-mechanics todo block.
+- `scripts/check-realtime-wrap.mjs` still absent (todo unblocked but not built).
+
+**Action:** Puffer Fish — (1) drain combat-flow Phase B from debug-handoff §3 HOPED-FOR; (2) verify vehicle popout broadcast caveat and close or restate it; (3) audit-correct the Vehicles-as-Cover todo entry; (4) close `img_scale` + pin catch-up stale todos.
+
+---
+
 ## 2026-06-13 15:09 UTC
 
 **Status:** DRIFT (carry-forward — no new commits since 12:09; 12:09 action not yet taken)
