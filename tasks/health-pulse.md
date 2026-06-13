@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-13 00:11 UTC
+
+**Status:** DRIFT (carry-over; gates/CI/audit all green)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-13T00:00Z)
+
+**Since 21:09 UTC (positive):**
+- Confidence Ledger refreshed (was "738/41"; now correctly 875/48 in debug-handoff §3).
+- P3 Q4-b Advantages drained to PLAYTESTED RECENTLY (Session 63 + post-63 live test).
+
+**Drift (carry-over):**
+- STILL HOPED-FOR (>14 days, drain target Beta-500 ≤2026-07-01): FI Insight Die AWARD path (`useRollResolution.ts:264`, doubles never fired in live play); Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE); Vehicle popout broadcasts (Section B); Combat-flow Phase B (initiative-bar DOM, blocked on HP testids).
+- `scripts/check-realtime-wrap.mjs` still absent; todo says "now unblocked."
+- Stale-as-open todos need audit-correction: (1) `img_scale FIXED - awaiting 2-client VISUAL eyeball` — condition satisfied; tactical map GREEN 2026-05-30 (12-check 2-client gate all-pass). (2) `PUFFER - pin realtime propagation` — catch-up shipped: `CampaignPins.tsx:178+180` has `SUBSCRIBED` + visibility reload.
+
+**Action:** Tick the two stale-open todos above as done; plan Beta-500 dry-run for remaining HOPED-FOR items before 7/1.
+
+---
+
 ## 2026-06-12 21:09 UTC
 
 **Status:** DRIFT (carry-over; gates/CI/audit all green)
