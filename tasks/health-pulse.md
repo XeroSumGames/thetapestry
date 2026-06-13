@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-13 12:09 UTC
+
+**Status:** DRIFT (carry-forward; one stale debug-handoff HOPED-FOR entry newly identified)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-13T09:09Z)
+
+**Drift:**
+- HOPED-FOR >14 days (drain target Beta-500 ≤2026-07-01): Vehicle popout broadcasts (Section B, ~20 days); Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE, >14 days).
+- **NEW correction:** `debug-handoff.md §3` HOPED-FOR still lists "combat-flow Phase B (initiative-bar DOM ordering / action decrement)" — but `todo.md` shows `[x] E2E DONE 2026-06-11`, Phase B SHIPPED GREEN 12.4s. Prior 3 health-pulse entries over-counted this as HOPED-FOR. Puffer Fish: drain it from debug-handoff §3 HOPED-FOR.
+- FI Insight Die AWARD path documented HOPED-FOR 2026-06-12 (1 day old — below 3-day flag threshold; carry forward next run if no playtest evidence).
+- `scripts/check-realtime-wrap.mjs` still absent (todo says "now unblocked").
+- Two stale todos from 00:11 entry still unclosed: `img_scale FIXED awaiting 2-client visual eyeball` + pin realtime propagation catch-up.
+
+**Action:** Puffer Fish — drain combat-flow Phase B from debug-handoff §3 HOPED-FOR. Then close the two stale todos from 00:11.
+
+---
+
 ## 2026-06-13 09:06 UTC
 
 **Status:** DRIFT (carry-forward — no new findings since 06:15)
