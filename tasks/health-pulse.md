@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-13 21:06 UTC
+
+**Status:** DRIFT (carry-forward — 18:06 action not yet taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-13T18:09Z)
+
+**Drift:**
+- HOPED-FOR ~22 days: Vehicle popout broadcast (Section B). No code changes. Puffer Fish to drain or restate.
+- HOPED-FOR ~14 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). Drain target: Beta-500 dry-run ≤2026-07-01.
+- HOPED-FOR 2 days: FI Insight Die AWARD path (still below 3-day flag; watch next run).
+- `debug-handoff.md §3` HOPED-FOR still lists combat-flow Phase B despite shipping 2026-06-11 — flagged 3 runs running, action not taken.
+- `scripts/check-realtime-wrap.mjs` absent (todo open ~2026-05-24).
+- Vehicles-as-Cover stale todo from 18:06 entry not yet corrected.
+
+**Action:** Puffer Fish (same as 18:06) — drain combat-flow Phase B from debug-handoff §3; audit-correct Vehicles-as-Cover todo; close img_scale + pin stale todos; verify vehicle popout caveat.
+
+---
+
 ## 2026-06-13 18:06 UTC
 
 **Status:** DRIFT (carry-forward — 15:09 action not yet taken)
