@@ -208,6 +208,27 @@ H&P also shipped between last Puffer session and now:
 
 ---
 
+# Session state - 2026-06-12 (E2E / Playwright: user-guide acceptance test plan)
+
+## Current HEAD: verify with `git rev-parse --short HEAD`. Tests: 875 vitest green. All guardrails green. Working tree has untracked H&P SQL + spec files (do NOT commit from E2E lane).
+
+## What shipped this session (2026-06-12, E2E lane)
+
+- **user-guide acceptance test plan written** - `tasks/user-guide-acceptance-testplan-2026-06-12.md`. Chapter-by-chapter coverage map for all 16 guide files (14 Beginners Guide + Tactical Map Guide + GM Scene Setup Guide). 31 existing specs mapped against guide claims; 17 gap specs identified + prioritized P1-P5. Key finding: core combat loop (Ch9), character trackers (Ch4), env damage (Ch4), and grapple completion (Ch9) are the P1 automation gaps. Canvas/dice items (fog, range circles, mortal wound, lasting wound) are correctly manual. todo.md updated with P1 spec queue.
+
+## OPEN E2E queue - next up (from the test plan)
+
+1. **[P1 QUEUED] `grapple-subdue-breakfree.spec`** - Extends `grapple-family.spec`: REST poll defender's `actions_remaining` decrements on successful grapple; Subdue + Release buttons visible in action bar while `isGrappling`; Break Free reduces breaker's `actions_remaining`. All REST/DOM. ~45 min.
+2. **[P1 QUEUED] `character-card-trackers.spec`** - WP/RP/Stress click persists via REST poll; 0 WP -> stress auto-bump via `gm_apply_damage`. ~30 min.
+3. **[P1 QUEUED] `env-damage.spec`** - GM clicks Falling (3 WP/3 RP per 10 ft) + Drowning; assert `character_states` decremented. ~20 min.
+4. **[WATCH] section-a1-combat-start transient Arena contamination.** Passes standalone but occasionally misses in full re-cert (Arena leftover combat state). If it goes red 2+ runs, add a second End-Combat + 1s wait guard or switch to throwaway campaign.
+
+## Full coverage report
+
+All 16 guide files mapped to test coverage. 31 existing specs cover the core loop. 17 gap specs queued. Manual-only list (22 items) documented. See `tasks/user-guide-acceptance-testplan-2026-06-12.md` for the full chapter-by-chapter breakdown.
+
+---
+
 # Session state - 2026-06-11 (E2E / Playwright: Phase B initiative-bar + turn-advance GREEN)
 
 ## Current HEAD: `5d9773f` (verify with `git rev-parse --short HEAD`). Tests: 875 vitest green (verify with `npm test`). All guardrails green. Working tree clean. Everything ships to main (Vercel = live/dev env).
