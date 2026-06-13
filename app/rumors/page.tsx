@@ -345,6 +345,18 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 🔒 Private
               </span>
             )}
+            {/* Play time chip - shown when the author has set a duration */}
+            {m.play_time && (
+              <span style={{
+                padding: '2px 8px', background: '#1a1e2e', border: '1px solid #2e3a5e',
+                borderRadius: '3px', fontSize: '13px', color: '#7ab3d4',
+                fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+              }}
+                title="Estimated play time">
+                ⏱ {m.play_time}
+              </span>
+            )}
             {/* Rating chip - always rendered for visual consistency
                 with the 📥 chip. When rating_count is 0 we show
                 "Unrated" in a muted treatment instead of "0.0 (0)" so

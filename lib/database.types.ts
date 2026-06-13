@@ -2273,6 +2273,7 @@ export type Database = {
           parent_setting: string | null
           player_count_recommended: number | null
           rating_count: number | null
+          play_time: string | null
           session_count_estimate: number | null
           sort_order: number | null
           source_campaign_id: string | null
@@ -2299,6 +2300,7 @@ export type Database = {
           parent_setting?: string | null
           player_count_recommended?: number | null
           rating_count?: number | null
+          play_time?: string | null
           session_count_estimate?: number | null
           sort_order?: number | null
           source_campaign_id?: string | null
@@ -2324,6 +2326,7 @@ export type Database = {
           name?: string
           parent_setting?: string | null
           player_count_recommended?: number | null
+          play_time?: string | null
           rating_count?: number | null
           session_count_estimate?: number | null
           sort_order?: number | null

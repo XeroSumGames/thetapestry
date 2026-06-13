@@ -30,7 +30,7 @@ interface ModuleRow {
   description: string | null
   cover_image_url: string | null
   content_tags: string[] | null
-  session_count_estimate: number | null
+  play_time: string | null
   player_count_recommended: number | null
   parent_setting: string | null
   visibility: string
@@ -91,7 +91,7 @@ export default function ModuleEditPage() {
   const [tagline, setTagline] = useState('')
   const [description, setDescription] = useState('')
   const [tagsInput, setTagsInput] = useState('')
-  const [sessionEstimate, setSessionEstimate] = useState<string>('')
+  const [playTime, setPlayTime] = useState<string>('')
   const [playerCount, setPlayerCount] = useState<string>('')
   const [sortOrder, setSortOrder] = useState<string>('')
   // Canonical start date controls - Month / Day / Year-of-Pandemic
@@ -116,7 +116,7 @@ export default function ModuleEditPage() {
 
       const [{ data: row, error }, { data: profile }] = await Promise.all([
         supabase.from('modules')
-          .select('id, author_user_id, name, tagline, description, cover_image_url, content_tags, session_count_estimate, player_count_recommended, parent_setting, visibility, moderation_status, sort_order, start_canon_day')
+          .select('id, author_user_id, name, tagline, description, cover_image_url, content_tags, play_time, player_count_recommended, parent_setting, visibility, moderation_status, sort_order, start_canon_day')
           .eq('id', moduleId)
           .maybeSingle(),
         supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
@@ -143,7 +143,7 @@ export default function ModuleEditPage() {
       setTagline(m.tagline ?? '')
       setDescription(m.description ?? '')
       setTagsInput((m.content_tags ?? []).join(', '))
-      setSessionEstimate(m.session_count_estimate != null ? String(m.session_count_estimate) : '')
+      setPlayTime(m.play_time ?? '')
       setPlayerCount(m.player_count_recommended != null ? String(m.player_count_recommended) : '')
       setSortOrder(m.sort_order != null ? String(m.sort_order) : '')
       // Reverse-compute Month / Day / Year from start_canon_day so the
@@ -264,7 +264,6 @@ export default function ModuleEditPage() {
       .split(',')
       .map(t => t.trim())
       .filter(Boolean)
-    const sessions = sessionEstimate.trim() === '' ? null : Math.max(0, parseInt(sessionEstimate, 10) || 0)
     const players = playerCount.trim() === '' ? null : Math.max(0, parseInt(playerCount, 10) || 0)
     // sort_order: blank → null (sorts last on /modules); otherwise an
     // integer where lower numbers rank earlier in the marketplace.
@@ -292,7 +291,7 @@ export default function ModuleEditPage() {
         tagline: tagline.trim() || null,
         description: description.trim() || null,
         content_tags: tags.length > 0 ? tags : null,
-        session_count_estimate: sessions,
+        play_time: playTime.trim() || null,
         player_count_recommended: players,
         sort_order: sort,
         start_canon_day: startCanonDay,
@@ -409,8 +408,8 @@ export default function ModuleEditPage() {
       </div>
       <div style={{ display: 'flex', gap: '12px', marginBottom: '14px' }}>
         <div style={{ flex: 1 }}>
-          <label style={lbl}>Session Estimate</label>
-          <input type="number" min={0} value={sessionEstimate} onChange={e => setSessionEstimate(e.target.value)} placeholder="e.g. 3" style={inp} />
+          <label style={lbl}>Play Time</label>
+          <input value={playTime} onChange={e => setPlayTime(e.target.value)} placeholder="e.g. 60-90 min, 3-5 sessions" style={inp} />
         </div>
         <div style={{ flex: 1 }}>
           <label style={lbl}>Recommended Players</label>

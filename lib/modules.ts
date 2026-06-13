@@ -123,6 +123,7 @@ export interface ModuleListing {
   // rating_count is 0 → don't render the chip on cards.
   avg_rating: number | null
   rating_count: number | null
+  play_time: string | null
   latest_version?: {
     id: string
     version: string
@@ -203,8 +204,8 @@ async function listAvailableModulesTwoStep(
   // The reliable path (no FK-embed - see listAvailableModules): select the
   // module rows, then hydrate latest_version in a second query. Migration-
   // tolerant on subscriber_count: retry without it if the column is absent.
-  const fullCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, avg_rating, rating_count'
-  const liteCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order'
+  const fullCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, avg_rating, rating_count, play_time'
+  const liteCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, play_time'
   let { data: modules, error } = await supabase
     .from('modules')
     .select(fullCols)
