@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-13 15:09 UTC
+
+**Status:** DRIFT (carry-forward — no new commits since 12:09; 12:09 action not yet taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-13T12:12Z)
+
+**Drift:**
+- HOPED-FOR >14 days: Vehicle popout broadcasts (Section B, ~21 days since 2026-05-24). No vehicle commits in last 3 days.
+- HOPED-FOR >14 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). Drain target: Beta-500 dry-run ≤2026-07-01.
+- HOPED-FOR 2 days: FI Insight Die AWARD path (below 3-day flag; watch next run).
+- `debug-handoff.md §3` still lists combat-flow Phase B as HOPED-FOR despite shipping 2026-06-11 (flagged 12:09, action not taken).
+- `scripts/check-realtime-wrap.mjs` absent (todo open since ~2026-05-24).
+- Two stale todos still unclosed: `img_scale FIXED awaiting 2-client eyeball` (gate ALL-PASS 2026-05-30, watch closed 2026-06-12) + pin realtime propagation catch-up.
+
+**Action:** Same as 12:09 — Puffer Fish: drain combat-flow Phase B from `debug-handoff.md §3` HOPED-FOR; close two stale todos.
+
+---
+
 ## 2026-06-13 12:09 UTC
 
 **Status:** DRIFT (carry-forward; one stale debug-handoff HOPED-FOR entry newly identified)
