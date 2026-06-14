@@ -1341,8 +1341,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 <span style={{ ...LABEL_STYLE_TIGHT }}>Pins</span>
                 <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
               </div>
-              <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
-                style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
+              <div style={{ position: 'relative', marginBottom: '6px' }}>
+                <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
+                  style={{ width: '100%', padding: '5px 8px', paddingRight: pinSearch ? '26px' : '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
+                {pinSearch && (
+                  <button onClick={() => setPinSearch('')} style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#5a5a5a', cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: '0 2px' }}>✕</button>
+                )}
+              </div>
               {!userId && (
                 <div onClick={() => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('tapestry-ghost-wall')) }}
                   style={{ marginBottom: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', fontStyle: 'italic' }}>
