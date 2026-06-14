@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
   const [hasCampaigns, setHasCampaigns] = useState(true)
+  const [skipToWorld, setSkipToWorld] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -99,6 +100,15 @@ export default function DashboardPage() {
   // New-but-authed: logged-in, onboarded, no campaigns yet. Show the first-action
   // pull instead of the world map so a new GM lands on something actionable.
   // WelcomeModal still renders on top when !onboarded (brand-new users see both).
+  if (!hasCampaigns && skipToWorld) return (
+    <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        <MapView embedded showSidebar />
+      </div>
+      {showWelcome && <WelcomeModal username={username} onClose={() => setShowWelcome(false)} />}
+    </div>
+  )
+
   if (!hasCampaigns) return (
     <div style={{ flex: 1, background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ maxWidth: '680px', width: '100%' }}>
@@ -141,6 +151,17 @@ export default function DashboardPage() {
           <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '13px', color: '#5a5a5a' }}>
             All three modules are available in the module picker on the next screen.
           </div>
+        </div>
+
+        {/* Escape hatch for explorers who just want to look around */}
+        <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #1e1e1e' }}>
+          <button
+            onClick={() => setSkipToWorld(true)}
+            style={{ background: 'transparent', border: 'none', color: '#5a5a5a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'underline' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#cce0f5')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#5a5a5a')}>
+            Take me to the world
+          </button>
         </div>
       </div>
 
