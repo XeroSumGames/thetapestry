@@ -1163,6 +1163,16 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     }
   }, [userId])
 
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (!map) return
+    // Leaflet doesn't watch its container for size changes; tell it to
+    // recalculate after the sidebar slides in or out (CSS has no transition
+    // here so 50ms is enough for the DOM reflow to finish).
+    const t = setTimeout(() => map.invalidateSize(), 50)
+    return () => clearTimeout(t)
+  }, [sidebarOpen])
+
   const lbl: React.CSSProperties = { display: 'block', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', marginBottom: '4px' }
   const inp: React.CSSProperties = { width: '100%', padding: '7px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }
 
