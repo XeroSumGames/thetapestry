@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-14 12:09 UTC
+
+**Status:** DRIFT (carry-forward — 8th consecutive run, action not taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh CLI absent in sandbox — skipped
+
+**Drift:**
+- HOPED-FOR ~22 days: Vehicle popout broadcasts (Section B). No code change since last run.
+- HOPED-FOR ~28 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). Drain target: Beta-500 dry-run ≤2026-07-01.
+- HOPED-FOR >3 days: FI Insight Die AWARD path. 3-day flag crossed at 06:08 run; still no code change.
+- `debug-handoff.md §3` HOPED-FOR still lists combat-flow Phase B (shipped GREEN 2026-06-11) — flagged 8 consecutive runs, action not taken.
+- `scripts/check-realtime-wrap.mjs` absent (todo open ~2026-05-24).
+- Stale todos (prev confirmed + newly found): pin realtime catch-up; img_scale eyeball; NEW — "6 mechanics still owe real code for 9/1 KS" (todo.md:67) parent `[ ]` open while all 6 child items are [x] closed.
+
+**Action:** ⚠️ 8th flag — Puffer Fish: drain combat-flow Phase B from debug-handoff §3; tick "6 mechanics" parent todo; close pin + img_scale stale todos; restate or close vehicle popout caveat.
+
+---
+
 ## 2026-06-14 06:08 UTC
 
 **Status:** DRIFT (carry-forward — 7th consecutive run, action not taken)
