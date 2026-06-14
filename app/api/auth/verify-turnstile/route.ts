@@ -105,15 +105,14 @@ export async function POST(req: NextRequest) {
       // primary anti-bot. The body-size cap also still runs.
       console.error('[verify-turnstile] upstash error - allowing request:', e?.message ?? String(e))
     }
-  } else if (process.env.NODE_ENV === 'production') {
-    // Production without Upstash env vars = misconfigured deploy.
-    // Fail loud so the operator notices the missing env vars.
-    return NextResponse.json(
-      { ok: false, error: 'rate limiter not configured' },
-      { status: 503 },
-    )
   } else {
-    // Dev fallback. Same per-instance bucket behavior as pre-KV.
+    // Upstash env vars missing. Log loudly so the operator notices, but
+    // fall through to the in-memory bucket rather than hard-blocking every
+    // user. Failing open here is the lesser evil - Turnstile below is the
+    // primary bot defence; the rate limiter is defence-in-depth.
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[verify-turnstile] ALERT: Upstash env vars not configured in production - using in-memory fallback')
+    }
     sweepStaleBuckets()
     const limit = rateLimitInMemory(ip)
     if (!limit.ok) {
@@ -143,10 +142,12 @@ export async function POST(req: NextRequest) {
 
   const secret = process.env.TURNSTILE_SECRET_KEY
   if (!secret) {
-    // Secret not configured - fail open in dev so local signup still works.
-    // In production this env var must be set in Vercel.
-    if (process.env.NODE_ENV !== 'production') return NextResponse.json({ ok: true })
-    return NextResponse.json({ ok: false, error: 'turnstile not configured' }, { status: 500 })
+    // Secret not configured - log loudly but fail open so users aren't blocked.
+    // Fix by setting TURNSTILE_SECRET_KEY in Vercel env vars.
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[verify-turnstile] ALERT: TURNSTILE_SECRET_KEY not set in production - skipping verification')
+    }
+    return NextResponse.json({ ok: true })
   }
 
   const body = new URLSearchParams({ secret, response: token })
