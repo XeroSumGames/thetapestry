@@ -12,6 +12,7 @@ import {
   PARADIGMS, PROFESSIONS, MELEE_WEAPONS, RANGED_WEAPONS, EQUIPMENT,
   AttributeName
 } from '../../../lib/xse-schema'
+import { fetchRandomPortrait } from '../../../lib/data/portrait-bank'
 
 const FIRST_NAMES = [
   'Mara','Cole','Jesse','Petra','Dex','Avery','Rook','Sloane','Cas','Wren',
@@ -190,6 +191,12 @@ export default function RandomCharacterPage() {
       const commonEquip = EQUIPMENT.filter(e => e.rarity === 'Common')
       state.equipment = paradigm.equipment?.[0] ?? pick(commonEquip).name
       state.incidentalItem = paradigm.equipment?.[1] ?? pick(commonEquip).name
+
+      // Pick a random portrait from the bank matching gender
+      const genderMap: Record<string, string> = { Male: 'man', Female: 'woman' }
+      const bankGender = (genderMap[state.gender] ?? null) as 'man' | 'woman' | null
+      const portraitUrl = await fetchRandomPortrait(supabase, bankGender)
+      if (portraitUrl) state.photoDataUrl = portraitUrl
 
       setStatus('Saving...')
 

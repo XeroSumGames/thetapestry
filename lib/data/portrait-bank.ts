@@ -1,4 +1,15 @@
 // Seam for portrait_bank storage + metadata operations.
+
+export async function fetchRandomPortrait(
+  supabase: any,
+  gender: 'man' | 'woman' | null,
+): Promise<string | null> {
+  let q = supabase.from('portrait_bank').select('url_256').eq('is_private', false)
+  if (gender) q = q.eq('gender', gender)
+  const { data } = await q.limit(200)
+  if (!data || data.length === 0) return null
+  return data[Math.floor(Math.random() * data.length)].url_256 as string
+}
 // Accepts the Supabase browser client as a parameter since storage
 // operations require the client-side instance.
 
