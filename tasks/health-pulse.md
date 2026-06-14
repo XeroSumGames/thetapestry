@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-14 00:11 UTC
+
+**Status:** DRIFT (carry-forward — same items flagged 6+ consecutive runs, action not taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-13T22:54Z)
+
+**Drift:**
+- HOPED-FOR ~22 days: Vehicle popout broadcasts (Section B). No vehicle-component commits in >3 days. Code wired per 18:06 entry (`app/vehicle/page.tsx:354,1003`); ledger caveat never closed.
+- HOPED-FOR ~27 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). Drain target: Beta-500 dry-run ≤2026-07-01.
+- HOPED-FOR 2 days: FI Insight Die AWARD path (2026-06-12 — tips over 3-day flag at next run ~06:00 UTC).
+- `debug-handoff.md §3` HOPED-FOR still lists combat-flow Phase B (confirmed shipped 2026-06-11) — flagged 6 runs, action not taken.
+- Stale todos: img_scale awaiting eyeball (gate ALL-PASS 2026-05-30, watch CLEAN 2026-06-12); Vehicles-as-Cover (lib/vehicle-cover.ts ships it); pin realtime catch-up.
+- `scripts/check-realtime-wrap.mjs` absent (todo open ~2026-05-24).
+
+**Action:** ⚠️ 6th flag — Puffer Fish: drain combat-flow Phase B from debug-handoff §3; close img_scale + Vehicles-as-Cover + pin stale todos; close or restate vehicle popout caveat.
+
+---
+
 ## 2026-06-13 21:06 UTC
 
 **Status:** DRIFT (carry-forward — 18:06 action not yet taken)
