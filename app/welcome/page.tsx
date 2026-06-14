@@ -128,27 +128,21 @@ export default function WelcomePage() {
             <Link href="/creating-a-character" style={cardLink}>Read Guide</Link>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '2.5rem' }}>
-          <div style={card}>
-            <div style={cardTitle}>Backstory Generation</div>
-            <div style={cardBody}>Recommended for first time survivors, the Background Generation process allows you to spend Character Development Points during the different stages of your survivor&apos;s life to craft a character that directly matches your vision.</div>
-            <Link href="/characters/new" style={cardLink}>Start</Link>
-          </div>
-          <div style={card}>
-            <div style={cardTitle}>Quick Character</div>
-            <div style={cardBody}>Recommended for experienced users, this option lets you spend 20 CDP on attributes and skills and directly customize your character.</div>
-            <Link href="/characters/quick" style={cardLink}>Start</Link>
-          </div>
-          <div style={card}>
-            <div style={cardTitle}>Random Character</div>
-            <div style={cardBody}>Roll up a survivor on the fly. Great for NPCs or table emergencies.</div>
-            <Link href="/characters/random" style={cardLink}>Roll</Link>
-          </div>
-          <div style={card}>
-            <div style={cardTitle}>Paradigms</div>
-            <div style={cardBody}>Pick from the 12 setting-specific Distemper templates. Pre-built RAPID, skills, and loadout - add a name + Motivation + Complication and you&apos;re playing.</div>
-            <Link href="/characters/paradigms" style={cardLink}>Pick One</Link>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '2.5rem' }}>
+          {([
+            { href: '/characters/new',       label: 'Backstory Generation', action: 'Start',    desc: 'Recommended for first-timers. Spend CDP across life stages to craft a character that matches your vision.' },
+            { href: '/characters/quick',     label: 'Quick Character',      action: 'Start',    desc: 'Recommended for experienced players. Spend 20 CDP directly on attributes and skills and go.' },
+            { href: '/characters/random',    label: 'Random Character',     action: 'Roll',     desc: 'Roll up a survivor on the fly. Great for NPCs or table emergencies.' },
+            { href: '/characters/paradigms', label: 'Paradigms',            action: 'Pick One', desc: 'Pick from 12 Distemper templates. Pre-built RAPID, skills, and loadout - add a name and play.' },
+          ] as const).map(({ href, label, action, desc }) => (
+            <Link key={href} href={href} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 18px', background: '#161616', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '3px' }}>{label}</div>
+                <div style={{ fontSize: '13px', color: '#8a8a8a', lineHeight: 1.5 }}>{desc}</div>
+              </div>
+              <div style={{ padding: '6px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', flexShrink: 0 }}>{action}</div>
+            </Link>
+          ))}
         </div>
 
         {/* Beginners' Guide - twelve chapters covering navigation,
