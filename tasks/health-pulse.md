@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-14 06:08 UTC
+
+**Status:** DRIFT (carry-forward — 7th consecutive run, action not taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 4 runs all success (latest 2026-06-14T04:03Z); gh CLI absent, used MCP
+
+**Drift:**
+- HOPED-FOR ~21 days: Vehicle popout broadcasts (Section B). No vehicle-component commits in 3+ days. Ledger caveat open since 2026-05-24.
+- HOPED-FOR ~26 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). Drain target: Beta-500 dry-run ≤2026-07-01.
+- HOPED-FOR ~3 days: FI Insight Die AWARD path (rolling doubles). Crosses 3-day flag this run.
+- `debug-handoff.md §3` HOPED-FOR still lists combat-flow Phase B (shipped 2026-06-11) — flagged 7 runs, action not taken.
+- Stale todos (confirmed shipped today): pin realtime catch-up (CampaignMap.tsx:960 + CampaignPins.tsx:178 both have SUBSCRIBED+visibilitychange); img_scale eyeball (gate ALL-PASS 2026-05-30, watch CLOSED 2026-06-12).
+- `scripts/check-realtime-wrap.mjs` absent (todo open ~2026-05-24).
+
+**Action:** ⚠️ 7th flag — Puffer Fish must drain: combat-flow Phase B from debug-handoff §3; close pin + img_scale stale todos; restate or close vehicle popout caveat. FI Insight Die now in 3-day window.
+
+---
+
 ## 2026-06-14 00:11 UTC
 
 **Status:** DRIFT (carry-forward — same items flagged 6+ consecutive runs, action not taken)
