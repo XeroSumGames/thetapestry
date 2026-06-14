@@ -195,7 +195,7 @@ export default function Sidebar() {
                   reachable from the main nav below). Matches the
                   MessagesBell dim-when-idle treatment. */}
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                <span title="The Campfire - coming soon" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.45, filter: 'grayscale(1)' }}>🔥</span>
+                <Link href="/campfire" title="The Campfire" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', textDecoration: 'none' }}>🔥</Link>
               </div>
               {/* Bug report - opens a modal where the user describes
                   what broke. Insert into bug_reports fires the
