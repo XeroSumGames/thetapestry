@@ -1073,6 +1073,9 @@ function CharacterCardImpl({
                               onClick={() => canEdit && weapon.reloads < 10 && setWeapon({ ...weapon, reloads: weapon.reloads + 1 })}
                               style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads < 10 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
                           </div>
+                          {weapon.reloads > 0 && (
+                            <span style={{ fontSize: '13px', color: '#8a8a8a', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>{weapon.reloads * w.clip} bullets</span>
+                          )}
                         </div>
                       )}
                       {/* Traits */}
