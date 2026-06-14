@@ -76,8 +76,9 @@ export function computeRestRecovery(s: RestState, hours: number, restful: boolea
   const newRP = s.rp_current >= rpCap ? s.rp_current : Math.min(rpCap, s.rp_current + totalHours)
   const rpGain = newRP - s.rp_current
 
-  const stressDrop = (restful && totalHours >= 8) ? Math.floor(totalHours / 8) : 0
-  const newStress = Math.max(0, s.stress - stressDrop)
+  const rawStressDrop = (restful && totalHours >= 8) ? Math.floor(totalHours / 8) : 0
+  const stressDrop = Math.min(s.stress, rawStressDrop)
+  const newStress = s.stress - stressDrop
 
   return { totalHours, wasMortal, isSick, wpHeal, newWP, rpGain, newRP, stressDrop, newStress }
 }

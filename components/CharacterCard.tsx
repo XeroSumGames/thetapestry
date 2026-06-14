@@ -705,9 +705,9 @@ function CharacterCardImpl({
                   no campaign-scoped state row to deduct CDP from
                   (e.g. browsing your own character outside a session).
                   Purple to read as a "growth" surface. */}
-              <button onClick={() => setShowEvolution(true)} disabled={!localState}
-                title={!localState ? 'Open Evolution from inside a campaign session - your CDP balance lives there.' : 'Spend CDP on RAPID + skill raises'}
-                style={{ ...btn('#2a1a3e', '#c4a7f0'), opacity: localState ? 1 : 0.5, cursor: localState ? 'pointer' : 'not-allowed' }}>Evolution</button>
+              <button onClick={() => setShowEvolution(true)} disabled={!localState || !campaignIdProp}
+                title={!localState ? 'Open Evolution from inside a campaign session - your CDP balance lives there.' : !campaignIdProp ? 'Open this character from a campaign session to use Evolution.' : 'Spend CDP on RAPID + skill raises'}
+                style={{ ...btn('#2a1a3e', '#c4a7f0'), opacity: (localState && campaignIdProp) ? 1 : 0.5, cursor: (localState && campaignIdProp) ? 'pointer' : 'not-allowed' }}>Evolution</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}

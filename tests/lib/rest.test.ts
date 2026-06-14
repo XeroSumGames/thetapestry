@@ -117,9 +117,9 @@ describe('computeRestRecovery', () => {
       expect(r.stressDrop).toBe(0)
     })
 
-    it('floors stress at 0', () => {
-      const r = computeRestRecovery({ ...base, stress: 2 }, 40, true) // floor(40/8)=5 pips
-      expect(r.stressDrop).toBe(5)
+    it('floors stress at 0 and caps stressDrop at current stress', () => {
+      const r = computeRestRecovery({ ...base, stress: 2 }, 40, true) // floor(40/8)=5 raw, capped at 2
+      expect(r.stressDrop).toBe(2)
       expect(r.newStress).toBe(0)
     })
   })
