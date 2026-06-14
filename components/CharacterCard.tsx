@@ -14,6 +14,10 @@ import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
 import { appendProgressionEntry } from '../lib/progression-log'
 import CharacterEvolution from './CharacterEvolution'
+import NpcCard from './NpcCard'
+import ApprenticeCreationWizard from './ApprenticeCreationWizard'
+import type { CampaignNpc } from './NpcRoster'
+import { fetchApprenticeNpc } from '../lib/data/community'
 import { openPopout } from '../lib/popout'
 import RollModal, { type RollResult } from './RollModal'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
@@ -222,6 +226,11 @@ function CharacterCardImpl({
   const [showRestModal, setShowRestModal] = useState(false)
   const [showInventory, setShowInventory] = useState(false)
   const [showEvolution, setShowEvolution] = useState(false)
+  const [showApprentice, setShowApprentice] = useState(false)
+  const [apprenticeNpc, setApprenticeNpc] = useState<CampaignNpc | null>(null)
+  const [apprenticeMemberId, setApprenticeMemberId] = useState<string | null>(null)
+  const [apprenticeMeta, setApprenticeMeta] = useState<any>(null)
+  const [showApprenticeSetup, setShowApprenticeSetup] = useState(false)
   const [restHours, setRestHours] = useState(0)
   const [restDays, setRestDays] = useState(0)
   const [restWeeks, setRestWeeks] = useState(0)
@@ -284,6 +293,19 @@ function CharacterCardImpl({
       }
     }
   }, [liveState])
+
+  // Load apprentice NPC bond on mount (campaign-scoped).
+  useEffect(() => {
+    if (!campaignIdProp) return
+    let cancelled = false
+    fetchApprenticeNpc(c.id, campaignIdProp).then(result => {
+      if (cancelled || !result) return
+      setApprenticeNpc(result.npc as CampaignNpc)
+      setApprenticeMemberId(result.memberId)
+      setApprenticeMeta(result.apprenticeMeta)
+    })
+    return () => { cancelled = true }
+  }, [c.id, campaignIdProp])
 
   const rapid = c.data?.rapid ?? {}
   const skills: { skillName: string; level: number }[] = c.data?.skills ?? []
@@ -493,7 +515,7 @@ function CharacterCardImpl({
                   picker/display is built. Matches Inventory styling
                   (green community-palette) so it reads as a paired
                   bond surface. */}
-              <button onClick={() => alert('Apprentice view coming soon - check the Community roster for NPCs tagged ⇐ this PC.')} style={btn('#1a2e10', '#7fc458')}>Apprentice</button>
+              <button onClick={() => setShowApprentice(true)} style={btn('#1a2e10', '#7fc458')}>Apprentice</button>
               {/* GM-action trio (Reduce Stress / Env. Damage / Rest)
                   is gated on canEdit + localState because they only
                   make sense in a campaign session. */}
@@ -1567,6 +1589,42 @@ function CharacterCardImpl({
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('tapestry:character-evolved', { detail: { characterId: c.id } }))
             }
+          }}
+        />
+      )}
+      {/* Apprentice panel */}
+      {showApprentice && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', zIndex: 1000, overflowY: 'auto' }} onClick={e => { if (e.target === e.currentTarget) setShowApprentice(false) }}>
+          {apprenticeNpc ? (
+            <NpcCard
+              npc={apprenticeNpc}
+              onClose={() => setShowApprentice(false)}
+              campaignId={campaignIdProp}
+              onSetupApprentice={!apprenticeMeta?.setup_complete && apprenticeMemberId ? () => { setShowApprentice(false); setShowApprenticeSetup(true) } : undefined}
+            />
+          ) : (
+            <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '6px', padding: '32px', maxWidth: '420px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>
+              <div style={{ fontSize: '28px', marginBottom: '16px' }}>⇐</div>
+              <div style={{ color: '#f5f2ee', fontSize: '16px', fontWeight: 700, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '.06em' }}>No Apprentice</div>
+              <div style={{ color: '#8a8a8a', fontSize: '13px', lineHeight: 1.6 }}>{campaignIdProp ? 'This character has no apprentice bond in this campaign. Recruit an NPC as an Apprentice via the Moment of High Insight flow at the table.' : 'Open this character from a campaign table to see the Apprentice bond.'}</div>
+              <button onClick={() => setShowApprentice(false)} style={{ marginTop: '20px', padding: '8px 24px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>Close</button>
+            </div>
+          )}
+        </div>
+      )}
+      {showApprenticeSetup && apprenticeNpc && apprenticeMemberId && apprenticeMeta && (
+        <ApprenticeCreationWizard
+          communityMemberId={apprenticeMemberId}
+          campaignNpcId={apprenticeNpc.id}
+          npcCurrentName={apprenticeNpc.name ?? 'Apprentice'}
+          masterCharacterId={c.id}
+          apprenticeMeta={apprenticeMeta}
+          onClose={() => setShowApprenticeSetup(false)}
+          onSaved={async () => {
+            setShowApprenticeSetup(false)
+            if (!campaignIdProp) return
+            const result = await fetchApprenticeNpc(c.id, campaignIdProp)
+            if (result) { setApprenticeNpc(result.npc as CampaignNpc); setApprenticeMeta(result.apprenticeMeta) }
           }}
         />
       )}

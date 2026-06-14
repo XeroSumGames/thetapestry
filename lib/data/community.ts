@@ -188,6 +188,30 @@ export function updateCharacterData(characterId: string, data: unknown) {
 export function eventAuthorUsernames(ids: string[]) {
   return db().from('profiles').select('id, username').in('id', ids)
 }
+/** Fetch the apprentice NPC bonded to a master PC in a given campaign.
+ *  Returns { memberId, npc, apprenticeMeta } or null if no active bond. */
+export async function fetchApprenticeNpc(
+  characterId: string,
+  campaignId: string,
+): Promise<{ memberId: string; npc: any; apprenticeMeta: any } | null> {
+  const { data: bond } = await db()
+    .from('community_members')
+    .select('id, npc_id, apprentice_meta, communities!inner(campaign_id)')
+    .eq('apprentice_of_character_id', characterId)
+    .eq('recruitment_type', 'apprentice')
+    .is('left_at', null)
+    .eq('communities.campaign_id', campaignId)
+    .maybeSingle()
+  if (!bond || !(bond as any).npc_id) return null
+  const { data: npc } = await db()
+    .from('campaign_npcs')
+    .select('*')
+    .eq('id', (bond as any).npc_id)
+    .maybeSingle()
+  if (!npc) return null
+  return { memberId: (bond as any).id, npc, apprenticeMeta: (bond as any).apprentice_meta }
+}
+
 /** Recruit-outcome roll_log rows for the dashboard (filtered client-side by community). */
 export function recruitRolls(campaignId: string) {
   return db().from('roll_log')
