@@ -535,7 +535,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
       mapInstanceRef.current = map
 
-      map.on('click', (e: any) => {
+      map.doubleClickZoom.disable()
+      map.on('dblclick', (e: any) => {
         if (!user) return // Ghost mode - read only
         setQuickAddLat(e.latlng.lat)
         setQuickAddLng(e.latlng.lng)
