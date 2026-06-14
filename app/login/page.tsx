@@ -26,6 +26,7 @@ export default function LoginPage() {
   // (separate from `error`) lets the inline button know which address to
   // resend to without re-reading the form.
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
+  const [showResend, setShowResend] = useState(false)
   // Turnstile state mirrors /signup. The widget is mounted invisibly off-
   // screen; a token is auto-solved on page load and cached. We read the
   // cached token on submit (calling execute() conflicts with Managed mode
@@ -46,7 +47,7 @@ export default function LoginPage() {
   // bouncing back to the form.
   useEffect(() => {
     const err = new URLSearchParams(window.location.search).get('error')
-    if (err === 'missing_code') setError('Confirmation link was incomplete. Try signing up again or click the most recent email.')
+    if (err === 'missing_code') { setError('Confirmation link was incomplete.'); setShowResend(true) }
     else if (err === 'callback_failed') setError('Confirmation link expired or was already used. Sign in normally if your account is confirmed.')
   }, [])
 
@@ -183,6 +184,31 @@ export default function LoginPage() {
           {error && (
             <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px' }}>
               {error}
+            </div>
+          )}
+
+          {showResend && !unconfirmedEmail && (
+            <div style={{ fontSize: '13px', color: '#cce0f5', padding: '10px 12px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', lineHeight: 1.5 }}>
+              <div style={{ marginBottom: '8px' }}>
+                Enter your email above then click below to get a fresh confirmation link.
+              </div>
+              <button
+                type="button"
+                disabled={!email}
+                onClick={async () => {
+                  const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email,
+                    options: {
+                      emailRedirectTo: `${window.location.origin}/auth/callback${redirect ? `?next=${encodeURIComponent(redirect)}` : ''}`,
+                    },
+                  })
+                  if (error) alert(`Resend failed: ${error.message}`)
+                  else { alert('Confirmation email resent - check your inbox.'); setShowResend(false); setError('') }
+                }}
+                style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: email ? '#EF9F27' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: email ? 'pointer' : 'default' }}>
+                Resend Confirmation Email
+              </button>
             </div>
           )}
 
