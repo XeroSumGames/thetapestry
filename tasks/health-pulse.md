@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-21 06:06 UTC
+
+**Status:** DRIFT (carry-forward — 11th consecutive run, action not taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-14T18:10Z — `feat(dashboard): add 'Take me to the world' escape-hatch button on empty state` landed clean)
+
+**New since last pulse:** `feat(dashboard): add 'Take me to the world' escape-hatch button on empty state` (`c9c6a57`) — clean CI, no gate failures.
+
+**Drift:**
+- HOPED-FOR ~23 days: Vehicle popout broadcasts (Section B). No vehicle component commits in 3+ days.
+- HOPED-FOR ~29 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). Drain target: Beta-500 dry-run ≤2026-07-01.
+- HOPED-FOR >3 days: FI Insight Die AWARD path. No code change.
+- `debug-handoff.md §3` HOPED-FOR still lists combat-flow Phase B — 11th consecutive flag, action not taken.
+- `scripts/check-realtime-wrap.mjs` absent (todo open ~2026-05-24).
+- "6 mechanics" parent todo (todo.md:67) still `[ ]` open; all 6 child items are `[x]` closed.
+
+**Action:** ⚠️ 11th flag — Puffer Fish: drain combat-flow Phase B from debug-handoff §3; tick "6 mechanics" parent todo; restate or close vehicle popout caveat.
+
+---
+
 ## 2026-06-14 18:09 UTC
 
 **Status:** DRIFT (carry-forward — 10th consecutive run, action not taken)
