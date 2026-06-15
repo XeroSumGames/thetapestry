@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 12:11 UTC
+
+**Status:** DRIFT (carry-forward — 15th consecutive, no new commits since 09:07 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-15T09:10:50Z)
+
+**New since last pulse:** none (only 09:07 health-pulse commit)
+
+**Drift:** (unchanged from 06:11 + 09:07)
+- Launch-day decision (todo.md:399) still `[ ]` — today is 6/15, no action taken as of 12:11 UTC
+- HOPED-FOR ~21 days: Vehicle popout broadcasts (Section B) — no vehicle commits
+- HOPED-FOR ~27 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain ≤2026-07-01
+- HOPED-FOR FI Insight Die AWARD path — untested
+- debug-handoff.md §3 combat-flow Phase B still HOPED-FOR (Puffer: drain)
+- "6 mechanics" parent todo (todo.md:67) still `[ ]`; all 6 children `[x]` (Puffer: close)
+- `scripts/check-realtime-wrap.mjs` absent
+
+**Action:** No new action — see 06:11 UTC entry. Launch-day decision is the priority call for today.
+
+---
+
 ## 2026-06-15 09:07 UTC
 
 **Status:** DRIFT (carry-forward — 14th consecutive, no new commits since 06:11 UTC)
