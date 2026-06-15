@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 21:10 UTC
+
+**Status:** RED+DRIFT (carry-forward from 18:12 — vulns unactioned)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — unchanged since 18:12 report; action not yet taken
+- HIGH `vite` (via vitest): Windows NTLMv2 / `server.fs.deny` bypass; dev-only; fixAvailable
+- HIGH `ws` (via @supabase/realtime-js): memory exhaustion DoS on ws SERVER; app is client-only; fixAvailable
+
+**CI:** last 5 runs all success (latest 2026-06-15T21:04Z) — 18:12 pulse had to skip gh CLI; confirmed now
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — since 2026-05-24; no vehicle code touches in 3 days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain target: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — 0 live fires ever; needs a doubles roll in play
+- *Stale-as-open* todo.md:67 "6 mechanics still owe real code" — all 6 sub-items [x]; parent not ticked
+- *Stale-as-open* todo.md:214 "[PUFFER - pin realtime propagation]" — SUBSCRIBED catch-up fix confirmed shipped in `CampaignPins.tsx:178` + `CampaignMap.tsx:960`; checkbox was never closed
+
+**Action:** (1) `npm audit fix` for vite+ws — both transitive, safe minor bumps; run `npm test` after. (2) Close todo.md:67 + todo.md:214 parent checkboxes (code confirmed, nothing to build). Remaining drift items are Beta-500 dry-run targets; no action before that session.
+
+---
+
 ## 2026-06-15 18:12 UTC
 
 **Status:** RED+DRIFT
