@@ -1380,6 +1380,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         || (s.kind === 'door' && s.door_open === false)
         || (s.kind === 'window' && s.door_open === false)
       )
+      // Open passages that can clear a wall block when the LOS ray's
+      // intersection point with the wall falls on them. This handles
+      // diagonal walls where splitOverlappingSegments can't punch a
+      // hole (it only handles axis-aligned walls), so the wall segment
+      // still spans the window area. At LOS-check time we compute the
+      // exact intersection and clear the block if a window/door is there.
+      const openSegs = segs.filter(s =>
+        (s.kind === 'window' && s.door_open !== false) ||
+        (s.kind === 'door' && s.door_open !== false)
+      )
       const cellBlockers = new Set<string>()
       for (const tok of tokensRef.current) {
         const blocks = !!tok.is_wall
@@ -1410,15 +1420,43 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const d4 = ccw(ax, ay, bx, by, dx, dy)
         return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
       }
+      // Parametric intersection of lines AB and CD. Both are treated as
+      // infinite lines; only called after segmentsCross confirms they cross.
+      function lineIntersect(ax: number, ay: number, bx: number, by: number,
+                             cx: number, cy: number, dx: number, dy: number): { x: number; y: number } | null {
+        const denom = (ax - bx) * (cy - dy) - (ay - by) * (cx - dx)
+        if (Math.abs(denom) < 1e-10) return null
+        const t = ((ax - cx) * (cy - dy) - (ay - cy) * (cx - dx)) / denom
+        return { x: ax + t * (bx - ax), y: ay + t * (by - ay) }
+      }
+      // True when point (px,py) lies on segment (x1,y1)-(x2,y2) within
+      // a small tolerance (0.05 cells) for floating-point wall coordinates.
+      function pointOnSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): boolean {
+        const lenSq = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
+        if (lenSq < 1e-10) return false
+        const cross = (x2 - x1) * (py - y1) - (y2 - y1) * (px - x1)
+        if ((cross * cross) / lenSq > 0.0025) return false // distance from line > 0.05 cells
+        const tol = 0.05
+        return px >= Math.min(x1, x2) - tol && px <= Math.max(x1, x2) + tol
+            && py >= Math.min(y1, y2) - tol && py <= Math.max(y1, y2) + tol
+      }
       // True when ANY vision-blocking thing (segment OR cell) sits on
       // the line between origin cell center and candidate cell center.
       function losBlocked(ox: number, oy: number, tx: number, ty: number): boolean {
         if (ox === tx && oy === ty) return false
         const ax = ox + 0.5, ay = oy + 0.5
         const bx = tx + 0.5, by = ty + 0.5
-        // Segment check
+        // Segment check: a wall blocks unless an open window/door at the
+        // exact intersection point clears it. This handles diagonal walls
+        // (splitOverlappingSegments skips them) so the wall stays intact
+        // but the window opening still passes LOS.
         for (const w of visionSegs) {
-          if (segmentsCross(ax, ay, bx, by, w.x1, w.y1, w.x2, w.y2)) return true
+          if (!segmentsCross(ax, ay, bx, by, w.x1, w.y1, w.x2, w.y2)) continue
+          if (openSegs.length > 0) {
+            const pt = lineIntersect(ax, ay, bx, by, w.x1, w.y1, w.x2, w.y2)
+            if (pt && openSegs.some(o => pointOnSegment(pt.x, pt.y, o.x1, o.y1, o.x2, o.y2))) continue
+          }
+          return true
         }
         // Legacy cell-block check (Bresenham). Only walks if there's
         // anything to potentially hit.
