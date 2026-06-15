@@ -3342,15 +3342,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const maxX = Math.max(fogRectStart.x, fogRectEnd.x)
         const minY = Math.min(fogRectStart.y, fogRectEnd.y)
         const maxY = Math.max(fogRectStart.y, fogRectEnd.y)
-        // Cells overlapping the float rectangle (any-overlap rule).
-        // Cell (i,j) overlaps the rect [minX,maxX]×[minY,maxY] iff
-        //   i+1 > minX  AND  i < maxX  AND  j+1 > minY  AND  j < maxY
-        // For a zero-area click (start == end at integer), clamp so
-        // we still fog the cell at that point.
-        const x1 = Math.floor(minX)
-        const y1 = Math.floor(minY)
-        const x2 = Math.max(x1, Math.ceil(maxX) - 1)
-        const y2 = Math.max(y1, Math.ceil(maxY) - 1)
+        // Cell-center rule: fog cells whose center (i+0.5, j+0.5) falls
+        // inside the drawn rectangle. Prevents fog from exceeding the
+        // visible boundary by excluding cells that are less than 50%
+        // covered. Fallback to floor(click) for zero-area single clicks.
+        let x1 = Math.ceil(minX - 0.5)
+        let x2 = Math.floor(maxX - 0.5)
+        let y1 = Math.ceil(minY - 0.5)
+        let y2 = Math.floor(maxY - 0.5)
+        if (x2 < x1) { x1 = x2 = Math.floor(minX) }
+        if (y2 < y1) { y1 = y2 = Math.floor(minY) }
         const erase = fogEditMode === 'rect-erase'
         setFogLocal(prev => {
           const next = { ...prev }
