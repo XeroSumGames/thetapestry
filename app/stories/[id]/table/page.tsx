@@ -537,6 +537,7 @@ export default function TablePage() {
     setMoveMode(null)
   }, [activeIdForReset])
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
+  const [collapsedItmFolders, setCollapsedItmFolders] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   // Restore cluster (showRestorePicker/restoreNpcIds/restoring/restoreObjects)
   // now lives in useGmTools (re-arch Phase 3); destructured below.
@@ -8594,27 +8595,32 @@ export default function TablePage() {
                   const folderIds = folderNpcs.map(n => n.id)
                   const allInFolder = folderIds.every(id => selectedNpcIds.has(id))
                   const someInFolder = folderIds.some(id => selectedNpcIds.has(id))
+                  const isCollapsed = collapsedItmFolders.has(folderName)
                   return (
                     <div key={folderName} style={{ marginBottom: '8px' }}>
-                      {/* Folder header - checkbox toggles every NPC in
-                          this folder. Uses indeterminate state when
-                          some-but-not-all are selected. */}
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '2px', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={allInFolder}
-                          ref={el => { if (el) el.indeterminate = !allInFolder && someInFolder }}
-                          onChange={() => {
-                            setSelectedNpcIds(prev => {
-                              const next = new Set(prev)
-                              if (allInFolder) folderIds.forEach(id => next.delete(id))
-                              else folderIds.forEach(id => next.add(id))
-                              return next
-                            })
-                          }}
-                          style={{ accentColor: '#7ab3d4' }} />
-                        <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>{folderName}</span>
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.filter(n => selectedNpcIds.has(n.id)).length}/{folderNpcs.length}</span>
-                      </label>
-                      {folderNpcs.map(npc => (
+                      {/* Folder header - left chevron collapses; checkbox toggles all. */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '2px' }}>
+                        <button onClick={() => setCollapsedItmFolders(prev => { const n = new Set(prev); if (n.has(folderName)) n.delete(folderName); else n.add(folderName); return n })}
+                          style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', cursor: 'pointer', padding: '0', width: '14px', flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}>
+                          {isCollapsed ? '▶' : '▼'}
+                        </button>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'pointer' }}>
+                          <input type="checkbox" checked={allInFolder}
+                            ref={el => { if (el) el.indeterminate = !allInFolder && someInFolder }}
+                            onChange={() => {
+                              setSelectedNpcIds(prev => {
+                                const next = new Set(prev)
+                                if (allInFolder) folderIds.forEach(id => next.delete(id))
+                                else folderIds.forEach(id => next.add(id))
+                                return next
+                              })
+                            }}
+                            style={{ accentColor: '#7ab3d4' }} />
+                          <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>{folderName}</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.filter(n => selectedNpcIds.has(n.id)).length}/{folderNpcs.length}</span>
+                        </label>
+                      </div>
+                      {!isCollapsed && folderNpcs.map(npc => (
                         <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', paddingLeft: '24px', background: selectedNpcIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${selectedNpcIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '2px', cursor: 'pointer' }}>
                           <input type="checkbox" checked={selectedNpcIds.has(npc.id)} onChange={() => {
                             setSelectedNpcIds(prev => {

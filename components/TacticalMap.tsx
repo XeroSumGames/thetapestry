@@ -1354,12 +1354,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const VISION_RADIUS_CELLS = 30
     const rawFog = fogLocalRef.current
     let fogMap = rawFog
-    // PC tokens that fire vision. PC-only by spec - NPCs don't lift
-    // fog of war for players. is_visible=false (hidden NPC, but
-    // shouldn't apply to a PC anyway) is also excluded as a safety.
+    // Vision tokens: PCs always; NPCs included for the GM so the GM
+    // can see the full battlefield from every token's perspective.
+    // Players only see their own PC's LOS (character_id filter).
     const pcVisionTokens = tokensRef.current.filter(t =>
       t.token_type !== 'object'
-      && !!t.character_id
+      && (isGM || !!t.character_id)
       && t.is_visible !== false
     )
     const hasPCs = pcVisionTokens.length > 0
@@ -2006,7 +2006,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
             ctx.strokeStyle = '#f5f2ee'; ctx.lineWidth = 3.5; ctx.stroke()
           } else {
+            // Normal token: dark halo so portrait pops on any map background
+            ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 12
             ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 6; ctx.stroke()
+            ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
             ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
             ctx.strokeStyle = vividTokenBorder(t.color); ctx.lineWidth = 3.5; ctx.stroke()
           }
@@ -2018,9 +2021,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2)
             ctx.strokeStyle = '#ffc61f'; ctx.lineWidth = 3.5; ctx.stroke()
           } else {
+            // Initials token: same dark halo for non-active/selected
+            if (selectedToken !== t.id) {
+              ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 10
+            }
             ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
             ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
             ctx.stroke()
+            ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
           }
           ctx.fillStyle = '#f5f2ee'
           ctx.font = `bold ${Math.max(10, radius * 0.8)}px Carlito`
