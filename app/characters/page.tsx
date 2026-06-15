@@ -6,6 +6,7 @@ import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 import { useRouter } from 'next/navigation'
 import CharacterCard from '../../components/CharacterCard'
 import { createTestCharacter } from '../../scripts/create-test-character'
+import { updateCharacterDataField } from '../../lib/data/characters'
 
 interface CharacterRow {
   id: string
@@ -20,6 +21,24 @@ export default function CharactersPage() {
   const [isThriver, setIsThriver] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  // Between-sessions stat updates: write back to characters.data so WP/Stress
+  // changes on /characters persist across page reloads. CharacterCard uses
+  // the character's own `id` as the stateId here (not a character_states row).
+  async function handleStatUpdate(charId: string, field: string, value: number) {
+    const fieldToDataPath: Record<string, string> = {
+      wp_current: 'wpCurrent',
+      stress: 'stressLevel',
+      rp_current: 'rpCurrent',
+      insight_dice: 'insightDice',
+    }
+    const dataKey = fieldToDataPath[field]
+    if (!dataKey) return
+    setCharacters(prev => prev.map(c =>
+      c.id === charId ? { ...c, data: { ...c.data, [dataKey]: value } } : c
+    ))
+    await updateCharacterDataField(charId, { [dataKey]: value })
+  }
 
   useEffect(() => {
     async function load() {
@@ -150,9 +169,9 @@ export default function CharactersPage() {
               character={c}
               liveState={{
                 id: c.id,
-                wp_current: c.data?.secondary?.woundPoints ?? 10,
+                wp_current: c.data?.wpCurrent ?? c.data?.secondary?.woundPoints ?? 10,
                 wp_max: c.data?.secondary?.woundPoints ?? 10,
-                rp_current: c.data?.secondary?.resiliencePoints ?? 6,
+                rp_current: c.data?.rpCurrent ?? c.data?.secondary?.resiliencePoints ?? 6,
                 rp_max: c.data?.secondary?.resiliencePoints ?? 6,
                 stress: c.data?.stressLevel ?? 0,
                 insight_dice: c.data?.insightDice ?? 2,
@@ -163,6 +182,7 @@ export default function CharactersPage() {
               isMySheet={true}
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
+              onStatUpdate={handleStatUpdate}
             />
           </div>
         ))}

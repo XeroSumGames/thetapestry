@@ -208,7 +208,7 @@ CREATE TABLE public.character_states (
   wp_max integer NOT NULL DEFAULT 10,
   rp_current integer NOT NULL DEFAULT 6,
   rp_max integer NOT NULL DEFAULT 6,
-  stress integer NOT NULL DEFAULT 0,
+  stress integer NOT NULL DEFAULT 0 CHECK (stress >= 0 AND stress <= 5),
   insight_dice integer NOT NULL DEFAULT 2,
   morality integer NOT NULL DEFAULT 3,
   updated_at timestamp with time zone DEFAULT now(),
