@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 06:11 UTC
+
+**Status:** DRIFT (carry-forward — 13th consecutive run + new: launch-day decision overdue)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-15T00:13:08Z)
+
+**New since last pulse:** none (only the health-pulse commit itself)
+
+**Drift:**
+- **NEW: `todo.md:399` "Confirm launch day (6/15 is a Sunday; reviewers publish Tue-Thu; consider 6/16 or 6/17)" is still `[ ]` and TODAY IS 2026-06-15.** Decision point has arrived; if KS launch is today or imminent, this needs a call now.
+- HOPED-FOR ~26 days: Vehicle popout broadcasts (Section B) — no vehicle commits in 3+ days
+- HOPED-FOR ~32 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain target Beta-500 ≤2026-07-01
+- HOPED-FOR ~3 days: FI Insight Die AWARD path (roll doubles ~2.8%/roll; still untested)
+- combat-flow Phase B — 13th consecutive flag, no code change
+- `scripts/check-realtime-wrap.mjs` absent (open todo ~2026-05-24)
+- "6 mechanics" parent todo (todo.md:67) still `[ ]`; all 6 child items `[x]` closed
+
+**Action:** Launch-day decision is the urgent item — confirm or defer the KS date NOW. Puffer Fish: drain combat-flow Phase B from debug-handoff §3 and close "6 mechanics" parent todo.
+
+---
+
 ## 2026-06-15 00:12 UTC
 
 **Status:** DRIFT (carry-forward — 12th consecutive run, action not taken)
