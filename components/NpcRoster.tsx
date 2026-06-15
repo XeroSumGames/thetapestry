@@ -1520,37 +1520,24 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       onDragEnd={() => { setDragFolderId(null); setDragOverFolderId(null) }}
                       onClick={() => toggleFolder(folderName)}
                       onDoubleClick={e => { e.stopPropagation(); setRenamingFolder(folderName); setRenameValue(folderName) }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', background: dragOverFolderId === folderName ? '#242424' : 'transparent', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', background: dragOverFolderId === folderName ? '#242424' : 'transparent', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = dragOverFolderId === folderName ? '#242424' : 'transparent')}>
-                      <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
-                      {renamingFolder === folderName ? (
-                        <input value={renameValue} onChange={e => setRenameValue(e.target.value)}
-                          onBlur={() => renameFolder(folderName, renameValue)}
-                          onKeyDown={e => { if (e.key === 'Enter') renameFolder(folderName, renameValue); if (e.key === 'Escape') setRenamingFolder(null) }}
-                          onClick={e => e.stopPropagation()}
-                          autoFocus
-                          style={{ flex: 1, padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }} />
-                      ) : (
-                        <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
-                      )}
-                      {/* One-button folder toggle that does EVERYTHING.
-                          SHOW: place any missing tokens (or un-archive
-                          existing ones to restore prior positions) +
-                          set revealed=true + is_visible=true. Result:
-                          tokens visible on every map (GM + players) AND
-                          listed in the player NPC sidebar. HIDE: archive
-                          all tokens (so they vanish from every map -
-                          GM included - but the row keeps grid_x / grid_y
-                          / scale / rotation for the next SHOW) + set
-                          revealed=false. Position is never lost. */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                        {renamingFolder === folderName ? (
+                          <input value={renameValue} onChange={e => setRenameValue(e.target.value)}
+                            onBlur={() => renameFolder(folderName, renameValue)}
+                            onKeyDown={e => { if (e.key === 'Enter') renameFolder(folderName, renameValue); if (e.key === 'Escape') setRenamingFolder(null) }}
+                            onClick={e => e.stopPropagation()}
+                            autoFocus
+                            style={{ flex: 1, padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }} />
+                        ) : (
+                          <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
+                        )}
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.length}</span>
+                      </div>
                       {folderNpcs.length > 0 && (() => {
-                        // Gate previously required pcEntries.length > 0 (a
-                        // PC must be in the session). Dropped per playtest:
-                        // GM testing solo / before players join still wants
-                        // to place + hide tokens on the map. The reveal-
-                        // to-players half just becomes a no-op when there
-                        // are no PCs to reveal to.
                         const folderIds = folderNpcs.map(n => n.id)
                         const allRevealed = folderIds.every(id => revealedNpcIds.has(id))
                         const label = allRevealed ? 'Hide' : 'Show'
@@ -1559,11 +1546,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                           : folderNpcs
                         const allOnMap = unplaced.length === 0
                         return (
-                          <>
-                          {/* MAP/UNMAP: bulk-place this folder's tokens
-                              on the tactical map without touching reveal
-                              state. Lets the GM stage tokens before a
-                              SHOW reveal. */}
+                          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', paddingLeft: '18px' }}>
                           {onPlaceFolderOnMap && (
                             <button onClick={async e => {
                               e.stopPropagation()
@@ -1577,44 +1560,32 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                               title={allOnMap
                                 ? `Unmap all ${folderNpcs.length} NPCs (archive tokens; reveal state unchanged)`
                                 : `Place ${unplaced.length} unplaced NPC${unplaced.length === 1 ? '' : 's'} on the map (no reveal)`}
-                              style={{ padding: '1px 8px', background: allOnMap ? '#1a1a1a' : '#10202e', border: `1px solid ${allOnMap ? '#3a3a3a' : '#3a5a7a'}`, borderRadius: '2px', color: allOnMap ? '#cce0f5' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                              style={{ flex: 1, padding: '1px 8px', background: allOnMap ? '#1a1a1a' : '#10202e', border: `1px solid ${allOnMap ? '#3a3a3a' : '#3a5a7a'}`, borderRadius: '2px', color: allOnMap ? '#cce0f5' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
                               {allOnMap ? 'Unmap' : 'Map'}
                             </button>
                           )}
                           <button onClick={async e => {
                             e.stopPropagation()
                             if (allRevealed) {
-                              // HIDE: archive tokens (off every map,
-                              // position preserved) + sidebar reveal off.
                               if (onUnmapFolder) await onUnmapFolder(folderNpcs)
                               await hideNpcsByIds(folderIds)
                             } else {
-                              // SHOW: place / un-archive first, then
-                              // reveal so players see them on their
-                              // canvas + sidebar in one click.
                               if (onPlaceFolderOnMap && unplaced.length > 0) {
                                 await onPlaceFolderOnMap(unplaced)
                               }
                               await revealNpcsByIds(folderIds)
                             }
-                            // Final nudge so player TacticalMaps
-                            // re-fetch and pick up the latest
-                            // is_visible / archived_at state. Without
-                            // this the player has to manually refresh
-                            // because postgres_changes on scene_tokens
-                            // is unreliable for is_visible UPDATEs.
                             onTacticalRefresh?.()
                           }}
                             title={allRevealed
                               ? `Hide all ${folderNpcs.length} NPCs (vanish from every map; positions preserved)`
                               : `Place + reveal all ${folderNpcs.length} NPCs (visible to GM + players)`}
-                            style={{ padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                            style={{ flex: 1, padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
                             {label}
                           </button>
-                          </>
+                          </div>
                         )
                       })()}
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.length}</span>
                     </div>
                     {isOpen && folderNpcs.map(renderNpcCard)}
                   </div>
