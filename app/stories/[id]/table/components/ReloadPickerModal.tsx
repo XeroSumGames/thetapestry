@@ -7,11 +7,13 @@
 // unchanged including the confirm() gate and window.location.reload on success.
 
 import { restoreCampaignSnapshot } from '../../../../../lib/campaign-snapshot'
+import { deleteCampaignSnapshot } from '../../../../../lib/data/snapshots'
 
 interface ReloadPickerModalProps {
   open: boolean
   onClose: () => void
   snapshots: any[]
+  setSnapshots: React.Dispatch<React.SetStateAction<any[]>>
   reloadingSnapshotId: string | null
   setReloadingSnapshotId: React.Dispatch<React.SetStateAction<string | null>>
   supabase: any
@@ -19,7 +21,7 @@ interface ReloadPickerModalProps {
 }
 
 export function ReloadPickerModal({
-  open, onClose, snapshots, reloadingSnapshotId, setReloadingSnapshotId, supabase, campaignId,
+  open, onClose, snapshots, setSnapshots, reloadingSnapshotId, setReloadingSnapshotId, supabase, campaignId,
 }: ReloadPickerModalProps) {
   if (!open) return null
   return (
@@ -34,32 +36,47 @@ export function ReloadPickerModal({
         </div>
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px' }}>
           {snapshots.length === 0 ? (
-            <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Carlito, sans-serif' }}>No snapshots yet for this campaign. Create one in Campaign edit → Snapshots.</div>
+            <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Carlito, sans-serif' }}>No snapshots yet for this campaign. Create one in Campaign edit - Snapshots.</div>
           ) : (
             snapshots.map(s => (
               <div key={s.id}
                 style={{ padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '6px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{s.name}</div>
-                {s.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{s.description}</div>}
-                <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
-                  {new Date(s.created_at).toLocaleString()}
-                  {' · '}{(s.snapshot as any)?.npcs?.length ?? 0} NPCs
-                  {' · '}{(s.snapshot as any)?.pins?.length ?? 0} pins
-                  {' · '}{(s.snapshot as any)?.scenes?.length ?? 0} scenes
-                  {' · '}{(s.snapshot as any)?.notes?.length ?? 0} notes
-                  {s.includes_character_states && <span style={{ color: '#EF9F27', marginLeft: '6px' }}>+ party states</span>}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{s.name}</div>
+                    {s.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{s.description}</div>}
+                    <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
+                      {new Date(s.created_at).toLocaleString()}
+                      {' · '}{(s.snapshot as any)?.npcs?.length ?? 0} NPCs
+                      {' · '}{(s.snapshot as any)?.pins?.length ?? 0} pins
+                      {' · '}{(s.snapshot as any)?.scenes?.length ?? 0} scenes
+                      {' · '}{(s.snapshot as any)?.notes?.length ?? 0} notes
+                      {s.includes_character_states && <span style={{ color: '#EF9F27', marginLeft: '6px' }}>+ party states</span>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Delete snapshot "${s.name}"? This cannot be undone.`)) return
+                      await deleteCampaignSnapshot(s.id)
+                      setSnapshots(prev => prev.filter(x => x.id !== s.id))
+                    }}
+                    disabled={!!reloadingSnapshotId}
+                    title="Delete this snapshot"
+                    style={{ flexShrink: 0, padding: '2px 8px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: reloadingSnapshotId ? 'not-allowed' : 'pointer', opacity: reloadingSnapshotId ? 0.4 : 1, fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+                    Delete
+                  </button>
                 </div>
                 <button onClick={async () => {
                   const lines = [
                     `Restore campaign state to "${s.name}"?`,
                     '',
                     'This will:',
-                    '  • Wipe all current NPCs, pins, scenes, tactical tokens, and notes.',
-                    '  • Re-insert the content from the snapshot.',
-                    '  • Clear initiative, roll log, and chat messages.',
+                    '  - Wipe all current NPCs, pins, scenes, tactical tokens, and notes.',
+                    '  - Re-insert the content from the snapshot.',
+                    '  - Clear initiative, roll log, and chat messages.',
                   ]
-                  if (s.includes_character_states) lines.push('  • Restore character states (WP/RP/stress/insight).')
-                  else lines.push('  • Leave character states UNTOUCHED.')
+                  if (s.includes_character_states) lines.push('  - Restore character states (WP/RP/stress/insight).')
+                  else lines.push('  - Leave character states UNTOUCHED.')
                   lines.push('', 'This cannot be undone. Players at the table will see the reset.')
                   if (!confirm(lines.join('\n'))) return
                   setReloadingSnapshotId(s.id)
@@ -67,11 +84,6 @@ export function ReloadPickerModal({
                   setReloadingSnapshotId(null)
                   onClose()
                   if (res.ok) {
-                    // Hard-reload the page so every state slice (entries,
-                    // initiative, mapTokens, chat, rolls feed) refetches
-                    // from the now-restored DB. Cheaper and more
-                    // reliable than threading a re-mount across all the
-                    // hooks here.
                     window.location.reload()
                   } else {
                     alert(`Partial restore - errors:\n${res.errors.join('\n')}`)

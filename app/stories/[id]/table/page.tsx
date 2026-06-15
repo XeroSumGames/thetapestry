@@ -8490,6 +8490,7 @@ export default function TablePage() {
         open={showReloadPicker}
         onClose={() => setShowReloadPicker(false)}
         snapshots={reloadSnapshots}
+        setSnapshots={setReloadSnapshots}
         reloadingSnapshotId={reloadingSnapshotId}
         setReloadingSnapshotId={setReloadingSnapshotId}
         supabase={supabase}
