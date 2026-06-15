@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 00:12 UTC
+
+**Status:** DRIFT (carry-forward — 12th consecutive run, action not taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-14T21:32Z)
+
+**New since last pulse:** 6 commits landed clean: map `invalidateSize` on pin sidebar open/close, Thriver notify URL hardcoded (drops `current_setting` dep), in-app bell for all Thriver moderation events, welcome character-creation rows equal-width, double-click required to open Drop-a-Pin modal, Campfire icon wired to `/campfire`.
+
+**Drift:**
+- HOPED-FOR ~26 days: Vehicle popout broadcasts (Section B) — no vehicle commits in 3+ days
+- HOPED-FOR ~32 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain target Beta-500 ≤2026-07-01
+- HOPED-FOR >3 days: FI Insight Die AWARD path — untested, trigger is rolling doubles (~2.8%/roll)
+- combat-flow Phase B — 12th consecutive flag, no code change
+- "6 mechanics" parent todo (todo.md:67) still `[ ]`; all 6 child items `[x]` closed
+- `scripts/check-realtime-wrap.mjs` absent (open todo ~2026-05-24)
+
+**Action:** ⚠️ 12th flag — Puffer Fish: drain combat-flow Phase B from debug-handoff §3; tick "6 mechanics" parent todo closed; restate or close vehicle popout caveat. FI Insight Die drain target needed.
+
+---
+
 ## 2026-06-21 06:06 UTC
 
 **Status:** DRIFT (carry-forward — 11th consecutive run, action not taken)
