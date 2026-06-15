@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'
+import { updateSceneTokenGroupLabel } from '../lib/data/scenes'
 import { getCachedAuth } from '../lib/auth-cache'
 import { ALL_WEAPONS } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
@@ -126,6 +127,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [fileInputKey, setFileInputKey] = useState(0)
   const [dragObjId, setDragObjId] = useState<string | null>(null)
   const [dragOverObjId, setDragOverObjId] = useState<string | null>(null)
+  const [dragOverGroup, setDragOverGroup] = useState<string | null>(null) // group name or '__ungrouped__'
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 
   async function handleObjDrop(targetId: string) {
@@ -133,16 +135,28 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     const fromIdx = objects.findIndex(o => o.id === dragObjId)
     const toIdx = objects.findIndex(o => o.id === targetId)
     if (fromIdx < 0 || toIdx < 0) { setDragObjId(null); setDragOverObjId(null); return }
+    const targetGroup = objects[toIdx].group_label ?? null
     const next = [...objects]
     const [moved] = next.splice(fromIdx, 1)
+    moved.group_label = targetGroup
     next.splice(toIdx, 0, moved)
     setObjects(next)
     setDragObjId(null)
     setDragOverObjId(null)
-    // Persist sort order to DB
+    // Persist sort order + group membership
+    await updateSceneTokenGroupLabel(supabase, moved.id, targetGroup)
     await Promise.all(next.map((o, i) =>
       supabase.from('scene_tokens').update({ sort_order: i + 1 }).eq('id', o.id)
     ))
+  }
+
+  async function handleGroupHeaderDrop(groupName: string | null) {
+    if (!dragObjId) return
+    setDragOverGroup(null)
+    const id = dragObjId
+    setObjects(prev => prev.map(o => o.id === id ? { ...o, group_label: groupName } : o))
+    setDragObjId(null)
+    await updateSceneTokenGroupLabel(supabase, id, groupName)
   }
 
   useEffect(() => { loadObjects(); loadLibrary() }, [campaignId, tokenRefreshKey])
@@ -606,15 +620,29 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         }
         return (
           <>
+            {dragObjId && (
+              <div
+                onDragOver={e => { e.preventDefault(); setDragOverGroup('__ungrouped__') }}
+                onDragLeave={() => setDragOverGroup(null)}
+                onDrop={() => handleGroupHeaderDrop(null)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px', marginBottom: '4px', border: `1px dashed ${dragOverGroup === '__ungrouped__' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', background: dragOverGroup === '__ungrouped__' ? '#10202e' : 'transparent', color: dragOverGroup === '__ungrouped__' ? '#7ab3d4' : '#3a3a3a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', transition: 'all 0.1s' }}>
+                Drop here to ungroup
+              </div>
+            )}
             {ungrouped.map(obj => renderObj(obj))}
             {[...groupMap.entries()].map(([group, groupObjs]) => {
               const collapsed = collapsedGroups.has(group)
+              const isGroupOver = dragOverGroup === group
               return (
                 <div key={group} style={{ marginBottom: '4px' }}>
-                  <div onClick={() => setCollapsedGroups(prev => { const n = new Set(prev); n.has(group) ? n.delete(group) : n.add(group); return n })}
-                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', cursor: 'pointer', userSelect: 'none', marginBottom: collapsed ? 0 : '2px' }}>
-                    <span style={{ fontSize: '13px', color: '#5a5550' }}>{collapsed ? '▶' : '▼'}</span>
-                    <span style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>{group}</span>
+                  <div
+                    onClick={() => !dragObjId && setCollapsedGroups(prev => { const n = new Set(prev); n.has(group) ? n.delete(group) : n.add(group); return n })}
+                    onDragOver={e => { if (dragObjId) { e.preventDefault(); setDragOverGroup(group) } }}
+                    onDragLeave={() => { if (dragOverGroup === group) setDragOverGroup(null) }}
+                    onDrop={() => handleGroupHeaderDrop(group)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: isGroupOver ? '#10202e' : '#111', border: `1px solid ${isGroupOver ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '3px', cursor: dragObjId ? 'copy' : 'pointer', userSelect: 'none', marginBottom: collapsed ? 0 : '2px', transition: 'all 0.1s' }}>
+                    <span style={{ fontSize: '13px', color: isGroupOver ? '#7ab3d4' : '#5a5550' }}>{collapsed ? '▶' : '▼'}</span>
+                    <span style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: isGroupOver ? '#7ab3d4' : '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>{group}</span>
                     <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{groupObjs.length}</span>
                   </div>
                   {!collapsed && groupObjs.map(obj => renderObj(obj))}

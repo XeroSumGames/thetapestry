@@ -72,3 +72,7 @@ export async function createCampaignScene(supabase: SupabaseClient, campaignId: 
   await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', campaignId).neq('id', (data as any).id)
   return (data as any).id as string
 }
+
+export async function updateSceneTokenGroupLabel(supabase: SupabaseClient, tokenId: string, groupLabel: string | null) {
+  return supabase.from('scene_tokens').update({ group_label: groupLabel }).eq('id', tokenId)
+}
