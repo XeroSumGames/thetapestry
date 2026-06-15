@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 09:07 UTC
+
+**Status:** DRIFT (carry-forward — 14th consecutive, no new commits since 06:11 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-15T06:15:36Z)
+
+**New since last pulse:** none (only the 06:11 health-pulse commit itself)
+
+**Drift:** (unchanged from 06:11 — no new commits)
+- Launch-day decision (todo.md:399) still `[ ]` — today is 2026-06-15 (first flagged 06:11 UTC)
+- HOPED-FOR ~21 days: Vehicle popout broadcasts (Section B) — no vehicle commits
+- HOPED-FOR ~27 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain target Beta-500 ≤2026-07-01
+- HOPED-FOR ~3 days: FI Insight Die AWARD path — untested
+- debug-handoff.md §3 still lists combat-flow Phase B as HOPED-FOR (shipped GREEN 2026-06-11)
+
+**Action:** No new action — see 06:11 UTC entry. Launch-day decision remains priority item.
+
+---
+
 ## 2026-06-15 06:11 UTC
 
 **Status:** DRIFT (carry-forward — 13th consecutive run + new: launch-day decision overdue)
