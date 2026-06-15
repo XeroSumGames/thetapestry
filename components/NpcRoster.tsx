@@ -1443,59 +1443,58 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 return (
                   <div key={key} style={{ marginBottom: '2px' }}>
                     <div onClick={() => toggleFolder(key)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', background: 'transparent', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', background: 'transparent', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
-                      <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
-                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{cname}</span>
-                      {cnpcs.length > 0 && onPlaceFolderOnMap && (() => {
-                        // MAP/UNMAP: bulk place tokens on the GM's
-                        // tactical map (or archive them off) WITHOUT
-                        // touching reveal-to-players state. Lets the GM
-                        // stage a community on the map and then SHOW
-                        // them as a separate beat.
-                        const cAllOnMap = cUnplaced.length === 0
-                        return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                        <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
+                        <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{cname}</span>
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{cnpcs.length}</span>
+                      </div>
+                      {cnpcs.length > 0 && (
+                        <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', paddingLeft: '18px' }}>
+                          {onPlaceFolderOnMap && (() => {
+                            const cAllOnMap = cUnplaced.length === 0
+                            return (
+                              <button onClick={async e => {
+                                e.stopPropagation()
+                                if (cAllOnMap) {
+                                  if (onUnmapFolder) await onUnmapFolder(cnpcs)
+                                } else {
+                                  await onPlaceFolderOnMap(cUnplaced)
+                                }
+                                onTacticalRefresh?.()
+                              }}
+                                title={cAllOnMap
+                                  ? `Unmap all ${cnpcs.length} NPCs (archive tokens; reveal state unchanged)`
+                                  : `Place ${cUnplaced.length} unplaced NPC${cUnplaced.length === 1 ? '' : 's'} on the map (no reveal)`}
+                                style={{ flex: 1, padding: '1px 8px', background: cAllOnMap ? '#1a1a1a' : '#10202e', border: `1px solid ${cAllOnMap ? '#3a3a3a' : '#3a5a7a'}`, borderRadius: '2px', color: cAllOnMap ? '#cce0f5' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                                {cAllOnMap ? 'Unmap' : 'Map'}
+                              </button>
+                            )
+                          })()}
                           <button onClick={async e => {
                             e.stopPropagation()
-                            if (cAllOnMap) {
+                            if (cAllRevealed) {
                               if (onUnmapFolder) await onUnmapFolder(cnpcs)
+                              await hideNpcsByIds(cIds)
                             } else {
-                              await onPlaceFolderOnMap(cUnplaced)
+                              if (onPlaceFolderOnMap && cUnplaced.length > 0) {
+                                await onPlaceFolderOnMap(cUnplaced)
+                              }
+                              await revealNpcsByIds(cIds)
                             }
                             onTacticalRefresh?.()
                           }}
-                            title={cAllOnMap
-                              ? `Unmap all ${cnpcs.length} NPCs (archive tokens; reveal state unchanged)`
-                              : `Place ${cUnplaced.length} unplaced NPC${cUnplaced.length === 1 ? '' : 's'} on the map (no reveal)`}
-                            style={{ padding: '1px 8px', background: cAllOnMap ? '#1a1a1a' : '#10202e', border: `1px solid ${cAllOnMap ? '#3a3a3a' : '#3a5a7a'}`, borderRadius: '2px', color: cAllOnMap ? '#cce0f5' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
-                            {cAllOnMap ? 'Unmap' : 'Map'}
+                            title={cAllRevealed
+                              ? `Hide all ${cnpcs.length} NPCs (vanish from every map; positions preserved)`
+                              : `Place + reveal all ${cnpcs.length} NPCs (visible to GM + players)`}
+                            style={{ flex: 1, padding: '1px 8px', background: cAllRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${cAllRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: cAllRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                            {cLabel}
                           </button>
-                        )
-                      })()}
-                      {cnpcs.length > 0 && (
-                        <button onClick={async e => {
-                          e.stopPropagation()
-                          if (cAllRevealed) {
-                            if (onUnmapFolder) await onUnmapFolder(cnpcs)
-                            await hideNpcsByIds(cIds)
-                          } else {
-                            if (onPlaceFolderOnMap && cUnplaced.length > 0) {
-                              await onPlaceFolderOnMap(cUnplaced)
-                            }
-                            await revealNpcsByIds(cIds)
-                          }
-                          onTacticalRefresh?.()
-                        }}
-                          title={cAllRevealed
-                            ? `Hide all ${cnpcs.length} NPCs (vanish from every map; positions preserved)`
-                            : `Place + reveal all ${cnpcs.length} NPCs (visible to GM + players)`}
-                          style={{ padding: '1px 8px', background: cAllRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${cAllRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: cAllRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
-                          {cLabel}
-                        </button>
+                        </div>
                       )}
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{cnpcs.length}</span>
                     </div>
                     {isOpen && cnpcs.map(renderNpcCard)}
                   </div>
