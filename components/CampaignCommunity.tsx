@@ -2122,8 +2122,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     in one button-press with per-roll CMod inputs
                     and auto-filled slot suggestions. */}
                 {(isGM || (!!myUserId && c.leader_user_id === myUserId)) && isCommunity && c.status !== 'dissolved' && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
-                    <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
+                    <div>
                       <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
                         📊 Weekly Check
                       </div>
@@ -2132,26 +2132,28 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         {c.consecutive_failures === 2 && <span style={{ color: '#f5a89a', fontWeight: 600 }}> · one more failure dissolves the community</span>}
                       </div>
                     </div>
-                    <button onClick={() => handleSkipWeek(c)}
-                      title="Advance the community's week counter without rolling. Use for off-screen time - Morale / resource consequences only apply on an actual Weekly Check."
-                      style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Skip Week
-                    </button>
-                    {/* NPC-proxy recruitment - disabled when there's
-                        no Leader NPC set (proxy rolls are by-the-leader
-                        by definition). Hover tooltip explains why. */}
-                    <button onClick={() => setProxyRecruitCommunityId(c.id)}
-                      disabled={!c.leader_npc_id}
-                      title={c.leader_npc_id
-                        ? 'Have the Leader NPC recruit a target NPC into this community - off-screen growth between sessions.'
-                        : 'Set a Leader NPC first - proxy recruitment uses the leader as the roller.'}
-                      style={{ padding: '8px 14px', background: c.leader_npc_id ? 'transparent' : '#111', border: `1px solid ${c.leader_npc_id ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: c.leader_npc_id ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: c.leader_npc_id ? 'pointer' : 'not-allowed' }}>
-                      🤝 Recruit (Proxy)
-                    </button>
-                    <button onClick={() => setMoraleCommunityId(c.id)}
-                      style={{ padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
-                      Run Weekly Check
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => handleSkipWeek(c)}
+                        title="Advance the community's week counter without rolling. Use for off-screen time - Morale / resource consequences only apply on an actual Weekly Check."
+                        style={{ flex: 1, padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Skip Week
+                      </button>
+                      {/* NPC-proxy recruitment - disabled when there's
+                          no Leader NPC set (proxy rolls are by-the-leader
+                          by definition). Hover tooltip explains why. */}
+                      <button onClick={() => setProxyRecruitCommunityId(c.id)}
+                        disabled={!c.leader_npc_id}
+                        title={c.leader_npc_id
+                          ? 'Have the Leader NPC recruit a target NPC into this community - off-screen growth between sessions.'
+                          : 'Set a Leader NPC first - proxy recruitment uses the leader as the roller.'}
+                        style={{ flex: 1, padding: '8px 14px', background: c.leader_npc_id ? 'transparent' : '#111', border: `1px solid ${c.leader_npc_id ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: c.leader_npc_id ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: c.leader_npc_id ? 'pointer' : 'not-allowed' }}>
+                        🤝 Recruit (Proxy)
+                      </button>
+                      <button onClick={() => setMoraleCommunityId(c.id)}
+                        style={{ flex: 1, padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                        Run Weekly Check
+                      </button>
+                    </div>
                   </div>
                 )}
 
