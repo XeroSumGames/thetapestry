@@ -61,6 +61,7 @@ interface ObjectToken {
   // PCs allowed to drag this object on the tactical map. Empty array
   // (the default) means GM-only.
   controlled_by_character_ids?: string[]
+  group_label?: string | null
 }
 
 interface Props {
@@ -84,6 +85,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [activeSceneRows, setActiveSceneGridRows] = useState<number>(15)
   const [showAdd, setShowAdd] = useState(false)
   const [addName, setAddName] = useState('')
+  const [addGroup, setAddGroup] = useState('')
   const [addIcon, setAddIcon] = useState('crate')
   const [addWP, setAddWP] = useState('3')
   const [addIndestructible, setAddIndestructible] = useState(false)
@@ -92,6 +94,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [saving, setSaving] = useState(false)
   const [editingObj, setEditingObj] = useState<ObjectToken | null>(null)
   const [editName, setEditName] = useState('')
+  const [editGroup, setEditGroup] = useState('')
   const [editWP, setEditWP] = useState('')
   const [editIndestructible, setEditIndestructible] = useState(false)
   const [editProps, setEditProps] = useState<TokenProperty[]>([])
@@ -123,6 +126,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [fileInputKey, setFileInputKey] = useState(0)
   const [dragObjId, setDragObjId] = useState<string | null>(null)
   const [dragOverObjId, setDragOverObjId] = useState<string | null>(null)
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 
   async function handleObjDrop(targetId: string) {
     if (!dragObjId || dragObjId === targetId) { setDragObjId(null); setDragOverObjId(null); return }
@@ -216,6 +220,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         door_open: addIcon === 'door' ? false : true,
         is_wall: addIcon === 'wall',
         is_window: addIcon === 'window',
+        group_label: addGroup.trim() || null,
       })
       onTokenChanged?.()
       loadObjects()
@@ -235,6 +240,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     }
 
     setAddName('')
+    setAddGroup('')
     setAddIcon('crate')
     setAddWP('3')
     setAddIndestructible(false)
@@ -353,7 +359,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       {showAdd && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px', marginBottom: '6px' }}>
           <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Object name..."
-            style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
+            style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
+          <input value={addGroup} onChange={e => setAddGroup(e.target.value)} placeholder="Folder / group (e.g. Crates)"
+            style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
 
           <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '4px' }}>Icon</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px', marginBottom: '6px' }}>
@@ -446,7 +454,15 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         </div>
       )}
 
-      {objects.map(obj => {
+      {(() => {
+        // Group objects by group_label; ungrouped (null/'') rendered flat first
+        const ungrouped = objects.filter(o => !o.group_label?.trim())
+        const groupMap = new Map<string, ObjectToken[]>()
+        for (const o of objects) {
+          const g = o.group_label?.trim()
+          if (g) { if (!groupMap.has(g)) groupMap.set(g, []); groupMap.get(g)!.push(o) }
+        }
+        const renderObj = (obj: ObjectToken) => {
         const destroyed = obj.wp_max != null && obj.wp_current != null && obj.wp_current <= 0
         return (
           <div key={obj.id}
@@ -543,7 +559,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
                 <button onClick={async () => {
-                  setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '3'); setEditIndestructible(obj.wp_max == null); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []); setEditControllers(Array.isArray(obj.controlled_by_character_ids) ? obj.controlled_by_character_ids : [])
+                  setEditingObj(obj); setEditName(obj.name); setEditGroup(obj.group_label ?? ''); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '3'); setEditIndestructible(obj.wp_max == null); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []); setEditControllers(Array.isArray(obj.controlled_by_character_ids) ? obj.controlled_by_character_ids : [])
                   // Lazy-fetch campaign PCs the first time an edit modal
                   // opens. Two queries: campaign_members → characters,
                   // then profiles → username (the embedded
@@ -587,7 +603,27 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             )}
           </div>
         )
-      })}
+        }
+        return (
+          <>
+            {ungrouped.map(obj => renderObj(obj))}
+            {[...groupMap.entries()].map(([group, groupObjs]) => {
+              const collapsed = collapsedGroups.has(group)
+              return (
+                <div key={group} style={{ marginBottom: '4px' }}>
+                  <div onClick={() => setCollapsedGroups(prev => { const n = new Set(prev); n.has(group) ? n.delete(group) : n.add(group); return n })}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', cursor: 'pointer', userSelect: 'none', marginBottom: collapsed ? 0 : '2px' }}>
+                    <span style={{ fontSize: '13px', color: '#5a5550' }}>{collapsed ? '▶' : '▼'}</span>
+                    <span style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>{group}</span>
+                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{groupObjs.length}</span>
+                  </div>
+                  {!collapsed && groupObjs.map(obj => renderObj(obj))}
+                </div>
+              )
+            })}
+          </>
+        )
+      })()}
 
       {/* Loot modal */}
       {lootingObj && entries && (
@@ -776,7 +812,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <div style={{ marginBottom: '8px' }}>
               <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Name</div>
               <input value={editName} onChange={e => setEditName(e.target.value)}
-                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
+              <input value={editGroup} onChange={e => setEditGroup(e.target.value)} placeholder="Folder / group (e.g. Crates)"
+                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
             <div style={{ marginBottom: '4px' }}>
               <div style={{ fontSize: '13px', color: editIndestructible ? '#5a5550' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {editIndestructible ? '(disabled)' : ''}</div>
@@ -940,15 +978,17 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   wpVal = isNaN(parsed) ? 3 : parsed
                 }
                 const cleanProps = editProps.filter(p => p.key.trim())
+                const newGroup = editGroup.trim() || null
                 await supabase.from('scene_tokens').update({
                   name: editName.trim() || editingObj.name,
+                  group_label: newGroup,
                   wp_max: wpVal,
                   wp_current: wpVal,
                   properties: cleanProps,
                   contents: editContents,
                   controlled_by_character_ids: editControllers,
                 }).eq('id', editingObj.id)
-                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal, properties: cleanProps, contents: editContents, controlled_by_character_ids: editControllers } : o))
+                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, group_label: newGroup, wp_max: wpVal, wp_current: wpVal, properties: cleanProps, contents: editContents, controlled_by_character_ids: editControllers } : o))
                 setEditingObj(null)
               }}
                 style={{ ...chipBtn, flex: 1, background: '#c0392b', border: '1px solid #c0392b', color: '#fff' }}>Save</button>
