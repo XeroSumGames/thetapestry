@@ -1448,7 +1448,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
-                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community - {cname}</span>
+                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{cname}</span>
                       {cnpcs.length > 0 && onPlaceFolderOnMap && (() => {
                         // MAP/UNMAP: bulk place tokens on the GM's
                         // tactical map (or archive them off) WITHOUT
