@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 18:12 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — NEW since 15:12 UTC pulse (prior run reported clean)
+- HIGH `vite@8.0.13` (via vitest 4.1.6): Windows dev-server NTLMv2 hash disclosure + `server.fs.deny` bypass; fixAvailable. Dev-only + Windows-specific → not a prod risk on Linux, but advisory is HIGH.
+- HIGH `ws@8.20.1` (via @supabase/realtime-js): Memory exhaustion DoS on ws SERVER; fixAvailable (8.21.0). App uses ws as a CLIENT (Supabase realtime), not a server → lower direct risk, but the Supabase dep is in the production realtime path.
+
+**CI:** gh CLI not available in sandbox; skipped
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — since 2026-05-24 (~22 days); no vehicle code commits in 3 days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — since 2026-05-19 (~27 days); drain target: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path (`useRollResolution.ts:264`) — no code touch since Session 63 (2026-06-12); needs a live doubles roll to drain
+- *Stale-as-open* todo.md:67 "6 mechanics still owe real code" — all 6 sub-items verified shipped/closed; parent `[ ]` (Puffer: close)
+
+Note: Prior pulse drift items resolved — Puffer commit `4b191ad` (16:22 UTC) ticked 3 tactical-map todos + drained combat-flow Phase B from debug-handoff §3 HOPED-FOR.
+
+**Action:** Run `npm audit fix` to bump vite (→ post-8.0.15) and ws (→ 8.21.0), then re-run `npm test` to confirm no regressions. Both are transitive deps with safe minor/patch upgrades. Close todo.md:67 parent checkbox (all children done).
+
+---
+
 ## 2026-06-15 15:12 UTC
 
 **Status:** DRIFT
