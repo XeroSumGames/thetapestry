@@ -6,6 +6,35 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 15:12 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-15T12:16Z)
+
+**Drift:**
+
+*HOPED-FOR items >3 days without playtest update:*
+- **Vehicle popout broadcasts** (Section B) — HOPED-FOR since 2026-05-24 Grand Re-Arch; no vehicle-popout git touches in 3 days. Needs a full vehicle-session playtest to drain.
+- **Stress Check 12-string narrative** — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured. In HOPED-FOR since 2026-05-19 batch. Drain target: Beta-500 dry-run.
+- **FI Insight Die AWARD path** (`useRollResolution.ts:264`, doubles trigger) — 0 live fires ever; in HOPED-FOR as of Session 63 (2026-06-12); no code change since. Needs a session with a doubles roll on FI (~36 rolls to expect one).
+
+*Confidence Ledger correction needed in debug-handoff.md §3:*
+- `combat-flow Phase B` listed as HOPED-FOR in debug-handoff §3 but todo.md shows **[E2E DONE 2026-06-11]** (Phase B GREEN 12.4s). Ledger needs a drain pass.
+
+*Stale-as-open todo items — all three tactical-map items are covered by the 12-check 2-client ALL-PASS gate (2026-05-30) + debug-handoff TacticalMap GREEN (2026-05-30):*
+- Line 183: "PLAYER center-on-open races" — myCharacterId late-arrival fix (`c0d9fb8`) shipped; Phase B gate covered move-follow. Mark [x].
+- Line 184: "img_scale divergence FIXED — awaiting Xero's 2-client VISUAL eyeball" — the 12-check ALL-PASS IS the visual confirmation. Mark [x].
+- Line 189: "player viewport doesn't FOLLOW token MOVES" — debug-handoff §1 explicitly: "Phase B (9-12) covered the 2026-05-29 NO-GO move-follow class." Mark [x].
+
+**Action:** Puffer drain pass — update debug-handoff.md §3 Confidence Ledger (combat-flow Phase B -> TESTED; tick the three stale tactical-map todo entries). Vehicle broadcasts and Stress 12-string are Beta-500 dry-run items; no action before that session.
+
+---
+
 ## 2026-06-15 12:11 UTC
 
 **Status:** DRIFT (carry-forward — 15th consecutive, no new commits since 09:07 UTC)
