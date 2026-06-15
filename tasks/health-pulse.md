@@ -6,6 +6,132 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-15 15:12 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [clean — 0 high, 0 critical]
+
+**CI:** last 5 runs all success (latest 2026-06-15T12:16Z)
+
+**Drift:**
+
+*HOPED-FOR items >3 days without playtest update:*
+- **Vehicle popout broadcasts** (Section B) — HOPED-FOR since 2026-05-24 Grand Re-Arch; no vehicle-popout git touches in 3 days. Needs a full vehicle-session playtest to drain.
+- **Stress Check 12-string narrative** — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured. In HOPED-FOR since 2026-05-19 batch. Drain target: Beta-500 dry-run.
+- **FI Insight Die AWARD path** (`useRollResolution.ts:264`, doubles trigger) — 0 live fires ever; in HOPED-FOR as of Session 63 (2026-06-12); no code change since. Needs a session with a doubles roll on FI (~36 rolls to expect one).
+
+*Confidence Ledger correction needed in debug-handoff.md §3:*
+- `combat-flow Phase B` listed as HOPED-FOR in debug-handoff §3 but todo.md shows **[E2E DONE 2026-06-11]** (Phase B GREEN 12.4s). Ledger needs a drain pass.
+
+*Stale-as-open todo items — all three tactical-map items are covered by the 12-check 2-client ALL-PASS gate (2026-05-30) + debug-handoff TacticalMap GREEN (2026-05-30):*
+- Line 183: "PLAYER center-on-open races" — myCharacterId late-arrival fix (`c0d9fb8`) shipped; Phase B gate covered move-follow. Mark [x].
+- Line 184: "img_scale divergence FIXED — awaiting Xero's 2-client VISUAL eyeball" — the 12-check ALL-PASS IS the visual confirmation. Mark [x].
+- Line 189: "player viewport doesn't FOLLOW token MOVES" — debug-handoff §1 explicitly: "Phase B (9-12) covered the 2026-05-29 NO-GO move-follow class." Mark [x].
+
+**Action:** Puffer drain pass — update debug-handoff.md §3 Confidence Ledger (combat-flow Phase B -> TESTED; tick the three stale tactical-map todo entries). Vehicle broadcasts and Stress 12-string are Beta-500 dry-run items; no action before that session.
+
+---
+
+## 2026-06-15 12:11 UTC
+
+**Status:** DRIFT (carry-forward — 15th consecutive, no new commits since 09:07 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-15T09:10:50Z)
+
+**New since last pulse:** none (only 09:07 health-pulse commit)
+
+**Drift:** (unchanged from 06:11 + 09:07)
+- Launch-day decision (todo.md:399) still `[ ]` — today is 6/15, no action taken as of 12:11 UTC
+- HOPED-FOR ~21 days: Vehicle popout broadcasts (Section B) — no vehicle commits
+- HOPED-FOR ~27 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain ≤2026-07-01
+- HOPED-FOR FI Insight Die AWARD path — untested
+- debug-handoff.md §3 combat-flow Phase B still HOPED-FOR (Puffer: drain)
+- "6 mechanics" parent todo (todo.md:67) still `[ ]`; all 6 children `[x]` (Puffer: close)
+- `scripts/check-realtime-wrap.mjs` absent
+
+**Action:** No new action — see 06:11 UTC entry. Launch-day decision is the priority call for today.
+
+---
+
+## 2026-06-15 09:07 UTC
+
+**Status:** DRIFT (carry-forward — 14th consecutive, no new commits since 06:11 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-15T06:15:36Z)
+
+**New since last pulse:** none (only the 06:11 health-pulse commit itself)
+
+**Drift:** (unchanged from 06:11 — no new commits)
+- Launch-day decision (todo.md:399) still `[ ]` — today is 2026-06-15 (first flagged 06:11 UTC)
+- HOPED-FOR ~21 days: Vehicle popout broadcasts (Section B) — no vehicle commits
+- HOPED-FOR ~27 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain target Beta-500 ≤2026-07-01
+- HOPED-FOR ~3 days: FI Insight Die AWARD path — untested
+- debug-handoff.md §3 still lists combat-flow Phase B as HOPED-FOR (shipped GREEN 2026-06-11)
+
+**Action:** No new action — see 06:11 UTC entry. Launch-day decision remains priority item.
+
+---
+
+## 2026-06-15 06:11 UTC
+
+**Status:** DRIFT (carry-forward — 13th consecutive run + new: launch-day decision overdue)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-15T00:13:08Z)
+
+**New since last pulse:** none (only the health-pulse commit itself)
+
+**Drift:**
+- **NEW: `todo.md:399` "Confirm launch day (6/15 is a Sunday; reviewers publish Tue-Thu; consider 6/16 or 6/17)" is still `[ ]` and TODAY IS 2026-06-15.** Decision point has arrived; if KS launch is today or imminent, this needs a call now.
+- HOPED-FOR ~26 days: Vehicle popout broadcasts (Section B) — no vehicle commits in 3+ days
+- HOPED-FOR ~32 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain target Beta-500 ≤2026-07-01
+- HOPED-FOR ~3 days: FI Insight Die AWARD path (roll doubles ~2.8%/roll; still untested)
+- combat-flow Phase B — 13th consecutive flag, no code change
+- `scripts/check-realtime-wrap.mjs` absent (open todo ~2026-05-24)
+- "6 mechanics" parent todo (todo.md:67) still `[ ]`; all 6 child items `[x]` closed
+
+**Action:** Launch-day decision is the urgent item — confirm or defer the KS date NOW. Puffer Fish: drain combat-flow Phase B from debug-handoff §3 and close "6 mechanics" parent todo.
+
+---
+
+## 2026-06-15 00:12 UTC
+
+**Status:** DRIFT (carry-forward — 12th consecutive run, action not taken)
+
+**Gates:** font-sizes [OK], role-literals [OK — 334 files], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-14T21:32Z)
+
+**New since last pulse:** 6 commits landed clean: map `invalidateSize` on pin sidebar open/close, Thriver notify URL hardcoded (drops `current_setting` dep), in-app bell for all Thriver moderation events, welcome character-creation rows equal-width, double-click required to open Drop-a-Pin modal, Campfire icon wired to `/campfire`.
+
+**Drift:**
+- HOPED-FOR ~26 days: Vehicle popout broadcasts (Section B) — no vehicle commits in 3+ days
+- HOPED-FOR ~32 days: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain target Beta-500 ≤2026-07-01
+- HOPED-FOR >3 days: FI Insight Die AWARD path — untested, trigger is rolling doubles (~2.8%/roll)
+- combat-flow Phase B — 12th consecutive flag, no code change
+- "6 mechanics" parent todo (todo.md:67) still `[ ]`; all 6 child items `[x]` closed
+- `scripts/check-realtime-wrap.mjs` absent (open todo ~2026-05-24)
+
+**Action:** ⚠️ 12th flag — Puffer Fish: drain combat-flow Phase B from debug-handoff §3; tick "6 mechanics" parent todo closed; restate or close vehicle popout caveat. FI Insight Die drain target needed.
+
+---
+
 ## 2026-06-21 06:06 UTC
 
 **Status:** DRIFT (carry-forward — 11th consecutive run, action not taken)
