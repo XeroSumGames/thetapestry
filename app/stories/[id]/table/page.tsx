@@ -857,13 +857,14 @@ export default function TablePage() {
     scrollFeedToBottom: () => { rollsFeed.rollFeedRef.current?.scrollTo(0, rollsFeed.rollFeedRef.current.scrollHeight) },
   })
   // Incoming-chat notification: ping + flash the feed's "Chat" tab 3x when a
-  // NEW message from someone else lands (messages are newest-first). Skips the
-  // first populate (page load) and the viewer's own sends.
+  // NEW message from someone else lands. chat.messages is oldest-first (see
+  // TableChat refetch where visible.reverse() makes it ascending); the newest
+  // message is the last element, not the first.
   const [chatPulse, setChatPulse] = useState(0)
   const lastChatIdRef = useRef<string | null>(null)
   const chatInitRef = useRef(false)
   useEffect(() => {
-    const newest = chat.messages[0]
+    const newest = chat.messages.at(-1)
     if (!newest) return
     if (!chatInitRef.current) { chatInitRef.current = true; lastChatIdRef.current = newest.id; return }
     if (newest.id === lastChatIdRef.current) return
