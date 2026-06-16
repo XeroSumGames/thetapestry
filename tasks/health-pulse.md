@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-16 12:09 UTC
+
+**Status:** RED+DRIFT (carry-forward; no new commits since 09:12 entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — same carry-forward advisories
+- HIGH `vite` (via vitest): Windows NTLMv2 hash via launch-editor; Windows path bypass — dev-only
+- HIGH `ws` (via @supabase/realtime-js): memory exhaustion DoS on ws SERVER — app is client-only
+
+**CI:** last 5 runs all pass (latest: 2026-06-16T06:12:42Z — CI now confirmed clean post `84b33e2` TSC fix)
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — no vehicle popout commits in 3+ days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — needs live doubles roll to drain
+- *Stale-as-open* `todo.md` "[FOLLOW-UP] add scripts/check-realtime-wrap.mjs" — script still missing
+- *Stale-as-open* `todo.md` "6 mechanics still owe real code" — all 6 sub-items [x]; parent not ticked
+
+**Action:** No new signal vs 09:12 entry. Still owed: `npm audit fix` (vite+ws transitive bumps, HP lane).
+
+---
+
 ## 2026-06-16 09:12 UTC
 
 **Status:** RED+DRIFT
