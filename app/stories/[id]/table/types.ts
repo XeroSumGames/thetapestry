@@ -23,6 +23,7 @@ export interface TableEntry {
   username: string
   character: { id: string; name: string; created_at: string; data: any; portrait_url: string | null }
   liveState: LiveState
+  observer: boolean
 }
 
 export interface GmInfo {

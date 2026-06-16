@@ -933,7 +933,7 @@ export default function TablePage() {
     const isLatest = () => seq === loadEntriesSeqRef.current
 
     const [{ data: members }, { data: rawStates }] = await Promise.all([
-      supabase.from('campaign_members').select('user_id, character_id').eq('campaign_id', campaignId).not('character_id', 'is', null),
+      supabase.from('campaign_members').select('user_id, character_id, observer').eq('campaign_id', campaignId).not('character_id', 'is', null),
       supabase.from('character_states').select('*').eq('campaign_id', campaignId),
     ])
 
@@ -943,7 +943,11 @@ export default function TablePage() {
     }
 
     const currentAssignment: Record<string, string> = {}
-    for (const m of members) currentAssignment[m.user_id] = m.character_id
+    const observerUsers = new Set<string>()
+    for (const m of members) {
+      currentAssignment[m.user_id] = m.character_id
+      if ((m as any).observer) observerUsers.add(m.user_id)
+    }
 
     const filteredStates = rawStates.filter((s: any) => currentAssignment[s.user_id] === s.character_id && !s.kicked)
     if (filteredStates.length === 0) { if (isLatest()) { setEntries([]); setEntriesLoading(false) } return }
@@ -989,6 +993,7 @@ export default function TablePage() {
       userId: s.user_id,
       username: profileMap[s.user_id] ?? 'Unknown',
       character: charMapLean[s.character_id] ?? { id: s.character_id, name: 'Unknown', created_at: '', data: {} },
+      observer: observerUsers.has(s.user_id),
       liveState: {
         id: s.id,
         wp_current: s.wp_current, wp_max: s.wp_max,
@@ -1660,9 +1665,10 @@ export default function TablePage() {
     const [, { data: rawMembers }] = await Promise.all([
       supabase.from('initiative_order').delete().eq('campaign_id', id),
       supabase.from('campaign_members')
-        .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
+        .select('user_id, character_id, observer, characters:character_id(id, name, data->rapid)')
         .eq('campaign_id', id)
-        .not('character_id', 'is', null),
+        .not('character_id', 'is', null)
+        .eq('observer', false),
     ])
     if (rawMembers && rawMembers.length > 0) {
       await ensureCharacterStates(id, rawMembers as any[])
@@ -5281,7 +5287,7 @@ export default function TablePage() {
 
   const gmEntry = entries.find(e => e.userId === campaign.gm_user_id) ?? null
   const playerEntries = (() => {
-    const filtered = entries.filter(e => e.userId !== campaign.gm_user_id)
+    const filtered = entries.filter(e => e.userId !== campaign.gm_user_id && !e.observer)
     // Order rule (per Xero 2026-05-18): currently-online players sit
     // closest to the GM, offline players after. `onlineUserIds` is a
     // React-state Set populated by the table-page presence channel
@@ -5645,6 +5651,17 @@ export default function TablePage() {
             {
               label: 'GM Screen',
               onClick: () => openPopout(`/gm-screen?c=${id}`, `gm-screen-${id}`, { w: 900, h: 700 }),
+            },
+            {
+              label: 'Observer Link',
+              onClick: () => {
+                const url = `${window.location.origin}/stories/join?code=${campaign.invite_code}&observer=1`
+                navigator.clipboard.writeText(url).then(() => {
+                  alert('Observer link copied - share it with whoever should watch without appearing in the player bar or combat.')
+                }).catch(() => {
+                  prompt('Copy this observer link:', url)
+                })
+              },
             },
           ],
           hdrBtn('#2a2010', '#EF9F27', '#5a4a1b'),

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
@@ -9,8 +9,16 @@ export default function JoinCampaignPage() {
   const [code, setCode] = useState('')
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState('')
+  const [isObserver, setIsObserver] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const codeParam = params.get('code')
+    if (codeParam) setCode(codeParam.toUpperCase())
+    if (params.get('observer') === '1') setIsObserver(true)
+  }, [])
 
   async function handleJoin() {
     if (!code.trim()) return
@@ -34,6 +42,7 @@ export default function JoinCampaignPage() {
     const { error: joinErr } = await supabase.from('campaign_members').insert({
       campaign_id: campaign.id,
       user_id: user.id,
+      observer: isObserver,
     })
 
     if (joinErr) {
@@ -47,7 +56,7 @@ export default function JoinCampaignPage() {
       return
     }
 
-    logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
+    if (!isObserver) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
     router.push(`/stories/${campaign.id}`)
   }
 
@@ -56,11 +65,17 @@ export default function JoinCampaignPage() {
 
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          Join a Story
+          {isObserver ? 'Join as Observer' : 'Join a Story'}
         </div>
       </div>
 
-      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.5rem', borderLeft: '3px solid #7ab3d4' }}>
+      {isObserver && (
+        <div style={{ background: '#1a2010', border: '1px solid #2d5a1b', borderRadius: '4px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', lineHeight: 1.6 }}>
+          Observer mode: you will join the session silently - no player bar entry, no combat slot. You see the table as a player but are invisible to the group.
+        </div>
+      )}
+
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.5rem', borderLeft: `3px solid ${isObserver ? '#7fc458' : '#7ab3d4'}` }}>
         <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.7, marginBottom: '16px' }}>
           Enter the invite code your GM gave you. Codes are 6 characters and look like <strong style={{ color: '#f5f2ee' }}>WOLF47</strong>.
         </p>
@@ -84,8 +99,8 @@ export default function JoinCampaignPage() {
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleJoin} disabled={joining || code.trim().length < 6}
-            style={{ flex: 1, padding: '10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: joining || code.trim().length < 6 ? 0.6 : 1 }}>
-            {joining ? 'Joining...' : 'Join Story'}
+            style={{ flex: 1, padding: '10px', background: isObserver ? '#1a2e10' : '#1a3a5c', border: `1px solid ${isObserver ? '#7fc458' : '#7ab3d4'}`, borderRadius: '3px', color: isObserver ? '#7fc458' : '#7ab3d4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: joining || code.trim().length < 6 ? 0.6 : 1 }}>
+            {joining ? 'Joining...' : isObserver ? 'Join as Observer' : 'Join Story'}
           </button>
           <button onClick={() => router.back()}
             style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>

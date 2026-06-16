@@ -75,7 +75,8 @@ CREATE TABLE public.campaign_members (
   campaign_id uuid NOT NULL,
   user_id uuid NOT NULL,
   character_id uuid,
-  joined_at timestamp with time zone DEFAULT now()
+  joined_at timestamp with time zone DEFAULT now(),
+  observer boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE public.campaign_notes (
