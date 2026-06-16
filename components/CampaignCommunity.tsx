@@ -2570,7 +2570,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           )}
                           {isGM ? (
                             <button onClick={() => handleRemoveMember(m)} title="Remove from community"
-                              style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
+                              style={{ padding: '2px 8px', background: '#1a0a0a', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>Remove</button>
                           ) : isMyPc ? (
                             <button onClick={() => handleRemoveMember(m, { self: true })} title="Leave this community"
                               style={{ background: 'none', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '1px 6px', lineHeight: 1, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Leave</button>
