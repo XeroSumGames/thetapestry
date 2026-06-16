@@ -8401,6 +8401,10 @@ export default function TablePage() {
         userId={userId}
         channelRef={initChannelRef}
         onGiven={() => Promise.all([loadEntries(id), rollsFeed.refetch()])}
+        campaignItems={[
+          ...entries.flatMap(e => (e.character.data?.inventory ?? []) as Array<{ name: string }>).map(i => i.name),
+          ...campaignNpcs.flatMap((n: any) => (Array.isArray(n.inventory) ? n.inventory : []) as Array<{ name: string }>).map(i => i.name),
+        ].filter((n, i, arr) => typeof n === 'string' && n.trim() && arr.indexOf(n) === i)}
       />
 
       {/* Populate Modal - bulk-generate NPCs distributed across the

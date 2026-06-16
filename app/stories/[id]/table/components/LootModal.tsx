@@ -36,11 +36,12 @@ interface LootModalProps {
   userId: string | null
   channelRef: { current: any }
   onGiven: () => void | Promise<unknown>
+  campaignItems?: string[]
 }
 
 export function LootModal({
   open, onClose, entries, lootItems, setLootItems, lootRecipients, setLootRecipients,
-  supabase, campaignId, userId, channelRef, onGiven,
+  supabase, campaignId, userId, channelRef, onGiven, campaignItems,
 }: LootModalProps) {
   const [itemName, setItemName] = useState('')
   const [itemQty, setItemQty] = useState(1)
@@ -51,13 +52,23 @@ export function LootModal({
   const suggestions = (() => {
     const q = itemName.trim().toLowerCase()
     if (!q) return []
-    const matches = LOOT_CATALOG.filter(c => c.name.toLowerCase().includes(q))
-    matches.sort((a, b) => {
+    const catalogMatches = LOOT_CATALOG.filter(c => c.name.toLowerCase().includes(q))
+    catalogMatches.sort((a, b) => {
       const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1
       const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1
       return aStarts - bStarts || a.name.localeCompare(b.name)
     })
-    return matches.slice(0, 8)
+    const catalogNames = new Set(LOOT_CATALOG.map(c => c.name.toLowerCase()))
+    const extraMatches: CatalogItem[] = (campaignItems ?? [])
+      .filter(n => n.toLowerCase().includes(q) && !catalogNames.has(n.toLowerCase()))
+      .filter((n, i, arr) => arr.findIndex(x => x.toLowerCase() === n.toLowerCase()) === i)
+      .sort((a, b) => {
+        const aStarts = a.toLowerCase().startsWith(q) ? 0 : 1
+        const bStarts = b.toLowerCase().startsWith(q) ? 0 : 1
+        return aStarts - bStarts || a.localeCompare(b)
+      })
+      .map(n => ({ name: n, rarity: 'Custom' }))
+    return [...catalogMatches, ...extraMatches].slice(0, 10)
   })()
 
   function addItem(name: string, qty: number) {
