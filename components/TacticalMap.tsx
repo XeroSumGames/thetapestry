@@ -1734,22 +1734,27 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // simply on the map; whether players can see it is the GM's
       // workflow concern, not a visual cue they need on their canvas.
 
-      // Determine mortal wound / dead status
+      // Determine mortal wound / dead / incapacitated status
       let tokenDead = false
       let tokenMortal = false
+      let tokenIncap = false  // RP=0 but WP>0: out of fight, not dying
       if (t.npc_id && campaignNpcs) {
         const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
         if (npc) {
           const wp = npc.wp_current ?? npc.wp_max ?? 10
+          const rp = npc.rp_current ?? npc.rp_max ?? 6
           tokenDead = npc.status === 'dead' || (wp === 0 && npc.death_countdown != null && npc.death_countdown <= 0)
           tokenMortal = wp === 0 && !tokenDead
+          tokenIncap = rp === 0 && wp > 0 && !tokenDead
         }
       } else if (t.character_id && entries) {
         const entry = entries.find((e: any) => e.character.id === t.character_id)
         if (entry) {
           const wp = entry.liveState?.wp_current ?? entry.liveState?.wp_max ?? 10
+          const rp = entry.liveState?.rp_current ?? entry.liveState?.rp_max ?? 6
           tokenDead = wp === 0
           tokenMortal = wp === 0
+          tokenIncap = rp === 0 && wp > 0
         }
       } else if (t.token_type === 'object' && (t as any).wp_max != null) {
         const wp = (t as any).wp_current ?? (t as any).wp_max ?? 0
@@ -1761,6 +1766,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // destroyed portrait is set - the alt art is the story, don't mute it.
       const hasDestroyedArt = t.token_type === 'object' && tokenDead && !!t.destroyed_portrait_url
       if (tokenDead && !hasDestroyedArt) ctx.globalAlpha = t.token_type === 'object' ? 0.3 : 0.5
+      else if (tokenIncap) ctx.globalAlpha = 0.65
 
       // Apply rotation
       const tokenRotation = (t.rotation ?? 0) * Math.PI / 180
@@ -2098,6 +2104,38 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         ctx.moveTo(cx + xSize, cy - xSize)
         ctx.lineTo(cx - xSize, cy + xSize)
         ctx.stroke()
+        ctx.restore()
+      }
+
+      // Incapacitated (RP=0, WP>0): orange dashed outer ring + "KO" badge.
+      // Distinct from dead/mortal (red X) - this token is out of the fight
+      // but still alive and can be stabilised/healed.
+      if (tokenIncap && !isObject) {
+        ctx.save()
+        ctx.globalAlpha = 1
+        ctx.beginPath()
+        ctx.arc(cx, cy, radius + 4, 0, Math.PI * 2)
+        ctx.setLineDash([6, 4])
+        ctx.strokeStyle = '#EF9F27'
+        ctx.lineWidth = 3
+        ctx.stroke()
+        ctx.setLineDash([])
+        // KO badge in lower-right quadrant
+        const badgeR = Math.max(8, radius * 0.35)
+        const bx = cx + radius * 0.6
+        const by = cy + radius * 0.6
+        ctx.beginPath()
+        ctx.arc(bx, by, badgeR, 0, Math.PI * 2)
+        ctx.fillStyle = '#3a2000'
+        ctx.fill()
+        ctx.strokeStyle = '#EF9F27'
+        ctx.lineWidth = 1.5
+        ctx.stroke()
+        ctx.fillStyle = '#EF9F27'
+        ctx.font = `bold ${Math.max(8, badgeR * 1.1)}px Carlito`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('KO', bx, by)
         ctx.restore()
       }
 
