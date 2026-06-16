@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-16 00:09 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [2 errors], tests [875 passed]
+
+**Audit:** npm audit [2 high, 0 critical] — carry-forward from prior runs; same vite+ws advisories
+
+**CI:** last failure 2026-06-15T22:24:34Z — TypeScript typecheck step; Vitest skipped as result
+- https://github.com/XeroSumGames/thetapestry/actions/runs/27580402653
+- Introduced by `f4c5a2b` (fix(characters): wire WP/Stress editing; stress DB constraint)
+
+**TSC errors (both new in f4c5a2b):**
+- `app/characters/page.tsx:185` — `handleStatUpdate` typed as `(stateId, field, value: string|number|boolean|null) => void` but passed a handler with `value: number` only; `null` not assignable
+- `lib/data/characters.ts:11` — spread on a possibly-non-object type (`TS2698`)
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — no vehicle popout commits in 3 days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain target: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — needs a live doubles roll to drain
+- *Stale-as-open* todo.md:67 "6 mechanics still owe real code" — all 6 sub-items [x]; parent not ticked
+- *Stale-as-open* todo.md:214 "[PUFFER - pin realtime propagation]" — fix confirmed shipped; checkbox never closed
+
+**Action:** Fix 2 TSC errors from `f4c5a2b` — CI is RED and Vitest is being skipped. Route to HP.
+
+---
+
 ## 2026-06-15 21:10 UTC
 
 **Status:** RED+DRIFT (carry-forward from 18:12 — vulns unactioned)
