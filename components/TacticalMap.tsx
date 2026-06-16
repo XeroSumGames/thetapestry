@@ -763,7 +763,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       { label: 'tactical:initiative_order', event: '*', table: 'initiative_order', filter: `campaign_id=eq.${campaignId}`, handler: loadInitiativeRef },
     ],
     broadcasts: {
-      token_moved: () => { if (sceneRef.current) loadTokens(sceneRef.current.id) },
+      token_moved: (p) => {
+        if (!sceneRef.current) return
+        // Fast path: sender included position - patch local state instantly,
+        // skip the DB round-trip. postgres_changes:scene_tokens still fires
+        // and confirms via loadTokens; this just makes the move appear sooner.
+        if (p.tokenId !== undefined && p.grid_x !== undefined && p.grid_y !== undefined) {
+          setTokens(prev => prev.map(t => t.id === p.tokenId ? { ...t, grid_x: p.grid_x!, grid_y: p.grid_y! } : t))
+        } else {
+          loadTokens(sceneRef.current.id)
+        }
+      },
       // Vehicle popout fires this on every successful seat-write; the
       // parent refetches campaigns.vehicles (aboard-token filter +
       // passenger badge). Belt-and-suspenders for the flaky jsonb
@@ -3157,7 +3167,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             tokenAnimRef.current.set(moveTok.id, { fromX, fromY, toX, toY, t: 0 })
             setTokens(prev => prev.map(t => t.id === moveTok.id ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
             updateToken(moveTok.id, { grid_x: pos.gx, grid_y: pos.gy }).then(() => {
-              tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
+              tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: { tokenId: moveTok.id, grid_x: pos.gx, grid_y: pos.gy } })
               onMoveComplete?.()
             })
             // Carry passengers when an object-type vehicle token moves
@@ -3570,7 +3580,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: newGx, grid_y: newGy } : t))
       updateToken(tokenId, { grid_x: newGx, grid_y: newGy }).then(({ error }: any) => {
         if (error) console.error('[TacticalMap] token move failed:', error)
-        else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
+        else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: { tokenId, grid_x: newGx, grid_y: newGy } })
       })
       // Vehicle passenger sync - drag path. Helper handles the
       // object-token + non-zero (dx,dy) gate internally; safe to call

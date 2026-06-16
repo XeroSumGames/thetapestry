@@ -36,8 +36,10 @@ export interface CampaignBroadcastPayloads {
   // --- Tactical map ---
   token_changed: EmptyPayload
   // token_moved: a token's grid position changed (TacticalMap drags, the
-  // vehicle popout's MOVE HERE snaps). Receivers refetch; payload empty.
-  token_moved: EmptyPayload
+  // vehicle popout's MOVE HERE snaps). When tokenId + grid_x/y are present
+  // receivers apply an optimistic state update (no DB round-trip); when
+  // absent (multi-token vehicle-passenger flush) receivers refetch.
+  token_moved: { tokenId?: string; grid_x?: number; grid_y?: number }
   scene_activated: EmptyPayload
   tactical_shared: { shared: boolean; sceneId?: string | null }
   tactical_unshared: EmptyPayload
