@@ -1,3 +1,4 @@
+import type { Json } from '../database.types'
 import { db } from './db'
 
 /**
@@ -8,6 +9,7 @@ import { db } from './db'
  */
 export async function updateCharacterDataField(charId: string, patch: Record<string, unknown>) {
   const { data: existing } = await db().from('characters').select('data').eq('id', charId).single()
-  const merged = { ...(existing?.data ?? {}), ...patch }
+  const base = (existing?.data && typeof existing.data === 'object' && !Array.isArray(existing.data)) ? existing.data as Record<string, Json> : {}
+  const merged: Json = { ...base, ...patch as Record<string, Json> }
   return db().from('characters').update({ data: merged }).eq('id', charId)
 }

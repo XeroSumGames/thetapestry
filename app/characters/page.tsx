@@ -25,7 +25,7 @@ export default function CharactersPage() {
   // Between-sessions stat updates: write back to characters.data so WP/Stress
   // changes on /characters persist across page reloads. CharacterCard uses
   // the character's own `id` as the stateId here (not a character_states row).
-  async function handleStatUpdate(charId: string, field: string, value: number) {
+  async function handleStatUpdate(charId: string, field: string, value: string | number | boolean | null) {
     const fieldToDataPath: Record<string, string> = {
       wp_current: 'wpCurrent',
       stress: 'stressLevel',
@@ -33,7 +33,7 @@ export default function CharactersPage() {
       insight_dice: 'insightDice',
     }
     const dataKey = fieldToDataPath[field]
-    if (!dataKey) return
+    if (!dataKey || value == null) return
     setCharacters(prev => prev.map(c =>
       c.id === charId ? { ...c, data: { ...c.data, [dataKey]: value } } : c
     ))
