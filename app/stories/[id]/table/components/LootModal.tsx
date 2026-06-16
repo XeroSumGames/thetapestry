@@ -48,9 +48,17 @@ export function LootModal({
   const nameInputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  const suggestions = itemName.trim().length >= 1
-    ? LOOT_CATALOG.filter(c => c.name.toLowerCase().includes(itemName.toLowerCase())).slice(0, 8)
-    : []
+  const suggestions = (() => {
+    const q = itemName.trim().toLowerCase()
+    if (!q) return []
+    const matches = LOOT_CATALOG.filter(c => c.name.toLowerCase().includes(q))
+    matches.sort((a, b) => {
+      const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1
+      const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1
+      return aStarts - bStarts || a.name.localeCompare(b.name)
+    })
+    return matches.slice(0, 8)
+  })()
 
   function addItem(name: string, qty: number) {
     const trimmed = name.trim()
