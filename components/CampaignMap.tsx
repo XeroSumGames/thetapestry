@@ -146,6 +146,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const pinsChannelRef = useRef<any>(null)
   const npcsMapChannelRef = useRef<any>(null)
   const [sharedToast, setSharedToast] = useState<string | null>(null)
+  const [lastSharedView, setLastSharedView] = useState<{ lat: number; lng: number; zoom: number; tile: string | null } | null>(null)
   const [shareFlash, setShareFlash] = useState(false)
   const pingMarkersRef = useRef<any[]>([])
   // Measure tool - click to drop point A, click again for point B,
@@ -994,8 +995,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           if (!map) return
           if (tile && tile !== mapLayerRef.current) switchLayer(tile)
           map.flyTo([lat, lng], zoom, { duration: 0.6 })
+          setLastSharedView({ lat, lng, zoom, tile })
           setSharedToast('GM shared a view')
-          window.setTimeout(() => setSharedToast(null), 2500)
         }))
         .on('broadcast', { event: 'cm_route_share' }, wrapBroadcast('cm_route_share', (msg: any) => {
           // Players (and other GMs) receive a shared route and draw it.
@@ -1033,7 +1034,6 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             setTravelMode(p.travelMode as TravelMode)
           }
           setSharedToast('GM shared a route')
-          window.setTimeout(() => setSharedToast(null), 2500)
         }))
         .subscribe()
       viewShareChannelRef.current = viewCh
@@ -1397,14 +1397,28 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Player view-share toast - fires when the GM clicks SHARE
-          VIEW and this client receives the broadcast. Soft blue chip,
-          auto-clears after 2.5s. GM never sees this; their own
-          confirmation lives on the button itself. */}
+      {/* Player view-share / route-share chip. Stays visible until a new
+          share replaces it. View-share: clicking flies back to the GM's
+          last shared position (useful after the player has navigated away).
+          Route-share: non-interactive label only (no coords to fly back to).
+          GM never sees this; their own confirmation is on the Share button. */}
       {sharedToast && !isGM && (
-        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
-          👁 {sharedToast}
-        </div>
+        lastSharedView && sharedToast === 'GM shared a view' ? (
+          <button
+            onClick={() => {
+              const map = mapInstanceRef.current
+              if (!map || !lastSharedView) return
+              if (lastSharedView.tile && lastSharedView.tile !== mapLayerRef.current) switchLayer(lastSharedView.tile)
+              map.flyTo([lastSharedView.lat, lastSharedView.lng], lastSharedView.zoom, { duration: 0.6 })
+            }}
+            style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            👁 GM shared a view
+          </button>
+        ) : (
+          <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+            👁 {sharedToast}
+          </div>
+        )
       )}
 
       {/* Player pin submitted - 3-second confirmation that the pin
