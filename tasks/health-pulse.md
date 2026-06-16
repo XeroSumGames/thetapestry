@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-16 18:08 UTC
+
+**Status:** RED — 2 HIGH vulns, non-breaking fixes confirmed available; security audit escalated ws to CVSS 7.5
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical]
+- HIGH `ws` CVSS 7.5 — memory exhaustion DoS (16:23 security audit confirms non-breaking fix: bump ws >=8.21.0 via `npm audit fix`)
+- HIGH `vite` — fs.deny bypass + NTLMv2 leak (dev-only; non-breaking fix available)
+- NEW MODERATE `@opentelemetry/core` chain (via @sentry/nextjs) — unbounded memory alloc; fix requires Sentry major bump (breaking, hold)
+- ESCALATED `app/api/health/route.ts` — unauthenticated GET runs live DB COUNT, 4 audits deferred; add rate limit before paid launch
+
+**CI:** gh CLI not available in sandbox — skipped
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — no vehicle commits in 3+ days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — needs live doubles roll to drain
+- *Stale-as-open* `scripts/check-realtime-wrap.mjs` — still does not exist
+- *Stale-as-open* "6 mechanics still owe real code" — all 6 sub-items [x]; parent unchecked
+
+**Action:** `npm audit fix` (ws + vite, non-breaking) — unblocked, run `npm test` after; add `app/api/health` rate limit before paid launch; hold opentelemetry (breaking major bump).
+
+---
+
 ## 2026-06-16 15:09 UTC
 
 **Status:** RED+DRIFT (carry-forward; no new commits since 12:09 entry — HEAD still c01cd8a)
