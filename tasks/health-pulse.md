@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-16 09:12 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK — fixed by `84b33e2` since last pulse], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — carry-forward; unactioned since 2026-06-15 18:12
+- HIGH `vite` (via vitest): Windows NTLMv2 hash disclosure via launch-editor; dev-only
+- HIGH `ws` (via @supabase/realtime-js): memory exhaustion DoS on ws SERVER; app is client-only
+
+**CI:** gh CLI not available in sandbox — skipped
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — no vehicle popout commits in 3+ days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain target: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — needs a live doubles roll to drain
+- *Stale-as-open* todo.md:85 "[FOLLOW-UP] add scripts/check-realtime-wrap.mjs" — file does not exist; genuine open item
+- *Stale-as-open* todo.md:67 "6 mechanics still owe real code" — all 6 sub-items [x]; parent not ticked (carry-forward)
+
+**Action:** `npm audit fix` for vite+ws — safe transitive bumps; unblocked, run `npm test` after. TSC now clean; Session 24 findings routed.
+
+---
+
 ## 2026-06-16 00:09 UTC
 
 **Status:** RED+DRIFT
