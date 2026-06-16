@@ -8,6 +8,49 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-06-16 16:23 UTC - weekly audit
+
+**Sections with findings:** npm audit (new HIGH vulns), rate-limit / DoS (carry-over), dependency drift (carry-over)
+
+**Closed since last audit (2026-06-09):**
+- `app/gm-notes-popout/page.tsx:694` dangerouslySetInnerHTML XSS trap - **CONFIRMED FIXED** (static script only, no user HTML in inject path).
+- `app/account/page.tsx:102` avatar upload missing pre-flight - **CONFIRMED FIXED** (routes through `prepareUpload('account-avatars', ...)` at line 114; 5 MB cap + image-only + SVG blocked).
+
+### npm audit (moderate+)
+
+**NEW HIGH:**
+- `ws` 8.0.0-8.20.1 - HIGH - CVSS 7.5 - "Memory exhaustion DoS from tiny fragments and data chunks" - transitive - fixAvailable: true (non-breaking bump to >=8.21.0) - **action: `npm audit fix` scoped to ws**
+- `vite` 8.0.0-8.0.15 - HIGH - two advisories: (1) NTLMv2 hash disclosure via UNC path on Windows (GHSA-v6wh-96g9-6wx3), (2) `server.fs.deny` bypass via alternate paths (GHSA-fx2h-pf6j-xcff) - transitive - fixAvailable: true
+
+**NEW MODERATE:**
+- `@opentelemetry/core` <2.8.0 - moderate - CVSS 5.3 - "Unbounded memory allocation in W3C Baggage propagation" - transitive via `@sentry/nextjs` - fix: requires `@sentry/nextjs` major version change (breaking)
+- `@sentry/node` 8.0.0-alpha.1 - 10.53.1 - moderate - via @opentelemetry chain - transitive - fix: breaking
+- `@opentelemetry/instrumentation-http` <=0.218.0 - moderate - via @opentelemetry/core - transitive - fix: breaking
+- `@opentelemetry/resources` 0.8.0-2.7.1 - moderate - via @opentelemetry/core - transitive - fixAvailable: true (non-sentry path)
+- `@opentelemetry/sdk-trace-base` <=2.7.1 - moderate - via @opentelemetry chain - transitive - fixAvailable: true (non-sentry path)
+- `js-yaml` <=4.1.1 - moderate - CVSS 5.3 - "Quadratic-complexity DoS in merge key handling via repeated aliases" - transitive - fixAvailable: true
+
+**CARRY-OVER (no change):**
+- `postcss` <8.5.10 - moderate - CVSS 6.1 - XSS via `</style>` - transitive via `next` - fix: breaking (next major downgrade) - hold
+- `next` 9.3.4-canary.0 - 16.3.0-canary.5 - moderate - isDirect: true - via postcss - fix: breaking - hold
+- `@sentry/nextjs` >=6.3.6 - moderate - isDirect: true - fix: breaking major downgrade to 6.3.5 - hold
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` - GET, unauthenticated, no rate limit - executes live DB query (`SELECT COUNT` on `profiles`) on every call - carry-over from 2026-05-19 (originally flagged LOW, escalating: at 50k users monitoring + external probes this is a trivial DB amplification vector) - add Upstash rate limit or a simple in-memory token bucket
+
+### Dependency drift
+
+- `@supabase/ssr` - 0.9.0 installed vs 0.12.0 latest (3 minor versions, drifting for 4 consecutive audits) - auth-adjacent; changelog review due before bump
+- `react` / `react-dom` - 19.2.4 vs 19.2.7 (patch) - carry-over, routine
+
+**Top 3 priorities:**
+1. `ws` HIGH CVSS 7.5 - non-breaking fix available; run `npm audit fix` targeted to `ws` to clear without touching `next`. This is an active DoS vector at scale.
+2. `vite` HIGH - fs.deny bypass + NTLMv2 leak; non-breaking fix available - run `npm audit fix` for vite.
+3. `app/api/health/route.ts` - 4 audits deferred; add a rate limit (10 req/min per IP) before paid launch to prevent DB amplification abuse.
+
+---
+
 ## 2026-06-09 16:23 UTC - weekly audit
 
 **Sections with findings:** npm audit (carry-over), XSS pattern (new), file uploads (carry-over), dependency drift
