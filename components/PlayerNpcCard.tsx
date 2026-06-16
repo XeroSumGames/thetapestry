@@ -81,6 +81,9 @@ interface Props {
   // realtime publication, so without this the inventory panel never
   // reflects the loot until the player manually refreshes.
   onItemTaken?: () => void
+  // Called when the player opens the loot panel. Pass this when it's the
+  // player's combat turn so the action debit fires before they loot.
+  onSearchRemains?: () => void
 }
 
 type RecruitState =
@@ -89,7 +92,7 @@ type RecruitState =
   | { kind: 'failed'; outcome: string }
   | null
 
-export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit, onSetupApprentice, onFirstImpression, onItemTaken }: Props) {
+export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit, onSetupApprentice, onFirstImpression, onItemTaken, onSearchRemains }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
@@ -266,6 +269,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const canLoot = displayStatus !== 'active' && !!viewingCharacterId
 
   async function openLoot() {
+    onSearchRemains?.()
     setLootError(null)
     setShowLoot(true)
     setLootItems(null)

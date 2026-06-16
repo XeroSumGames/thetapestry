@@ -6164,6 +6164,42 @@ export default function TablePage() {
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Inspire' ? null : { action: 'Inspire' }) }}
                   style={actBtn(socialTarget?.action === 'Inspire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Inspire' ? '#7fc458' : '#d4cfc9', socialTarget?.action === 'Inspire' ? '#2d5a1b' : '#3a3a3a')}>Inspire</button>
 
+                {/* ── MELEE: 1-action melee weapon attack using a weapon from inventory
+                    (or NPC weapon2 slot). Lets a player with a ranged primary attack
+                    with a carried melee weapon without spending an action to swap via
+                    Ready Weapon first. Disabled when no melee weapon is available. ── */}
+                {(() => {
+                  const charInventory: any[] = charEntry?.character.data?.inventory ?? []
+                  const primaryName = w?.name?.toLowerCase()
+                  const invMeleeItem = charInventory.find((item: any) => {
+                    if (item.name?.toLowerCase() === primaryName) return false
+                    const schema = getWeaponByName(item.name)
+                    return schema && schema.category === 'melee'
+                  })
+                  const mw = invMeleeItem ? getWeaponByName(invMeleeItem.name)
+                    : (() => {
+                        const w2 = npcForWeapon?.skills?.weapon2
+                        if (!w2?.weaponName) return null
+                        const schema = getWeaponByName(w2.weaponName)
+                        return (schema && schema.category === 'melee') ? schema : null
+                      })()
+                  return mw ? (
+                    <button onClick={() => {
+                      clearAimIfActive(activeEntry.id)
+                      const rapid = charEntry?.character.data?.rapid ?? {}
+                      const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                      const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                      const smod = npcAttacker
+                        ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Melee Combat')?.level ?? 0 : 0)
+                        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
+                      handleRollRequest(`${activeEntry.character_name} - Melee (${mw.name})`, amod, smod, { weaponName: mw.name, damage: mw.damage, rpPercent: mw.rpPercent, conditionCmod: 0, traits: mw.traits ?? [] })
+                    }}
+                      style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Melee ({mw.name})</button>
+                  ) : (
+                    <button disabled title="No melee weapon in inventory" style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Melee</button>
+                  )
+                })()}
+
                 {/* ── MOVE: highlight cells + click to move ── */}
                 {/* GM-selected-token override: if the GM has clicked a different   */}
                 {/* token on the map (e.g. an NPC not yet in initiative), anchor    */}
@@ -6671,6 +6707,14 @@ export default function TablePage() {
                       ? () => { setFirstImpressionNpcId(npc.id); setShowSpecialCheck('first_impression') }
                       : undefined}
                     onItemTaken={() => loadEntries(id)}
+                    onSearchRemains={(() => {
+                      if (!combatActive) return undefined
+                      const ae = initiativeOrder.find(e => e.is_active)
+                      if (!ae) return undefined
+                      const isMyTurn = !!(ae.character_id && myEntry && ae.character_id === myEntry.character.id)
+                      if (!isMyTurn && !gmLike) return undefined
+                      return () => consumeAction(ae.id, `${ae.character_name} - Search Remains`)
+                    })()}
                   />
                 )
               })}
@@ -6784,6 +6828,14 @@ export default function TablePage() {
                         ? () => { setFirstImpressionNpcId(npc.id); setShowSpecialCheck('first_impression') }
                         : undefined}
                       onItemTaken={() => loadEntries(id)}
+                      onSearchRemains={(() => {
+                        if (!combatActive) return undefined
+                        const ae = initiativeOrder.find(e => e.is_active)
+                        if (!ae) return undefined
+                        const isMyTurn = !!(ae.character_id && myEntry && ae.character_id === myEntry.character.id)
+                        if (!isMyTurn && !gmLike) return undefined
+                        return () => consumeAction(ae.id, `${ae.character_name} - Search Remains`)
+                      })()}
                     />
                   )}
                   {/* Resize handle - bottom-right corner. Drag to resize the
