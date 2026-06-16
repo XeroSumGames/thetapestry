@@ -6208,7 +6208,7 @@ export default function TablePage() {
                 {/* Players always move the active combatant (their own PC).       */}
                 <button onClick={() => {
                   clearAimIfActive(activeEntry.id)
-                  if (moveMode) { setMoveMode(null); return }
+                  if (moveMode) { handleMapMoveCancel(); return }
                   const active = initiativeOrder.find(e => e.is_active)
                   let moverCharId: string | undefined
                   let moverNpcId: string | undefined
