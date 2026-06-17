@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-17 00:11 UTC
+
+**Status:** RED+DRIFT (carry-forward; new ship `62abbb1` verified clean)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — unchanged
+- HIGH `ws` 8.20.1 CVSS 7.5 — memory exhaustion DoS; fix: `npm audit fix` (bumps to >=8.21.0, non-breaking)
+- HIGH `vite` 8.0.13 — fs.deny bypass + NTLMv2 leak (Windows / dev-only; fix available)
+
+**CI:** last 5 runs all success (latest 2026-06-16T21:56 UTC — post `62abbb1`)
+
+**New ship:** `62abbb1 perf(tactical-map)` — token_moved broadcast now carries `{tokenId, grid_x, grid_y}`; receivers apply optimistic update instead of full `loadTokens()` refetch; postgres_changes safety net still fires. 2 files (+17/-5). All gates green; CI pass.
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — no commits in 3+ days; 24+ days HOPED-FOR
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — needs live doubles roll to drain
+- *Stale-as-open* `scripts/check-realtime-wrap.mjs` — file still does not exist
+- *Stale-as-open* "6 mechanics still owe real code" — all 6 sub-items [x]; parent unchecked
+
+**Action:** `npm audit fix` (ws+vite, non-breaking) still owed — assign to HP lane. TacticalMap perf ship clean.
+
+---
+
 ## 2026-06-16 21:06 UTC
 
 **Status:** RED+DRIFT (carry-forward from 18:08 UTC — no new signal; CI now confirmed via MCP)
