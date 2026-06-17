@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-17 18:09 UTC
+
+**Status:** RED+DRIFT (carry-forward; no new commits since 15:09 UTC health-pulse commit)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — unchanged
+- HIGH `ws` — memory exhaustion DoS; fix available (`npm audit fix`, non-breaking)
+- HIGH `vite` — fs.deny bypass + NTLMv2 leak (Windows/dev); fix available
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — 25+ days; no vehicle commits in 3+ days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — needs live doubles roll to drain
+- *Stale-as-open* `scripts/check-realtime-wrap.mjs` — file does not exist; todo item unchecked
+- *Stale-as-open* recorder `window.prompt` — still in `PlaytestRecorder.tsx:244`; todo unchecked
+
+**Action:** No new signal. `npm audit fix` (ws+vite) still the open action — HP lane.
+
+---
+
 ## 2026-06-17 15:09 UTC
 
 **Status:** RED+DRIFT (carry-forward; no new commits since 12:13 UTC)
