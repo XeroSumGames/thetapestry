@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-17 06:09 UTC
+
+**Status:** RED+DRIFT (carry-forward; no new signal since 00:11 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — unchanged
+- HIGH `ws` 8.20.1 CVSS 7.5 — memory exhaustion DoS; fix: `npm audit fix` (bumps >=8.21.0, non-breaking)
+- HIGH `vite` 8.0.13 — fs.deny bypass + NTLMv2 leak (Windows / dev-only; fix available)
+
+**CI:** last 5 runs all success (latest 2026-06-17T00:12 UTC)
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — 25+ days HOPED-FOR; no vehicle commits in 3+ days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — drain: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — needs live doubles roll to drain
+- *Stale-as-open* `scripts/check-realtime-wrap.mjs` — file does not exist; todo item unchecked
+- *Stale-as-open* "6 mechanics still owe real code" — all 6 sub-items appear [x]; parent unchecked
+
+**Action:** No new signal. `npm audit fix` (ws+vite, non-breaking) still owed — assign to HP lane.
+
+---
+
 ## 2026-06-17 00:11 UTC
 
 **Status:** RED+DRIFT (carry-forward; new ship `62abbb1` verified clean)
