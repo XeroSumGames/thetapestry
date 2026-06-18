@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-18 00:08 UTC
+
+**Status:** RED+DRIFT (carry-forward; 0 new commits since last pulse — ws+vite HIGH unpatched)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [875 passed / 48 files]
+
+**Audit:** npm audit [2 high, 0 critical] — unchanged
+- HIGH `ws` 8.20.1 (via `@supabase/realtime-js`) — memory exhaustion DoS; `npm audit fix` non-breaking
+- HIGH `vite` 8.0.13 (via `vitest`, dev-only, Windows-specific) — low prod risk
+
+**CI:** last 5 runs all success (latest 2026-06-17T21:09 UTC)
+
+**Drift:**
+- *HOPED-FOR* Vehicle popout broadcasts (Section B) — 26+ days; no vehicle popout commits in last 3 days
+- *HOPED-FOR* Stress Check 12-string (HEAL/UNJAM/REPAIR/GI/Group Check/DRIVE/BREW/NAVIGATE) — 30+ days; drain target: Beta-500 dry-run
+- *HOPED-FOR* FI Insight Die AWARD path — 6 days; needs live doubles roll
+- *Stale-as-open* `scripts/check-realtime-wrap.mjs` — file does not exist; todo unchecked
+- *Stale-as-open* "6 mechanics still owe real code" todo parent unchecked — all 6 sub-items are [x]; audit-correction needed
+
+**Action:** `npm audit fix` (ws + vite) — HP lane; no new signal this run.
+
+---
+
 ## 2026-06-17 21:07 UTC
 
 **Status:** RED+DRIFT (carry-forward; 11 new commits since 18:09 UTC, all feature/fix — no vuln remediation)
