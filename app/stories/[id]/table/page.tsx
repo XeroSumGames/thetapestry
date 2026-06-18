@@ -3163,7 +3163,11 @@ export default function TablePage() {
       matched: mover?.id === activeNow?.id,
     })
     const charge = pendingChargeRef.current
-    if (charge) {
+    // Only honour a pending charge if moveMode is still the 20-foot charge
+    // move. If moveMode is 10ft (regular Move after Cancel), pendingChargeRef
+    // survived the cancel due to a React state-timing edge case - treat it as
+    // stale and fall through to normal move/sprint handling.
+    if (charge && moveMode?.feet === 20) {
       if (mover && charge.activeId && charge.activeId !== mover.id) {
         trace('charge', { aborted: 'active combatant changed' })
         pendingChargeRef.current = null
@@ -3175,6 +3179,7 @@ export default function TablePage() {
       actionCostRef.current = 2
       handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
     } else if (sprintPendingRef.current) {
+      if (charge) pendingChargeRef.current = null // clear stale charge
       // Sprint: token moved, NOW consume the 2 actions and fire the
       // Athletics check. We consume here (not on button click) so that
       // a failed cell click can't burn actions without movement.
@@ -3211,6 +3216,7 @@ export default function TablePage() {
       // bypass the active-combatant check that would otherwise block it.
       handleRollRequest(`${mover?.character_name ?? 'Unknown'} - Sprint (Athletics)`, amod, smod, undefined, true)
     } else {
+      if (charge) pendingChargeRef.current = null // clear stale charge
       // Only consume an action when the combatant we just moved is
       // actually the active one. GM-initiated "move this NPC" for an
       // off-turn combatant must not silently deduct from their next
