@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## Verify all code paths when fixing a call-site bug - not just the primary one (2026-06-17)
+
+When fixing a bug at a call site (e.g. "this function is called wrong"), grep for ALL call sites before closing the ticket. The stun-weapon PHY fix needed the same change in three places: (1) the main attack loop in `useRollResolution.ts`, (2) the stray-shot path in the same file (which also had the additional bug of computing `isStunWeapon` AFTER calling `rollDamage`, meaning it was always using the stale pre-computed value), and (3) the insight reroll path in `page.tsx` (which was missing both `rpFromRaw` and `finalWP` zeroing entirely - a third class of bug). Finding only the first would have shipped an incomplete fix. Pattern: after identifying a bug at one call site, always grep the full codebase for the same pattern before committing.
+
+## A schema value of 0 for a percentage-multiplied field produces 0 output (2026-06-17)
+
+`damageBase: 0` with `rpPercent: 400` gives 0 RP (0 x 400% = 0). If a weapon needs to deal a fixed non-zero RP with 0 lethal output, use `damageBase: 1` as a technical minimum to drive the percentage math, relying on the runtime isStun check to zero the finalWP. The `damageBase: 1` is never visible to the player since the stun zeroing fires before output. Alternatively, add a `flatRP` field to the schema for true "0 WP / N RP" semantics - but that requires schema + calculateDamage changes and should be done when multiple weapons need it.
+
 ## Always edit files in the puffer WORKTREE (C:\TheTapestry-puffer), not the main checkout, when committing from puffer lane (2026-06-12)
 
 Edit tool paths must start with `C:\TheTapestry-puffer\` for puffer-lane commits. If I accidentally edit `C:\TheTapestry\...` instead, the change lands in the main checkout's working tree (untracked, not on any commit). Then when I `cd C:\TheTapestry-puffer && git add && git commit`, the file in the worktree hasn't changed - the commit is empty or stale. Fix: always verify the target path before using Edit. If I realize the mistake: (1) apply the same edit to the puffer worktree file, (2) revert the main checkout file to HEAD.
