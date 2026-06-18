@@ -1,5 +1,9 @@
 # Lessons Learned
 
+## When a shipped fix doesn't fully resolve a bug, add a defensive secondary guard (2026-06-17)
+
+The charge cancel bug was marked [FIXED 550e252] but recurred in Session 24. Dump analysis revealed that `handleMapMoveCancel()` was being called correctly (clearing pendingChargeRef), but the charge modal still fired on the next regular Move click - a React state-timing edge case where `pendingChargeRef` survived the cancel. The fix was a defensive guard in `handleMapMoveComplete`: only honour the pending charge if `moveMode?.feet === 20`. If it's 10ft (regular Move), the stale ref is cleared and the move proceeds normally. Pattern: when a ref-based state machine has multiple code paths that all converge on one "commit" function, guard the commit on the CURRENT state matching the expected entry condition - don't trust that prior cleanup was perfect. The `useStableCallback` fresh-closure property makes this check reliable (always reads current React state).
+
 ## Verify all code paths when fixing a call-site bug - not just the primary one (2026-06-17)
 
 When fixing a bug at a call site (e.g. "this function is called wrong"), grep for ALL call sites before closing the ticket. The stun-weapon PHY fix needed the same change in three places: (1) the main attack loop in `useRollResolution.ts`, (2) the stray-shot path in the same file (which also had the additional bug of computing `isStunWeapon` AFTER calling `rollDamage`, meaning it was always using the stale pre-computed value), and (3) the insight reroll path in `page.tsx` (which was missing both `rpFromRaw` and `finalWP` zeroing entirely - a third class of bug). Finding only the first would have shipped an incomplete fix. Pattern: after identifying a bug at one call site, always grep the full codebase for the same pattern before committing.
