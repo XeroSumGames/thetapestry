@@ -72,7 +72,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
-import { sceneTokenPositions, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy, setInitiativePendingActionLoss } from '../../../../lib/data/tactical'
+import { sceneTokenPositions, updateToken as updateSceneToken, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy, setInitiativePendingActionLoss } from '../../../../lib/data/tactical'
 import { applyDamageToPc, applyDamageToNpc } from '../../../../lib/data/combat'
 import { playChatPing } from '../../../../lib/sound'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
@@ -345,6 +345,7 @@ export default function TablePage() {
   const actionPreConsumedRef = useRef(false)  // Set when Sprint/Unjam pre-consumes before the roll modal (Stabilize + Distract migrated off this 2026-05-20)
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
   const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
+  const chargeOriginRef = useRef<{ tokenId: string; x: number; y: number } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal - refs survive React batching. RESET in closeRollModal after the consume-gate logic reads it (the guard is per-roll, not per-modal-open).
   const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn - prevents races where realtime echo + optimistic call both advance, silently skipping a combatant. RESET in the try/finally of nextTurn itself (set true at top, false in finally) - guard is per-nextTurn-call, not session-scoped.
   const consumeActionInFlightRef = useRef<Set<string>>(new Set())   // Per-entry lock for consumeAction - prevents double-click races from decrementing actions_remaining twice (e.g. Aim button hit twice fast burning both actions instead of one)
@@ -3121,7 +3122,7 @@ export default function TablePage() {
     setMapCellFeet(cellFeet)
   })
 
-  const handleMapMoveComplete = useStableCallback(async () => {
+  const handleMapMoveComplete = useStableCallback(async (movedTokenId?: string, originX?: number, originY?: number) => {
     // Vehicle / object-token moves: the token physically moved
     // via scene_tokens.grid_x/y, but no character/NPC consumed
     // an action - vehicles aren't combatants. Bump the token's
@@ -3177,6 +3178,9 @@ export default function TablePage() {
       pendingChargeRef.current = null
       setMoveMode(null)
       actionCostRef.current = 2
+      if (movedTokenId != null && originX != null && originY != null) {
+        chargeOriginRef.current = { tokenId: movedTokenId, x: originX, y: originY }
+      }
       handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
     } else if (sprintPendingRef.current) {
       if (charge) pendingChargeRef.current = null // clear stale charge
@@ -5132,6 +5136,13 @@ export default function TablePage() {
       rollerInitId,
       wasWeaponAttack,
     })
+    const chargeOrigin = chargeOriginRef.current
+    chargeOriginRef.current = null
+    if (!didRoll && chargeOrigin) {
+      await updateSceneToken(chargeOrigin.tokenId, { grid_x: chargeOrigin.x, grid_y: chargeOrigin.y })
+      setTokenRefreshKey(k => k + 1)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: { tokenId: chargeOrigin.tokenId, grid_x: chargeOrigin.x, grid_y: chargeOrigin.y } })
+    }
     // Consume action(s) if a roll was actually executed.
     // Skip if the action was already pre-consumed (Stabilize/Unjam) OR
     // if the roller is NOT the active combatant (out-of-turn check, no

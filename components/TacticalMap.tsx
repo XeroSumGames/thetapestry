@@ -126,7 +126,7 @@ interface Props {
   myCharacterId?: string | null
   viewingSceneId?: string | null // Player follows this scene (explicit Share Map); GM ignores.
   moveMode?: { characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null
-  onMoveComplete?: () => void
+  onMoveComplete?: (tokenId: string, originX: number, originY: number) => void
   onMoveCancel?: () => void
   // Throw-to-cell mode for grenades / thrown explosives. When set, the
   // map paints every cell within `rangeFeet` of the attacker orange and
@@ -3168,7 +3168,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             setTokens(prev => prev.map(t => t.id === moveTok.id ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
             updateToken(moveTok.id, { grid_x: pos.gx, grid_y: pos.gy }).then(() => {
               tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: { tokenId: moveTok.id, grid_x: pos.gx, grid_y: pos.gy } })
-              onMoveComplete?.()
+              onMoveComplete?.(moveTok.id, moveTok.grid_x, moveTok.grid_y)
             })
             // Carry passengers when an object-type vehicle token moves
             // via the popout MOVE button. Helper short-circuits for
