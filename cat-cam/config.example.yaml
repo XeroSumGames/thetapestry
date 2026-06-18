@@ -1,0 +1,48 @@
+# cat-cam configuration. Copy this file to config.yaml and edit the values.
+#   cp config.example.yaml config.yaml
+
+camera:
+  # For an RTSP Wi-Fi camera, use its stream URL (find it in the camera's app
+  # or manual). The username/password are the camera's, not your Wi-Fi:
+  source: "rtsp://username:password@192.168.1.50:554/stream1"
+  # For a USB webcam plugged into THIS computer, use a number instead (0 is
+  # usually the first webcam):
+  # source: 0
+
+bed_zone:
+  # The bed outline, as pixel (x, y) corners in the camera's view.
+  # Don't guess these - run `python scripts/draw_zone.py` and click the corners,
+  # then paste what it prints here.
+  polygon:
+    - [400, 300]
+    - [1200, 300]
+    - [1200, 900]
+    - [400, 900]
+
+cats:
+  # Just for reference / sanity-checking. The names that actually matter are the
+  # folder names under reference_photos/ (one folder per cat).
+  names: [Mittens, Shadow, Pumpkin, Luna, Oreo, Tiger, Smokey]
+
+reference_photos_dir: "reference_photos"
+
+identify:
+  # Cosine-similarity threshold. A live cat that doesn't match any reference
+  # this closely is logged as "unknown". Raise it (e.g. 0.65) if cats get
+  # confused for each other; lower it (e.g. 0.45) if real cats log as unknown.
+  min_confidence: 0.55
+
+monitor:
+  # Only watch between these hours (24h clock). [21, 8] = 9pm to 8am.
+  active_hours: [21, 8]
+  # Seconds between processed frames. Sleeping cats don't move fast; 5s is fine
+  # and keeps CPU usage low.
+  sample_interval_seconds: 5
+  # A cat must be seen this many samples in a row before "arrived" is logged
+  # (and missing this many before "left"). Filters out flickers.
+  presence_confirm_samples: 3
+
+storage:
+  database_path: "data/cat_cam.sqlite"
+  save_event_snapshots: true
+  snapshot_dir: "data/snapshots"

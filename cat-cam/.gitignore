@@ -1,0 +1,17 @@
+# Local config (copied from config.example.yaml) - may contain your camera password
+config.yaml
+
+# Runtime data + captured images
+data/
+reference_photos/
+!reference_photos/.gitkeep
+
+# Model weights downloaded by ultralytics on first run
+*.pt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/

@@ -1,0 +1,11 @@
+# cat-cam dependencies. Install with:  pip install -r requirements.txt
+ultralytics>=8.1.0       # YOLO cat detection (pulls in torch)
+torch>=2.1.0             # neural-net backbone (CPU build is fine)
+torchvision>=0.16.0      # ResNet features for cat identification
+opencv-python>=4.8.0     # camera capture + drawing the bed zone
+pillow>=10.0.0           # image handling for the identifier
+numpy>=1.24.0
+pyyaml>=6.0              # reads config.yaml
+
+# For running the tests only:
+pytest>=7.0
