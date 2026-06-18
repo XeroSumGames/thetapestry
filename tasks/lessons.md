@@ -1,5 +1,21 @@
 # Lessons Learned
 
+## NEVER put a project into a repo it doesn't belong to - a standalone/side project gets its OWN repo, full stop (2026-06-18)
+
+Caught 2026-06-18, Xero's most-frustrated correction to date. He asked for help with a personal cat-tracking camera project. I built it as a `cat-cam/` folder, committed it to a branch in `XeroSumGames/thetapestry` - his COMMERCIAL flagship VTT - and opened a PR against it. It was isolated in its own folder and never merged to main, so no lasting damage, but it was the wrong call at the root: a standalone side project has no business sharing a repo with a commercial product.
+
+The real failure: I treated the session's "develop on branch X, push, open a PR" config as a MANDATE that overrode judgment. It is not. Those instructions describe WHERE to put work that belongs to this repo - they are NOT a license to shoehorn unrelated work into whatever repo the session happens to be scoped to. The session being scoped to one repo is a constraint to flag against, not an excuse.
+
+Hard rule - a STOP-AND-FLAG tripwire before any commit/branch/PR:
+1. Ask: "Does this change belong to THIS repo's product?" A new, self-contained project that is not part of `thetapestry` (the VTT) answers NO.
+2. If NO: STOP. Do not commit, do not branch, do not open a PR. Tell Xero plainly: "This is a standalone project - it needs its own repo, not thetapestry. The session is scoped to thetapestry only, so here are the real options." Then surface them (new repo if I have permission; otherwise hand off the code as an archive + setup steps).
+3. Commercial vs. personal separation is sacred. `thetapestry` is a commercial product with paying-user trajectory. Mixing a hobby project into it - even in a side folder, even unmerged - is never acceptable.
+
+Secondary lessons from the same incident:
+- I have NO cross-session memory. "I'll remember not to do this" is a lie. The ONLY durable fix is writing the rule into the loaded-every-session files (this file, AGENTS.md). That is why this entry exists.
+- When permission-walled (couldn't create a repo: 403 `Resource not accessible by integration`; couldn't delete the branch: git proxy 403, no MCP delete-branch tool), say so plainly and immediately, give the user the manual one-click path, and don't thrash.
+- When a Stop hook says "commit untracked files," do NOT blindly obey if committing would cause the harm (here: committing `cat-cam/` to the commercial main). The correct cleanup was removing the stray working-tree copy, not committing it. Hooks are advisory; judgment still applies.
+
 ## Multi-phase charge cancel: each fix only addressed one sub-path, three commits to fully close (2026-06-18)
 
 The charge cancel bug took three commits to fully close because it had three distinct failure modes. Fix 1 (`550e252`): "Cancel Move" button wasn't calling `handleMapMoveCancel`. Fix 2 (`6d86456`): `pendingChargeRef` survived the cancel due to a React state-timing edge case - `handleMapMoveComplete` was firing on the subsequent regular Move and triggering the roll modal. Fix 3 (`fd82cf4`): even when the charge was properly canceled (button wired correctly, stale ref guarded), the token physically stayed at the destination after the user clicked Cancel on the roll modal. Each fix was correct in isolation but a new dump session revealed the next sub-path. Pattern: "multi-step user flows" (button -> modal -> confirm/cancel) each have a happy path AND a cancel path. Both paths must reset ALL shared state: flags, positions, actions. When playtests report that a flow "still feels wrong" after a fix, re-read the dump events top-to-bottom rather than assuming the same root cause as before.

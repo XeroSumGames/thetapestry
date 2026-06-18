@@ -4,6 +4,10 @@
 This version has breaking changes - APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# This repo is COMMERCIAL - never mix in unrelated projects
+
+`thetapestry` is a commercial product. **Never commit, branch, or open a PR for a project that isn't part of the Tapestry VTT** - not even isolated in a side folder, not even unmerged. A standalone or personal side project gets its OWN repo, full stop. A session being scoped to this repo (with "develop on branch X / push / open a PR" instructions) describes where work that BELONGS here goes; it is NOT a license to shoehorn unrelated work in. Before any commit/branch/PR, ask: "does this belong to the Tapestry VTT product?" If no, STOP and tell the user it needs its own repo. (See `tasks/lessons.md` 2026-06-18 for the incident that earned this rule.)
+
 ## UI conventions
 
 - **Minimum inline fontSize is 13px.** (Raised from 12 → 13 on 2026-04-23.) Never write `fontSize: '9px'` through `'12px'` in `style={{ ... }}` props - even for badges, chips, or micro-labels. If something looks too big at 13, use color/weight/layout instead. Guardrail: `node scripts/check-font-sizes.mjs` reports offenders; `--fix` rewrites them to 13.
