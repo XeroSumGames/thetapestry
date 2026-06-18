@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-18 12:07 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (most recent: 09:09 UTC today)
+
+**Drift:**
+- **HOPED-FOR (same as 09:06 entry, unresolved):** vehicle popout broadcasts, Stress 12-string narrative (8 strings), FI Insight Die AWARD path — all still in HOPED-FOR, no code activity in last 3 days. Session 24 (2026-06-16) confirmed all three still owed.
+- **Stale-as-open todo — `6 mechanics still owe real code for 9/1 KS`:** parent `[ ]` at `todo.md:72` but all 6 child items independently verified [x] (Rest ✓, Vehicles-as-Cover ✓, Item Condition ✓, Env Damage ✓, Travel ✓, Conditions Phase-2 CLOSED). Parent checkbox can be marked [x].
+- **Stale-as-open todo (pin catch-up) — same as 09:06:** `[ ]` at `todo.md:220`; fix shipped 2026-05-27 + E2E green. Only residual open = Xero's proximity auto-reveal roadmap decision. Parent can be closed once decision is logged.
+
+**Action:** Docs-only cleanup: mark `6 mechanics` parent [x]; close pin catch-up parent. HOPED-FOR trio drains at next Beta-500 dry-run — no code fix needed before then.
+
+---
+
 ## 2026-06-18 09:06 UTC
 
 **Status:** DRIFT
