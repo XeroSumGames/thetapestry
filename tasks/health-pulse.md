@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-18 06:09 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical) — RED resolved; ws CVSS 7.5 + vite fs.deny bypass patched by `3ce2ebb`; first clean audit since 2026-06-16 security-audit
+
+**CI:** last 5 runs all success (latest 2026-06-18T04:06 UTC)
+
+**Drift:**
+- HOPED-FOR >3 days: **Stress Check 12-string narrative** (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — no code touch; drain at Beta-500 dry-run
+- HOPED-FOR >3 days: **FI Insight Die award path** (`useRollResolution.ts:264`) — never fired live; no code touch
+- HOPED-FOR >3 days: **Vehicle popout broadcasts** (Section B) — awaiting playtest ride; no code touch
+
+**Action:** RED cleared — audit clean for first time since 2026-06-16. Drift items are playtest-timing only; no code fix needed.
+
+---
+
 ## 2026-06-18 00:08 UTC
 
 **Status:** RED+DRIFT (carry-forward; 0 new commits since last pulse — ws+vite HIGH unpatched)
