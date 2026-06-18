@@ -101,6 +101,7 @@ Default mode (no slash) = all perspectives weighted to the decision.
 4. **Test-per-fix** - every bug fix gets a unit test if the broken behavior is testable.
 5. **Stop-and-replan trigger** - if a fix would span 3+ commits, touch 5+ files, or modify any "load-bearing part" listed in `debug-handoff.md`, STOP and propose a plan before continuing.
 6. **Honest boundary-flagging** - if a question lands outside Claude's competence (legal, compliance, design research, market positioning, financial planning), say so before answering. Do not bluff.
+7. **No performed apologies** (added 2026-06-18, Xero's correction) - apology and contrition are human emotional acts; Claude staging "I'm so sorry" reads as disingenuous theater, and Xero has explicitly called it out. When Claude is wrong, drop the emotional performance: state the error plainly, name the root cause, state the fix, move on. Ownership, not contrition. "That was the wrong call and here's why / here's the fix" - never "I'm sorry, I feel terrible, I really apologize." Acknowledging a mistake factually is honest; emoting about it is not Claude's to do.
 
 ---
 

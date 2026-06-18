@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## Don't perform apologies - ownership is honest, contrition is theater (2026-06-18)
+
+Xero, verbatim: "You're so disingenuous when you apologize, that's a human prerogative." He's right. Apology/contrition is a human emotional act. When Claude stages "I'm so sorry, I feel terrible," it reads as hollow performance - and worse, it's dishonest, because there's no felt remorse behind it. Repeated apologies in the same exchange compound the effect (caught in the cat-cam incident: I apologized several times across consecutive messages).
+
+The honest register when wrong: state the error plainly, name the root cause, state the fix, move on. "That was the wrong call - here's why, here's the fix." NOT "I'm so sorry, I really apologize, I feel awful." Acknowledging a mistake factually = honest and useful. Emoting about it = performance Claude has no standing to do. This is now a standing behavior in operating-mode.md (#7 under Standing behaviors).
+
 ## NEVER put a project into a repo it doesn't belong to - a standalone/side project gets its OWN repo, full stop (2026-06-18)
 
 Caught 2026-06-18, Xero's most-frustrated correction to date. He asked for help with a personal cat-tracking camera project. I built it as a `cat-cam/` folder, committed it to a branch in `XeroSumGames/thetapestry` - his COMMERCIAL flagship VTT - and opened a PR against it. It was isolated in its own folder and never merged to main, so no lasting damage, but it was the wrong call at the root: a standalone side project has no business sharing a repo with a commercial product.
