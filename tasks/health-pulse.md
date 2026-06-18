@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-18 09:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (most recent: run #1056, 06:09 UTC today)
+
+**Drift:**
+- **HOPED-FOR >3 days (vehicle popout broadcasts):** Section B of the Phase 7 2-client re-arch acceptance — `vehicle_updated` / `firing_arc_toggle` popout broadcasts — still unverified at a playtest. First logged HOPED-FOR 2026-05-24. No git activity on vehicle-popout files in last 3 days.
+- **HOPED-FOR >3 days (Stress Check 12-string narrative):** 8 outcome strings still uncaptured (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). Confirmed missing in Session 24 (2026-06-16). Drain target: Beta-500 dry-run. No `roll-helpers.ts` changes in last 3 days.
+- **HOPED-FOR >3 days (FI Insight Die AWARD path):** `insight_dice +1` increment at `useRollResolution.ts:264` (rolling doubles on a 2d6 check) has never fired in live play. Confirmed still owed Session 24 (2026-06-16). No `useRollResolution.ts` changes in last 3 days.
+- **Stale-as-open todo (pin catch-up):** The `todo.md` "[PUFFER - pin realtime propagation]" item routed a fix to HP: "catch-up `loadPins` on SUBSCRIBED + visibility." That fix IS in `components/CampaignPins.tsx:178-181` (SUBSCRIBED handler + visibilitychange handler both present). Todo entry should be audited/closed.
+
+**Action:** No blockers — all green. Audit-close the pin catch-up todo; schedule vehicle-popout + Stress 12-string + FI Insight Die for the next Beta-500 dry-run pass.
+
+---
+
 ## 2026-06-18 06:09 UTC
 
 **Status:** DRIFT
