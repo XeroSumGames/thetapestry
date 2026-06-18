@@ -1,6 +1,6 @@
 # Charge Cancel Fix - Verify Plan
 
-**Commits:** `550e252` (route Cancel Move to handleMapMoveCancel) + `6d86456` (stale pendingChargeRef guard)
+**Commits:** `550e252` (route Cancel Move to handleMapMoveCancel) + `6d86456` (stale pendingChargeRef guard) + `fd82cf4` (revert token to origin on roll modal cancel)
 **Date:** 2026-06-17
 **Session 24 marks:** "charge when canceled is broken" (00:51:28) / "charge failed again - hit charge, hit cancel, still got the CHARGE modal and two moves" (01:01:45)
 
@@ -35,7 +35,16 @@
 16. Report: turn ends after 2nd move?
 17. Expected: YES - 2 regular moves use 2 actions, turn ends normally
 
+**Roll modal cancel (token must revert):**
+18. On a combatant with 2 actions, click Charge
+19. Click a valid destination cell (token moves, charge roll modal appears)
+20. Click Cancel on the roll modal (NOT Cancel Move - this is the modal's Cancel button)
+21. Report: where is the token?
+22. Expected: token is BACK at its original position (before the charge move)
+23. Report: how many actions does the combatant have?
+24. Expected: still 2 actions (nothing consumed - charge never happened)
+
 ---
 
 **Priority:** HIGH - verify before next playtest session.
-**Routed by:** Puffer Fish (dump analysis + fix), 2026-06-17. Commits `550e252` + `6d86456`.
+**Routed by:** Puffer Fish (dump analysis + fix), 2026-06-17/18. Commits `550e252` + `6d86456` + `fd82cf4`.
