@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-18 21:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (most recent 18:07 UTC — no new runs since 18:07 entry)
+
+**Drift:**
+- HOPED-FOR trio unchanged from 18:07 entry: vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. No relevant code changes in last 3d. TacticalMap.tsx touched today (charge + perf fixes) but not vehicle popout path.
+- Open todos unchanged: `check-realtime-wrap.mjs` not created; recorder `window.prompt` not replaced; `6 mechanics` parent checkbox + pin catch-up todo still await docs-only close.
+
+**Action:** carry-forward — no new signal since 18:07 entry. Drain HOPED-FOR trio at next Beta-500 dry-run session.
+
+---
+
 ## 2026-06-18 18:07 UTC
 
 **Status:** DRIFT
