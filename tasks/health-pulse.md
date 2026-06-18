@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-18 18:07 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 15:09 UTC)
+
+**Drift:**
+- HOPED-FOR trio persists (no change since 15:07 entry) — vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. No code activity in 3d. All three unconfirmed at playtest.
+- Open todos confirmed still open: `check-realtime-wrap.mjs` not created; recorder `window.prompt` not replaced.
+
+**Action:** carry-forward — drain at next Beta-500 dry-run session. No new signal since 15:07 entry.
+
+---
+
 ## 2026-06-18 15:07 UTC
 
 **Status:** DRIFT
