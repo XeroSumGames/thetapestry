@@ -439,7 +439,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
       let totalBase = 0, totalDice = 0, totalPhy = 0
       let diceDesc = ''
       for (let i = 0; i < rolls; i++) {
-        const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
+        const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee && !isStun)
         totalBase += dmg.base
         totalDice += dmg.diceRoll
         totalPhy += dmg.phyBonus
@@ -1906,10 +1906,10 @@ export function useRollResolution(deps: RollResolutionDeps) {
               // Compute weapon damage against the grappler
               const attackerPhy = myEntry?.character.data?.rapid?.PHY ?? 0
               const unarmedBonus = strayWeapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
-              const strayDmg = rollDamage(strayWeapon.damage, attackerPhy, !!strayIsMelee)
-              const strayTotalWP = strayDmg.base + strayDmg.diceRoll + strayDmg.phyBonus + unarmedBonus
               const strayTraits = strayWeapon.traits ?? []
               const isStunWeapon = getTraitValue(strayTraits, 'Stun') !== null
+              const strayDmg = rollDamage(strayWeapon.damage, attackerPhy, !!strayIsMelee && !isStunWeapon)
+              const strayTotalWP = strayDmg.base + strayDmg.diceRoll + strayDmg.phyBonus + unarmedBonus
               // Grappler defense (MDM or RDM)
               const grapplerRapid = grapplerEntry?.character.data?.rapid
                 ?? (grapplerNpc ? { PHY: grapplerNpc.physicality ?? 0, DEX: grapplerNpc.dexterity ?? 0 } : {})
@@ -1930,10 +1930,11 @@ export function useRollResolution(deps: RollResolutionDeps) {
                 strayWeapon.weaponName === 'Unarmed' ? 'unarmed'
                 : strayIsMelee ? 'melee'
                 : (strayW?.category as AttackerCategory | undefined)
-              const { finalWP: strayFinalWP, finalRP: strayFinalRP } = calculateDamage(
+              const { finalWP: strayFinalWPRaw, finalRP: strayFinalRP } = calculateDamage(
                 strayTotalWP, strayWeapon.rpPercent, grapplerDM,
                 { rpFromRaw: isStunWeapon, armor: grapplerArmorPieces, attackerCategory: strayAttackerCat, wpPercent: strayWeapon.wpPercent },
               )
+              const strayFinalWP = isStunWeapon ? 0 : strayFinalWPRaw
               const strayCtx: DamageContext = { campaignId: id, userId, attackerName: characterName, defenderName: grapplerName }
               if (grapplerEntry?.liveState) {
                 const { patch } = await applyDamageToPc(grapplerEntry.stateId, {

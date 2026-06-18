@@ -4989,9 +4989,11 @@ export default function TablePage() {
       const defensiveMod = targetObjectReroll ? 0 : ((isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus2)
 
       const attackerPhy = insightHolder.character.data?.rapid?.PHY ?? 0
-      const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
+      const isStunReroll = getTraitValue(weapon.traits ?? [], 'Stun') !== null
+      const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee && !isStunReroll)
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? rollResult.smod : 0
-      const { finalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP + unarmedBonus, weapon.rpPercent, defensiveMod, { wpPercent: weapon.wpPercent })
+      const { finalWP: rawFinalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP + unarmedBonus, weapon.rpPercent, defensiveMod, { rpFromRaw: isStunReroll, wpPercent: weapon.wpPercent })
+      const finalWP = isStunReroll ? 0 : rawFinalWP
 
       rerollDamage = { base: dmg.base, diceRoll: dmg.diceRoll, diceDesc: dmg.diceDesc, phyBonus: dmg.phyBonus, totalWP: dmg.totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 

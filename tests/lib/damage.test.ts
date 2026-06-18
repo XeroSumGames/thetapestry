@@ -33,13 +33,29 @@ describe('calculateDamage', () => {
   })
 
   it('honors rpFromRaw=true to compute RP from RAW WP (Stun-tagged weapons)', () => {
-    // Canon: Taser deals 1 WP / 4 RP from raw. Even when armor mitigates
+    // Canon: Taser deals 1 WP / 6 RP from raw. Even when armor mitigates
     // the WP, the stun impact still rocks the body. rpFromRaw bypasses
     // mitigation for the RP calc.
-    // Raw 1 WP * 400% = 4 RP (mitigation should NOT reduce this).
-    const result = calculateDamage(1, 400, 2, { rpFromRaw: true })
+    // Raw 1 WP * 600% = 6 RP (mitigation should NOT reduce this).
+    const result = calculateDamage(1, 600, 2, { rpFromRaw: true })
     expect(result.finalWP).toBe(0)  // mitigated below zero
-    expect(result.finalRP).toBe(4)  // computed from raw 1, not from final 0
+    expect(result.finalRP).toBe(6)  // computed from raw 1, not from final 0
+  })
+
+  it('cattle prod deals fixed 2 RP regardless of defensive modifier', () => {
+    // Canon: Cattle Prod 1 WP base, rpPercent 200, always zeroed to 0 WP by isStun.
+    // rpFromRaw=true ensures armor does not reduce the RP.
+    // Raw 1 WP * 200% = 2 RP.
+    const result = calculateDamage(1, 200, 3, { rpFromRaw: true })
+    expect(result.finalWP).toBe(0)  // fully mitigated
+    expect(result.finalRP).toBe(2)  // from raw WP, not mitigated
+  })
+
+  it('stun gun deals fixed 4 RP regardless of defensive modifier', () => {
+    // Canon: Stun Gun 1 WP base, rpPercent 400, always zeroed to 0 WP by isStun.
+    const result = calculateDamage(1, 400, 3, { rpFromRaw: true })
+    expect(result.finalWP).toBe(0)
+    expect(result.finalRP).toBe(4)
   })
 
   it('stacks armor DM additively with defensive modifier', () => {
