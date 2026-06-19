@@ -22,7 +22,7 @@ export type ModerationStatus = 'pending' | 'approved' | 'rejected'
 export async function moderationPendingCounts() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const c = db()
-  const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes, forumsRes, warstoriesRes, lfgRes, bugsRes] = await Promise.all([
+  const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes, forumsRes, warstoriesRes, lfgRes, bugsRes, pregensRes] = await Promise.all([
     c.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
     c.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     c.from('world_communities').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
@@ -32,6 +32,7 @@ export async function moderationPendingCounts() {
     c.from('war_stories').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
     c.from('lfg_posts').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
     c.from('bug_reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+    c.from('pregen_library').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
   ])
   return {
     rumors: rumorsRes.count ?? 0,
@@ -43,6 +44,7 @@ export async function moderationPendingCounts() {
     warstories: warstoriesRes.count ?? 0,
     lfg: lfgRes.count ?? 0,
     bugs: bugsRes.count ?? 0,
+    pregens: pregensRes.count ?? 0,
   }
 }
 

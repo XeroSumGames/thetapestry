@@ -8,6 +8,9 @@ import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
+import { loadApprovedPregens } from '../../../lib/data/pregens'
+import { createCharacterForUser } from '../../../lib/data/characters'
+import { assignMemberCharacter } from '../../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
@@ -84,6 +87,8 @@ export default function CampaignPage() {
   // (cloning state removed - Clone button retired Apr 2026)
   const [showPregens, setShowPregens] = useState(false)
   const [creatingPregen, setCreatingPregen] = useState(false)
+  const [libraryPregens, setLibraryPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null }>>([])
+  const [creatingLibraryPregen, setCreatingLibraryPregen] = useState<string | null>(null)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
@@ -114,6 +119,11 @@ export default function CampaignPage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
+
+      if (camp.setting) {
+        const { data: libP } = await loadApprovedPregens(camp.setting)
+        setLibraryPregens(libP ?? [])
+      }
 
       // Seed GM Tools form state from the loaded campaign row. GM-or-
       // Thriver-only inputs below; non-GM members never see this
@@ -215,6 +225,26 @@ export default function CampaignPage() {
       }
     } finally {
       setCreatingPregen(false)
+    }
+  }
+
+  async function handleSelectLibraryPregen(row: { id: string; name: string; data: any }) {
+    if (!userId || !campaign || creatingLibraryPregen) return
+    setCreatingLibraryPregen(row.id)
+    try {
+      const { data: created, error: charErr } = await createCharacterForUser(userId, row.name, row.data)
+      if (charErr || !created) { console.error('[LibraryPregen] character create error:', charErr?.message); return }
+      const { error: assignErr } = await assignMemberCharacter(id, userId, created.id)
+      if (!assignErr) {
+        setSelectedCharId(created.id)
+        setAssignedCharName(created.name)
+        setMyCharacters(prev => [created, ...prev])
+        setShowPregens(false)
+        const mems = await fetchMembersWithProfiles(supabase, id)
+        setMembers(mems)
+      }
+    } finally {
+      setCreatingLibraryPregen(null)
     }
   }
 
@@ -499,27 +529,56 @@ export default function CampaignPage() {
               Random Character
             </a>
           </div>
-          {/* Pregen selection - only for settings with pregens */}
-          {campaign.setting && SETTING_PREGENS[campaign.setting] && (
+          {/* Pregen selection - official pregens for this setting + community library */}
+          {(campaign.setting && SETTING_PREGENS[campaign.setting] || libraryPregens.length > 0) && (
             <div style={{ marginTop: '10px' }}>
               <button onClick={() => setShowPregens(!showPregens)}
                 style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 {showPregens ? 'Hide Pre-Generated Characters' : 'Or Choose a Pre-Generated Character'}
               </button>
               {showPregens && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-                  {SETTING_PREGENS[campaign.setting]!.map(p => (
-                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                      <div>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>{p.profession} &middot; {p.three_words}</div>
-                      </div>
-                      <button onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
-                        style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creatingPregen ? 'not-allowed' : 'pointer', opacity: creatingPregen ? 0.6 : 1, whiteSpace: 'nowrap' }}>
-                        {creatingPregen ? 'Creating...' : 'Select'}
-                      </button>
+                <div style={{ marginTop: '8px' }}>
+                  {campaign.setting && SETTING_PREGENS[campaign.setting] && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: libraryPregens.length > 0 ? '14px' : '0' }}>
+                      {SETTING_PREGENS[campaign.setting]!.map(p => (
+                        <div key={p.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                          <div>
+                            <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>{p.profession} &middot; {p.three_words}</div>
+                          </div>
+                          <button onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
+                            style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creatingPregen ? 'not-allowed' : 'pointer', opacity: creatingPregen ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                            {creatingPregen ? 'Creating...' : 'Select'}
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {libraryPregens.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase', color: '#7ab3d4', fontWeight: 600, marginBottom: '6px', fontFamily: 'Carlito, sans-serif' }}>
+                        Community Pregens
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {libraryPregens.slice(0, 5).map((p: any) => (
+                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#242424', border: '1px solid #2a3a2a', borderRadius: '3px' }}>
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                              {p.data?.profession && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>{p.data.profession}</div>}
+                            </div>
+                            <button onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
+                              style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', opacity: creatingLibraryPregen ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                              {creatingLibraryPregen === p.id ? 'Creating...' : 'Select'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <a href={`/pregen?return=${id}`}
+                    style={{ display: 'inline-block', marginTop: '10px', fontSize: '13px', color: '#7ab3d4', textDecoration: 'none', letterSpacing: '.04em' }}>
+                    More pregens &rarr;
+                  </a>
                 </div>
               )}
             </div>

@@ -1,5 +1,24 @@
 # Lessons Learned
 
+## Windows sed introduces UTF-8 BOM - always strip after mass sed sweeps (2026-06-18)
+
+`sed -i` on Windows (Git Bash / WSL interop) rewrites files with a UTF-8 BOM (`\xEF\xBB\xBF`) prepended. Turbopack hard-fails on BOM in CSS (`Parsing CSS source code failed`); Next.js TSX compilation also chokes. The symptom is a Vercel deploy failure on `app/globals.css:1:2` showing `﻿@font-face`.
+
+**Rule:** After ANY `sed -i` mass-replace across source files on Windows, immediately run the BOM scan + strip before committing:
+
+```python
+import glob
+patterns = ['app/**/*.tsx','app/**/*.ts','app/**/*.css','components/**/*.tsx','lib/**/*.ts','lib/**/*.tsx']
+for pat in patterns:
+    for path in glob.glob(pat, recursive=True):
+        with open(path,'rb') as f: data=f.read()
+        if data[:3]==b'\xef\xbb\xbf':
+            with open(path,'wb') as f: f.write(data[3:])
+```
+
+Alternative: use Python for mass-replace entirely (reads/writes in binary, no BOM added) instead of sed. The sed approach is fragile on Windows even in Git Bash.
+
+
 ## Canon skill/term removal is NOT a blind find-replace - dedup + logic + prose (2026-06-18)
 
 Xero: "Intimidation no longer exists. all uses should be changed to Manipulation." Collapsing one skill into another across the codebase has three traps a naive `sed s/Intimidation/Manipulation/g` walks straight into:

@@ -300,6 +300,7 @@ export type Database = {
           character_id: string | null
           id: string
           joined_at: string | null
+          observer: boolean
           user_id: string
         }
         Insert: {
@@ -307,6 +308,7 @@ export type Database = {
           character_id?: string | null
           id?: string
           joined_at?: string | null
+          observer?: boolean
           user_id: string
         }
         Update: {
@@ -314,6 +316,7 @@ export type Database = {
           character_id?: string | null
           id?: string
           joined_at?: string | null
+          observer?: boolean
           user_id?: string
         }
         Relationships: [
@@ -2271,9 +2274,9 @@ export type Database = {
           moderation_status: string
           name: string
           parent_setting: string | null
+          play_time: string | null
           player_count_recommended: number | null
           rating_count: number | null
-          play_time: string | null
           session_count_estimate: number | null
           sort_order: number | null
           source_campaign_id: string | null
@@ -2298,9 +2301,9 @@ export type Database = {
           moderation_status?: string
           name: string
           parent_setting?: string | null
+          play_time?: string | null
           player_count_recommended?: number | null
           rating_count?: number | null
-          play_time?: string | null
           session_count_estimate?: number | null
           sort_order?: number | null
           source_campaign_id?: string | null
@@ -2325,8 +2328,8 @@ export type Database = {
           moderation_status?: string
           name?: string
           parent_setting?: string | null
-          player_count_recommended?: number | null
           play_time?: string | null
+          player_count_recommended?: number | null
           rating_count?: number | null
           session_count_estimate?: number | null
           sort_order?: number | null
@@ -2608,6 +2611,56 @@ export type Database = {
         }
         Relationships: []
       }
+      pregen_library: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          author_id: string | null
+          created_at: string
+          data: Json
+          id: string
+          moderation_status: string
+          module_id: string | null
+          name: string
+          portrait_url: string | null
+          setting: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_id?: string | null
+          created_at?: string
+          data: Json
+          id?: string
+          moderation_status?: string
+          module_id?: string | null
+          name: string
+          portrait_url?: string | null
+          setting?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_id?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          moderation_status?: string
+          module_id?: string | null
+          name?: string
+          portrait_url?: string | null
+          setting?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pregen_library_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2776,6 +2829,7 @@ export type Database = {
           grid_w: number
           grid_x: number
           grid_y: number
+          group_label: string | null
           id: string
           is_door: boolean
           is_visible: boolean | null
@@ -2813,6 +2867,7 @@ export type Database = {
           grid_w?: number
           grid_x?: number
           grid_y?: number
+          group_label?: string | null
           id?: string
           is_door?: boolean
           is_visible?: boolean | null
@@ -2850,6 +2905,7 @@ export type Database = {
           grid_w?: number
           grid_x?: number
           grid_y?: number
+          group_label?: string | null
           id?: string
           is_door?: boolean
           is_visible?: boolean | null

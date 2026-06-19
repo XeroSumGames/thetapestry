@@ -1,6 +1,11 @@
 import type { Json } from '../database.types'
 import { db } from './db'
 
+/** Create a character row for a user. Returns {data: {id, name}, error}. */
+export function createCharacterForUser(userId: string, name: string, data: unknown) {
+  return db().from('characters').insert({ user_id: userId, name, data: data as Json }).select('id, name').single()
+}
+
 /**
  * Merge a partial data blob into a character's JSON data column.
  * Used on /characters to persist between-sessions stat changes (WP, stress, etc.)

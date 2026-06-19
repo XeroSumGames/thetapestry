@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import CharacterCard from '../../components/CharacterCard'
 import { createTestCharacter } from '../../scripts/create-test-character'
 import { updateCharacterDataField } from '../../lib/data/characters'
+import { loadAuthorPregens } from '../../lib/data/pregens'
 
 interface CharacterRow {
   id: string
@@ -15,10 +16,20 @@ interface CharacterRow {
   data: any
 }
 
+interface PregenRow {
+  id: string
+  name: string
+  setting: string | null
+  moderation_status: string
+  created_at: string
+  portrait_url: string | null
+}
+
 export default function CharactersPage() {
   const [characters, setCharacters] = useState<CharacterRow[]>([])
   const [loading, setLoading] = useState(true)
   const [isThriver, setIsThriver] = useState(false)
+  const [myPregens, setMyPregens] = useState<PregenRow[]>([])
   const router = useRouter()
   const supabase = createClient()
 
@@ -52,6 +63,8 @@ export default function CharactersPage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
       setCharacters(data ?? [])
+      const { data: pregens } = await loadAuthorPregens(user.id)
+      setMyPregens(pregens ?? [])
       setLoading(false)
     }
     load()
@@ -187,6 +200,38 @@ export default function CharactersPage() {
           </div>
         ))}
       </div>
+
+      {myPregens.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif', borderBottom: '1px solid #2e2e2e', paddingBottom: '6px' }}>
+            My Pregens
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {myPregens.map(p => {
+              const chipColor = p.moderation_status === 'approved' ? '#7fc458' : p.moderation_status === 'rejected' ? '#f5a89a' : '#EF9F27'
+              const chipBg = p.moderation_status === 'approved' ? '#1a2e10' : p.moderation_status === 'rejected' ? '#2a1210' : '#2a1e05'
+              return (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {p.portrait_url ? (
+                      <img src={p.portrait_url} alt={p.name} style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a' }} />
+                    ) : (
+                      <div style={{ width: '36px', height: '36px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f5f2ee', fontSize: '18px' }}>?</div>
+                    )}
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                      {p.setting && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '1px', textTransform: 'capitalize' }}>{p.setting}</div>}
+                    </div>
+                  </div>
+                  <div style={{ padding: '3px 10px', background: chipBg, border: `1px solid ${chipColor}`, borderRadius: '3px', fontSize: '13px', color: chipColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    {p.moderation_status}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

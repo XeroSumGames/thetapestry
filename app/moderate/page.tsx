@@ -16,6 +16,7 @@ import {
   deleteForumThread, updateWarStory, deleteWarStory, updateLfgPost, deleteLfgPost,
   updateProfile, updateRumorPin, deleteRumorPin,
 } from '../../lib/data/moderation'
+import { loadPregensByStatus, updatePregen, deletePregen } from '../../lib/data/pregens'
 
 interface Pin {
   id: string
@@ -74,7 +75,7 @@ const navLink: React.CSSProperties = {
 }
 
 export default function ModerationPage() {
-  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities' | 'modules' | 'forums' | 'warstories' | 'lfg' | 'bugs'>('users')
+  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities' | 'modules' | 'forums' | 'warstories' | 'lfg' | 'bugs' | 'pregens'>('users')
   const [pins, setPins] = useState<Pin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
@@ -117,7 +118,9 @@ export default function ModerationPage() {
   // when there's something waiting. Users counts "new in last 7
   // days" (no moderation status concept there); rumors / npcs /
   // communities count actual pending rows.
-  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number; forums: number; warstories: number; lfg: number; bugs: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0, forums: 0, warstories: 0, lfg: 0, bugs: 0 })
+  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number; forums: number; warstories: number; lfg: number; bugs: number; pregens: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0, forums: 0, warstories: 0, lfg: 0, bugs: 0, pregens: 0 })
+  const [pregens, setPregens] = useState<any[]>([])
+  const [pregensLoading, setPregensLoading] = useState(false)
   const [bugs, setBugs] = useState<any[]>([])
   const [bugsLoading, setBugsLoading] = useState(false)
   // Inline RESPOND state per bug row. Maps bug id -> draft text shown
@@ -243,6 +246,7 @@ export default function ModerationPage() {
     if (section === 'npcs') loadWorldNpcs()
     if (section === 'communities') loadWorldCommunities()
     if (section === 'modules') loadModules()
+    if (section === 'pregens') loadPregens()
     if (section === 'forums') loadForumThreads()
     if (section === 'warstories') loadWarStories()
     if (section === 'lfg') loadLfgPosts()
@@ -368,6 +372,45 @@ export default function ModerationPage() {
       })
     }
     setModules(prev => prev.filter(m => m.id !== id))
+    setActing(null)
+  }
+
+  async function loadPregens() {
+    setPregensLoading(true)
+    const { data, error } = await loadPregensByStatus(filter)
+    if (error) { setPregensLoading(false); return }
+    const authorIds = [...new Set((data ?? []).map((p: any) => p.author_id).filter(Boolean))] as string[]
+    let profileMap: Record<string, string> = {}
+    if (authorIds.length > 0) {
+      const { data: profs } = await usernamesByIds(authorIds)
+      profileMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+    }
+    setPregens((data ?? []).map((p: any) => ({ ...p, author_username: profileMap[p.author_id] ?? 'unknown' })))
+    setPregensLoading(false)
+  }
+
+  async function handlePregenAction(id: string, status: 'approved' | 'rejected') {
+    setActing(id)
+    const { user } = await getCachedAuth()
+    const pregen = pregens.find(p => p.id === id)
+    const { error } = await updatePregen(id, {
+      moderation_status: status,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    })
+    if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
+    if (pregen?.author_id) {
+      await insertNotification({
+        user_id: pregen.author_id,
+        type: status === 'approved' ? 'pregen_approved' : 'pregen_rejected',
+        title: status === 'approved' ? 'Pregen approved' : 'Pregen rejected',
+        body: status === 'approved'
+          ? `Your pre-generated character "${pregen.name}" has been approved and is now in the library.`
+          : `Your pre-generated character "${pregen.name}" was not approved. You can edit and re-submit.`,
+        metadata: { pregen_id: id, pregen_name: pregen.name },
+      })
+    }
+    setPregens(prev => prev.filter(p => p.id !== id))
     setActing(null)
   }
 
@@ -743,7 +786,7 @@ export default function ModerationPage() {
           tab keeps its red accent so the user can tell where they
           are. Count badge appears next to the label. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {(['users', 'rumors', 'npcs', 'communities', 'modules', 'forums', 'warstories', 'lfg', 'bugs'] as const).map(s => {
+        {(['users', 'rumors', 'npcs', 'communities', 'modules', 'pregens', 'forums', 'warstories', 'lfg', 'bugs'] as const).map(s => {
           const count = pendingCounts[s]
           const hasPending = count > 0
           const isActive = section === s
@@ -754,6 +797,7 @@ export default function ModerationPage() {
             : s === 'npcs' ? 'NPCs'
             : s === 'communities' ? 'Communities'
             : s === 'modules' ? 'Modules'
+            : s === 'pregens' ? 'Pregens'
             : s === 'forums' ? 'Forums'
             : s === 'warstories' ? 'War Stories'
             : s === 'bugs' ? 'Bugs'
@@ -1302,6 +1346,58 @@ export default function ModerationPage() {
                   {filter === 'rejected' && (
                     <button onClick={() => handleModuleAction(m.id, 'approved')} disabled={acting === m.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
                   )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── PREGENS ── */}
+      {section === 'pregens' && (
+        <>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
+            {(['pending', 'approved', 'rejected'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '7px 16px', border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
+                background: filter === f ? '#2a1210' : '#242424', color: filter === f ? '#f5a89a' : '#f5f2ee',
+                borderRadius: '3px', cursor: 'pointer', fontSize: '13px',
+                fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+              }}>{f}</button>
+            ))}
+          </div>
+          {pregensLoading && <div style={{ color: '#f5f2ee', fontSize: '13px' }}>Loading...</div>}
+          {!pregensLoading && pregens.length === 0 && (
+            <div style={{ color: '#f5f2ee', fontSize: '13px', fontStyle: 'italic' }}>No {filter} pregens.</div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {pregens.map(p => (
+              <div key={p.id} style={{ padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${filter === 'approved' ? '#7fc458' : filter === 'rejected' ? '#c0392b' : '#8b5cf6'}`, borderRadius: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                      {p.name}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
+                      By <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{p.author_username}</span>{p.created_at ? ` · submitted ${new Date(p.created_at).toLocaleDateString()}` : ''}
+                      {p.setting && <span style={{ marginLeft: '8px', color: '#EF9F27', textTransform: 'capitalize' }}>· {p.setting}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {filter === 'pending' && (
+                    <>
+                      <button onClick={() => handlePregenAction(p.id, 'approved')} disabled={acting === p.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                      <button onClick={() => handlePregenAction(p.id, 'rejected')} disabled={acting === p.id} style={actionBtn('#7a1f16', '#f5a89a')}>Reject</button>
+                    </>
+                  )}
+                  {filter === 'approved' && (
+                    <button onClick={() => handlePregenAction(p.id, 'rejected')} disabled={acting === p.id} style={actionBtn('#7a1f16', '#f5a89a')}>Revoke</button>
+                  )}
+                  {filter === 'rejected' && (
+                    <button onClick={() => handlePregenAction(p.id, 'approved')} disabled={acting === p.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                  )}
+                  <button onClick={async () => { if (!confirm(`Delete pregen "${p.name}"?`)) return; setActing(p.id); await deletePregen(p.id); setPregens(prev => prev.filter(x => x.id !== p.id)); setActing(null) }} disabled={acting === p.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
                 </div>
               </div>
             ))}

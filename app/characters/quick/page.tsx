@@ -4,6 +4,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { logFirstEvent } from '../../../lib/events'
+import { isThriver } from '../../../lib/auth/roles'
+import { countGmCampaigns, getUserRole, getStoryCampaignSetting } from '../../../lib/data/campaigns'
+import { insertPregen } from '../../../lib/data/pregens'
 import GhostWall from '../../../components/GhostWall'
 import {
   createWizardState, WizardState, buildCharacter,
@@ -48,8 +51,31 @@ export default function QuickCharacterPage() {
   const [step, setStep] = useState(0)
   const [isAuth, setIsAuth] = useState<boolean | null>(null)
   const [showGhostWall, setShowGhostWall] = useState(false)
+  const [canPregen, setCanPregen] = useState(false)
+  const [pregenRole, setPregenRole] = useState<'thriver' | 'gm' | null>(null)
+  const [pregenning, setPregenning] = useState(false)
+  const [pregened, setPregened] = useState(false)
+  const [pregenMsg, setPregenMsg] = useState('')
 
-  useEffect(() => { getCachedAuth().then(({ user }) => setIsAuth(!!user)) }, [])
+  useEffect(() => {
+    async function checkAuth() {
+      const { user } = await getCachedAuth()
+      setIsAuth(!!user)
+      if (!user) return
+      const { data: profile } = await getUserRole(user.id)
+      if (isThriver(profile)) {
+        setCanPregen(true)
+        setPregenRole('thriver')
+      } else {
+        const { count } = await countGmCampaigns(user.id)
+        if ((count ?? 0) > 0) {
+          setCanPregen(true)
+          setPregenRole('gm')
+        }
+      }
+    }
+    checkAuth()
+  }, [])
   function requireAuth() { if (isAuth === false) { setShowGhostWall(true); return true } return false }
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -160,6 +186,43 @@ export default function QuickCharacterPage() {
 
   function handlePrint() {
     window.print()
+  }
+
+  async function handlePregen() {
+    if (pregenning || pregened) return
+    setPregenning(true)
+    setPregenMsg('')
+    try {
+      const { user } = await getCachedAuth()
+      if (!user) return
+      const character = buildCharacter(state)
+      const now = new Date().toISOString()
+      const isThriverUser = pregenRole === 'thriver'
+
+      let setting: string | null = null
+      if (returnStoryId) {
+        const { setting: s } = await getStoryCampaignSetting(returnStoryId)
+        setting = s
+      }
+
+      const { error } = await insertPregen({
+        author_id: user.id,
+        name: character.name || 'Unnamed Character',
+        data: character as unknown as import('../../../lib/database.types').Json,
+        portrait_url: (character as any).photoDataUrl ?? null,
+        setting,
+        moderation_status: isThriverUser ? 'approved' : 'pending',
+        approved_by: isThriverUser ? user.id : null,
+        approved_at: isThriverUser ? now : null,
+      })
+      if (error) { setPregenMsg('Error saving pregen.'); return }
+      setPregened(true)
+      setPregenMsg(isThriverUser
+        ? 'Added to the pregen library.'
+        : "Submitted for approval - it's in your characters now and will go live once approved.")
+    } finally {
+      setPregenning(false)
+    }
   }
 
   const allSkills = getCumulativeSkills(state.steps)
@@ -313,11 +376,18 @@ export default function QuickCharacterPage() {
         <div style={{ textAlign: 'center' }}>
           {saveError && <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
           {saved && <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
+          {pregenMsg && <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '2px' }}>{pregenMsg}</div>}
           <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 5</div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 5 && (
             <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>Print Character</button>
+          )}
+          {step === 5 && canPregen && (
+            <button onClick={handlePregen} disabled={pregenning || pregened}
+              style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458', opacity: pregenning || pregened ? 0.6 : 1 }}>
+              {pregenning ? 'Saving...' : pregened ? 'Saved as Pregen' : 'Pregen'}
+            </button>
           )}
           {step < 5
             ? <button onClick={() => { if (requireAuth()) return; setStep(s => Math.min(5, s + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={navBtn(true)}>Advance</button>
