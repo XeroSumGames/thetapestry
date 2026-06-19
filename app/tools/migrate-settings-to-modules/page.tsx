@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Thriver-only one-shot tool to publish the deprecated /stories/new
 // settings (Chased, Mongrels, Empty, The Rock, The Arena) as Modules.
 // Each click creates one module + one version, marks listed +

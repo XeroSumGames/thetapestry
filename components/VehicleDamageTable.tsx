@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { type VehicleDamageTable, damageRowForRoll } from '../lib/vehicle-damage'

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
 import { createClient } from '../../lib/supabase-browser'

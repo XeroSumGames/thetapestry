@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useEffect } from 'react'
 import { createWizardState, WizardState, buildCharacter } from '../../../lib/xse-engine'
 import { createClient } from '../../../lib/supabase-browser'

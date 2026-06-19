@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { wrapDbChange } from '../lib/sentry-realtime'

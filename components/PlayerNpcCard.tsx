@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { CampaignNpc, getNpcRingColor } from './NpcRoster'
 import { createClient } from '../lib/supabase-browser'

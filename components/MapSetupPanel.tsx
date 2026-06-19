@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useRef, useState } from 'react'
 
 // In-tab floating, draggable, always-on-top (within the browser tab) host for

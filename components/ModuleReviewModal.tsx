@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Phase 5 Sprint 3b - Review modal.
 //
 // When a subscriber's campaign is behind on module updates, this

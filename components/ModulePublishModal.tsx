@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Phase 5 Sprint 2 - Module publish wizard.
 //
 // A single-page modal (not a multi-step wizard) that lets the GM turn

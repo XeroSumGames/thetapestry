@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useMemo, useState } from 'react'
 import { WizardState } from '../../lib/xse-engine'
 import { ALL_WEAPONS, TRAIT_DESCRIPTIONS, getWeaponByName, type Weapon, type WeaponCategory } from '../../lib/weapons'

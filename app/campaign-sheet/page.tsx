@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // Campaign Sheet - Phase 2.
 //

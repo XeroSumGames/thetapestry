@@ -1,4 +1,4 @@
-﻿// XSE SRD Weapon Database
+// XSE SRD Weapon Database
 //
 // Stun-weapon canon (locked 2026-05-09):
 //   - Taser:       1 WP / 4 RP per hit (rpPercent 400) + Stun trait.

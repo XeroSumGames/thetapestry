@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'

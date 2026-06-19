@@ -1,4 +1,4 @@
-﻿// Initiative Bar - extracted from app/stories/[id]/table/page.tsx during the
+// Initiative Bar - extracted from app/stories/[id]/table/page.tsx during the
 // C2 refactor pass. Renders the combat initiative tracker that's shown
 // across the top of the table page when combat is active.
 //

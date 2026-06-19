@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Vehicle skill-check state machine, extracted from app/vehicle/page.tsx
 // (2026-05-24) so the LOC-ratcheted popout can stay under its ceiling and
 // the combat-adjacent roll path lives in one testable place. Owns the

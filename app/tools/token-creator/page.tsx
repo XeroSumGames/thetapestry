@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'

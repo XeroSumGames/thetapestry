@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // StoryActionBar - the canonical campaign-page header rendered at the
 // top of every campaign page (hub + Snapshots + Sessions + Community).
 // Carries:

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { WizardState, StepData, rollComplication, rollMotivation } from '../../lib/xse-engine'
 import { COMPLICATIONS, MOTIVATIONS } from '../../lib/xse-schema'
 

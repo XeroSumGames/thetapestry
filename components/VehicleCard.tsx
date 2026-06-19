@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { openPopout } from '../lib/popout'
 import { type InventoryItem, normalizeInventoryItem } from '../lib/inventory'
 

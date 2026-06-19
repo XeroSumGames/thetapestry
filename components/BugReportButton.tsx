@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // BugReportButton - 🐞 icon in the sidebar's user-header icon row.
 // Click opens a modal with a textarea; submit inserts a bug_reports
 // row, the DB trigger fires call_notify_thriver to email Xero.

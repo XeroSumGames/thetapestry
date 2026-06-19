@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // ApprenticeCreationWizard - modal that runs the Apprentice creation flow
 // per spec-communities §2a / SRD §08 p.21. Triggered from the Apprentice
 // NPC card by the master PC after a Moment-of-High-Insight recruit.

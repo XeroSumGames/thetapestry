@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // /terms - beta-period terms of service. Plain-language, narrow-scope.
 // Will get a proper legal pass before public launch.
 

@@ -1,4 +1,4 @@
-﻿// Session log export.
+// Session log export.
 //
 // Produces a standalone HTML document mirroring the roll-feed preview's
 // look (tasks/roll-feed-log-preview.html), populated with the current

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { memo, useState, useEffect, useRef } from 'react'
 import { ModalBackdrop } from '../lib/style-helpers'
 import { useRouter } from 'next/navigation'

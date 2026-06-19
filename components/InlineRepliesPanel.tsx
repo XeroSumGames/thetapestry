@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Phase 4E - inline-expand reply panel for War Stories + LFG. Mirrors
 // the Forums thread-detail reply UX (flat list ordered ASC by
 // created_at + textarea composer at the bottom) but lives inline

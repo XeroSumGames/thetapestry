@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { prepareUpload } from '../lib/safe-upload'

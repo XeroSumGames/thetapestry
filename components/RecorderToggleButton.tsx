@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Chrome-level ⏺ recorder toggle for the Sidebar user-header icon row.
 // Scoped by userId (not campaignId) so it survives navigation across all
 // routes. Phase A: single-tab only; the /table cascade button handles the

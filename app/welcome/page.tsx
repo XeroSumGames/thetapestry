@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import Link from 'next/link'
 
 // "A Guide to the Tapestry" - the reference hub for returning users.

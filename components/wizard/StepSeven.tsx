@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { WizardState, getCumulativeAttributes } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, deriveSecondaryStats, type AttributeName } from '../../lib/xse-schema'
 import HelpTooltip from '../HelpTooltip'

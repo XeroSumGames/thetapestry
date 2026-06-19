@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Off-screen recruitment for a community.
 //
 // Lets a GM stand the community's Leader NPC in for a PC during

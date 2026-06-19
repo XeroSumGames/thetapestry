@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // /modules - Phase C marketplace browse page.
 //
 // Public-facing surface for discovering modules (the campaign-create

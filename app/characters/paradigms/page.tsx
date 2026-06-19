@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // /characters/paradigms - the third character-creation funnel.
 //
 // Backstory wizard = full 7-step authored character. Random = one click,

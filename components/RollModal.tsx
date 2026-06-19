@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Shared roll modal shell - the canonical ATTACK ROLL shape.
 //
 // Visual chrome matches the inline Attack Roll modal in

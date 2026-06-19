@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // no React hooks needed - HP is derived from props
 import { useState } from 'react'
 import { CampaignNpc, getNpcRingColor } from './NpcRoster'

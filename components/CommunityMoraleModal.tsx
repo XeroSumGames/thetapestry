@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // /privacy - beta-period privacy policy. Plain-language, narrow-scope.
 // Replaces the placeholder; will get a proper legal pass before public
 // launch. The point during beta is just to disclose what's actually

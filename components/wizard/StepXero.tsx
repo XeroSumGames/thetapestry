@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useRef } from 'react'
 import { WizardState } from '../../lib/xse-engine'
 import { resizeImage } from '../../lib/image-utils'

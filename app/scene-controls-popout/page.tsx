@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // Popped-out tactical scene controls. Same buttons as the inline GM
 // strip in TacticalMap.tsx, but in their own browser window so the GM
 // can keep them on a second monitor and let the map fill its screen.

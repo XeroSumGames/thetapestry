@@ -1,4 +1,4 @@
-﻿import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSection'
+import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSection'
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 

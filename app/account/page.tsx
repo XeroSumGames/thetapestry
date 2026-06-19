@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // /account - player account management. Distinct from character
 // management (which lives at /characters): this is the human behind
 // the screen, not the character they're playing.

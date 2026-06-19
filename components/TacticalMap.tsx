@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { memo, useEffect, useRef, useState } from 'react'
 import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'

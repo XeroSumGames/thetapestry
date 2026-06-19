@@ -1,4 +1,4 @@
-﻿// Shared design-token style helpers. The codebase doesn't use a CSS-in-JS
+// Shared design-token style helpers. The codebase doesn't use a CSS-in-JS
 // framework - components inline their styles via the `style={{ ... }}`
 // prop. That's deliberate (no runtime cost, no build pipeline), but it
 // means recurring patterns get duplicated literally instead of referenced.

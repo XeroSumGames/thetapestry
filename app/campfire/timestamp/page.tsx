@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useMemo, useState } from 'react'
 
 // /campfire/timestamp - HammerTime-style timestamp generator. Pick a date

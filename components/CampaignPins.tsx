@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { wrapBroadcast } from '../lib/sentry-realtime'

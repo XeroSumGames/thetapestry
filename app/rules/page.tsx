@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { RULE_SECTIONS } from '../../lib/rules/sections'
 import { RuleHero } from '../../components/rules/RuleSection'
 

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'

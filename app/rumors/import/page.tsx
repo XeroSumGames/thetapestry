@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // /modules/import - second entry point into the module-publish flow.
 //
 // The first entry point is from a campaign edit page ("Publish as

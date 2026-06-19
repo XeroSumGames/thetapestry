@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
 import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'

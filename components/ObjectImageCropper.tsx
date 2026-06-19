@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import { ModalBackdrop } from '../lib/style-helpers'
 

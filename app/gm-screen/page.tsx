@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // Skip Next's static prerender entirely. /gm-screen mounts a Supabase
 // client (via the GmNotes panel) and reads useSearchParams() - both

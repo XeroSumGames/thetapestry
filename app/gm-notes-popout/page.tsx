@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 // /gm-notes-popout - comprehensive GM-side overview of a campaign.
 // Opens as a popout window from two surfaces: the GM Notes button
 // on /stories/[id] and the GM Tools dropdown on /table.
