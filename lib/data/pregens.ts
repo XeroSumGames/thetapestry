@@ -31,6 +31,10 @@ export function loadPregensByStatus(status: ModerationStatus) {
     .order('created_at', { ascending: false })
 }
 
+export function loadPregenById(id: string) {
+  return db().from('pregen_library').select('*').eq('id', id).single()
+}
+
 export function updatePregen(id: string, patch: Update<'pregen_library'>) {
   return db().from('pregen_library').update(patch).eq('id', id)
 }

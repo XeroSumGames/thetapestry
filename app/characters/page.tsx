@@ -223,8 +223,14 @@ export default function CharactersPage() {
                       {p.setting && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '1px', textTransform: 'capitalize' }}>{p.setting}</div>}
                     </div>
                   </div>
-                  <div style={{ padding: '3px 10px', background: chipBg, border: `1px solid ${chipColor}`, borderRadius: '3px', fontSize: '13px', color: chipColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                    {p.moderation_status}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <a href={`/pregen/${p.id}/edit`}
+                      style={{ padding: '3px 10px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', textDecoration: 'none' }}>
+                      Edit
+                    </a>
+                    <div style={{ padding: '3px 10px', background: chipBg, border: `1px solid ${chipColor}`, borderRadius: '3px', fontSize: '13px', color: chipColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      {p.moderation_status}
+                    </div>
                   </div>
                 </div>
               )
