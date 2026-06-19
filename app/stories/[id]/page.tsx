@@ -737,32 +737,36 @@ export default function CampaignPage() {
                       <div style={{ width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, flexShrink: 0, background: isThisGM ? '#2a1210' : '#0f2035', border: isThisGM ? '2px solid #c0392b' : '1px solid #1a3a5c', color: isThisGM ? '#f5a89a' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
                         {uname.charAt(0).toUpperCase()}
                       </div>
+                      {/* Name + sub-line + joined date stacked in the flex:1 column */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{uname}</span>
-                          {isThisGM && <span style={{ fontSize: '13px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>GM</span>}
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{uname}</span>
+                          {isThisGM && <span style={{ fontSize: '13px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>GM</span>}
                         </div>
                         {(m.characters as any)?.name ? (
-                          <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Carlito, sans-serif' }}>{(m.characters as any).name}</div>
+                          <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Carlito, sans-serif' }}>{(m.characters as any).name}</div>
                         ) : isThisGM ? (
-                          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>Running the table</div>
+                          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '1px', fontFamily: 'Carlito, sans-serif' }}>Running the table</div>
                         ) : (
-                          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>No character assigned</div>
+                          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '1px', fontFamily: 'Carlito, sans-serif' }}>No character assigned</div>
                         )}
+                        <div style={{ fontSize: '13px', color: '#555', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{formatDate(m.joined_at)}</div>
                       </div>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
-                        {m.user_id && m.user_id !== userId && (
-                          <a href={`/messages?dm=${m.user_id}`} style={{ padding: '4px 9px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                            💬 Msg
-                          </a>
-                        )}
-                        {gmLike && !isThisGM && (
-                          <button onClick={() => handleRemoveMember(m)} style={{ padding: '4px 9px', background: 'transparent', border: '1px solid #3a1a18', borderRadius: '3px', color: '#7a3028', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                            Remove
-                          </button>
-                        )}
-                        <span style={{ fontSize: '13px', color: '#cce0f5', whiteSpace: 'nowrap', fontFamily: 'Carlito, sans-serif' }}>{formatDate(m.joined_at)}</span>
-                      </div>
+                      {/* Action buttons - no date here, so they always fit */}
+                      {(m.user_id && m.user_id !== userId) || (gmLike && !isThisGM) ? (
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                          {m.user_id && m.user_id !== userId && (
+                            <a href={`/messages?dm=${m.user_id}`} style={{ padding: '4px 9px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                              💬 Msg
+                            </a>
+                          )}
+                          {gmLike && !isThisGM && (
+                            <button onClick={() => handleRemoveMember(m)} style={{ padding: '4px 9px', background: 'transparent', border: '1px solid #3a1a18', borderRadius: '3px', color: '#7a3028', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                   )
                 })}
