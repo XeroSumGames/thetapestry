@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-19 21:07 UTC
+
+**Status:** DRIFT (carry-forward #7 — CI fully green, pregen edit wizard shipped, HOPED-FOR trio persists)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — latest 20:54 UTC. Full clean since 06:09 UTC. Pregen work (feat/fix: Edit button, PREGEN wizard button, sidebar hide, TS build fix) all passed green.
+
+**Drift:**
+- HOPED-FOR trio unchanged (#7): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. No code activity since Session 24 (2026-06-16). Drain target: Beta-500 dry-run.
+- Stale todos unchanged: `scripts/check-realtime-wrap.mjs` not created; recorder `window.prompt` at `PlaytestRecorder.tsx:244` not replaced with in-app input.
+
+**Action:** carry-forward — no new signal. Drain HOPED-FOR trio at next Beta-500 dry-run. CI fully recovered.
+
+---
+
 ## 2026-06-19 12:07 UTC
 
 **Status:** DRIFT (carry-forward #6 — CI fully recovered, HOPED-FOR trio persists)
