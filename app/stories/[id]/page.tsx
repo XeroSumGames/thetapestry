@@ -10,10 +10,11 @@ import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 import { loadApprovedPregens } from '../../../lib/data/pregens'
 import { createCharacterForUser } from '../../../lib/data/characters'
-import { assignMemberCharacter } from '../../../lib/data/campaigns'
+import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover } from '../../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
+import { prepareUpload } from '../../../lib/safe-upload'
 
 // GM Tools section constants (lifted from the retired /edit page -
 // the Edit form is now inlined on the hub itself).
@@ -34,6 +35,7 @@ interface Campaign {
   gm_user_id: string
   status: string
   created_at: string
+  cover_image_url?: string | null
 }
 
 interface Member {
@@ -109,6 +111,8 @@ export default function CampaignPage() {
   const [editSyncResult, setEditSyncResult] = useState('')
   const editDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [gmToolsOpen, setGmToolsOpen] = useState(false)
+  const [heroCoverUrl, setHeroCoverUrl] = useState<string | null>(null)
+  const [coverUploading, setCoverUploading] = useState(false)
   // Module publish + subscriber-update state moved to StoryActionBar
   // alongside the action buttons that consume it. Hub keeps only the
   // state it actually renders (members, kicked-rejoin, pregens).
@@ -122,6 +126,15 @@ export default function CampaignPage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
+
+      // Resolve hero cover: campaign's own upload wins; fall back to the
+      // module subscription's cover if the campaign was created from a /rumors module.
+      if (camp.cover_image_url) {
+        setHeroCoverUrl(camp.cover_image_url)
+      } else {
+        const modCover = await getCampaignModuleCover(id)
+        if (modCover) setHeroCoverUrl(modCover)
+      }
 
       if (camp.setting) {
         const { data: libP } = await loadApprovedPregens(camp.setting)
@@ -286,6 +299,22 @@ export default function CampaignPage() {
       return
     }
     setMembers(prev => prev.filter(m => m.user_id !== member.user_id))
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+    const check = prepareUpload('campaign-covers', file)
+    if (!check.ok) { alert(check.reason); e.target.value = ''; return }
+    setCoverUploading(true)
+    const result = await uploadCampaignCover(id, file, check.contentType)
+    if ('error' in result) {
+      alert(`Upload failed: ${result.error}`)
+    } else {
+      setHeroCoverUrl(result.url)
+    }
+    setCoverUploading(false)
+    e.target.value = ''
   }
 
   // GM Tools - Save form (Name / Description / Map Style / Map Center).
@@ -462,9 +491,21 @@ export default function CampaignPage() {
 
         {/* Hero */}
         <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', borderBottom: '1px solid #1a1a1a' }}>
-          {/* Cover placeholder */}
-          <div style={{ background: '#0d0d0d', minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '13px', color: '#2e2e2e', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>No cover</span>
+          {/* Cover - inherited from module subscription or GM-uploaded */}
+          <div style={{ background: '#0d0d0d', minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+            {heroCoverUrl ? (
+              <img src={heroCoverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+            ) : gmLike ? (
+              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: coverUploading ? 'default' : 'pointer' }}>
+                <span style={{ fontSize: '13px', color: coverUploading ? '#EF9F27' : '#666', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>
+                  {coverUploading ? 'Uploading...' : 'No cover'}
+                </span>
+                {!coverUploading && <span style={{ fontSize: '13px', color: '#3a6a3a', fontFamily: 'Carlito, sans-serif', textDecoration: 'underline' }}>click to upload</span>}
+                <input type="file" accept="image/*" hidden onChange={handleCoverUpload} disabled={coverUploading} />
+              </label>
+            ) : (
+              <span style={{ fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>No cover</span>
+            )}
           </div>
           {/* Hero body */}
           <div style={{ padding: '28px 28px 24px' }}>

@@ -40,6 +40,7 @@ const BUCKETS: Record<string, BucketRule> = {
   // even start decoding hostile input. Security-audit 2026-06-02
   // carry-over (closed 2026-06-10).
   'account-avatars':     { maxBytes: 5 * 1024 * 1024,  extToCt: IMAGE_EXT },
+  'campaign-covers':     { maxBytes: 5 * 1024 * 1024,  extToCt: IMAGE_EXT },
 }
 
 const MAX_STEM_LEN = 80

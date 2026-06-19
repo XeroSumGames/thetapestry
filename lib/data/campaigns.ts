@@ -38,3 +38,43 @@ export function assignMemberCharacter(campaignId: string, userId: string, charId
 export function getUserRole(userId: string) {
   return db().from('profiles' as any).select('role').eq('id', userId).single()
 }
+
+/**
+ * Fetch the cover_image_url from the first active module subscription for
+ * a campaign. Used to inherit the /rumors module's cover image into the
+ * story page hero when the campaign has no custom cover of its own.
+ */
+export async function getCampaignModuleCover(campaignId: string): Promise<string | null> {
+  const { data } = await db()
+    .from('module_subscriptions' as any)
+    .select('modules:module_id(cover_image_url)')
+    .eq('campaign_id', campaignId)
+    .eq('status', 'active')
+    .maybeSingle()
+  const modRow = (data as any)?.modules
+  return (Array.isArray(modRow) ? modRow[0] : modRow)?.cover_image_url ?? null
+}
+
+/**
+ * Upload a cover image file to the campaign-covers bucket and persist the
+ * public URL to campaigns.cover_image_url. Returns the public URL on
+ * success or an error string on failure.
+ */
+export async function uploadCampaignCover(
+  campaignId: string,
+  file: File,
+  contentType: string,
+): Promise<{ url: string } | { error: string }> {
+  const client = db()
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+  const path = `${campaignId}/cover.${ext}`
+  const { error: upErr } = await (client as any).storage
+    .from('campaign-covers')
+    .upload(path, file, { upsert: true, contentType })
+  if (upErr) return { error: (upErr as any).message }
+  const { data: pub } = (client as any).storage.from('campaign-covers').getPublicUrl(path)
+  const url = `${pub.publicUrl}?v=${Date.now()}`
+  const { error: dbErr } = await client.from('campaigns').update({ cover_image_url: url } as any).eq('id', campaignId)
+  if (dbErr) return { error: dbErr.message }
+  return { url }
+}
