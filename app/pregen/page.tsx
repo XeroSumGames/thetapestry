@@ -2,13 +2,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getCachedAuth } from '../../lib/auth-cache'
-import { buildCharacterFromPregen } from '../../lib/xse-schema'
-import { SETTING_PREGENS, EMPTY_PREGENS, type PregenSeed } from '../../lib/setting-npcs'
-import { loadApprovedPregens } from '../../lib/data/pregens'
+import { loadOfficialPregens, loadApprovedPregens } from '../../lib/data/pregens'
 import { createCharacterForUser } from '../../lib/data/characters'
 import { assignMemberCharacter, getStoryCampaignSetting } from '../../lib/data/campaigns'
 
-interface LibraryPregen {
+interface DBPregen {
   id: string
   name: string
   data: any
@@ -22,7 +20,8 @@ export default function PregenPage() {
   const searchParams = useSearchParams()
   const returnStoryId = searchParams.get('return')
 
-  const [libraryPregens, setLibraryPregens] = useState<LibraryPregen[]>([])
+  const [officialPregens, setOfficialPregens] = useState<DBPregen[]>([])
+  const [libraryPregens, setLibraryPregens] = useState<DBPregen[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -30,8 +29,9 @@ export default function PregenPage() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await loadApprovedPregens()
-      setLibraryPregens((data ?? []).map((p: any) => ({
+      const [offRes, libRes] = await Promise.all([loadOfficialPregens(), loadApprovedPregens()])
+      setOfficialPregens((offRes.data ?? []) as DBPregen[])
+      setLibraryPregens((libRes.data ?? []).map((p: any) => ({
         ...p,
         author_username: (p.profiles as any)?.username ?? 'unknown',
       })))
@@ -40,23 +40,9 @@ export default function PregenPage() {
     load()
   }, [])
 
-  // Build the official pregen list: if returnStoryId, we could filter by setting,
-  // but without it loaded we show all. Show SETTING_PREGENS entries flat.
-  const officialPregens: PregenSeed[] = useMemo(() => {
-    const seen = new Set<string>()
-    const all: PregenSeed[] = []
-    for (const list of Object.values(SETTING_PREGENS)) {
-      for (const p of list) {
-        if (!seen.has(p.name)) { seen.add(p.name); all.push(p) }
-      }
-    }
-    return all
-  }, [])
-
   const availableSettings = useMemo(() => {
     const s = new Set<string>()
     libraryPregens.forEach(p => { if (p.setting) s.add(p.setting) })
-    Object.keys(SETTING_PREGENS).forEach(k => s.add(k))
     return [...s]
   }, [libraryPregens])
 
@@ -66,9 +52,9 @@ export default function PregenPage() {
     return true
   }
 
+  // Official pregens show regardless of setting filter (all have null setting)
   const filteredOfficial = officialPregens.filter(p =>
-    matchesFilter(p.name, p.profession + ' ' + p.three_words) &&
-    (!settingFilter || Object.entries(SETTING_PREGENS).some(([k, list]) => k === settingFilter && list.some(x => x.name === p.name)))
+    matchesFilter(p.name, p.data?.profession ?? '')
   )
 
   const filteredLibrary = libraryPregens.filter(p =>
@@ -76,23 +62,7 @@ export default function PregenPage() {
     (!settingFilter || p.setting === settingFilter)
   )
 
-  async function useOfficialPregen(seed: PregenSeed) {
-    const key = `official-${seed.name}`
-    if (creating) return
-    setCreating(key)
-    try {
-      const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
-      const char = buildCharacterFromPregen(seed)
-      const { data: created, error } = await createCharacterForUser(user.id, char.name, char)
-      if (error || !created) return
-      await maybeAssign(user.id, created.id)
-    } finally {
-      setCreating(null)
-    }
-  }
-
-  async function useLibraryPregen(pregen: LibraryPregen) {
+  async function usePregen(pregen: DBPregen) {
     if (creating) return
     setCreating(pregen.id)
     try {
@@ -177,13 +147,13 @@ export default function PregenPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
             {filteredOfficial.map(p => (
               <PregenCard
-                key={p.name}
+                key={p.id}
                 name={p.name}
-                subtitle={p.profession}
-                blurb={p.three_words}
-                portraitUrl={null}
-                isCreating={creating === `official-${p.name}`}
-                onUse={() => useOfficialPregen(p)}
+                subtitle={p.data?.profession ?? ''}
+                blurb={Array.isArray(p.data?.threeWords) ? p.data.threeWords.join(', ') : (p.data?.threeWords ?? '')}
+                portraitUrl={p.portrait_url}
+                isCreating={creating === p.id}
+                onUse={() => usePregen(p)}
               />
             ))}
           </div>
@@ -207,10 +177,10 @@ export default function PregenPage() {
                 key={p.id}
                 name={p.name}
                 subtitle={p.data?.profession ?? ''}
-                blurb={p.data?.three_words ?? ''}
+                blurb={Array.isArray(p.data?.threeWords) ? p.data.threeWords.join(', ') : (p.data?.threeWords ?? '')}
                 portraitUrl={p.portrait_url}
                 isCreating={creating === p.id}
-                onUse={() => useLibraryPregen(p)}
+                onUse={() => usePregen(p)}
               />
             ))}
           </div>

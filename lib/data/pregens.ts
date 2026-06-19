@@ -5,11 +5,21 @@ export function insertPregen(row: Insert<'pregen_library'>) {
   return db().from('pregen_library').insert(row)
 }
 
+export function loadOfficialPregens() {
+  return db()
+    .from('pregen_library')
+    .select('id, name, data, portrait_url, setting')
+    .is('author_id', null)
+    .eq('moderation_status', 'approved')
+    .order('created_at', { ascending: true })
+}
+
 export function loadApprovedPregens(setting?: string) {
   let q = db()
     .from('pregen_library')
     .select('*, profiles!pregen_library_author_id_fkey(username)')
     .eq('moderation_status', 'approved')
+    .not('author_id', 'is', null)
     .order('created_at', { ascending: false })
   if (setting) q = q.eq('setting', setting)
   return q
