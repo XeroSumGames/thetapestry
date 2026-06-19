@@ -5,8 +5,8 @@ import { getCachedAuth } from '../../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { getUserRole } from '../../../../lib/data/campaigns'
 import { loadPregenById, updatePregen } from '../../../../lib/data/pregens'
-import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
-import { SKILLS, normalizeRations } from '../../../../lib/xse-schema'
+import { createWizardState, WizardState, buildCharacter, getCumulativeSkills, skillStepUp, skillStepDown } from '../../../../lib/xse-engine'
+import { SKILLS, SKILL_LABELS, PROFESSIONS, normalizeRations } from '../../../../lib/xse-schema'
 import StepXero from '../../../../components/wizard/StepXero'
 import StepSix from '../../../../components/wizard/StepSix'
 import StepSeven from '../../../../components/wizard/StepSeven'
@@ -20,6 +20,7 @@ const STEPS = [
   { num: 2, title: 'Secondary Stats' },
   { num: 3, title: 'What They Have' },
   { num: 4, title: 'Final Review' },
+  { num: 5, title: 'Skills' },
 ]
 
 export default function EditPregenPage() {
@@ -168,6 +169,7 @@ export default function EditPregenPage() {
         {step === 2 && <StepSeven state={state} />}
         {step === 3 && <StepEight state={state} onChange={handleChange} />}
         {step === 4 && <StepNine state={state} onChange={handleChange} />}
+        {step === 5 && <SkillsPanel state={state} onChange={handleChange} />}
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #2e2e2e' }}>
@@ -179,8 +181,8 @@ export default function EditPregenPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 4 && <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>Print</button>}
-          {step < 4
-            ? <button onClick={() => setStep(s => Math.min(4, s + 1))} style={navBtn(true)}>Next</button>
+          {step < 5
+            ? <button onClick={() => setStep(s => Math.min(5, s + 1))} style={navBtn(true)}>Next</button>
             : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Pregen'}</button>
           }
         </div>
@@ -189,6 +191,107 @@ export default function EditPregenPage() {
       <PrintSheet state={state} />
     </div>
   )
+}
+
+function SkillsPanel({ state, onChange }: { state: WizardState; onChange: (u: Partial<WizardState>) => void }) {
+  const [filter, setFilter] = useState('')
+  const cumulativeSkills = getCumulativeSkills(state.steps)
+  const step3 = state.steps[3] ?? {}
+  const skillDeltas = step3.skillDeltas ?? {}
+  const raisedCount = Object.values(skillDeltas).filter(v => (v ?? 0) > 0).length
+
+  function adjustSkill(skillName: string, dir: 1 | -1) {
+    const skill = SKILLS.find(s => s.name === skillName)!
+    const cumVal = cumulativeSkills[skillName] as any
+    const baseVal = skill.vocational ? -3 : 0
+    let newLevel: number
+    if (dir === 1) {
+      if (cumVal >= 3) return
+      newLevel = skillStepUp(cumVal, skill.vocational)
+    } else {
+      if (cumVal <= baseVal) return
+      newLevel = skillStepDown(cumVal, baseVal as any, skill.vocational)
+    }
+    const delta = newLevel - baseVal
+    const newDeltas = { ...skillDeltas }
+    if (delta <= 0) delete newDeltas[skillName]
+    else newDeltas[skillName] = delta
+    const newSteps = [...state.steps]
+    newSteps[3] = { ...step3, skillDeltas: newDeltas }
+    onChange({ steps: newSteps })
+  }
+
+  const filtered = SKILLS.filter(s =>
+    !filter ||
+    s.name.toLowerCase().includes(filter.toLowerCase()) ||
+    s.attribute.toLowerCase().includes(filter.toLowerCase())
+  )
+
+  const panelSh: React.CSSProperties = {
+    fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
+    textTransform: 'uppercase', letterSpacing: '.1em', margin: '1.25rem 0 8px',
+    borderBottom: '1px solid #2e2e2e', paddingBottom: '4px',
+  }
+
+  return (
+    <div>
+      <div style={panelSh}>Profession</div>
+      <select
+        value={step3.profession ?? ''}
+        onChange={e => {
+          const newSteps = [...state.steps]
+          newSteps[3] = { ...step3, profession: e.target.value }
+          onChange({ steps: newSteps })
+        }}
+        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '10px' }}>
+        <option value="">- select -</option>
+        {PROFESSIONS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+      </select>
+
+      <div style={{ ...panelSh, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem' }}>
+        <span>Skills</span>
+        <span style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 400, letterSpacing: 0, textTransform: 'none' }}>{raisedCount} raised above base</span>
+      </div>
+      <input
+        value={filter}
+        onChange={e => setFilter(e.target.value)}
+        placeholder="Filter skills..."
+        style={{ width: '100%', marginBottom: '7px', fontSize: '13px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
+      />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', maxHeight: '380px', overflowY: 'auto', paddingRight: '2px' }}>
+        {filtered.map(sk => {
+          const cumVal = cumulativeSkills[sk.name]
+          const baseVal = sk.vocational ? -3 : 0
+          const raised = (skillDeltas[sk.name] ?? 0) > 0
+          const disp = cumVal >= 0 ? (cumVal > 0 ? `+${cumVal}` : '0') : String(cumVal)
+          return (
+            <div key={sk.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: `1px ${sk.vocational ? 'dashed' : 'solid'} #2e2e2e`, borderRadius: '3px', padding: '5px 7px', background: '#242424' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: raised ? '#f5a89a' : '#f5f2ee' }}>
+                  {sk.name}{sk.vocational ? '*' : ''}
+                </div>
+                <div style={{ fontSize: '13px', color: '#7a7068' }}>{sk.attribute} - {SKILL_LABELS[cumVal]}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
+                <button onClick={() => adjustSkill(sk.name, -1)} disabled={cumVal <= baseVal} style={skPanelBtn(cumVal <= baseVal)}>-</button>
+                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
+                <button onClick={() => adjustSkill(sk.name, 1)} disabled={cumVal >= 3} style={skPanelBtn(cumVal >= 3)}>+</button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function skPanelBtn(disabled: boolean): React.CSSProperties {
+  return {
+    width: '19px', height: '19px', border: '1px solid #3a3a3a', borderRadius: '2px',
+    background: '#1a1a1a', cursor: disabled ? 'not-allowed' : 'pointer',
+    fontSize: '13px', color: '#f5f2ee', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
+  }
 }
 
 function navBtn(primary: boolean): React.CSSProperties {

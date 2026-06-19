@@ -78,3 +78,9 @@ export async function uploadCampaignCover(
   if (dbErr) return { error: dbErr.message }
   return { url }
 }
+
+/** Clear campaigns.cover_image_url (leaves the file in storage, just un-references it). */
+export async function removeCampaignCover(campaignId: string): Promise<{ error?: string }> {
+  const { error } = await db().from('campaigns').update({ cover_image_url: null } as any).eq('id', campaignId)
+  return error ? { error: error.message } : {}
+}

@@ -10,7 +10,7 @@ import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 import { loadApprovedPregens } from '../../../lib/data/pregens'
 import { createCharacterForUser } from '../../../lib/data/characters'
-import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover } from '../../../lib/data/campaigns'
+import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover, removeCampaignCover } from '../../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
@@ -317,6 +317,13 @@ export default function CampaignPage() {
     e.target.value = ''
   }
 
+  async function handleCoverRemove() {
+    if (!id) return
+    const { error } = await removeCampaignCover(id)
+    if (error) { alert(`Remove failed: ${error}`); return }
+    setHeroCoverUrl(null)
+  }
+
   // GM Tools - Save form (Name / Description / Map Style / Map Center).
   // Lifted from the retired /edit page. GM-or-Thriver gated at the JSX
   // call-site; the function itself trusts the caller.
@@ -506,6 +513,14 @@ export default function CampaignPage() {
                 {!coverUploading && <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textDecoration: 'underline' }}>click to upload</span>}
               </div>
               <input type="file" accept="image/*" hidden onChange={handleCoverUpload} disabled={coverUploading} />
+              {heroCoverUrl && !coverUploading && (
+                <button
+                  onClick={e => { e.preventDefault(); handleCoverRemove() }}
+                  title="Remove cover image"
+                  style={{ position: 'absolute', top: '6px', right: '6px', width: '22px', height: '22px', background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: '3px', color: '#ccc', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, lineHeight: 1, padding: 0 }}>
+                  x
+                </button>
+              )}
             </label>
           ) : (
             <div style={{ background: '#0d0d0d', minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
