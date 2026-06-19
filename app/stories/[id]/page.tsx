@@ -491,22 +491,30 @@ export default function CampaignPage() {
 
         {/* Hero */}
         <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', borderBottom: '1px solid #1a1a1a' }}>
-          {/* Cover - inherited from module subscription or GM-uploaded */}
-          <div style={{ background: '#0d0d0d', minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-            {heroCoverUrl ? (
-              <img src={heroCoverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-            ) : gmLike ? (
-              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: coverUploading ? 'default' : 'pointer' }}>
-                <span style={{ fontSize: '13px', color: coverUploading ? '#EF9F27' : '#666', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>
-                  {coverUploading ? 'Uploading...' : 'No cover'}
+          {/* Cover - inherited from module subscription or GM-uploaded.
+              For GMs the entire column is a <label> so clicking anywhere
+              (image present or not) opens the file picker. */}
+          {gmLike ? (
+            <label className="cover-upload-label" style={{ background: '#0d0d0d', minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: coverUploading ? 'default' : 'pointer' }}>
+              <style>{`.cover-upload-label:hover .cover-change-hint { opacity: 1 !important; }`}</style>
+              {heroCoverUrl && <img src={heroCoverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />}
+              {/* Overlay - always rendered, visible on hover when image present */}
+              <div className="cover-change-hint" style={{ position: 'absolute', inset: 0, background: heroCoverUrl ? 'rgba(0,0,0,0.55)' : 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: heroCoverUrl ? 0 : 1, transition: 'opacity .18s' }}>
+                <span style={{ fontSize: '13px', color: coverUploading ? '#EF9F27' : '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>
+                  {coverUploading ? 'Uploading...' : heroCoverUrl ? 'Change cover' : 'No cover'}
                 </span>
-                {!coverUploading && <span style={{ fontSize: '13px', color: '#3a6a3a', fontFamily: 'Carlito, sans-serif', textDecoration: 'underline' }}>click to upload</span>}
-                <input type="file" accept="image/*" hidden onChange={handleCoverUpload} disabled={coverUploading} />
-              </label>
-            ) : (
-              <span style={{ fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>No cover</span>
-            )}
-          </div>
+                {!coverUploading && <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textDecoration: 'underline' }}>click to upload</span>}
+              </div>
+              <input type="file" accept="image/*" hidden onChange={handleCoverUpload} disabled={coverUploading} />
+            </label>
+          ) : (
+            <div style={{ background: '#0d0d0d', minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+              {heroCoverUrl
+                ? <img src={heroCoverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                : <span style={{ fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>No cover</span>
+              }
+            </div>
+          )}
           {/* Hero body */}
           <div style={{ padding: '28px 28px 24px' }}>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' as const }}>
