@@ -24,9 +24,9 @@ export function countGmCampaigns(userId: string) {
 /** Get the campaign_id + setting for a given story. Returns { campaignId, setting }. */
 export async function getStoryCampaignSetting(storyId: string): Promise<{ campaignId: string | null; setting: string | null }> {
   const { data: story } = await db().from('stories' as any).select('campaign_id').eq('id', storyId).single()
-  if (!story?.campaign_id) return { campaignId: null, setting: null }
-  const { data: camp } = await db().from('campaigns').select('setting').eq('id', story.campaign_id).single()
-  return { campaignId: story.campaign_id, setting: (camp as any)?.setting ?? null }
+  if (!(story as any)?.campaign_id) return { campaignId: null, setting: null }
+  const { data: camp } = await db().from('campaigns').select('setting').eq('id', (story as any).campaign_id).single()
+  return { campaignId: (story as any).campaign_id, setting: (camp as any)?.setting ?? null }
 }
 
 /** Assign a character to a campaign member. */
