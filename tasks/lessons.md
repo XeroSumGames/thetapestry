@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## Arch ratchet: force-rebaseline is correct for intentional god-component growth (2026-06-18)
+
+When adding a legitimate new feature section to a god-component (like the Pregens queue in `moderate/page.tsx`), the `--force` flag on `check-arch.mjs --save --force` is the correct tool. `--save` alone refuses to raise LOC ceilings; `--force` re-baselines the exact current values. Use `--force` only when the growth is intentional and clearly bounded - document why in the commit message. Seam leakage (`.from outside lib/data`) still gets zero tolerance: add `lib/data/` helpers to absorb new raw calls rather than re-baselining upward.
+
+## New DB tables require DB type regeneration before writing any data-layer code (2026-06-18)
+
+Whenever Puffer Fish adds a new table (like `pregen_library`), Hunt & Peck must run `npx supabase gen types typescript --linked > lib/database.types.ts` as Step 0 before writing any `lib/data/**` helper that references the new table. Without this, `Insert<'pregen_library'>` is not a valid type and tsc will fail.
+
 ## Windows sed introduces UTF-8 BOM - always strip after mass sed sweeps (2026-06-18)
 
 `sed -i` on Windows (Git Bash / WSL interop) rewrites files with a UTF-8 BOM (`\xEF\xBB\xBF`) prepended. Turbopack hard-fails on BOM in CSS (`Parsing CSS source code failed`); Next.js TSX compilation also chokes. The symptom is a Vercel deploy failure on `app/globals.css:1:2` showing `﻿@font-face`.
