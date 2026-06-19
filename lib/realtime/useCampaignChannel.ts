@@ -28,6 +28,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { createClient } from '../supabase-browser'
 import { wrapBroadcast, wrapDbChange } from '../sentry-realtime'
+import { record } from '../playtest-recorder'
 import type { CampaignBroadcastEvent, CampaignBroadcastPayloads } from './events'
 
 /** A broadcast handler receives the (typed) payload directly. */
@@ -115,7 +116,9 @@ export function useCampaignChannel(
       )
     }
 
-    channel.subscribe()
+    channel.subscribe((status: string) => {
+      record('realtime', { direction: 'status', channel: name, status })
+    })
     channelRef.current = channel
 
     return () => {

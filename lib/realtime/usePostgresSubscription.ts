@@ -18,6 +18,7 @@
 import { useEffect, useRef } from 'react'
 import { createClient } from '../supabase-browser'
 import { wrapDbChange } from '../sentry-realtime'
+import { record } from '../playtest-recorder'
 
 export interface PostgresSubscriptionConfig {
   /** A short stable label for Sentry tagging (e.g. 'map_pins:*'). */
@@ -50,7 +51,9 @@ export function usePostgresSubscription(
         { event: c.event ?? '*', schema: c.schema ?? 'public', table: c.table, ...(c.filter ? { filter: c.filter } : {}) },
         wrapDbChange(c.label, (payload: any) => configRef.current.handler(payload)),
       )
-      .subscribe()
+      .subscribe((status: string) => {
+        record('realtime', { direction: 'status', channel: channelName, status })
+      })
 
     return () => {
       try { supabase.removeChannel(channel) } catch { /* already torn down */ }

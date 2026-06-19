@@ -25,6 +25,7 @@ import { useRollsFeed } from '../../../../components/RollsFeed'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { wrapBroadcast, wrapDbChange } from '../../../../lib/sentry-realtime'
 import { useCampaignChannel } from '../../../../lib/realtime/useCampaignChannel'
+import { usePlaytestSnapshot } from '../../../../lib/realtime/usePlaytestSnapshot'
 import { reportSupabaseError } from '../../../../lib/supabase-errors'
 import { useHeaderMenus } from './hooks/useHeaderMenus'
 import { useGmTools } from './hooks/useGmTools'
@@ -3625,6 +3626,21 @@ export default function TablePage() {
       return changed ? next : prev
     })
   }, [campaignNpcs])
+
+  // Item 3: playtest-recorder snapshot (lib/realtime/usePlaytestSnapshot.ts)
+  const _ase = initiativeOrder.find((e: any) => e.is_active) as any
+  const _om = selectedEntry ? 'character-sheet' : pendingRoll ? 'roll' : showSpecialCheck ? `special-check-${showSpecialCheck}` : showRecruit ? 'recruit' : mapSetupOpen ? 'map-setup' : showCoordinateModal ? 'coordinate' : showEndSessionModal ? 'end-session' : null
+  usePlaytestSnapshot({
+    active_entry_id: _ase?.id ?? null, active_combatant_name: _ase?.character_name ?? null,
+    actions_remaining: _ase?.actions_remaining ?? null,
+    scene_id: sharedSceneId, scene_kind: showTacticalMap ? 'tactical' : 'campaign',
+    open_modal: _om,
+    selected_token_id: (selectedEntry as any)?.stateId ?? null,
+    selected_npc_id: [...selectedNpcIds][0] ?? null,
+    combat_active: combatActive,
+    my_character_id: (entries.find((e: any) => e.userId === userId) as any)?.character?.id ?? null,
+    token_count: mapTokens.length, initiative_count: initiativeOrder.length,
+  })
 
   async function handlePublishNpc(npc: CampaignNpc) {
     const { user } = await getCachedAuth()

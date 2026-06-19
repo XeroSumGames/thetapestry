@@ -34,7 +34,52 @@ function describeTarget(el: Element | null): Record<string, unknown> {
   if (tag !== 'input' && tag !== 'textarea') {
     text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80) || null
   }
-  return { tag, id, cls, aria, role, text, button_text: buttonText, link_href: linkHref }
+
+  // Item 4: climb up ~6 parents for game-object IDs and nearest interactive.
+  let nearest_interactive: string | null = null
+  let game_object: { kind: string; id: string } | null = null
+  let on_map = false
+  let map_layer: string | null = null
+  let node: Element | null = el
+  for (let i = 0; i < 6 && node; i++) {
+    const tokenId = node.getAttribute('data-token-id')
+    const pinId = node.getAttribute('data-pin-id')
+    const npcId = node.getAttribute('data-npc-id')
+    if (tokenId && !game_object) game_object = { kind: 'token', id: tokenId }
+    else if (pinId && !game_object) game_object = { kind: 'pin', id: pinId }
+    else if (npcId && !game_object) game_object = { kind: 'npc', id: npcId }
+
+    if (!on_map) {
+      const nc = node.getAttribute('class') ?? ''
+      const nt = node.tagName.toLowerCase()
+      if (nc.includes('leaflet') || nt === 'canvas') {
+        on_map = true
+        map_layer = nc.split(' ').find(c => c.startsWith('leaflet-') || c === 'canvas') ?? null
+      }
+    }
+
+    if (!nearest_interactive) {
+      const nt = node.tagName.toLowerCase()
+      const testid = node.getAttribute('data-testid')
+      const nr = node.getAttribute('role')
+      if (nt === 'button' || nt === 'a' || testid || (nr && nr !== 'presentation')) {
+        const nt2 = node.tagName.toLowerCase()
+        const label = testid ? `[testid=${testid}]` : nr ? `[role=${nr}]` : null
+        const btxt = nt2 !== 'input' && nt2 !== 'textarea'
+          ? (node.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60)
+          : null
+        nearest_interactive = [nt2, label, btxt ? `"${btxt}"` : null].filter(Boolean).join('')
+      }
+    }
+    node = node.parentElement
+  }
+
+  return {
+    tag, id, cls, aria, role, text, button_text: buttonText, link_href: linkHref,
+    nearest_interactive,
+    ...(game_object ? { game_object } : {}),
+    ...(on_map ? { on_map: true, map_layer } : {}),
+  }
 }
 
 export default function PlaytestRecorder() {
@@ -123,6 +168,72 @@ export default function PlaytestRecorder() {
       })
       authSub = data.subscription
     } catch {}
+
+    // ── Item 1: Network / RPC capture ────────────────────────────────────
+    // Wrap fetch once to intercept Supabase calls. Filters to the Supabase
+    // URL only. Records method/path/status/duration/table-or-rpc. NEVER
+    // logs request or response bodies - only the PostgREST error envelope's
+    // code+message on 4xx/5xx. Calls over 1500ms are flagged `slow:true`.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+    const origFetch = window.fetch
+    if (supabaseUrl) {
+      window.fetch = async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        const url = typeof input === 'string' ? input
+          : input instanceof URL ? input.href
+          : (input as Request).url
+        if (!url.startsWith(supabaseUrl)) return origFetch.call(window, input, init)
+
+        let parsedPath = ''
+        let table_or_rpc: string | null = null
+        try {
+          const pu = new URL(url)
+          // Strip query values to param-names-only (privacy)
+          const paramKeys = [...pu.searchParams.keys()]
+          parsedPath = pu.pathname + (paramKeys.length ? `?[${paramKeys.join(',')}]` : '')
+          // Parse /rest/v1/<table> or /rest/v1/rpc/<fn> or /auth/...
+          const parts = pu.pathname.split('/').filter(Boolean)
+          const rpcIdx = parts.indexOf('rpc')
+          const v1Idx = parts.indexOf('v1')
+          if (rpcIdx >= 0 && parts[rpcIdx + 1]) table_or_rpc = `rpc/${parts[rpcIdx + 1]}`
+          else if (v1Idx >= 0 && parts[v1Idx + 1]) table_or_rpc = parts[v1Idx + 1]
+          else if (pu.pathname.includes('/auth/')) table_or_rpc = 'auth'
+        } catch {}
+
+        const method = ((init?.method ?? 'GET') as string).toUpperCase()
+        const t0 = Date.now()
+        try {
+          const res = await origFetch.call(window, input, init)
+          const duration_ms = Date.now() - t0
+          let error_code: string | null = null
+          let error_message: string | null = null
+          if (!res.ok && res.status >= 400) {
+            try {
+              const body = await res.clone().json()
+              if (body && typeof body === 'object') {
+                error_code = (body as any).code ?? null
+                error_message = (body as any).message ? String((body as any).message).slice(0, 200) : null
+              }
+            } catch {}
+          }
+          record('net', {
+            method, url_path: parsedPath, status: res.status, ok: res.ok,
+            duration_ms, table_or_rpc,
+            ...(error_code != null ? { error_code } : {}),
+            ...(error_message != null ? { error_message } : {}),
+            ...(duration_ms > 1500 ? { slow: true } : {}),
+          })
+          return res
+        } catch (fetchErr: unknown) {
+          const duration_ms = Date.now() - t0
+          record('net', {
+            method, url_path: parsedPath, status: 0, ok: false, duration_ms, table_or_rpc,
+            error_message: fetchErr instanceof Error ? fetchErr.message.slice(0, 200) : 'network error',
+            ...(duration_ms > 1500 ? { slow: true } : {}),
+          })
+          throw fetchErr
+        }
+      }
+    }
 
     // ── Click capture (event delegation, capture phase, passive) ──────────
     const onClick = (e: MouseEvent) => {

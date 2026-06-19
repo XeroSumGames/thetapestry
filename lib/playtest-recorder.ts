@@ -35,7 +35,7 @@ let periodicFlushTimer: ReturnType<typeof setInterval> | null = null
 export type PlaytestEvent = {
   t: string            // ISO timestamp
   ms: number           // ms since recorder start (cheap timeline scrubbing)
-  kind: 'click' | 'route' | 'error' | 'rejection' | 'console-error' | 'console-warn' | 'mark' | 'custom'
+  kind: 'click' | 'route' | 'error' | 'rejection' | 'console-error' | 'console-warn' | 'mark' | 'custom' | 'net' | 'realtime' | 'snapshot'
   data: Record<string, unknown>
 }
 
@@ -59,6 +59,9 @@ declare global {
     __tapestryMark?: (label: string, data?: Record<string, unknown>) => void
     __tapestryDump?: () => void
     __tapestryRecord?: (kind: PlaytestEvent['kind'], data: Record<string, unknown>) => void
+    // Table page registers this to give record() a live state snapshot.
+    // Invoked defensively (try/catch) - must never throw.
+    __tapestrySnapshot?: () => Record<string, unknown>
   }
 }
 
@@ -164,12 +167,13 @@ export function getRecorder(): RecorderState | null {
   return window.__tapestryRecorder ?? null
 }
 
-// Truncate big strings, drop anything that smells like a token or password.
+// Truncate big strings, drop anything that smells like a token, password, or body.
+// NEVER capture request/response bodies, form values, or free-text user content.
 function redact(value: unknown, depth = 0): unknown {
   if (depth > 3) return '[deep]'
   if (value == null) return value
   if (typeof value === 'string') {
-    if (value.length > 500) return value.slice(0, 500) + `…(+${value.length - 500} chars)`
+    if (value.length > 500) return value.slice(0, 500) + `+(${value.length - 500} chars)`
     return value
   }
   if (typeof value === 'number' || typeof value === 'boolean') return value
@@ -178,8 +182,14 @@ function redact(value: unknown, depth = 0): unknown {
     const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       const lower = k.toLowerCase()
+      // Credential strip
       if (lower.includes('password') || lower.includes('token') || lower === 'authorization' || lower === 'cookie') {
         out[k] = '[redacted]'
+        continue
+      }
+      // Body strip - never capture request/response bodies or raw input values
+      if (lower === 'body' || lower.endsWith('_body') || lower.startsWith('body_') || lower === 'request_body' || lower === 'response_body') {
+        out[k] = '[body-stripped]'
         continue
       }
       out[k] = redact(v, depth + 1)
@@ -187,6 +197,12 @@ function redact(value: unknown, depth = 0): unknown {
     return out
   }
   return String(value)
+}
+
+// Push a single event into the buffer, capping at MAX_EVENTS.
+function pushEvent(r: RecorderState, ev: PlaytestEvent) {
+  r.buffer.push(ev)
+  if (r.buffer.length > MAX_EVENTS) r.buffer.splice(0, r.buffer.length - MAX_EVENTS)
 }
 
 export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown>) {
@@ -201,19 +217,38 @@ export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown
   // client. Trade-off: a player who forgets to hit Record loses any
   // pre-click context. That's the price of strict tab-isolation.
   if (!r.enabled) return
-  const ev: PlaytestEvent = {
-    t: new Date().toISOString(),
-    ms: Date.now() - r.startedAt,
+
+  const now = Date.now()
+
+  // Auto-attach a state snapshot BEFORE error/rejection/mark events so
+  // every "something went wrong" record is self-diagnosing. Defensive:
+  // if snapshot throws or is absent, we silently skip it.
+  if ((kind === 'error' || kind === 'rejection' || kind === 'mark') && typeof window !== 'undefined') {
+    try {
+      const snap = window.__tapestrySnapshot?.()
+      if (snap) {
+        pushEvent(r, {
+          t: new Date(now).toISOString(),
+          ms: now - r.startedAt,
+          kind: 'snapshot',
+          data: redact(snap) as Record<string, unknown>,
+        })
+      }
+    } catch { /* never let snapshot failure block the actual event */ }
+  }
+
+  pushEvent(r, {
+    t: new Date(now).toISOString(),
+    ms: now - r.startedAt,
     kind,
     data: redact(data) as Record<string, unknown>,
-  }
-  r.buffer.push(ev)
-  if (r.buffer.length > MAX_EVENTS) r.buffer.splice(0, r.buffer.length - MAX_EVENTS)
+  })
+
   // Persist to localStorage on errors and marks - cheap insurance against
   // refresh wiping the buffer right when something interesting happened.
   // The periodic flush (every 60s) covers the no-interesting-event case.
   if (kind === 'error' || kind === 'rejection' || kind === 'mark') {
-    persistTrailing(Date.now())
+    persistTrailing(now)
   }
 }
 
@@ -240,21 +275,38 @@ export function trace(label: string, data?: Record<string, unknown>) {
 function dumpBuffer(): { meta: Record<string, unknown>; events: PlaytestEvent[] } | null {
   const r = getRecorder()
   if (!r) return null
+  const now = Date.now()
+  const events: PlaytestEvent[] = [...r.buffer]
+  // Append a live snapshot at dump time so the dump is self-diagnosing
+  // even if no error/mark was recorded before the dump.
+  if (typeof window !== 'undefined') {
+    try {
+      const snap = window.__tapestrySnapshot?.()
+      if (snap) {
+        events.push({
+          t: new Date(now).toISOString(),
+          ms: now - r.startedAt,
+          kind: 'snapshot',
+          data: redact(snap) as Record<string, unknown>,
+        })
+      }
+    } catch {}
+  }
   return {
     meta: {
-      dumped_at: new Date().toISOString(),
+      dumped_at: new Date(now).toISOString(),
       started_at: new Date(r.startedAt).toISOString(),
-      duration_ms: Date.now() - r.startedAt,
+      duration_ms: now - r.startedAt,
       session_id: r.sessionId,
       user_id: r.userId,
       user_email: r.userEmail,
       user_agent: navigator.userAgent,
       viewport: { w: window.innerWidth, h: window.innerHeight },
       pathname: r.pathname,
-      event_count: r.buffer.length,
-      app_version: 'playtest-2026-05-04',
+      event_count: events.length,
+      app_version: 'playtest-2026-06-19',
     },
-    events: [...r.buffer],
+    events,
   }
 }
 
