@@ -5,6 +5,8 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { loginPathForCurrent } from '../../../../lib/login-redirect'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
+import { countGmCampaigns, getUserRole } from '../../../../lib/data/campaigns'
+import { insertPregen } from '../../../../lib/data/pregens'
 import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
 import { SKILLS, normalizeRations } from '../../../../lib/xse-schema'
 import StepXero from '../../../../components/wizard/StepXero'
@@ -44,6 +46,11 @@ export default function EditCharacterPage() {
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [canPregen, setCanPregen] = useState(false)
+  const [pregenRole, setPregenRole] = useState<'thriver' | 'gm' | null>(null)
+  const [pregenning, setPregenning] = useState(false)
+  const [pregened, setPregened] = useState(false)
+  const [pregenMsg, setPregenMsg] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -54,6 +61,13 @@ export default function EditCharacterPage() {
       // Everyone else must own the character - non-owners are redirected.
       const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       const isThriver = roleIsThriver(prof)
+
+      if (isThriver) {
+        setCanPregen(true); setPregenRole('thriver')
+      } else {
+        const { count } = await countGmCampaigns(user.id)
+        if ((count ?? 0) > 0) { setCanPregen(true); setPregenRole('gm') }
+      }
 
       let query = supabase.from('characters').select('id, name, data').eq('id', id)
       if (!isThriver) query = query.eq('user_id', user.id)
@@ -142,6 +156,36 @@ export default function EditCharacterPage() {
     window.print()
   }
 
+  async function handlePregen() {
+    if (pregenning || pregened || !state) return
+    setPregenning(true)
+    setPregenMsg('')
+    try {
+      const { user } = await getCachedAuth()
+      if (!user) return
+      const character = buildCharacter(state)
+      const now = new Date().toISOString()
+      const isThriverUser = pregenRole === 'thriver'
+      const { error } = await insertPregen({
+        author_id: user.id,
+        name: character.name || characterName || 'Unnamed Character',
+        data: character as unknown as import('../../../../lib/database.types').Json,
+        portrait_url: (character as any).photoDataUrl ?? null,
+        setting: null,
+        moderation_status: isThriverUser ? 'approved' : 'pending',
+        approved_by: isThriverUser ? user.id : null,
+        approved_at: isThriverUser ? now : null,
+      })
+      if (error) { setPregenMsg('Error saving pregen.'); return }
+      setPregened(true)
+      setPregenMsg(isThriverUser
+        ? 'Added to the pregen library.'
+        : "Submitted for approval - it's in your characters now and will go live once approved.")
+    } finally {
+      setPregenning(false)
+    }
+  }
+
   if (loading || !state) return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
       Loading...
@@ -185,6 +229,15 @@ export default function EditCharacterPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 4 && <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>Print</button>}
+          {step === 4 && canPregen && (
+            <button onClick={handlePregen} disabled={pregenning || pregened}
+              style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458', opacity: pregenning || pregened ? 0.6 : 1 }}>
+              {pregenning ? 'Saving...' : pregened ? 'Saved as Pregen' : 'Pregen'}
+            </button>
+          )}
+          {step === 4 && pregenMsg && (
+            <div style={{ fontSize: '13px', color: pregened ? '#7fc458' : '#f5a89a', maxWidth: '220px' }}>{pregenMsg}</div>
+          )}
           {step < 4
             ? <button onClick={() => { setStep(s => Math.min(4, s + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={navBtn(true)}>Advance</button>
             : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Changes'}</button>
