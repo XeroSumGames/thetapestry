@@ -630,7 +630,7 @@ export default function CampaignPage() {
                 </>
               )}
               <div style={{ marginTop: '12px' }}>
-                <a href={`/pregen?return=${id}`} style={{ display: 'inline-block', padding: '8px 16px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#7ab3d4', textDecoration: 'none', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
+                <a href={`/pregens?return=${id}`} style={{ display: 'inline-block', padding: '8px 16px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#7ab3d4', textDecoration: 'none', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
                   Or pick from a different pre-generated character &rarr;
                 </a>
               </div>

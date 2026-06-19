@@ -224,7 +224,7 @@ export default function CharactersPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <a href={`/pregen/${p.id}/edit`}
+                    <a href={`/pregens/${p.id}/edit`}
                       style={{ padding: '3px 10px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', textDecoration: 'none' }}>
                       Edit
                     </a>

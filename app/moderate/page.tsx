@@ -1397,7 +1397,7 @@ export default function ModerationPage() {
                   {filter === 'rejected' && (
                     <button onClick={() => handlePregenAction(p.id, 'approved')} disabled={acting === p.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
                   )}
-                  <Link href={`/pregen/${p.id}/edit`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}>Edit</Link>
+                  <Link href={`/pregens/${p.id}/edit`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}>Edit</Link>
                   <button onClick={async () => { if (!confirm(`Delete pregen "${p.name}"?`)) return; setActing(p.id); await deletePregen(p.id); setPregens(prev => prev.filter(x => x.id !== p.id)); setActing(null) }} disabled={acting === p.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
                 </div>
               </div>
