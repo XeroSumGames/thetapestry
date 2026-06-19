@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-19 12:07 UTC
+
+**Status:** DRIFT (carry-forward #6 — CI fully recovered, HOPED-FOR trio persists)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs — 3 success / 2 failure; failures (02:09/02:10 UTC) already captured in 09:06 entry and resolved. Latest success: 06:09 UTC. No new failures.
+
+**Drift:**
+- HOPED-FOR trio unchanged (#6): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Only style/BOM commits touched relevant files since Session 24 (2026-06-16).
+- Stale todos unchanged: `check-realtime-wrap.mjs` not created; recorder `window.prompt` not replaced.
+
+**Action:** carry-forward — no new signal since 09:06 entry. Force-push question + HOPED-FOR trio drain both still outstanding.
+
+---
+
 ## 2026-06-19 09:06 UTC
 
 **Status:** RED+DRIFT (CI failures in last 5 runs + force push on main, both resolved; HOPED-FOR trio persists)
