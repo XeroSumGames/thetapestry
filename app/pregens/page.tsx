@@ -4,7 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { loadOfficialPregens, loadApprovedPregens } from '../../lib/data/pregens'
 import { createCharacterForUser } from '../../lib/data/characters'
-import { assignMemberCharacter, getStoryCampaignSetting } from '../../lib/data/campaigns'
+import { assignMemberCharacter, getStoryCampaignSetting, getUserRole } from '../../lib/data/campaigns'
+import { isThriver as roleIsThriver } from '../../lib/auth/roles'
 
 interface DBPregen {
   id: string
@@ -12,6 +13,7 @@ interface DBPregen {
   data: any
   portrait_url: string | null
   setting: string | null
+  author_id?: string | null
   author_username?: string
 }
 
@@ -26,9 +28,17 @@ export default function PregenPage() {
   const [creating, setCreating] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [settingFilter, setSettingFilter] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isThriverUser, setIsThriverUser] = useState(false)
 
   useEffect(() => {
     async function load() {
+      const { user } = await getCachedAuth()
+      if (user) {
+        setUserId(user.id)
+        const { data: prof } = await getUserRole(user.id)
+        setIsThriverUser(roleIsThriver(prof))
+      }
       const [offRes, libRes] = await Promise.all([loadOfficialPregens(), loadApprovedPregens()])
       setOfficialPregens((offRes.data ?? []) as DBPregen[])
       setLibraryPregens((libRes.data ?? []).map((p: any) => ({
@@ -154,6 +164,7 @@ export default function PregenPage() {
                 portraitUrl={p.portrait_url}
                 isCreating={creating === p.id}
                 onUse={() => usePregen(p)}
+                editHref={isThriverUser ? `/pregens/${p.id}/edit` : undefined}
               />
             ))}
           </div>
@@ -181,6 +192,7 @@ export default function PregenPage() {
                 portraitUrl={p.portrait_url}
                 isCreating={creating === p.id}
                 onUse={() => usePregen(p)}
+                editHref={(isThriverUser || p.author_id === userId) ? `/pregens/${p.id}/edit` : undefined}
               />
             ))}
           </div>
@@ -196,9 +208,9 @@ export default function PregenPage() {
   )
 }
 
-function PregenCard({ name, subtitle, blurb, portraitUrl, isCreating, onUse }: {
+function PregenCard({ name, subtitle, blurb, portraitUrl, isCreating, onUse, editHref }: {
   name: string; subtitle: string; blurb: string; portraitUrl: string | null
-  isCreating: boolean; onUse: () => void
+  isCreating: boolean; onUse: () => void; editHref?: string
 }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
@@ -221,6 +233,11 @@ function PregenCard({ name, subtitle, blurb, portraitUrl, isCreating, onUse }: {
           style={{ marginTop: '10px', padding: '7px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isCreating ? 'not-allowed' : 'pointer', opacity: isCreating ? 0.6 : 1 }}>
           {isCreating ? 'Creating...' : 'Use this character'}
         </button>
+        {editHref && (
+          <a href={editHref} style={{ marginTop: '6px', display: 'block', textAlign: 'center', fontSize: '13px', color: '#5a8a9a', textDecoration: 'none', letterSpacing: '.04em', fontFamily: 'Carlito, sans-serif' }}>
+            Edit
+          </a>
+        )}
       </div>
     </div>
   )
