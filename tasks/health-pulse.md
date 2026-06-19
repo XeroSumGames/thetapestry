@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-19 09:06 UTC
+
+**Status:** RED+DRIFT (CI failures in last 5 runs + force push on main, both resolved; HOPED-FOR trio persists)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [877 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** 2 failures in last 5 runs — `https://github.com/XeroSumGames/thetapestry/actions/runs/27801083208` (02:09 UTC) and `runs/27801115353` (02:10 UTC). Both resolved: runs/27804980282 (04:14 UTC) and runs/27805695313 (04:36 UTC) are green. Cause: pregen feature (`2700bfa`) triggered TS build error (`getStoryCampaignSetting`); fixed by `9ca5935`. **Force push on main detected** (`cf9beb9...74cdbe7`) — operating-mode bright line; already happened, confirm it was intentional.
+
+**Drift:**
+- HOPED-FOR trio unchanged (#5 carry-forward): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. No code activity since Session 24 (2026-06-16).
+- Stale todos unchanged: `check-realtime-wrap.mjs` still not created; recorder `window.prompt` still not replaced.
+
+**Action:** (1) Confirm force push to main was intentional. (2) HOPED-FOR trio: drain at next Beta-500 dry-run. CI is now green — no action needed there.
+
+---
+
 ## 2026-06-19 06:06 UTC
 
 **Status:** DRIFT (carry-forward #4 — no new signal)
