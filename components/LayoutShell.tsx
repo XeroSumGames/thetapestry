@@ -18,7 +18,7 @@ const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/press']
 // Pages that use their own full-width layout (popouts + the table view).
 // CONVENTION: any new popout route should end in `-sheet` or `-popout`
 // (or live under `/popout/...`) so it's auto-included here without an edit.
-const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/handout$|-sheet$|-popout$|^\/popout\//
+const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/handout$|^\/pregen$|-sheet$|-popout$|^\/popout\//
 
 function MobileBanner() {
   const [isPhone, setIsPhone] = useState(false)
