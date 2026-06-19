@@ -10,7 +10,7 @@
 --   * Wild Success / HI → permanent commit (unchanged from today)
 --   * Conscript Failure → NPC appears to comply but escapes at next
 --     opportunity (GM-fired via "Escape Pending" surface)
---   * Convert + Intimidation Failure → NPC permanently rejects the
+--   * Convert + Manipulation Failure → NPC permanently rejects the
 --     Convert approach (any PC, any future attempt). Other approaches
 --     (Cohort) remain available if the story justifies it.
 --
@@ -50,18 +50,18 @@ CREATE INDEX IF NOT EXISTS idx_community_members_temporary
 -- Global per NPC (not per PC). Per Xero 2026-05-19: "a PC COULD try
 -- a Cohort check, if the story made sense" - meaning only the failed
 -- approach is locked, not the NPC entirely. The lock applies to ALL
--- PCs going forward (the NPC has been burned by Intimidation, no
+-- PCs going forward (the NPC has been burned by Manipulation, no
 -- matter who tried).
 --
 -- Array values are RecruitApproach strings: 'cohort' | 'conscript' |
 -- 'convert'. Today only 'convert' gets populated (via Convert +
--- Intimidation Failure); the array shape lets us extend to other
+-- Manipulation Failure); the array shape lets us extend to other
 -- approach-specific bans later without another schema migration.
 ALTER TABLE public.campaign_npcs
   ADD COLUMN IF NOT EXISTS recruit_locked_approaches TEXT[] NOT NULL DEFAULT '{}';
 
 COMMENT ON COLUMN public.campaign_npcs.recruit_locked_approaches IS
-  'Per-NPC array of approach strings (cohort / conscript / convert) that are permanently locked for future recruit attempts. Populated by the recruit-result handler on terminal failures (today only Convert + Intimidation Failure). The Recruit modal (Phase C) hides locked approaches per NPC.';
+  'Per-NPC array of approach strings (cohort / conscript / convert) that are permanently locked for future recruit attempts. Populated by the recruit-result handler on terminal failures (today only Convert + Manipulation Failure). The Recruit modal (Phase C) hides locked approaches per NPC.';
 
 -- GIN index for the array containment check the Recruit modal will
 -- use to gate approach picker per NPC. Cheap; the array stays small

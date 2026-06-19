@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## Canon skill/term removal is NOT a blind find-replace - dedup + logic + prose (2026-06-18)
+
+Xero: "Intimidation no longer exists. all uses should be changed to Manipulation." Collapsing one skill into another across the codebase has three traps a naive `sed s/Intimidation/Manipulation/g` walks straight into:
+1. **List dedup.** In several NPC skill arrays + the `RECRUITMENT_ALL_SKILLS` / Politician pools, Manipulation ALREADY coexisted with Intimidation. A blind rename produces a duplicate entry (two Manipulations on one NPC). Correct handling: if the target already exists in that array, MERGE - keep the higher level, drop the other - don't rename into a dup. (5 of 15 NPCs in setting-npcs.ts were merge cases; 2 of those had Intimidation > Manipulation so the rename won and the lower dup was deleted.)
+2. **Load-bearing logic + variable names.** `isConvertIntimidationFailure` and the Distract `smod = max(Intimidation, Inspiration, ...)` aren't just strings - the var name has to be renamed for future legibility and the smod gains real behavior (PCs never had Intimidation so `skLevel('Intimidation')` was always 0; now it reads their Manipulation - a latent dead-path fixed by the collapse).
+3. **User-facing prose.** Tooltips ("Best with Intimidation or Bluff", "a prior Intimidation Failure...") are seen by players - reword them, not just the code.
+Method that worked: full grep inventory FIRST (43 hits / 6 files), classify each as rename vs merge vs logic vs prose, line-number Python transform for the bulk data files (avoids the "identical line, not unique for Edit" problem), then tsc + full test suite + guardrails. Also: checked live DB row counts before assuming a data migration was needed (0 rows had it - none needed). Left `docs/Rules/*.txt` (source rulebook extracts) untouched - they're historical source, not canon.
+
 ## Be PRECISE about memory - never hide behind "I can't remember between sessions" (2026-06-18)
 
 Xero caught this same morning as the apology lesson: I told him "I don't carry memory between sessions" while we were actively USING the .md memory system - CLAUDE.md, AGENTS.md, operating-mode.md, lessons.md are all loaded into context at the start of every session. He correctly flagged it as disingenuous: "we both know you read .md files. Either a lie or just sheer confidence."

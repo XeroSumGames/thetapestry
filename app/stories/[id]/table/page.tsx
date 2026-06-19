@@ -333,7 +333,7 @@ export default function TablePage() {
     rollerEntryId: string        // initiative_order.id of the active combatant
     rollerName: string
     amod: number                 // INF AMod
-    smod: number                 // max of Intimidation / Inspiration / Psychology* / Tactics*
+    smod: number                 // max of Manipulation / Inspiration / Psychology* / Tactics*
     candidates: Array<{ entryId: string; name: string; distFeet: number | null; isNpc: boolean }>
     rollerIsNpc: boolean
     preselectName: string | null
@@ -3992,7 +3992,7 @@ export default function TablePage() {
     //   Wild Success / HI (any)        → permanent (default flags)
     //   Conscript Failure              → escape_pending = true, still
     //                                     inserts the membership
-    //   Convert + Intimidation Failure → no membership; append
+    //   Convert + Manipulation Failure → no membership; append
     //                                     'convert' to NPC's
     //                                     recruit_locked_approaches array
     //   Cohort/Convert Failure or any  → no membership, no lock
@@ -4000,10 +4000,10 @@ export default function TablePage() {
     //                                     (narrative-only)
     const isSuccessTier = outcome === 'Success'  // plain Success, NOT Wild/HI
     const isConscriptFailure = recruitApproach === 'conscript' && (outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight')
-    const isConvertIntimidationFailure = recruitApproach === 'convert' && recruitSkill === 'Intimidation' && (outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight')
+    const isConvertManipulationFailure = recruitApproach === 'convert' && recruitSkill === 'Manipulation' && (outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight')
     // Membership-shape: who gets a row? Successes always do; Conscript
     // Failure gets a row WITH escape_pending so the GM can fire the
-    // escape later. Convert+Intimidation Failure NEVER gets a row;
+    // escape later. Convert+Manipulation Failure NEVER gets a row;
     // the NPC just gets the approach locked.
     const writesMembership = isSuccess || isConscriptFailure
 
@@ -4047,13 +4047,13 @@ export default function TablePage() {
         if (rollerEntry.character?.id) void appendProgressionLog(rollerEntry.character.id, 'community', `🤝 Recruited ${npc.name} as ${recruitedAs} to ${finalCommunityName}.`)
       }
     }
-    // Convert + Intimidation Failure: lock the 'convert' approach on
+    // Convert + Manipulation Failure: lock the 'convert' approach on
     // this NPC permanently (any future PC, any future attempt). The
     // Recruit modal (Phase C) will hide the locked approach in its
     // picker. Dedupe in JS - array_append in SQL would also work but
     // requires a fetch-or-RPC roundtrip; this is one read + one
     // update either way.
-    if (isConvertIntimidationFailure) {
+    if (isConvertManipulationFailure) {
       const existing: string[] = Array.isArray((npc as any).recruit_locked_approaches) ? (npc as any).recruit_locked_approaches : []
       if (!existing.includes('convert')) {
         const next = [...existing, 'convert']
@@ -6057,7 +6057,7 @@ export default function TablePage() {
                 <button onClick={() => {
                   clearAimIfActive(activeEntry.id)
                   // Compute Distract roll mods from the active combatant.
-                  // Per CRB: Intimidation / Inspiration / Tactics* /
+                  // Per CRB: Manipulation / Inspiration / Tactics* /
                   // Psychology* - take the highest level. ("Tactical*"
                   // in the CRB is a typo per Xero; engine uses Tactics*.)
                   let amod = 0, smod = 0
@@ -6066,14 +6066,14 @@ export default function TablePage() {
                     amod = distractCharEntry.character.data?.rapid?.INF ?? 0
                     const sk: any[] = Array.isArray(distractCharEntry.character.data?.skills) ? distractCharEntry.character.data.skills : []
                     const skLevel = (n: string) => (sk.find((s: any) => s.skillName === n)?.level ?? 0)
-                    smod = Math.max(skLevel('Intimidation'), skLevel('Inspiration'), skLevel('Psychology*'), skLevel('Tactics*'))
+                    smod = Math.max(skLevel('Manipulation'), skLevel('Inspiration'), skLevel('Psychology*'), skLevel('Tactics*'))
                   } else {
                     const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
                     if (npcRoller) {
                       amod = (npcRoller as any).influence ?? 0
                       const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
                       const skLevel = (n: string) => (npcSkills.find((s: any) => s.name === n)?.level ?? 0)
-                      smod = Math.max(skLevel('Intimidation'), skLevel('Inspiration'), skLevel('Psychology*'), skLevel('Tactics*'))
+                      smod = Math.max(skLevel('Manipulation'), skLevel('Inspiration'), skLevel('Psychology*'), skLevel('Tactics*'))
                     }
                   }
                   // Per CRB §06 Combat Actions: "Choose an enemy at Close
@@ -9849,7 +9849,7 @@ export default function TablePage() {
         const suggestedSkills = suggestedSkillsForApproach(recruitApproach)
         // Recruit Tier-2 Phase C lock-gate. Pulled from the picked NPC's
         // recruit_locked_approaches array (per-NPC, global across PCs).
-        // Today only 'convert' gets locked (via Convert+Intimidation
+        // Today only 'convert' gets locked (via Convert+Manipulation
         // Failure). The picker disables locked buttons and the roll
         // gate refuses to fire if the selected approach is locked.
         const lockedApproaches: RecruitApproach[] = Array.isArray((pickedNpc as any)?.recruit_locked_approaches)
@@ -9955,7 +9955,7 @@ export default function TablePage() {
                       <HelpTooltip
                         title="Recruitment Approach"
                         text={
-                          'Cohort - cooperative. The NPC joins for a shared interest, goal, or perceived benefit. Best with Persuasion, Inspiration, or Charm. Probationary through the next Morale Check; the outcome decides whether they stick around or drift off.\n\nConscript - coercive. The PC must have already established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. Best with Intimidation or Bluff. Stays compliant only while the threat holds; the first Morale Check typically becomes an escape attempt.\n\nConvert - ideological. The NPC is brought in by shared belief, worldview, or cause. Best with Inspiration, Religion, or a relevant Ideology. Probationary through the first Morale Check; if they pass it, they become long-term committed.'
+                          'Cohort - cooperative. The NPC joins for a shared interest, goal, or perceived benefit. Best with Persuasion, Inspiration, or Charm. Probationary through the next Morale Check; the outcome decides whether they stick around or drift off.\n\nConscript - coercive. The PC must have already established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. Best with Manipulation or Bluff. Stays compliant only while the threat holds; the first Morale Check typically becomes an escape attempt.\n\nConvert - ideological. The NPC is brought in by shared belief, worldview, or cause. Best with Inspiration, Religion, or a relevant Ideology. Probationary through the first Morale Check; if they pass it, they become long-term committed.'
                         }
                       />
                     </div>
@@ -9967,7 +9967,7 @@ export default function TablePage() {
                           <button key={ap}
                             disabled={isLocked}
                             onClick={() => { if (isLocked) return; setRecruitApproach(ap); setRecruitSkill('') }}
-                            title={isLocked ? `${ap.toUpperCase()} permanently locked on this NPC - a prior Intimidation Failure on a Convert attempt ruled out the approach. Try a different approach.` : undefined}
+                            title={isLocked ? `${ap.toUpperCase()} permanently locked on this NPC - a prior Manipulation Failure on a Convert attempt ruled out the approach. Try a different approach.` : undefined}
                             style={{ flex: 1, padding: '8px 6px', background: isLocked ? '#1a1010' : (isSelected ? '#2d5a1b' : '#242424'), border: `1px solid ${isLocked ? '#3a1a1a' : (isSelected ? '#7fc458' : '#3a3a3a')}`, borderRadius: '3px', color: isLocked ? '#5a3030' : (isSelected ? '#7fc458' : '#f5f2ee'), fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isLocked ? 'not-allowed' : 'pointer', textDecoration: isLocked ? 'line-through' : 'none' }}>
                             {ap}{isLocked ? ' 🔒' : ''}
                           </button>
@@ -9977,7 +9977,7 @@ export default function TablePage() {
                     {/* Lock-state warnings per Recruit Tier-2 Phase C. */}
                     {allApproachesLocked && pickedNpc && (
                       <div style={{ marginTop: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-                        🔒 <span style={{ fontWeight: 700 }}>All recruit approaches are permanently locked on this NPC.</span> Prior Intimidation Failures have ruled out every approach. This NPC cannot be recruited.
+                        🔒 <span style={{ fontWeight: 700 }}>All recruit approaches are permanently locked on this NPC.</span> Prior Manipulation Failures have ruled out every approach. This NPC cannot be recruited.
                       </div>
                     )}
                     {currentApproachLocked && !allApproachesLocked && (

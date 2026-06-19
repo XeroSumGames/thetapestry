@@ -37,7 +37,7 @@ BEGIN
       wp_max, rp_max, wp_current, rp_current, skills, equipment, notes, motivation, status, sort_order,
       campaign_pin_id)
     VALUES (camp_id, 'Frank "Frankie" Wallace', 2, 2, 1, 2, 1, 12, 7, 12, 7,
-      '{"entries":[{"name":"Mechanic","level":2},{"name":"Tinkerer","level":2},{"name":"Inspiration","level":1},{"name":"Ranged Combat","level":1},{"name":"Survival","level":1},{"name":"Tactics","level":1},{"name":"Driving","level":1},{"name":"Intimidation","level":1}]}'::jsonb,
+      '{"entries":[{"name":"Mechanic","level":2},{"name":"Tinkerer","level":2},{"name":"Inspiration","level":1},{"name":"Ranged Combat","level":1},{"name":"Survival","level":1},{"name":"Tactics","level":1},{"name":"Driving","level":1},{"name":"Manipulation","level":1}]}'::jsonb,
       '[{"name":"Heavy Pistol"},{"name":"Grenade","notes":"Hidden in pocket. 4-square blast radius."}]'::jsonb,
       E'Role: Compound Leader\n\nFrankie is a competent, stubborn man who has kept eleven people alive in the Sonoran Desert for three years. He dies on Day One.\n\nHow to meet: The players begin the campaign working alongside Frankie in the barn.',
       'Get his people to Bozeman before Kincaid forces them into a water war.', 'active', sort_idx,
@@ -51,7 +51,7 @@ BEGIN
       wp_max, rp_max, wp_current, rp_current, skills, equipment, notes, motivation, status, sort_order,
       campaign_pin_id)
     VALUES (camp_id, 'Kincaid', 1, 1, 2, 2, 1, 14, 6, 14, 6,
-      '{"entries":[{"name":"Intimidation","level":2},{"name":"Tactics","level":2},{"name":"Ranged Combat","level":2},{"name":"Melee Combat","level":1},{"name":"Manipulation","level":1},{"name":"Athletics","level":1},{"name":"Survival","level":1}]}'::jsonb,
+      '{"entries":[{"name":"Manipulation","level":2},{"name":"Tactics","level":2},{"name":"Ranged Combat","level":2},{"name":"Melee Combat","level":1},{"name":"Athletics","level":1},{"name":"Survival","level":1}]}'::jsonb,
       '[{"name":"Heavy Pistol"},{"name":"Hunting Rifle"}]'::jsonb,
       E'Role: Warlord / Antagonist\n\nKincaid controls Apache Junction and Canyon Lake. Ruthless, calculating. His men do not cross into Menendez territory.\n\nHow to meet: Arrives at the compound on Day One with Justice Morse and a dozen soldiers.',
       'Control the methanol production capability.', 'active', sort_idx,
@@ -64,7 +64,7 @@ BEGIN
     INSERT INTO campaign_npcs (campaign_id, name, reason, acumen, physicality, influence, dexterity,
       wp_max, rp_max, wp_current, rp_current, skills, equipment, notes, motivation, status, sort_order)
     VALUES (camp_id, 'Justice Morse', 0, 1, 2, 1, 1, 13, 6, 13, 6,
-      '{"entries":[{"name":"Ranged Combat","level":2},{"name":"Melee Combat","level":1},{"name":"Intimidation","level":1},{"name":"Athletics","level":1},{"name":"Tactics","level":1},{"name":"Driving","level":1}]}'::jsonb,
+      '{"entries":[{"name":"Ranged Combat","level":2},{"name":"Melee Combat","level":1},{"name":"Manipulation","level":1},{"name":"Athletics","level":1},{"name":"Tactics","level":1},{"name":"Driving","level":1}]}'::jsonb,
       '[{"name":"Assault Rifle","notes":"Full-auto capable"},{"name":"Heavy Pistol"}]'::jsonb,
       E'Role: Kincaid''s Lieutenant\n\nJustice Morse is Kincaid''s right hand. Loyal, efficient, dangerous.\n\nHow to meet: Arrives with Kincaid on Day One.',
       'Loyalty to Kincaid.', 'active', sort_idx);
@@ -76,9 +76,9 @@ BEGIN
     INSERT INTO campaign_npcs (campaign_id, name, reason, acumen, physicality, influence, dexterity,
       wp_max, rp_max, wp_current, rp_current, skills, equipment, notes, motivation, status, sort_order)
     VALUES (camp_id, 'Kincaid''s Soldier', 0, 0, 1, 0, 1, 12, 7, 12, 7,
-      '{"entries":[{"name":"Ranged Combat","level":1},{"name":"Melee Combat","level":1},{"name":"Athletics","level":1},{"name":"Intimidation","level":1},{"name":"Driving","level":1},{"name":"Survival","level":1}]}'::jsonb,
+      '{"entries":[{"name":"Ranged Combat","level":1},{"name":"Melee Combat","level":1},{"name":"Athletics","level":1},{"name":"Manipulation","level":1},{"name":"Driving","level":1},{"name":"Survival","level":1}]}'::jsonb,
       '[{"name":"Assault Rifle"},{"name":"Light Pistol"}]'::jsonb,
-      E'Role: Raider\n\nGeneric stat block for Kincaid''s men. A dozen arrive on Day One.\n\nHow to meet: Day One — they surround the compound.',
+      E'Role: Raider\n\nGeneric stat block for Kincaid''s men. A dozen arrive on Day One.\n\nHow to meet: Day One - they surround the compound.',
       'Following orders.', 'active', sort_idx);
   END IF;
 
@@ -117,9 +117,9 @@ BEGIN
       wp_max, rp_max, wp_current, rp_current, skills, equipment, notes, motivation, status, sort_order,
       campaign_pin_id)
     VALUES (camp_id, 'Cole Vickers', 1, 1, 2, 1, 1, 13, 7, 13, 7,
-      '{"entries":[{"name":"Ranged Combat","level":2},{"name":"Survival","level":2},{"name":"Athletics","level":1},{"name":"Intimidation","level":1},{"name":"Stealth","level":1}]}'::jsonb,
+      '{"entries":[{"name":"Ranged Combat","level":2},{"name":"Survival","level":2},{"name":"Athletics","level":1},{"name":"Manipulation","level":1},{"name":"Stealth","level":1}]}'::jsonb,
       '[{"name":"Hunting Rifle"},{"name":"Hunting Knife"}]'::jsonb,
-      E'Role: Survivalist Leader\n\nControls Cedar Breaks at 10,000ft. Suspicious, territorial, well-prepared — but not unreasonable.\n\nHow to meet: Day 16, approach to Cedar City.',
+      E'Role: Survivalist Leader\n\nControls Cedar Breaks at 10,000ft. Suspicious, territorial, well-prepared - but not unreasonable.\n\nHow to meet: Day 16, approach to Cedar City.',
       'Protect the water supply.', 'active', sort_idx,
       (pin_map->>'Cedar Breaks National Monument, UT')::uuid);
   END IF;
@@ -131,7 +131,7 @@ BEGIN
       wp_max, rp_max, wp_current, rp_current, skills, equipment, notes, motivation, status, sort_order,
       campaign_pin_id)
     VALUES (camp_id, 'Brother Elias', 2, 2, 0, 2, 0, 10, 8, 10, 8,
-      '{"entries":[{"name":"Manipulation","level":2},{"name":"Inspiration","level":2},{"name":"Psychology","level":1},{"name":"Intimidation","level":1}]}'::jsonb,
+      '{"entries":[{"name":"Manipulation","level":2},{"name":"Inspiration","level":2},{"name":"Psychology","level":1}]}'::jsonb,
       '[]'::jsonb,
       E'Role: Fanatic Preacher\n\nLeads the religious fanatics on I-15. Theology is coherent and disturbing. First encounter is non-violent.\n\nHow to meet: Days 17-19, Cedar City to Holden.',
       'Convert the players. Absolute faith.', 'active', sort_idx,
