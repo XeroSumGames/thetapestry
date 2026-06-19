@@ -120,6 +120,12 @@ export default function PregenPage() {
 
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '2rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
+      <style>{`
+        .pregen-card { transition: border-color .15s, transform .15s; }
+        .pregen-card:hover { border-color: #c0392b !important; transform: translateY(-2px); }
+        .pregen-card:hover .pregen-use-btn { background: #223d14 !important; }
+        .pregen-chip:hover:not(.active) { border-color: #3a3a3a !important; color: #f5f2ee !important; }
+      `}</style>
 
       {/* Topbar */}
       <div style={{ marginBottom: '20px' }}>
@@ -132,18 +138,20 @@ export default function PregenPage() {
       <div style={{ fontSize: '30px', fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: '#fff', marginBottom: '6px' }}>
         Pre-generated characters
       </div>
-      <div style={{ fontSize: '14px', color: '#cce0f5', marginBottom: '24px' }}>
-        Ready-to-play survivors. Pick one to drop straight into your story.
+      <div style={{ fontSize: '14px', color: '#7a7068', marginBottom: '24px' }}>
+        Ready-to-play survivors. Pick one to drop straight into your story, or start from the ones authored for the module you&apos;re playing.
       </div>
 
       {/* Filter bar */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={() => setSettingFilter(null)}
+          className={`pregen-chip${settingFilter === null ? ' active' : ''}`}
           style={filterChip(settingFilter === null)}>
           All
         </button>
         {availableSettings.map(s => (
           <button key={s} onClick={() => setSettingFilter(settingFilter === s ? null : s)}
+            className={`pregen-chip${settingFilter === s ? ' active' : ''}`}
             style={filterChip(settingFilter === s)}>
             {s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
@@ -224,7 +232,7 @@ function PregenCard({ name, subtitle, blurb, portraitUrl, isCreating, onUse }: {
 }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
-    <div style={{ background: '#141414', border: '1px solid #222', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div className="pregen-card" style={{ background: '#141414', border: '1px solid #222', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ width: '100%', height: '130px', background: '#0d0d0d', position: 'relative', overflow: 'hidden' }}>
         {portraitUrl ? (
           <img src={portraitUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -233,12 +241,13 @@ function PregenCard({ name, subtitle, blurb, portraitUrl, isCreating, onUse }: {
             {initials}
           </div>
         )}
+        <span style={{ position: 'absolute', top: '6px', right: '6px', fontSize: '13px', padding: '2px 7px', borderRadius: '3px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, background: 'rgba(0,0,0,.6)', color: '#7fc458' }}>Common</span>
       </div>
       <div style={{ padding: '10px 12px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', letterSpacing: '.02em' }}>{name}</div>
         {subtitle && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '2px' }}>{subtitle}</div>}
         {blurb && <div style={{ fontSize: '13px', color: '#6a635c', marginTop: '7px', lineHeight: 1.45, flex: 1 }}>{blurb}</div>}
-        <button onClick={onUse} disabled={isCreating}
+        <button onClick={onUse} disabled={isCreating} className="pregen-use-btn"
           style={{ marginTop: '10px', padding: '7px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isCreating ? 'not-allowed' : 'pointer', opacity: isCreating ? 0.6 : 1 }}>
           {isCreating ? 'Creating...' : 'Use this character'}
         </button>
@@ -251,7 +260,7 @@ function filterChip(active: boolean): React.CSSProperties {
   return {
     padding: '6px 14px', background: active ? '#2a1210' : '#171717',
     border: `1px solid ${active ? '#c0392b' : '#2e2e2e'}`,
-    borderRadius: '16px', color: active ? '#f5a89a' : '#cce0f5',
+    borderRadius: '16px', color: active ? '#f5a89a' : '#7a7068',
     fontSize: '13px', fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.04em', cursor: 'pointer',
   }
