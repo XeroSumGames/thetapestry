@@ -52,7 +52,7 @@ export function CdpModal({
               <input type="checkbox" checked={cdpRecipients.has(e.stateId)} onChange={() => {
                 setCdpRecipients(prev => { const n = new Set(prev); n.has(e.stateId) ? n.delete(e.stateId) : n.add(e.stateId); return n })
               }} style={{ accentColor: '#7ab3d4' }} />
-              {e.character.name} <span style={{ color: '#5a5550', fontWeight: 400 }}>({e.liveState?.cdp ?? 0} CDP)</span>
+              {e.character.name} <span style={{ color: '#f5f2ee', fontWeight: 400 }}>({e.liveState?.cdp ?? 0} CDP)</span>
             </label>
           ))}
         </div>

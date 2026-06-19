@@ -142,7 +142,7 @@ export default function ImportSnapshotPage() {
               ← Back to dashboard
             </button>
           </div>
-          <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '10px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '10px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
             module id: <code style={{ color: '#cce0f5' }}>{published.moduleId}</code>
           </div>
         </div>

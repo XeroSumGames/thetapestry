@@ -765,7 +765,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           : status === 'Holding' ? '#cce0f5'
           : status === 'Struggling' ? '#EF9F27'
           : status === 'Dying' ? '#f5a89a'
-          : status === 'Dissolved' ? '#5a5550'
+          : status === 'Dissolved' ? '#f5f2ee'
           : '#cce0f5'
         // Distinct visual language from pins: solid colored circle
         // with a thin dark outline + subtle glow. No emoji - the
@@ -1220,7 +1220,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       <button key={opt.v} onClick={() => setLinkType(opt.v)}
                         style={{ flex: 1, padding: '10px 8px', background: linkType === opt.v ? `${opt.color}22` : '#242424', border: `1px solid ${linkType === opt.v ? opt.color : '#3a3a3a'}`, borderRadius: '3px', color: linkType === opt.v ? opt.color : '#cce0f5', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: linkType === opt.v ? 700 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                         <span>{opt.label}</span>
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', textTransform: 'none', letterSpacing: 0 }}>{opt.desc}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'none', letterSpacing: 0 }}>{opt.desc}</span>
                       </button>
                     ))}
                   </div>
@@ -1339,7 +1339,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
                 <span style={{ ...LABEL_STYLE_TIGHT }}>Pins</span>
-                <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
+                <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
               </div>
               <div style={{ position: 'relative', marginBottom: '6px' }}>
                 <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
@@ -1360,7 +1360,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
                 {(['public', 'mine', 'campaign', 'whispers'] as const).map(tab => (
                   <button key={tab} onClick={() => setSidebarTab(tab)}
-                    style={{ flex: 1, padding: '6px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '6px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {tab === 'public' ? 'Public' : tab === 'mine' ? 'My Pins' : tab === 'campaign' ? 'Campaign' : 'Whispers'}
                   </button>
                 ))}
@@ -1381,15 +1381,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       rows={3}
                       style={{ width: '100%', padding: '6px 8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, resize: 'vertical', boxSizing: 'border-box' }} />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{whisperDraft.length}/500</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{whisperDraft.length}/500</span>
                       <button onClick={postWhisper} disabled={postingWhisper || !whisperDraft.trim()}
-                        style={{ padding: '4px 12px', background: whisperDraft.trim() ? '#1a2e10' : '#242424', border: `1px solid ${whisperDraft.trim() ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: whisperDraft.trim() ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: postingWhisper ? 'wait' : whisperDraft.trim() ? 'pointer' : 'not-allowed' }}>
+                        style={{ padding: '4px 12px', background: whisperDraft.trim() ? '#1a2e10' : '#242424', border: `1px solid ${whisperDraft.trim() ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: whisperDraft.trim() ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: postingWhisper ? 'wait' : whisperDraft.trim() ? 'pointer' : 'not-allowed' }}>
                         {postingWhisper ? '…' : 'Whisper'}
                       </button>
                     </div>
                   </div>
                   {whispers.length === 0 ? (
-                    <div style={{ padding: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    <div style={{ padding: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                       No whispers yet
                     </div>
                   ) : (
@@ -1400,7 +1400,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                             <span style={{ fontSize: '13px', color: w.author_user_id === userId ? '#7fc458' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
                               {w.author_username ?? '?'}
                             </span>
-                            <span title={new Date(w.created_at).toLocaleString()} style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                            <span title={new Date(w.created_at).toLocaleString()} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                               {(() => { const ms = Date.now() - new Date(w.created_at).getTime(); const m = Math.floor(ms / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m`; const h = Math.floor(m / 60); if (h < 24) return `${h}h`; const d = Math.floor(h / 24); return `${d}d` })()}
                             </span>
                           </div>
@@ -1539,10 +1539,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{wcFolderOpen ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{wcFolderOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '14px' }}>🌐</span>
                       <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1, fontWeight: 600 }}>Player Communities</span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginRight: '4px' }}>{wcFiltered.length}</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginRight: '4px' }}>{wcFiltered.length}</span>
                       <span onClick={e => {
                         e.stopPropagation()
                         setHiddenFolders(prev => {
@@ -1553,7 +1553,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                         })
                       }}
                         title={wcHidden ? 'Show on map' : 'Hide from map'}
-                        style={{ fontSize: '13px', cursor: 'pointer', color: wcHidden ? '#5a5550' : '#7fc458', lineHeight: 1 }}>
+                        style={{ fontSize: '13px', cursor: 'pointer', color: wcHidden ? '#f5f2ee' : '#7fc458', lineHeight: 1 }}>
                         {wcHidden ? '👁‍🗨' : '👁'}
                       </span>
                     </div>
@@ -1567,7 +1567,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                             : wc.community_status === 'Holding' ? '#cce0f5'
                             : wc.community_status === 'Struggling' ? '#EF9F27'
                             : wc.community_status === 'Dying' ? '#f5a89a'
-                            : '#5a5550'
+                            : '#f5f2ee'
                           return (
                             <div key={wc.id}
                               onClick={() => {
@@ -1583,7 +1583,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                               title={`${wc.name} · ${wc.size_band} · ${wc.community_status}${wc.faction_label ? ' · ' + wc.faction_label : ''} · From ${wc.campaign_name}`}>
                               <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, border: '1px solid #1a1a1a', flexShrink: 0 }} />
                               <span style={{ color: '#f5f2ee', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wc.name}</span>
-                              <span style={{ color: '#5a5550', fontSize: '13px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0 }}>{wc.size_band}</span>
+                              <span style={{ color: '#f5f2ee', fontSize: '13px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0 }}>{wc.size_band}</span>
                             </div>
                           )
                         })}
@@ -1611,10 +1611,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                        <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         <span style={{ fontSize: '14px' }}>{cat.emoji}</span>
                         <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{cat.label}</span>
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginRight: '4px' }}>{folderPins.length}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginRight: '4px' }}>{folderPins.length}</span>
                         <span onClick={e => {
                           e.stopPropagation()
                           setHiddenFolders(prev => {
@@ -1625,7 +1625,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                           })
                         }}
                           title={isHidden ? 'Show on map' : 'Hide from map'}
-                          style={{ fontSize: '13px', cursor: 'pointer', color: isHidden ? '#5a5550' : '#7fc458', lineHeight: 1 }}>
+                          style={{ fontSize: '13px', cursor: 'pointer', color: isHidden ? '#f5f2ee' : '#7fc458', lineHeight: 1 }}>
                           {isHidden ? '👁‍🗨' : '👁'}
                         </span>
                       </div>
@@ -1665,7 +1665,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                   onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#1a1a1a' }}
                                   onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent' }}>
                                   <div style={{ fontSize: '13px', color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>
-                                    {isChild && <span style={{ color: '#5a5550', marginRight: '4px' }}>↳</span>}
+                                    {isChild && <span style={{ color: '#f5f2ee', marginRight: '4px' }}>↳</span>}
                                     {p.title}
                                   {isExpanded && p.user_id && thriverUserIds.has(p.user_id) && (
                                     <span title="Canon - published by The Tapestry team" style={{ marginLeft: '6px', padding: '1px 6px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
@@ -2002,7 +2002,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     )}
     {/* New file upload */}
     <div style={{ marginBottom: '12px' }}>
-      <label style={{ display: 'block', padding: '8px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+      <label style={{ display: 'block', padding: '8px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
         {editAttachments.length > 0 ? <span style={{ color: '#7fc458' }}>{editAttachments.length} file{editAttachments.length > 1 ? 's' : ''} to upload</span> : '+ Add files'}
         <input type="file" multiple hidden onChange={e => { if (e.target.files) setEditAttachments(prev => [...prev, ...e.target.files!]); e.target.value = '' }} />
       </label>

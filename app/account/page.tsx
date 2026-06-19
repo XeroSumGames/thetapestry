@@ -218,7 +218,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div style={{ flex: 1, padding: '60px 20px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+      <div style={{ flex: 1, padding: '60px 20px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
         Loading account…
       </div>
     )
@@ -251,7 +251,7 @@ export default function AccountPage() {
   const btnStyle = (disabled: boolean): React.CSSProperties => ({
     padding: '8px 18px', background: disabled ? '#242424' : '#2a1a3e',
     border: `1px solid ${disabled ? '#3a3a3a' : '#5a2e5a'}`, borderRadius: '3px',
-    color: disabled ? '#5a5550' : '#c4a7f0', fontSize: '13px',
+    color: disabled ? '#f5f2ee' : '#c4a7f0', fontSize: '13px',
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase',
     fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer',
   })
@@ -294,7 +294,7 @@ export default function AccountPage() {
               background: profile?.avatar_url ? `url(${profile.avatar_url}) center/cover` : '#1a1a1a',
               border: '2px solid #5a2e5a', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif',
+              fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif',
               letterSpacing: '.06em', textTransform: 'uppercase',
             }}>
               {!profile?.avatar_url && 'No avatar'}
@@ -355,7 +355,7 @@ export default function AccountPage() {
                 {emailSaving ? 'Saving…' : 'Save'}
               </button>
             </div>
-            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+            <div style={{ marginTop: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
               Changing your email sends a confirmation link to the new address. The change finalizes when you click that link.
             </div>
             {emailMessage && (
@@ -369,7 +369,7 @@ export default function AccountPage() {
             <div style={{ ...inputStyle, color: '#cce0f5', background: '#1a1a1a', cursor: 'not-allowed' }}>
               {profile?.role ?? 'survivor'}
             </div>
-            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+            <div style={{ marginTop: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
               Roles are set by the moderation team. Reach out via the Campfire if you think this is wrong.
             </div>
           </div>
@@ -394,7 +394,7 @@ export default function AccountPage() {
             style={btnStyle(pwdSaving || pwd.length < 8 || pwd !== pwdConfirm)}>
             {pwdSaving ? 'Saving…' : 'Update password'}
           </button>
-          <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             Minimum 8 characters. You won&apos;t be logged out - your current session keeps working.
           </div>
           {pwdMessage && (
@@ -425,7 +425,7 @@ export default function AccountPage() {
         {/* Privacy + terms link strip. Required for any platform that
             collects user data. Kept compact so the page doesn't end
             on a legal-feeling note. */}
-        <div style={{ marginTop: '1rem', paddingTop: '12px', borderTop: '1px solid #2e2e2e', textAlign: 'center', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+        <div style={{ marginTop: '1rem', paddingTop: '12px', borderTop: '1px solid #2e2e2e', textAlign: 'center', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
           <Link href="/privacy" style={{ color: '#7ab3d4', textDecoration: 'none', marginRight: '14px' }}>Privacy Policy</Link>
           <Link href="/terms" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Terms of Service</Link>
         </div>
@@ -550,7 +550,7 @@ function DangerZone({ profile }: DangerZoneProps) {
                 background: matches && !deleting ? '#c0392b' : '#241010',
                 border: `1px solid ${matches && !deleting ? '#c0392b' : '#3a3a3a'}`,
                 borderRadius: '3px',
-                color: matches && !deleting ? '#fff' : '#5a5550',
+                color: matches && !deleting ? '#fff' : '#f5f2ee',
                 fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700,
                 cursor: matches && !deleting ? 'pointer' : 'not-allowed',

@@ -78,7 +78,7 @@ export default function ProgressionLog({ characterId, log, canEdit, onUpdate, co
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
         <span style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>Progression Log</span>
-        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{log.length} entries</span>
+        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{log.length} entries</span>
         {canEdit && (
           <button onClick={() => setShowAdd(!showAdd)} style={{ marginLeft: 'auto', padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             {showAdd ? 'Cancel' : '+ Note'}
@@ -103,7 +103,7 @@ export default function ProgressionLog({ characterId, log, canEdit, onUpdate, co
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '6px' }}>
           {Object.entries(TYPE_LABELS).filter(([type]) => log.some(e => e.type === type)).map(([type, label]) => (
             <button key={type} onClick={() => setFilter(filter === type ? null : type)}
-              style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', background: filter === type ? '#242424' : 'transparent', border: `1px solid ${filter === type ? TYPE_COLORS[type] : '#3a3a3a'}`, color: filter === type ? TYPE_COLORS[type] : '#5a5550' }}>
+              style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', background: filter === type ? '#242424' : 'transparent', border: `1px solid ${filter === type ? TYPE_COLORS[type] : '#3a3a3a'}`, color: filter === type ? TYPE_COLORS[type] : '#f5f2ee' }}>
               {label}
             </button>
           ))}
@@ -132,7 +132,7 @@ export default function ProgressionLog({ characterId, log, canEdit, onUpdate, co
       )}
 
       {compact && log.length > 10 && (
-        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', textAlign: 'center', padding: '4px', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textAlign: 'center', padding: '4px', textTransform: 'uppercase' }}>
           +{log.length - 10} more entries
         </div>
       )}

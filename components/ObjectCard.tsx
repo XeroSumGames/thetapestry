@@ -313,7 +313,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                       <button
                         disabled={!selectedChar || giving === k}
                         onClick={() => giveOne(c)}
-                        style={{ padding: '2px 8px', background: selectedChar ? '#1a2e10' : '#242424', border: `1px solid ${selectedChar ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selectedChar ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: selectedChar ? 'pointer' : 'not-allowed' }}
+                        style={{ padding: '2px 8px', background: selectedChar ? '#1a2e10' : '#242424', border: `1px solid ${selectedChar ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selectedChar ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: selectedChar ? 'pointer' : 'not-allowed' }}
                       >
                         {giving === k ? '…' : 'Give'}
                       </button>

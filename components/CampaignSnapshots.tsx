@@ -201,7 +201,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
 
       {/* List */}
       {rows.length === 0 ? (
-        <div style={{ padding: '16px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+        <div style={{ padding: '16px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
           No snapshots yet.
         </div>
       ) : (
@@ -211,7 +211,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.name}</div>
                 {r.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{r.description}</div>}
-                <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
                   {new Date(r.created_at).toLocaleString()} · {r.snapshot?.npcs?.length ?? 0} NPCs · {r.snapshot?.pins?.length ?? 0} pins · {r.snapshot?.scenes?.length ?? 0} scenes · {r.snapshot?.notes?.length ?? 0} notes
                   {r.includes_character_states && <span style={{ color: '#EF9F27', marginLeft: '6px' }}>+ party states</span>}
                 </div>

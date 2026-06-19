@@ -99,7 +99,7 @@ export default function BugReportButton() {
                 width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px',
                 color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical',
               }} />
-            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+            <div style={{ marginTop: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
               Page: {typeof window !== 'undefined' ? window.location.pathname : '(unknown)'}
             </div>
             {error && (
@@ -114,7 +114,7 @@ export default function BugReportButton() {
                   background: !draft.trim() || submitting ? '#242424' : '#2a1210',
                   border: `1px solid ${!draft.trim() || submitting ? '#3a3a3a' : '#c0392b'}`,
                   borderRadius: '3px',
-                  color: !draft.trim() || submitting ? '#5a5550' : '#f5a89a',
+                  color: !draft.trim() || submitting ? '#f5f2ee' : '#f5a89a',
                   fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                   letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600,
                   cursor: !draft.trim() || submitting ? 'not-allowed' : 'pointer',

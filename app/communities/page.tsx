@@ -417,7 +417,7 @@ export default function CommunitiesIndexPage() {
       </p>
 
       {rows.length === 0 && (
-        <div style={{ padding: '3rem', textAlign: 'center', color: '#5a5550', fontSize: '16px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
+        <div style={{ padding: '3rem', textAlign: 'center', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
           You haven&apos;t founded or joined any communities yet.
           <div style={{ marginTop: '8px', fontSize: '15px', color: '#cce0f5', textTransform: 'none', letterSpacing: 0 }}>
             Click <span style={{ color: '#c0392b' }}>+ New Community</span> above to found one inside any campaign you&apos;re a member of.
@@ -431,7 +431,7 @@ export default function CommunitiesIndexPage() {
           <section key={campaignId} style={{ marginBottom: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px', paddingBottom: '4px', borderBottom: '1px solid #2e2e2e' }}>
               <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', color: '#EF9F27', letterSpacing: '.08em', textTransform: 'uppercase' }}>{first.campaign_name}</span>
-              {first.campaign_setting && <span style={{ fontSize: '13px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em' }}>{first.campaign_setting}</span>}
+              {first.campaign_setting && <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em' }}>{first.campaign_setting}</span>}
               {first.i_am_gm && <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#c0392b', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', padding: '1px 6px', textTransform: 'uppercase', letterSpacing: '.06em' }}>GM</span>}
             </div>
 
@@ -467,7 +467,7 @@ export default function CommunitiesIndexPage() {
         <section style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px', paddingBottom: '4px', borderBottom: '1px solid #2e2e2e' }}>
             <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', color: '#7ab3d4', letterSpacing: '.08em', textTransform: 'uppercase' }}>★ Following</span>
-            <span style={{ fontSize: '13px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em' }}>{followed.length} community{followed.length === 1 ? '' : 's'} on the Tapestry</span>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em' }}>{followed.length} community{followed.length === 1 ? '' : 's'} on the Tapestry</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
             {followed.map(f => {
@@ -475,7 +475,7 @@ export default function CommunitiesIndexPage() {
                 : f.communityStatus === 'Holding' ? '#cce0f5'
                 : f.communityStatus === 'Struggling' ? '#EF9F27'
                 : f.communityStatus === 'Dying' ? '#c0392b'
-                : '#5a5550'
+                : '#f5f2ee'
               const mapHref = f.homesteadLat != null && f.homesteadLng != null
                 ? `/map?lat=${f.homesteadLat}&lng=${f.homesteadLng}&zoom=10`
                 : '/map'
@@ -511,7 +511,7 @@ export default function CommunitiesIndexPage() {
                     </div>
                   )}
                   {f.lastPublicUpdateAt && (
-                    <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', marginBottom: '8px' }}
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', marginBottom: '8px' }}
                       title={new Date(f.lastPublicUpdateAt).toLocaleString()}>
                       Updated {formatRelativeTime(f.lastPublicUpdateAt)}
                     </div>
@@ -522,7 +522,7 @@ export default function CommunitiesIndexPage() {
                       🌐 On Map
                     </Link>
                     <button onClick={() => handleUnfollow(f.id)}
-                      style={{ flex: 1, padding: '4px 8px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ flex: 1, padding: '4px 8px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       ✕ Unfollow
                     </button>
                   </div>
@@ -549,7 +549,7 @@ export default function CommunitiesIndexPage() {
             <div style={{ marginBottom: '10px' }}>
               <div style={{ ...lbl }}>Community</div>
               {rows.length === 0 ? (
-                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                   No communities yet. Create one first, then you can invite others.
                 </div>
               ) : (
@@ -567,7 +567,7 @@ export default function CommunitiesIndexPage() {
               <div style={{ marginBottom: '10px' }}>
                 <div style={{ ...lbl }}>Invite which PC?</div>
                 {inviteCandidates.length === 0 ? (
-                  <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                  <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                     Every PC in this campaign is already a member or pending.
                   </div>
                 ) : (
@@ -614,7 +614,7 @@ export default function CommunitiesIndexPage() {
             <div style={{ marginBottom: '10px' }}>
               <div style={lbl}>Campaign</div>
               {campaigns.length === 0 ? (
-                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                   You&apos;re not in any campaigns yet.
                 </div>
               ) : (

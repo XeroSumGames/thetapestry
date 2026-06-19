@@ -37,7 +37,7 @@ export default function AdvantagesPanel({ advantages, gmLike, myCharacterIds, ho
     if (hideWhenEmpty) return null
     return (
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
           No advantages pending
         </div>
         {gmLike && (

@@ -91,9 +91,9 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
         {/* Grid */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Carlito", sans-serif', textTransform: 'uppercase' }}>Loading...</div>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#f5f2ee', fontFamily: '"Carlito", sans-serif', textTransform: 'uppercase' }}>Loading...</div>
           ) : portraits.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Carlito", sans-serif', fontSize: '13px' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#f5f2ee', fontFamily: '"Carlito", sans-serif', fontSize: '13px' }}>
               No portraits in the bank yet.<br />
               <span style={{ fontSize: '13px' }}>Add portraits via the Create Tokens tool.</span>
             </div>

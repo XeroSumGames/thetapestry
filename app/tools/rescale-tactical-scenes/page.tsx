@@ -133,12 +133,12 @@ export default function RescaleTacticalScenesPage() {
             <tr key={r.id} style={{ borderBottom: '1px solid #2e2e2e' }}>
               <td style={{ padding: '6px 8px' }}>
                 <div style={{ fontWeight: 600 }}>{r.name}</div>
-                <div style={{ fontSize: '13px', color: '#5a5550' }}>{r.campaign_id.slice(0, 8)}…</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee' }}>{r.campaign_id.slice(0, 8)}…</div>
               </td>
               <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{r.natural_w ?? '-'}</td>
               <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{r.img_scale.toFixed(3)}</td>
               <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', color: '#7fc458' }}>{r.new_scale != null ? r.new_scale.toFixed(3) : '-'}</td>
-              <td style={{ padding: '6px 8px', color: r.status === 'done' ? '#7fc458' : r.status === 'error' ? '#c0392b' : r.status === 'ready' ? '#EF9F27' : '#5a5550' }}>
+              <td style={{ padding: '6px 8px', color: r.status === 'done' ? '#7fc458' : r.status === 'error' ? '#c0392b' : r.status === 'ready' ? '#EF9F27' : '#f5f2ee' }}>
                 {r.status}{r.error ? ` - ${r.error}` : ''}
               </td>
               <td style={{ padding: '6px 8px' }}>
@@ -155,7 +155,7 @@ export default function RescaleTacticalScenesPage() {
       </table>
 
       {rows.length === 0 && (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#5a5550' }}>No scenes with background images found.</div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: '#f5f2ee' }}>No scenes with background images found.</div>
       )}
     </div>
   )

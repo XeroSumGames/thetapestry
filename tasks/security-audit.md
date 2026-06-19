@@ -79,7 +79,7 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 - `react` / `react-dom` â€” 19.2.4 â†’ 19.2.7 (patch) â€” carry-over, routine
 
 **Top 3 priorities:**
-1. `app/gm-notes-popout/page.tsx:694` â€” dangerouslySetInnerHTML with prop-passed `title`. No live XSS today but the API is a trap. Replace with `<span>{title}</span>` + separate `<span style="color:#5a5550"> Â· {count}</span>` as sibling React elements â€” eliminates the risk without visual change.
+1. `app/gm-notes-popout/page.tsx:694` â€” dangerouslySetInnerHTML with prop-passed `title`. No live XSS today but the API is a trap. Replace with `<span>{title}</span>` + separate `<span style="color:#f5f2ee"> Â· {count}</span>` as sibling React elements â€” eliminates the risk without visual change.
 2. `app/account/page.tsx:102` â€” carry-over: add explicit MIME/extension pre-check before `resizeImage` (e.g. `if (!/^image\/(jpeg|jpg|png|gif|webp)$/.test(file.type)) return`) to match `prepareUpload` pattern used everywhere else.
 3. `@supabase/ssr` 0.9.0 â†’ 0.12.0 â€” 3 minor versions of drift; review changelog and bump in a low-traffic window. Last two audits deferred this.
 

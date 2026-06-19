@@ -969,15 +969,15 @@ export default function CommunityMoraleModal({
                 {/* Fed slot - live 0 until roll fires */}
                 <div style={slotRow} title="Set by this week's Fed Check (Gatherers). Outcome ladder: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Currently shows - because the Fed roll hasn't fired yet; it snaps to the actual rolled CMod when you click Run Weekly Check.">
                   <span style={{ ...label, flex: 1 }}>Fed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>snaps to Fed outcome</span>
-                  <span style={{ color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>-</span>
+                  <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>snaps to Fed outcome</span>
+                  <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>-</span>
                   <div style={{ width: '64px' }} />
                 </div>
                 {/* Clothed slot - live 0 until roll fires */}
                 <div style={slotRow} title="Set by this week's Clothed Check (Maintainers). Same outcome ladder as Fed: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Snaps to the rolled CMod when you click Run Weekly Check.">
                   <span style={{ ...label, flex: 1 }}>Clothed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>snaps to Clothed outcome</span>
-                  <span style={{ color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>-</span>
+                  <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>snaps to Clothed outcome</span>
+                  <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>-</span>
                   <div style={{ width: '64px' }} />
                 </div>
                 {/* Mood - carries over from prior week's cmod_for_next.
@@ -987,7 +987,7 @@ export default function CommunityMoraleModal({
                     modifiers." User-requested order 2026-04-23. */}
                 <div style={slotRow} title="Carried over from last week's Morale outcome. High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Starts at 0 if this is the first check. Override if last week's events don't match the stored value.">
                   <span style={{ ...label, flex: 1 }}>Mood Around The Campfire</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
+                  <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(moodFromPrior), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(moodFromPrior)}</span>
                   <input type="number" value={slotMoodOverride ?? ''} placeholder="-"
                     onChange={e => setSlotMoodOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
@@ -996,7 +996,7 @@ export default function CommunityMoraleModal({
                 {/* Enough Hands */}
                 <div style={slotRow} title="+1 when all three role groups are at or above their minimums (Gatherers 33% of the NPC labor pool, Maintainers 20%, Safety 5%). Otherwise −1 per group that's short, capped at −3. Labor pool excludes PCs and 'Assigned' NPCs.">
                   <span style={{ ...label, flex: 1 }}>Enough Hands</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
+                  <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>
                   <input type="number" value={slotEnoughHandsOverride ?? ''} placeholder="-"
                     onChange={e => setSlotEnoughHandsOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
@@ -1005,7 +1005,7 @@ export default function CommunityMoraleModal({
                 {/* A Clear Voice */}
                 <div style={slotRow} title="0 if the community has an acknowledged leader (PC or NPC); −1 if leaderless. Set or change the leader via the Leader dropdown on the community panel.">
                   <span style={{ ...label, flex: 1 }}>A Clear Voice</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
+                  <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoClearVoice), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoClearVoice)}</span>
                   <input type="number" value={slotClearVoiceOverride ?? ''} placeholder="-"
                     onChange={e => setSlotClearVoiceOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
@@ -1014,7 +1014,7 @@ export default function CommunityMoraleModal({
                 {/* Safety */}
                 <div style={slotRow} title="+1 if Safety makes up ≥ 10% of the NPC labor pool, −1 if < 5%, otherwise 0. Safety covers policing / patrol / fire / emergency and is where community leadership is drawn from.">
                   <span style={{ ...label, flex: 1 }}>Someone To Watch Over Me</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
+                  <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoSafety), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoSafety)}</span>
                   <input type="number" value={slotSafetyOverride ?? ''} placeholder="-"
                     onChange={e => setSlotSafetyOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
@@ -1030,14 +1030,14 @@ export default function CommunityMoraleModal({
                     title="Distemper Timeline pins in the Homestead's region apply temporary CMods to this Morale Check. Uncheck any event whose effect doesn't apply narratively to this community.">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ ...label, flex: 1, color: '#7ab3d4' }}>World Events</span>
-                      <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto from active timeline pins</span>
+                      <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>auto from active timeline pins</span>
                       <span style={{ color: cmodColor(slotWorldEvents), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(slotWorldEvents)}</span>
                       <div style={{ width: '64px' }} />
                     </div>
                     {worldEvents.map(ev => {
                       const on = worldEventsApplied.has(ev.pinId)
                       return (
-                        <label key={ev.pinId} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'Carlito, sans-serif', color: on ? '#cce0f5' : '#5a5550' }}>
+                        <label key={ev.pinId} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'Carlito, sans-serif', color: on ? '#cce0f5' : '#f5f2ee' }}>
                           <input type="checkbox" checked={on} onChange={e => {
                             setWorldEventsApplied(prev => {
                               const next = new Set(prev)
@@ -1047,7 +1047,7 @@ export default function CommunityMoraleModal({
                             })
                           }} />
                           <span style={{ flex: 1 }}>{ev.label}</span>
-                          <span style={{ fontSize: '13px', color: '#5a5550' }}>{Math.round(ev.distanceKm)} km</span>
+                          <span style={{ fontSize: '13px', color: '#f5f2ee' }}>{Math.round(ev.distanceKm)} km</span>
                           <span style={{ color: cmodColor(ev.cmod), fontWeight: 700, minWidth: '28px', textAlign: 'right' }}>{formatCmod(ev.cmod)}</span>
                         </label>
                       )
@@ -1057,7 +1057,7 @@ export default function CommunityMoraleModal({
                 {/* Additional - freeform */}
                 <div style={slotRow} title="GM freeform Fill-In-The-Gaps - event-specific modifiers this week (raids, crises, miracles, weather, a surprise resupply, a Distemper surge, etc.). Resets to 0 each time the modal opens so one-off events don't bleed into future weeks.">
                   <span style={{ ...label, flex: 1 }}>Additional (Fill-In-The-Gaps)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>GM freeform</span>
+                  <span style={{ ...label, color: '#f5f2ee', fontSize: '17px' }}>GM freeform</span>
                   <span style={{ color: cmodColor(additionalMoraleCmod), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(additionalMoraleCmod)}</span>
                   <input type="number" value={additionalMoraleCmod}
                     onChange={e => setAdditionalMoraleCmod(parseInt(e.target.value, 10) || 0)}
@@ -1173,7 +1173,7 @@ export default function CommunityMoraleModal({
               <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.morale.total}</span>
             </div>
             <div style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.6 }}>
-              <span style={{ color: '#5a5550' }}>Slots:</span>
+              <span style={{ color: '#f5f2ee' }}>Slots:</span>
               <span> Mood <span style={{ color: cmodColor(r.moraleSlots.mood), fontWeight: 700 }}>{formatCmod(r.moraleSlots.mood)}</span></span>
               <span> · Fed <span style={{ color: cmodColor(r.moraleSlots.fed), fontWeight: 700 }}>{formatCmod(r.moraleSlots.fed)}</span></span>
               <span> · Clothed <span style={{ color: cmodColor(r.moraleSlots.clothed), fontWeight: 700 }}>{formatCmod(r.moraleSlots.clothed)}</span></span>

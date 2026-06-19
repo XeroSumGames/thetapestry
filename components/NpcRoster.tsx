@@ -1154,7 +1154,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               const active = npcTypeFilter === t
               return (
                 <button key={t} onClick={() => setNpcTypeFilter(active ? null : t)}
-                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? tc.bg : 'transparent', border: `1px solid ${active ? tc.border : '#3a3a3a'}`, color: active ? tc.color : '#5a5550' }}>
+                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? tc.bg : 'transparent', border: `1px solid ${active ? tc.border : '#3a3a3a'}`, color: active ? tc.color : '#f5f2ee' }}>
                   {t}
                 </button>
               )
@@ -1164,7 +1164,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               const sc = STATUS_COLORS[s]
               return (
                 <button key={s} onClick={() => setNpcStatusFilter(active ? null : s)}
-                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? sc.bg : 'transparent', border: `1px solid ${active ? sc.border : '#3a3a3a'}`, color: active ? sc.color : '#5a5550' }}>
+                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? sc.bg : 'transparent', border: `1px solid ${active ? sc.border : '#3a3a3a'}`, color: active ? sc.color : '#f5f2ee' }}>
                   {s}
                 </button>
               )
@@ -1335,7 +1335,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                             popout, the realtime sub on campaign_npcs
                             isn't firing - run
                             sql/campaign-npcs-realtime-publication.sql. */}
-                        <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : npc.disposition === 'neutral' ? '#fcd34d' : '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
+                        <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : npc.disposition === 'neutral' ? '#fcd34d' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
                           {npc.disposition ?? '-'}
                         </span>
                       </span>
@@ -1447,10 +1447,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
                         <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{cname}</span>
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{cnpcs.length}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{cnpcs.length}</span>
                       </div>
                       {cnpcs.length > 0 && (
                         <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', paddingLeft: '18px' }}>
@@ -1524,7 +1524,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = dragOverFolderId === folderName ? '#242424' : 'transparent')}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         {renamingFolder === folderName ? (
                           <input value={renameValue} onChange={e => setRenameValue(e.target.value)}
                             onBlur={() => renameFolder(folderName, renameValue)}
@@ -1535,7 +1535,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                         ) : (
                           <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                         )}
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.length}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.length}</span>
                       </div>
                       {folderNpcs.length > 0 && (() => {
                         const folderIds = folderNpcs.map(n => n.id)
@@ -1809,7 +1809,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             <div style={{ marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '6px', marginBottom: '4px' }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Inventory (loot)</div>
-                <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{form.inventoryEntries.length} item{form.inventoryEntries.length === 1 ? '' : 's'}</span>
+                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{form.inventoryEntries.length} item{form.inventoryEntries.length === 1 ? '' : 's'}</span>
               </div>
               {form.inventoryEntries.map((item, i) => (
                 <div key={i} style={{ display: 'flex', gap: '4px', marginBottom: '4px', alignItems: 'center' }}>
@@ -1864,7 +1864,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   + Custom
                 </button>
               </div>
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '6px', fontStyle: 'italic' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '6px', fontStyle: 'italic' }}>
                 Players loot these via 🎒 Search Remains when this NPC is dead, mortally wounded, or unconscious.
               </div>
             </div>

@@ -152,7 +152,7 @@ export default function CharactersPage() {
                 <img src={c.data.photoDataUrl} alt={c.name} loading="lazy"
                   style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a' }} />
               ) : (
-                <div style={{ width: '64px', height: '64px', background: '#161616', border: '1px solid #3a3a3a', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5a5550', fontSize: '24px' }}>?</div>
+                <div style={{ width: '64px', height: '64px', background: '#161616', border: '1px solid #3a3a3a', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f5f2ee', fontSize: '24px' }}>?</div>
               )}
               <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.1, width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {c.name}

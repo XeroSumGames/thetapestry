@@ -80,12 +80,12 @@ export function PopulateModal({
             style={{ width: '60px', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', fontWeight: 700 }} />
           <button onClick={() => setCount(Math.min(50, count + 1))} disabled={busy}
             style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: busy ? 'not-allowed' : 'pointer' }}>+</button>
-          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginLeft: 'auto' }}>max 50</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginLeft: 'auto' }}>max 50</span>
         </div>
 
         {/* Per-type breakdown with individual steppers */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px', padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakdown</div>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakdown</div>
           {TYPES.map(({ key, label, color }) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ flex: 1, fontSize: '14px', color: breakdown[key] > 0 ? color : '#3a3a3a', fontFamily: 'Carlito, sans-serif', transition: 'color 0.15s' }}>{label}</span>
@@ -93,7 +93,7 @@ export function PopulateModal({
             </div>
           ))}
           {total === 0 && (
-            <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>Add at least one NPC to generate.</div>
+            <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>Add at least one NPC to generate.</div>
           )}
         </div>
 

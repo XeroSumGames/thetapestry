@@ -411,7 +411,7 @@ export default function CharacterEvolution({
           </div>
           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>CDP</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>CDP</div>
               <div style={{ fontSize: '22px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', fontWeight: 700, lineHeight: 1 }}>{cdpBalance}</div>
             </div>
             <button onClick={!saving ? onClose : undefined}
@@ -433,7 +433,7 @@ export default function CharacterEvolution({
                   background: target === 'pc' ? '#2a1a3e' : 'transparent',
                   border: `1px solid ${target === 'pc' ? '#5a2e5a' : 'transparent'}`,
                   borderRadius: '2px',
-                  color: target === 'pc' ? '#c4a7f0' : '#5a5550',
+                  color: target === 'pc' ? '#c4a7f0' : '#f5f2ee',
                   fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                   letterSpacing: '.06em', textTransform: 'uppercase',
                   fontWeight: target === 'pc' ? 700 : 400,
@@ -447,7 +447,7 @@ export default function CharacterEvolution({
                   background: target === 'apprentice' ? '#2a102a' : 'transparent',
                   border: `1px solid ${target === 'apprentice' ? '#8b2e8b' : 'transparent'}`,
                   borderRadius: '2px',
-                  color: target === 'apprentice' ? '#d48bd4' : '#5a5550',
+                  color: target === 'apprentice' ? '#d48bd4' : '#f5f2ee',
                   fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                   letterSpacing: '.06em', textTransform: 'uppercase',
                   fontWeight: target === 'apprentice' ? 700 : 400,
@@ -483,7 +483,7 @@ export default function CharacterEvolution({
                     {current >= 0 ? '+' : ''}{current}
                   </span>
                   {isMax ? (
-                    <span style={{ padding: '4px 10px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '160px', textAlign: 'right' }}>Human Peak</span>
+                    <span style={{ padding: '4px 10px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '160px', textAlign: 'right' }}>Human Peak</span>
                   ) : (
                     <button onClick={() => startRapidSpend(k)} disabled={!canBuy}
                       style={{
@@ -491,7 +491,7 @@ export default function CharacterEvolution({
                         background: canBuy ? '#2a1a3e' : '#1a1a1a',
                         border: `1px solid ${canBuy ? '#5a2e5a' : '#2e2e2e'}`,
                         borderRadius: '3px',
-                        color: canBuy ? '#c4a7f0' : '#5a5550',
+                        color: canBuy ? '#c4a7f0' : '#f5f2ee',
                         fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                         letterSpacing: '.04em', textTransform: 'uppercase',
                         cursor: canBuy ? 'pointer' : 'not-allowed',
@@ -520,14 +520,14 @@ export default function CharacterEvolution({
               const learning = current < 1
               return (
                 <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: '#1a1a1a', borderRadius: '2px' }}>
-                  <span style={{ flex: 1, fontSize: '13px', color: current > 0 ? '#cce0f5' : '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                  <span style={{ flex: 1, fontSize: '13px', color: current > 0 ? '#cce0f5' : '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                     {s.name}
                   </span>
                   <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>
                     {current}
                   </span>
                   {isMax ? (
-                    <span style={{ padding: '2px 8px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '160px', textAlign: 'right' }}>Life&apos;s Work</span>
+                    <span style={{ padding: '2px 8px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '160px', textAlign: 'right' }}>Life&apos;s Work</span>
                   ) : (
                     <button onClick={() => startSkillSpend(s.name)} disabled={!canBuy}
                       style={{

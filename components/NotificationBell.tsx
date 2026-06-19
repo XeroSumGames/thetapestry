@@ -440,7 +440,7 @@ export default function NotificationBell() {
         return (
           <>
             <span style={{ color: '#c4a7f0' }}>"{name}"</span> has been{' '}
-            <span style={{ color: '#5a5550', fontWeight: 700 }}>archived</span> by its author. Your campaign content is untouched.
+            <span style={{ color: '#f5f2ee', fontWeight: 700 }}>archived</span> by its author. Your campaign content is untouched.
           </>
         )
       }

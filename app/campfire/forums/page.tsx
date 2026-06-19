@@ -648,7 +648,7 @@ export default function ForumsIndexPage() {
                     fontFamily: 'Carlito, sans-serif',
                     fontSize: '20px',
                     fontWeight: 700,
-                    color: t.reply_count > 0 ? '#f5f2ee' : '#5a5550',
+                    color: t.reply_count > 0 ? '#f5f2ee' : '#f5f2ee',
                     letterSpacing: '.04em',
                     lineHeight: 1,
                   }}>

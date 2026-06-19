@@ -48,7 +48,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderTop: '1px solid #2e2e2e', background: '#1a1a1a' }}>
                 <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {att.name} <span style={{ color: '#5a5550' }}>({fmtSize(att.size)})</span>
+                  {att.name} <span style={{ color: '#f5f2ee' }}>({fmtSize(att.size)})</span>
                 </span>
                 <a href={att.url} target="_blank" rel="noreferrer"
                   style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', padding: '2px 6px', border: '1px solid #2e2e5a', borderRadius: '2px' }}>
@@ -71,7 +71,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
             <div key={att.path} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
               <a href={att.url} target="_blank" rel="noreferrer"
                 style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>
-                📄 {att.name} <span style={{ color: '#5a5550' }}>({fmtSize(att.size)})</span>
+                📄 {att.name} <span style={{ color: '#f5f2ee' }}>({fmtSize(att.size)})</span>
               </a>
               {onDelete && (
                 <button onClick={() => onDelete(att)}

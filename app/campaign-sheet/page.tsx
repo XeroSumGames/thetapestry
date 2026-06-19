@@ -879,7 +879,7 @@ function QueueHealModal({ party, onClose, onSubmit }: HealModalProps) {
           <input type="text" value={source} onChange={e => setSource(e.target.value)} placeholder="e.g. Doctor's Kit (Juno)" style={inp} />
         </Field>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
-          <button onClick={onClose} disabled={submitting} style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #5a5550', borderRadius: 3, color: '#cce0f5', fontSize: 13, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          <button onClick={onClose} disabled={submitting} style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #f5f2ee', borderRadius: 3, color: '#cce0f5', fontSize: 13, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
           <button onClick={submit} disabled={submitting || !target} style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: 3, color: '#7fc458', fontSize: 13, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: submitting ? 'wait' : 'pointer', opacity: !target ? 0.5 : 1 }}>

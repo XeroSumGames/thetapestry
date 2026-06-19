@@ -544,7 +544,7 @@ export default function NewCampaignPage() {
                   : c.community_status === 'Holding' ? '#cce0f5'
                   : c.community_status === 'Struggling' ? '#EF9F27'
                   : c.community_status === 'Dying' ? '#f5a89a'
-                  : '#5a5550'
+                  : '#f5f2ee'
                 return (
                   <button key={c.id} onClick={() => {
                     if (picked) {
@@ -564,7 +564,7 @@ export default function NewCampaignPage() {
                       {c.faction_label && <span style={{ fontSize: '13px', color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.faction_label}</span>}
                     </div>
                     {c.description && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Carlito, sans-serif', textTransform: 'none', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.description}</div>}
-                    <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '2px' }}>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '2px' }}>
                       {c.lat.toFixed(3)}, {c.lng.toFixed(3)}
                     </div>
                   </button>

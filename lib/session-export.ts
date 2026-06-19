@@ -217,7 +217,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
       ? `${esc(leaderName)} rallied the survivors and the Community still exists`
       : `With the members fragmenting in different directions, ${esc(communityName)} has dissolved.`
     const rolledBy = dj.leaderName
-      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#5a5550">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
+      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#f5f2ee">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
       : ''
     const amodChip = r.amod !== 0 ? ` <span style="color:${r.amod > 0 ? '#7fc458' : '#c0392b'}">${r.amod > 0 ? '+' : ''}${r.amod} AMod</span>` : ''
     const smodChip = r.smod !== 0 ? ` <span style="color:${r.smod > 0 ? '#7fc458' : '#c0392b'}">${r.smod > 0 ? '+' : ''}${r.smod} SMod</span>` : ''
@@ -253,7 +253,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
       : 'The residents were unsuccessful and will go without this week.'
     const body = isHit ? successBody : failBody
     const rolledBy = dj.leaderName
-      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#5a5550">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
+      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#f5f2ee">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
       : ''
     const amodChip = r.amod !== 0 ? ` <span style="color:${r.amod > 0 ? '#7fc458' : '#c0392b'}">${r.amod > 0 ? '+' : ''}${r.amod} AMod</span>` : ''
     const smodChip = r.smod !== 0 ? ` <span style="color:${r.smod > 0 ? '#7fc458' : '#c0392b'}">${r.smod > 0 ? '+' : ''}${r.smod} SMod</span>` : ''
@@ -294,7 +294,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
     const fmt = (n: number) => n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0'
     const cmodClr = (n: number) => n > 0 ? '#7fc458' : n < 0 ? '#f5a89a' : '#cce0f5'
     const rolledBy = dj.leaderName
-      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#5a5550">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
+      ? `<div style="margin-bottom:4px;color:#cce0f5">Rolled by <span style="color:#f5f2ee;font-weight:700">${esc(dj.leaderName)}</span>${dj.leaderKind ? ` <span style="color:#f5f2ee">(${dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>` : ''}${dj.skillUsed ? ` - <span style="color:#7ab3d4">${esc(dj.skillUsed)}</span>` : ''}</div>`
       : ''
     const amodChip = r.amod !== 0 ? ` <span style="color:${r.amod > 0 ? '#7fc458' : '#c0392b'}">${r.amod > 0 ? '+' : ''}${r.amod} AMod</span>` : ''
     const smodChip = r.smod !== 0 ? ` <span style="color:${r.smod > 0 ? '#7fc458' : '#c0392b'}">${r.smod > 0 ? '+' : ''}${r.smod} SMod</span>` : ''
@@ -309,7 +309,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
       if (slots.additional !== 0 && slots.additional != null) {
         parts.push(` · Additional <span style="color:${cmodClr(slots.additional)};font-weight:700">${fmt(slots.additional)}</span>`)
       }
-      slotsLine = `<div style="color:#cce0f5;line-height:1.6;margin-bottom:4px"><span style="color:#5a5550">Slots:</span>${parts.join('')}</div>`
+      slotsLine = `<div style="color:#cce0f5;line-height:1.6;margin-bottom:4px"><span style="color:#f5f2ee">Slots:</span>${parts.join('')}</div>`
     }
     let departureLine = ''
     if (!willDissolve && dj.departureCount > 0) {

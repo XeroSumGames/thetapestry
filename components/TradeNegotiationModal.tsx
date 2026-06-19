@@ -240,7 +240,7 @@ export default function TradeNegotiationModal({
     return (
       <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: selected > 0 ? '#1a2e10' : '#1a1a1a', border: `1px solid ${selected > 0 ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '2px' }}>
         <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
-          {item.name} <span style={{ color: '#5a5550' }}>×{item.qty}</span>
+          {item.name} <span style={{ color: '#f5f2ee' }}>×{item.qty}</span>
         </span>
         <span style={{ fontSize: '13px', color: rarityCol, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '60px', textAlign: 'right' }}>
           {item.rarity}
@@ -268,7 +268,7 @@ export default function TradeNegotiationModal({
               {pcName} ↔ {target.name}
             </div>
             {target.subtext && (
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '2px' }}>{target.subtext}</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '2px' }}>{target.subtext}</div>
             )}
           </div>
           <button onClick={!applying ? onClose : undefined}
@@ -284,7 +284,7 @@ export default function TradeNegotiationModal({
             </div>
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
               {pcInventory.length === 0 ? (
-                <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>Your inventory is empty.</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>Your inventory is empty.</div>
               ) : (
                 pcInventory.map((it, i) => renderPickerRow(it, i, 'give'))
               )}
@@ -298,7 +298,7 @@ export default function TradeNegotiationModal({
             </div>
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
               {target.inventory.length === 0 ? (
-                <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>{target.name}&apos;s inventory is empty.</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>{target.name}&apos;s inventory is empty.</div>
               ) : (
                 target.inventory.map((it, i) => renderPickerRow(it, i, 'get'))
               )}
@@ -314,13 +314,13 @@ export default function TradeNegotiationModal({
               color: fairness === 'fair' ? '#7fc458'
                 : fairness === 'pc-overpays' ? '#EF9F27'
                 : fairness === 'pc-underpays' ? '#7ab3d4'
-                : '#5a5550' }}>
+                : '#f5f2ee' }}>
               {fairness === 'fair' && `Even-handed (${offeredWeight} ↔ ${requestedWeight})`}
               {fairness === 'pc-overpays' && `You're overpaying (${offeredWeight} → ${requestedWeight}) - easier roll`}
               {fairness === 'pc-underpays' && `You're underpaying (${offeredWeight} → ${requestedWeight}) - harder roll`}
               {fairness === 'empty' && `Pick something on each side to deal`}
             </div>
-            <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }} title="Rarity weights: Common 1, Uncommon 2, Rare 4">
+            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }} title="Rarity weights: Common 1, Uncommon 2, Rare 4">
               Common 1 · Uncommon 2 · Rare 4
             </span>
           </div>
@@ -342,7 +342,7 @@ export default function TradeNegotiationModal({
                 </div>
               )
             })()}
-            <div style={{ display: 'flex', gap: '12px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
               <span>{pcName}: {pcDie1ToStr(outcome)} <span style={{ color: '#7ab3d4' }}>{outcome.pcOutcome}</span></span>
               <span>{target.name}: {npcDieToStr(outcome)}</span>
             </div>

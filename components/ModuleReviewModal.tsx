@@ -250,7 +250,7 @@ export default function ModuleReviewModal({
           <label key={`${bucket}-${xid}`} style={{ ...changeRow, cursor: 'pointer' }}>
             <input type="checkbox" checked={checked}
               onChange={() => toggleCheck(section, bucket, xid)} />
-            <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '72px', flexShrink: 0 }}>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '72px', flexShrink: 0 }}>
               {sectionName}
             </span>
             <span style={{ fontSize: '14px', color: '#f5f2ee', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -285,7 +285,7 @@ export default function ModuleReviewModal({
             The author just published <strong style={{ color: '#c4a7f0' }}>v{newVersionLabel}</strong>.
             Pick which changes to pull in. The default skips anything you've locally customized.
           </div>
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             Diff summary: <span style={{ color: '#c4a7f0' }}>{summary}</span>
           </div>
 

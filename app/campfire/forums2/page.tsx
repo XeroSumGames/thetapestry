@@ -342,10 +342,10 @@ export default function Forums2Page() {
                     }}>
                       r/{CATEGORY_LABEL[t.category].toLowerCase().replace(/\s+/g, '-')}
                     </span>
-                    <span style={{ color: '#5a5550' }}>·</span>
+                    <span style={{ color: '#f5f2ee' }}>·</span>
                     <span style={{ color: '#9aa5b0' }}>posted by</span>
                     <span style={{ color: '#cce0f5', fontWeight: 600 }}>u/{t.author_username}</span>
-                    <span style={{ color: '#5a5550' }}>·</span>
+                    <span style={{ color: '#f5f2ee' }}>·</span>
                     <span style={{ color: '#7a7570' }}>{formatRelative(t.created_at)}</span>
                     {t.pinned && <span style={{ marginLeft: '4px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
                     {t.locked && <span style={{ marginLeft: '4px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}

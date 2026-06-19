@@ -43,7 +43,7 @@ export default function HandoutPage() {
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
           {note.title || 'Untitled'}
         </div>
-        <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px' }}>
           {new Date(note.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </div>
       </div>

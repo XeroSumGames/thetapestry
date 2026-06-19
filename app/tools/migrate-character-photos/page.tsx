@@ -167,7 +167,7 @@ export default function MigrateCharacterPhotosPage() {
           {running ? `Migrating ${progress.done + 1} / ${progress.total}…` : `Migrate ${rows.length} Character${rows.length === 1 ? '' : 's'}`}
         </button>
         {running && progress.current && (
-          <div style={{ marginTop: '8px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '8px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             Current: {progress.current}
           </div>
         )}

@@ -592,7 +592,7 @@ export default function CampaignPage() {
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={lbl}>Description <span style={{ color: '#5a5550', fontWeight: 400 }}>(optional)</span></label>
+            <label style={lbl}>Description <span style={{ color: '#f5f2ee', fontWeight: 400 }}>(optional)</span></label>
             <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="A brief description of your story..." />
           </div>
 
@@ -652,7 +652,7 @@ export default function CampaignPage() {
               </div>
             )}
             {!editMapCenter && (
-              <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>No custom center - map uses default view</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px' }}>No custom center - map uses default view</div>
             )}
           </div>
 

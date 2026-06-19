@@ -576,7 +576,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             {dj.leaderName && (
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
-                {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
+                {dj.leaderKind && <span style={{ color: '#f5f2ee' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
                 {dj.skillUsed && <span> - <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
               </div>
             )}
@@ -637,7 +637,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             {dj.leaderName && (
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
-                {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
+                {dj.leaderKind && <span style={{ color: '#f5f2ee' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
                 {dj.skillUsed && <span> - <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
               </div>
             )}
@@ -700,7 +700,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             {dj.leaderName && (
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
-                {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
+                {dj.leaderKind && <span style={{ color: '#f5f2ee' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
                 {dj.skillUsed && <span> - <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
               </div>
             )}
@@ -714,7 +714,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             </div>
             {slots && Object.keys(slots).length > 0 && (
               <div style={{ color: '#cce0f5', lineHeight: 1.6, marginBottom: '4px' }}>
-                <span style={{ color: '#5a5550' }}>Slots:</span>
+                <span style={{ color: '#f5f2ee' }}>Slots:</span>
                 {[['Mood', slots.mood], ['Fed', slots.fed], ['Clothed', slots.clothed], ['Hands', slots.enoughHands], ['Voice', slots.clearVoice], ['Watch', slots.safety]].map(([n, v]: any, i) => (
                   <span key={i}> · {n} <span style={{ color: cmodClr(v ?? 0), fontWeight: 700 }}>{fmt(v ?? 0)}</span></span>
                 ))}

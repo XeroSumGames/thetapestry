@@ -276,7 +276,7 @@ export default function GMNotesPopoutPage() {
         {Array.from(npcsByFolder.entries()).map(([folder, list]) => (
           <div key={folder} style={{ marginBottom: '12px' }}>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
-              {folder} <span style={{ color: '#5a5550' }}>· {list.length}</span>
+              {folder} <span style={{ color: '#f5f2ee' }}>· {list.length}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {list.map(n => (
@@ -381,7 +381,7 @@ export default function GMNotesPopoutPage() {
         ))}
       </Section>
 
-      <div style={{ fontSize: '13px', color: '#5a5550', textAlign: 'center', marginTop: '24px', fontStyle: 'italic' }}>
+      <div style={{ fontSize: '13px', color: '#f5f2ee', textAlign: 'center', marginTop: '24px', fontStyle: 'italic' }}>
         Click any field to edit - changes save automatically. Adding new beats / NPCs / pins still happens on the main /table page.
       </div>
     </div>
@@ -492,7 +492,7 @@ function EditableText({
       style={displayStyle}
     >
       {isEmpty
-        ? <span style={{ color: '#5a5550', fontStyle: 'italic' }}>{emptyPlaceholder ?? 'Click to edit'}</span>
+        ? <span style={{ color: '#f5f2ee', fontStyle: 'italic' }}>{emptyPlaceholder ?? 'Click to edit'}</span>
         : (displayContent ?? value)}
     </span>
   )
@@ -691,10 +691,10 @@ function Section({ title, count, emptyText, children }: { title: string; count: 
     <div style={{ marginBottom: '24px' }}>
       <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
         <span>{title}</span>
-        <span style={{ color: '#5a5550' }}> · {count}</span>
+        <span style={{ color: '#f5f2ee' }}> · {count}</span>
       </div>
       {count === 0 ? (
-        <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', padding: '8px 0' }}>{emptyText}</div>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic', padding: '8px 0' }}>{emptyText}</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>{children}</div>
       )}

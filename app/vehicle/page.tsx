@@ -778,7 +778,7 @@ export default function VehiclePage() {
           background: noOp ? '#242424' : '#1a2e10',
           border: `1px solid ${noOp ? '#3a3a3a' : accent}`,
           borderRadius: '3px',
-          color: noOp ? '#5a5550' : accent,
+          color: noOp ? '#f5f2ee' : accent,
           fontSize: '13px',
           fontFamily: 'Carlito, sans-serif',
           letterSpacing: '.06em',
@@ -838,7 +838,7 @@ export default function VehiclePage() {
               {renderMoveHere('driver', '#7fc458')}
               <button onClick={() => openCheck('driving')}
                 disabled={!vehicle.driver_character_id}
-                style={{ padding: '6px 14px', background: vehicle.driver_character_id ? '#1a3a5c' : '#242424', border: `1px solid ${vehicle.driver_character_id ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.driver_character_id ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.driver_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
+                style={{ padding: '6px 14px', background: vehicle.driver_character_id ? '#1a3a5c' : '#242424', border: `1px solid ${vehicle.driver_character_id ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.driver_character_id ? '#7ab3d4' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.driver_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
                 🚗 Driving Check
               </button>
             </div>
@@ -869,7 +869,7 @@ export default function VehiclePage() {
               <button onClick={() => openCheck('navigate')}
                 disabled={!vehicle.navigator_character_id}
                 title="Default Navigation (ACU) - swap to any skill in the modal if a player has made the case"
-                style={{ padding: '6px 14px', background: vehicle.navigator_character_id ? '#241a3a' : '#242424', border: `1px solid ${vehicle.navigator_character_id ? '#a78bfa' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.navigator_character_id ? '#a78bfa' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.navigator_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
+                style={{ padding: '6px 14px', background: vehicle.navigator_character_id ? '#241a3a' : '#242424', border: `1px solid ${vehicle.navigator_character_id ? '#a78bfa' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.navigator_character_id ? '#a78bfa' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.navigator_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
                 🧭 Navigate
               </button>
             </div>
@@ -900,7 +900,7 @@ export default function VehiclePage() {
               {renderMoveHere('brewer', '#7fc458')}
               <button onClick={() => openCheck('brew')}
                 disabled={!vehicle.brewer_character_id}
-                style={{ padding: '6px 14px', background: vehicle.brewer_character_id ? '#3a2516' : '#242424', border: `1px solid ${vehicle.brewer_character_id ? '#b87333' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.brewer_character_id ? '#b87333' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.brewer_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
+                style={{ padding: '6px 14px', background: vehicle.brewer_character_id ? '#3a2516' : '#242424', border: `1px solid ${vehicle.brewer_character_id ? '#b87333' : '#3a3a3a'}`, borderRadius: '3px', color: vehicle.brewer_character_id ? '#b87333' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: vehicle.brewer_character_id ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
                 ⚗️ Brew Check
               </button>
             </div>
@@ -945,7 +945,7 @@ export default function VehiclePage() {
             )
           })}
         </div>
-        <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginTop: '6px' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic', marginTop: '6px' }}>
           When this vehicle's token moves on the tactical map, everyone seated here moves with it.
         </div>
       </div>
@@ -966,7 +966,7 @@ export default function VehiclePage() {
                       </span>
                     )}
                   </div>
-                  {w.notes && <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginBottom: '6px' }}>{w.notes}</div>}
+                  {w.notes && <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic', marginBottom: '6px' }}>{w.notes}</div>}
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     <span style={{ ...lbl, marginBottom: 0, flexShrink: 0 }}>Shooter</span>
                     <select value={pendingSlot[`shooter:${i}` as SlotKey] ?? (w.shooter_character_id ?? '')}
@@ -988,7 +988,7 @@ export default function VehiclePage() {
                     {renderMoveHere(`shooter:${i}` as SlotKey, '#7fc458')}
                     <button onClick={() => openCheck('attack', i)}
                       disabled={!w.shooter_character_id}
-                      style={{ padding: '6px 14px', background: w.shooter_character_id ? '#2a1210' : '#242424', border: `1px solid ${w.shooter_character_id ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: w.shooter_character_id ? '#f5a89a' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: w.shooter_character_id ? 'pointer' : 'not-allowed' }}>
+                      style={{ padding: '6px 14px', background: w.shooter_character_id ? '#2a1210' : '#242424', border: `1px solid ${w.shooter_character_id ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: w.shooter_character_id ? '#f5a89a' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: w.shooter_character_id ? 'pointer' : 'not-allowed' }}>
                       🎯 Attack
                     </button>
                     {/* Cross-window arc toggle. Broadcasts to the
@@ -1141,7 +1141,7 @@ export default function VehiclePage() {
                 <span style={{ fontSize: '15px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                   {installedDrumCount(vehicle)} / {(vehicle.fuel_storage_max ?? 0) - effectiveFuelMaxBase(vehicle)} drum{installedDrumCount(vehicle) === 1 ? '' : 's'} installed
                   &nbsp;·&nbsp;
-                  <span style={{ color: '#5a5550' }}>{drumsInCargo(vehicle.cargo)} in cargo</span>
+                  <span style={{ color: '#f5f2ee' }}>{drumsInCargo(vehicle.cargo)} in cargo</span>
                 </span>
                 {canEdit && (
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
@@ -1169,7 +1169,7 @@ export default function VehiclePage() {
               {fuelStorageError && (
                 <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{fuelStorageError}</div>
               )}
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                 Base capacity {effectiveFuelMaxBase(vehicle)} days · cap {vehicle.fuel_storage_max} days. Each 55-Gallon Drum installed adds 1 day of fuel storage.
               </div>
             </div>
@@ -1204,7 +1204,7 @@ export default function VehiclePage() {
               {brewingSuppliesError && (
                 <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{brewingSuppliesError}</div>
               )}
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                 Brew check consumes 1 day per attempt (success or fail). Brew is blocked when supplies hit 0.
               </div>
             </div>

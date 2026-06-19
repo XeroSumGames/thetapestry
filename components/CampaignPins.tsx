@@ -467,7 +467,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', borderBottom: '1px solid #2e2e2e', userSelect: 'none', background: 'transparent' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                   <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                   {canManage && (
                     // Folder reveal as a green/red radio dot, matching the
@@ -482,7 +482,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       aria-label={allFolderRevealed ? `Hide all pins in ${folderName} from players` : `Reveal all pins in ${folderName} to players`}
                       style={{ width: '15px', height: '15px', borderRadius: '50%', padding: 0, flexShrink: 0, cursor: 'pointer', background: allFolderRevealed ? '#7fc458' : '#c0392b', border: `1px solid ${allFolderRevealed ? '#2d5a1b' : '#7a1f16'}`, boxShadow: allFolderRevealed ? '0 0 4px rgba(127,196,88,.6)' : 'none' }} />
                   )}
-                  <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderPins.length}</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{folderPins.length}</span>
                 </div>
                 {isOpen && folderPins.map(pin => (
             <div

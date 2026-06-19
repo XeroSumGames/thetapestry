@@ -222,7 +222,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         </div>
 
         {/* Enc breakdown */}
-        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', display: 'flex', gap: '12px' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', display: 'flex', gap: '12px' }}>
           <span>Weapons: {weaponEnc}</span>
           <span>Gear: {invEnc}</span>
           <span>Limit: {BASE_ENC_LIMIT} + PHY({phyMod}){backpackBonus > 0 ? ` + Pack(${backpackBonus})` : ''} = {encLimit}</span>
@@ -271,7 +271,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
               else if (ownSort === 'rarity') sorted.sort((a, b) => (RARITY_RANK[a.item.rarity] ?? 99) - (RARITY_RANK[b.item.rarity] ?? 99) || a.item.name.localeCompare(b.item.name))
               if (sorted.length === 0) {
                 return (
-                  <div style={{ padding: '1.25rem 1rem', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                  <div style={{ padding: '1.25rem 1rem', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     No items match {`"${ownSearch}"`}
                   </div>
                 )
@@ -330,7 +330,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   style={{ width: '50px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 <button onClick={() => setGiveQty(q => Math.min(givingItem.qty, q + 1))}
                   style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1 }}>+</button>
-                <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>of {givingItem.qty}</span>
+                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>of {givingItem.qty}</span>
                 <button onClick={() => setGiveQty(givingItem.qty)}
                   style={{ marginLeft: 'auto', padding: '2px 6px', background: 'transparent', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>All</button>
               </div>
@@ -411,11 +411,11 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                       {item.name}
-                      {item.notes && <span style={{ fontSize: '13px', color: '#5a5550', marginLeft: '6px' }}>- {item.notes}</span>}
+                      {item.notes && <span style={{ fontSize: '13px', color: '#f5f2ee', marginLeft: '6px' }}>- {item.notes}</span>}
                     </span>
                     {isWeapon && <span style={{ fontSize: '13px', color: '#f5a89a', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', padding: '0 3px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>WPN</span>}
                     <span style={{ fontSize: '13px', color: rc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{item.rarity}</span>
-                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '20px', textAlign: 'right' }}>{item.enc > 0 ? item.enc : '-'}</span>
+                    <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '20px', textAlign: 'right' }}>{item.enc > 0 ? item.enc : '-'}</span>
                   </div>
                 )
               })}

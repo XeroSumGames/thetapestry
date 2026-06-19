@@ -95,22 +95,22 @@ export function AdvanceTimeModal({
             style={{ width: '60px', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', fontWeight: 700 }} />
           <button onClick={() => setAdvanceTimeHours(Math.min(24, hours + 1))} disabled={advanceTimeBusy}
             style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: advanceTimeBusy ? 'not-allowed' : 'pointer' }}>+</button>
-          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginLeft: 'auto' }}>max 24</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginLeft: 'auto' }}>max 24</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px', padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', maxHeight: '220px', overflowY: 'auto' }}>
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
             {total === 0 ? 'No one is overencumbered' : `${total} affected`}
           </div>
           {affectedPcs.map(p => (
             <div key={`pc:${p.stateId}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
-              <span style={{ color: '#7ab3d4' }}>PC · {p.name} <span style={{ color: '#5a5550' }}>({p.overBy} over · -{p.overBy}/h)</span></span>
+              <span style={{ color: '#7ab3d4' }}>PC · {p.name} <span style={{ color: '#f5f2ee' }}>({p.overBy} over · -{p.overBy}/h)</span></span>
               <span style={{ color: p.next === 0 && p.cur > 0 ? '#c0392b' : '#cce0f5', fontWeight: 700 }}>RP {p.cur} → {p.next}{p.next === 0 && p.cur > 0 ? ' · INCAP' : ''}</span>
             </div>
           ))}
           {affectedNpcs.map(n => (
             <div key={`npc:${n.id}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
-              <span style={{ color: '#EF9F27' }}>NPC · {n.name} <span style={{ color: '#5a5550' }}>({n.overBy} over · -{n.overBy}/h)</span></span>
+              <span style={{ color: '#EF9F27' }}>NPC · {n.name} <span style={{ color: '#f5f2ee' }}>({n.overBy} over · -{n.overBy}/h)</span></span>
               <span style={{ color: n.next === 0 && n.cur > 0 ? '#c0392b' : '#cce0f5', fontWeight: 700 }}>RP {n.cur} → {n.next}{n.next === 0 && n.cur > 0 ? ' · INCAP' : ''}</span>
             </div>
           ))}
@@ -183,7 +183,7 @@ export function AdvanceTimeModal({
             setAdvanceTimeBusy(false)
             onClose()
           }} disabled={advanceTimeBusy || total === 0}
-            style={{ flex: 2, padding: '10px', background: total === 0 ? '#1a1a1a' : '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: total === 0 ? '#5a5550' : '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: advanceTimeBusy || total === 0 ? 'not-allowed' : 'pointer', opacity: advanceTimeBusy ? 0.6 : 1, fontWeight: 700 }}>
+            style={{ flex: 2, padding: '10px', background: total === 0 ? '#1a1a1a' : '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: total === 0 ? '#f5f2ee' : '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: advanceTimeBusy || total === 0 ? 'not-allowed' : 'pointer', opacity: advanceTimeBusy ? 0.6 : 1, fontWeight: 700 }}>
             {advanceTimeBusy ? 'Applying…' : total === 0 ? 'Nothing to apply' : `Apply ${hours}h to ${total}`}
           </button>
         </div>

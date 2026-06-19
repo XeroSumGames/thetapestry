@@ -141,12 +141,12 @@ export default function InlineRepliesPanel({
               <div key={r.id} style={{ padding: '8px 10px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${isMine ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <AuthorBadge username={r.author_username + (isMine ? ' (you)' : '')} avatarUrl={r.author_avatar_url} size={18} emphasis />
-                  <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#9aa5b0' }}>{fmt(r.created_at)}</span>
                   <div style={{ flex: 1 }} />
                   {isMine && (
                     <button onClick={() => handleDelete(r.id)} title="Delete reply"
-                      style={{ background: 'transparent', border: 'none', color: '#5a5550', fontSize: '13px', cursor: 'pointer', padding: '0 4px' }}>×</button>
+                      style={{ background: 'transparent', border: 'none', color: '#f5f2ee', fontSize: '13px', cursor: 'pointer', padding: '0 4px' }}>×</button>
                   )}
                 </div>
                 <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>

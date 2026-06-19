@@ -6351,7 +6351,7 @@ export default function TablePage() {
                       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', minWidth: '220px', maxWidth: '320px' }}>
                         <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>{socialTarget.action} - Select Target</div>
                         {targets.length === 0 ? (
-                          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', padding: '1rem 0', textAlign: 'center' }}>No valid targets</div>
+                          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', padding: '1rem 0', textAlign: 'center' }}>No valid targets</div>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {targets.map(t => (
@@ -6420,7 +6420,7 @@ export default function TablePage() {
                             handleRollRequest(`${activeEntry.character_name} - Coordinate (vs ${coordinateSelection})`, amod, smod)
                             setShowCoordinateModal(false)
                           }}
-                            style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
+                            style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
                         </div>
                       </div>
                     </div>
@@ -7047,7 +7047,7 @@ export default function TablePage() {
                   {vehicles.find(v => v.id === selectedVehicleId)?.name ?? 'Vehicle'}
                 </span>
                 <button onClick={() => setSelectedVehicleId(null)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #5a5550', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #f5f2ee', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Close
                 </button>
               </div>
@@ -7559,12 +7559,12 @@ export default function TablePage() {
                         }}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', cursor: isCombatBucket ? 'default' : 'pointer', userSelect: 'none', background: isFolderDragOver ? '#1a2e10' : 'transparent', border: isFolderDragOver ? '1px dashed #7fc458' : '1px solid transparent', borderRadius: '3px', transition: 'background 0.15s' }}>
                         {!isCombatBucket && (
-                          <span style={{ fontSize: '13px', color: '#5a5550', width: '10px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                          <span style={{ fontSize: '13px', color: '#f5f2ee', width: '10px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         )}
                         <span style={{ fontSize: '13px', color: headerColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
                           {bucket.name}
                         </span>
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                           ({bucket.npcs.length})
                         </span>
                       </div>
@@ -7650,7 +7650,7 @@ export default function TablePage() {
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('objects') ? '▼' : '▶'}</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('objects') ? '▼' : '▶'}</span>
                   <span style={{ fontSize: '14px' }}>🎯</span>
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Objects</span>
                 </div>
@@ -7743,10 +7743,10 @@ export default function TablePage() {
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('vehicles') ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('vehicles') ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '14px' }}>🚗</span>
                       <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Vehicles</span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{vehicles.length}</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{vehicles.length}</span>
                     </div>
                     {assetsFolderState.has('vehicles') && (
                       <div style={{ padding: '4px' }}>
@@ -8693,7 +8693,7 @@ export default function TablePage() {
                       {/* Folder header - left chevron collapses; checkbox toggles all. */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '2px' }}>
                         <button onClick={() => setCollapsedItmFolders(prev => { const n = new Set(prev); if (n.has(folderName)) n.delete(folderName); else n.add(folderName); return n })}
-                          style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', cursor: 'pointer', padding: '0', width: '14px', flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}>
+                          style={{ background: 'none', border: 'none', color: '#f5f2ee', fontSize: '13px', cursor: 'pointer', padding: '0', width: '14px', flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}>
                           {isCollapsed ? '▶' : '▼'}
                         </button>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'pointer' }}>
@@ -8709,7 +8709,7 @@ export default function TablePage() {
                             }}
                             style={{ accentColor: '#7ab3d4' }} />
                           <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>{folderName}</span>
-                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.filter(n => selectedNpcIds.has(n.id)).length}/{folderNpcs.length}</span>
+                          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.filter(n => selectedNpcIds.has(n.id)).length}/{folderNpcs.length}</span>
                         </label>
                       </div>
                       {!isCollapsed && folderNpcs.map(npc => (
@@ -9899,7 +9899,7 @@ export default function TablePage() {
                   <div style={{ marginBottom: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target NPC</div>
                     {eligibleNpcs.length === 0 ? (
-                      <div style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
+                      <div style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px' }}>
                         No NPCs visible on the map or in your sidebar. A GM needs to reveal one first.
                       </div>
                     ) : (
@@ -9985,7 +9985,7 @@ export default function TablePage() {
                         🔒 <span style={{ fontWeight: 700 }}>{recruitApproach.toUpperCase()} locked on this NPC.</span> Pick a different approach above.
                       </div>
                     )}
-                    <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                    <div style={{ marginTop: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                       {recruitApproach === 'cohort' ? 'Shared interest or goal - joins until the next Morale Check.'
                         : recruitApproach === 'conscript' ? 'Coerced by credible threat - follows orders while coercion holds.'
                         : 'Shared belief or ideology - probationary through first Morale Check, then committed.'}
@@ -10029,22 +10029,22 @@ export default function TablePage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>First Impression</span>
-                        <span style={{ color: cmods.firstImpression > 0 ? '#7fc458' : cmods.firstImpression < 0 ? '#f5a89a' : '#5a5550' }}>
+                        <span style={{ color: cmods.firstImpression > 0 ? '#7fc458' : cmods.firstImpression < 0 ? '#f5a89a' : '#f5f2ee' }}>
                           {cmods.firstImpression > 0 ? `+${cmods.firstImpression}` : cmods.firstImpression}
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Inspiration skill SMod (+1/level)</span>
-                        <span style={{ color: cmods.inspiration > 0 ? '#7fc458' : '#5a5550' }}>
+                        <span style={{ color: cmods.inspiration > 0 ? '#7fc458' : '#f5f2ee' }}>
                           {cmods.inspiration > 0 ? `+${cmods.inspiration}` : '0'}
                           {recruitSkill === 'Inspiration' && cmods.inspiration === 0 && (
-                            <span style={{ color: '#5a5550', fontSize: '13px', marginLeft: '4px' }}>(in SMod above)</span>
+                            <span style={{ color: '#f5f2ee', fontSize: '13px', marginLeft: '4px' }}>(in SMod above)</span>
                           )}
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Poaching penalty</span>
-                        <span style={{ color: cmods.poaching < 0 ? '#f5a89a' : '#5a5550' }}>
+                        <span style={{ color: cmods.poaching < 0 ? '#f5a89a' : '#f5f2ee' }}>
                           {cmods.poaching < 0 ? cmods.poaching : '0'}
                         </span>
                       </div>
@@ -10089,7 +10089,7 @@ export default function TablePage() {
                     <button onClick={closeRecruitModal}
                       style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                     <button onClick={executeRecruitRoll} disabled={!canRoll}
-                      style={{ flex: 2, padding: '10px', background: canRoll ? '#c0392b' : '#2a1210', border: `1px solid ${canRoll ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: canRoll ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canRoll ? 'pointer' : 'not-allowed' }}>
+                      style={{ flex: 2, padding: '10px', background: canRoll ? '#c0392b' : '#2a1210', border: `1px solid ${canRoll ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: canRoll ? '#fff' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canRoll ? 'pointer' : 'not-allowed' }}>
                     🎲 Roll Recruitment
                   </button>
                 </div>

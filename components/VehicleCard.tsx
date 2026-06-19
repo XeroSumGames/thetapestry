@@ -158,7 +158,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
         <button onClick={e => { e.stopPropagation(); openPopout(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, { w: 900, h: 700 }) }} title="Pop out"
           style={{ background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Popout</button>
         {onClose && (
-          <button onClick={e => { e.stopPropagation(); onClose() }} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+          <button onClick={e => { e.stopPropagation(); onClose() }} style={{ background: 'none', border: 'none', color: '#f5f2ee', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
         )}
       </div>
 

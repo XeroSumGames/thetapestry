@@ -273,12 +273,12 @@ export default function ModulePublishModal({
                 border: `1px solid ${coverUrl ? '#5a2e5a' : '#3a3a3a'}`,
                 borderRadius: '3px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '24px', color: '#5a5550',
+                fontSize: '24px', color: '#f5f2ee',
               }}>
                 {!coverUrl && '📦'}
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ display: 'inline-block', padding: '6px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: coverUploading ? '#5a5550' : '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: coverUploading ? 'wait' : 'pointer' }}>
+                <label style={{ display: 'inline-block', padding: '6px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: coverUploading ? '#f5f2ee' : '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: coverUploading ? 'wait' : 'pointer' }}>
                   {coverUploading ? 'Uploading…' : coverUrl ? 'Replace cover' : '+ Upload cover'}
                   <input type="file" accept="image/*" hidden disabled={coverUploading} onChange={e => { const f = e.target.files?.[0]; if (f) setCoverFile(f); e.target.value = '' }} />
                 </label>

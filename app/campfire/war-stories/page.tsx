@@ -625,7 +625,7 @@ export default function WarStoriesPage() {
               </div>
             )}
             {/* Picker for new files (staged until save). */}
-            <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+            <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
               {newFiles.length > 0
                 ? <span style={{ color: '#7fc458' }}>{newFiles.length} file{newFiles.length > 1 ? 's' : ''} staged</span>
                 : '+ Add files (images, PDFs, etc.)'}
@@ -716,11 +716,11 @@ export default function WarStoriesPage() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>by</span>
                   <AuthorBadge username={s.author_username} avatarUrl={s.author_avatar_url} size={18} />
-                  <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(s.updated_at)}</span>
                   {s.campaign_name && (
                     <>
-                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                       <span style={{ padding: '1px 8px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', fontSize: '13px', color: '#b87333', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         {s.campaign_name}
                       </span>
@@ -730,7 +730,7 @@ export default function WarStoriesPage() {
                     const tagAccent = settingAccent(s.setting)
                     return (
                       <>
-                        <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                         <span style={{ padding: '1px 8px', background: `${tagAccent}22`, color: tagAccent, border: `1px solid ${tagAccent}55`, borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                           {settingLabel(s.setting)}
                         </span>
@@ -739,7 +739,7 @@ export default function WarStoriesPage() {
                   })()}
                   {s.moderation_status === 'pending' && (
                     <>
-                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                       <span style={{ padding: '1px 8px', background: '#2a2010', color: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
                         ⏳ Pending review
                       </span>
@@ -747,7 +747,7 @@ export default function WarStoriesPage() {
                   )}
                   {s.moderation_status === 'rejected' && (
                     <>
-                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                       <span style={{ padding: '1px 8px', background: '#2a1010', color: '#f5a89a', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
                         ✗ Rejected
                       </span>

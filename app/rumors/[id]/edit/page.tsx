@@ -356,7 +356,7 @@ export default function ModuleEditPage() {
               : 'linear-gradient(135deg, #1a1a1a 0%, #2a1a3e 100%)',
             border: '1px solid #2e2e2e', borderRadius: '3px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#5a5550', fontSize: '36px',
+            color: '#f5f2ee', fontSize: '36px',
           }}>
             {!coverUrl && '📦'}
           </div>
@@ -402,7 +402,7 @@ export default function ModuleEditPage() {
       <div style={{ marginBottom: '14px' }}>
         <label style={lbl}>Content Tags</label>
         <input value={tagsInput} onChange={e => setTagsInput(e.target.value)} placeholder="comma, separated, tags" style={inp} />
-        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
           Examples: one-shot, horror, road, combat-heavy, sandbox.
         </div>
       </div>
@@ -418,7 +418,7 @@ export default function ModuleEditPage() {
         <div style={{ flex: 1 }}>
           <label style={lbl}>Sort Order</label>
           <input type="number" min={0} value={sortOrder} onChange={e => setSortOrder(e.target.value)} placeholder="blank = last" style={inp} />
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
             Lower number ranks first on /rumors. Blank sorts last.
           </div>
         </div>
@@ -462,7 +462,7 @@ export default function ModuleEditPage() {
             </div>
           )
         })()}
-        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
           Leave blank for a module with no canonical start date - clones will use the campaign creator's setting.
         </div>
       </div>

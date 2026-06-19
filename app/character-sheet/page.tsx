@@ -178,7 +178,7 @@ export default function CharacterSheetPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {portraitUrl
               ? <img src={portraitUrl} alt="Portrait" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '50%', border: '2px solid #3a3a3a', flexShrink: 0 }} />
-              : <div style={{ width: '72px', height: '72px', borderRadius: '50%', border: '1px dashed #3a3a3a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: '#5a5550', flexShrink: 0 }}>No photo</div>
+              : <div style={{ width: '72px', height: '72px', borderRadius: '50%', border: '1px dashed #3a3a3a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: '#f5f2ee', flexShrink: 0 }}>No photo</div>
             }
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>

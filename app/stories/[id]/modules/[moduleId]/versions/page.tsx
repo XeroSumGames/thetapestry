@@ -223,7 +223,7 @@ export default function ModuleVersionsPage() {
                 </div>
               )}
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-                <span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Changes vs prior:</span>{' '}
+                <span style={{ color: '#f5f2ee', textTransform: 'uppercase' }}>Changes vs prior:</span>{' '}
                 <span style={{ color: '#f5f2ee' }}>{summary}</span>
               </div>
             </div>

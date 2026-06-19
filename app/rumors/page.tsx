@@ -192,7 +192,7 @@ export default function ModuleMarketplacePage() {
       )}
 
       {modules === null ? (
-        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
           Loading modules…
         </div>
       ) : filtered && filtered.length === 0 ? (
@@ -336,12 +336,12 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
               </span>
             )}
             {m.visibility === 'unlisted' && (
-              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 🔗 Unlisted
               </span>
             )}
             {m.visibility === 'private' && (
-              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 🔒 Private
               </span>
             )}
@@ -370,7 +370,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
               background: (m.rating_count ?? 0) > 0 ? '#2a2010' : '#242424',
               border: `1px solid ${(m.rating_count ?? 0) > 0 ? '#5a4a1b' : '#3a3a3a'}`,
               borderRadius: '3px', fontSize: '13px',
-              color: (m.rating_count ?? 0) > 0 ? '#EF9F27' : '#5a5550',
+              color: (m.rating_count ?? 0) > 0 ? '#EF9F27' : '#f5f2ee',
               fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
               display: 'inline-flex', alignItems: 'center', gap: '4px',
             }}
@@ -397,7 +397,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
               📥 {m.subscriber_count ?? 0}
             </span>
             {publishedAt && (
-              <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+              <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                 {new Date(publishedAt).toLocaleDateString()}
               </span>
             )}

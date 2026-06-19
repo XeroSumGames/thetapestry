@@ -210,7 +210,7 @@ export default function CampaignExplorerPage() {
             {loading ? '…' : 'Refresh'}
           </button>
         </div>
-        <div style={{ ...subLabel, marginTop: '10px', color: '#5a5550' }}>
+        <div style={{ ...subLabel, marginTop: '10px', color: '#f5f2ee' }}>
           {filtered.length} of {rows.length} campaigns · {totals.members} members · {totals.pins} pins · {totals.npcs} NPCs · {totals.scenes} scenes · {totals.handouts} handouts
         </div>
       </div>
@@ -253,7 +253,7 @@ export default function CampaignExplorerPage() {
           </tbody>
         </table>
         {filtered.length === 0 && !loading && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             No campaigns match the filter.
           </div>
         )}

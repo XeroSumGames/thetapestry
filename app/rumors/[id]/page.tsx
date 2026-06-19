@@ -213,7 +213,7 @@ export default function ModuleDetailPage() {
 
   if (!mod) {
     return (
-      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
         {error || 'Loading…'}
       </div>
     )
@@ -264,7 +264,7 @@ export default function ModuleDetailPage() {
             background: isArchived || isPendingModeration ? '#242424' : '#2a1a3e',
             border: `1px solid ${isArchived || isPendingModeration ? '#3a3a3a' : '#5a2e5a'}`,
             borderRadius: '3px',
-            color: isArchived || isPendingModeration ? '#5a5550' : '#c4a7f0',
+            color: isArchived || isPendingModeration ? '#f5f2ee' : '#c4a7f0',
             fontSize: '14px',
             fontFamily: 'Carlito, sans-serif',
             letterSpacing: '.08em',
@@ -379,7 +379,7 @@ export default function ModuleDetailPage() {
                   style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '8px' }} />
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button type="button" onClick={handleSubmitReview} disabled={savingReview || draftRating < 1}
-                    style={{ padding: '7px 14px', background: draftRating > 0 ? '#1a1a2e' : '#111', border: `1px solid ${draftRating > 0 ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: draftRating > 0 ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: draftRating > 0 && !savingReview ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                    style={{ padding: '7px 14px', background: draftRating > 0 ? '#1a1a2e' : '#111', border: `1px solid ${draftRating > 0 ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: draftRating > 0 ? '#7ab3d4' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: draftRating > 0 && !savingReview ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
                     {savingReview ? 'Saving…' : myReview ? 'Update review' : 'Submit review'}
                   </button>
                   {myReview && (
@@ -397,9 +397,9 @@ export default function ModuleDetailPage() {
 
             {/* Public review list */}
             {reviews === null ? (
-              <div style={{ fontSize: '13px', color: '#5a5550' }}>Loading…</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee' }}>Loading…</div>
             ) : reviews.length === 0 ? (
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                 No reviews yet. {canReview ? 'Be the first.' : 'Subscribers can leave reviews - pick a campaign with this module to write one.'}
               </div>
             ) : (
@@ -411,7 +411,7 @@ export default function ModuleDetailPage() {
                         {'★'.repeat(r.rating)}<span style={{ color: '#3a3a3a' }}>{'★'.repeat(5 - r.rating)}</span>
                         <span style={{ marginLeft: '8px', color: '#f5f2ee', fontWeight: 600 }}>{r.author_username ?? 'unknown'}</span>
                       </span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                         {new Date(r.created_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -434,9 +434,9 @@ export default function ModuleDetailPage() {
           Version history
         </div>
         {versions === null ? (
-          <div style={{ fontSize: '13px', color: '#5a5550' }}>Loading…</div>
+          <div style={{ fontSize: '13px', color: '#f5f2ee' }}>Loading…</div>
         ) : versions.length === 0 ? (
-          <div style={{ fontSize: '13px', color: '#5a5550' }}>No versions published yet.</div>
+          <div style={{ fontSize: '13px', color: '#f5f2ee' }}>No versions published yet.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {versions.map((v, i) => (

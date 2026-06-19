@@ -752,10 +752,10 @@ export default function LfgPage() {
                   <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: accent, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
                     {KIND_LABEL[p.kind]}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>by</span>
                   <AuthorBadge username={p.author_username} avatarUrl={p.author_avatar_url} size={18} />
-                  <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(p.updated_at)}</span>
                   {p.moderation_status === 'pending' && (
                     <span style={{ padding: '1px 8px', background: '#2a2010', color: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>

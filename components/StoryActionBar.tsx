@@ -268,14 +268,14 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
         </button>
       )}
       {isGM && existingModule?.archived_at && (
-        <span style={{ padding: '6px 12px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', lineHeight: 1 }}>
+        <span style={{ padding: '6px 12px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', lineHeight: 1 }}>
           Archived
         </span>
       )}
       {isGM && existingModule && !existingModule.archived_at && (
         <button onClick={handleArchiveModule}
           title="Archive this module - removes it from the marketplace, notifies subscribers"
-          style={btn('#1a1a1a', '#5a5550', '#3a3a3a', false) as any}>
+          style={btn('#1a1a1a', '#f5f2ee', '#3a3a3a', false) as any}>
           Archive
         </button>
       )}

@@ -53,7 +53,7 @@ export default function Page() {
               <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 700, color: '#7ab3d4' }}>
                 {s.attribute}
               </td>
-              <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: s.vocational ? '#cce0f5' : '#5a5550' }}>
+              <td style={{ ...ruleTableTdStyle, whiteSpace: 'nowrap', textAlign: 'center', color: s.vocational ? '#cce0f5' : '#f5f2ee' }}>
                 {s.vocational ? '★' : '-'}
               </td>
               <td style={ruleTableTdStyle}>{s.description}</td>

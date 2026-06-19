@@ -45,7 +45,7 @@ export function ReloadPickerModal({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{s.name}</div>
                     {s.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{s.description}</div>}
-                    <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
                       {new Date(s.created_at).toLocaleString()}
                       {' · '}{(s.snapshot as any)?.npcs?.length ?? 0} NPCs
                       {' · '}{(s.snapshot as any)?.pins?.length ?? 0} pins

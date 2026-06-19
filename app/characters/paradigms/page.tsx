@@ -69,12 +69,12 @@ export default function ParadigmsPage() {
           inbuilt sense of justice, even in the face of so much loss and death. Perhaps your Small Town Mayor finds
           himself leading a group of people across the country in hopes of a better life.
         </p>
-        <p style={{ margin: 0, color: '#5a5550', fontSize: '13px', fontStyle: 'italic' }}>
+        <p style={{ margin: 0, color: '#f5f2ee', fontSize: '13px', fontStyle: 'italic' }}>
           Whatever the numbers say, it&apos;s always the story you are telling that is more interesting.
         </p>
       </div>
 
-      <div style={{ marginBottom: '12px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+      <div style={{ marginBottom: '12px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
         Pick a Paradigm
       </div>
 
@@ -85,7 +85,7 @@ export default function ParadigmsPage() {
           picked" on this entry surface. */}
       <ParadigmPicker value={null} onChange={handlePick} />
 
-      <div style={{ marginTop: '24px', fontSize: '13px', color: '#5a5550' }}>
+      <div style={{ marginTop: '24px', fontSize: '13px', color: '#f5f2ee' }}>
         Want to author every detail yourself? Try{' '}
         <Link href="/characters/new" style={{ color: '#c4a7f0', textDecoration: 'underline' }}>Backstory Generation</Link>.
         Just want a Survivor right now? Hit{' '}

@@ -1196,20 +1196,20 @@ export default function ModerationPage() {
 
                   <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Carlito, sans-serif', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                     <span>
-                      <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Homestead:</span>{' '}
+                      <span style={{ color: '#f5f2ee', letterSpacing: '.06em', textTransform: 'uppercase' }}>Homestead:</span>{' '}
                       {hasCoords
                         ? <span style={{ fontFamily: 'monospace', color: '#f5f2ee' }}>{wc.homestead_lat.toFixed(4)}, {wc.homestead_lng.toFixed(4)}</span>
                         : <span style={{ color: '#EF9F27' }}>unlocated - won't appear on the world map</span>}
                     </span>
                     <span>
-                      <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Last update:</span>{' '}
+                      <span style={{ color: '#f5f2ee', letterSpacing: '.06em', textTransform: 'uppercase' }}>Last update:</span>{' '}
                       <span style={{ color: '#f5f2ee' }}>{wc.last_public_update_at ? formatDate(wc.last_public_update_at) : '-'}</span>
                     </span>
                   </div>
 
                   {wc.moderator_notes && (
                     <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '8px', padding: '6px 8px', background: '#2a1010', borderRadius: '3px', border: '1px solid #c0392b' }}>
-                      <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Moderator notes:</span> {wc.moderator_notes}
+                      <span style={{ color: '#f5f2ee', letterSpacing: '.06em', textTransform: 'uppercase' }}>Moderator notes:</span> {wc.moderator_notes}
                     </div>
                   )}
 
@@ -1256,9 +1256,9 @@ export default function ModerationPage() {
             ))}
           </div>
 
-          {modulesLoading && <div style={{ color: '#5a5550', fontSize: '13px' }}>Loading…</div>}
+          {modulesLoading && <div style={{ color: '#f5f2ee', fontSize: '13px' }}>Loading…</div>}
           {!modulesLoading && modules.length === 0 && (
-            <div style={{ color: '#5a5550', fontSize: '13px', fontStyle: 'italic' }}>
+            <div style={{ color: '#f5f2ee', fontSize: '13px', fontStyle: 'italic' }}>
               No {filter} modules.
             </div>
           )}
@@ -1426,7 +1426,7 @@ export default function ModerationPage() {
                 background: bugs.length === 0 ? '#242424' : '#1a2e10',
                 border: `1px solid ${bugs.length === 0 ? '#3a3a3a' : '#2d5a1b'}`,
                 borderRadius: '3px',
-                color: bugs.length === 0 ? '#5a5550' : '#7fc458',
+                color: bugs.length === 0 ? '#f5f2ee' : '#7fc458',
                 fontSize: '13px',
                 fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em',
@@ -1437,9 +1437,9 @@ export default function ModerationPage() {
             </button>
           </div>
           {bugsLoading ? (
-            <div style={{ padding: '20px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Loading…</div>
+            <div style={{ padding: '20px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Loading…</div>
           ) : bugs.length === 0 ? (
-            <div style={{ padding: '20px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No bug reports yet.</div>
+            <div style={{ padding: '20px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No bug reports yet.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {bugs.map((b: any) => {
@@ -1447,7 +1447,7 @@ export default function ModerationPage() {
                   open: '#f5a89a',
                   triaged: '#EF9F27',
                   fixed: '#7fc458',
-                  wontfix: '#5a5550',
+                  wontfix: '#f5f2ee',
                 }
                 return (
                   <div key={b.id} style={{
@@ -1461,11 +1461,11 @@ export default function ModerationPage() {
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                         {b.reporter_name ?? b.reporter_email ?? '(unknown)'}
                       </span>
-                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                       <span style={{ fontSize: '13px', color: '#9aa5b0', fontFamily: 'Carlito, sans-serif' }}>
                         {new Date(b.created_at).toLocaleString()}
                       </span>
-                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee' }}>·</span>
                       <span style={{ fontSize: '13px', color: statusColor[b.status] ?? '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
                         {b.status}
                       </span>
@@ -1479,7 +1479,7 @@ export default function ModerationPage() {
                       {b.description}
                     </div>
                     {b.user_agent && (
-                      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', wordBreak: 'break-all' }}>
+                      <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', wordBreak: 'break-all' }}>
                         UA: {b.user_agent}
                       </div>
                     )}
@@ -1565,7 +1565,7 @@ export default function ModerationPage() {
                               background: bugResponseSending.has(b.id) ? '#242424' : '#241a3a',
                               border: `1px solid ${bugResponseSending.has(b.id) ? '#3a3a3a' : '#a78bfa'}`,
                               borderRadius: '3px',
-                              color: bugResponseSending.has(b.id) ? '#5a5550' : '#a78bfa',
+                              color: bugResponseSending.has(b.id) ? '#f5f2ee' : '#a78bfa',
                               fontSize: '13px',
                               fontFamily: 'Carlito, sans-serif',
                               letterSpacing: '.06em',
@@ -1647,7 +1647,7 @@ function CampfireQueue({
             {renderRow(r)}
             {r.moderator_notes && (
               <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '8px', padding: '6px 8px', background: '#2a1010', borderRadius: '3px', border: '1px solid #c0392b' }}>
-                <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Moderator notes:</span> {r.moderator_notes}
+                <span style={{ color: '#f5f2ee', letterSpacing: '.06em', textTransform: 'uppercase' }}>Moderator notes:</span> {r.moderator_notes}
               </div>
             )}
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>

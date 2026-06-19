@@ -743,7 +743,7 @@ For phase-organized feature status see `tasks/totallist.md`. For the current spr
 - `7fe3509` style: notification bell color changes with state, sidebar divider
 - `d06449e` move notification bell from navbar to sidebar next to username
 - `44ee204` fix: session history header shows campaign name with session count below
-- `34364e8` style: replace all #5a5550 muted text with #cce0f5 light blue
+- `34364e8` style: replace all #f5f2ee muted text with #cce0f5 light blue
 - `8217829` fix: session date/duration text color to light gray for readability
 - `0d0cf8a` fix: bump all font sizes +2px on session history page
 - `501a315` fix: session history grid fixed at 5 columns

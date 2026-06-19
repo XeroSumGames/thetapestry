@@ -3912,11 +3912,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div onMouseDown={startFogBarDrag}
                 title="Drag to reposition the fog/lighting toolbar"
-                style={{ cursor: 'move', color: '#5a5550', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 4px' }}>⠿</div>
+                style={{ cursor: 'move', color: '#f5f2ee', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 4px' }}>⠿</div>
               {fogBarMoved && (
                 <button onClick={resetFogBarPos}
                   title="Reset toolbar to default position (top-center)"
-                  style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', lineHeight: 1, cursor: 'pointer', padding: '0 4px' }}>↺</button>
+                  style={{ background: 'none', border: 'none', color: '#f5f2ee', fontSize: '13px', lineHeight: 1, cursor: 'pointer', padding: '0 4px' }}>↺</button>
               )}
             </div>
             {/* Day / Night toggle - outdoor scenes default 'day' (PCs
@@ -4089,7 +4089,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                 scheduleWallsPersist()
               }}
                 title="Cycle kind: wall → door → window → wall"
-                style={{ padding: '3px 8px', background: '#1a1a1a', border: '1px solid #5a5550', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '3px 8px', background: '#1a1a1a', border: '1px solid #f5f2ee', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 ↻ Convert
               </button>
               <button onClick={() => {
@@ -4106,7 +4106,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               </button>
               <button onClick={() => setSelectedSegmentId(null)}
                 title="Deselect"
-                style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '14px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>
+                style={{ background: 'none', border: 'none', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>
                 ✕
               </button>
             </div>
@@ -4164,7 +4164,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.9)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 12px', minWidth: '150px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{tok.name}</div>
-              <button onClick={() => setSelectedToken(null)} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '14px', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
+              <button onClick={() => setSelectedToken(null)} style={{ background: 'none', border: 'none', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
             </div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{tok.token_type} · {String.fromCharCode(65 + tok.grid_x)}{tok.grid_y + 1}</div>
             {/* WP bar - object tokens only. Falls back to the matching
@@ -4309,7 +4309,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     </button>
                   ))}
                   <button onClick={() => setMovingTokenToScene(null)}
-                    style={{ marginTop: '2px', padding: '4px 8px', background: 'transparent', border: 'none', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ marginTop: '2px', padding: '4px 8px', background: 'transparent', border: 'none', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Cancel
                   </button>
                 </div>
@@ -4357,7 +4357,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                         await updateToken(tok.id, { grid_w: v })
                       }}
                       style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
-                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>×</span>
+                    <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>×</span>
                     <input type="number" min={1} max={20} step={1} value={tok.grid_h ?? 1}
                       title="Height in cells"
                       onChange={async e => {

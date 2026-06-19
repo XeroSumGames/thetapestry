@@ -145,7 +145,7 @@ export default function ReseedCampaignPage() {
             <>
               <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.6, marginBottom: '12px' }}>
                 Will add {plan.pinsToAdd.length} pin{plan.pinsToAdd.length === 1 ? '' : 's'}, {plan.npcsToAdd.length} NPC{plan.npcsToAdd.length === 1 ? '' : 's'}, {plan.scenesToAdd.length} scene{plan.scenesToAdd.length === 1 ? '' : 's'}, {plan.handoutsToAdd.length} handout{plan.handoutsToAdd.length === 1 ? '' : 's'}.{' '}
-                <span style={{ color: '#5a5550' }}>
+                <span style={{ color: '#f5f2ee' }}>
                   Skipped {plan.pinsSkipped + plan.npcsSkipped + plan.scenesSkipped + plan.handoutsSkipped} already-present items.
                 </span>
               </div>
@@ -191,7 +191,7 @@ function ItemList({ title, items }: { title: string; items: string[] }) {
   return (
     <div style={{ marginBottom: '10px' }}>
       <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
-        {title} <span style={{ color: '#5a5550' }}>({items.length})</span>
+        {title} <span style={{ color: '#f5f2ee' }}>({items.length})</span>
       </div>
       <div style={{ background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 10px', maxHeight: '160px', overflowY: 'auto' }}>
         {items.map((name, i) => (

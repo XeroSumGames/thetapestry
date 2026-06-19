@@ -436,7 +436,7 @@ export default function QuickAddModal({
                   placeholder="e.g. Broken Arrow, OK"
                   style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                 <button type="submit" disabled={!addrQuery.trim() || addrSearching}
-                  style={{ padding: '7px 14px', background: addrQuery.trim() ? '#1a1a2e' : '#111', border: `1px solid ${addrQuery.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: addrQuery.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addrQuery.trim() && !addrSearching ? 'pointer' : 'not-allowed' }}>
+                  style={{ padding: '7px 14px', background: addrQuery.trim() ? '#1a1a2e' : '#111', border: `1px solid ${addrQuery.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: addrQuery.trim() ? '#7ab3d4' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addrQuery.trim() && !addrSearching ? 'pointer' : 'not-allowed' }}>
                   {addrSearching ? '…' : 'Go'}
                 </button>
               </form>
@@ -515,7 +515,7 @@ export default function QuickAddModal({
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Attachments (optional)</div>
-              <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: pinAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+              <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: pinAttachments.length > 0 ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                 {pinAttachments.length > 0 ? `${pinAttachments.length} file${pinAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                 <input type="file" multiple onChange={e => { if (e.target.files) setPinAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
               </label>
@@ -536,7 +536,7 @@ export default function QuickAddModal({
                   <span style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
                     Make this pin public
                   </span>
-                  <span style={{ display: 'block', marginTop: '2px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', lineHeight: 1.3 }}>
+                  <span style={{ display: 'block', marginTop: '2px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.3 }}>
                     {roleIsThriver(userRole)
                       ? 'Auto-approved for Thrivers. Visible to all players as a Rumor.'
                       : 'Goes to the Thriver queue. If approved, becomes a Rumor visible to all players.'}
@@ -547,7 +547,7 @@ export default function QuickAddModal({
             )}
 
             <button onClick={handlePinSave} disabled={pinSaving || !pinName.trim()}
-              style={{ width: '100%', padding: '9px', background: pinName.trim() ? '#1a1a2e' : '#111', border: `1px solid ${pinName.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: pinName.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: pinName.trim() && !pinSaving ? 'pointer' : 'not-allowed' }}>
+              style={{ width: '100%', padding: '9px', background: pinName.trim() ? '#1a1a2e' : '#111', border: `1px solid ${pinName.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: pinName.trim() ? '#7ab3d4' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: pinName.trim() && !pinSaving ? 'pointer' : 'not-allowed' }}>
               {pinSaving ? 'Saving…' : '📍 Save Pin'}
             </button>
             {pinDone && (
@@ -571,11 +571,11 @@ export default function QuickAddModal({
               {existingCommunities.length > 0 && (
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
                   <button type="button" onClick={() => setCommMode('join')}
-                    style={{ flex: 1, padding: '7px', background: commMode === 'join' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'join' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'join' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                    style={{ flex: 1, padding: '7px', background: commMode === 'join' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'join' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'join' ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                     🤝 Join Existing
                   </button>
                   <button type="button" onClick={() => setCommMode('start')}
-                    style={{ flex: 1, padding: '7px', background: commMode === 'start' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'start' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'start' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                    style={{ flex: 1, padding: '7px', background: commMode === 'start' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'start' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'start' ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                     🏡 Start New
                   </button>
                 </div>
@@ -602,7 +602,7 @@ export default function QuickAddModal({
                   )}
 
                   <button type="button" onClick={handleCommJoin} disabled={!commJoinId || !myPcId || commJoining}
-                    style={{ width: '100%', padding: '9px', background: commJoinId && myPcId ? '#1a2e10' : '#111', border: `1px solid ${commJoinId && myPcId ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commJoinId && myPcId ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commJoinId && myPcId && !commJoining ? 'pointer' : 'not-allowed' }}>
+                    style={{ width: '100%', padding: '9px', background: commJoinId && myPcId ? '#1a2e10' : '#111', border: `1px solid ${commJoinId && myPcId ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commJoinId && myPcId ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commJoinId && myPcId && !commJoining ? 'pointer' : 'not-allowed' }}>
                     {commJoining ? 'Joining…' : '🤝 Join Community'}
                   </button>
                   {commJoinDone && (
@@ -662,7 +662,7 @@ export default function QuickAddModal({
                   })()}
                 </select>
                 {pinList.length === 0 && (
-                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>Drop a pin on the left first to tie a homestead to it. Tag it as <strong style={{ color: '#7ab3d4' }}>🏡 Homestead</strong> for easy selection.</div>
+                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>Drop a pin on the left first to tie a homestead to it. Tag it as <strong style={{ color: '#7ab3d4' }}>🏡 Homestead</strong> for easy selection.</div>
                 )}
               </div>
 
@@ -673,7 +673,7 @@ export default function QuickAddModal({
 
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Attachments (optional)</div>
-                <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: commAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+                <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: commAttachments.length > 0 ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                   {commAttachments.length > 0 ? `${commAttachments.length} file${commAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                   <input type="file" multiple onChange={e => { if (e.target.files) setCommAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
                 </label>
@@ -685,7 +685,7 @@ export default function QuickAddModal({
               </div>
 
               <button onClick={handleCommSave} disabled={commSaving || !commName.trim()}
-                style={{ width: '100%', padding: '9px', background: commName.trim() ? '#1a2e10' : '#111', border: `1px solid ${commName.trim() ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commName.trim() ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commName.trim() && !commSaving ? 'pointer' : 'not-allowed' }}>
+                style={{ width: '100%', padding: '9px', background: commName.trim() ? '#1a2e10' : '#111', border: `1px solid ${commName.trim() ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commName.trim() ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commName.trim() && !commSaving ? 'pointer' : 'not-allowed' }}>
                 {commSaving ? 'Saving…' : '🏘️ Create Community'}
               </button>
               {commDone && (

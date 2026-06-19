@@ -367,14 +367,14 @@ export default function ApprenticeCreationWizard({
           {/* Locked Motivation + Complication banner - visible on every step */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <div style={{ padding: '6px 10px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
-              <span style={{ color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.06em' }}>Motivation</span>
+              <span style={{ color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.06em' }}>Motivation</span>
               <span style={{ marginLeft: '6px', color: '#d48bd4', fontWeight: 600 }}>{apprenticeMeta.motivation}</span>
-              <span style={{ marginLeft: '6px', color: '#5a5550', fontSize: '13px' }}>(rolled {apprenticeMeta.motivation_roll})</span>
+              <span style={{ marginLeft: '6px', color: '#f5f2ee', fontSize: '13px' }}>(rolled {apprenticeMeta.motivation_roll})</span>
             </div>
             <div style={{ padding: '6px 10px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
-              <span style={{ color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.06em' }}>Complication</span>
+              <span style={{ color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.06em' }}>Complication</span>
               <span style={{ marginLeft: '6px', color: '#d48bd4', fontWeight: 600 }}>{apprenticeMeta.complication}</span>
-              <span style={{ marginLeft: '6px', color: '#5a5550', fontSize: '13px' }}>(rolled {apprenticeMeta.complication_roll})</span>
+              <span style={{ marginLeft: '6px', color: '#f5f2ee', fontSize: '13px' }}>(rolled {apprenticeMeta.complication_roll})</span>
             </div>
           </div>
 
@@ -411,7 +411,7 @@ export default function ApprenticeCreationWizard({
                       style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                   ))}
                 </div>
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                   Three trait words that capture this Apprentice. Auto-rolled at recruit time; edit freely.
                 </div>
               </div>
@@ -420,7 +420,7 @@ export default function ApprenticeCreationWizard({
                 <textarea value={background} onChange={e => setBackground(e.target.value)} rows={4}
                   placeholder="Where did they come from? How did they end up with the master PC? What's their unspoken hope?"
                   style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                   Optional but encouraged. Per SRD §08 p.21 the master PC + GM "Fill In The Gaps" together - anchor the Apprentice in the world.
                 </div>
               </div>
@@ -514,11 +514,11 @@ export default function ApprenticeCreationWizard({
                       <span style={{ flex: 1, fontSize: '13px', color: final > base ? '#7fc458' : '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                         {s.name}{inProfession && <span style={{ marginLeft: '4px', color: '#d48bd4', fontSize: '13px' }}>★</span>}
                       </span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '50px', textAlign: 'right' }}
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '50px', textAlign: 'right' }}
                         title={inProfession ? `${profession.name} seed: ${base}` : 'Not seeded by profession'}>
                         base {base}
                       </span>
-                      <span style={{ fontSize: '13px', color: trainable ? '#7ab3d4' : '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '60px', textAlign: 'right' }}
+                      <span style={{ fontSize: '13px', color: trainable ? '#7ab3d4' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '60px', textAlign: 'right' }}
                         title={trainable
                           ? `Master PC has ${s.name} ${pcLevel}; cap = ${cap}`
                           : `Master PC doesn't have ${s.name} - can't train`}>
@@ -545,8 +545,8 @@ export default function ApprenticeCreationWizard({
           {step === 'confirm' && profession && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Identity</div>
-                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 600 }}>{name} <span style={{ color: '#5a5550', fontWeight: 400, fontSize: '13px' }}>· age {age}</span></div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Identity</div>
+                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 600 }}>{name} <span style={{ color: '#f5f2ee', fontWeight: 400, fontSize: '13px' }}>· age {age}</span></div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{profession.name}</div>
                 <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', marginTop: '4px', letterSpacing: '.04em' }}>
                   {threeWords.map(w => w.trim()).filter(Boolean).join(' · ')}
@@ -556,7 +556,7 @@ export default function ApprenticeCreationWizard({
                 )}
               </div>
               <div style={{ padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>RAPID</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>RAPID</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {ATTR_ORDER.map(k => (
                     <span key={k} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
@@ -566,7 +566,7 @@ export default function ApprenticeCreationWizard({
                 </div>
               </div>
               <div style={{ padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skills</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skills</div>
                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                   {SKILLS.filter(s => getSkillFinal(s.name) > (s.vocational ? -3 : 0)).map(s => {
                     const final = getSkillFinal(s.name)

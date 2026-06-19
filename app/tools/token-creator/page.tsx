@@ -624,7 +624,7 @@ export default function PortraitResizerPage() {
       {activeTab === 'bulk' && (
         <div>
           <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Carlito, sans-serif' }}>
-            Select portrait images. Tag each as <strong style={{ color: '#7ab3d4' }}>M</strong> or <strong style={{ color: '#c4a7f0' }}>F</strong> to add them to the shared portrait bank (auto-numbered). Leave the tag as <strong style={{ color: '#5a5550' }}>-</strong> to save privately under your own name.
+            Select portrait images. Tag each as <strong style={{ color: '#7ab3d4' }}>M</strong> or <strong style={{ color: '#c4a7f0' }}>F</strong> to add them to the shared portrait bank (auto-numbered). Leave the tag as <strong style={{ color: '#f5f2ee' }}>-</strong> to save privately under your own name.
           </div>
 
           {/* Drop zone */}
@@ -643,7 +643,7 @@ export default function PortraitResizerPage() {
             <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '16px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: bulkDropOver ? '#c0392b' : '#f5f2ee' }}>
               {bulkDropOver ? 'Drop to add' : 'Drop images here'}
             </div>
-            <div style={{ color: '#5a5550', fontSize: '13px', marginTop: '6px' }}>or click to select multiple files (JPG, PNG, WebP, GIF)</div>
+            <div style={{ color: '#f5f2ee', fontSize: '13px', marginTop: '6px' }}>or click to select multiple files (JPG, PNG, WebP, GIF)</div>
             <input ref={bulkFileInputRef} type="file" accept="image/*" multiple
               onChange={e => { if (e.target.files?.length) { handleBulkFiles(e.target.files); e.target.value = '' } }}
               style={{ display: 'none' }} />
@@ -667,7 +667,7 @@ export default function PortraitResizerPage() {
                   style={{ ...btnSecondary, opacity: bulkRunning ? 0.5 : 1, cursor: bulkRunning ? 'not-allowed' : 'pointer' }}>
                   Clear All
                 </button>
-                <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                   {bulkItems.filter(i => i.status === 'done').length} done
                   {bulkItems.filter(i => i.status === 'error').length > 0 && ` · ${bulkItems.filter(i => i.status === 'error').length} failed`}
                 </span>
@@ -676,14 +676,14 @@ export default function PortraitResizerPage() {
               {/* Preview + name grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px' }}>
                 {bulkItems.map(item => {
-                  const statusColor = item.status === 'done' ? '#7fc458' : item.status === 'error' ? '#f5a89a' : item.status === 'uploading' ? '#7ab3d4' : '#5a5550'
+                  const statusColor = item.status === 'done' ? '#7fc458' : item.status === 'error' ? '#f5a89a' : item.status === 'uploading' ? '#7ab3d4' : '#f5f2ee'
                   return (
                     <div key={item.id} style={{ background: '#111', border: `1px solid ${item.status === 'error' ? '#c0392b' : '#2e2e2e'}`, borderRadius: '4px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {/* Preview */}
                       <div style={{ width: '100%', aspectRatio: '1', background: '#0a0a0a', borderRadius: '3px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {item.previewUrl
                           ? <img src={item.previewUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                          : <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>...</span>}
+                          : <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>...</span>}
                       </div>
                       {/* Name: editable for untagged (-); auto-numbered for M/F */}
                       {item.gender === null ? (
@@ -695,7 +695,7 @@ export default function PortraitResizerPage() {
                           style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '4px 6px', boxSizing: 'border-box' }}
                         />
                       ) : (
-                        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', padding: '4px 6px' }}>
+                        <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', padding: '4px 6px' }}>
                           Auto-numbered
                         </div>
                       )}
@@ -708,7 +708,7 @@ export default function PortraitResizerPage() {
                             <button key={label} type="button"
                               disabled={item.status === 'uploading' || item.status === 'done'}
                               onClick={() => setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, gender: g } : p))}
-                              style={{ flex: 1, padding: '3px 0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#1a1a1a', color: active ? '#f5a89a' : '#5a5550' }}>
+                              style={{ flex: 1, padding: '3px 0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#1a1a1a', color: active ? '#f5a89a' : '#f5f2ee' }}>
                               {label}
                             </button>
                           )
@@ -771,7 +771,7 @@ export default function PortraitResizerPage() {
             Private - keep out of random NPC assignment
           </span>
         </label>
-        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>
           Unchecked = portrait goes into the shared bank (used by GENERATE / POPULATE). Checked = library-only, never auto-assigned.
         </div>
         {batchRunning && (
@@ -847,7 +847,7 @@ export default function PortraitResizerPage() {
           <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '18px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: isDragging ? '#c0392b' : '#f5f2ee' }}>
             {isDragging ? 'Drop to process' : 'Drop an image here'}
           </div>
-          <div style={{ color: '#5a5550', fontSize: '13px', marginTop: '8px' }}>or click to browse (JPG, PNG, GIF, WebP)</div>
+          <div style={{ color: '#f5f2ee', fontSize: '13px', marginTop: '8px' }}>or click to browse (JPG, PNG, GIF, WebP)</div>
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleInputChange} style={{ display: 'none' }} />
         </div>
       )}
@@ -918,7 +918,7 @@ export default function PortraitResizerPage() {
                       {Math.round(circle.r * 2)}px
                     </div>
                   </div>
-                  <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px' }}>
                     Source area: {Math.round((circle.r * 2 * origDims.w) / displayDims.w)}px
                   </div>
                 </div>
@@ -1041,7 +1041,7 @@ export default function PortraitResizerPage() {
                       cursor: 'pointer',
                     }}>
                     {g === 'man' ? 'Male' : 'Female'}
-                    <span style={{ fontSize: '13px', marginLeft: '8px', color: '#5a5550', fontWeight: 400 }}>{counts[g]} saved</span>
+                    <span style={{ fontSize: '13px', marginLeft: '8px', color: '#f5f2ee', fontWeight: 400 }}>{counts[g]} saved</span>
                   </button>
                 )
               })}
@@ -1063,7 +1063,7 @@ export default function PortraitResizerPage() {
                 <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Added to portrait bank</span>
               )}
             </div>
-            <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '8px' }}>
+            <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '8px' }}>
               {isPrivate ? 'Private - stored in your library but never auto-assigned to NPCs.' : 'Each download uploads 256/56/32px versions to the shared portrait bank for random NPC assignment.'}
             </div>
           </div>

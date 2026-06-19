@@ -553,7 +553,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
             <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase' }}>
               My Notes
             </span>
-            <span style={{ fontSize: '13px', color: notesSaving ? '#7ab3d4' : notesDirty ? '#EF9F27' : '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '13px', color: notesSaving ? '#7ab3d4' : notesDirty ? '#EF9F27' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
               {notesSaving ? 'Saving…' : notesDirty ? 'Unsaved' : 'Saved'}
             </span>
           </div>

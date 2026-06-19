@@ -206,7 +206,7 @@ export default function LoginPage() {
                   if (error) alert(`Resend failed: ${error.message}`)
                   else { alert('Confirmation email resent - check your inbox.'); setShowResend(false); setError('') }
                 }}
-                style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: email ? '#EF9F27' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: email ? 'pointer' : 'default' }}>
+                style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: email ? '#EF9F27' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: email ? 'pointer' : 'default' }}>
                 Resend Confirmation Email
               </button>
             </div>

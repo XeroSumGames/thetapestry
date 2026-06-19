@@ -205,7 +205,7 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
             />
           </div>
         ) : (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#5a5550' }}>Loading…</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#f5f2ee' }}>Loading…</div>
         )}
 
         {(localError || uploadError) && (

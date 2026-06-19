@@ -233,7 +233,7 @@ export default function CommunityDashboardPage() {
             <div style={{ ...cardBox, marginBottom: '1rem', display: 'flex', alignItems: 'baseline', gap: '18px', flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontSize: '22px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>{selected.name}</div>
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   {selected.status} · Week {selected.week_number} · {selected.consecutive_failures}/3 failures · {members.length} members
                 </div>
               </div>
@@ -249,11 +249,11 @@ export default function CommunityDashboardPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px', fontFamily: 'Carlito, sans-serif' }}>
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#5a5550', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Week</th>
-                    <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#5a5550', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Outcome</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#5a5550', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Total</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#5a5550', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Members</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#5a5550', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Next Mood</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#f5f2ee', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Week</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#f5f2ee', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Outcome</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#f5f2ee', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Total</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#f5f2ee', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Members</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#f5f2ee', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Next Mood</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -289,7 +289,7 @@ export default function CommunityDashboardPage() {
                   const color = outcomeColor(r.outcome)
                   return (
                     <div key={i} style={{ padding: '6px 8px', background: '#1a1a1a', border: `1px solid ${color}33`, borderLeft: `3px solid ${color}`, borderRadius: '3px' }}>
-                      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         {r.kind === 'fed' ? '🌾 Fed' : '🔧 Clothed'} · Wk {r.week_number}
                       </div>
                       <div style={{ fontSize: '15px', color, fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{prettyOutcome(r.outcome)}</div>
@@ -324,7 +324,7 @@ export default function CommunityDashboardPage() {
                         )}
                       </div>
                       <span style={{ width: '90px', textAlign: 'right', color: ok ? '#7fc458' : row.min > 0 ? '#c0392b' : '#cce0f5', fontWeight: 700 }}>{row.count} ({row.pct}%)</span>
-                      <span style={{ width: '60px', textAlign: 'right', color: '#5a5550', fontSize: '13px' }}>{row.min > 0 ? `min ${row.min}%` : '-'}</span>
+                      <span style={{ width: '60px', textAlign: 'right', color: '#f5f2ee', fontSize: '13px' }}>{row.min > 0 ? `min ${row.min}%` : '-'}</span>
                     </div>
                   )
                 })}
@@ -375,7 +375,7 @@ export default function CommunityDashboardPage() {
               {Object.entries(memberBreakdown).map(([type, count]) => (
                 <div key={type} style={{ padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', textAlign: 'center' }}>
                   <div style={{ ...label, marginBottom: '4px', textTransform: 'capitalize' }}>{type}</div>
-                  <div style={{ fontSize: '19px', color: count > 0 ? '#f5f2ee' : '#5a5550', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{count}</div>
+                  <div style={{ fontSize: '19px', color: count > 0 ? '#f5f2ee' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{count}</div>
                 </div>
               ))}
             </div>

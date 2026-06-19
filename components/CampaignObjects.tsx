@@ -389,7 +389,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
-            <label style={{ flex: 1, display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer' }}>
+            <label style={{ flex: 1, display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#f5f2ee', fontSize: '13px', textAlign: 'center', cursor: 'pointer' }}>
               {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image - click to replace' : 'Or upload custom image'}
               <input key={`add-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'add' }); e.target.value = '' }} />
             </label>
@@ -404,7 +404,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
             <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '96px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
               {library.length === 0 ? (
-                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty - upload an image or save an object without a scene</div>
+                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty - upload an image or save an object without a scene</div>
               ) : library.map(lib => (
                 lib.metadata ? (
                   // Template item - shows name + WP chip; Place button when scene active
@@ -423,7 +423,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                         ▶ Place
                       </button>
                     ) : (
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>staged</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>staged</span>
                     )}
                   </div>
                 ) : (
@@ -439,9 +439,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '4px', alignItems: 'flex-end' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '13px', color: addIndestructible ? '#5a5550' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {addIndestructible ? '(disabled)' : '(default 3)'}</div>
+              <div style={{ fontSize: '13px', color: addIndestructible ? '#f5f2ee' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {addIndestructible ? '(disabled)' : '(default 3)'}</div>
               <input value={addIndestructible ? '' : addWP} onChange={e => setAddWP(e.target.value)} placeholder="e.g. 3" disabled={addIndestructible}
-                style={{ width: '100%', padding: '4px 6px', background: addIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: addIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '4px 6px', background: addIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: addIndestructible ? '#f5f2ee' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', cursor: 'pointer', fontSize: '13px', color: addIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
@@ -526,7 +526,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed || destroyed).length > 0 && (
               <div style={{ paddingLeft: '24px' }}>
                 {obj.properties.filter(p => isGM || p.revealed || destroyed).map((p, i) => (
-                  <div key={i} style={{ fontSize: '13px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Carlito, sans-serif', lineHeight: 1.3 }}>
+                  <div key={i} style={{ fontSize: '13px', color: (p.revealed || destroyed) ? '#cce0f5' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.3 }}>
                     <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && !destroyed && isGM ? ' 🔒' : ''}
                   </div>
                 ))}
@@ -569,7 +569,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, is_visible: newVis } : o))
                   onTokenChanged?.()
                 }}
-                  style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
                 <button onClick={async () => {
@@ -641,9 +641,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     onDragLeave={() => { if (dragOverGroup === group) setDragOverGroup(null) }}
                     onDrop={() => handleGroupHeaderDrop(group)}
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: isGroupOver ? '#10202e' : '#111', border: `1px solid ${isGroupOver ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '3px', cursor: dragObjId ? 'copy' : 'pointer', userSelect: 'none', marginBottom: collapsed ? 0 : '2px', transition: 'all 0.1s' }}>
-                    <span style={{ fontSize: '13px', color: isGroupOver ? '#7ab3d4' : '#5a5550' }}>{collapsed ? '▶' : '▼'}</span>
+                    <span style={{ fontSize: '13px', color: isGroupOver ? '#7ab3d4' : '#f5f2ee' }}>{collapsed ? '▶' : '▼'}</span>
                     <span style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: isGroupOver ? '#7ab3d4' : '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>{group}</span>
-                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{groupObjs.length}</span>
+                    <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{groupObjs.length}</span>
                   </div>
                   {!collapsed && groupObjs.map(obj => renderObj(obj))}
                 </div>
@@ -660,7 +660,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>🎒 Loot from {lootingObj.name}</div>
             {lootingObj.contents.length === 0 ? (
               <>
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
                 {/* "Found nothing" log path: searcher picks the PC who
                     did the searching, then writes a roll_log row so the
                     feed shows the attempt. Matches the ObjectCard
@@ -690,7 +690,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                       setLootingObj(null)
                       setLootCharId('')
                     }}
-                    style={{ width: '100%', marginTop: '6px', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: lootCharId ? '#f5f2ee' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: lootCharId ? 'pointer' : 'not-allowed', opacity: lootCharId ? 1 : 0.5 }}>
+                    style={{ width: '100%', marginTop: '6px', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: lootCharId ? '#f5f2ee' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: lootCharId ? 'pointer' : 'not-allowed', opacity: lootCharId ? 1 : 0.5 }}>
                     Confirm Search (log &quot;found nothing&quot;)
                   </button>
                 </div>
@@ -762,7 +762,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                           onLoot?.(lootingObj.name, item, charId, charEntry.character.name)
                           setGivingItemIdx(null)
                         }}
-                        style={{ padding: '2px 8px', background: charId ? '#1a2e10' : '#242424', border: `1px solid ${charId ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: charId ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: charId && !busy ? 'pointer' : 'not-allowed' }}>
+                        style={{ padding: '2px 8px', background: charId ? '#1a2e10' : '#242424', border: `1px solid ${charId ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: charId ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: charId && !busy ? 'pointer' : 'not-allowed' }}>
                         {busy ? '…' : 'Give'}
                       </button>
                     </div>
@@ -822,7 +822,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   setLootingObj(null)
                   setLootItemPick({})
                 }}
-                  style={{ ...chipBtn, flex: 1, background: lootCharId ? '#1a2e10' : '#242424', border: `1px solid ${lootCharId ? '#2d5a1b' : '#3a3a3a'}`, color: lootCharId ? '#7fc458' : '#5a5550' }}>
+                  style={{ ...chipBtn, flex: 1, background: lootCharId ? '#1a2e10' : '#242424', border: `1px solid ${lootCharId ? '#2d5a1b' : '#3a3a3a'}`, color: lootCharId ? '#7fc458' : '#f5f2ee' }}>
                   Loot All
                 </button>
               )}
@@ -845,9 +845,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
             <div style={{ marginBottom: '4px' }}>
-              <div style={{ fontSize: '13px', color: editIndestructible ? '#5a5550' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {editIndestructible ? '(disabled)' : ''}</div>
+              <div style={{ fontSize: '13px', color: editIndestructible ? '#f5f2ee' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {editIndestructible ? '(disabled)' : ''}</div>
               <input value={editIndestructible ? '' : editWP} onChange={e => setEditWP(e.target.value)} placeholder="e.g. 3" disabled={editIndestructible}
-                style={{ width: '100%', padding: '4px 6px', background: editIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: editIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '4px 6px', background: editIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: editIndestructible ? '#f5f2ee' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', cursor: 'pointer', fontSize: '13px', color: editIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
               <input type="checkbox" checked={editIndestructible} onChange={e => setEditIndestructible(e.target.checked)}
@@ -856,7 +856,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             </label>
             <div style={{ marginBottom: '10px' }}>
               <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Image</div>
-              <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer', marginBottom: '4px' }}>
+              <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center', cursor: 'pointer', marginBottom: '4px' }}>
                 {uploading ? 'Uploading...' : 'Upload new image'}
                 <input key={`edit-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit' }); e.target.value = '' }} />
               </label>
@@ -865,7 +865,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
                 <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '80px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                   {library.length === 0 ? (
-                    <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty - upload an image and it'll show here</div>
+                    <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>Empty - upload an image and it'll show here</div>
                   ) : library.map(lib => (
                     <button key={lib.id} title={lib.name}
                       onClick={async () => {
@@ -894,12 +894,12 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 {editingObj.destroyed_portrait_url && (
                   <img src={editingObj.destroyed_portrait_url} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', flexShrink: 0 }} />
                 )}
-                <label style={{ flex: 1, display: 'block', padding: '6px', background: editingObj.destroyed_portrait_url ? '#1a2e10' : '#242424', border: `1px dashed ${editingObj.destroyed_portrait_url ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: editingObj.destroyed_portrait_url ? '#7fc458' : '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer' }}>
+                <label style={{ flex: 1, display: 'block', padding: '6px', background: editingObj.destroyed_portrait_url ? '#1a2e10' : '#242424', border: `1px dashed ${editingObj.destroyed_portrait_url ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: editingObj.destroyed_portrait_url ? '#7fc458' : '#f5f2ee', fontSize: '13px', textAlign: 'center', cursor: 'pointer' }}>
                   {uploading ? 'Uploading...' : editingObj.destroyed_portrait_url ? 'Replace destroyed image' : 'Upload destroyed image'}
                   <input key={`destroyed-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit-destroyed' }); e.target.value = '' }} />
                 </label>
               </div>
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', marginTop: '3px' }}>Shown on the tactical map when WP hits 0. Leave blank to keep the fade + shatter overlay.</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', marginTop: '3px' }}>Shown on the tactical map when WP hits 0. Leave blank to keep the fade + shatter overlay.</div>
             </div>
             {/* Properties */}
             <div style={{ marginBottom: '10px' }}>
@@ -918,14 +918,14 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                   <button onClick={() => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, revealed: !p.revealed } : p))}
                     title={prop.revealed ? 'Visible to players' : 'Hidden from players'}
-                    style={{ background: 'none', border: 'none', fontSize: '13px', cursor: 'pointer', padding: '0 2px', color: prop.revealed ? '#7fc458' : '#5a5550' }}>
+                    style={{ background: 'none', border: 'none', fontSize: '13px', cursor: 'pointer', padding: '0 2px', color: prop.revealed ? '#7fc458' : '#f5f2ee' }}>
                     {prop.revealed ? '👁' : '👁‍🗨'}
                   </button>
                   <button onClick={() => setEditProps(prev => prev.filter((_, j) => j !== i))}
                     style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
                 </div>
               ))}
-              {editProps.length === 0 && <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic' }}>No properties set</div>}
+              {editProps.length === 0 && <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic' }}>No properties set</div>}
             </div>
 
             {/* Contents - lootable items */}
@@ -974,10 +974,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                 <span style={{ ...LABEL_STYLE_TIGHT }}>Controlled By</span>
-                <span style={{ fontSize: '13px', color: '#5a5550' }}>{editControllers.length === 0 ? 'GM only' : `${editControllers.length} PC${editControllers.length === 1 ? '' : 's'}`}</span>
+                <span style={{ fontSize: '13px', color: '#f5f2ee' }}>{editControllers.length === 0 ? 'GM only' : `${editControllers.length} PC${editControllers.length === 1 ? '' : 's'}`}</span>
               </div>
               {campaignPcs.length === 0 ? (
-                <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic' }}>No player characters in this campaign yet.</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic' }}>No player characters in this campaign yet.</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '140px', overflowY: 'auto', padding: '4px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                   {campaignPcs.map(pc => {
@@ -988,7 +988,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                           onChange={() => setEditControllers(prev => checked ? prev.filter(id => id !== pc.id) : [...prev, pc.id])}
                           style={{ accentColor: '#7fc458', cursor: 'pointer' }} />
                         <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{pc.name}</span>
-                        {pc.ownerName && <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{pc.ownerName}</span>}
+                        {pc.ownerName && <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{pc.ownerName}</span>}
                       </label>
                     )
                   })}

@@ -163,7 +163,7 @@ export interface CloseButtonProps {
 }
 
 export function CloseButton({ onClick, title = 'Close', tone = 'muted', children = '×' }: CloseButtonProps) {
-  const baseColor = tone === 'danger' ? '#f5a89a' : '#5a5550'
+  const baseColor = tone === 'danger' ? '#f5a89a' : '#f5f2ee'
   return (
     <button
       onClick={onClick}

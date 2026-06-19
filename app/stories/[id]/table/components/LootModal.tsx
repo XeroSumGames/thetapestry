@@ -111,7 +111,7 @@ export function LootModal({
             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '2px', fontSize: '13px' }}>
               <span style={{ flex: 1, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                 {item.name}{item.qty > 1 && <span style={{ color: '#7ab3d4' }}> x{item.qty}</span>}
-                {item.notes && <span style={{ color: '#5a5550', fontSize: '13px' }}> - {item.notes}</span>}
+                {item.notes && <span style={{ color: '#f5f2ee', fontSize: '13px' }}> - {item.notes}</span>}
               </span>
               <button onClick={() => setLootItems(prev => prev.filter((_, i) => i !== idx))}
                 style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>x</button>
@@ -148,7 +148,7 @@ export function LootModal({
                   onMouseEnter={e => (e.currentTarget.style.background = '#2a2a2a')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                   <span>{s.name}</span>
-                  <span style={{ fontSize: '13px', color: '#5a5550' }}>{s.rarity}</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee' }}>{s.rarity}</span>
                 </div>
               ))}
             </div>

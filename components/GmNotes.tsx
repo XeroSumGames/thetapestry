@@ -355,7 +355,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {pendingFiles.map((f, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name} <span style={{ color: '#5a5550' }}>({fmtSize(f.size)})</span></span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name} <span style={{ color: '#f5f2ee' }}>({fmtSize(f.size)})</span></span>
                   <button onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#c0392b', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
                 </div>
               ))}
@@ -437,14 +437,14 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
               {/* Drag handle - purely visual (the whole card is draggable);
                   the grip glyph just signals "this is reorderable" so a GM
                   doesn't have to discover the affordance by accident. */}
-              <span title="Drag to reorder" aria-hidden style={{ color: '#5a5550', cursor: 'grab', fontSize: '13px', userSelect: 'none', flexShrink: 0 }}>⋮⋮</span>
+              <span title="Drag to reorder" aria-hidden style={{ color: '#f5f2ee', cursor: 'grab', fontSize: '13px', userSelect: 'none', flexShrink: 0 }}>⋮⋮</span>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                 {n.title}
                 {n.shared && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#7fc458' }}>SHARED</span>}
                 {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
               </span>
             </span>
-            <span style={{ fontSize: '13px', color: '#5a5550', flexShrink: 0 }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', flexShrink: 0 }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -459,7 +459,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                       {savingEdit ? 'Saving...' : 'Save'}
                     </button>
                     <button onClick={handleEditCancel} disabled={savingEdit}
-                      style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #5a5550', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: savingEdit ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
+                      style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #f5f2ee', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: savingEdit ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
                       Cancel
                     </button>
                   </>

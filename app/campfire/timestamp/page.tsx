@@ -221,14 +221,14 @@ export default function TimestampPage() {
               📋 {copiedFlash === 'unix' ? 'Copied!' : String(unix)}
             </button>
           </div>
-          <div style={{ ...tableCell, color: '#5a5550', fontStyle: 'italic' }}>
+          <div style={{ ...tableCell, color: '#f5f2ee', fontStyle: 'italic' }}>
             (raw integer - paste into anything that takes a unix epoch)
           </div>
         </div>
       </div>
 
       {/* Help */}
-      <div style={{ marginTop: '1.25rem', fontSize: '13px', color: '#5a5550', lineHeight: 1.6 }}>
+      <div style={{ marginTop: '1.25rem', fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6 }}>
         Tip - these tokens are the same format Discord uses for{' '}
         <a href="https://discord.com/developers/docs/reference#message-formatting-timestamp-styles" target="_blank" rel="noreferrer" style={{ color: '#7ab3d4' }}>timestamp messages</a>.
         Paste a copied token into any Discord channel and it renders in everyone's local time automatically.

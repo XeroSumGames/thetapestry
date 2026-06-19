@@ -279,7 +279,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
         </div>
 
         {loading && (
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
             Loading leader and candidates…
           </div>
         )}
@@ -389,7 +389,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
             <div style={{ display: 'flex', gap: '8px' }}>
               <Button tone="secondary" size="md" onClick={onClose} style={{ flex: 1 }}>Cancel</Button>
               <button onClick={executeRoll} disabled={rolling || !targetId || !skill}
-                style={{ flex: 2, padding: '10px', background: targetId && skill ? '#1a2e10' : '#111', border: `1px solid ${targetId && skill ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: targetId && skill ? '#7fc458' : '#5a5550', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: targetId && skill && !rolling ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
+                style={{ flex: 2, padding: '10px', background: targetId && skill ? '#1a2e10' : '#111', border: `1px solid ${targetId && skill ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: targetId && skill ? '#7fc458' : '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: targetId && skill && !rolling ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
                 {rolling ? 'Rolling…' : '🎲 Roll Recruitment'}
               </button>
             </div>

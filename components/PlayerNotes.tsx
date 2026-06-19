@@ -172,7 +172,7 @@ export default function PlayerNotes({ campaignId, header }: { campaignId: string
                   {n.title}
                   {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
                 </span>
-                <span style={{ fontSize: '13px', color: '#5a5550' }}>{expanded.has(`shared-${n.id}`) ? '▲' : '▼'}</span>
+                <span style={{ fontSize: '13px', color: '#f5f2ee' }}>{expanded.has(`shared-${n.id}`) ? '▲' : '▼'}</span>
               </div>
               {expanded.has(`shared-${n.id}`) && (
                 <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -210,7 +210,7 @@ export default function PlayerNotes({ campaignId, header }: { campaignId: string
               {n.title || n.content.slice(0, 40) + (n.content.length > 40 ? '…' : '')}
               {n.submitted_to_summary && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#7fc458' }}>✓ SUBMITTED</span>}
             </span>
-            <span style={{ fontSize: '13px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
+            <span style={{ fontSize: '13px', color: '#f5f2ee' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>

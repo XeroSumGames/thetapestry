@@ -326,7 +326,7 @@ export default function FirstImpressionModal({
             <div style={{ marginBottom: '12px' }}>
               <div style={sectionLabelStyle}>Target NPC</div>
               {eligibleNpcs.length === 0 ? (
-                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
+                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px' }}>
                   No NPCs visible on the map or in your sidebar. A GM needs to place an NPC or reveal one first.
                 </div>
               ) : (
@@ -360,7 +360,7 @@ export default function FirstImpressionModal({
                 none. Matches the green-box style of the Attack modal. */}
             {pc && (
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: pc.insightDice > 0 ? '#7fc458' : '#5a5550', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: pc.insightDice > 0 ? '#7fc458' : '#f5f2ee', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
                   🎲 Spend Insight Die ({pc.insightDice} available)
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>

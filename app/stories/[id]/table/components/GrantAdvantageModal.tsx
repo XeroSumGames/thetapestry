@@ -83,7 +83,7 @@ export function GrantAdvantageModal({
             </span>
             <button type="button" onClick={() => setGrantCmod((c: number) => (c < 10 ? c + 1 : c))} disabled={grantSubmitting}
               style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer' }}>+</button>
-            <span style={{ fontSize: '13px', color: '#5a5550', marginLeft: 'auto', fontStyle: 'italic' }}>0 is invalid</span>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', marginLeft: 'auto', fontStyle: 'italic' }}>0 is invalid</span>
           </div>
         </div>
 
@@ -125,7 +125,7 @@ export function GrantAdvantageModal({
               setAdvantages((prev: any[]) => [advantage, ...prev])
               onClose()
             }}
-            style={{ flex: 2, padding: '10px', background: canSubmit ? '#2a2010' : '#1a1a1a', border: '1px solid #5a4a1b', borderRadius: '3px', color: canSubmit ? '#EF9F27' : '#5a5550', fontSize: '13px', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canSubmit ? 'pointer' : 'not-allowed', fontWeight: 700 }}>
+            style={{ flex: 2, padding: '10px', background: canSubmit ? '#2a2010' : '#1a1a1a', border: '1px solid #5a4a1b', borderRadius: '3px', color: canSubmit ? '#EF9F27' : '#f5f2ee', fontSize: '13px', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canSubmit ? 'pointer' : 'not-allowed', fontWeight: 700 }}>
             {grantSubmitting ? 'Granting…' : '⭐ Grant'}
           </button>
         </div>
