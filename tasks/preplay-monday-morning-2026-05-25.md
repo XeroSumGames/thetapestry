@@ -74,7 +74,7 @@ Two clients (GM + player):
 
 - Open the campaign Community page (`/stories/<id>/community`).
 - **PASS:** morale rows + resource rows show the same colors they did before (green / blue / amber / red).
-- **Fast-fail signal:** a row shows the default grey (`#d4cfc9`) = the canonical isn't matching the snake_case input.
+- **Fast-fail signal:** a row shows the default grey (`#f5f2ee`) = the canonical isn't matching the snake_case input.
 
 ### 7. Feed narrative parity across modal migrations
 

@@ -780,7 +780,7 @@ For phase-organized feature status see `tasks/totallist.md`. For the current spr
 - `50ba6f8` perf: optimistic stat updates in CharacterCard, instant dot/counter response
 - `743f864` perf: optimistic stat updates in CharacterCard, instant dot/counter response
 - `6f09337` fix: players can only open own sheet, roll feed updates immediately after roll
-- `daac8aa` style: brighten muted text from #b0aaa4 to #d4cfc9 site-wide
+- `daac8aa` style: brighten muted text from #b0aaa4 to #f5f2ee site-wide
 - `6ac7146` fix: raise overlay z-index above sidebar
 - `b9d1d88` feat: dice roller, roll feed, deferred photo load on table page
 - `2ea948d` feat: dice roller, roll feed, deferred photo load, onRoll prop on CharacterCard

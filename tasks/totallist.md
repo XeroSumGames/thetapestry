@@ -300,7 +300,7 @@ Everything built, in progress, and planned across all phases.
 - [x] Middleware for Vercel geo headers → cookies
 - [x] Shared SETTINGS constant (lib/settings.ts) - eliminated 5 duplicates
 - [x] Pin/NPC seed inserts with error handling + eliminated extra DB round-trip
-- [x] Muted text brightened from #b0aaa4 to #d4cfc9 site-wide
+- [x] Muted text brightened from #b0aaa4 to #f5f2ee site-wide
 - [x] Minimum font size 13px enforced
 - [x] hdrBtn style helper for uniform header buttons
 - [ ] Migrate character photos from base64 to Supabase Storage (low priority)

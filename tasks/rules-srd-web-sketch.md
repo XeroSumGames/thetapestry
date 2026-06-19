@@ -109,7 +109,7 @@ On Wix, the same anchors are absolutized to `https://thetapestry.distemperverse.
 
 ## 5. Typography (matches existing Tapestry conventions)
 
-- Bg `#0f0f0f`, body text `#f5f2ee` / `#d4cfc9`.
+- Bg `#0f0f0f`, body text `#f5f2ee` / `#f5f2ee`.
 - Eyebrow: Carlito 13px uppercase letter-spaced `.2em`, color `#c0392b` (red accent).
 - H1: Carlito 48px bold uppercase letter-spaced `.04em`, color `#f5f2ee`.
 - H2: Carlito 28px bold uppercase letter-spaced `.06em`, color `#f5f2ee`, top-margin `3rem`, anchor target.

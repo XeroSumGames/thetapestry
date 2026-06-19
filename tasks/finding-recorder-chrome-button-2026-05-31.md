@@ -116,7 +116,7 @@ Match the existing icon-row pattern at
 ```
 
 Button itself (inside `RecorderToggleButton.tsx`):
-- Inactive: `fontSize: '16px'`, `color: '#d4cfc9'`, `opacity: 0.65`,
+- Inactive: `fontSize: '16px'`, `color: '#f5f2ee'`, `opacity: 0.65`,
   Carlito, plain ⏺ glyph, transparent bg.
 - Active: same size, `color: '#c0392b'` (the project's "recording" red),
   `opacity: 1`, no border.
