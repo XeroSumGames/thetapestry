@@ -42,18 +42,19 @@ interface Member {
   character_id: string | null
   joined_at: string
   profiles: { username: string; role: string }
-  characters: { id: string; name: string } | null
+  characters: { id: string; name: string; portrait_url: string | null } | null
 }
 
 interface Character {
   id: string
   name: string
+  portrait_url?: string | null
 }
 
 async function fetchMembersWithProfiles(supabase: any, campaignId: string): Promise<Member[]> {
   const { data: mems } = await supabase
     .from('campaign_members')
-    .select(`id, user_id, character_id, joined_at, characters:character_id(id, name)`)
+    .select(`id, user_id, character_id, joined_at, characters:character_id(id, name, portrait_url)`)
     .eq('campaign_id', campaignId)
     .order('joined_at', { ascending: true })
   if (!mems) return []
@@ -82,6 +83,7 @@ export default function CampaignPage() {
   const [selectedCharId, setSelectedCharId] = useState<string>('')
   const [assigning, setAssigning] = useState(false)
   const [assignedCharName, setAssignedCharName] = useState<string>('')
+  const [assignedPortrait, setAssignedPortrait] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   // (cloning state removed - Clone button retired Apr 2026)
@@ -151,7 +153,7 @@ export default function CampaignPage() {
 
       const { data: chars } = await supabase
         .from('characters')
-        .select('id, name')
+        .select('id, name, portrait_url')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
       setMyCharacters(chars ?? [])
@@ -160,6 +162,7 @@ export default function CampaignPage() {
       if (myMembership?.character_id) {
         setSelectedCharId(myMembership.character_id)
         setAssignedCharName((myMembership.characters as any)?.name ?? '')
+        setAssignedPortrait((myMembership.characters as any)?.portrait_url ?? null)
       }
 
       // Module publish + subscriber-update state moved to
@@ -194,6 +197,7 @@ export default function CampaignPage() {
     if (!error) {
       const chosen = myCharacters.find(c => c.id === selectedCharId)
       setAssignedCharName(chosen?.name ?? '')
+      setAssignedPortrait(chosen?.portrait_url ?? null)
       const mems = await fetchMembersWithProfiles(supabase, id)
       setMembers(mems)
     }
@@ -219,6 +223,7 @@ export default function CampaignPage() {
       if (!assignErr) {
         setSelectedCharId(created.id)
         setAssignedCharName(created.name)
+        setAssignedPortrait((created as any).portrait_url ?? null)
         setMyCharacters(prev => [created, ...prev])
         setShowPregens(false)
         const mems = await fetchMembersWithProfiles(supabase, id)
@@ -239,6 +244,7 @@ export default function CampaignPage() {
       if (!assignErr) {
         setSelectedCharId(created.id)
         setAssignedCharName(created.name)
+        setAssignedPortrait((created as any).portrait_url ?? null)
         setMyCharacters(prev => [created, ...prev])
         setShowPregens(false)
         const mems = await fetchMembersWithProfiles(supabase, id)
@@ -515,8 +521,10 @@ export default function CampaignPage() {
               <div style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
                 {assignedCharName && (
                   <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, flexShrink: 0, background: '#2a1210', border: '2px solid #c0392b', color: '#f5a89a' }}>
-                      {assignedCharName.charAt(0).toUpperCase()}
+                    <div style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, flexShrink: 0, background: '#2a1210', border: '2px solid #c0392b', color: '#f5a89a', overflow: 'hidden', position: 'relative' }}>
+                      {assignedPortrait
+                        ? <img src={assignedPortrait} alt={assignedCharName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', position: 'absolute', inset: 0 }} />
+                        : assignedCharName.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <div style={{ fontSize: '17px', fontWeight: 700, color: '#fff', marginBottom: '3px', letterSpacing: '.02em', fontFamily: 'Carlito, sans-serif' }}>{assignedCharName}</div>
