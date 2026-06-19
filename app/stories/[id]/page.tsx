@@ -703,9 +703,11 @@ export default function CampaignPage() {
                         </div>
                         {(m.characters as any)?.name ? (
                           <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Carlito, sans-serif' }}>{(m.characters as any).name}</div>
-                        ) : !isThisGM ? (
+                        ) : isThisGM ? (
+                          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>Running the table</div>
+                        ) : (
                           <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>No character assigned</div>
-                        ) : null}
+                        )}
                       </div>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                         {m.user_id && m.user_id !== userId && (
