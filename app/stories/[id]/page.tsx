@@ -106,6 +106,7 @@ export default function CampaignPage() {
   const [editSyncing, setEditSyncing] = useState(false)
   const [editSyncResult, setEditSyncResult] = useState('')
   const editDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [gmToolsOpen, setGmToolsOpen] = useState(false)
   // Module publish + subscriber-update state moved to StoryActionBar
   // alongside the action buttons that consume it. Hub keeps only the
   // state it actually renders (members, kicked-rejoin, pregens).
@@ -434,353 +435,355 @@ export default function CampaignPage() {
   const inviteLink = typeof window !== 'undefined' ? `${window.location.origin}/join/${campaign.invite_code}` : ''
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
+      <div style={{ background: '#111', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1a1a1a' }}>
 
-      {/* Kicked banner above the action bar so the explanation reads
-          before the Rejoin button. The banner-then-buttons order also
-          keeps the action row visually unbroken. Player-only. */}
-      {!gmLike && amKicked && (
-        <div style={{ background: '#2a1210', border: '1px solid #c0392b', borderRadius: '4px', padding: '12px 14px', marginBottom: '12px', color: '#f5a89a', fontSize: '13px', lineHeight: 1.5 }}>
-          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>Removed from Session</div>
-          You were removed from this session by the GM. Click <b>Rejoin Session</b> below to return to the game.
+        {/* Topbar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', borderBottom: '1px solid #1a1a1a' }}>
+          <Link href="/stories" style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', textDecoration: 'none' }}>
+            &larr; My stories
+          </Link>
+          <span style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Campaign lobby</span>
         </div>
-      )}
 
-      {/* Canonical campaign-page header - setting label, role chip,
-          campaign name, description, red separator, and the action
-          bar (full 7 buttons for GM, slim Launch/Share for player +
-          inline Rejoin/Leave via extraButtons so all player actions
-          sit on a single row). */}
-      <StoryActionBar campaignId={id} extraButtons={!gmLike ? (
-        <>
-          {amKicked && (
-            <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
-              {rejoining ? 'Rejoining…' : 'Rejoin Session'}
-            </button>
-          )}
-          <button onClick={handleLeave} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
-            Leave
-          </button>
-        </>
-      ) : undefined} />
-
-      {/* Invite link - both views */}
-      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Invite Link</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', padding: '8px 10px', fontFamily: 'Carlito, sans-serif', wordBreak: 'break-all' }}>
-            {inviteLink}
+        {/* Kicked banner (player only) */}
+        {!gmLike && amKicked && (
+          <div style={{ margin: '16px 24px 0', padding: '12px 16px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '4px', fontSize: '13px', color: '#f5a89a', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>Removed from session</div>
+            You were removed from this session by the GM. Click <b>Rejoin session</b> below to return to the game.
           </div>
-          <button onClick={copyInviteLink}
-            style={{ flexShrink: 0, padding: '8px 16px', background: copied ? '#1a2e10' : '#242424', border: `1px solid ${copied ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
-        </div>
-        <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px' }}>
-          Code: <span style={{ color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', fontWeight: 700 }}>{campaign.invite_code}</span>
-        </div>
-      </div>
+        )}
 
-      {/* My Survivor - player only (Thriver godmode also hides this) */}
-      {!gmLike && (
-        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
-            My Survivor
+        {/* Hero */}
+        <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', borderBottom: '1px solid #1a1a1a' }}>
+          {/* Cover placeholder */}
+          <div style={{ background: '#0d0d0d', minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '13px', color: '#2e2e2e', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>No cover</span>
           </div>
-          {assignedCharName && (
-            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '8px' }}>
-              Currently playing: <strong>{assignedCharName}</strong>
+          {/* Hero body */}
+          <div style={{ padding: '28px 28px 24px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' as const }}>
+              <span style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: '3px', fontWeight: 700, background: '#1a2e10', color: '#7fc458', border: '1px solid #2d5a1b', fontFamily: 'Carlito, sans-serif' }}>
+                {SETTINGS[campaign.setting] ?? campaign.setting ?? 'Custom'}
+              </span>
+              <span style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: '3px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', ...(gmLike ? { background: '#2a1808', color: '#EF9F27', border: '1px solid #6b4310' } : { background: '#0f2035', color: '#7ab3d4', border: '1px solid #1a3a5c' }) }}>
+                {isGM ? 'Game master' : isThriver ? 'Admin' : 'Player'}
+              </span>
+            </div>
+            <div style={{ fontSize: '34px', fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase' as const, color: '#fff', marginBottom: '10px', lineHeight: 1.05, fontFamily: 'Carlito, sans-serif' }}>
+              {campaign.name}
+            </div>
+            {campaign.description && (
+              <p style={{ fontSize: '15px', color: '#cce0f5', lineHeight: 1.65, fontStyle: 'italic', marginBottom: '22px', maxWidth: '560px', fontFamily: 'Carlito, sans-serif' }}>
+                {campaign.description}
+              </p>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <a href={`/stories/${id}/table`} target="_blank" rel="noopener noreferrer"
+                style={{ padding: '13px 40px', background: '#c0392b', border: '2px solid #c0392b', borderRadius: '4px', color: '#fff', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}>
+                &#9654; Launch
+              </a>
+              {!gmLike && amKicked && (
+                <button onClick={handleRejoin} disabled={rejoining}
+                  style={{ padding: '11px 22px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rejoining ? 'not-allowed' : 'pointer', opacity: rejoining ? 0.6 : 1 }}>
+                  {rejoining ? 'Rejoining...' : 'Rejoin session'}
+                </button>
+              )}
+              {!gmLike && (
+                <button onClick={handleLeave}
+                  style={{ padding: '11px 22px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '4px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Leave
+                </button>
+              )}
+              {gmLike && (
+                <button onClick={() => setGmToolsOpen(o => !o)}
+                  style={{ padding: '11px 22px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '4px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  GM tools {gmToolsOpen ? '▲' : '▼'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Body - two-column */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 270px' }}>
+
+          {/* LEFT: Player view */}
+          {!gmLike && (
+            <div style={{ padding: '22px 24px', borderRight: '1px solid #1a1a1a' }}>
+              <div style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', fontWeight: 700, marginBottom: '12px', fontFamily: 'Carlito, sans-serif' }}>My survivor</div>
+              <div style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
+                {assignedCharName && (
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, flexShrink: 0, background: '#2a1210', border: '2px solid #c0392b', color: '#f5a89a' }}>
+                      {assignedCharName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '17px', fontWeight: 700, color: '#fff', marginBottom: '3px', letterSpacing: '.02em', fontFamily: 'Carlito, sans-serif' }}>{assignedCharName}</div>
+                      <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>Currently assigned</div>
+                    </div>
+                  </div>
+                )}
+                {!assignedCharName && (
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '12px', fontFamily: 'Carlito, sans-serif' }}>No survivor assigned. Pick one below or create a new one.</div>
+                )}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
+                    style={{ flex: 1, padding: '8px 10px', background: '#1e1e1e', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                    <option value="">- Select a survivor -</option>
+                    {myCharacters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <button onClick={handleAssignCharacter} disabled={assigning || !selectedCharId}
+                    style={{ padding: '8px 16px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assigning || !selectedCharId ? 'not-allowed' : 'pointer', opacity: assigning || !selectedCharId ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                    {assigning ? 'Saving...' : 'Assign'}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>Create new survivor</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+                <a href={`/characters/new?return=${id}`} style={{ padding: '10px 6px', borderRadius: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.4, background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', textDecoration: 'none', display: 'block' }}>
+                  Backstory<br />generation
+                </a>
+                <a href={`/characters/quick?return=${id}`} style={{ padding: '10px 6px', borderRadius: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.4, background: '#171717', border: '1px solid #2e2e2e', color: '#7a7068', textDecoration: 'none', display: 'block' }}>
+                  Quick<br />character
+                </a>
+                <a href={`/characters/random?return=${id}`} style={{ padding: '10px 6px', borderRadius: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.4, background: '#171717', border: '1px solid #2e2e2e', color: '#7a7068', textDecoration: 'none', display: 'block' }}>
+                  Random<br />character
+                </a>
+              </div>
+
+              {(campaign.setting && SETTING_PREGENS[campaign.setting] || libraryPregens.length > 0) && (
+                <>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>Pre-generated for this story</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {(campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []).map(p => (
+                      <button key={p.name} onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
+                        style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingPregen ? 0.6 : 1 }}>
+                        <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
+                          {p.name.charAt(0)}
+                        </div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                        <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                      </button>
+                    ))}
+                    {libraryPregens.slice(0, 3).map((p: any) => (
+                      <button key={p.id} onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
+                        style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
+                        <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
+                          {p.name.charAt(0)}
+                        </div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                        {p.data?.profession && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.data.profession}</div>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div style={{ marginTop: '12px' }}>
+                <a href={`/pregen?return=${id}`} style={{ display: 'inline-block', padding: '8px 16px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#7ab3d4', textDecoration: 'none', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
+                  Or pick from a different pre-generated character &rarr;
+                </a>
+              </div>
             </div>
           )}
-          {myCharacters.length === 0 ? (
-            <div style={{ fontSize: '13px', color: '#cce0f5' }}>
-              You have no characters yet. Pick a creation method below.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
-                style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
-                <option value="">- Select a survivor -</option>
-                {myCharacters.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <button onClick={handleAssignCharacter} disabled={assigning || !selectedCharId}
-                style={{ padding: '8px 16px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assigning || !selectedCharId ? 'not-allowed' : 'pointer', opacity: assigning || !selectedCharId ? 0.6 : 1 }}>
-                {assigning ? 'Saving...' : 'Assign'}
-              </button>
-            </div>
-          )}
-          {/* Shortcut row - three character-creation paths so a new player
-              doesn't have to find the sidebar to make their first survivor.
-              Each link carries ?return=<story-id> so the creation pages can
-              bounce the new player right back here when they're done. */}
-          <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-            <a href={`/characters/new?return=${id}`}
-              style={{ flex: 1, minHeight: '44px', padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'nowrap' }}>
-              Backstory Generation
-            </a>
-            <a href={`/characters/quick?return=${id}`}
-              style={{ flex: 1, minHeight: '44px', padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'nowrap' }}>
-              Quick Character
-            </a>
-            <a href={`/characters/random?return=${id}`}
-              style={{ flex: 1, minHeight: '44px', padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'nowrap' }}>
-              Random Character
-            </a>
-          </div>
-          {/* Pregen selection - official pregens for this setting + community library */}
-          {(campaign.setting && SETTING_PREGENS[campaign.setting] || libraryPregens.length > 0) && (
-            <div style={{ marginTop: '10px' }}>
-              <button onClick={() => setShowPregens(!showPregens)}
-                style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {showPregens ? 'Hide Pre-Generated Characters' : 'Or Choose a Pre-Generated Character'}
-              </button>
-              {showPregens && (
-                <div style={{ marginTop: '8px' }}>
-                  {campaign.setting && SETTING_PREGENS[campaign.setting] && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: libraryPregens.length > 0 ? '14px' : '0' }}>
-                      {SETTING_PREGENS[campaign.setting]!.map(p => (
-                        <div key={p.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                          <div>
-                            <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                            <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>{p.profession} &middot; {p.three_words}</div>
-                          </div>
-                          <button onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
-                            style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creatingPregen ? 'not-allowed' : 'pointer', opacity: creatingPregen ? 0.6 : 1, whiteSpace: 'nowrap' }}>
-                            {creatingPregen ? 'Creating...' : 'Select'}
-                          </button>
+
+          {/* LEFT: GM view - Story settings form */}
+          {gmLike && (
+            <div style={{ padding: '22px 24px', borderRight: '1px solid #1a1a1a' }}>
+              <div style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', fontWeight: 700, marginBottom: '12px', fontFamily: 'Carlito, sans-serif' }}>Story settings</div>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={lbl}>Story name</label>
+                <input style={inp} value={editName} onChange={e => setEditName(e.target.value)} placeholder="Name your story..." />
+              </div>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={lbl}>Hook <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
+                <textarea style={{ ...inp, minHeight: '72px', resize: 'vertical' as const }} value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="A brief description of your story..." />
+              </div>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={lbl}>Default map style</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                  {MAP_STYLES.map(([val, label]) => (
+                    <button key={val} type="button" onClick={() => setEditMapStyle(val)}
+                      style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editMapStyle === val ? '#c0392b' : '#2e2e2e'}`, background: editMapStyle === val ? '#2a1210' : '#1e1e1e', color: editMapStyle === val ? '#f5a89a' : '#7a7068' }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom: '18px', position: 'relative' }}>
+                <label style={lbl}>Map center <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
+                <div style={{ position: 'relative' }}>
+                  <input value={editLocationQuery} onChange={e => {
+                    setEditLocationQuery(e.target.value)
+                    if (editDebounceRef.current) clearTimeout(editDebounceRef.current)
+                    if (e.target.value.length >= 3) {
+                      editDebounceRef.current = setTimeout(async () => {
+                        try {
+                          const data = await searchNominatimUSFirst(e.target.value)
+                          setEditLocationSuggestions(data)
+                        } catch { setEditLocationSuggestions([]) }
+                      }, 300)
+                    } else { setEditLocationSuggestions([]) }
+                  }} placeholder="Search for a location..." style={inp} />
+                  {editLocationSuggestions.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 10 }}>
+                      {editLocationSuggestions.map((s, i) => (
+                        <div key={i} onClick={() => {
+                          setEditMapCenter({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) })
+                          setEditLocationQuery(s.display_name.split(',').slice(0, 2).join(','))
+                          setEditLocationSuggestions([])
+                        }}
+                          style={{ padding: '8px 10px', fontSize: '13px', color: '#f5f2ee', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                          {s.display_name.length > 80 ? s.display_name.slice(0, 80) + '...' : s.display_name}
                         </div>
                       ))}
                     </div>
                   )}
-                  {libraryPregens.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase', color: '#7ab3d4', fontWeight: 600, marginBottom: '6px', fontFamily: 'Carlito, sans-serif' }}>
-                        Community Pregens
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {libraryPregens.slice(0, 5).map((p: any) => (
-                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#242424', border: '1px solid #2a3a2a', borderRadius: '3px' }}>
-                            <div>
-                              <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                              {p.data?.profession && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>{p.data.profession}</div>}
-                            </div>
-                            <button onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
-                              style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', opacity: creatingLibraryPregen ? 0.6 : 1, whiteSpace: 'nowrap' }}>
-                              {creatingLibraryPregen === p.id ? 'Creating...' : 'Select'}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <a href={`/pregen?return=${id}`}
-                    style={{ display: 'inline-block', marginTop: '10px', fontSize: '13px', color: '#7ab3d4', textDecoration: 'none', letterSpacing: '.04em' }}>
-                    More pregens &rarr;
-                  </a>
+                </div>
+                {editMapCenter && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                    <span style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'monospace' }}>
+                      {editMapCenter.lat.toFixed(4)}, {editMapCenter.lng.toFixed(4)}
+                    </span>
+                    <button type="button" onClick={() => { setEditMapCenter(null); setEditLocationQuery('') }}
+                      style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>
+                      Clear
+                    </button>
+                  </div>
+                )}
+                {!editMapCenter && (
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>No custom center - map uses default view</div>
+                )}
+              </div>
+              {editError && (
+                <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', marginBottom: '12px' }}>
+                  {editError}
                 </div>
               )}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button onClick={handleEditSave} disabled={editSaving || !editName.trim()}
+                  style={{ padding: '10px 26px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSaving || !editName.trim() ? 'not-allowed' : 'pointer', opacity: editSaving || !editName.trim() ? 0.6 : 1 }}>
+                  {editSaving ? 'Saving...' : 'Save changes'}
+                </button>
+                {editSaved && <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>✓ Saved</span>}
+              </div>
             </div>
           )}
-        </div>
-      )}
 
-      {/* Members list - both views */}
-      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
-          Members ({members.length})
+          {/* RIGHT: Party + Invite (both views) */}
+          <div style={{ padding: '20px', background: '#0d0d0d' }}>
+            <div style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', fontWeight: 700, marginBottom: '12px', fontFamily: 'Carlito, sans-serif' }}>Party ({members.length})</div>
+            {members.length === 0 ? (
+              <div style={{ fontSize: '13px', color: '#cce0f5', textAlign: 'center', padding: '1rem', fontFamily: 'Carlito, sans-serif' }}>No players yet. Share the invite link below.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {members.map(m => {
+                  const isThisGM = m.user_id === campaign.gm_user_id
+                  const uname = (m.profiles as any)?.username ?? 'Unknown'
+                  return (
+                    <div key={m.id} style={{ background: '#171717', border: '1px solid #222', borderRadius: '5px', padding: '10px 12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <div style={{ width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, flexShrink: 0, background: isThisGM ? '#2a1210' : '#0f2035', border: isThisGM ? '2px solid #c0392b' : '1px solid #1a3a5c', color: isThisGM ? '#f5a89a' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
+                        {uname.charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{uname}</span>
+                          {isThisGM && <span style={{ fontSize: '13px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>GM</span>}
+                        </div>
+                        {(m.characters as any)?.name ? (
+                          <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Carlito, sans-serif' }}>{(m.characters as any).name}</div>
+                        ) : !isThisGM ? (
+                          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>No character assigned</div>
+                        ) : null}
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                        {m.user_id && m.user_id !== userId && (
+                          <a href={`/messages?dm=${m.user_id}`} style={{ padding: '4px 9px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                            💬 Msg
+                          </a>
+                        )}
+                        {gmLike && !isThisGM && (
+                          <button onClick={() => handleRemoveMember(m)} style={{ padding: '4px 9px', background: 'transparent', border: '1px solid #3a1a18', borderRadius: '3px', color: '#7a3028', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            Remove
+                          </button>
+                        )}
+                        <span style={{ fontSize: '13px', color: '#cce0f5', whiteSpace: 'nowrap', fontFamily: 'Carlito, sans-serif' }}>{formatDate(m.joined_at)}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Invite */}
+            <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #1a1a1a' }}>
+              <div style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', fontWeight: 700, marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>Invite</div>
+              <div style={{ fontSize: '13px', color: '#7ab3d4', marginBottom: '8px', wordBreak: 'break-all', fontFamily: 'Carlito, sans-serif' }}>{inviteLink}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }}>Code</span>
+                <span style={{ color: '#c0392b', fontWeight: 700, letterSpacing: '.14em', fontFamily: 'Carlito, sans-serif', fontSize: '14px' }}>{campaign.invite_code}</span>
+                <button onClick={copyInviteLink} style={{ marginLeft: 'auto', padding: '5px 10px', background: copied ? '#1a2e10' : 'transparent', border: `1px solid ${copied ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  {copied ? 'Copied!' : 'Copy link'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        {members.length === 0 ? (
-          <div style={{ fontSize: '13px', color: '#cce0f5', textAlign: 'center', padding: '1rem' }}>No players yet. Share the invite link above.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {members.map(m => {
-              const isThisGM = m.user_id === campaign.gm_user_id
-              return (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#242424', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
-                  <div>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{(m.profiles as any)?.username ?? 'Unknown'}</span>
-                    {isThisGM && <span style={{ marginLeft: '6px', fontSize: '13px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em' }}>GM</span>}
-                    {(m.characters as any)?.name && (
-                      <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
-                    )}
-                    {!(m.characters as any)?.name && !isThisGM && (
-                      <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>No character assigned</div>
+
+        {/* GM Tools (collapsible) - GM or Thriver only */}
+        {gmLike && (
+          <div style={{ borderTop: '1px solid #1a1a1a' }}>
+            <div onClick={() => setGmToolsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', cursor: 'pointer', background: '#0d0d0d' }}>
+              <span style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#EF9F27', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>&#9881; GM tools</span>
+              <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{gmToolsOpen ? '▲ collapse' : '▼ expand'}</span>
+            </div>
+            {gmToolsOpen && (
+              <div style={{ padding: '20px 28px 24px', borderTop: '1px solid #1a1a1a' }}>
+                {/* StoryActionBar in compact mode: hides title header + Launch
+                    (both already shown in the hero above). Shows GM Notes,
+                    Snapshot, Publish, Archive, Module update, Delete, GM Kit. */}
+                <StoryActionBar campaignId={id} compact />
+                {isThriver && campaign.setting && campaign.setting !== 'custom' && (
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Seed Management</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '10px', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif' }}>
+                      Update the seed data for <strong style={{ color: '#f5f2ee' }}>{SETTINGS[campaign.setting] ?? campaign.setting}</strong> using this campaign's NPCs, pins, scenes, and handouts. All future campaigns using this setting will start with this data.
+                    </div>
+                    <button onClick={handleEditSyncSeed} disabled={editSyncing}
+                      style={{ padding: '10px 24px', background: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSyncing ? 'wait' : 'pointer', fontWeight: 700, opacity: editSyncing ? 0.6 : 1 }}>
+                      {editSyncing ? 'Syncing...' : 'Update Seed Data'}
+                    </button>
+                    {editSyncResult && (
+                      <div style={{ marginTop: '8px', fontSize: '13px', color: editSyncResult.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>
+                        {editSyncResult}
+                      </div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {m.user_id && m.user_id !== userId && (
-                      <a href={`/messages?dm=${m.user_id}`} title="Send message"
-                        style={{ padding: '3px 8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', lineHeight: 1.4 }}>
-                        💬 Message
-                      </a>
-                    )}
-                    {/* GM-or-Thriver Remove. Hidden for the GM's own
-                        row to prevent self-removal - a campaign needs
-                        a GM. Thrivers can remove members on any
-                        campaign via godmode. */}
-                    {gmLike && !isThisGM && (
-                      <button onClick={() => handleRemoveMember(m)} title={`Remove ${(m.profiles as any)?.username ?? 'player'} from the campaign`}
-                        style={{ padding: '3px 8px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.4 }}>
-                        Remove
-                      </button>
-                    )}
-                    <div style={{ fontSize: '13px', color: '#cce0f5' }}>Joined {formatDate(m.joined_at)}</div>
-                  </div>
-                </div>
-              )
-            })}
+                )}
+              </div>
+            )}
           </div>
         )}
-      </div>
 
-      {/* GM Tools - Edit form, lifted from the retired /edit page (2026-05-15).
-          GM-or-Thriver only. Story Name / Description / Default Map Style /
-          Map Center Location, with Save Changes. Seed Management sub-section
-          is Thriver-only and only visible on non-custom settings. */}
-      {gmLike && (
-        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
-            GM Tools
+        {/* Footer */}
+        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 24px', borderTop: '1px solid #151515', background: '#0d0d0d' }}>
+          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
+            {(() => {
+              const myMem = members.find(m => m.user_id === userId)
+              return myMem ? `Joined ${formatDate(myMem.joined_at)}` : `Created ${formatDate(campaign.created_at)}`
+            })()}
+          </span>
+          <div style={{ marginLeft: 'auto', display: 'flex' }}>
+            <span style={{ padding: '6px 16px', fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>War stories</span>
+            <span style={{ padding: '6px 16px', fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', borderLeft: '1px solid #1a1a1a' }}>Sessions</span>
+            <Link href="/community" style={{ padding: '6px 16px', fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', borderLeft: '1px solid #1a1a1a', textDecoration: 'none' }}>Community</Link>
           </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={lbl}>Story Name</label>
-            <input style={inp} value={editName} onChange={e => setEditName(e.target.value)} placeholder="Name your story..." />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={lbl}>Description <span style={{ color: '#f5f2ee', fontWeight: 400 }}>(optional)</span></label>
-            <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="A brief description of your story..." />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={lbl}>Default Map Style</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
-              {MAP_STYLES.map(([val, label]) => (
-                <button key={val} type="button" onClick={() => setEditMapStyle(val)}
-                  style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editMapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: editMapStyle === val ? '#2a1210' : '#242424', color: editMapStyle === val ? '#f5a89a' : '#f5f2ee' }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '20px', position: 'relative' }}>
-            <label style={lbl}>Map Center Location</label>
-            <div style={{ position: 'relative' }}>
-              <input value={editLocationQuery} onChange={e => {
-                setEditLocationQuery(e.target.value)
-                if (editDebounceRef.current) clearTimeout(editDebounceRef.current)
-                if (e.target.value.length >= 3) {
-                  editDebounceRef.current = setTimeout(async () => {
-                    try {
-                      const data = await searchNominatimUSFirst(e.target.value)
-                      setEditLocationSuggestions(data)
-                    } catch { setEditLocationSuggestions([]) }
-                  }, 300)
-                } else { setEditLocationSuggestions([]) }
-              }} placeholder="Search for a new center location..." style={inp} />
-              {editLocationSuggestions.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 10 }}>
-                  {editLocationSuggestions.map((s, i) => (
-                    <div key={i} onClick={() => {
-                      setEditMapCenter({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) })
-                      setEditLocationQuery(s.display_name.split(',').slice(0, 2).join(','))
-                      setEditLocationSuggestions([])
-                    }}
-                      style={{ padding: '8px 10px', fontSize: '13px', color: '#f5f2ee', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      {s.display_name.length > 80 ? s.display_name.slice(0, 80) + '...' : s.display_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {editMapCenter && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                <span style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'monospace' }}>
-                  {editMapCenter.lat.toFixed(4)}, {editMapCenter.lng.toFixed(4)}
-                </span>
-                <button type="button" onClick={() => { setEditMapCenter(null); setEditLocationQuery('') }}
-                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>
-                  Clear
-                </button>
-              </div>
-            )}
-            {!editMapCenter && (
-              <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px' }}>No custom center - map uses default view</div>
-            )}
-          </div>
-
-          {editError && (
-            <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', marginBottom: '12px' }}>
-              {editError}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button onClick={handleEditSave} disabled={editSaving || !editName.trim()}
-              style={{ padding: '10px 24px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSaving || !editName.trim() ? 'not-allowed' : 'pointer', opacity: editSaving || !editName.trim() ? 0.6 : 1 }}>
-              {editSaving ? 'Saving...' : 'Save Changes'}
-            </button>
-            {editSaved && (
-              <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Saved</span>
-            )}
-          </div>
-
-          {/* Sync to Seed - Thriver only, non-custom settings. Overwrites
-              setting_seed_* tables with this campaign's curated content. */}
-          {isThriver && campaign.setting && campaign.setting !== 'custom' && (
-            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Seed Management</div>
-              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '10px', lineHeight: 1.5 }}>
-                Update the seed data for <strong style={{ color: '#f5f2ee' }}>{SETTINGS[campaign.setting] ?? campaign.setting}</strong> using this campaign's NPCs, pins, scenes, and handouts. All future campaigns using this setting will start with this data.
-              </div>
-              <button onClick={handleEditSyncSeed} disabled={editSyncing}
-                style={{ padding: '10px 24px', background: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSyncing ? 'wait' : 'pointer', fontWeight: 700, opacity: editSyncing ? 0.6 : 1 }}>
-                {editSyncing ? 'Syncing...' : 'Update Seed Data'}
-              </button>
-              {editSyncResult && (
-                <div style={{ marginTop: '8px', fontSize: '13px', color: editSyncResult.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>
-                  {editSyncResult}
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      )}
 
-      {/* Back button */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <Link href="/stories" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-          Back
-        </Link>
       </div>
-
-      {/* ModulePublishModal lives inside <StoryActionBar> now -
-          opening from the Publish button there. */}
-
     </div>
   )
-}
-
-function btn(bg: string, color: string, border: string): React.CSSProperties {
-  return {
-    // Padding tightened from 8px/18px → 6px/14px so all seven hub
-    // actions (Launch / Edit / Share / GM Kit / Snapshot / Publish /
-    // Delete) fit on one line at standard viewport widths without
-    // Delete dropping to a second row.
-    padding: '6px 14px', background: bg, border: `1px solid ${border}`,
-    borderRadius: '3px', color, fontSize: '13px',
-    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
-    textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer',
-    // inline-flex + center keeps icon glyphs (📦) baseline-aligned with the
-    // text label. whiteSpace + lineHeight stop multi-word labels (GM Kit,
-    // Publish Module) from wrapping to two lines and breaking row height.
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    whiteSpace: 'nowrap', lineHeight: 1,
-  }
 }

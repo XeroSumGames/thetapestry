@@ -54,9 +54,13 @@ interface Props {
   // splitting Launch+Share above and Rejoin+Leave below the kicked
   // banner.
   extraButtons?: React.ReactNode
+  // When true, hides the campaign header block and the Launch button.
+  // Used inside the GM Tools collapsible on /stories/[id] where the
+  // hero already shows the title and a Launch button.
+  compact?: boolean
 }
 
-export default function StoryActionBar({ campaignId, extraButtons }: Props) {
+export default function StoryActionBar({ campaignId, extraButtons, compact }: Props) {
   const supabase = createClient()
   const router = useRouter()
   const pathname = usePathname() ?? ''
@@ -206,39 +210,33 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
 
   return (
     <div>
-      {/* Canonical header - setting label + role + campaign name +
-          optional description + red separator. Mirrors the hub's
-          original H1 block so every sub-page reads as "FIGHT CLUB"
-          consistently. */}
-      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px', fontFamily: 'Carlito, sans-serif' }}>
-          {settingLabel} &mdash; {isGM ? 'Game Master' : 'Player'}
+      {/* Canonical header - suppressed in compact mode (the hub hero
+          already shows the title). Shown on all sub-pages (Snapshots,
+          Sessions, Community) so every page reads consistently. */}
+      {!compact && (
+        <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px', fontFamily: 'Carlito, sans-serif' }}>
+            {settingLabel} &mdash; {isGM ? 'Game Master' : 'Player'}
+          </div>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+            {campaign.name}
+          </div>
+          {campaign.description && (
+            <p style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
+          )}
         </div>
-        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          {campaign.name}
-        </div>
-        {campaign.description && (
-          <p style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
-        )}
-      </div>
+      )}
 
       {/* Action bar */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.25rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-      {/* Player view = a slimmer surface (Launch + Share only). The
-          GM-only actions just don't render. */}
-      {/* Order locked by Xero (2026-05-06, EDIT removed 2026-05-15):
-          LAUNCH → GM NOTES → SNAPSHOT → PUBLISH → DELETE → GM KIT.
-          Share button removed - the always-visible Invite Link box
-          below the action bar already has its own COPY LINK button,
-          so Share was redundant. The Edit page was retired 2026-05-15
-          and its form lives inline on the campaign hub itself; clicking
-          the campaign name from /stories drops the GM right into the
-          editable surface. Conditional buttons (Archive, Module
-          update) slot in next to PUBLISH. */}
-      <a href={`/stories/${campaignId}/table`} target="_blank" rel="noreferrer"
-        style={btn('#c0392b', '#fff', '#c0392b', false)}>
-        Launch
-      </a>
+      {/* In compact mode (GM Tools collapsible on the hub), Launch is
+          already in the hero so we skip it here to avoid duplication. */}
+      {!compact && (
+        <a href={`/stories/${campaignId}/table`} target="_blank" rel="noreferrer"
+          style={btn('#c0392b', '#fff', '#c0392b', false)}>
+          Launch
+        </a>
+      )}
       {isGM && (
         <button onClick={() => {
           // Popout - same window-features as /gm-screen so it lands
