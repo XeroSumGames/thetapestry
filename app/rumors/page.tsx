@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // /modules - Phase C marketplace browse page.
 //
 // Public-facing surface for discovering modules (the campaign-create
@@ -140,7 +140,7 @@ export default function ModuleMarketplacePage() {
   }, [modules, search, sortBy])
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px', color: '#f5f2ee' }}>
       <div style={{ marginBottom: '6px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
         Module System
       </div>
@@ -323,7 +323,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
           </div>
 
           {m.tagline && (
-            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
               {m.tagline}
             </div>
           )}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -296,7 +296,7 @@ export default function Sidebar() {
             <Link href="/signup" style={{ display: 'block', width: '100%', padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
               Create Account
             </Link>
-            <Link href="/login" style={{ display: 'block', width: '100%', padding: '8px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+            <Link href="/login" style={{ display: 'block', width: '100%', padding: '8px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
               Sign In
             </Link>
           </>
@@ -308,7 +308,7 @@ export default function Sidebar() {
                 colored circle with the user's initial when no
                 avatar is set. */}
             <Link href="/account"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 4px', textDecoration: 'none', borderRadius: '3px', color: '#d4cfc9' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 4px', textDecoration: 'none', borderRadius: '3px', color: '#f5f2ee' }}
               onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#1a1a1a' }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}>
               <span style={{

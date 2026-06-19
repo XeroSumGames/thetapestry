@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'
@@ -880,7 +880,7 @@ export default function CommunityMoraleModal({
       case 'Failure': return '#EF9F27'
       case 'Dire Failure':
       case 'Low Insight': return '#c0392b'
-      default: return '#d4cfc9'
+      default: return '#f5f2ee'
     }
   }
 
@@ -1132,7 +1132,7 @@ export default function CommunityMoraleModal({
         <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{emoji} {title}</span>
         <span style={{ fontSize: '14px', color: outcomeColor(rr.outcome), fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{rr.outcome}</span>
       </div>
-      <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+      <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
         [{rr.die1}+{rr.die2}]
         {rr.amod !== 0 && <span style={{ color: rr.amod > 0 ? '#7fc458' : '#c0392b' }}> {rr.amod > 0 ? '+' : ''}{rr.amod} AMod</span>}
         {rr.smod !== 0 && <span style={{ color: rr.smod > 0 ? '#7fc458' : '#c0392b' }}> {rr.smod > 0 ? '+' : ''}{rr.smod} SMod</span>}
@@ -1165,7 +1165,7 @@ export default function CommunityMoraleModal({
               <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>📊 Morale</span>
               <span style={{ fontSize: '17px', color: outcomeColor(r.morale.outcome), fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.morale.outcome}</span>
             </div>
-            <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
+            <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
               [{r.morale.die1}+{r.morale.die2}]
               {r.morale.amod !== 0 && <span style={{ color: r.morale.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.morale.amod > 0 ? '+' : ''}{r.morale.amod} AMod</span>}
               {r.morale.smod !== 0 && <span style={{ color: r.morale.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.morale.smod > 0 ? '+' : ''}{r.morale.smod} SMod</span>}
@@ -1198,7 +1198,7 @@ export default function CommunityMoraleModal({
                 <span style={{ fontSize: '18px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🙏 Retention Check</span>
                 <span style={{ fontSize: '19px', color: outcomeColor(retention.outcome), fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{retention.outcome}</span>
               </div>
-              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
+              <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
                 [{retention.die1}+{retention.die2}]
                 {retention.amod !== 0 && <span style={{ color: retention.amod > 0 ? '#7fc458' : '#c0392b' }}> {retention.amod > 0 ? '+' : ''}{retention.amod} AMod</span>}
                 {retention.smod !== 0 && <span style={{ color: retention.smod > 0 ? '#7fc458' : '#c0392b' }}> {retention.smod > 0 ? '+' : ''}{retention.smod} SMod</span>}
@@ -1219,7 +1219,7 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 ⚠ Community Dissolves
               </div>
-              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                 3 consecutive Morale failures. All {r.membersBefore} members scatter. The community is gone.
                 {!retention && leaderInfo && (
                   <> A fast-acting leader may attempt an immediate Retention Check to salvage fragments.</>
@@ -1265,7 +1265,7 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 Community Retained
               </div>
-              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                 {leaderInfo?.name ?? 'The leader'} rallied the survivors. The community does NOT dissolve.
                 Original Morale failure consequence still applies: {r.departureIds.length} member{r.departureIds.length === 1 ? '' : 's'} leave - {r.departureIds.map(id => memberNameById.get(id) ?? '(unknown)').join(', ')}.
               </div>
@@ -1278,7 +1278,7 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 {r.departureIds.length} Member{r.departureIds.length === 1 ? '' : 's'} Leave
               </div>
-              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                 {r.departureIds.map(id => memberNameById.get(id) ?? '(unknown)').join(', ')}
               </div>
               <div style={{ marginTop: '6px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>

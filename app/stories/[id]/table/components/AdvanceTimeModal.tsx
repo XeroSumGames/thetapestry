@@ -88,13 +88,13 @@ export function AdvanceTimeModal({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '60px' }}>Hours</span>
           <button onClick={() => setAdvanceTimeHours(Math.max(1, hours - 1))} disabled={advanceTimeBusy}
-            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: advanceTimeBusy ? 'not-allowed' : 'pointer' }}>−</button>
+            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: advanceTimeBusy ? 'not-allowed' : 'pointer' }}>−</button>
           <input type="number" min={1} max={24} value={hours}
             onChange={e => setAdvanceTimeHours(Math.max(1, Math.min(24, parseInt(e.target.value, 10) || 1)))}
             disabled={advanceTimeBusy}
             style={{ width: '60px', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', fontWeight: 700 }} />
           <button onClick={() => setAdvanceTimeHours(Math.min(24, hours + 1))} disabled={advanceTimeBusy}
-            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: advanceTimeBusy ? 'not-allowed' : 'pointer' }}>+</button>
+            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: advanceTimeBusy ? 'not-allowed' : 'pointer' }}>+</button>
           <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginLeft: 'auto' }}>max 24</span>
         </div>
 
@@ -118,7 +118,7 @@ export function AdvanceTimeModal({
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onClose} disabled={advanceTimeBusy}
-            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: advanceTimeBusy ? 'not-allowed' : 'pointer' }}>
+            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: advanceTimeBusy ? 'not-allowed' : 'pointer' }}>
             Cancel
           </button>
           <button onClick={async () => {

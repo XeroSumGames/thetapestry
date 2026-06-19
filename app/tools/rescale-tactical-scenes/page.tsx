@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
@@ -144,7 +144,7 @@ export default function RescaleTacticalScenesPage() {
               <td style={{ padding: '6px 8px' }}>
                 {r.status === 'ready' && (
                   <button onClick={() => rescaleOne(r)}
-                    style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Rescale
                   </button>
                 )}

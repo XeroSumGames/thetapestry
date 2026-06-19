@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
 import { createClient } from '../../lib/supabase-browser'
@@ -247,7 +247,7 @@ export default function LoginPage() {
 
         <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
           No account?{' '}
-          <a href={redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup'} style={{ color: '#d4cfc9', textDecoration: 'none' }}>Sign up</a>
+          <a href={redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup'} style={{ color: '#f5f2ee', textDecoration: 'none' }}>Sign up</a>
         </p>
 
       </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Thriver-only one-shot tool to publish the deprecated /stories/new
 // settings (Chased, Mongrels, Empty, The Rock, The Arena) as Modules.
 // Each click creates one module + one version, marks listed +
@@ -355,7 +355,7 @@ export default function MigrateSettingsPage() {
   }
   if (!isThriver) {
     return (
-      <div style={{ padding: '24px', maxWidth: '720px', margin: '0 auto', color: '#d4cfc9' }}>
+      <div style={{ padding: '24px', maxWidth: '720px', margin: '0 auto', color: '#f5f2ee' }}>
         <div style={{ fontSize: '20px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
         <div style={{ fontSize: '14px' }}>Thriver-only tool. Contact xerosumgames@gmail.com if you think this is wrong.</div>
       </div>
@@ -363,7 +363,7 @@ export default function MigrateSettingsPage() {
   }
 
   return (
-    <div style={{ padding: '24px 20px', maxWidth: '900px', margin: '0 auto', color: '#d4cfc9' }}>
+    <div style={{ padding: '24px 20px', maxWidth: '900px', margin: '0 auto', color: '#f5f2ee' }}>
       <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
         Thriver Tool
       </div>

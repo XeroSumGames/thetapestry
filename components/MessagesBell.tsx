@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { wrapDbChange } from '../lib/sentry-realtime'
@@ -292,7 +292,7 @@ export default function MessagesBell() {
                       // Bold the entire headline when unread per Xero's
                       // direction. Read items render at normal weight.
                       fontWeight: it.is_unread ? 700 : 400,
-                      color: it.is_unread ? '#f5f2ee' : '#d4cfc9',
+                      color: it.is_unread ? '#f5f2ee' : '#f5f2ee',
                       lineHeight: 1.4,
                       wordBreak: 'break-word',
                       overflowWrap: 'anywhere',

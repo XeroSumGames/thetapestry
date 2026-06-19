@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -1637,7 +1637,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
             <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Leader</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: leaderKind === 'npc' ? '6px' : 0 }}>
               {(['self', 'npc', 'none'] as const).map(kind => (
-                <label key={kind} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9', cursor: 'pointer' }}>
+                <label key={kind} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee', cursor: 'pointer' }}>
                   <input type="radio" name="leaderKind" value={kind} checked={leaderKind === kind} onChange={() => setLeaderKind(kind)} style={{ accentColor: '#c0392b' }} />
                   {kind === 'self' ? "I'll lead it" : kind === 'npc' ? 'An NPC will lead it' : 'No leader yet'}
                 </label>
@@ -2199,7 +2199,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               {eventSubmitting ? 'Posting…' : 'Post to feed'}
                             </button>
                             <button onClick={closeEventComposer} disabled={eventSubmitting}
-                              style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: eventSubmitting ? 'wait' : 'pointer' }}>
+                              style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: eventSubmitting ? 'wait' : 'pointer' }}>
                               Cancel
                             </button>
                           </div>
@@ -2541,7 +2541,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           )}
                           {isCommunity && (
                           <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
-                            style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                            style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                           </select>
                           )}
@@ -2658,7 +2658,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     <div style={{ ...LABEL_STYLE_LG, marginBottom: '10px', fontWeight: 600 }}>Add Member</div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                       <select value={addKind} onChange={e => { setAddKind(e.target.value as 'npc' | 'pc'); setAddSubjectId('') }}
-                        style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                        style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         <option value="npc">NPC</option>
                         <option value="pc">PC</option>
                       </select>
@@ -2670,11 +2670,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                       <select value={addRole} onChange={e => setAddRole(e.target.value as Role)}
-                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                       </select>
                       <select value={addType} onChange={e => setAddType(e.target.value as RecruitmentType)}
-                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         {(Object.keys(RECRUITMENT_LABEL) as RecruitmentType[]).map(rt => <option key={rt} value={rt}>{RECRUITMENT_LABEL[rt]}</option>)}
                       </select>
                     </div>

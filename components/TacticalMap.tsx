@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { memo, useEffect, useRef, useState } from 'react'
 import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'
@@ -3822,7 +3822,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setShowSetup(false)}
-                  style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                 <button onClick={() => createScene()}
                   style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
               </div>
@@ -3862,7 +3862,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           {!isGM && mapLocked && (
             <button type="button" onClick={() => centerViewport()}
               title="Center the map on your token"
-              style={{ padding: '3px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '3px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Center
             </button>
           )}
@@ -3885,7 +3885,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                 window.setTimeout(() => setTacticalShareFlash(false), 1500)
               }}
               title="Push your current map view (scroll + zoom) to every player"
-              style={{ padding: '3px 8px', background: tacticalShareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${tacticalShareFlash ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: tacticalShareFlash ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '3px 8px', background: tacticalShareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${tacticalShareFlash ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: tacticalShareFlash ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
               {tacticalShareFlash ? '✓ Shared' : '👁 Share View'}
             </button>
           )}
@@ -4405,7 +4405,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowSetup(false)}
-                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={() => createScene()}
                 style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
             </div>

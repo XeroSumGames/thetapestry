@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useMemo, useState } from 'react'
 import { WizardState } from '../../lib/xse-engine'
 import { ALL_WEAPONS, TRAIT_DESCRIPTIONS, getWeaponByName, type Weapon, type WeaponCategory } from '../../lib/weapons'
@@ -290,10 +290,10 @@ function WeaponSection({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '1rem' }}>
           <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>How many {current}{current.endsWith('s') ? '' : 's'} carried?</span>
           <button type="button" onClick={() => setQty(qty - 1)}
-            style={{ padding: '4px 11px', fontSize: '14px', border: '1px solid #3a3a3a', borderRadius: '3px', background: '#1a1a1a', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>−</button>
+            style={{ padding: '4px 11px', fontSize: '14px', border: '1px solid #3a3a3a', borderRadius: '3px', background: '#1a1a1a', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>−</button>
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{qty}</span>
           <button type="button" onClick={() => setQty(qty + 1)}
-            style={{ padding: '4px 11px', fontSize: '14px', border: '1px solid #3a3a3a', borderRadius: '3px', background: '#1a1a1a', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+</button>
+            style={{ padding: '4px 11px', fontSize: '14px', border: '1px solid #3a3a3a', borderRadius: '3px', background: '#1a1a1a', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+</button>
         </div>
       )}
     </div>
@@ -501,7 +501,7 @@ export default function StepEight({ state, onChange }: Props) {
                 {item.rarity}
               </div>
               <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} - {item.notes}</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '2px' }}>ENC {item.enc} - {item.notes}</div>
             </div>
           )
         })}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
@@ -230,7 +230,7 @@ export default function RandomCharacterPage() {
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>
           Random Character
         </div>
-        <div style={{ fontSize: '14px', color: '#d4cfc9', letterSpacing: '.06em' }}>{status}</div>
+        <div style={{ fontSize: '14px', color: '#f5f2ee', letterSpacing: '.06em' }}>{status}</div>
         <div style={{ marginTop: '24px', display: 'flex', gap: '6px', justifyContent: 'center' }}>
           {[0,1,2].map(i => (
             <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#c0392b', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />

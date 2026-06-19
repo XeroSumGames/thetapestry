@@ -442,7 +442,7 @@ export default function CampaignPage() {
             {inviteLink}
           </div>
           <button onClick={copyInviteLink}
-            style={{ flexShrink: 0, padding: '8px 16px', background: copied ? '#1a2e10' : '#242424', border: `1px solid ${copied ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ flexShrink: 0, padding: '8px 16px', background: copied ? '#1a2e10' : '#242424', border: `1px solid ${copied ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
@@ -454,7 +454,7 @@ export default function CampaignPage() {
       {/* My Survivor - player only (Thriver godmode also hides this) */}
       {!gmLike && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
             My Survivor
           </div>
           {assignedCharName && (
@@ -529,7 +529,7 @@ export default function CampaignPage() {
 
       {/* Members list - both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '13px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
+        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>
           Members ({members.length})
         </div>
         {members.length === 0 ? (
@@ -544,7 +544,7 @@ export default function CampaignPage() {
                     <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{(m.profiles as any)?.username ?? 'Unknown'}</span>
                     {isThisGM && <span style={{ marginLeft: '6px', fontSize: '13px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em' }}>GM</span>}
                     {(m.characters as any)?.name && (
-                      <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
+                      <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
                     )}
                     {!(m.characters as any)?.name && !isThisGM && (
                       <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>No character assigned</div>
@@ -601,7 +601,7 @@ export default function CampaignPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
               {MAP_STYLES.map(([val, label]) => (
                 <button key={val} type="button" onClick={() => setEditMapStyle(val)}
-                  style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editMapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: editMapStyle === val ? '#2a1210' : '#242424', color: editMapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
+                  style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editMapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: editMapStyle === val ? '#2a1210' : '#242424', color: editMapStyle === val ? '#f5a89a' : '#f5f2ee' }}>
                   {label}
                 </button>
               ))}
@@ -631,7 +631,7 @@ export default function CampaignPage() {
                       setEditLocationQuery(s.display_name.split(',').slice(0, 2).join(','))
                       setEditLocationSuggestions([])
                     }}
-                      style={{ padding: '8px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                      style={{ padding: '8px 10px', fontSize: '13px', color: '#f5f2ee', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       {s.display_name.length > 80 ? s.display_name.slice(0, 80) + '...' : s.display_name}
@@ -696,7 +696,7 @@ export default function CampaignPage() {
 
       {/* Back button */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        <Link href="/stories" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href="/stories" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </Link>
       </div>

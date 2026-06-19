@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
@@ -154,7 +154,7 @@ export default function MigrateCharacterPhotosPage() {
 
       <div style={panel}>
         <div style={{ ...subLabel, marginBottom: '6px' }}>What this does</div>
-        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '12px' }}>
+        <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '12px' }}>
           Moves character portraits from inline base64 (in <code>characters.data.photoDataUrl</code>) to the
           <code> character-portraits</code> Storage bucket, replacing the value with the public URL. Reduces
           per-character row weight by 20-40 KB. Idempotent - re-runs are no-ops.

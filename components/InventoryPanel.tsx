@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
 import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
@@ -237,7 +237,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
               style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
             <select value={ownSort} onChange={e => setOwnSort(e.target.value as InventorySortKey)}
               title="Sort displayed items"
-              style={{ width: '120px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer' }}>
+              style={{ width: '120px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer' }}>
               <option value="manual">Manual</option>
               <option value="name">Name (A→Z)</option>
               <option value="enc-desc">Enc (high→low)</option>
@@ -294,7 +294,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                     {item.notes && <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.3 }}>{item.notes}</div>}
                   </div>
                   <span style={{ fontSize: '13px', color: rc.color, background: rc.bg, border: `1px solid ${rc.border}`, borderRadius: '2px', padding: '0 4px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>{item.rarity}</span>
-                  <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', flexShrink: 0, minWidth: '24px', textAlign: 'center' }}>{item.enc > 0 ? `${item.enc}` : '-'}</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', flexShrink: 0, minWidth: '24px', textAlign: 'center' }}>{item.enc > 0 ? `${item.enc}` : '-'}</span>
                   {canEdit && isArmor && (
                     <button
                       onClick={() => onUpdate(inventory.map((i, j) => j === idx ? { ...i, worn: !i.worn } : i))}
@@ -324,12 +324,12 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                 <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Qty:</span>
                 <button onClick={() => setGiveQty(q => Math.max(1, q - 1))}
-                  style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1 }}>−</button>
+                  style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1 }}>−</button>
                 <input type="number" min={1} max={givingItem.qty} value={giveQty}
                   onChange={e => setGiveQty(Math.max(1, Math.min(givingItem.qty, parseInt(e.target.value, 10) || 1)))}
                   style={{ width: '50px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 <button onClick={() => setGiveQty(q => Math.min(givingItem.qty, q + 1))}
-                  style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1 }}>+</button>
+                  style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1 }}>+</button>
                 <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>of {givingItem.qty}</span>
                 <button onClick={() => setGiveQty(givingItem.qty)}
                   style={{ marginLeft: 'auto', padding: '2px 6px', background: 'transparent', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>All</button>
@@ -384,11 +384,11 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         {canEdit && (
           <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
             <button onClick={() => { setShowCatalog(!showCatalog); setShowCustom(false) }}
-              style={{ flex: 1, padding: '6px', background: showCatalog ? '#1a2e10' : '#242424', border: `1px solid ${showCatalog ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showCatalog ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer' }}>
+              style={{ flex: 1, padding: '6px', background: showCatalog ? '#1a2e10' : '#242424', border: `1px solid ${showCatalog ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showCatalog ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer' }}>
               + From Catalog
             </button>
             <button onClick={() => { setShowCustom(!showCustom); setShowCatalog(false) }}
-              style={{ flex: 1, padding: '6px', background: showCustom ? '#2a2010' : '#242424', border: `1px solid ${showCustom ? '#5a4a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showCustom ? '#EF9F27' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer' }}>
+              style={{ flex: 1, padding: '6px', background: showCustom ? '#2a2010' : '#242424', border: `1px solid ${showCustom ? '#5a4a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showCustom ? '#EF9F27' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer' }}>
               + Custom Item
             </button>
           </div>
@@ -449,7 +449,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         )}
 
         <button onClick={onClose}
-          style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Close
         </button>
       </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -63,7 +63,7 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
       <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '700px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b' }}>Portrait Bank</div>
-          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #3a3a3a', color: '#d4cfc9', padding: '4px 10px', fontSize: '13px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px' }}>Close</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #3a3a3a', color: '#f5f2ee', padding: '4px 10px', fontSize: '13px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px' }}>Close</button>
         </div>
 
         {/* Filter tabs */}
@@ -77,7 +77,7 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
                   background: active ? '#2a1210' : '#242424',
                   border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`,
                   borderRadius: '3px',
-                  color: active ? '#f5a89a' : '#d4cfc9',
+                  color: active ? '#f5a89a' : '#f5f2ee',
                   fontSize: '13px', fontFamily: '"Carlito", sans-serif',
                   letterSpacing: '.08em', textTransform: 'uppercase',
                   cursor: 'pointer',

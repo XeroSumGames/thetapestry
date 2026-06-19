@@ -1,0 +1,1 @@
+SELECT ts.id, ts.name, ts.campaign_id, c.name as campaign_name, jsonb_array_length(ts.walls::jsonb) as wall_count FROM tactical_scenes ts JOIN campaigns c ON c.id = ts.campaign_id WHERE jsonb_array_length(ts.walls::jsonb) > 0 ORDER BY ts.created_at DESC LIMIT 10;

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { loginPathForCurrent } from '../../../lib/login-redirect'
@@ -560,7 +560,7 @@ export default function LfgPage() {
   }
   const shareItemStyle: React.CSSProperties = {
     display: 'block', width: '100%', padding: '7px 12px', background: 'none',
-    border: 'none', color: '#d4cfc9', fontSize: '13px',
+    border: 'none', color: '#f5f2ee', fontSize: '13px',
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left',
   }
@@ -611,7 +611,7 @@ export default function LfgPage() {
             <div style={{ display: 'flex', gap: '6px' }}>
               {(['gm_seeking_players', 'player_seeking_game'] as Kind[]).map(k => (
                 <button key={k} onClick={() => setDraft(d => ({ ...d, kind: k }))}
-                  style={{ flex: 1, padding: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.kind === k ? KIND_ACCENT[k] : '#3a3a3a'}`, background: draft.kind === k ? '#242424' : '#1a1a1a', color: draft.kind === k ? KIND_ACCENT[k] : '#d4cfc9' }}>
+                  style={{ flex: 1, padding: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.kind === k ? KIND_ACCENT[k] : '#3a3a3a'}`, background: draft.kind === k ? '#242424' : '#1a1a1a', color: draft.kind === k ? KIND_ACCENT[k] : '#f5f2ee' }}>
                   {KIND_LABEL[k]}
                 </button>
               ))}
@@ -635,7 +635,7 @@ export default function LfgPage() {
                 const accent = s === 'setting' ? '#7ab3d4' : '#9aa5b0'
                 return (
                   <button key={s} onClick={() => setDraft(d => ({ ...d, scope: s }))}
-                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9' }}>
+                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#f5f2ee' }}>
                     {s === 'setting' ? '🏷 Setting' : '🌐 Global'}
                   </button>
                 )
@@ -665,7 +665,7 @@ export default function LfgPage() {
               {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Post')}
             </button>
             <button onClick={cancelCompose}
-              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -699,7 +699,7 @@ export default function LfgPage() {
           const active = settingFilter === opt.value
           return (
             <button key={key} onClick={() => setSettingFilter(opt.value)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '999px', border: `1px solid ${active ? opt.accent : '#3a3a3a'}`, background: active ? `${opt.accent}22` : '#1a1a1a', color: active ? opt.accent : '#d4cfc9' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '999px', border: `1px solid ${active ? opt.accent : '#3a3a3a'}`, background: active ? `${opt.accent}22` : '#1a1a1a', color: active ? opt.accent : '#f5f2ee' }}>
               <span>{opt.label}</span>
               <span style={{ background: active ? `${opt.accent}33` : '#242424', color: active ? opt.accent : '#9aa5b0', padding: '1px 7px', borderRadius: '999px', fontSize: '13px', fontWeight: 700 }}>{count}</span>
             </button>
@@ -715,7 +715,7 @@ export default function LfgPage() {
           ['player_seeking_game', 'Players', KIND_ACCENT.player_seeking_game],
         ] as [Filter, string, string][]).map(([val, label, accent]) => (
           <button key={val} onClick={() => setFilter(val)}
-            style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${filter === val ? accent : '#3a3a3a'}`, background: filter === val ? '#242424' : '#1a1a1a', color: filter === val ? accent : '#d4cfc9' }}>
+            style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${filter === val ? accent : '#3a3a3a'}`, background: filter === val ? '#242424' : '#1a1a1a', color: filter === val ? accent : '#f5f2ee' }}>
             {label}
           </button>
         ))}
@@ -771,7 +771,7 @@ export default function LfgPage() {
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   {p.title}
                 </div>
-                <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: '10px' }}>
+                <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: '10px' }}>
                   {renderRichText(p.body, { linkify: true })}
                 </div>
                 {(p.setting || p.schedule) && (
@@ -821,7 +821,7 @@ export default function LfgPage() {
                   {(isMine || isThriver) && (
                     <>
                       <button onClick={() => startEdit(p)}
-                        style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Edit
                       </button>
                       <button onClick={() => handleDelete(p.id)}
@@ -835,7 +835,7 @@ export default function LfgPage() {
                       via the document-level mousedown handler above. */}
                   <div data-share-root style={{ position: 'relative' }}>
                     <button onClick={() => setShareOpenId(prev => prev === p.id ? null : p.id)}
-                      style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       🔗 Share
                     </button>
                     {shareOpenId === p.id && (
@@ -864,7 +864,7 @@ export default function LfgPage() {
                     const open = openRepliesFor === p.id
                     return (
                       <button onClick={() => setOpenRepliesFor(open ? null : p.id)}
-                        style={{ padding: '6px 14px', background: open ? '#1a3a5c' : '#242424', border: `1px solid ${open ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: open ? '#7ab3d4' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '6px 14px', background: open ? '#1a3a5c' : '#242424', border: `1px solid ${open ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: open ? '#7ab3d4' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         💬 {liveCount} {liveCount === 1 ? 'reply' : 'replies'} {open ? '▴' : '▾'}
                       </button>
                     )
@@ -930,7 +930,7 @@ export default function LfgPage() {
                               {myCampaigns.length > 0 && (
                                 <div data-invite-root style={{ position: 'relative' }}>
                                   <button onClick={() => setInvitingFor(prev => prev === inviteKey ? null : inviteKey)} disabled={justSent}
-                                    style={{ padding: '3px 10px', background: justSent ? '#1a2e10' : '#242424', border: `1px solid ${justSent ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: justSent ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: justSent ? 'default' : 'pointer' }}>
+                                    style={{ padding: '3px 10px', background: justSent ? '#1a2e10' : '#242424', border: `1px solid ${justSent ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: justSent ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: justSent ? 'default' : 'pointer' }}>
                                     {justSent ? '✓ Invite Sent' : '🎟 Invite'}
                                   </button>
                                   {pickerOpen && (

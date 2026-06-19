@@ -200,7 +200,7 @@ export default function ModuleDetailPage() {
 
   if (notFound) {
     return (
-      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#d4cfc9' }}>
+      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#f5f2ee' }}>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>📦</div>
         <h1 style={{ margin: '0 0 8px', fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>Module not found</h1>
         <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#cce0f5' }}>
@@ -228,7 +228,7 @@ export default function ModuleDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 20px', color: '#f5f2ee' }}>
 
       <div style={{ marginBottom: '14px' }}>
         <Link href="/rumors" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
@@ -330,7 +330,7 @@ export default function ModuleDetailPage() {
           <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '8px' }}>
             About this module
           </div>
-          <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif' }}>
             {mod.description}
           </div>
         </div>
@@ -416,7 +416,7 @@ export default function ModuleDetailPage() {
                       </span>
                     </div>
                     {r.body && (
-                      <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap' }}>
+                      <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap' }}>
                         {r.body}
                       </div>
                     )}
@@ -447,7 +447,7 @@ export default function ModuleDetailPage() {
                 borderRadius: '3px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: i === 0 ? '#c4a7f0' : '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                  <span style={{ fontSize: '15px', fontWeight: 700, color: i === 0 ? '#c4a7f0' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     v{v.version}{i === 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7fc458', letterSpacing: '.06em', textTransform: 'uppercase' }}>← latest</span>}
                   </span>
                   <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
@@ -455,7 +455,7 @@ export default function ModuleDetailPage() {
                   </span>
                 </div>
                 {v.changelog && (
-                  <div style={{ marginTop: '6px', fontSize: '13px', color: '#d4cfc9', whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif' }}>
+                  <div style={{ marginTop: '6px', fontSize: '13px', color: '#f5f2ee', whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif' }}>
                     {v.changelog}
                   </div>
                 )}

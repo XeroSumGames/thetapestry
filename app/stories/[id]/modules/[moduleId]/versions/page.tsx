@@ -109,7 +109,7 @@ export default function ModuleVersionsPage() {
         </div>
         <div style={{ flex: 1 }} />
         <button onClick={() => router.back()}
-          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Back
         </button>
       </div>
@@ -218,7 +218,7 @@ export default function ModuleVersionsPage() {
                 )}
               </div>
               {v.changelog && (
-                <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '6px', whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.5, marginBottom: '6px', whiteSpace: 'pre-wrap' }}>
                   {v.changelog}
                 </div>
               )}

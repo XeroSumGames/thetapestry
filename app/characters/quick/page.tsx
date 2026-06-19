@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
@@ -178,7 +178,7 @@ export default function QuickCharacterPage() {
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Quick Character Creation
         </div>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
           20 CDP � No Life-Stage Structure
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function QuickCharacterPage() {
       {/* Progress */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '1.25rem' }}>
         {QUICK_STEPS.map((s, i) => (
-          <button key={i} onClick={() => { if (requireAuth()) return; setStep(i); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0, cursor: 'pointer', padding: 0 }}>
+          <button key={i} onClick={() => { if (requireAuth()) return; setStep(i); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#f5f2ee', flexShrink: 0, cursor: 'pointer', padding: 0 }}>
             {i}
           </button>
         ))}
@@ -209,7 +209,7 @@ export default function QuickCharacterPage() {
 
         {step === 1 && (
           <div>
-            <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.7, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.7, marginBottom: '1rem' }}>
               Spend <strong style={{ color: '#f5f2ee' }}>5 CDP</strong> on attributes and <strong style={{ color: '#f5f2ee' }}>15 CDP</strong> on skills freely. No life-stage restrictions. Max attribute: Exceptional (+3). Max skill: Professional (+3).
             </p>
 
@@ -242,13 +242,13 @@ export default function QuickCharacterPage() {
                 const canDec = val > 0
                 return (
                   <div key={k} style={{ background: val > 0 ? '#2a1210' : '#242424', border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', padding: '8px 4px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                       <button onClick={() => changeAttr(k, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
                       <div>
                         <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee' }}>{val >= 0 ? `+${val}` : val}</div>
-                        <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                        <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#f5f2ee', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
                       </div>
                       <button onClick={() => changeAttr(k, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
                     </div>
@@ -287,7 +287,7 @@ export default function QuickCharacterPage() {
                       <div style={{ fontSize: '11.5px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee' }}>
                         {sk.name}{sk.vocational ? '*' : ''}{isVoc ? ' ?' : ''}
                       </div>
-                      <div style={{ fontSize: '9.5px', color: '#d4cfc9' }}>{sk.attribute} � {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}</div>
+                      <div style={{ fontSize: '9.5px', color: '#f5f2ee' }}>{sk.attribute} � {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                       <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
@@ -313,7 +313,7 @@ export default function QuickCharacterPage() {
         <div style={{ textAlign: 'center' }}>
           {saveError && <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
           {saved && <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
-          <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 5</div>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 5</div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 5 && (

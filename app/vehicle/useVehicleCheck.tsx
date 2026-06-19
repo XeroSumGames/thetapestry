@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Vehicle skill-check state machine, extracted from app/vehicle/page.tsx
 // (2026-05-24) so the LOC-ratcheted popout can stay under its ceiling and
 // the combat-adjacent roll path lives in one testable place. Owns the
@@ -818,7 +818,7 @@ export function useVehicleCheck({
                       : `Tinkerer (DEX ${signed(member?.dex ?? 0)} · Skill ${signed(member?.tinkererLevel ?? 0)})`
                     return (
                       <button key={s} onClick={() => switchBrewSkill(s)}
-                        style={{ flex: 1, padding: '6px', background: selected ? '#1a2e10' : '#1a1a1a', border: `1px solid ${selected ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selected ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ flex: 1, padding: '6px', background: selected ? '#1a2e10' : '#1a1a1a', border: `1px solid ${selected ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selected ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         {label}
                       </button>
                     )
@@ -832,7 +832,7 @@ export function useVehicleCheck({
         result={sharedResult}
         renderOutcome={(r) => (
           <>
-            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
               [{r.die1}+{r.die2}]
               {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
               {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
@@ -852,7 +852,7 @@ export function useVehicleCheck({
                 applyInstallOutcome/applyGatherOutcome. Bordered by the
                 outcome color so success/cost reads at a glance. */}
             {(check.kind === 'install' || check.kind === 'gather') && check.result?.message && (
-              <div style={{ padding: '8px 10px', background: '#161616', border: `1px solid ${feedOutcomeColor(r.outcome)}`, borderRadius: '3px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', textAlign: 'center' }}>
+              <div style={{ padding: '8px 10px', background: '#161616', border: `1px solid ${feedOutcomeColor(r.outcome)}`, borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', textAlign: 'center' }}>
                 {check.result.message}
               </div>
             )}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
@@ -524,7 +524,7 @@ export default function WarStoriesPage() {
       {tableMissing && (
         <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '12px 16px', marginBottom: '1.25rem', color: '#EF9F27', fontSize: '14px', lineHeight: 1.5 }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>Feature not yet enabled</div>
-          <div style={{ color: '#d4cfc9' }}>
+          <div style={{ color: '#f5f2ee' }}>
             War Stories isn&apos;t live on this database yet - a Thriver needs to apply <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories.sql</code> (and <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories-attachments.sql</code> for image uploads) in Supabase. Once that&apos;s done, refresh and post away.
           </div>
         </div>
@@ -576,7 +576,7 @@ export default function WarStoriesPage() {
                   <button key={s} onClick={() => !disabled && setDraft(d => ({ ...d, scope: s }))}
                     disabled={disabled}
                     title={disabled ? 'You aren’t a member of any campaign yet.' : undefined}
-                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9', opacity: disabled ? 0.4 : 1 }}>
+                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#f5f2ee', opacity: disabled ? 0.4 : 1 }}>
                     {label}
                   </button>
                 )
@@ -648,7 +648,7 @@ export default function WarStoriesPage() {
               {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Post Story')}
             </button>
             <button onClick={() => { setComposing(false); setEditingId(null) }}
-              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -688,7 +688,7 @@ export default function WarStoriesPage() {
             const active = settingFilter === opt.value
             return (
               <button key={key} onClick={() => setSettingFilter(opt.value)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '999px', border: `1px solid ${active ? opt.accent : '#3a3a3a'}`, background: active ? `${opt.accent}22` : '#1a1a1a', color: active ? opt.accent : '#d4cfc9' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '999px', border: `1px solid ${active ? opt.accent : '#3a3a3a'}`, background: active ? `${opt.accent}22` : '#1a1a1a', color: active ? opt.accent : '#f5f2ee' }}>
                 <span>{opt.label}</span>
                 <span style={{ background: active ? `${opt.accent}33` : '#242424', color: active ? opt.accent : '#9aa5b0', padding: '1px 7px', borderRadius: '999px', fontSize: '13px', fontWeight: 700 }}>{count}</span>
               </button>
@@ -754,7 +754,7 @@ export default function WarStoriesPage() {
                     </>
                   )}
                 </div>
-                <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: (s.attachments.length > 0 || isMine) ? '12px' : 0 }}>
+                <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: (s.attachments.length > 0 || isMine) ? '12px' : 0 }}>
                   {renderRichText(s.body, { linkify: true })}
                 </div>
                 {/* Attachments. Images render as clickable thumbnails
@@ -800,7 +800,7 @@ export default function WarStoriesPage() {
                     const open = openRepliesFor === s.id
                     return (
                       <button onClick={() => setOpenRepliesFor(open ? null : s.id)}
-                        style={{ padding: '5px 12px', background: open ? '#1a3a5c' : '#242424', border: `1px solid ${open ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: open ? '#7ab3d4' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '5px 12px', background: open ? '#1a3a5c' : '#242424', border: `1px solid ${open ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: open ? '#7ab3d4' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         💬 {liveCount} {liveCount === 1 ? 'reply' : 'replies'} {open ? '▴' : '▾'}
                       </button>
                     )
@@ -808,7 +808,7 @@ export default function WarStoriesPage() {
                   {isMine && (
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={() => startEdit(s)}
-                        style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Edit
                       </button>
                       <button onClick={() => handleDelete(s.id)}

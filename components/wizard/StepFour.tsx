@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp, skillStepDown } from '../../lib/xse-engine'
 import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, PROFESSIONS, AttributeName, SkillValue } from '../../lib/xse-schema'
@@ -104,20 +104,20 @@ export default function StepFour({ state, onChange }: Props) {
         const gained = Object.entries(d.skillDeltas ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([n]) => n)
         return (
           <div key={idx} style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px', marginBottom: '8px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Carlito, sans-serif' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Carlito, sans-serif' }}>
               Step {num}: {title}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '2px 0', borderBottom: '1px solid #2e2e2e' }}>
-              <span style={{ color: '#d4cfc9' }}>Attribute</span>
+              <span style={{ color: '#f5f2ee' }}>Attribute</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee' }}>{attrStr}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '2px 0' }}>
-              <span style={{ color: '#d4cfc9' }}>Skills</span>
+              <span style={{ color: '#f5f2ee' }}>Skills</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee', maxWidth: '65%', textAlign: 'right', wordBreak: 'break-word' }}>
                 {gained.length ? gained.join(', ') : 'none'}
               </span>
             </div>
-            {d.note && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
+            {d.note && <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
           </div>
         )
       })}
@@ -142,7 +142,7 @@ export default function StepFour({ state, onChange }: Props) {
         <HelpTooltip title="Vocational skills (*)" text={VOCATIONAL_DESCRIPTION} icon="*" iconStyle={{ color: '#EF9F27', borderColor: '#EF9F27' }} />
       </div>
       {profSkills.length > 0 && (
-        <p style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '6px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '6px', lineHeight: 1.6 }}>
           Profession skills highlighted: {profSkills.join(', ')}
         </p>
       )}
@@ -190,7 +190,7 @@ export default function StepFour({ state, onChange }: Props) {
                     iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }}
                   />
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee' }}>
                   {sk.attribute} - {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
                 </div>
               </div>

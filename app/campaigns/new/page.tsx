@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
@@ -226,7 +226,7 @@ export default function NewCampaignPage() {
           <div style={{ display: 'flex', gap: '6px' }}>
             {CAMPAIGN_SETTING_OPTIONS.map(s => (
               <button key={s.value} onClick={() => { setSetting(s.value); setPickedModuleVersionId(''); setPickedModuleId('') }}
-                style={{ flex: 1, padding: '8px', border: `1px solid ${!pickedModuleVersionId && setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: !pickedModuleVersionId && setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: !pickedModuleVersionId && setting === s.value ? '#f5a89a' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                style={{ flex: 1, padding: '8px', border: `1px solid ${!pickedModuleVersionId && setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: !pickedModuleVersionId && setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: !pickedModuleVersionId && setting === s.value ? '#f5a89a' : '#f5f2ee', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 {s.label}
               </button>
             ))}
@@ -252,7 +252,7 @@ export default function NewCampaignPage() {
                       setSetting('')
                     }
                   }}
-                    style={{ padding: '8px 10px', border: `1px solid ${picked ? '#8b5cf6' : '#3a3a3a'}`, background: picked ? '#2a1a3e' : '#242424', borderRadius: '3px', color: picked ? '#c4a7f0' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'left' }}>
+                    style={{ padding: '8px 10px', border: `1px solid ${picked ? '#8b5cf6' : '#3a3a3a'}`, background: picked ? '#2a1a3e' : '#242424', borderRadius: '3px', color: picked ? '#c4a7f0' : '#f5f2ee', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'left' }}>
                     <div style={{ fontWeight: 600, textTransform: 'uppercase' }}>
                       📦 {m.name}
                       {m.latest_version && <span style={{ opacity: 0.7, marginLeft: '8px', fontSize: '13px' }}>v{m.latest_version.version}</span>}
@@ -290,7 +290,7 @@ export default function NewCampaignPage() {
                         setLocationQuery(s.display_name.split(',').slice(0, 2).join(','))
                         setLocationSuggestions([])
                       }}
-                        style={{ padding: '8px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                        style={{ padding: '8px 10px', fontSize: '13px', color: '#f5f2ee', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         {s.display_name.length > 80 ? s.display_name.slice(0, 80) + '...' : s.display_name}
@@ -318,7 +318,7 @@ export default function NewCampaignPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
             {[['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['positron', 'Positron'], ['dark', 'Dark']].map(([val, label]) => (
               <button key={val} type="button" onClick={() => setMapStyle(val)}
-                style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: mapStyle === val ? '#2a1210' : '#242424', color: mapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
+                style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: mapStyle === val ? '#2a1210' : '#242424', color: mapStyle === val ? '#f5a89a' : '#f5f2ee' }}>
                 {label}
               </button>
             ))}
@@ -337,7 +337,7 @@ export default function NewCampaignPage() {
             {saving ? 'Creating...' : 'Create Campaign'}
           </button>
           <button onClick={() => router.back()}
-            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
         </div>
@@ -349,6 +349,6 @@ export default function NewCampaignPage() {
 
 const lbl: React.CSSProperties = {
   display: 'block', fontSize: '13px', fontWeight: 600,
-  color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
+  color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em',
   marginBottom: '6px', fontFamily: 'Carlito, sans-serif',
 }

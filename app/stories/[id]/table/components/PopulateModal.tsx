@@ -29,10 +29,10 @@ function Stepper({ value, onChange, min = 0, disabled }: { value: number; onChan
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <button onClick={() => onChange(Math.max(min, value - 1))} disabled={disabled || value <= min}
-        style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: disabled || value <= min ? 'not-allowed' : 'pointer', opacity: disabled || value <= min ? 0.4 : 1, flexShrink: 0 }}>−</button>
+        style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: disabled || value <= min ? 'not-allowed' : 'pointer', opacity: disabled || value <= min ? 0.4 : 1, flexShrink: 0 }}>−</button>
       <span style={{ width: '24px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{value}</span>
       <button onClick={() => onChange(value + 1)} disabled={disabled}
-        style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1, flexShrink: 0 }}>+</button>
+        style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1, flexShrink: 0 }}>+</button>
     </div>
   )
 }
@@ -73,13 +73,13 @@ export function PopulateModal({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '60px' }}>Preset</span>
           <button onClick={() => setCount(Math.max(1, count - 1))} disabled={busy}
-            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: busy ? 'not-allowed' : 'pointer' }}>−</button>
+            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: busy ? 'not-allowed' : 'pointer' }}>−</button>
           <input type="number" min={1} max={50} value={count}
             onChange={e => setCount(Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1)))}
             disabled={busy}
             style={{ width: '60px', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', fontWeight: 700 }} />
           <button onClick={() => setCount(Math.min(50, count + 1))} disabled={busy}
-            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: busy ? 'not-allowed' : 'pointer' }}>+</button>
+            style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: busy ? 'not-allowed' : 'pointer' }}>+</button>
           <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginLeft: 'auto' }}>max 50</span>
         </div>
 
@@ -99,7 +99,7 @@ export function PopulateModal({
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onClose} disabled={busy}
-            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: busy ? 'not-allowed' : 'pointer' }}>
+            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: busy ? 'not-allowed' : 'pointer' }}>
             Cancel
           </button>
           <button onClick={async () => {

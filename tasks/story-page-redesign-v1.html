@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Story Page Redesign v1</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; font-family: 'Segoe UI', Carlito, sans-serif; color: #f5f2ee; min-height: 100vh; padding: 2rem 1rem; }
+
+  /* ── View toggle ── */
+  .view-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 2rem; }
+  .view-toggle button { padding: 7px 20px; background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 3px; color: #7a7068; font-size: 13px; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+  .view-toggle button.active { background: #242424; border-color: #c0392b; color: #f5f2ee; }
+
+  /* ── Page shell ── */
+  .page { max-width: 800px; margin: 0 auto; background: #111; border-radius: 8px; overflow: hidden; border: 1px solid #1a1a1a; }
+
+  /* ── Topbar ── */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid #1a1a1a; }
+  .back-link { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #5a5550; text-transform: uppercase; letter-spacing: .08em; text-decoration: none; cursor: pointer; }
+  .back-link:hover { color: #d4cfc9; }
+  .breadcrumb { font-size: 12px; color: #3a3a3a; text-transform: uppercase; letter-spacing: .08em; }
+
+  /* ── Hero ── */
+  .hero { padding: 0; border-bottom: 1px solid #1a1a1a; display: grid; grid-template-columns: 240px 1fr; }
+  .hero-cover { position: relative; background: #0d0d0d; min-height: 240px; overflow: hidden; }
+  .hero-cover img { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; }
+  .hero-cover-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,0) 60%, #111 100%); }
+  .hero-cover-source { position: absolute; bottom: 8px; left: 10px; font-size: 11px; color: #d4cfc9; background: rgba(0,0,0,.55); padding: 2px 7px; border-radius: 3px; letter-spacing: .06em; text-transform: uppercase; }
+  .hero-cover-empty { width: 100%; height: 100%; min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #3a3a3a; }
+  .hero-cover-empty .upload-hint { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+  .hero-body { padding: 28px 28px 24px; }
+  .tag-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chip { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; font-weight: 700; }
+  .chip-setting { background: #1a2e10; color: #7fc458; border: 1px solid #2d5a1b; }
+  .chip-role { background: #0f2035; color: #7ab3d4; border: 1px solid #1a3a5c; }
+  .chip-role-gm { background: #2a1808; color: #EF9F27; border: 1px solid #6b4310; }
+  .campaign-title { font-size: 34px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #fff; margin-bottom: 10px; line-height: 1.05; }
+  .campaign-hook { font-size: 15px; color: #8a8278; line-height: 1.65; font-style: italic; margin-bottom: 22px; max-width: 560px; }
+  .hero-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-launch { padding: 13px 40px; background: #c0392b; border: 2px solid #c0392b; border-radius: 4px; color: #fff; font-size: 15px; font-family: inherit; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: background .15s; }
+  .btn-launch:hover { background: #a93226; border-color: #a93226; }
+  .btn-leave { padding: 11px 22px; background: transparent; border: 1px solid #2e2e2e; border-radius: 4px; color: #5a5550; font-size: 13px; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+  .btn-leave:hover { border-color: #5a5550; color: #d4cfc9; }
+  .btn-gm-tools { padding: 11px 22px; background: transparent; border: 1px solid #2e2e2e; border-radius: 4px; color: #EF9F27; font-size: 13px; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+  .btn-gm-tools:hover { border-color: #EF9F27; }
+
+  /* ── Body columns ── */
+  .body { display: grid; grid-template-columns: 1fr 270px; }
+  .col-left { padding: 22px 24px; border-right: 1px solid #1a1a1a; }
+  .col-right { padding: 20px; background: #0d0d0d; }
+  .section-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #4a4642; font-weight: 700; margin-bottom: 12px; }
+
+  /* ── Survivor card ── */
+  .survivor-card { background: #171717; border: 1px solid #252525; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+  .survivor-card-top { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .survivor-desc { flex: 1; min-width: 0; font-size: 13px; color: #8a8278; line-height: 1.4; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+  .survivor-desc:hover { color: #cce0f5; }
+  .avatar { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; overflow: hidden; position: relative; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .avatar-player { background: #2a1210; border: 2px solid #c0392b; color: #f5a89a; }
+  .avatar-gm { background: #2a1210; border: 2px solid #c0392b; color: #f5a89a; }
+  .avatar-member { background: #0f2035; border: 1px solid #1a3a5c; color: #7ab3d4; }
+  .avatar-sm { width: 34px; height: 34px; font-size: 13px; }
+  .survivor-name { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 3px; letter-spacing: .02em; }
+  .survivor-sub { font-size: 13px; color: #7ab3d4; }
+  .change-row { display: flex; gap: 8px; margin-top: 10px; }
+  .char-select { flex: 1; padding: 8px 10px; background: #1e1e1e; border: 1px solid #2e2e2e; border-radius: 3px; color: #f5f2ee; font-size: 13px; font-family: inherit; outline: none; }
+  .char-select:hover { border-color: #3a3a3a; }
+  .btn-assign { padding: 8px 16px; background: #c0392b; border: 1px solid #c0392b; border-radius: 3px; color: #fff; font-size: 13px; font-family: inherit; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+  .btn-assign:hover { background: #a93226; }
+
+  /* ── Create row ── */
+  .create-divider { font-size: 11px; color: #3a3a3a; text-transform: uppercase; letter-spacing: .1em; margin: 16px 0 10px; }
+  .create-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .btn-create { padding: 10px 6px; border-radius: 4px; font-size: 12px; font-family: inherit; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; text-align: center; line-height: 1.4; transition: all .15s; }
+  .btn-create-primary { background: #1a2e10; border: 1px solid #2d5a1b; color: #7fc458; }
+  .btn-create-primary:hover { background: #223d14; }
+  .btn-create-secondary { background: #171717; border: 1px solid #2e2e2e; color: #7a7068; }
+  .btn-create-secondary:hover { border-color: #3a3a3a; color: #d4cfc9; }
+
+  /* ── Pregen picks ── */
+  .pregen-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .pregen-card { background: #171717; border: 1px solid #252525; border-radius: 6px; padding: 12px 6px; cursor: pointer; text-align: center; transition: all .15s; font-family: inherit; }
+  .pregen-card:hover { border-color: #c0392b; background: #1c1413; }
+  .pregen-name { font-size: 13px; font-weight: 600; color: #f5f2ee; }
+  .pregen-role { font-size: 12px; color: #7ab3d4; margin-top: 1px; }
+  .pregen-link { display: inline-block; padding: 8px 16px; background: transparent; border: 1px solid #2e2e2e; border-radius: 3px; color: #7ab3d4; text-decoration: none; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+  .pregen-link:hover { border-color: #1a3a5c; color: #a9d2ec; }
+
+  /* ── Member cards ── */
+  .member-card { background: #171717; border: 1px solid #222; border-radius: 5px; padding: 10px 12px; margin-bottom: 6px; display: flex; gap: 10px; align-items: center; }
+  .member-info { flex: 1; min-width: 0; }
+  .member-name-row { display: flex; align-items: center; gap: 6px; }
+  .member-name { font-size: 14px; font-weight: 600; color: #f5f2ee; }
+  .gm-chip { font-size: 10px; background: #c0392b; color: #fff; padding: 1px 5px; border-radius: 2px; letter-spacing: .06em; text-transform: uppercase; }
+  .member-char { font-size: 12px; color: #5a5550; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .member-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+  .btn-msg { padding: 4px 9px; background: #0f2035; border: 1px solid #1a3a5c; border-radius: 3px; color: #7ab3d4; font-size: 11px; font-family: inherit; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+  .btn-msg:hover { background: #142840; }
+  .btn-remove { padding: 4px 9px; background: transparent; border: 1px solid #3a1a18; border-radius: 3px; color: #7a3028; font-size: 11px; font-family: inherit; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: all .15s; }
+  .btn-remove:hover { border-color: #c0392b; color: #f5a89a; }
+
+  /* ── Invite (in right col) ── */
+  .invite-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid #1a1a1a; }
+  .invite-url { font-size: 12px; color: #3a3a3a; margin-bottom: 8px; word-break: break-all; }
+  .invite-code-row { display: flex; align-items: center; gap: 8px; }
+  .invite-label { font-size: 11px; color: #4a4642; text-transform: uppercase; letter-spacing: .1em; }
+  .invite-code { color: #c0392b; font-weight: 700; letter-spacing: .14em; font-family: 'Courier New', monospace; font-size: 14px; }
+  .btn-copy { margin-left: auto; padding: 5px 10px; background: transparent; border: 1px solid #2e2e2e; border-radius: 3px; color: #5a5550; font-size: 11px; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  .btn-copy:hover { border-color: #5a5550; color: #d4cfc9; }
+
+  /* ── GM Edit form ── */
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #7ab3d4; font-weight: 700; margin-bottom: 6px; }
+  .form-label span { color: #3a3a3a; font-weight: 400; }
+  .form-input { width: 100%; padding: 9px 12px; background: #1e1e1e; border: 1px solid #2e2e2e; border-radius: 3px; color: #f5f2ee; font-size: 14px; font-family: inherit; outline: none; }
+  .form-input:hover, .form-input:focus { border-color: #3a3a3a; }
+  .form-textarea { width: 100%; padding: 9px 12px; background: #1e1e1e; border: 1px solid #2e2e2e; border-radius: 3px; color: #f5f2ee; font-size: 14px; font-family: inherit; min-height: 72px; resize: vertical; outline: none; }
+  .form-textarea:hover, .form-textarea:focus { border-color: #3a3a3a; }
+  .map-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .btn-map-style { padding: 6px 4px; font-size: 12px; font-family: inherit; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; border-radius: 3px; transition: all .1s; }
+  .btn-map-style.inactive { background: #1e1e1e; border: 1px solid #2e2e2e; color: #7a7068; }
+  .btn-map-style.inactive:hover { border-color: #3a3a3a; color: #d4cfc9; }
+  .btn-map-style.active { background: #2a1210; border: 1px solid #c0392b; color: #f5a89a; }
+  .btn-save { padding: 10px 26px; background: #c0392b; border: 1px solid #c0392b; border-radius: 3px; color: #fff; font-size: 14px; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  .btn-save:hover { background: #a93226; }
+
+  /* ── Footer ── */
+  .footer { display: flex; align-items: center; gap: 0; padding: 12px 24px; border-top: 1px solid #151515; background: #0d0d0d; }
+  .footer-date { font-size: 12px; color: #3a3a3a; }
+  .footer-links { margin-left: auto; display: flex; gap: 0; }
+  .footer-link { padding: 6px 16px; font-size: 12px; color: #4a4642; text-transform: uppercase; letter-spacing: .08em; text-decoration: none; cursor: pointer; border-left: 1px solid #1a1a1a; transition: color .15s; }
+  .footer-link:hover { color: #d4cfc9; }
+  .footer-link:first-child { border-left: none; }
+
+  /* ── GM Tools section ── */
+  .gm-tools-section { border-top: 1px solid #1a1a1a; }
+  .gm-tools-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; cursor: pointer; background: #0d0d0d; }
+  .gm-tools-title { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #EF9F27; font-weight: 700; }
+  .gm-tools-toggle { font-size: 12px; color: #4a4642; }
+  .gm-tools-body { padding: 20px 28px 24px; border-top: 1px solid #1a1a1a; display: none; }
+  .gm-tools-body.open { display: block; }
+
+  /* ── Kicked banner ── */
+  .kicked-banner { margin: 0 24px 16px; padding: 12px 16px; background: #2a1210; border: 1px solid #7a1f16; border-radius: 4px; font-size: 13px; color: #f5a89a; line-height: 1.5; }
+  .kicked-banner-title { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #f5a89a; margin-bottom: 4px; }
+
+  /* ── Utils ── */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="view-toggle">
+  <button class="active" onclick="setView('player')">Player view</button>
+  <button onclick="setView('gm')">GM view</button>
+</div>
+
+<div class="page">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <a class="back-link">&#8592; My stories</a>
+    <span class="breadcrumb">Campaign lobby</span>
+  </div>
+
+  <!-- Kicked banner (player only) -->
+  <div class="kicked-banner hidden" id="kicked-banner">
+    <div class="kicked-banner-title">Removed from session</div>
+    You were removed from this session by the GM. Click <strong>Rejoin session</strong> below to return to the game.
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <!-- Cover image: module art OR GM custom upload -->
+    <div class="hero-cover">
+      <img src="https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=480&q=70" alt="Empty cover" id="hero-cover-img" />
+      <div class="hero-cover-overlay"></div>
+      <span class="hero-cover-source" id="hero-cover-source">Module art</span>
+      <!-- GM-view-only upload affordance, overlaid on the image -->
+      <button class="hidden" id="hero-cover-upload" onclick="event.stopPropagation()"
+        style="position:absolute;top:8px;right:8px;padding:5px 10px;background:rgba(0,0,0,.6);border:1px solid #2e2e2e;border-radius:3px;color:#d4cfc9;font-size:11px;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">
+        &#128247; Change image
+      </button>
+    </div>
+    <div class="hero-body">
+      <div class="tag-row">
+        <span class="chip chip-setting" id="setting-chip">Custom setting</span>
+        <span class="chip chip-role" id="role-chip">Player</span>
+      </div>
+      <h1 class="campaign-title">Empty</h1>
+      <p class="campaign-hook">You need an arc welder and you know there's one in the gas station down the road. You thought you were alone but are starting to think you might be wrong...</p>
+      <div class="hero-actions" id="hero-actions-player">
+        <button class="btn-launch">&#9654; Launch</button>
+        <button class="btn-leave">Leave</button>
+      </div>
+      <div class="hero-actions hidden" id="hero-actions-gm">
+        <button class="btn-launch">&#9654; Launch</button>
+        <button class="btn-gm-tools" onclick="toggleGmTools()">GM tools &#8595;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- LEFT: Player view -->
+    <div class="col-left" id="col-left-player">
+      <div class="section-label">My survivor</div>
+      <div class="survivor-card">
+        <div class="survivor-card-top">
+          <!-- Avatar = character portrait if set, else initials fallback -->
+          <div class="avatar avatar-player">
+            <img src="https://i.pravatar.cc/100?img=12" alt="Tony Bushell" />
+          </div>
+          <div style="flex-shrink:0">
+            <div class="survivor-name">Tony Bushell</div>
+            <div class="survivor-sub">Currently assigned</div>
+          </div>
+          <!-- Character summary/description; clamps to 3 lines with ellipsis, click -> character sheet -->
+          <div class="survivor-desc" title="Click to open character sheet">A wiry ex-lineman who knows the back roads better than the highways. Lost his crew at the substation and has been moving solo since, trading repairs for a place by the fire.</div>
+        </div>
+        <div class="change-row">
+          <select class="char-select">
+            <option>Tony Bushell</option>
+            <option>Knox Koss</option>
+            <option>Sable Munroe</option>
+          </select>
+          <button class="btn-assign">Assign</button>
+        </div>
+      </div>
+
+      <div class="create-divider">Create new survivor</div>
+      <div class="create-row">
+        <button class="btn-create btn-create-primary">Backstory<br>generation</button>
+        <button class="btn-create btn-create-secondary">Quick<br>character</button>
+        <button class="btn-create btn-create-secondary">Random<br>character</button>
+      </div>
+
+      <!-- Module-specific pregens (the ones authored for "Empty") -->
+      <div class="create-divider">Pre-generated for this story</div>
+      <div class="pregen-row">
+        <button class="pregen-card">
+          <div class="avatar avatar-member avatar-sm" style="margin:0 auto 6px"><img src="https://i.pravatar.cc/80?img=33" alt="" /></div>
+          <div class="pregen-name">Marla Voss</div>
+          <div class="pregen-role">Scavenger</div>
+        </button>
+        <button class="pregen-card">
+          <div class="avatar avatar-member avatar-sm" style="margin:0 auto 6px"><img src="https://i.pravatar.cc/80?img=51" alt="" /></div>
+          <div class="pregen-name">Dell Ramos</div>
+          <div class="pregen-role">Medic</div>
+        </button>
+        <button class="pregen-card">
+          <div class="avatar avatar-member avatar-sm" style="margin:0 auto 6px;background:#1a2e10;border-color:#2d5a1b;color:#7fc458">JT</div>
+          <div class="pregen-name">Jin Tao</div>
+          <div class="pregen-role">Tinker</div>
+        </button>
+      </div>
+
+      <div style="margin-top:12px">
+        <a href="/pregen" class="pregen-link">
+          Or pick from a different pre-generated character &#8594;
+        </a>
+      </div>
+    </div>
+
+    <!-- LEFT: GM view -->
+    <div class="col-left hidden" id="col-left-gm">
+      <div class="section-label">Story settings</div>
+
+      <div class="form-group">
+        <label class="form-label">Story name</label>
+        <input class="form-input" type="text" value="Empty" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Hook <span>(optional)</span></label>
+        <textarea class="form-textarea">You need an arc welder and you know there's one in the gas station down the road. You thought you were alone but are starting to think you might be wrong...</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Default map style</label>
+        <div class="map-grid">
+          <button class="btn-map-style inactive">Satellite</button>
+          <button class="btn-map-style inactive">Topo</button>
+          <button class="btn-map-style active">Street</button>
+          <button class="btn-map-style inactive">Voyager</button>
+          <button class="btn-map-style inactive">Humanitarian</button>
+          <button class="btn-map-style inactive">Positron</button>
+          <button class="btn-map-style inactive">Dark</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Map center <span>(optional)</span></label>
+        <input class="form-input" type="text" placeholder="Search for a location..." />
+        <div style="font-size:12px;color:#3a3a3a;margin-top:5px">No custom center - map uses default view</div>
+      </div>
+
+      <button class="btn-save">Save changes</button>
+    </div>
+
+    <!-- RIGHT: Party (both views) -->
+    <div class="col-right">
+      <div class="section-label">Party (3)</div>
+
+      <div class="member-card">
+        <div class="avatar avatar-gm avatar-sm">X</div>
+        <div class="member-info">
+          <div class="member-name-row">
+            <span class="member-name">Xero</span>
+            <span class="gm-chip">GM</span>
+          </div>
+          <div class="member-char">Running the table</div>
+        </div>
+        <div class="member-actions">
+          <span style="font-size:11px;color:#3a3a3a">Apr 29, 2026</span>
+        </div>
+      </div>
+
+      <div class="member-card">
+        <div class="avatar avatar-member avatar-sm">M</div>
+        <div class="member-info">
+          <div class="member-name-row"><span class="member-name">Marv</span></div>
+          <div class="member-char">Tony Bushell</div>
+        </div>
+        <div class="member-actions" id="marv-actions-player">
+          <button class="btn-msg">&#128172; Msg</button>
+        </div>
+        <div class="member-actions hidden" id="marv-actions-gm">
+          <button class="btn-msg">&#128172; Msg</button>
+          <button class="btn-remove">Remove</button>
+        </div>
+      </div>
+
+      <div class="member-card">
+        <div class="avatar avatar-member avatar-sm" style="background:#1a2e10;border-color:#2d5a1b;color:#7fc458">K</div>
+        <div class="member-info">
+          <div class="member-name-row"><span class="member-name">Knox</span></div>
+          <div class="member-char" style="color:#4a4642">No character assigned</div>
+        </div>
+        <div class="member-actions" id="knox-actions-player">
+          <button class="btn-msg">&#128172; Msg</button>
+        </div>
+        <div class="member-actions hidden" id="knox-actions-gm">
+          <button class="btn-msg">&#128172; Msg</button>
+          <button class="btn-remove">Remove</button>
+        </div>
+      </div>
+
+      <!-- Invite (in right col) -->
+      <div class="invite-section">
+        <div class="section-label">Invite</div>
+        <div class="invite-url">thetapestry.distemperverse.com/join/5D7PUQ</div>
+        <div class="invite-code-row">
+          <span class="invite-label">Code</span>
+          <span class="invite-code">5D7PUQ</span>
+          <button class="btn-copy">Copy link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GM Tools (collapsible, GM view only) -->
+  <div class="gm-tools-section hidden" id="gm-tools-section">
+    <div class="gm-tools-header" onclick="toggleGmTools()">
+      <span class="gm-tools-title">&#9881; GM tools</span>
+      <span class="gm-tools-toggle" id="gm-tools-arrow">&#9660; expand</span>
+    </div>
+    <div class="gm-tools-body" id="gm-tools-body">
+      <p style="font-size:13px;color:#5a5550">Advanced settings: snapshot export, module publish, delete campaign, seed management (Thriver only).</p>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button style="padding:8px 16px;background:transparent;border:1px solid #2e2e2e;border-radius:3px;color:#7a7068;font-size:13px;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">&#128190; Snapshot</button>
+        <button style="padding:8px 16px;background:#1a2e10;border:1px solid #2d5a1b;border-radius:3px;color:#7fc458;font-size:13px;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">&#128230; Publish module</button>
+        <button style="padding:8px 16px;background:#1a2e10;border:1px solid #2d5a1b;border-radius:3px;color:#7fc458;font-size:13px;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">&#128196; GM kit</button>
+        <button style="padding:8px 16px;background:transparent;border:1px solid #7a1f16;border-radius:3px;color:#7a3028;font-size:13px;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Delete story</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span class="footer-date">Joined Apr 29, 2026</span>
+    <div class="footer-links">
+      <a class="footer-link">War stories</a>
+      <a class="footer-link">Sessions</a>
+      <a class="footer-link">Community</a>
+    </div>
+  </div>
+</div>
+
+<script>
+var currentView = 'player'
+var gmToolsOpen = false
+
+function setView(v) {
+  currentView = v
+  document.querySelectorAll('.view-toggle button').forEach(function(b, i) {
+    b.classList.toggle('active', (i === 0 && v === 'player') || (i === 1 && v === 'gm'))
+  })
+  var isGm = v === 'gm'
+  var roleChip = document.getElementById('role-chip')
+  roleChip.textContent = isGm ? 'Game master' : 'Player'
+  roleChip.className = isGm ? 'chip chip-role-gm' : 'chip chip-role'
+  document.getElementById('hero-actions-player').classList.toggle('hidden', isGm)
+  document.getElementById('hero-actions-gm').classList.toggle('hidden', !isGm)
+  document.getElementById('col-left-player').classList.toggle('hidden', isGm)
+  document.getElementById('col-left-gm').classList.toggle('hidden', !isGm)
+  document.getElementById('gm-tools-section').classList.toggle('hidden', !isGm)
+  document.getElementById('marv-actions-player').classList.toggle('hidden', isGm)
+  document.getElementById('marv-actions-gm').classList.toggle('hidden', !isGm)
+  document.getElementById('knox-actions-player').classList.toggle('hidden', isGm)
+  document.getElementById('knox-actions-gm').classList.toggle('hidden', !isGm)
+  document.getElementById('hero-cover-upload').classList.toggle('hidden', !isGm)
+  document.getElementById('hero-cover-source').textContent = isGm ? 'GM upload' : 'Module art'
+}
+
+function toggleGmTools() {
+  gmToolsOpen = !gmToolsOpen
+  document.getElementById('gm-tools-body').classList.toggle('open', gmToolsOpen)
+  document.getElementById('gm-tools-arrow').textContent = gmToolsOpen ? '▲ collapse' : '▼ expand'
+}
+
+document.querySelectorAll('.btn-map-style').forEach(function(b) {
+  b.addEventListener('click', function() {
+    document.querySelectorAll('.btn-map-style').forEach(function(x) { x.className = 'btn-map-style inactive' })
+    b.className = 'btn-map-style active'
+  })
+})
+</script>
+</body>
+</html>

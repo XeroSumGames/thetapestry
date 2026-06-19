@@ -1,0 +1,1 @@
+SELECT id, name, grid_cols, grid_rows, jsonb_array_length(walls::jsonb) as wall_count, walls FROM tactical_scenes WHERE campaign_id = '35ed2133-498a-43d2-bbd6-21da05233af2' ORDER BY created_at DESC LIMIT 5;

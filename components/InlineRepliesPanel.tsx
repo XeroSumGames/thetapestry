@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Phase 4E - inline-expand reply panel for War Stories + LFG. Mirrors
 // the Forums thread-detail reply UX (flat list ordered ASC by
 // created_at + textarea composer at the bottom) but lives inline
@@ -149,7 +149,7 @@ export default function InlineRepliesPanel({
                       style={{ background: 'transparent', border: 'none', color: '#5a5550', fontSize: '13px', cursor: 'pointer', padding: '0 4px' }}>×</button>
                   )}
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                   {renderRichText(r.body, { linkify: true })}
                 </div>
               </div>

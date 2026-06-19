@@ -56,7 +56,7 @@ export default function JoinByCodePage() {
     <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '20px', color: '#f5a89a', marginBottom: '8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Invalid Code</div>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '16px' }}>That invite code doesn't match any story.</div>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '16px' }}>That invite code doesn't match any story.</div>
         <Link href="/stories/join" style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Try Again</Link>
       </div>
     </div>
@@ -67,7 +67,7 @@ export default function JoinByCodePage() {
       <div style={{ maxWidth: '420px', width: '100%', padding: '2rem', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', margin: '1rem' }}>
         <div style={{ fontSize: '13px', color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>You've been invited to join</div>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#f5f2ee', marginBottom: '8px' }}>{campaign.name}</div>
-        {campaign.description && <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '16px' }}>{campaign.description}</p>}
+        {campaign.description && <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '16px' }}>{campaign.description}</p>}
         <button onClick={handleJoin} disabled={joining}
           style={{ width: '100%', padding: '12px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: joining ? 0.6 : 1 }}>
           {joining ? 'Joining...' : 'Join Story'}

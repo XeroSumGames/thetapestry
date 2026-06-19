@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'
@@ -17,7 +17,7 @@ const TYPE_COLORS: Record<string, string> = {
   item: '#7fc458',
   kill: '#f5a89a',
   session: '#cce0f5',
-  note: '#d4cfc9',
+  note: '#f5f2ee',
   skill: '#7ab3d4',
   attribute: '#7ab3d4',
   community: '#a87fc4',
@@ -80,7 +80,7 @@ export default function ProgressionLog({ characterId, log, canEdit, onUpdate, co
         <span style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>Progression Log</span>
         <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{log.length} entries</span>
         {canEdit && (
-          <button onClick={() => setShowAdd(!showAdd)} style={{ marginLeft: 'auto', padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+          <button onClick={() => setShowAdd(!showAdd)} style={{ marginLeft: 'auto', padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             {showAdd ? 'Cancel' : '+ Note'}
           </button>
         )}
@@ -119,8 +119,8 @@ export default function ProgressionLog({ characterId, log, canEdit, onUpdate, co
       ) : (
         displayed.map((entry, idx) => (
           <div key={`${entry.date}-${idx}`} style={{ display: 'flex', gap: '6px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
-            <span style={{ fontSize: '13px', color: TYPE_COLORS[entry.type] ?? '#d4cfc9', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '50px', flexShrink: 0 }}>{TYPE_LABELS[entry.type] ?? entry.type}</span>
-            <span style={{ color: '#d4cfc9', flex: 1 }}>{renderRichText(entry.text)}</span>
+            <span style={{ fontSize: '13px', color: TYPE_COLORS[entry.type] ?? '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '50px', flexShrink: 0 }}>{TYPE_LABELS[entry.type] ?? entry.type}</span>
+            <span style={{ color: '#f5f2ee', flex: 1 }}>{renderRichText(entry.text)}</span>
             <span style={{ fontSize: '13px', color: '#cce0f5', flexShrink: 0 }}>{new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
             {canEdit && entry.type === 'note' && (
               <button onClick={() => removeEntry(idx)} style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}

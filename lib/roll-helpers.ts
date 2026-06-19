@@ -54,7 +54,7 @@ export function outcomeColor(outcome: string): string {
     case 'low insight':
       return '#c0392b'
     default:
-      return '#d4cfc9'
+      return '#f5f2ee'
   }
 }
 

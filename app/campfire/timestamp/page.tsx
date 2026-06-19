@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 
 // /campfire/timestamp - HammerTime-style timestamp generator. Pick a date
@@ -195,7 +195,7 @@ export default function TimestampPage() {
           const flashing = copiedFlash === f.code
           return (
             <div key={f.code} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', alignItems: 'center' }}>
-              <div style={{ ...tableCell, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#d4cfc9' }}>
+              <div style={{ ...tableCell, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#f5f2ee' }}>
                 {f.label}
               </div>
               <div style={tableCell}>
@@ -211,7 +211,7 @@ export default function TimestampPage() {
         })}
         {/* Raw unix row, useful for systems that take the integer directly */}
         <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', alignItems: 'center' }}>
-          <div style={{ ...tableCell, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#d4cfc9' }}>
+          <div style={{ ...tableCell, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#f5f2ee' }}>
             Unix seconds
           </div>
           <div style={tableCell}>

@@ -1,4 +1,4 @@
-import {
+﻿import {
   RuleHero,
   RuleSection,
   RuleTable,
@@ -65,7 +65,7 @@ export default function Page() {
                 ))}
                 <td style={ruleTableTdStyle}>
                   {p.skills.map(s => (
-                    <span key={s.skillName} style={{ display: 'inline-block', marginRight: 12, color: '#d4cfc9' }}>
+                    <span key={s.skillName} style={{ display: 'inline-block', marginRight: 12, color: '#f5f2ee' }}>
                       <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{s.skillName}</span>{' '}
                       <span style={{ color: '#cce0f5', fontWeight: 700 }}>+{s.level}</span>
                     </span>

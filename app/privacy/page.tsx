@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // /privacy - beta-period privacy policy. Plain-language, narrow-scope.
 // Replaces the placeholder; will get a proper legal pass before public
 // launch. The point during beta is just to disclose what's actually
@@ -17,11 +17,11 @@ export default function PrivacyPage() {
     marginBottom: '10px',
   }
   const body: React.CSSProperties = {
-    fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6,
+    fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6,
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#0f0f0f', color: '#d4cfc9' }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#0f0f0f', color: '#f5f2ee' }}>
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
 
         <div style={{ marginBottom: '1.5rem' }}>

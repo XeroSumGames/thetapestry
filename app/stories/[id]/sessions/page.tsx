@@ -41,7 +41,7 @@ function SessionRollLog({ raw }: { raw: string }) {
   try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) rows = parsed } catch { /* legacy plain-text digest */ }
   if (!rows || rows.length === 0) {
     return (
-      <pre style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif', margin: 0, maxHeight: '400px', overflowY: 'auto', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>{raw}</pre>
+      <pre style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif', margin: 0, maxHeight: '400px', overflowY: 'auto', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>{raw}</pre>
     )
   }
   return (
@@ -188,7 +188,7 @@ export default function SessionHistoryPage() {
                     <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                       Session {s.session_number}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee' }}>
                       {formatDate(s.started_at)} {formatTime(s.started_at)}
                       {s.ended_at && <> - {duration(s.started_at, s.ended_at)}</>}
                     </div>
@@ -212,7 +212,7 @@ export default function SessionHistoryPage() {
                 <div style={{ marginTop: 'auto', padding: '0 12px 10px', display: 'flex', gap: '4px' }}>
                   {hasContent && (
                     <button onClick={() => setExpandedId(isExpanded ? null : s.id)}
-                      style={{ flex: 1, padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ flex: 1, padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       {isExpanded ? 'Collapse' : 'Expand'}
                     </button>
                   )}
@@ -234,19 +234,19 @@ export default function SessionHistoryPage() {
                     {s.gm_summary && (
                       <div style={{ marginTop: '10px' }}>
                         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>What Happened</div>
-                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.gm_summary}</div>
+                        <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.gm_summary}</div>
                       </div>
                     )}
                     {s.cliffhanger && (
                       <div style={{ marginTop: '10px' }}>
                         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>How Did It End?</div>
-                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.cliffhanger}</div>
+                        <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.cliffhanger}</div>
                       </div>
                     )}
                     {s.next_session_notes && (
                       <div style={{ marginTop: '10px' }}>
                         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
-                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.next_session_notes}</div>
+                        <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.next_session_notes}</div>
                       </div>
                     )}
                     {s.session_log && (

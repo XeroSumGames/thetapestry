@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // /account - player account management. Distinct from character
 // management (which lives at /characters): this is the human behind
 // the screen, not the character they're playing.
@@ -237,7 +237,7 @@ export default function AccountPage() {
     textTransform: 'uppercase', color: '#c0392b', marginBottom: '10px',
   }
   const cardBody: React.CSSProperties = {
-    fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5,
+    fontSize: '14px', color: '#f5f2ee', lineHeight: 1.5,
   }
   const labelStyle: React.CSSProperties = {
     fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif',
@@ -262,7 +262,7 @@ export default function AccountPage() {
   })
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#0f0f0f', color: '#d4cfc9' }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#0f0f0f', color: '#f5f2ee' }}>
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
 
         {resetMode && (
@@ -510,7 +510,7 @@ function DangerZone({ profile }: DangerZoneProps) {
       }}>
         ⚠ Danger Zone
       </div>
-      <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '12px' }}>
+      <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.5, marginBottom: '12px' }}>
         Delete your account and personally-identifying data. Characters, campaign memberships, pins, notifications, and funnel events are wiped. Campaigns you GM are deleted along with their content (warn your players first if this is shared).
         Content entangled with other users (forum posts, modules others have subscribed to) is anonymized rather than deleted, so the platform doesn&apos;t break for everyone else.
         <br /><br />
@@ -561,7 +561,7 @@ function DangerZone({ profile }: DangerZoneProps) {
               disabled={deleting}
               style={{
                 padding: '8px 14px', background: 'transparent', border: '1px solid #3a3a3a',
-                borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em', textTransform: 'uppercase', cursor: deleting ? 'not-allowed' : 'pointer',
               }}>
               Cancel

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
@@ -76,7 +76,7 @@ export default function JoinCampaignPage() {
       )}
 
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.5rem', borderLeft: `3px solid ${isObserver ? '#7fc458' : '#7ab3d4'}` }}>
-        <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.7, marginBottom: '16px' }}>
+        <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.7, marginBottom: '16px' }}>
           Enter the invite code your GM gave you. Codes are 6 characters and look like <strong style={{ color: '#f5f2ee' }}>WOLF47</strong>.
         </p>
 
@@ -103,7 +103,7 @@ export default function JoinCampaignPage() {
             {joining ? 'Joining...' : isObserver ? 'Join as Observer' : 'Join Story'}
           </button>
           <button onClick={() => router.back()}
-            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
         </div>
@@ -114,6 +114,6 @@ export default function JoinCampaignPage() {
 
 const lbl: React.CSSProperties = {
   display: 'block', fontSize: '13px', fontWeight: 600,
-  color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
+  color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em',
   marginBottom: '6px', fontFamily: 'Carlito, sans-serif',
 }

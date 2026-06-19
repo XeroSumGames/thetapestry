@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // Campaign Sheet - Phase 2.
 //
@@ -324,7 +324,7 @@ export default function CampaignSheetPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', padding: '20px 24px 80px' }}>
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', padding: '20px 24px 80px' }}>
       {/* ── Header ─────────────────────────────────────────── */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 13, color: '#888', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>
@@ -494,7 +494,7 @@ export default function CampaignSheetPage() {
                       Day {e.canon_day} · {cal.monthName} {cal.dayOrdinal}, Year {cal.yearNumber}
                       {isToday && <span style={{ marginLeft: 8, fontWeight: 700 }}>· Today</span>}
                     </div>
-                    <div style={{ fontSize: 15, color: '#d4cfc9' }}>{e.event}</div>
+                    <div style={{ fontSize: 15, color: '#f5f2ee' }}>{e.event}</div>
                   </div>
                 )
               })}
@@ -653,7 +653,7 @@ function EditClockModal({ clock, startCanonDay, onClose, onSubmit }: {
 
         <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
           <button onClick={onClose}
-            style={{ flex: 1, padding: '9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
           <button onClick={() => isValid && onSubmit({ canonDay: newCanonDay!, hour: newHourVal, startCanonDay: newStartCanonDay! })} disabled={!isValid}

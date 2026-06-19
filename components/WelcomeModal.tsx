@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { ONBOARDING_SECTIONS } from '../lib/onboarding-sections'
@@ -107,7 +107,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
             DistemperVerse v1.0
           </div>
           {username && (
-            <div style={{ fontSize: '15px', color: '#d4cfc9', marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '15px', color: '#f5f2ee', marginBottom: '1.5rem' }}>
               Good luck, <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{username}</span>. You&apos;re gonna need it.
             </div>
           )}
@@ -144,15 +144,15 @@ export default function WelcomeModal({ username, onClose }: Props) {
           {/* External links */}
           <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1.5rem', marginBottom: '1.5rem', display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
-              style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+              style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
               DistemperVerse.com 🔗
             </a>
             <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer"
-              style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+              style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
               XeroSumGames.com 🔗
             </a>
             <a href="https://www.xerosumstudio.com" target="_blank" rel="noreferrer"
-              style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+              style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
               XeroSumStudio.com 🔗
             </a>
           </div>

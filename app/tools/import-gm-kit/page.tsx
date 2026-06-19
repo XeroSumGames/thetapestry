@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
@@ -158,7 +158,7 @@ export default function ImportGmKitPage() {
 
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', fontWeight: 600,
-    color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
+    color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em',
     marginBottom: '6px', fontFamily: 'Carlito, sans-serif',
   }
 
@@ -175,7 +175,7 @@ export default function ImportGmKitPage() {
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Import GM Kit → Setting Seed
         </div>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '6px', lineHeight: 1.5 }}>
           Upload a <code style={{ color: '#7ab3d4' }}>gm-kit-*.zip</code> from any campaign and write its
           contents into the <code style={{ color: '#7ab3d4' }}>setting_seed_*</code> tables under a
           chosen setting key. Anyone picking that setting on <code>/stories/new</code> will get this

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Phase 5 Sprint 2 - Module publish wizard.
 //
 // A single-page modal (not a multi-step wizard) that lets the GM turn
@@ -222,7 +222,7 @@ export default function ModulePublishModal({
   }
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', fontWeight: 600,
-    color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
+    color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em',
     marginBottom: '6px', fontFamily: 'Carlito, sans-serif',
   }
   const inp: React.CSSProperties = {
@@ -306,7 +306,7 @@ export default function ModulePublishModal({
             <div style={{ display: 'flex', gap: '6px' }}>
               {(['private', 'unlisted', 'listed'] as const).map(v => (
                 <button key={v} type="button" onClick={() => setVisibility(v)}
-                  style={{ flex: 1, padding: '8px', border: `1px solid ${visibility === v ? '#8b5cf6' : '#3a3a3a'}`, background: visibility === v ? '#2a1a3e' : '#242424', borderRadius: '3px', color: visibility === v ? '#c4a7f0' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  style={{ flex: 1, padding: '8px', border: `1px solid ${visibility === v ? '#8b5cf6' : '#3a3a3a'}`, background: visibility === v ? '#2a1a3e' : '#242424', borderRadius: '3px', color: visibility === v ? '#c4a7f0' : '#f5f2ee', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   {v === 'private' && '🔒 Private'}
                   {v === 'unlisted' && '🔗 Unlisted'}
                   {v === 'listed' && '🌐 Listed'}
@@ -328,16 +328,16 @@ export default function ModulePublishModal({
             <div>
               <label style={lbl}>From snapshot file</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                   📍 Pins<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts?.pins ?? 0}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                   🧑 NPCs<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts?.npcs ?? 0}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                   🗺 Tactical scenes<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts ? `${counts.scenes} / ${counts.tokens} tokens` : '0'}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                   📄 Handouts<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts?.handouts ?? 0}</span>
                 </div>
               </div>
@@ -349,19 +349,19 @@ export default function ModulePublishModal({
             <div>
               <label style={lbl}>Include in snapshot</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includePins} onChange={e => setIncludePins(e.target.checked)} />
                   📍 Pins{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includePins ? counts.pins : 0}</span>}
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includeNpcs} onChange={e => setIncludeNpcs(e.target.checked)} />
                   🧑 NPCs{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includeNpcs ? counts.npcs : 0}</span>}
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includeScenes} onChange={e => setIncludeScenes(e.target.checked)} />
                   🗺 Tactical scenes{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includeScenes ? `${counts.scenes} / ${counts.tokens} tokens` : 0}</span>}
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includeHandouts} onChange={e => setIncludeHandouts(e.target.checked)} />
                   📄 Handouts{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includeHandouts ? counts.handouts : 0}</span>}
                 </label>
@@ -377,7 +377,7 @@ export default function ModulePublishModal({
               <div style={{ display: 'flex', gap: '6px' }}>
                 {(['patch', 'minor', 'major'] as const).map(k => (
                   <button key={k} type="button" onClick={() => setBumpKind(k)}
-                    style={{ flex: 1, padding: '8px', border: `1px solid ${bumpKind === k ? '#8b5cf6' : '#3a3a3a'}`, background: bumpKind === k ? '#2a1a3e' : '#242424', borderRadius: '3px', color: bumpKind === k ? '#c4a7f0' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    style={{ flex: 1, padding: '8px', border: `1px solid ${bumpKind === k ? '#8b5cf6' : '#3a3a3a'}`, background: bumpKind === k ? '#2a1a3e' : '#242424', borderRadius: '3px', color: bumpKind === k ? '#c4a7f0' : '#f5f2ee', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     {k} → v{bumpSemver(existingModule.latest_version!.version, k)}
                   </button>
                 ))}
@@ -406,7 +406,7 @@ export default function ModulePublishModal({
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={onClose} disabled={submitting}
-              style={{ padding: '8px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: submitting ? 'not-allowed' : 'pointer' }}>
+              style={{ padding: '8px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: submitting ? 'not-allowed' : 'pointer' }}>
               Cancel
             </button>
             <button onClick={handlePublish} disabled={submitting || !name.trim()}

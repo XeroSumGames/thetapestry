@@ -71,8 +71,8 @@ describe('outcomeColor', () => {
   })
 
   it('returns the muted default for unknown outcomes', () => {
-    expect(outcomeColor('something_else')).toBe('#d4cfc9')
-    expect(outcomeColor('')).toBe('#d4cfc9')
+    expect(outcomeColor('something_else')).toBe('#f5f2ee')
+    expect(outcomeColor('')).toBe('#f5f2ee')
   })
 
   // Snake-case input contract for DB-stored outcomes (community_events,
@@ -89,8 +89,8 @@ describe('outcomeColor', () => {
   })
 
   it('null/undefined-tolerant', () => {
-    expect(outcomeColor(null as any)).toBe('#d4cfc9')
-    expect(outcomeColor(undefined as any)).toBe('#d4cfc9')
+    expect(outcomeColor(null as any)).toBe('#f5f2ee')
+    expect(outcomeColor(undefined as any)).toBe('#f5f2ee')
   })
 })
 

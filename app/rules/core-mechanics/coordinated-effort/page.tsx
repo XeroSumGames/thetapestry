@@ -1,4 +1,4 @@
-import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSection'
+﻿import { RuleHero, TryIt, P, Term } from '../../../../components/rules/RuleSection'
 import SectionSubNav from '../../../../components/rules/SectionSubNav'
 import { findSection } from '../../../../lib/rules/sections'
 
@@ -49,7 +49,7 @@ export default function Page() {
         outcome carries through the whole chain.
       </P>
       <h3 style={{ fontSize: 20, color: '#f5f2ee', marginTop: '1.4rem', marginBottom: '.6rem' }}>Lead-roll outcome → chain CMod</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse', margin: '0 0 1rem', fontSize: 15, color: '#d4cfc9' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', margin: '0 0 1rem', fontSize: 15, color: '#f5f2ee' }}>
         <thead>
           <tr style={{ background: '#1a1a1a', textAlign: 'left' }}>
             <th style={{ padding: '8px 12px', border: '1px solid #3a3a3a' }}>First-roll outcome</th>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import {
@@ -800,9 +800,9 @@ export default function VehiclePage() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>{vehicle.name}</div>
           <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{vehicle.type}</span>
-          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>Rarity: {vehicle.rarity}</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>Rarity: {vehicle.rarity}</span>
         </div>
-        {vehicle.three_words && <div style={{ fontSize: '14px', color: '#d4cfc9', fontStyle: 'italic', marginTop: '4px' }}>"{vehicle.three_words}"</div>}
+        {vehicle.three_words && <div style={{ fontSize: '14px', color: '#f5f2ee', fontStyle: 'italic', marginTop: '4px' }}>"{vehicle.three_words}"</div>}
       </div>
 
       {/* Crew & Checks - Driver + Navigator side by side; Brewer
@@ -1239,7 +1239,7 @@ export default function VehiclePage() {
               </div>
               {canEdit && (
                 <button onClick={() => setShowAddCargo(!showAddCargo)}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                   {showAddCargo ? 'Cancel' : '+ Add'}
                 </button>
               )}
@@ -1262,10 +1262,10 @@ export default function VehiclePage() {
                   {canEdit ? (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                       <button title="-1 (removes at 0)" onClick={() => { const raw = vehicle.cargo ?? []; const n = item.qty - 1; updateVehicle({ ...vehicle, cargo: (n <= 0 ? raw.filter((_, i) => i !== idx) : raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: n } : c)) as any }) }}
-                        style={{ width: '20px', height: '20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0 }}>−</button>
+                        style={{ width: '20px', height: '20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0 }}>−</button>
                       <span style={{ color: '#7ab3d4', minWidth: '16px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{item.qty}</span>
                       <button title="+1" onClick={() => { const raw = vehicle.cargo ?? []; updateVehicle({ ...vehicle, cargo: raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: item.qty + 1 } : c) as any }) }}
-                        style={{ width: '20px', height: '20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0 }}>+</button>
+                        style={{ width: '20px', height: '20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0 }}>+</button>
                       <button title={`Remove ${item.name} from cargo`} onClick={() => { const raw = vehicle.cargo ?? []; updateVehicle({ ...vehicle, cargo: raw.filter((_, i) => i !== idx) as any }) }}
                         style={{ width: '20px', height: '20px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', lineHeight: 1, cursor: 'pointer', padding: 0, marginLeft: '2px' }}>×</button>
                     </span>
@@ -1378,7 +1378,7 @@ export default function VehiclePage() {
               <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', flex: 1 }}>Operator Notes</div>
               {canEdit && (
                 <button onClick={() => { setEditingNotes(!editingNotes); setNotesValue(vehicle.notes) }}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
                   {editingNotes ? 'Cancel' : 'Edit'}
                 </button>
               )}

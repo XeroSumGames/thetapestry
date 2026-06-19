@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
@@ -39,7 +39,7 @@ export default function StepNine({ state, onChange }: Props) {
 
   return (
     <div>
-      <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '1rem' }}>
+      <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '1rem' }}>
         Review everything below before saving your character.
       </p>
 
@@ -68,7 +68,7 @@ export default function StepNine({ state, onChange }: Props) {
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
               {state.name || 'Unnamed Character'}
             </div>
-            <div style={{ fontSize: '14px', color: '#d4cfc9', marginTop: '4px' }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', marginTop: '4px' }}>
               {[step4.profession, state.gender, state.age ? `Age ${state.age}` : '', state.height, state.weight].filter(Boolean).join(' · ')}
             </div>
             {state.concept && (
@@ -130,13 +130,13 @@ export default function StepNine({ state, onChange }: Props) {
             {step6.complicationNote ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 <label style={fieldLabel}>Complication notes</label>
-                <div style={{ ...fieldInput, minHeight: '56px', color: '#d4cfc9', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{step6.complicationNote}</div>
+                <div style={{ ...fieldInput, minHeight: '56px', color: '#f5f2ee', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{step6.complicationNote}</div>
               </div>
             ) : <div />}
             {step6.motivationNote ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 <label style={fieldLabel}>Motivation notes</label>
-                <div style={{ ...fieldInput, minHeight: '56px', color: '#d4cfc9', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{step6.motivationNote}</div>
+                <div style={{ ...fieldInput, minHeight: '56px', color: '#f5f2ee', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{step6.motivationNote}</div>
               </div>
             ) : <div />}
           </div>
@@ -155,12 +155,12 @@ export default function StepNine({ state, onChange }: Props) {
                 border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
                 borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
               }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                 <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '3px 0' }}>
                   {sgn(val)}
                 </div>
-                <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
+                <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#f5f2ee' }}>{ATTRIBUTE_LABELS[val]}</div>
               </div>
             )
           })}
@@ -180,7 +180,7 @@ export default function StepNine({ state, onChange }: Props) {
             { label: 'Stress Mod',        value: sgn(derived.stressModifier), hi: false },
           ].map(({ label, value, hi }) => (
             <div key={label} style={{ background: '#242424', border: `1px solid ${hi ? '#7a1f16' : '#2e2e2e'}`, borderRadius: '3px', padding: '8px 10px' }}>
-              <div style={{ fontSize: '9.5px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>{label}</div>
+              <div style={{ fontSize: '9.5px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>{label}</div>
               <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>{value}</div>
             </div>
           ))}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // StoryActionBar - the canonical campaign-page header rendered at the
 // top of every campaign page (hub + Snapshots + Sessions + Community).
 // Carries:
@@ -218,7 +218,7 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
           {campaign.name}
         </div>
         {campaign.description && (
-          <p style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
+          <p style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
         )}
       </div>
 

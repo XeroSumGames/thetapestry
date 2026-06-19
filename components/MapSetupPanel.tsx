@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 
 // In-tab floating, draggable, always-on-top (within the browser tab) host for
@@ -77,7 +77,7 @@ export default function MapSetupPanel({ campaignId, onClose }: { campaignId: str
           &#x283f; Map Setup
         </span>
         <button onClick={onClose} title="Close" aria-label="Close Map Setup" style={{
-          background: 'transparent', border: 'none', color: '#d4cfc9', fontSize: '16px',
+          background: 'transparent', border: 'none', color: '#f5f2ee', fontSize: '16px',
           lineHeight: 1, cursor: 'pointer', padding: '0 4px',
         }}>&times;</button>
       </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // ApprenticeCreationWizard - modal that runs the Apprentice creation flow
 // per spec-communities §2a / SRD §08 p.21. Triggered from the Apprentice
 // NPC card by the master PC after a Moment-of-High-Insight recruit.
@@ -552,7 +552,7 @@ export default function ApprenticeCreationWizard({
                   {threeWords.map(w => w.trim()).filter(Boolean).join(' · ')}
                 </div>
                 {background.trim() && (
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '6px', whiteSpace: 'pre-wrap' }}>{background.trim()}</div>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginTop: '6px', whiteSpace: 'pre-wrap' }}>{background.trim()}</div>
                 )}
               </div>
               <div style={{ padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>

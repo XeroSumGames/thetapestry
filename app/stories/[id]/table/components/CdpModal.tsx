@@ -39,9 +39,9 @@ export function CdpModal({
         {/* Amount */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Amount</span>
-          <button onClick={() => setCdpAmount(Math.max(1, cdpAmount - 1))} style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer' }}>-</button>
+          <button onClick={() => setCdpAmount(Math.max(1, cdpAmount - 1))} style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer' }}>-</button>
           <span style={{ fontSize: '20px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', minWidth: '24px', textAlign: 'center' }}>{cdpAmount}</span>
-          <button onClick={() => setCdpAmount(Math.min(10, cdpAmount + 1))} style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer' }}>+</button>
+          <button onClick={() => setCdpAmount(Math.min(10, cdpAmount + 1))} style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer' }}>+</button>
         </div>
 
         {/* Recipients */}
@@ -60,7 +60,7 @@ export function CdpModal({
         {/* Actions */}
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={onClose}
-            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
           <button onClick={async () => {
             if (cdpRecipients.size === 0) return
             const names: string[] = []

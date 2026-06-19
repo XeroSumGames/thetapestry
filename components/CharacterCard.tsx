@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { memo, useState, useEffect, useRef } from 'react'
 import { ModalBackdrop } from '../lib/style-helpers'
 import { useRouter } from 'next/navigation'
@@ -437,7 +437,7 @@ function CharacterCardImpl({
     return (
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>{label}</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>{label}</span>
           <span style={{ fontSize: '13px', color, fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>{current} / {max}</span>
         </div>
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
@@ -466,7 +466,7 @@ function CharacterCardImpl({
     if (!localState) return null
     return (
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>{label}</div>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>{label}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
           <button disabled={!canEdit || value <= 0}
             onClick={() => canEdit && value > 0 && localState && updateStat(localState.id, field, value - 1)}
@@ -710,7 +710,7 @@ function CharacterCardImpl({
                 style={{ ...btn('#2a1a3e', '#c4a7f0'), opacity: (localState && campaignIdProp) ? 1 : 0.5, cursor: (localState && campaignIdProp) ? 'pointer' : 'not-allowed' }}>Evolution</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
-              {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
+              {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#f5f2ee')}>{deleting ? '...' : 'Delete'}</button>}
               {campaignIdProp && (
                 <button onClick={() => openPopout(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, { w: 800, h: 800 })} title="Pop out" style={btn('#2a102a', '#d48bd4')}>Popout</button>
               )}
@@ -722,11 +722,11 @@ function CharacterCardImpl({
         {/* Concept/Complication/Motivation/Words - two aligned rows */}
         <div style={{ display: 'flex', marginBottom: '8px', fontSize: '13px' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ color: '#d4cfc9' }}>{profession || 'No profession'} &middot; Created {formatDate(c.created_at)}</div>
+            <div style={{ color: '#f5f2ee' }}>{profession || 'No profession'} &middot; Created {formatDate(c.created_at)}</div>
             <div style={{ color: '#cce0f5', fontStyle: 'italic', marginTop: '2px' }}>Concept: {c.data?.notes || 'A survivor, just trying to get by.'}</div>
           </div>
           <div style={{ flexShrink: 0, textAlign: 'right' }}>
-            <div style={{ color: '#d4cfc9' }}>
+            <div style={{ color: '#f5f2ee' }}>
               {complication && <span><span style={{ color: '#c0392b' }}>Complication:</span> {complication} &nbsp;</span>}
               {motivation && <span><span style={{ color: '#7fc458' }}>Motivation:</span> {motivation}</span>}
             </div>
@@ -754,8 +754,8 @@ function CharacterCardImpl({
                 onMouseEnter={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = '#7fc458'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#243e14' : '#2e2e2e' } }}
                 onMouseLeave={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = v > 0 ? '#2d5a1b' : '#3a3a3a'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#1a2e10' : '#242424' } }}
               >
-                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: v > 0 ? '#7fc458' : '#f5f2ee' }}>{sgn(v)}</div>
                 {clickable && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>ROLL</div>}
               </div>
             )
@@ -847,7 +847,7 @@ function CharacterCardImpl({
               {/* Stress bar with Breaking Point trigger */}
               <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '3px' }}>
-                  <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Stress</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Stress</span>
                   {/* Manual Stress Check: GM-called mid-play. Opens the
                       dedicated modal in 'mid-play' mode (success = no
                       change, failure = +1 stress, cascades to 'at-max'
@@ -885,7 +885,7 @@ function CharacterCardImpl({
               </div>
               {/* Insight bar - 10 blocks */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Insight</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Insight</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                   <button disabled={!canEdit || localState.insight_dice <= 0}
                     onClick={() => canEdit && localState.insight_dice > 0 && updateStat(localState.id, 'insight_dice', localState.insight_dice - 1)}
@@ -902,7 +902,7 @@ function CharacterCardImpl({
               </div>
               {/* CDP bar - 10 blocks */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>CDP</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>CDP</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                   <button disabled={!canEdit || localState.cdp <= 0}
                     onClick={() => canEdit && localState.cdp > 0 && updateStat(localState.id, 'cdp', localState.cdp - 1)}
@@ -919,14 +919,14 @@ function CharacterCardImpl({
               </div>
               {/* Morality bar - 7 blocks */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Morality</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Morality</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                   <button disabled={!canEdit || localState.morality <= 0}
                     onClick={() => canEdit && localState.morality > 0 && updateStat(localState.id, 'morality', localState.morality - 1)}
                     style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.morality > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.morality > 0 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>-</button>
                   <div style={{ display: 'flex', gap: '2px' }}>
                     {Array.from({ length: 7 }).map((_, i) => (
-                      <div key={i} style={{ width: '10px', height: '16px', borderRadius: '2px', background: i < localState.morality ? '#d4cfc9' : '#242424', border: `1px solid ${i < localState.morality ? '#d4cfc9' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
+                      <div key={i} style={{ width: '10px', height: '16px', borderRadius: '2px', background: i < localState.morality ? '#f5f2ee' : '#242424', border: `1px solid ${i < localState.morality ? '#f5f2ee' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
                     ))}
                   </div>
                   <button disabled={!canEdit || localState.morality >= 7}
@@ -971,7 +971,7 @@ function CharacterCardImpl({
           <button onClick={onRoll ? () => {
             onRoll(`${c.name} - Unarmed Attack`, rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
           } : undefined}
-            style={{ width: '100%', padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: onRoll ? 'pointer' : 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            style={{ width: '100%', padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: onRoll ? 'pointer' : 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
             <span>👊 Unarmed Attack</span>
             <span style={{ color: '#7ab3d4', fontWeight: 400, letterSpacing: 0 }}>
               Damage: <span style={{ color: '#c0392b', fontWeight: 700 }}>1d3{((rapid.PHY ?? 0) + (skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0)) !== 0 ? `+${(rapid.PHY ?? 0) + (skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0)}` : ''}</span> (PHY + Unarmed)
@@ -1007,14 +1007,14 @@ function CharacterCardImpl({
                     <>
                       {/* Line 1: Skill, WP Damage, RP */}
                       <div style={{ display: 'flex', gap: '8px', fontSize: '15px', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>
-                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill}</span>
-                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
-                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
-                        {w.category === 'explosive' && <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Qty:</span> <span style={{ color: '#EF9F27', fontWeight: 700 }}>×{(weapon as any).qty ?? 1}</span></span>}
+                        <span style={{ color: '#f5f2ee' }}><span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill}</span>
+                        <span style={{ color: '#f5f2ee' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
+                        <span style={{ color: '#f5f2ee' }}><span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
+                        {w.category === 'explosive' && <span style={{ color: '#f5f2ee' }}><span style={{ color: '#cce0f5' }}>Qty:</span> <span style={{ color: '#EF9F27', fontWeight: 700 }}>×{(weapon as any).qty ?? 1}</span></span>}
                       </div>
                       {/* Line 2: Range, Condition */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
-                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Range:</span> {w.range}</span>
+                        <span style={{ color: '#f5f2ee' }}><span style={{ color: '#cce0f5' }}>Range:</span> {w.range}</span>
                         <div style={{ flex: 1 }} />
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                           <span style={{ color: '#cce0f5' }}>Condition:</span>
@@ -1029,10 +1029,10 @@ function CharacterCardImpl({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Quantity</span>
                           <button onClick={() => canEdit && setWeapon({ ...weapon, qty: Math.max(1, ((weapon as any).qty ?? 1) - 1) })} disabled={!canEdit}
-                            style={{ padding: '2px 9px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: canEdit ? 'pointer' : 'default' }}>−</button>
+                            style={{ padding: '2px 9px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: canEdit ? 'pointer' : 'default' }}>−</button>
                           <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', minWidth: '20px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{(weapon as any).qty ?? 1}</span>
                           <button onClick={() => canEdit && setWeapon({ ...weapon, qty: ((weapon as any).qty ?? 1) + 1 })} disabled={!canEdit}
-                            style={{ padding: '2px 9px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: canEdit ? 'pointer' : 'default' }}>+</button>
+                            style={{ padding: '2px 9px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: canEdit ? 'pointer' : 'default' }}>+</button>
                         </div>
                       )}
                       {/* Upkeep Check + Unequip - weapon admin row */}
@@ -1054,7 +1054,7 @@ function CharacterCardImpl({
                               const amod = rapid[attrKey] ?? 0
                               onRoll(`Upkeep - ${w.name}`, amod, smod)
                             }}
-                              style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                               Upkeep Check
                             </button>
                           )}
@@ -1262,7 +1262,7 @@ function CharacterCardImpl({
               const r = computeRestRecovery(localState, totalHours, restRestful)
               const rpCap = r.isSick ? Math.floor(localState.rp_max / 2) : localState.rp_max
               return totalHours > 0 ? (
-                <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', padding: '8px', background: '#242424', borderRadius: '3px' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', padding: '8px', background: '#242424', borderRadius: '3px' }}>
                   <div>WP healed: <span style={{ color: '#c0392b', fontWeight: 700 }}>+{r.wpHeal}</span> ({r.wasMortal ? '1 per 2 days' : '1 per day'})</div>
                   <div>RP recovered: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>+{r.rpGain}</span> (1 per hour{r.isSick ? `, sick cap ${rpCap}` : ''})</div>
                   {r.stressDrop > 0 && <div>Stress reduced: <span style={{ color: '#EF9F27', fontWeight: 700 }}>-{r.stressDrop}</span> (1 per 8h)</div>}
@@ -1271,7 +1271,7 @@ function CharacterCardImpl({
             })()}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowRestModal(false)}
-                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={async () => {
                 const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
                 if (totalHours <= 0) { setShowRestModal(false); return }

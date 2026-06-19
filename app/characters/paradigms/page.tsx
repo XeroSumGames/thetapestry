@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // /characters/paradigms - the third character-creation funnel.
 //
 // Backstory wizard = full 7-step authored character. Random = one click,
@@ -29,7 +29,7 @@ export default function ParadigmsPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ marginBottom: '6px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
         Survivors
       </div>

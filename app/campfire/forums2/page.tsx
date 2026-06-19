@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { loginPathForCurrent } from '../../../lib/login-redirect'
@@ -220,7 +220,7 @@ export default function Forums2Page() {
               style={{
                 padding: '6px 14px',
                 background: sort === s ? '#1a3a5c' : 'transparent',
-                color: sort === s ? '#7ab3d4' : '#d4cfc9',
+                color: sort === s ? '#7ab3d4' : '#f5f2ee',
                 border: 'none',
                 borderLeft: i === 0 ? 'none' : '1px solid #3a3a3a',
                 fontFamily: 'Carlito, sans-serif',
@@ -430,7 +430,7 @@ function FilterChip({ label, accent, active, onClick }: {
         borderRadius: '999px',
         border: `1px solid ${active ? accent : '#3a3a3a'}`,
         background: active ? `${accent}22` : '#1a1a1a',
-        color: active ? accent : '#d4cfc9',
+        color: active ? accent : '#f5f2ee',
         fontWeight: 700,
       }}>
       {label}

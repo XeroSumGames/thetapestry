@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Off-screen recruitment for a community.
 //
 // Lets a GM stand the community's Leader NPC in for a PC during
@@ -38,11 +38,11 @@ import { logEvent } from '../lib/events'
 
 type Approach = 'cohort' | 'conscript' | 'convert'
 
-const RECRUITMENT_ALL_SKILLS = ['Barter', 'Inspiration', 'Manipulation', 'Psychology', 'Streetwise', 'Tactics', 'Intimidation']
+const RECRUITMENT_ALL_SKILLS = ['Barter', 'Inspiration', 'Manipulation', 'Psychology', 'Streetwise', 'Tactics']
 
 function suggestedSkillsForApproach(ap: Approach): string[] {
   if (ap === 'cohort') return ['Barter', 'Tactics', 'Inspiration']
-  if (ap === 'conscript') return ['Intimidation', 'Tactics']
+  if (ap === 'conscript') return ['Manipulation', 'Tactics']
   return ['Inspiration', 'Psychology']
 }
 
@@ -328,7 +328,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
               <div style={{ display: 'flex', gap: '4px' }}>
                 {(['cohort', 'conscript', 'convert'] as Approach[]).map(ap => (
                   <button key={ap} type="button" onClick={() => { setApproach(ap); setSkill('') }}
-                    style={{ flex: 1, padding: '8px 6px', background: approach === ap ? '#2d5a1b' : '#242424', border: `1px solid ${approach === ap ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: approach === ap ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '8px 6px', background: approach === ap ? '#2d5a1b' : '#242424', border: `1px solid ${approach === ap ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: approach === ap ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {ap}
                   </button>
                 ))}

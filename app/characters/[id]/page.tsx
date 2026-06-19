@@ -59,7 +59,7 @@ export default function CharacterViewPage() {
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             {d.name || 'Unnamed Character'}
           </div>
-          <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
+          <div style={{ fontSize: '13px', color: '#f5f2ee' }}>
             {[d.profession, d.gender, d.age ? `Age ${d.age}` : '', d.height, d.weight].filter(Boolean).join(' · ')}
           </div>
           {d.threeWords?.some((w: string) => w) && (
@@ -74,7 +74,7 @@ export default function CharacterViewPage() {
             Edit
           </button>
           <button onClick={() => router.push('/characters')}
-            style={{ padding: '6px 14px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '6px 14px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Back
           </button>
         </div>
@@ -87,10 +87,10 @@ export default function CharacterViewPage() {
             const val = rapid[k] ?? 0
             return (
               <div key={k} style={{ background: val > 0 ? '#1a2e10' : '#242424', border: `1px solid ${val > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', padding: '8px 4px', textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                 <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#7fc458' : '#f5f2ee' }}>{sgn(val)}</div>
-                <div style={{ fontSize: '13px', color: val > 0 ? '#7fc458' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
+                <div style={{ fontSize: '13px', color: val > 0 ? '#7fc458' : '#f5f2ee' }}>{ATTRIBUTE_LABELS[val]}</div>
               </div>
             )
           })}
@@ -109,7 +109,7 @@ export default function CharacterViewPage() {
             { label: 'Stress Modifier', value: sgn(secondary.stressModifier ?? 0), hi: false },
           ].map(({ label, value, hi }) => (
             <div key={label} style={{ background: '#242424', border: `1px solid ${hi ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', padding: '8px 10px' }}>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '2px' }}>{label}</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '2px' }}>{label}</div>
               <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: hi ? '#7fc458' : '#f5f2ee' }}>{value}</div>
             </div>
           ))}

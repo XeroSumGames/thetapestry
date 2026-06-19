@@ -1,4 +1,4 @@
-// Shared design-token style helpers. The codebase doesn't use a CSS-in-JS
+﻿// Shared design-token style helpers. The codebase doesn't use a CSS-in-JS
 // framework - components inline their styles via the `style={{ ... }}`
 // prop. That's deliberate (no runtime cost, no build pipeline), but it
 // means recurring patterns get duplicated literally instead of referenced.
@@ -240,7 +240,7 @@ export type ButtonVariant = 'solid' | 'ghost'
 // color attribute. Danger's chroma matches its border (#c0392b).
 const BUTTON_TONES: Record<ButtonTone, { bg: string; color: string; border: string; chroma: string }> = {
   primary:   { bg: '#c0392b', color: '#ffffff', border: '#c0392b', chroma: '#c0392b' },
-  secondary: { bg: '#242424', color: '#d4cfc9', border: '#3a3a3a', chroma: '#d4cfc9' },
+  secondary: { bg: '#242424', color: '#f5f2ee', border: '#3a3a3a', chroma: '#f5f2ee' },
   confirm:   { bg: '#1a2e10', color: '#7fc458', border: '#2d5a1b', chroma: '#7fc458' },
   warning:   { bg: '#2a2010', color: '#EF9F27', border: '#5a4a1b', chroma: '#EF9F27' },
   info:      { bg: '#0f1a2e', color: '#7ab3d4', border: '#1a3a5c', chroma: '#7ab3d4' },

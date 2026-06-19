@@ -1,4 +1,4 @@
-// XSE SRD Weapon Database
+﻿// XSE SRD Weapon Database
 //
 // Stun-weapon canon (locked 2026-05-09):
 //   - Taser:       1 WP / 4 RP per hit (rpPercent 400) + Stun trait.
@@ -187,7 +187,7 @@ export function weaponCausesWoundInfection(weaponName: string | null | undefined
 export function conditionColor(condition: Condition): string {
   switch (condition) {
     case 'Pristine': return '#7fc458'
-    case 'Used': return '#d4cfc9'
+    case 'Used': return '#f5f2ee'
     case 'Worn': return '#EF9F27'
     case 'Damaged': return '#c0392b'
     case 'Broken': return '#7a1f16'

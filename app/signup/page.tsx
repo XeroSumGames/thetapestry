@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
 import { createClient } from '../../lib/supabase-browser'
@@ -230,7 +230,7 @@ export default function SignupPage() {
                 Check Your Email
               </div>
             </div>
-            <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '1.25rem' }}>
               We sent a confirmation link to{' '}
               <strong style={{ color: '#f5f2ee' }}>{checkEmailFor}</strong>.
               Click the link in that email to finish creating your account.
@@ -252,7 +252,7 @@ export default function SignupPage() {
                 if (error) alert(`Resend failed: ${error.message}`)
                 else alert('Confirmation email resent.')
               }}
-              style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Resend Confirmation Email
             </button>
             <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
@@ -260,7 +260,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setCheckEmailFor(null)}
-                style={{ color: '#d4cfc9', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: 0 }}>
+                style={{ color: '#f5f2ee', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: 0 }}>
                 Start over
               </button>
             </p>
@@ -306,7 +306,7 @@ export default function SignupPage() {
 
         <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
           Already have an account?{' '}
-          <a href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} style={{ color: '#d4cfc9', textDecoration: 'none' }}>Log in</a>
+          <a href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} style={{ color: '#f5f2ee', textDecoration: 'none' }}>Log in</a>
         </p>
         </>
         )}

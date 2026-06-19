@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Chrome-level ⏺ recorder toggle for the Sidebar user-header icon row.
 // Scoped by userId (not campaignId) so it survives navigation across all
 // routes. Phase A: single-tab only; the /table cascade button handles the
@@ -56,7 +56,7 @@ export default function RecorderToggleButton({ userId }: Props) {
       style={{
         background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
         fontSize: '16px', fontFamily: 'Carlito, sans-serif', lineHeight: 1,
-        color: enabled ? '#c0392b' : '#d4cfc9',
+        color: enabled ? '#c0392b' : '#f5f2ee',
         opacity: enabled ? 1 : 0.65,
       }}
     >

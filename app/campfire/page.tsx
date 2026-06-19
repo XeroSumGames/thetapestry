@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -396,7 +396,7 @@ function CampfireTabStrip() {
                   background: selected ? '#242424' : 'transparent',
                   border: 'none',
                   borderBottom: `2px solid ${selected ? t.accent : 'transparent'}`,
-                  color: selected ? t.accent : (t.soon ? '#3a3a3a' : '#d4cfc9'),
+                  color: selected ? t.accent : (t.soon ? '#3a3a3a' : '#f5f2ee'),
                   fontFamily: 'Carlito, sans-serif',
                   fontSize: '14px',
                   fontWeight: selected ? 700 : 500,
@@ -406,7 +406,7 @@ function CampfireTabStrip() {
                   transition: 'color .12s, border-color .12s',
                 }}
                 onMouseEnter={e => { if (!t.soon && !selected) (e.currentTarget as HTMLButtonElement).style.color = '#f5f2ee' }}
-                onMouseLeave={e => { if (!t.soon && !selected) (e.currentTarget as HTMLButtonElement).style.color = '#d4cfc9' }}
+                onMouseLeave={e => { if (!t.soon && !selected) (e.currentTarget as HTMLButtonElement).style.color = '#f5f2ee' }}
               >
                 {t.label}
                 {t.soon && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#cce0f5', opacity: .4 }}>- soon</span>}

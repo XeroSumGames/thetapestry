@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // BugReportButton - 🐞 icon in the sidebar's user-header icon row.
 // Click opens a modal with a textarea; submit inserts a bug_reports
 // row, the DB trigger fires call_notify_thriver to email Xero.
@@ -125,7 +125,7 @@ export default function BugReportButton() {
                 disabled={submitting}
                 style={{
                   padding: '8px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px',
-                  color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
+                  color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
                   textTransform: 'uppercase', cursor: submitting ? 'not-allowed' : 'pointer',
                 }}>
                 Cancel

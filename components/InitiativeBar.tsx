@@ -1,4 +1,4 @@
-// Initiative Bar - extracted from app/stories/[id]/table/page.tsx during the
+﻿// Initiative Bar - extracted from app/stories/[id]/table/page.tsx during the
 // C2 refactor pass. Renders the combat initiative tracker that's shown
 // across the top of the table page when combat is active.
 //
@@ -360,7 +360,7 @@ function InitiativeBarImpl({
                   )}
                 </div>
               )}
-              <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.hidden_from_players ? '#9a8a6a' : (entry.is_active ? '#f5f2ee' : '#d4cfc9'), fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', opacity: entry.hidden_from_players ? 0.8 : 1 }}>
+              <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.hidden_from_players ? '#9a8a6a' : (entry.is_active ? '#f5f2ee' : '#f5f2ee'), fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', opacity: entry.hidden_from_players ? 0.8 : 1 }}>
                 {compactName(entry.character_name)}
               </span>
               {/* GM-only HIDDEN chip + Reveal button */}
@@ -450,7 +450,7 @@ function InitiativeBarImpl({
             <div ref={addNPCBtnRef} style={{ position: 'relative', display: 'flex' }}>
             {!showAddNPC ? (
               <button onClick={() => setShowAddNPC(true)}
-                style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 + NPC
               </button>
             ) : (
@@ -469,7 +469,7 @@ function InitiativeBarImpl({
                 <button onClick={commitNpcText}
                   style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Add</button>
                 <button onClick={() => { setShowAddNPC(false); setNpcName('') }}
-                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>✕</button>
+                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>✕</button>
               </div>
             )}
             {/* Roster suggestions in a portal (escapes the bar's overflow-x:auto

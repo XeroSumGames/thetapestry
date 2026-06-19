@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
@@ -669,7 +669,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const npcSection = npcsHere.length === 0 ? '' :
         `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;">
            <div style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:3px;">Also Here</div>
-           ${npcsHere.map(n => `<div style="font-size:15px;color:#d4cfc9;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
+           ${npcsHere.map(n => `<div style="font-size:15px;color:#f5f2ee;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
          </div>`
       const popupHtml =
         `<div style="font-family:Carlito,sans-serif;min-width:180px;">` +
@@ -1151,7 +1151,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               so the GM sees them in CampaignPins for review/reveal. */}
           <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
             title={isGM ? 'Drop a pin on the campaign map' : 'Suggest a pin - GM will review and reveal it'}
-            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#f5f2ee' }}>
             {placing ? '✕ Cancel' : '+ Pin'}
           </button>
           {/* Measure tool - toggle on, click two (or more) points to
@@ -1173,7 +1173,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               }
             }}
             title={measureMode ? 'Stop measuring (Esc)' : 'Click two points to measure distance'}
-            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#f5f2ee' }}>
             {measureMode ? '✕ Stop' : '📏 Measure'}
           </button>
           {/* Route planner - pick start, pick destination, OSRM returns
@@ -1195,7 +1195,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               }
             }}
             title={routeMode ? 'Stop planning (Esc)' : 'Plot a road route from A to B'}
-            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeMode ? '#a855f7' : '#3a3a3a'}`, background: routeMode ? '#1c0e30' : 'rgba(15,15,15,.85)', color: routeMode ? '#a855f7' : '#d4cfc9' }}>
+            style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeMode ? '#a855f7' : '#3a3a3a'}`, background: routeMode ? '#1c0e30' : 'rgba(15,15,15,.85)', color: routeMode ? '#a855f7' : '#f5f2ee' }}>
             {routeMode ? '✕ Stop' : '🛣 Route'}
           </button>
           {/* Travel-mode picker reused for route ETA. Same dropdown as
@@ -1251,7 +1251,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 window.setTimeout(() => setShareFlash(false), 1500)
               }}
               title="Push your current map view (center/zoom/tile) to every player"
-              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${shareFlash ? '#2d5a1b' : '#3a3a3a'}`, background: shareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', color: shareFlash ? '#7fc458' : '#d4cfc9' }}>
+              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${shareFlash ? '#2d5a1b' : '#3a3a3a'}`, background: shareFlash ? '#1a2e10' : 'rgba(15,15,15,.85)', color: shareFlash ? '#7fc458' : '#f5f2ee' }}>
               {shareFlash ? '✓ Shared' : '👁 Share View'}
             </button>
           )}
@@ -1278,7 +1278,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 window.setTimeout(() => setRouteShareFlash(false), 1500)
               }}
               title="Push the current plotted route to every player"
-              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeShareFlash ? '#3d1a5e' : '#3a3a3a'}`, background: routeShareFlash ? '#1a0c2e' : 'rgba(15,15,15,.85)', color: routeShareFlash ? '#a855f7' : '#d4cfc9' }}>
+              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeShareFlash ? '#3d1a5e' : '#3a3a3a'}`, background: routeShareFlash ? '#1a0c2e' : 'rgba(15,15,15,.85)', color: routeShareFlash ? '#a855f7' : '#f5f2ee' }}>
               {routeShareFlash ? '✓ Shared' : '🛣 Share Route'}
             </button>
           )}
@@ -1305,7 +1305,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                     setSearchQuery(s.display_name.split(',')[0])
                     setSuggestions([])
                   }}
-                    style={{ padding: '6px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                    style={{ padding: '6px 10px', fontSize: '13px', color: '#f5f2ee', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     {s.display_name.length > 60 ? s.display_name.slice(0, 60) + '...' : s.display_name}
@@ -1330,7 +1330,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         <div ref={layerMenuRef} style={{ position: 'relative' }}>
           <button type="button" onClick={() => setLayerMenuOpen(o => !o)}
             className={`hdr-btn${layerMenuOpen ? ' hdr-btn--active' : ''}`}
-            style={{ ...toolbarCtrl, width: '120px', justifyContent: 'space-between', textTransform: 'uppercase', border: '1px solid #3a3a3a', background: 'rgba(15,15,15,.85)', color: '#d4cfc9' }}>
+            style={{ ...toolbarCtrl, width: '120px', justifyContent: 'space-between', textTransform: 'uppercase', border: '1px solid #3a3a3a', background: 'rgba(15,15,15,.85)', color: '#f5f2ee' }}>
             <span>{LAYER_OPTIONS.find(l => l[0] === mapLayer)?.[1] ?? 'Map'}</span>
             <span style={{ marginLeft: 6 }}>▾</span>
           </button>
@@ -1341,7 +1341,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 return (
                   <button key={layer} type="button" onClick={() => { switchLayer(layer); setLayerMenuOpen(false) }}
                     className="hdr-btn hdr-btn--child"
-                    style={{ ...toolbarCtrl, width: '120px', justifyContent: 'flex-start', textTransform: 'uppercase', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#151515', color: active ? '#f5a89a' : '#d4cfc9', animationDelay: `${i * 0.03}s` }}>
+                    style={{ ...toolbarCtrl, width: '120px', justifyContent: 'flex-start', textTransform: 'uppercase', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#151515', color: active ? '#f5a89a' : '#f5f2ee', animationDelay: `${i * 0.03}s` }}>
                     {label}
                   </button>
                 )
@@ -1460,7 +1460,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           </label>
           <div style={{ display: 'flex', gap: '4px' }}>
             <button onClick={() => { setNewPin(null); setAttachments([]) }}
-              style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
             <button onClick={savePin} disabled={!pinForm.name.trim() || saving}

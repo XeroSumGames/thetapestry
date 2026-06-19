@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { loginPathForCurrent } from '../../../lib/login-redirect'
@@ -399,7 +399,7 @@ export default function ForumsIndexPage() {
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {(Object.keys(CATEGORY_LABEL) as Category[]).map(c => (
                 <button key={c} onClick={() => setDraft(d => ({ ...d, category: c }))}
-                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: draft.category === c ? '#242424' : '#1a1a1a', color: draft.category === c ? CATEGORY_ACCENT[c] : '#d4cfc9' }}>
+                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: draft.category === c ? '#242424' : '#1a1a1a', color: draft.category === c ? CATEGORY_ACCENT[c] : '#f5f2ee' }}>
                   {CATEGORY_LABEL[c]}
                 </button>
               ))}
@@ -417,7 +417,7 @@ export default function ForumsIndexPage() {
                   <button key={s} onClick={() => !disabled && setDraft(d => ({ ...d, scope: s }))}
                     disabled={disabled}
                     title={disabled ? 'You aren’t a member of any campaign yet.' : undefined}
-                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9', opacity: disabled ? 0.4 : 1 }}>
+                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#f5f2ee', opacity: disabled ? 0.4 : 1 }}>
                     {label}
                   </button>
                 )
@@ -459,7 +459,7 @@ export default function ForumsIndexPage() {
               {saving ? 'Posting...' : 'Post Thread'}
             </button>
             <button onClick={() => setComposing(false)}
-              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -704,7 +704,7 @@ function FilterChip({ label, count, accent, active, onClick }: {
         borderRadius: '999px',
         border: `1px solid ${active ? accent : '#3a3a3a'}`,
         background: active ? `${accent}22` : '#1a1a1a',
-        color: active ? accent : '#d4cfc9',
+        color: active ? accent : '#f5f2ee',
       }}>
       <span>{label}</span>
       <span style={{

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
@@ -15,7 +15,7 @@ const panel: React.CSSProperties = { background: '#1a1a1a', border: '1px solid #
 const h1Style: React.CSSProperties = { fontFamily: '"Carlito", sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px', borderBottom: '1px solid #c0392b', paddingBottom: '10px' }
 const h2Style: React.CSSProperties = { fontFamily: '"Carlito", sans-serif', fontSize: '14px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }
 const btnPrimary: React.CSSProperties = { padding: '10px 20px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }
-const btnSecondary: React.CSSProperties = { ...btnPrimary, background: '#242424', border: '1px solid #3a3a3a', color: '#d4cfc9' }
+const btnSecondary: React.CSSProperties = { ...btnPrimary, background: '#242424', border: '1px solid #3a3a3a', color: '#f5f2ee' }
 const subLabel: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: '"Carlito", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }
 
 interface Circle { cx: number; cy: number; r: number } // in display coords
@@ -692,7 +692,7 @@ export default function PortraitResizerPage() {
                           onChange={e => setBulkItems(prev => prev.map(p => p.id === item.id ? { ...p, name: e.target.value } : p))}
                           disabled={item.status === 'uploading' || item.status === 'done'}
                           placeholder="Name (private)"
-                          style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '4px 6px', boxSizing: 'border-box' }}
+                          style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '4px 6px', boxSizing: 'border-box' }}
                         />
                       ) : (
                         <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', padding: '4px 6px' }}>
@@ -752,7 +752,7 @@ export default function PortraitResizerPage() {
           <input
             type="file" accept="image/*" multiple disabled={batchRunning}
             onChange={e => { const files = e.target.files; if (files && files.length > 0) handleBatch(files); e.target.value = '' }}
-            style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#d4cfc9' }}
+            style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#f5f2ee' }}
           />
           <button type="button" disabled={batchRunning}
             onClick={() => folderInputRef.current?.click()}
@@ -1032,7 +1032,7 @@ export default function PortraitResizerPage() {
                       background: active ? '#2a1210' : '#242424',
                       border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`,
                       borderRadius: '3px',
-                      color: active ? '#f5a89a' : '#d4cfc9',
+                      color: active ? '#f5a89a' : '#f5f2ee',
                       fontSize: '14px',
                       fontFamily: '"Carlito", sans-serif',
                       letterSpacing: '.08em',

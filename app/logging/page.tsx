@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
@@ -224,7 +224,7 @@ export default function LoggingPage() {
     padding: '7px 16px',
     border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`,
     background: active ? '#2a1210' : '#242424',
-    color: active ? '#f5a89a' : '#d4cfc9',
+    color: active ? '#f5a89a' : '#f5f2ee',
     borderRadius: '3px', cursor: 'pointer' as const,
     fontSize: '13px', fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.06em', textTransform: 'uppercase' as const,
@@ -238,7 +238,7 @@ export default function LoggingPage() {
           Activity Log
         </div>
         <div style={{ flex: 1 }} />
-        <Link href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</Link>
+        <Link href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</Link>
       </div>
 
       {/* Stat cards */}
@@ -259,11 +259,11 @@ export default function LoggingPage() {
       {/* Moderation queue */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
         <Link href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending Pins</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending Pins</span>
           <span style={{ fontSize: '18px', fontWeight: 700, color: pendingPins > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{pendingPins}</span>
         </Link>
         <Link href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending NPCs</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending NPCs</span>
           <span style={{ fontSize: '18px', fontWeight: 700, color: pendingNpcs > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{pendingNpcs}</span>
         </Link>
       </div>
@@ -272,7 +272,7 @@ export default function LoggingPage() {
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden', marginBottom: '1.5rem' }}>
         <div style={{ padding: '10px 14px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>Visitor Map</span>
-          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             {uniqueVisitors} unique visitors from {uniqueCountries} {uniqueCountries === 1 ? 'country' : 'countries'}
           </span>
         </div>
@@ -291,7 +291,7 @@ export default function LoggingPage() {
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
             {topPages.map((p, i) => (
               <div key={p.page} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: i < topPages.length - 1 ? '1px solid #2e2e2e' : 'none' }}>
-                <span style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>{p.page}</span>
+                <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{p.page}</span>
                 <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>{p.count}</span>
               </div>
             ))}
@@ -336,7 +336,7 @@ export default function LoggingPage() {
                   </button>
                 ))}
                 <button onClick={() => setExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
                   Clear All
                 </button>
               </div>
@@ -402,7 +402,7 @@ export default function LoggingPage() {
                   </button>
                 ))}
                 <button onClick={() => setEventExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
                   Clear All
                 </button>
               </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp, skillStepDown } from '../../lib/xse-engine'
 import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, AttributeName, SkillValue } from '../../lib/xse-schema'
@@ -110,20 +110,20 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         const gained = Object.entries(d.skillDeltas ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([n]) => n)
         return (
           <div key={idx} style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px', marginBottom: '8px' }}>
-            <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Carlito, sans-serif' }}>
+            <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Carlito, sans-serif' }}>
               Step {num}: {title}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0', borderBottom: '1px solid #2e2e2e' }}>
-              <span style={{ color: '#d4cfc9' }}>Attribute</span>
+              <span style={{ color: '#f5f2ee' }}>Attribute</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee' }}>{attrStr}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0' }}>
-              <span style={{ color: '#d4cfc9' }}>Skills</span>
+              <span style={{ color: '#f5f2ee' }}>Skills</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee', maxWidth: '65%', textAlign: 'right', wordBreak: 'break-word' }}>
                 {gained.length ? gained.join(', ') : 'none'}
               </span>
             </div>
-            {d.note && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
+            {d.note && <div style={{ fontSize: '13px', color: '#f5f2ee', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
           </div>
         )
       })}
@@ -156,18 +156,18 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                   borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
                   transition: 'all .15s',
                 }}>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                     {k}
                     <HelpTooltip title={`${k} - ${ATTR_FULL[k]}`} text={ATTRIBUTE_DESCRIPTIONS[k]} iconStyle={{ width: '13px', height: '13px', fontSize: '13px' }} />
                   </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                     <button onClick={() => pickAttr(k)} disabled={!canDec} style={attrBtn(!canDec)}>-</button>
                     <div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#d4cfc9' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#f5f2ee' }}>
                         {val >= 0 ? `+${val}` : val}
                       </div>
-                      <div style={{ fontSize: '13px', color: isSelected ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                      <div style={{ fontSize: '13px', color: isSelected ? '#f5a89a' : '#f5f2ee', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
                     </div>
                     <button onClick={() => pickAttr(k)} disabled={!canInc} style={attrBtn(!canInc)}>+</button>
                   </div>
@@ -176,7 +176,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
             })}
           </div>
           {stepData.attrKey && (
-            <p style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '8px', lineHeight: 1.6 }}>
               Raised {ATTR_FULL[stepData.attrKey as AttributeName]} this step. One attribute per step in stages 1-3.
             </p>
           )}
@@ -232,7 +232,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                     iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }}
                   />
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee' }}>
                   {sk.attribute} - {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
                 </div>
               </div>

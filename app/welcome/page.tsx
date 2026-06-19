@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import Link from 'next/link'
 
 // "A Guide to the Tapestry" - the reference hub for returning users.
@@ -29,7 +29,7 @@ export default function WelcomePage() {
   }
   const cardBody: React.CSSProperties = {
     fontSize: '15px',
-    color: '#d4cfc9',
+    color: '#f5f2ee',
     lineHeight: 1.65,
     flex: 1,
   }

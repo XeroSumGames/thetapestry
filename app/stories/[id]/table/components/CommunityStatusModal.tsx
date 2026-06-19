@@ -34,7 +34,7 @@ export function CommunityStatusModal({
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: '14px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>Community</div>
           <button onClick={() => onClose()}
-            style={{ background: 'none', border: 'none', color: '#d4cfc9', fontSize: '20px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}
+            style={{ background: 'none', border: 'none', color: '#f5f2ee', fontSize: '20px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}
             title="Close">✕</button>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>

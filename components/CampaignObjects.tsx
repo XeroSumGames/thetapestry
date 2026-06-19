@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'
@@ -356,7 +356,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
   const chipBtn: React.CSSProperties = {
     padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a',
-    borderRadius: '3px', color: '#d4cfc9', fontSize: '13px',
+    borderRadius: '3px', color: '#f5f2ee', fontSize: '13px',
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
@@ -365,7 +365,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     <div style={{ padding: '4px' }}>
       {isGM && (
         <button onClick={() => setShowAdd(!showAdd)}
-          style={{ ...chipBtn, width: '100%', marginBottom: '6px', background: showAdd ? '#2a1210' : '#242424', border: `1px solid ${showAdd ? '#c0392b' : '#3a3a3a'}`, color: showAdd ? '#f5a89a' : '#d4cfc9' }}>
+          style={{ ...chipBtn, width: '100%', marginBottom: '6px', background: showAdd ? '#2a1210' : '#242424', border: `1px solid ${showAdd ? '#c0392b' : '#3a3a3a'}`, color: showAdd ? '#f5a89a' : '#f5f2ee' }}>
           {showAdd ? 'Cancel' : '+ Add Object'}
         </button>
       )}
@@ -539,7 +539,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {destroyed && Array.isArray(obj.contents) && obj.contents.length === 0 && entries && entries.length > 0 && (
               <div style={{ paddingLeft: '24px', marginTop: '2px' }}>
                 <button onClick={e => { e.stopPropagation(); setLootingObj(obj); setLootCharId('') }}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', padding: '0 6px', cursor: 'pointer' }}>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', padding: '0 6px', cursor: 'pointer' }}>
                   Search
                 </button>
               </div>
@@ -603,7 +603,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     setCampaignPcs(pcs)
                   }
                 }}
-                  style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
                 {onDuplicate && (
@@ -690,7 +690,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                       setLootingObj(null)
                       setLootCharId('')
                     }}
-                    style={{ width: '100%', marginTop: '6px', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: lootCharId ? '#d4cfc9' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: lootCharId ? 'pointer' : 'not-allowed', opacity: lootCharId ? 1 : 0.5 }}>
+                    style={{ width: '100%', marginTop: '6px', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: lootCharId ? '#f5f2ee' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: lootCharId ? 'pointer' : 'not-allowed', opacity: lootCharId ? 1 : 0.5 }}>
                     Confirm Search (log &quot;found nothing&quot;)
                   </button>
                 </div>
@@ -906,7 +906,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <div style={{ ...LABEL_STYLE_TIGHT }}>Properties</div>
                 <button onClick={() => setEditProps(prev => [...prev, { key: '', value: '', revealed: false }])}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '1px 6px', cursor: 'pointer' }}>+ Add</button>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '1px 6px', cursor: 'pointer' }}>+ Add</button>
               </div>
               {editProps.map((prop, i) => (
                 <div key={i} style={{ display: 'flex', gap: '3px', marginBottom: '3px', alignItems: 'center' }}>
@@ -943,7 +943,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               ))}
               <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
                 <select value={contentPickerValue} onChange={e => setContentPickerValue(e.target.value)}
-                  style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                  style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">Add item...</option>
                   <optgroup label="Weapons">
                     {ALL_WEAPONS.map(w => <option key={w.name} value={`weapon:${w.name}`}>{w.name}</option>)}

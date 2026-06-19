@@ -233,7 +233,7 @@ export default function SettingHubPage() {
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '15px', color: meta.accent, fontStyle: 'italic', marginBottom: '12px' }}>
           {meta.tagline}
         </div>
-        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '16px', maxWidth: '720px' }}>
+        <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '16px', maxWidth: '720px' }}>
           {meta.blurb}
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -242,7 +242,7 @@ export default function SettingHubPage() {
             Run a Campaign in {name}
           </Link>
           <Link href={`/map?flyTo=${meta.mapCenter.lat},${meta.mapCenter.lng}&zoom=${meta.mapZoom}`}
-            style={{ padding: '10px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            style={{ padding: '10px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             🗺 Open on Map
           </Link>
         </div>
@@ -276,7 +276,7 @@ export default function SettingHubPage() {
                         </span>
                       </div>
                       {p.notes && (
-                        <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginTop: '4px', paddingLeft: '22px' }}>
+                        <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, marginTop: '4px', paddingLeft: '22px' }}>
                           {p.notes}
                         </div>
                       )}
@@ -320,7 +320,7 @@ export default function SettingHubPage() {
                     )}
                   </div>
                   {c.description && (
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: hasCoords ? '8px' : 0 }}>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, marginBottom: hasCoords ? '8px' : 0 }}>
                       {c.description}
                     </div>
                   )}

@@ -216,7 +216,7 @@ export default function ForumThreadPage() {
             <div style={{ marginBottom: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {(Object.keys(CATEGORY_LABEL) as Category[]).map(c => (
                 <button key={c} onClick={() => setThreadDraft(d => ({ ...d, category: c }))}
-                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${threadDraft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: threadDraft.category === c ? '#242424' : '#1a1a1a', color: threadDraft.category === c ? CATEGORY_ACCENT[c] : '#d4cfc9' }}>
+                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${threadDraft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: threadDraft.category === c ? '#242424' : '#1a1a1a', color: threadDraft.category === c ? CATEGORY_ACCENT[c] : '#f5f2ee' }}>
                   {CATEGORY_LABEL[c]}
                 </button>
               ))}
@@ -229,7 +229,7 @@ export default function ForumThreadPage() {
                 Save
               </button>
               <button onClick={() => setEditingThread(false)}
-                style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Cancel
               </button>
             </div>
@@ -247,13 +247,13 @@ export default function ForumThreadPage() {
               {thread.title}
             </div>
             {renderAuthorRow(thread.author_user_id, thread.created_at)}
-            <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
               {renderRichText(thread.body, { linkify: true })}
             </div>
             {isMyThread && (
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={startEditThread}
-                  style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
                 <button onClick={deleteThread}
@@ -287,20 +287,20 @@ export default function ForumThreadPage() {
                       Save
                     </button>
                     <button onClick={() => { setEditingReplyId(null); setReplyDraft('') }}
-                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Cancel
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: isMine ? '8px' : '0' }}>
+                  <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: isMine ? '8px' : '0' }}>
                     {renderRichText(r.body, { linkify: true })}
                   </div>
                   {isMine && (
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={() => startEditReply(r)}
-                        style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Edit
                       </button>
                       <button onClick={() => deleteReply(r.id)}

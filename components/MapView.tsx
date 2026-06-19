@@ -1303,7 +1303,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       {!embedded && showHeader && (
         <div style={{ flexShrink: 0, zIndex: 1000, background: '#0f0f0f', borderBottom: '1px solid #c0392b', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>The Tapestry</div>
-          <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
           <div style={{ flex: 1 }} />
           <button onClick={() => setSidebarOpen(p => !p)} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
@@ -1317,7 +1317,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               const text = `center: [${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}], zoom: ${z}`
               navigator.clipboard.writeText(text)
               alert(`Copied: ${text}`)
-            }} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            }} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Copy Position
             </button>
           )}
@@ -1450,7 +1450,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                               <span style={{ fontSize: '13px', color: '#f5f2ee', overflow: expandedPinId === p.id ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: expandedPinId === p.id ? 'normal' : 'nowrap' }}>{p.name}</span>
                             </div>
                             {expandedPinId === p.id && p.notes && (
-                              <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginTop: '4px', paddingLeft: '20px' }}>{p.notes}</div>
+                              <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, marginTop: '4px', paddingLeft: '20px' }}>{p.notes}</div>
                             )}
                           </div>
                         ))}
@@ -1694,7 +1694,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                         </div>
                                       )
                                     })()}
-                                    {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '6px' }}>{p.notes}</div>}
+                                    {p.notes && <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, marginBottom: '6px' }}>{p.notes}</div>}
                                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
                                       {p.category === 'world_event'
                                         ? (p.event_date ? <span style={{ color: '#EF9F27' }}>{p.event_date}</span> : '')
@@ -1727,7 +1727,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                           </button>
                                         )}
                                         <button onClick={e => { e.stopPropagation(); startEdit(p) }}
-                                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', padding: '0', fontFamily: 'Carlito, sans-serif' }}>Edit</button>
+                                          style={{ background: 'none', border: 'none', color: '#f5f2ee', cursor: 'pointer', fontSize: '13px', padding: '0', fontFamily: 'Carlito, sans-serif' }}>Edit</button>
                                         <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }}
                                           style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', padding: '0' }}>×</button>
                                       </div>
@@ -1753,7 +1753,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
         {/* Pins toggle button is rendered inside the search bar row below */}
         {!embedded && showHeader && (
-          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', pointerEvents: 'none' }}>
             Click anywhere on the map to place a pin
           </div>
         )}
@@ -1762,7 +1762,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {(!embedded || showSidebarProp) && !sidebarOpen && (
                 <button type="button" onClick={() => setSidebarOpen(true)}
-                  style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   Pins ☰
                 </button>
               )}
@@ -1789,7 +1789,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                         setSearchQuery(s.display_name.split(',')[0])
                         setSuggestions([])
                       }}
-                        style={{ padding: '6px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                        style={{ padding: '6px 10px', fontSize: '13px', color: '#f5f2ee', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         {s.display_name.length > 60 ? s.display_name.slice(0, 60) + '...' : s.display_name}
@@ -1802,7 +1802,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             </form>
             {[['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['positron', 'Positron'], ['dark', 'Dark']].map(([layer, label]) => (
               <button key={layer} onClick={() => switchLayer(layer)}
-                style={{ padding: '3px 0', width: '100px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
+                style={{ padding: '3px 0', width: '100px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#f5f2ee' }}>
                 {label}
               </button>
             ))}
@@ -1849,7 +1849,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         }
         e.target.value = ''
       }}
-        style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+        style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
         <option value="">+ Add category...</option>
         {PIN_CATEGORIES.filter(c => !editForm.categories.includes(c.value)).map(c => (
           <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
@@ -1974,7 +1974,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             <button key={val} onClick={() => {
               updateMapPinType(editingPin.id, val)
             }}
-              style={{ flex: 1, padding: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editingPin.pin_type === val ? '#c0392b' : '#3a3a3a'}`, background: editingPin.pin_type === val ? '#2a1210' : '#242424', color: editingPin.pin_type === val ? '#f5a89a' : '#d4cfc9' }}>
+              style={{ flex: 1, padding: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editingPin.pin_type === val ? '#c0392b' : '#3a3a3a'}`, background: editingPin.pin_type === val ? '#2a1210' : '#242424', color: editingPin.pin_type === val ? '#f5a89a' : '#f5f2ee' }}>
               {label}
             </button>
           ))}
@@ -2023,7 +2023,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         Delete
       </button>
       <button onClick={() => setEditingPin(null)}
-        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
         Cancel
       </button>
     </div>

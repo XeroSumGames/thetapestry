@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { type VehicleDamageTable, damageRowForRoll } from '../lib/vehicle-damage'
@@ -48,7 +48,7 @@ export default function VehicleDamageTable({ table, onRoll }: VehicleDamageTable
           <div style={{ fontSize: '14px', color: '#f5a89a', fontWeight: 700 }}>
             🎲 {roll.d1} + {roll.d2} = {roll.sum} &rarr; {hitRow.system}
           </div>
-          <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginTop: '3px' }}>{hitRow.effect}</div>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, marginTop: '3px' }}>{hitRow.effect}</div>
         </div>
       )}
 
@@ -71,7 +71,7 @@ export default function VehicleDamageTable({ table, onRoll }: VehicleDamageTable
                   <div style={{ fontSize: '15px', fontWeight: 700, color: isHit ? '#f5a89a' : '#7ab3d4', textAlign: 'center' }}>{r.roll}</div>
                   <div>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: isHit ? '#f5a89a' : '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.03em' }}>{r.system}</div>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginTop: '2px' }}>{r.effect}</div>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.5, marginTop: '2px' }}>{r.effect}</div>
                     <div style={{ fontSize: '13px', color: '#9aa5b0', lineHeight: 1.5, marginTop: '3px' }}>
                       <span style={{ color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.04em', fontSize: '13px' }}>Repair: </span>{r.repair}
                     </div>

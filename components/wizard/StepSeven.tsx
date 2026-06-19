@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { WizardState, getCumulativeAttributes } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, deriveSecondaryStats, type AttributeName } from '../../lib/xse-schema'
 import HelpTooltip from '../HelpTooltip'
@@ -58,15 +58,15 @@ export default function StepSeven({ state }: Props) {
               border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
               borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
             }}>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                 {k}
                 <HelpTooltip title={`${k} - ${ATTR_FULL[k]}`} text={ATTRIBUTE_DESCRIPTIONS[k]} iconStyle={{ width: '13px', height: '13px', fontSize: '13px' }} />
               </div>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
               <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '4px 0' }}>
                 {sgn(val)}
               </div>
-              <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
+              <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#f5f2ee' }}>{ATTRIBUTE_LABELS[val]}</div>
             </div>
           )
         })}
@@ -80,7 +80,7 @@ export default function StepSeven({ state }: Props) {
             background: '#242424', border: `1px solid ${hi ? '#7a1f16' : '#2e2e2e'}`,
             borderRadius: '3px', padding: '8px 10px',
           }}>
-            <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <span>{label}</span>
               {DERIVED_DESCRIPTIONS[label] && (
                 <HelpTooltip title={label} text={DERIVED_DESCRIPTIONS[label]} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
@@ -93,7 +93,7 @@ export default function StepSeven({ state }: Props) {
         ))}
       </div>
 
-      <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6 }}>
+      <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6 }}>
         All values auto-calculated from RAPID attributes.
       </p>
 

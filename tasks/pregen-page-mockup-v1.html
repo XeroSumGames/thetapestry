@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>/pregen — Pre-generated Character Library</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; font-family: 'Segoe UI', Carlito, sans-serif; color: #f5f2ee; min-height: 100vh; padding: 2rem 1rem; }
+  .page { max-width: 860px; margin: 0 auto; }
+
+  /* Topbar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .back-link { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #5a5550; text-transform: uppercase; letter-spacing: .08em; text-decoration: none; cursor: pointer; }
+  .back-link:hover { color: #d4cfc9; }
+  .page-title { font-size: 30px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #fff; margin-bottom: 6px; }
+  .page-sub { font-size: 14px; color: #7a7068; margin-bottom: 24px; }
+
+  /* Filter bar */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+  .filter-chip { padding: 6px 14px; background: #171717; border: 1px solid #2e2e2e; border-radius: 16px; color: #7a7068; font-size: 13px; font-family: inherit; letter-spacing: .04em; cursor: pointer; transition: all .15s; }
+  .filter-chip.active { background: #2a1210; border-color: #c0392b; color: #f5a89a; }
+  .filter-chip:hover:not(.active) { border-color: #3a3a3a; color: #d4cfc9; }
+  .search-box { margin-left: auto; padding: 7px 12px; background: #171717; border: 1px solid #2e2e2e; border-radius: 4px; color: #f5f2ee; font-size: 13px; font-family: inherit; outline: none; min-width: 200px; }
+  .search-box:focus { border-color: #3a3a3a; }
+
+  /* Group */
+  .group { margin-bottom: 32px; }
+  .group-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .group-title { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #7ab3d4; font-weight: 700; }
+  .group-count { font-size: 12px; color: #4a4642; }
+  .group-line { flex: 1; height: 1px; background: #1a1a1a; }
+
+  /* Card grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .char-card { background: #141414; border: 1px solid #222; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all .15s; display: flex; flex-direction: column; }
+  .char-card:hover { border-color: #c0392b; transform: translateY(-2px); }
+  .card-portrait { width: 100%; height: 130px; background: #0d0d0d; position: relative; overflow: hidden; }
+  .card-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card-portrait-initials { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700; color: #2d5a1b; background: #11180c; }
+  .rarity-tag { position: absolute; top: 6px; right: 6px; font-size: 11px; padding: 2px 7px; border-radius: 3px; letter-spacing: .06em; text-transform: uppercase; font-weight: 700; }
+  .rarity-common { background: rgba(0,0,0,.6); color: #7fc458; }
+  .card-body { padding: 10px 12px 12px; flex: 1; display: flex; flex-direction: column; }
+  .card-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .02em; }
+  .card-role { font-size: 13px; color: #7ab3d4; margin-top: 2px; }
+  .card-blurb { font-size: 13px; color: #6a635c; margin-top: 7px; line-height: 1.45; flex: 1; }
+  .card-use { margin-top: 10px; padding: 7px; background: #1a2e10; border: 1px solid #2d5a1b; border-radius: 4px; color: #7fc458; font-size: 13px; font-family: inherit; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: background .15s; }
+  .char-card:hover .card-use { background: #223d14; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <a class="back-link">&#8592; Back to story</a>
+  </div>
+
+  <h1 class="page-title">Pre-generated characters</h1>
+  <p class="page-sub">Ready-to-play survivors. Pick one to drop straight into your story, or start from the ones authored for the module you're playing.</p>
+
+  <div class="filter-bar">
+    <span class="filter-chip active">All</span>
+    <span class="filter-chip">For this story</span>
+    <span class="filter-chip">Combat</span>
+    <span class="filter-chip">Support</span>
+    <span class="filter-chip">Social</span>
+    <span class="filter-chip">Technical</span>
+    <input class="search-box" type="text" placeholder="Search characters..." />
+  </div>
+
+  <!-- Group: module-specific -->
+  <div class="group">
+    <div class="group-header">
+      <span class="group-title">&#9733; Authored for "Empty"</span>
+      <span class="group-count">3 characters</span>
+      <span class="group-line"></span>
+    </div>
+    <div class="grid">
+
+      <div class="char-card">
+        <div class="card-portrait">
+          <img src="https://i.pravatar.cc/300?img=33" alt="" />
+          <span class="rarity-tag rarity-common">Common</span>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Marla Voss</div>
+          <div class="card-role">Scavenger</div>
+          <div class="card-blurb">Quick hands, quicker exits. Knows where the good salvage hides.</div>
+          <button class="card-use">Use this character</button>
+        </div>
+      </div>
+
+      <div class="char-card">
+        <div class="card-portrait">
+          <img src="https://i.pravatar.cc/300?img=51" alt="" />
+          <span class="rarity-tag rarity-common">Common</span>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Dell Ramos</div>
+          <div class="card-role">Medic</div>
+          <div class="card-blurb">Steady under pressure. Keeps the party breathing when it counts.</div>
+          <button class="card-use">Use this character</button>
+        </div>
+      </div>
+
+      <div class="char-card">
+        <div class="card-portrait">
+          <div class="card-portrait-initials">JT</div>
+          <span class="rarity-tag rarity-common">Common</span>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Jin Tao</div>
+          <div class="card-role">Tinker</div>
+          <div class="card-blurb">Can wire a generator from a toaster and two paperclips.</div>
+          <button class="card-use">Use this character</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Group: general library -->
+  <div class="group">
+    <div class="group-header">
+      <span class="group-title">General library</span>
+      <span class="group-count">6 characters</span>
+      <span class="group-line"></span>
+    </div>
+    <div class="grid">
+
+      <div class="char-card">
+        <div class="card-portrait"><img src="https://i.pravatar.cc/300?img=14" alt="" /><span class="rarity-tag rarity-common">Common</span></div>
+        <div class="card-body"><div class="card-name">Cole Hargrove</div><div class="card-role">Brawler</div><div class="card-blurb">Talks with his fists. Surprisingly loyal once you earn it.</div><button class="card-use">Use this character</button></div>
+      </div>
+
+      <div class="char-card">
+        <div class="card-portrait"><img src="https://i.pravatar.cc/300?img=45" alt="" /><span class="rarity-tag rarity-common">Common</span></div>
+        <div class="card-body"><div class="card-name">Priya Anand</div><div class="card-role">Negotiator</div><div class="card-blurb">Reads a room in seconds. Has talked her way out of worse.</div><button class="card-use">Use this character</button></div>
+      </div>
+
+      <div class="char-card">
+        <div class="card-portrait"><div class="card-portrait-initials">RB</div><span class="rarity-tag rarity-common">Common</span></div>
+        <div class="card-body"><div class="card-name">Russ Blackwell</div><div class="card-role">Tracker</div><div class="card-blurb">Spent years in the back country. Nothing moves that he misses.</div><button class="card-use">Use this character</button></div>
+      </div>
+
+      <div class="char-card">
+        <div class="card-portrait"><img src="https://i.pravatar.cc/300?img=23" alt="" /><span class="rarity-tag rarity-common">Common</span></div>
+        <div class="card-body"><div class="card-name">Nadia Kerr</div><div class="card-role">Sharpshooter</div><div class="card-blurb">One shot, one solution. Patient to a fault.</div><button class="card-use">Use this character</button></div>
+      </div>
+
+      <div class="char-card">
+        <div class="card-portrait"><img src="https://i.pravatar.cc/300?img=60" alt="" /><span class="rarity-tag rarity-common">Common</span></div>
+        <div class="card-body"><div class="card-name">Theo Marsh</div><div class="card-role">Scout</div><div class="card-blurb">First in, first to spot trouble. Light on his feet.</div><button class="card-use">Use this character</button></div>
+      </div>
+
+      <div class="char-card">
+        <div class="card-portrait"><div class="card-portrait-initials">SG</div><span class="rarity-tag rarity-common">Common</span></div>
+        <div class="card-body"><div class="card-name">Sloane Gray</div><div class="card-role">Quartermaster</div><div class="card-blurb">Keeps the party fed and supplied. Counts every bullet.</div><button class="card-use">Use this character</button></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

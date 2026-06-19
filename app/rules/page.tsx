@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { RULE_SECTIONS } from '../../lib/rules/sections'
 import { RuleHero } from '../../components/rules/RuleSection'
 
@@ -57,7 +57,7 @@ export default function RulesIndexPage() {
             >
               {section.title}
             </div>
-            <div style={{ fontSize: 14, color: '#d4cfc9', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 14, color: '#f5f2ee', lineHeight: 1.6 }}>
               {section.summary}
             </div>
           </Link>

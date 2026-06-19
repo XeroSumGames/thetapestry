@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { openPopout } from '../lib/popout'
 import { type InventoryItem, normalizeInventoryItem } from '../lib/inventory'
 
@@ -152,7 +152,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{v.name}</div>
             <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{v.type} · {v.rarity}</div>
-            {v.three_words && <div style={{ fontSize: '13px', color: '#d4cfc9', fontStyle: 'italic' }}>{v.three_words}</div>}
+            {v.three_words && <div style={{ fontSize: '13px', color: '#f5f2ee', fontStyle: 'italic' }}>{v.three_words}</div>}
           </div>
         </div>
         <button onClick={e => { e.stopPropagation(); openPopout(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, { w: 900, h: 700 }) }} title="Pop out"
@@ -181,7 +181,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
       </div>
 
       {/* Range */}
-      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
+      <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
         Range: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>{v.range}</span>
       </div>
 

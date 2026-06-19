@@ -1,0 +1,1 @@
+SELECT w->>'id' as id, w->>'x1' as x1, w->>'y1' as y1, w->>'x2' as x2, w->>'y2' as y2, w->>'kind' as kind, w->>'door_open' as door_open FROM tactical_scenes ts, jsonb_array_elements(ts.walls::jsonb) w WHERE ts.id = '557378d7-557c-45b7-bf3c-42c2f73840a0' AND w->>'kind' = 'window' ORDER BY (w->>'y1')::float, (w->>'x1')::float;

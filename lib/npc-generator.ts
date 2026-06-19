@@ -58,7 +58,7 @@ const PROFESSION_SKILLS: Record<string, string[]> = {
   Outdoorsman: ['Survival', 'Athletics', 'Navigation', 'Stealth', 'Animal Handling'],
   Outlaw: ['Stealth', 'Lock-Picking', 'Sleight of Hand', 'Streetwise', 'Melee Combat'],
   Performer: ['Entertainment', 'Inspiration', 'Manipulation', 'Sleight of Hand', 'Barter'],
-  Politician: ['Manipulation', 'Inspiration', 'Psychology', 'Barter', 'Intimidation'],
+  Politician: ['Manipulation', 'Inspiration', 'Psychology', 'Barter', 'Streetwise'],
   Trader: ['Barter', 'Streetwise', 'Navigation', 'Scavenging', 'Manipulation'],
 }
 

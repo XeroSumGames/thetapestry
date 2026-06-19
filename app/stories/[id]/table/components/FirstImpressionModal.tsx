@@ -245,7 +245,7 @@ export default function FirstImpressionModal({
   const modalStyle: React.CSSProperties = {
     background: '#0f0f0f', border: '1px solid #5a1f1f', borderRadius: '4px',
     padding: '20px 24px', width: '480px', maxWidth: '100%',
-    fontFamily: 'Carlito, sans-serif', color: '#d4cfc9',
+    fontFamily: 'Carlito, sans-serif', color: '#f5f2ee',
   }
   const titleStyle: React.CSSProperties = {
     fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em',
@@ -269,7 +269,7 @@ export default function FirstImpressionModal({
   }
   const buttonStyle: React.CSSProperties = {
     padding: '8px 14px', background: '#242424', border: '1px solid #3a3a3a',
-    borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+    borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
   }
   const primaryButtonStyle: React.CSSProperties = {
@@ -278,7 +278,7 @@ export default function FirstImpressionModal({
   }
   const stepperStyle: React.CSSProperties = {
     padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a',
-    borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer',
+    borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer',
   }
 
   return (

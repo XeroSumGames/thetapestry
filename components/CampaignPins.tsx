@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { wrapBroadcast } from '../lib/sentry-realtime'
@@ -594,7 +594,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                   </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button onClick={saveEdit} style={{ flex: 1, padding: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
-                    <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: '3px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: '3px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                   </div>
                 </div>
               ) : (
@@ -729,7 +729,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
           {results.map((r, i) => (
             <button key={i}
               onClick={() => { onPick(parseFloat(r.lat), parseFloat(r.lon)); setResults([]); setQ('') }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? '1px solid #2e2e2e' : 'none', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? '1px solid #2e2e2e' : 'none', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
               onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               {r.display_name}

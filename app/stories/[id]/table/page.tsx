@@ -3837,11 +3837,11 @@ export default function TablePage() {
   // Skill auto-suggest per approach. Fallback social skills for free-pick.
   function suggestedSkillsForApproach(ap: RecruitApproach): string[] {
     if (ap === 'cohort') return ['Barter', 'Tactics', 'Inspiration']
-    if (ap === 'conscript') return ['Intimidation', 'Tactics']
+    if (ap === 'conscript') return ['Manipulation', 'Tactics']
     // convert
     return ['Inspiration', 'Psychology']
   }
-  const RECRUITMENT_ALL_SKILLS = ['Barter', 'Inspiration', 'Manipulation', 'Psychology', 'Streetwise', 'Tactics', 'Intimidation']
+  const RECRUITMENT_ALL_SKILLS = ['Barter', 'Inspiration', 'Manipulation', 'Psychology', 'Streetwise', 'Tactics']
 
   // Compute the CMod breakdown for the currently-selected recruit
   // state. Returns the pieces so the modal can display them line-by-
@@ -5384,7 +5384,7 @@ export default function TablePage() {
           <button onClick={toggleRecorder} disabled={recorderToggling}
             className="hdr-btn"
             title={recorderEnabled ? 'Stop recording - every connected player tab auto-downloads its buffer' : 'Start recording - every connected player tab wipes its buffer and captures fresh'}
-            style={{ ...hdrBtn(recorderEnabled ? '#2a1210' : '#242424', recorderEnabled ? '#f5a89a' : '#d4cfc9', recorderEnabled ? '#c0392b' : '#3a3a3a'), opacity: recorderToggling ? 0.5 : 1, cursor: recorderToggling ? 'not-allowed' : 'pointer' }}>
+            style={{ ...hdrBtn(recorderEnabled ? '#2a1210' : '#242424', recorderEnabled ? '#f5a89a' : '#f5f2ee', recorderEnabled ? '#c0392b' : '#3a3a3a'), opacity: recorderToggling ? 0.5 : 1, cursor: recorderToggling ? 'not-allowed' : 'pointer' }}>
             {recorderToggling ? '...' : '⏺'}
           </button>
         )}
@@ -5409,14 +5409,14 @@ export default function TablePage() {
             setShowEndSessionModal(true)
           }}
             className="hdr-btn"
-            style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>
+            style={hdrBtn('#242424', '#f5f2ee', '#3a3a3a')}>
             End Session
           </button>
         )}
         {gmLike && !combatActive && (
           <>
             {/* Campaign Map button + Tactical Map scene-picker dropdown (echoes Checks/Community: New Scene + every scene, active in green) */}
-            <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }} className={`hdr-btn${!showTacticalMap ? ' hdr-btn--active' : ''}`} style={hdrBtn(!showTacticalMap ? '#2a1210' : '#242424', !showTacticalMap ? '#f5a89a' : '#d4cfc9', !showTacticalMap ? '#c0392b' : '#3a3a3a')}>Campaign Map</button>
+            <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }} className={`hdr-btn${!showTacticalMap ? ' hdr-btn--active' : ''}`} style={hdrBtn(!showTacticalMap ? '#2a1210' : '#242424', !showTacticalMap ? '#f5a89a' : '#f5f2ee', !showTacticalMap ? '#c0392b' : '#3a3a3a')}>Campaign Map</button>
             {renderHeaderMenu('tacticalmap', 'Tactical Map', [
               // Map Setup opens the scene-controls panel as an in-tab floating,
               // draggable, always-on-top overlay (was a separate browser window
@@ -5424,13 +5424,13 @@ export default function TablePage() {
               { label: 'Map Setup', onClick: () => setMapSetupOpen(o => !o) },
               { label: 'New Scene', onClick: () => createNewScene() },
               ...sceneList.map(s => ({ label: s.name, color: s.is_active ? '#7fc458' : undefined, onClick: () => openScene(s.id) })),
-            ], hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a'))}
+            ], hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#f5f2ee', showTacticalMap ? '#c0392b' : '#3a3a3a'))}
           </>
         )}
         {!gmLike && !combatActive && (
           <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }}
             className={`hdr-btn${showTacticalMap ? ' hdr-btn--active' : ''}`}
-            style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
+            style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#f5f2ee', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
         )}
@@ -5451,7 +5451,7 @@ export default function TablePage() {
             window.setTimeout(() => setShareMapFlash(false), 1500)
           }}
             className={`hdr-btn${shareMapFlash ? ' hdr-btn--active' : ''}`}
-            style={hdrBtn(shareMapFlash ? '#1a2e10' : '#242424', shareMapFlash ? '#7fc458' : '#d4cfc9', shareMapFlash ? '#2d5a1b' : '#3a3a3a')}>
+            style={hdrBtn(shareMapFlash ? '#1a2e10' : '#242424', shareMapFlash ? '#7fc458' : '#f5f2ee', shareMapFlash ? '#2d5a1b' : '#3a3a3a')}>
             {shareMapFlash ? '✓ Shared' : 'Share Map'}
           </button>
         )}
@@ -5721,7 +5721,7 @@ export default function TablePage() {
           <div style={{ background: '#2a1210', borderBottom: '1px solid #c0392b', padding: '4px 16px', fontFamily: 'Carlito, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, gap: '8px', flexWrap: 'nowrap', fontSize: '13px' }}>
             <span style={{ fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', whiteSpace: 'nowrap' }}>🩸 {title}</span>
             <span style={{ color: '#666' }}>•</span>
-            <span style={{ color: '#d4cfc9', whiteSpace: 'nowrap' }}>{subtitle}</span>
+            <span style={{ color: '#f5f2ee', whiteSpace: 'nowrap' }}>{subtitle}</span>
             <span style={{ color: '#666' }}>•</span>
             <span style={{ color: '#cce0f5', whiteSpace: 'nowrap' }}>You can still watch the map, whisper the GM, and read the log.</span>
           </div>
@@ -5768,7 +5768,7 @@ export default function TablePage() {
                 )
               })}
               <button onClick={endCoordinatedEffort}
-                style={{ padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 End Effort
               </button>
             </div>
@@ -6013,11 +6013,11 @@ export default function TablePage() {
 
                 {/* ── COORDINATE ── */}
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setShowCoordinateModal(true); setCoordinateSelection('') }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Coordinate</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Coordinate</button>
 
                 {/* ── COVER FIRE - opens social-target picker (no roll, auto-applies) ── */}
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Cover Fire' ? null : { action: 'Cover Fire' }) }}
-                  style={actBtn(socialTarget?.action === 'Cover Fire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Cover Fire' ? '#7fc458' : '#d4cfc9', socialTarget?.action === 'Cover Fire' ? '#2d5a1b' : '#3a3a3a')}>Cover Fire</button>
+                  style={actBtn(socialTarget?.action === 'Cover Fire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Cover Fire' ? '#7fc458' : '#f5f2ee', socialTarget?.action === 'Cover Fire' ? '#2d5a1b' : '#3a3a3a')}>Cover Fire</button>
 
                 {/* ── DEFEND: +2 defensive modifier for next incoming attack ── */}
                 <button onClick={async () => {
@@ -6025,7 +6025,7 @@ export default function TablePage() {
                   await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2 }).eq('id', activeEntry.id)
                   await consumeAction(activeEntry.id, `${activeEntry.character_name} - Defend (+2 Defensive Modifier, next attack only)`)
                 }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend{(activeEntry.defense_bonus ?? 0) > 0 ? ` (+${activeEntry.defense_bonus})` : ''}</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Defend{(activeEntry.defense_bonus ?? 0) > 0 ? ` (+${activeEntry.defense_bonus})` : ''}</button>
 
                 {/* ── DICE CHECK: SRD §06 18th action - pop the active combatant's
                     sheet so the player can roll any attribute / skill. The roll
@@ -6044,7 +6044,7 @@ export default function TablePage() {
                     if (pc) { setSelectedEntry(pc); setViewingNpcs([]); setSheetPos(null) }
                   }
                 }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Dice Check</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Dice Check</button>
 
                 {/* ── DISTRACT: dedicated <RollModal> (Phase 2 migration,
                     2026-05-20). Same Close-range + alive-target filter
@@ -6155,7 +6155,7 @@ export default function TablePage() {
                     rollerIsNpc: distractRollerIsNpc,
                     preselectName: preselect,
                   })
-                }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
+                }} style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Distract</button>
 
                 {/* ── FIRE FROM COVER: both actions, fire weapon + keep cover defense ── */}
                 {activeEntry.has_cover && w ? (
@@ -6177,11 +6177,11 @@ export default function TablePage() {
 
                 {/* ── GRAPPLE: Opposed Unarmed Combat check ── */}
                 <button onClick={() => { setGrappleMode('grapple'); setGrappleResult(null); setShowGrappleModal(true) }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Grapple</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Grapple</button>
 
                 {/* ── INSPIRE - opens social-target picker (no roll, auto-applies) ── */}
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Inspire' ? null : { action: 'Inspire' }) }}
-                  style={actBtn(socialTarget?.action === 'Inspire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Inspire' ? '#7fc458' : '#d4cfc9', socialTarget?.action === 'Inspire' ? '#2d5a1b' : '#3a3a3a')}>Inspire</button>
+                  style={actBtn(socialTarget?.action === 'Inspire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Inspire' ? '#7fc458' : '#f5f2ee', socialTarget?.action === 'Inspire' ? '#2d5a1b' : '#3a3a3a')}>Inspire</button>
 
                 {/* ── MELEE: 1-action melee weapon attack using a weapon from inventory
                     (or NPC weapon2 slot). Lets a player with a ranged primary attack
@@ -6213,9 +6213,9 @@ export default function TablePage() {
                         : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
                       handleRollRequest(`${activeEntry.character_name} - Melee (${mw.name})`, amod, smod, { weaponName: mw.name, damage: mw.damage, rpPercent: mw.rpPercent, conditionCmod: 0, traits: mw.traits ?? [] })
                     }}
-                      style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Melee ({mw.name})</button>
+                      style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Melee ({mw.name})</button>
                   ) : (
-                    <button disabled title="No melee weapon in inventory" style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Melee</button>
+                    <button disabled title="No melee weapon in inventory" style={disabledBtn('#242424', '#f5f2ee', '#3a3a3a')}>Melee</button>
                   )
                 })()}
 
@@ -6245,7 +6245,7 @@ export default function TablePage() {
                   if (!moverCharId && !moverNpcId) return
                   setMoveMode({ characterId: moverCharId, npcId: moverNpcId, feet: 10 })
                 }}
-                  style={moveMode ? actBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#d4cfc9', '#3a3a3a')}>{moveMode ? 'Cancel Move' : 'Move'}</button>
+                  style={moveMode ? actBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#f5f2ee', '#3a3a3a')}>{moveMode ? 'Cancel Move' : 'Move'}</button>
 
                 {/* ── RAPID FIRE: -1 CMod first shot, -3 CMod second. Both actions: -2/-4 ── */}
                 {w && !isMelee ? (
@@ -6264,16 +6264,16 @@ export default function TablePage() {
                     title={isBroken ? `${w.name} is Broken - repair via Upkeep Check` : outOfAmmo ? `${w.name} is empty - Reload via Ready Weapon` : undefined}
                     style={(has2Actions && !isBroken && !outOfAmmo) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Rapid Fire{isBroken ? ' - Broken' : outOfAmmo ? ' - empty' : ''}</button>
                 ) : (
-                  <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Rapid Fire</button>
+                  <button disabled style={disabledBtn('#242424', '#f5f2ee', '#3a3a3a')}>Rapid Fire</button>
                 )}
 
                 {/* ── READY WEAPON: switch/reload/unjam ── */}
                 <button onClick={() => setShowReadyWeaponModal(true)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Ready Weapon</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Ready Weapon</button>
 
                 {/* ── REPOSITION: end-of-round positioning ── */}
                 <button onClick={() => { clearAimIfActive(activeEntry.id); consumeAction(activeEntry.id, `${activeEntry.character_name} - Reposition (Resolution phase)`) }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reposition</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Reposition</button>
 
                 {/* ── SPRINT: both actions, 3x move (30ft), then Athletics check ── */}
                 {/* Action consumption happens in onMoveComplete - NOT here. If we */}
@@ -6286,7 +6286,7 @@ export default function TablePage() {
                   sprintPendingRef.current = true
                   setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 30 })
                 } : undefined} disabled={!has2Actions}
-                  style={has2Actions ? actBtn('#242424', '#d4cfc9', '#3a3a3a') : disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Sprint</button>
+                  style={has2Actions ? actBtn('#242424', '#f5f2ee', '#3a3a3a') : disabledBtn('#242424', '#f5f2ee', '#3a3a3a')}>Sprint</button>
 
                 {/* ── SUBDUE: unarmed/melee, full RP, 50% WP ── */}
                 <button onClick={() => {
@@ -6302,7 +6302,7 @@ export default function TablePage() {
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
                   handleRollRequest(`${activeEntry.character_name} - Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, wpPercent: 50, conditionCmod: 0 })
                 }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Subdue</button>
 
                 {/* ── TAKE COVER: +2 defensive modifier for all attacks this round (once per round) ── */}
                 <button onClick={!activeEntry.has_cover ? async () => {
@@ -6310,7 +6310,7 @@ export default function TablePage() {
                   await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2, has_cover: true }).eq('id', activeEntry.id)
                   await consumeAction(activeEntry.id, `${activeEntry.character_name} - Take Cover (+2 Defensive Modifier, all attacks this round)`)
                 } : undefined} disabled={activeEntry.has_cover}
-                  style={activeEntry.has_cover ? disabledBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover{activeEntry.has_cover ? ' ✓' : ''}</button>
+                  style={activeEntry.has_cover ? disabledBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Take Cover{activeEntry.has_cover ? ' ✓' : ''}</button>
 
                 {/* ── UNARMED: PHY + Unarmed Combat, 1d3 ── */}
                 <button onClick={() => {
@@ -6322,7 +6322,7 @@ export default function TablePage() {
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
                   handleRollRequest(`${activeEntry.character_name} - Unarmed`, amod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
                 }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Unarmed</button>
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Unarmed</button>
 
                 {/* ── Modals (overlay-positioned; render order doesn't matter for layout) ── */}
                 {socialTarget && (() => {
@@ -6365,7 +6365,7 @@ export default function TablePage() {
                           </div>
                         )}
                         <button onClick={() => setSocialTarget(null)}
-                          style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                          style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                       </div>
                     </div>
                   )
@@ -6406,7 +6406,7 @@ export default function TablePage() {
                         </select>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button onClick={() => setShowCoordinateModal(false)}
-                            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                           <button disabled={!coordinateSelection} onClick={() => {
                             // Find the target entry and trigger Tactics* roll
                             const targetEntry = initiativeOrder.find(e => e.character_name === coordinateSelection)
@@ -8008,7 +8008,7 @@ export default function TablePage() {
                   : e))
               }}
             />
-            <button onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderTop: 'none', borderRadius: '0 0 4px 4px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderTop: 'none', borderRadius: '0 0 4px 4px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
             </button>
           </div>
@@ -8070,13 +8070,13 @@ export default function TablePage() {
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>{pendingRoll.weapon ? 'Attack Roll' : 'Rolling'}</div>
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{pendingRoll.label}</div>
-                <div style={{ display: 'flex', gap: '12px', marginBottom: pendingRoll.weapon ? '6px' : '1rem', fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: pendingRoll.weapon ? '6px' : '1rem', fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                   <span>2d6</span>
                   {pendingRoll.amod !== 0 && <span style={{ color: pendingRoll.amod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.amod > 0 ? '+' : ''}{pendingRoll.amod} AMod</span>}
                   {pendingRoll.smod !== 0 && <span style={{ color: pendingRoll.smod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.smod > 0 ? '+' : ''}{pendingRoll.smod} SMod</span>}
                 </div>
                 {pendingRoll.weapon && (
-                  <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                  <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                     <div>
                       <span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{pendingRoll.weapon.damage}</span>
                       &nbsp;&nbsp;<span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{pendingRoll.weapon.rpPercent}%</span>
@@ -8096,7 +8096,7 @@ export default function TablePage() {
                 {pendingRoll.weapon?.traits && getTraitValue(pendingRoll.weapon.traits, 'Automatic Burst') !== null && (
                   <div style={{ marginBottom: '1rem' }}>
                     <button onClick={() => setUseBurst(prev => !prev)}
-                      style={{ width: '100%', padding: '6px', background: useBurst ? '#2d5a1b' : '#242424', border: `1px solid ${useBurst ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: useBurst ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ width: '100%', padding: '6px', background: useBurst ? '#2d5a1b' : '#242424', border: `1px solid ${useBurst ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: useBurst ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       {useBurst ? `✓ Automatic Burst (${getTraitValue(pendingRoll.weapon.traits, 'Automatic Burst') || 3} rounds)` : `Automatic Burst (${getTraitValue(pendingRoll.weapon.traits, 'Automatic Burst') || 3} rounds)`}
                     </button>
                   </div>
@@ -8368,7 +8368,7 @@ export default function TablePage() {
                   )
                 })()}
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                   <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>
                     {rolling ? 'Rolling...' : preRollInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll'}
                   </button>
@@ -8389,7 +8389,7 @@ export default function TablePage() {
                     <div key={i} style={{ width: '52px', height: '52px', background: '#242424', border: '2px solid #3a3a3a', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, color: '#f5f2ee' }}>{d}</div>
                   ))}
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
                   [{rollResult.diceRolled && rollResult.diceRolled.length > 2
                     ? rollResult.diceRolled.join('+')
                     : `${rollResult.die1}+${rollResult.die2}`}]
@@ -8415,7 +8415,7 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
                       Damage to {rollResult.damage.targetName}
                     </div>
-                    <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
                       {rollResult.damage.base > 0 && <span>{rollResult.damage.base}</span>}
                       {rollResult.damage.diceDesc && <span>{rollResult.damage.base > 0 ? '+' : ''}{rollResult.damage.diceDesc} ({rollResult.damage.diceRoll})</span>}
                       {rollResult.damage.phyBonus > 0 && <span> +{rollResult.damage.phyBonus} PHY</span>}
@@ -8467,7 +8467,7 @@ export default function TablePage() {
                 {(rollResult.insightUsed === 'pre' || rollResult.insightUsed === 'both') && (
                   <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Insight {rollResult.insightUsed === 'both' ? 'Dice' : 'Die'} spent</div>
                 )}
-                <button onClick={closeRollModal} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Done</button>
+                <button onClick={closeRollModal} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Done</button>
               </>
             )}
 
@@ -8758,7 +8758,7 @@ export default function TablePage() {
               {dropCharacter && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>{dropCharacter} acts first with 1 action, then takes -2 CMod on initiative roll.</div>}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { setShowNpcPicker(false); setDropCharacter('') }} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowNpcPicker(false); setDropCharacter('') }} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={confirmStartCombat} disabled={startingCombat}
                 style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: startingCombat ? 'not-allowed' : 'pointer', opacity: startingCombat ? 0.6 : 1 }}>
                 {startingCombat ? 'Rolling...' : `⚔️ Into the Moment${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
@@ -9173,11 +9173,11 @@ export default function TablePage() {
               const gr = grappleResult!
               const bannerBg = gr.result === 'grappled' ? '#1a2e10' : gr.result === 'failed' ? '#2a1210' : '#242424'
               const bannerBorder = gr.result === 'grappled' ? '#2d5a1b' : gr.result === 'failed' ? '#c0392b' : '#3a3a3a'
-              const bannerColor = gr.result === 'grappled' ? '#7fc458' : gr.result === 'failed' ? '#f5a89a' : '#d4cfc9'
+              const bannerColor = gr.result === 'grappled' ? '#7fc458' : gr.result === 'failed' ? '#f5a89a' : '#f5f2ee'
               return (
                 <>
                   {/* Attacker math line (the dice tiles above show the same dice). */}
-                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '4px' }}>
                     [{Array.isArray(gr.aDiceRolled) && gr.aDiceRolled.length > 0 ? gr.aDiceRolled.join('+') : `${gr.aDie1}+${gr.aDie2}`}]
                     {aPhyMod !== 0 && <span style={{ color: aPhyMod > 0 ? '#7fc458' : '#c0392b' }}> {aPhyMod > 0 ? '+' : ''}{aPhyMod} PHY</span>}
                     {aUnarmed !== 0 && <span style={{ color: aUnarmed > 0 ? '#7fc458' : '#c0392b' }}> {aUnarmed > 0 ? '+' : ''}{aUnarmed} Unarmed</span>}
@@ -9189,7 +9189,7 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '6px' }}>Insight Die spent</div>
                   )}
                   {/* Defender opposed roll. */}
-                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '1rem' }}>
                     <span style={{ color: '#888', textTransform: 'uppercase', letterSpacing: '.06em' }}>vs {gr.defenderName}: </span>
                     {gr.dDie1}+{gr.dDie2} = <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{gr.dTotal}</span>
                     <span style={{ color: outcomeColor(gr.dOutcome), fontWeight: 700 }}>  ·  {gr.dOutcome}</span>
@@ -9442,7 +9442,7 @@ export default function TablePage() {
                   )}
                 </div>
                 <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}>{primary?.weaponName ?? 'None'}</div>
-                {primary && <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                {primary && <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                   Condition: <span style={{ color: condIdx <= 1 ? '#7fc458' : condIdx === 2 ? '#EF9F27' : '#f5a89a' }}>{primary.condition ?? 'Used'}</span>
                   {isJammed && <span style={{ marginLeft: '6px', padding: '0 5px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>Jammed</span>}
                   {primaryW?.clip ? <> · Ammo: <span style={{ color: '#EF9F27' }}>{primary.ammoCurrent ?? 0}/{primaryW.clip}</span> · Reloads: <span style={{ color: '#7ab3d4' }}>{primary.reloads ?? 0}</span></> : null}
@@ -9458,7 +9458,7 @@ export default function TablePage() {
                       </button>
                     )}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{secondary.weaponName}</div>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{secondary.weaponName}</div>
                 </>}
               </div>
 
@@ -9538,7 +9538,7 @@ export default function TablePage() {
               </div>
 
               <button onClick={() => setShowReadyWeaponModal(false)}
-                style={{ marginTop: '1rem', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ marginTop: '1rem', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Cancel
               </button>
             </div>
@@ -9684,7 +9684,7 @@ export default function TablePage() {
                       Perception for any PC (mirror First Impression below). */}
                   {entries.filter(e => gmLike || e.userId === userId).map(e => (
                     <button key={e.character.id} onClick={() => triggerPerceptionCheck(e.character.name)}
-                      style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name} (PER {(e.character.data?.rapid?.RSN ?? 0) + (e.character.data?.rapid?.ACU ?? 0)})</button>
+                      style={hdrBtn('#242424', '#f5f2ee', '#3a3a3a')}>{e.character.name} (PER {(e.character.data?.rapid?.RSN ?? 0) + (e.character.data?.rapid?.ACU ?? 0)})</button>
                   ))}
                 </div>
               </>
@@ -9697,7 +9697,7 @@ export default function TablePage() {
                   {/* Same player-self / GM-all filter as Perception + First Impression. */}
                   {entries.filter(e => gmLike || e.userId === userId).map(e => (
                     <button key={e.character.id} onClick={() => triggerGutInstinct(e.character.name)}
-                      style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name}</button>
+                      style={hdrBtn('#242424', '#f5f2ee', '#3a3a3a')}>{e.character.name}</button>
                   ))}
                 </div>
               </>
@@ -9829,7 +9829,7 @@ export default function TablePage() {
               </>
             )}
             <button onClick={() => setShowSpecialCheck(null)}
-              style={{ marginTop: '1rem', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ marginTop: '1rem', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
             </button>
           </div>
@@ -9968,7 +9968,7 @@ export default function TablePage() {
                             disabled={isLocked}
                             onClick={() => { if (isLocked) return; setRecruitApproach(ap); setRecruitSkill('') }}
                             title={isLocked ? `${ap.toUpperCase()} permanently locked on this NPC - a prior Intimidation Failure on a Convert attempt ruled out the approach. Try a different approach.` : undefined}
-                            style={{ flex: 1, padding: '8px 6px', background: isLocked ? '#1a1010' : (isSelected ? '#2d5a1b' : '#242424'), border: `1px solid ${isLocked ? '#3a1a1a' : (isSelected ? '#7fc458' : '#3a3a3a')}`, borderRadius: '3px', color: isLocked ? '#5a3030' : (isSelected ? '#7fc458' : '#d4cfc9'), fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isLocked ? 'not-allowed' : 'pointer', textDecoration: isLocked ? 'line-through' : 'none' }}>
+                            style={{ flex: 1, padding: '8px 6px', background: isLocked ? '#1a1010' : (isSelected ? '#2d5a1b' : '#242424'), border: `1px solid ${isLocked ? '#3a1a1a' : (isSelected ? '#7fc458' : '#3a3a3a')}`, borderRadius: '3px', color: isLocked ? '#5a3030' : (isSelected ? '#7fc458' : '#f5f2ee'), fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isLocked ? 'not-allowed' : 'pointer', textDecoration: isLocked ? 'line-through' : 'none' }}>
                             {ap}{isLocked ? ' 🔒' : ''}
                           </button>
                         )
@@ -10026,7 +10026,7 @@ export default function TablePage() {
                   {/* CMod preview */}
                   <div style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px' }}>
                     <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>CMod stack</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>First Impression</span>
                         <span style={{ color: cmods.firstImpression > 0 ? '#7fc458' : cmods.firstImpression < 0 ? '#f5a89a' : '#5a5550' }}>
@@ -10087,7 +10087,7 @@ export default function TablePage() {
 
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={closeRecruitModal}
-                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                     <button onClick={executeRecruitRoll} disabled={!canRoll}
                       style={{ flex: 2, padding: '10px', background: canRoll ? '#c0392b' : '#2a1210', border: `1px solid ${canRoll ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: canRoll ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canRoll ? 'pointer' : 'not-allowed' }}>
                     🎲 Roll Recruitment
@@ -10139,7 +10139,7 @@ export default function TablePage() {
           return (
             <>
               {/* Math line */}
-              <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
                 [{recruitResult.die1}+{recruitResult.die2}{recruitResult.die3 !== undefined ? `+${recruitResult.die3}` : ''}]
                 {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
                 {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
@@ -10151,7 +10151,7 @@ export default function TablePage() {
                 {outcome}
               </div>
               {/* Joined/failed card */}
-              <div style={{ padding: '12px', background: recruitResult.inserted ? '#0f1a0f' : '#2a1210', border: `1px solid ${recruitResult.inserted ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
+              <div style={{ padding: '12px', background: recruitResult.inserted ? '#0f1a0f' : '#2a1210', border: `1px solid ${recruitResult.inserted ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
                 {recruitResult.inserted ? (
                   <>
                     <strong>{recruitResult.npcName}</strong> joined <strong>{recruitResult.communityName}</strong>
@@ -10301,7 +10301,7 @@ export default function TablePage() {
         renderOutcome={(r) => (
           <>
             {/* Math line */}
-            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
               [{r.die1}+{r.die2}]
               {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
               {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
@@ -10314,7 +10314,7 @@ export default function TablePage() {
             </div>
             {/* Cascade narrative - "Bob stabilized! Incap 3 rounds..." or "Failed to stabilize Bob." */}
             {stabilizeNarrativeText && (
-              <div style={{ padding: '12px', background: isStabilizeSuccess(r.outcome) ? '#0f1a0f' : '#2a1210', border: `1px solid ${isStabilizeSuccess(r.outcome) ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4, textAlign: 'center' }}>
+              <div style={{ padding: '12px', background: isStabilizeSuccess(r.outcome) ? '#0f1a0f' : '#2a1210', border: `1px solid ${isStabilizeSuccess(r.outcome) ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4, textAlign: 'center' }}>
                 {stabilizeNarrativeText}
               </div>
             )}
@@ -10418,7 +10418,7 @@ export default function TablePage() {
           const border = !applied ? '#3a3a3a' : (delta < 0 ? '#2d5a1b' : '#5a4a1b')
           return (
             <>
-              <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
                 [{r.die1}+{r.die2}]
                 {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
                 {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
@@ -10429,7 +10429,7 @@ export default function TablePage() {
                 {r.outcome}
               </div>
               {distractNarrativeText && (
-                <div style={{ padding: '12px', background: bg, border: `1px solid ${border}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4, textAlign: 'center' }}>
+                <div style={{ padding: '12px', background: bg, border: `1px solid ${border}`, borderRadius: '3px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4, textAlign: 'center' }}>
                   {distractNarrativeText}
                 </div>
               )}
@@ -10797,7 +10797,7 @@ export default function TablePage() {
                     : `${insightSavePrompt.targetName} has no Insight Dice. Waiting for player to acknowledge...`}
                 </div>
                 <button onClick={() => setInsightSavePrompt(null)}
-                  style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Dismiss
                 </button>
               </>
@@ -10824,7 +10824,7 @@ export default function TablePage() {
             </div>
           </div>
           <div style={{ padding: '12px' }}>
-            <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', lineHeight: 1.5 }}>
               Whisper a private detail to {gutInstinctPrompt.characterName}'s player. They'll see it in their Chat tab. Skip if nothing to add.
             </div>
             <textarea
@@ -10840,7 +10840,7 @@ export default function TablePage() {
             <button
               onClick={() => { setGutInstinctPrompt(null); setGutInstinctDetail('') }}
               disabled={gutInstinctSending}
-              style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: gutInstinctSending ? 'not-allowed' : 'pointer' }}>
+              style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: gutInstinctSending ? 'not-allowed' : 'pointer' }}>
               Skip
             </button>
             <button

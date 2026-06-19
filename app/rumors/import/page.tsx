@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // /modules/import - second entry point into the module-publish flow.
 //
 // The first entry point is from a campaign edit page ("Publish as
@@ -82,7 +82,7 @@ export default function ImportSnapshotPage() {
   }
 
   return (
-    <div style={{ maxWidth: '760px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
+    <div style={{ maxWidth: '760px', margin: '0 auto', padding: '24px 20px', color: '#f5f2ee' }}>
 
       <div style={{ marginBottom: '6px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
         Module System
@@ -115,7 +115,7 @@ export default function ImportSnapshotPage() {
 
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
         <button onClick={() => router.push('/dashboard')}
-          style={{ padding: '9px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '9px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           ← Back to dashboard
         </button>
         <button onClick={() => parsed && setShowModal(true)} disabled={!parsed}
@@ -134,7 +134,7 @@ export default function ImportSnapshotPage() {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={() => { setPublished(null); setParsed(null) }}
-              style={{ padding: '7px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               📂 Import another snapshot
             </button>
             <button onClick={() => router.push('/dashboard')}

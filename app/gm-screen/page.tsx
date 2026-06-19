@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // Skip Next's static prerender entirely. /gm-screen mounts a Supabase
 // client (via the GmNotes panel) and reads useSearchParams() - both
@@ -58,7 +58,7 @@ const RANGE_BANDS = [
 
 const CONDITIONS = [
   { cond: 'Pristine', cmod: '+1', color: '#7fc458' },
-  { cond: 'Used', cmod: '0', color: '#d4cfc9' },
+  { cond: 'Used', cmod: '0', color: '#f5f2ee' },
   { cond: 'Worn', cmod: '-1', color: '#EF9F27' },
   { cond: 'Damaged', cmod: '-2', color: '#f5a89a' },
   { cond: 'Broken', cmod: 'Unusable', color: '#c0392b' },
@@ -368,7 +368,7 @@ export default function GMScreen() {
               <div key={o.label} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
                 <span style={{ ...cellStyle, color: o.color, fontWeight: 700, minWidth: '36px' }}>{o.roll}</span>
                 <span style={{ ...cellStyle, color: o.color, fontWeight: 700, minWidth: '100px' }}>{o.label}</span>
-                <span style={{ ...cellStyle, color: '#d4cfc9', flex: 1 }}>{o.desc}</span>
+                <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{o.desc}</span>
               </div>
             ))}
           </div>
@@ -385,7 +385,7 @@ export default function GMScreen() {
               <div key={a.name} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '2px' }}>
                 <span style={{ ...cellStyle, fontWeight: 700, color: '#f5f2ee', minWidth: '90px' }}>{a.name}</span>
                 <span style={{ ...cellStyle, color: a.cost === 2 ? '#EF9F27' : '#7fc458', minWidth: '16px', textAlign: 'center' }}>{a.cost}</span>
-                <span style={{ ...cellStyle, color: '#d4cfc9', flex: 1 }}>{a.desc}</span>
+                <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{a.desc}</span>
               </div>
             ))}
           </div>
@@ -401,7 +401,7 @@ export default function GMScreen() {
             {RANGE_BANDS.map(r => (
               <div key={r.band} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
                 <span style={{ ...cellStyle, color: r.color, fontWeight: 700, minWidth: '70px' }}>{r.band}</span>
-                <span style={{ ...cellStyle, color: '#d4cfc9' }}>{r.range}</span>
+                <span style={{ ...cellStyle, color: '#f5f2ee' }}>{r.range}</span>
               </div>
             ))}
           </div>
@@ -449,7 +449,7 @@ export default function GMScreen() {
             {HEALING.map(h => (
               <div key={h.type} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
                 <span style={{ ...cellStyle, color: '#f5f2ee', fontWeight: 700, minWidth: '130px' }}>{h.type}</span>
-                <span style={{ ...cellStyle, color: '#d4cfc9' }}>{h.rate}</span>
+                <span style={{ ...cellStyle, color: '#f5f2ee' }}>{h.rate}</span>
               </div>
             ))}
           </div>
@@ -465,7 +465,7 @@ export default function GMScreen() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
               {SKILLS_MAP.map(s => (
                 <div key={s.skill} style={{ display: 'flex', gap: '4px', alignItems: 'baseline' }}>
-                  <span style={{ ...cellStyle, color: '#d4cfc9', flex: 1 }}>{s.skill}</span>
+                  <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{s.skill}</span>
                   <span style={{ ...cellStyle, color: '#7ab3d4', fontWeight: 700, minWidth: '30px' }}>{s.attr}</span>
                 </div>
               ))}

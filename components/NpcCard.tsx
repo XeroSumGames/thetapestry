@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // no React hooks needed - HP is derived from props
 import { useState } from 'react'
 import { CampaignNpc, getNpcRingColor } from './NpcRoster'
@@ -212,7 +212,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             title={(displayStatus === 'dead' || displayStatus === 'mortally wounded')
               ? `${inv.length} item${inv.length === 1 ? '' : 's'} to loot`
               : `${inv.length} item${inv.length === 1 ? '' : 's'} in pack`}
-            style={{ padding: '2px 6px', background: (displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#2a1210' : inv.length > 0 ? '#2a2010' : '#242424', border: `1px solid ${(displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#c0392b' : inv.length > 0 ? '#5a4a1b' : '#3a3a3a'}`, borderRadius: '3px', color: (displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#f5a89a' : inv.length > 0 ? '#EF9F27' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '2px 6px', background: (displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#2a1210' : inv.length > 0 ? '#2a2010' : '#242424', border: `1px solid ${(displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#c0392b' : inv.length > 0 ? '#5a4a1b' : '#3a3a3a'}`, borderRadius: '3px', color: (displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#f5a89a' : inv.length > 0 ? '#EF9F27' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             {(displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0
               ? `🎒 Loot (${inv.length})`
               : inv.length > 0
@@ -228,7 +228,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
               style={{ padding: '2px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Popout</button>
           )}
           {onEdit && (
-            <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
+            <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
           )}
           <button onClick={onClose} style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
         </div>
@@ -243,8 +243,8 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             return (
               <div key={k} onClick={() => handleAttrRoll(k)}
                 style={{ width: '36px', background: v > 0 ? '#1a2e10' : '#242424', border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', padding: '1px 0', textAlign: 'center', cursor: onRoll ? 'pointer' : 'default' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
+                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: v > 0 ? '#7fc458' : '#f5f2ee' }}>{sgn(v)}</div>
               </div>
             )
           })}
@@ -253,7 +253,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-              <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>WP</span>
+              <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>WP</span>
               <span style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>{wpCurrent}/{wpMax}</span>
             </div>
             <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
@@ -266,7 +266,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-              <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>RP</span>
+              <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>RP</span>
               <span style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>{rpCurrent}/{rpMax}</span>
             </div>
             <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
@@ -305,7 +305,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', marginBottom: '4px' }}>
           {skillEntries.filter(s => s.name).map((s, i) => (
             <span key={i} onClick={() => handleSkillRoll(s.name, s.level)}
-              style={{ fontSize: '13px', padding: '0 4px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: s.level > 0 ? '#7fc458' : '#d4cfc9', fontFamily: 'Carlito, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
+              style={{ fontSize: '13px', padding: '0 4px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: s.level > 0 ? '#7fc458' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
               {s.name} {sgn(s.level)}
             </span>
           ))}
@@ -342,7 +342,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           {npc.skills?.weapon2 && (() => {
             const w2 = getWeaponByName(npc.skills.weapon2.weaponName)
             return w2 ? (
-              <span style={{ fontSize: '13px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+              <span style={{ fontSize: '13px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                 {w2.name} · {w2.damage} · {w2.range}{w2.category === 'explosive' ? ` · ×${(npc.skills.weapon2 as any)?.qty ?? 1}` : ''}
               </span>
             ) : null
@@ -358,7 +358,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             const smod = getSkillLevel('Unarmed Combat')
             onRoll(`${npc.name} - Unarmed`, phyAmod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
           }}
-            style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             👊 Unarmed
           </button>
           {w && (

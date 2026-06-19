@@ -1,4 +1,4 @@
-// Session log export.
+﻿// Session log export.
 //
 // Produces a standalone HTML document mirroring the roll-feed preview's
 // look (tasks/roll-feed-log-preview.html), populated with the current
@@ -114,7 +114,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
       const sep = i < arr.length - 1 ? 'border-bottom:1px solid #2e2e2e' : ''
       return `<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;${sep}">
   <span style="font-size:13px;font-weight:700;color:${nameColor};text-transform:uppercase;min-width:90px">${esc(e.name ?? '')}</span>
-  <span style="font-size:13px;color:#d4cfc9">[${e.d1}+${e.d2}]${initChip}${dropChip}</span>
+  <span style="font-size:13px;color:#f5f2ee">[${e.d1}+${e.d2}]${initChip}${dropChip}</span>
   <span style="margin-left:auto;font-size:14px;font-weight:700;color:#EF9F27">${e.total}</span>
 </div>`
     }).join('')
@@ -152,7 +152,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
       const smodChip = tr.smod !== 0 ? ` <span style="color:${tr.smod > 0 ? '#7fc458' : '#c0392b'}">${tr.smod > 0 ? '+' : ''}${tr.smod} SMod</span>` : ''
       const cmodChip = tr.cmod !== 0 ? ` <span style="color:${tr.cmod > 0 ? '#7ab3d4' : '#EF9F27'}">${tr.cmod > 0 ? '+' : ''}${tr.cmod} CMod</span>` : ''
       const oc = outcomeColor(tr.rollOutcome)
-      trBlock = `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #3a3a3a;font-size:13px;color:#d4cfc9">
+      trBlock = `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #3a3a3a;font-size:13px;color:#f5f2ee">
   <div>[${dice}]${amodChip}${smodChip}${cmodChip} <span style="color:#f5f2ee;font-weight:700"> = ${tr.total}</span> <span style="margin-left:8px;color:${oc};font-weight:700">${esc(tr.rollOutcome ?? '')}</span></div>
   <div style="margin-top:4px;color:${isWinded ? '#f5a89a' : '#7fc458'};font-weight:600">${isWinded ? 'Loses 1 Combat Action next round.' : 'Full 2 actions next round.'}</div>
 </div>`
@@ -228,7 +228,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
     return `<div style="margin-bottom:8px;padding:10px;background:${bgHex};border:1px solid ${colorHex};border-radius:3px;border-left:3px solid ${colorHex}">
   <div class="banner-head"><span class="banner-title" style="color:#f5f2ee">🙏 Week ${esc(String(dj.weekNumber ?? '?'))} · ${esc(dj.communityName ?? '?')} · Retention</span><span class="time">${esc(time)}</span></div>
   <div class="banner-body" style="color:${survived ? '#c4e8a8' : '#f5a89a'};font-weight:600">${narrative}</div>
-  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#d4cfc9">
+  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#f5f2ee">
     ${rolledBy}
     <div>[${r.die1}+${r.die2}]${amodChip}${smodChip}${moodChip} <span style="color:#f5f2ee;font-weight:700"> = ${r.total}</span> <span style="margin-left:8px;color:${colorHex};font-weight:700;text-transform:uppercase;letter-spacing:.06em">${esc(rollOutcome)}</span></div>
     ${survivedFooter}
@@ -263,7 +263,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
     return `<div style="margin-bottom:8px;padding:8px 10px;background:#111;border:1px solid ${colorHex}33;border-radius:3px;border-left:3px solid ${colorHex}">
   <div class="banner-head"><span class="banner-title" style="color:#f5f2ee">${emoji} Week ${esc(String(dj.weekNumber ?? '?'))} · ${esc(dj.communityName ?? '?')} · ${title}</span><span class="time">${esc(time)}</span></div>
   <div class="banner-body">${body}</div>
-  <div style="margin-top:6px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#d4cfc9">
+  <div style="margin-top:6px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#f5f2ee">
     ${rolledBy}
     <div>[${r.die1}+${r.die2}]${amodChip}${smodChip}${cmodChip} <span style="color:#f5f2ee;font-weight:700"> = ${r.total}</span> <span style="margin-left:8px;color:${colorHex};font-weight:700;text-transform:uppercase;letter-spacing:.06em">${esc(rollOutcome)}</span></div>
     <div style="margin-top:4px;color:#cce0f5">→ Next Morale CMod <span style="color:${nextCmodColor};font-weight:700">${nextCmod > 0 ? '+' : ''}${nextCmod}</span></div>
@@ -314,7 +314,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
     let departureLine = ''
     if (!willDissolve && dj.departureCount > 0) {
       const names = Array.isArray(dj.departureNames) ? dj.departureNames.map((n: any) => esc(String(n))).join(', ') : ''
-      departureLine = `<div style="color:#EF9F27">${esc(String(dj.departureCount))} left: <span style="color:#d4cfc9">${names}</span><span style="color:#cce0f5"> · ${esc(String(dj.membersAfter ?? '?'))}/${esc(String(dj.membersBefore ?? '?'))} remaining · ${esc(String(dj.consecutiveFailuresAfter ?? '?'))}/3 failures</span></div>`
+      departureLine = `<div style="color:#EF9F27">${esc(String(dj.departureCount))} left: <span style="color:#f5f2ee">${names}</span><span style="color:#cce0f5"> · ${esc(String(dj.membersAfter ?? '?'))}/${esc(String(dj.membersBefore ?? '?'))} remaining · ${esc(String(dj.consecutiveFailuresAfter ?? '?'))}/3 failures</span></div>`
     }
     let nextMoraleLine = ''
     if (!willDissolve) {
@@ -323,7 +323,7 @@ function renderBespokeBanner(r: RollLogRow): string | null {
     return `<div style="margin-bottom:8px;padding:10px;background:${willDissolve ? '#1a0a0a' : '#111'};border:1px solid ${colorHex};border-radius:3px;border-left:3px solid ${colorHex}">
   <div class="banner-head"><span class="banner-title" style="color:#f5f2ee">📊 Week ${esc(String(dj.weekNumber ?? '?'))} · ${esc(dj.communityName ?? '?')} · Morale</span><span class="time">${esc(time)}</span></div>
   <div class="banner-body">${narrative}</div>
-  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#d4cfc9">
+  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;font-size:13px;color:#f5f2ee">
     ${rolledBy}
     <div style="margin-bottom:4px">[${r.die1}+${r.die2}]${amodChip}${smodChip}${cmodChip} <span style="color:#f5f2ee;font-weight:700"> = ${r.total}</span> <span style="margin-left:8px;color:${colorHex};font-weight:700;text-transform:uppercase;letter-spacing:.06em">${esc(rollOutcome)}</span></div>
     ${slotsLine}
@@ -424,7 +424,7 @@ function renderHtml(args: { campaignName: string; sessionNumber: number; exporte
 <style>
   :root {
     --bg: #0e0e0e; --bg-row: #1a1a1a; --border: #2e2e2e;
-    --text: #d4cfc9; --text-strong: #f5f2ee; --label: #cce0f5;
+    --text: #f5f2ee; --text-strong: #f5f2ee; --label: #cce0f5;
     --green: #7fc458; --blue: #7ab3d4; --amber: #EF9F27; --red: #c0392b;
   }
   html, body { background: var(--bg); margin: 0; padding: 24px 24px 80px; font-family: 'Carlito', 'Segoe UI', sans-serif; color: var(--text); }

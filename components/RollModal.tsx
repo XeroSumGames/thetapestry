@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Shared roll modal shell - the canonical ATTACK ROLL shape.
 //
 // Visual chrome matches the inline Attack Roll modal in
@@ -177,14 +177,14 @@ export default function RollModal(props: RollModalProps) {
   })
   const secondaryBtn: React.CSSProperties = {
     padding: '10px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
+    color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer',
   }
   // Post-roll Done / Close - neutral grey full-width (matches ATTACK; only the
   // pre-roll Roll button carries the accent).
   const closeBtn: React.CSSProperties = {
     width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em',
+    color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
   const rerollBtn: React.CSSProperties = {
@@ -251,7 +251,7 @@ export default function RollModal(props: RollModalProps) {
                   all on one row (locked design 2026-05-24). The CMod box is
                   pushed right; the old full-width "Conditional Modifier" block
                   is gone. */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem', fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem', fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', alignItems: 'center' }}>
                 <span>2d6</span>
                 {amod !== 0 && <span style={modPart(amod)}>{amod > 0 ? '+' : ''}{amod} AMod</span>}
                 {smod !== 0 && <span style={modPart(smod)}>{smod > 0 ? '+' : ''}{smod} SMod</span>}
@@ -276,7 +276,7 @@ export default function RollModal(props: RollModalProps) {
                       CMod Stack
                     </div>
                     {cmodBreakdown.map((row, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9' }}>
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#f5f2ee' }}>
                         <span>{row.label}</span>
                         <span style={{ color: row.value >= 0 ? '#7fc458' : '#f5a89a', fontWeight: 700 }}>{row.value >= 0 ? `+${row.value}` : row.value}</span>
                       </div>
@@ -346,7 +346,7 @@ export default function RollModal(props: RollModalProps) {
               {/* Outcome - custom renderer or default banner */}
               {renderOutcome ? renderOutcome(result) : (
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#d4cfc9' }}>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#f5f2ee' }}>
                     [{result.diceRolled && result.diceRolled.length > 2 ? result.diceRolled.join('+') : `${result.die1}+${result.die2}`}]
                     {result.amod !== 0 && <span style={modPart(result.amod)}> {result.amod > 0 ? '+' : ''}{result.amod}</span>}
                     {result.smod !== 0 && <span style={modPart(result.smod)}> {result.smod > 0 ? '+' : ''}{result.smod}</span>}
@@ -368,7 +368,7 @@ export default function RollModal(props: RollModalProps) {
               {result.damage && result.damage.length > 0 && (
                 <div style={{ marginBottom: '1rem', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                   {result.damage.map((d, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                       <span>{d.label}</span>
                       <span style={{ color: d.color ?? '#f5f2ee', fontWeight: 700 }}>{d.value}</span>
                     </div>

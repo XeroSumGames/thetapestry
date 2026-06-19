@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
@@ -180,7 +180,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
           </button>
         )}
         <button onClick={onClose}
-          style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Close
         </button>
       </div>
@@ -281,7 +281,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
               <button
                 onClick={toggleLootable}
                 disabled={togglingLock}
-                style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
+                style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
                 title={lootable ? 'Click to lock - players can no longer loot' : 'Click to unlock - players can loot without destroying'}
               >
                 {togglingLock ? '…' : lootable ? '🔓 Unlocked' : '🔒 Locked'}
@@ -339,7 +339,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
         <div style={{ marginTop: '4px' }}>
           <button
             onClick={() => onSearchEmpty?.(name, myCharacter.id, myCharacter.name)}
-            style={{ padding: '3px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+            style={{ padding: '3px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
           >
             Search
           </button>

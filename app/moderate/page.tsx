@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
@@ -715,7 +715,7 @@ export default function ModerationPage() {
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Moderation
         </div>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.1em', textTransform: 'uppercase' }}>
           Thriver Console
         </div>
         <div style={{ flex: 1 }} />
@@ -748,7 +748,7 @@ export default function ModerationPage() {
           const hasPending = count > 0
           const isActive = section === s
           const borderColor = isActive ? '#c0392b' : (hasPending ? '#2d5a1b' : '#3a3a3a')
-          const color = isActive ? '#f5a89a' : (hasPending ? '#7fc458' : '#d4cfc9')
+          const color = isActive ? '#f5a89a' : (hasPending ? '#7fc458' : '#f5f2ee')
           const label = s === 'rumors' ? 'Rumor Queue'
             : s === 'users' ? 'Users'
             : s === 'npcs' ? 'NPCs'
@@ -791,7 +791,7 @@ export default function ModerationPage() {
                 padding: '7px 16px',
                 border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
                 background: filter === f ? '#2a1210' : '#242424',
-                color: filter === f ? '#f5a89a' : '#d4cfc9',
+                color: filter === f ? '#f5a89a' : '#f5f2ee',
                 borderRadius: '3px', cursor: 'pointer',
                 fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em', textTransform: 'uppercase',
@@ -801,7 +801,7 @@ export default function ModerationPage() {
             ))}
           </div>
 
-          {loading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}
+          {loading && <div style={{ color: '#f5f2ee', fontSize: '13px' }}>Loading...</div>}
 
           {!loading && pins.length === 0 && (
             <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
@@ -821,13 +821,13 @@ export default function ModerationPage() {
                       Submitted by {p.profiles?.username ?? 'unknown'} &mdash; {formatDate(p.created_at)}
                     </div>
                   </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'monospace' }}>
                     {p.lat.toFixed(4)}, {p.lng.toFixed(4)}
                   </div>
                 </div>
 
                 {p.notes && (
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
                     {p.notes}
                   </div>
                 )}
@@ -919,7 +919,7 @@ export default function ModerationPage() {
             </div>
           )}
 
-          {usersLoading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}
+          {usersLoading && <div style={{ color: '#f5f2ee', fontSize: '13px' }}>Loading...</div>}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {users.map(u => {
@@ -996,7 +996,7 @@ export default function ModerationPage() {
                       Suspend/Unsuspend, Delete. */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginLeft: '20px' }}>
                     {roleIsThriver(u.role) ? (
-                      <button onClick={() => handleRoleChange(u.id, SURVIVOR)} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}
+                      <button onClick={() => handleRoleChange(u.id, SURVIVOR)} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#f5f2ee')}
                         title="Demote to Survivor">
                         Demote
                       </button>
@@ -1114,7 +1114,7 @@ export default function ModerationPage() {
                   </div>
                 </div>
                 {npc.public_description && (
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.5 }}>{npc.public_description}</div>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '8px', lineHeight: 1.5 }}>{npc.public_description}</div>
                 )}
                 <div style={{ display: 'flex', gap: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>
                   {['RSN', 'ACU', 'PHY', 'INF', 'DEX'].map((attr, i) => {
@@ -1143,7 +1143,7 @@ export default function ModerationPage() {
                 padding: '7px 16px',
                 border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
                 background: filter === f ? '#2a1210' : '#242424',
-                color: filter === f ? '#f5a89a' : '#d4cfc9',
+                color: filter === f ? '#f5a89a' : '#f5f2ee',
                 borderRadius: '3px', cursor: 'pointer',
                 fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em', textTransform: 'uppercase',
@@ -1189,7 +1189,7 @@ export default function ModerationPage() {
                   </div>
 
                   {wc.description && (
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
                       {wc.description}
                     </div>
                   )}
@@ -1249,7 +1249,7 @@ export default function ModerationPage() {
             {(['pending', 'approved', 'rejected'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)} style={{
                 padding: '7px 16px', border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
-                background: filter === f ? '#2a1210' : '#242424', color: filter === f ? '#f5a89a' : '#d4cfc9',
+                background: filter === f ? '#2a1210' : '#242424', color: filter === f ? '#f5a89a' : '#f5f2ee',
                 borderRadius: '3px', cursor: 'pointer', fontSize: '13px',
                 fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
               }}>{f}</button>
@@ -1284,7 +1284,7 @@ export default function ModerationPage() {
                 </div>
 
                 {m.description && (
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
+                  <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
                     {m.description}
                   </div>
                 )}
@@ -1333,7 +1333,7 @@ export default function ModerationPage() {
                 {t.setting && <span style={{ color: '#7ab3d4', marginLeft: '6px' }}>· {t.setting}</span>}
                 {t.campaign_name && <span style={{ color: '#b87333', marginLeft: '6px' }}>· {t.campaign_name}</span>}
               </div>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
                 {t.body}
               </div>
             </>
@@ -1365,7 +1365,7 @@ export default function ModerationPage() {
                 {s.setting && <span style={{ color: '#7ab3d4', marginLeft: '6px' }}>· {s.setting}</span>}
                 {s.campaign_name && <span style={{ color: '#b87333', marginLeft: '6px' }}>· {s.campaign_name}</span>}
               </div>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
                 {s.body}
               </div>
               {Array.isArray(s.attachments) && s.attachments.length > 0 && (
@@ -1402,7 +1402,7 @@ export default function ModerationPage() {
                 {p.setting && <span style={{ color: '#7ab3d4', marginLeft: '6px' }}>· {p.setting}</span>}
                 {p.schedule && <span style={{ color: '#7fc458', marginLeft: '6px' }}>· {p.schedule}</span>}
               </div>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
                 {p.body}
               </div>
             </>
@@ -1475,7 +1475,7 @@ export default function ModerationPage() {
                         {b.page_url}
                       </div>
                     )}
-                    <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap', marginBottom: '8px', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap', marginBottom: '8px', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                       {b.description}
                     </div>
                     {b.user_agent && (
@@ -1541,7 +1541,7 @@ export default function ModerationPage() {
                         <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
                           Reply · {b.responded_at ? new Date(b.responded_at).toLocaleString() : ''}
                         </div>
-                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap' }}>
+                        <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap' }}>
                           {b.response_text}
                         </div>
                       </div>
@@ -1623,7 +1623,7 @@ function CampfireQueue({
             padding: '7px 16px',
             border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
             background: filter === f ? '#2a1210' : '#242424',
-            color: filter === f ? '#f5a89a' : '#d4cfc9',
+            color: filter === f ? '#f5a89a' : '#f5f2ee',
             borderRadius: '3px', cursor: 'pointer',
             fontSize: '13px', fontFamily: 'Carlito, sans-serif',
             letterSpacing: '.06em', textTransform: 'uppercase',

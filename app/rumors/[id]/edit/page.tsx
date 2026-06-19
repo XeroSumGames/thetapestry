@@ -310,7 +310,7 @@ export default function ModuleEditPage() {
   }
   if (accessDenied) {
     return (
-      <div style={{ padding: '24px', maxWidth: '720px', margin: '0 auto', color: '#d4cfc9' }}>
+      <div style={{ padding: '24px', maxWidth: '720px', margin: '0 auto', color: '#f5f2ee' }}>
         <div style={{ fontSize: '20px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
         <div style={{ fontSize: '14px' }}>Only the module&apos;s author or a Thriver can edit it.</div>
         <Link href="/rumors" style={{ display: 'inline-block', marginTop: '16px', color: '#c4a7f0' }}>← Back to /rumors</Link>
@@ -322,7 +322,7 @@ export default function ModuleEditPage() {
   const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }
 
   return (
-    <div style={{ padding: '24px 20px', maxWidth: '760px', margin: '0 auto', color: '#d4cfc9' }}>
+    <div style={{ padding: '24px 20px', maxWidth: '760px', margin: '0 auto', color: '#f5f2ee' }}>
       <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
         Module Editor
       </div>

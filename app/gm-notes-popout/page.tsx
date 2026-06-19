@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // /gm-notes-popout - comprehensive GM-side overview of a campaign.
 // Opens as a popout window from two surfaces: the GM Notes button
 // on /stories/[id] and the GM Tools dropdown on /table.
@@ -214,7 +214,7 @@ export default function GMNotesPopoutPage() {
           onSave={v => saveCampaign('description', v || null)}
           multiline
           emptyPlaceholder="Add a campaign description…"
-          textStyle={{ fontSize: '17px', color: '#d4cfc9', marginTop: '8px', lineHeight: 1.6, whiteSpace: 'pre-wrap', display: 'block' }}
+          textStyle={{ fontSize: '17px', color: '#f5f2ee', marginTop: '8px', lineHeight: 1.6, whiteSpace: 'pre-wrap', display: 'block' }}
         />
       </div>
 
@@ -240,7 +240,7 @@ export default function GMNotesPopoutPage() {
               // readable at panel density but tight for long-form
               // narrative. line-height 1.7 keeps multi-paragraph
               // content scannable.
-              textStyle={{ fontSize: '16px', color: '#d4cfc9', lineHeight: 1.7, whiteSpace: 'pre-wrap', display: 'block', marginTop: '4px' }}
+              textStyle={{ fontSize: '16px', color: '#f5f2ee', lineHeight: 1.7, whiteSpace: 'pre-wrap', display: 'block', marginTop: '4px' }}
             />
           </Card>
         ))}
@@ -333,7 +333,7 @@ export default function GMNotesPopoutPage() {
                     onSave={v => saveNpc(n.id, 'notes', v || null)}
                     multiline
                     emptyPlaceholder="Add notes…"
-                    textStyle={{ fontSize: '13px', color: '#d4cfc9', marginTop: '4px', lineHeight: 1.5, whiteSpace: 'pre-wrap', display: 'block' }}
+                    textStyle={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px', lineHeight: 1.5, whiteSpace: 'pre-wrap', display: 'block' }}
                   />
                 </Card>
               ))}
@@ -375,7 +375,7 @@ export default function GMNotesPopoutPage() {
               onSave={v => savePin(p.id, 'notes', v || null)}
               multiline
               emptyPlaceholder="Add pin notes…"
-              textStyle={{ fontSize: '13px', color: '#d4cfc9', marginTop: '4px', lineHeight: 1.5, whiteSpace: 'pre-wrap', display: 'block' }}
+              textStyle={{ fontSize: '13px', color: '#f5f2ee', marginTop: '4px', lineHeight: 1.5, whiteSpace: 'pre-wrap', display: 'block' }}
             />
           </Card>
         ))}

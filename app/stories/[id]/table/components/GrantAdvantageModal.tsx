@@ -46,7 +46,7 @@ export function GrantAdvantageModal({
     <div onClick={() => !grantSubmitting && onClose()}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div onClick={e => e.stopPropagation()}
-        style={{ background: '#0f0f0f', border: '1px solid #5a4a1b', borderRadius: '4px', padding: '20px 24px', width: '460px', maxWidth: '100%', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
+        style={{ background: '#0f0f0f', border: '1px solid #5a4a1b', borderRadius: '4px', padding: '20px 24px', width: '460px', maxWidth: '100%', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
         <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>⭐ Grant Advantage</div>
         <div style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '14px' }}>
           Track a contextual CMod
@@ -77,12 +77,12 @@ export function GrantAdvantageModal({
           <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>CMod</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button type="button" onClick={() => setGrantCmod((c: number) => (c > -10 ? c - 1 : c))} disabled={grantSubmitting}
-              style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer' }}>−</button>
+              style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer' }}>−</button>
             <span style={{ fontSize: '18px', fontWeight: 700, color: grantCmod > 0 ? '#7fc458' : grantCmod < 0 ? '#c0392b' : '#cce0f5', minWidth: '40px', textAlign: 'center' }}>
               {grantCmod > 0 ? `+${grantCmod}` : grantCmod}
             </span>
             <button type="button" onClick={() => setGrantCmod((c: number) => (c < 10 ? c + 1 : c))} disabled={grantSubmitting}
-              style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer' }}>+</button>
+              style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', cursor: 'pointer' }}>+</button>
             <span style={{ fontSize: '13px', color: '#5a5550', marginLeft: 'auto', fontStyle: 'italic' }}>0 is invalid</span>
           </div>
         </div>
@@ -102,7 +102,7 @@ export function GrantAdvantageModal({
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" onClick={() => onClose()} disabled={grantSubmitting}
-            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
           <button type="button" disabled={!canSubmit}

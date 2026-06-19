@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // Phase 5 Sprint 3b - Review modal.
 //
 // When a subscriber's campaign is behind on module updates, this
@@ -351,7 +351,7 @@ export default function ModuleReviewModal({
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={onClose} disabled={applying}
-              style={{ padding: '8px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: applying ? 'not-allowed' : 'pointer' }}>
+              style={{ padding: '8px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: applying ? 'not-allowed' : 'pointer' }}>
               Cancel
             </button>
             <button onClick={handleApply} disabled={applying || !flagsLoaded}

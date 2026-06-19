@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
@@ -624,7 +624,7 @@ export default function NotificationBell() {
                   </div>
                 </div>
                 <div style={{
-                  fontSize: '14px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left',
+                  fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4, textAlign: 'left',
                   // Belt + suspenders - some earlier ancestor CSS was
                   // still truncating with ellipsis on narrow widths.
                   // Explicitly force normal wrap, no truncation, and

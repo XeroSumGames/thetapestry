@@ -289,7 +289,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
           <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
           Between {((r.damage_json as any).combatants as string[]).map((n, i, arr) => (
             <span key={i}>
               <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
@@ -309,7 +309,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.label}</span>
           <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
       </div>
     )
   }
@@ -351,9 +351,9 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             )}
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>{r.label.replace(/^🏃\s*/, '')}</div>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{r.label.replace(/^🏃\s*/, '')}</div>
         {tr && isExpanded && (
-          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             <div>
               [{Array.isArray(tr.diceRolled) && tr.diceRolled.length > 0 ? tr.diceRolled.join('+') : `${tr.die1}+${tr.die2}`}]
               {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
@@ -500,7 +500,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
         </div>
         {((r.damage_json as any).combatants as string[]).length > 0 && (
-          <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
             Between {((r.damage_json as any).combatants as string[]).map((n, i, arr) => (
               <span key={i}>
                 <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
@@ -527,7 +527,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           return (
             <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: '6px', padding: '3px 0', borderBottom: i < (r.damage_json as any).initiative.length - 1 ? '1px solid #2e2e2e' : 'none' }}>
               <span style={{ fontSize: '13px', fontWeight: 700, color: nameColor, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '90px' }}>{e.name}</span>
-              <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+              <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                 [{e.d1}+{e.d2}]
                 {init !== 0 && <span style={{ color: '#7fc458' }}> {init > 0 ? '+' : ''}{init} Init</span>}
                 {e.drop !== 0 && <span style={{ color: '#f5a89a' }}> {e.drop} Drop</span>}
@@ -572,7 +572,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
         </div>
         <div style={{ fontSize: '15px', color: survived ? '#c4e8a8' : '#f5a89a', fontFamily: 'Carlito, sans-serif', fontWeight: 600, lineHeight: 1.5 }}>{narrative}</div>
         {isExpanded && (
-          <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             {dj.leaderName && (
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
@@ -631,9 +631,9 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             </button>
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{body}</div>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{body}</div>
         {isExpanded && (
-          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             {dj.leaderName && (
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
@@ -694,9 +694,9 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             </button>
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{narrative}</div>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{narrative}</div>
         {isExpanded && (
-          <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #2e2e2e', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             {dj.leaderName && (
               <div style={{ marginBottom: '4px', color: '#cce0f5' }}>
                 Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
@@ -725,7 +725,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             )}
             {!willDissolve && dj.departureCount > 0 && (
               <div style={{ color: '#EF9F27' }}>
-                {dj.departureCount} left: <span style={{ color: '#d4cfc9' }}>{(dj.departureNames ?? []).join(', ')}</span>
+                {dj.departureCount} left: <span style={{ color: '#f5f2ee' }}>{(dj.departureNames ?? []).join(', ')}</span>
                 <span style={{ color: '#cce0f5' }}> · {dj.membersAfter}/{dj.membersBefore} remaining · {dj.consecutiveFailuresAfter}/3 failures</span>
               </div>
             )}
@@ -796,14 +796,14 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             </button>
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
           {formatNames(participants)} {adverb} {skillTail}{groupOutcomeTag}
           {/* Badge gates on outcome AND insight_awarded - canon rule: Insight Die
               only on HI/LI, regardless of what insight_awarded says on old rows. */}
           {r.insight_awarded && (r.outcome === 'High Insight' || r.outcome === 'Low Insight') && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
         </div>
         {isExpanded && (
-          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             <div>
               [{r.die1}+{r.die2}]
               {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
@@ -865,12 +865,12 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             </button>
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
           {r.character_name} {adverbClause} to coordinate an effort with {formatNames(participantNames)}{insightTail}
           {r.insight_awarded && (r.outcome === 'High Insight' || r.outcome === 'Low Insight') && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
         </div>
         {isExpanded && (
-          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             {/* Lead row dice */}
             <div style={{ marginBottom: '4px' }}>
               <span style={{ color: '#cce0f5', fontWeight: 600 }}>{r.character_name} (lead):</span>{' '}
@@ -935,12 +935,12 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             </button>
           </div>
         </div>
-        <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
           {leadNarr}
           {r.insight_awarded && (r.outcome === 'High Insight' || r.outcome === 'Low Insight') && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
         </div>
         {isExpanded && (
-          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
             <div>
               <span style={{ color: '#cce0f5', fontWeight: 600 }}>{r.character_name} (lead):</span>{' '}
               [{r.die1}+{r.die2}]
@@ -1026,7 +1026,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
           )}
         </div>
       </div>
-      <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+      <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
         {compact}
         {/* Badge gates on outcome AND insight_awarded - stale-true rows from
             old DB writes can't leak the badge onto WS/Success/DF outcomes. */}
@@ -1038,7 +1038,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{actionExtra}</div>
           )}
           {hasRealDice && (
-            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>
               {/* Three render branches for the dice slot:
                   - insight_used='3d6' AND damage_json.die3 stored: split die2 into
                     its raw components (die2 = d2+d3 by storage convention) and show
@@ -1072,7 +1072,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
             </div>
           )}
           {hasDamageBox && (
-            <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
+            <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
               <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>Damage → {(r.damage_json as any).targetName}</span>
               <div style={{ marginTop: '2px' }}>
                 {(r.damage_json as any).base > 0 && <span>{(r.damage_json as any).base}</span>}
@@ -1090,7 +1090,7 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               the persistent feed (was modal-only). Independent of hasDamageBox
               so it still renders on a fumble where no primary box exists. */}
           {(r.damage_json as any)?.blastSummary && (
-            <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
+            <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
               <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>💥 Blast hit</span>
               <div style={{ marginTop: '2px' }}>{(r.damage_json as any).blastSummary}</div>
             </div>

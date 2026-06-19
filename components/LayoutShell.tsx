@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
@@ -188,14 +188,14 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '48px', fontWeight: 700, color: '#c0392b', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '1rem' }}>
             Suspended
           </div>
-          <div style={{ fontSize: '15px', color: '#d4cfc9', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+          <div style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.7, marginBottom: '1.5rem' }}>
             Your account has been suspended by a Thriver. You are unable to interact with The Tapestry at this time.
           </div>
           <div style={{ fontSize: '13px', color: '#cce0f5' }}>
             If you believe this is in error, contact a Thriver directly.
           </div>
           <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}
-            style={{ marginTop: '2rem', padding: '8px 24px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            style={{ marginTop: '2rem', padding: '8px 24px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             Sign Out
           </button>
         </div>

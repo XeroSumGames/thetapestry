@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -74,7 +74,7 @@ export default function RulesNav() {
     letterSpacing: '.06em',
     textTransform: 'uppercase',
     textDecoration: 'none',
-    color: '#d4cfc9',
+    color: '#f5f2ee',
     borderLeft: '2px solid transparent',
   }
   const linkActive: React.CSSProperties = {

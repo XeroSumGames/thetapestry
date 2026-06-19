@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { wrapDbChange } from '../../lib/sentry-realtime'
@@ -188,7 +188,7 @@ export default function CharacterSheetPage() {
                 <button
                   onClick={() => portraitInputRef.current?.click()}
                   disabled={portraitUploading}
-                  style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: portraitUploading ? 'wait' : 'pointer', opacity: portraitUploading ? 0.5 : 1 }}>
+                  style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: portraitUploading ? 'wait' : 'pointer', opacity: portraitUploading ? 0.5 : 1 }}>
                   {portraitUploading ? 'Uploading...' : (portraitUrl ? 'Replace photo' : 'Upload photo')}
                 </button>
                 {portraitUrl && (

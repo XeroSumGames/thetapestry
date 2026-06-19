@@ -1,4 +1,4 @@
-import {
+﻿import {
   RuleHero,
   RuleSection,
   RuleTable,
@@ -97,7 +97,7 @@ export default function Page() {
           heavy enough that wearers without the strength to manage
           them suffer a CMod penalty:
         </P>
-        <ul style={{ margin: '0 0 1rem 1.25rem', color: '#d4cfc9', lineHeight: 1.65 }}>
+        <ul style={{ margin: '0 0 1rem 1.25rem', color: '#f5f2ee', lineHeight: 1.65 }}>
           <li><Term>Improvised</Term>: requires PHY 1 to wear, or <Term>−1 CMod</Term> on all actions while worn.</li>
           <li><Term>Plate Steel</Term>: requires PHY 1 to wear, or <Term>−2 CMod</Term> on all actions while worn.</li>
         </ul>

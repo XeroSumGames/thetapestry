@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -121,7 +121,7 @@ export default function CharactersPage() {
 
       {characters.length === 0 && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '1rem' }}>No characters yet - pick a path:</div>
+          <div style={{ fontSize: '14px', color: '#f5f2ee', marginBottom: '1rem' }}>No characters yet - pick a path:</div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <a href='/characters/new' style={creationBtn('#c0392b', '#fff', '#c0392b')}>Backstory Generation</a>
             <a href='/characters/quick' style={creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4')}>Quick Character</a>
