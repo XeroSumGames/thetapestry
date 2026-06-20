@@ -188,7 +188,9 @@ export default function EditPregenPage() {
         </div>
       </div>
 
-      <PrintSheet state={state} />
+      <div className="print-sheet-container print-sheet-active">
+        <PrintSheet state={state} />
+      </div>
     </div>
   )
 }
