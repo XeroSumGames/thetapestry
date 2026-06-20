@@ -15,6 +15,7 @@ import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
 import { prepareUpload } from '../../../lib/safe-upload'
+import { usePostgresSubscription } from '../../../lib/realtime/usePostgresSubscription'
 
 // GM Tools section constants (lifted from the retired /edit page -
 // the Edit form is now inlined on the hub itself).
@@ -478,6 +479,20 @@ export default function CampaignPage() {
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
+
+  // Keep cover in sync for players: subscribe to campaign UPDATE events so
+  // a cover the GM uploads (or removes) is reflected without a page reload.
+  // campaigns is in supabase_realtime publication, so no publication change needed.
+  usePostgresSubscription(`campaign-cover-${id}`, {
+    label: `campaigns:cover:${id}`,
+    event: 'UPDATE',
+    table: 'campaigns',
+    filter: `id=eq.${id}`,
+    handler: (payload: any) => {
+      const url: string | null = payload.new?.cover_image_url ?? null
+      setHeroCoverUrl(url)
+    },
+  })
 
   if (loading || !campaign) return (
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>Loading...</div>
