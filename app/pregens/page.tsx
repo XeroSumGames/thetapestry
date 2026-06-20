@@ -242,7 +242,11 @@ function PregenCard({ name, subtitle, blurb, portraitUrl, campaignNames, isCreat
   isCreating: boolean; onUse: () => void; editHref?: string
 }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-  const badgeLabel = campaignNames.slice(0, 2).join(' / ').toUpperCase()
+  const badgeColors = [
+    { bg: 'rgba(20,55,90,0.92)', color: '#9dd0ef' },
+    { bg: 'rgba(18,50,18,0.92)', color: '#7fc458' },
+    { bg: 'rgba(80,42,20,0.92)', color: '#e8b08a' },
+  ]
   return (
     <div className="pregen-card" style={{ background: '#141414', border: '1px solid #222', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ width: '100%', height: '130px', background: '#0d0d0d', position: 'relative', overflow: 'hidden' }}>
@@ -253,10 +257,14 @@ function PregenCard({ name, subtitle, blurb, portraitUrl, campaignNames, isCreat
             {initials}
           </div>
         )}
-        {badgeLabel && (
-          <span style={{ position: 'absolute', top: '6px', right: '6px', fontSize: '13px', padding: '2px 7px', borderRadius: '3px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, background: 'rgba(0,0,0,.75)', color: '#cce0f5', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {badgeLabel}
-          </span>
+        {campaignNames.length > 0 && (
+          <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-end' }}>
+            {campaignNames.slice(0, 3).map((cn, i) => (
+              <span key={cn} style={{ fontSize: '13px', padding: '2px 7px', borderRadius: '3px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, background: badgeColors[i].bg, color: badgeColors[i].color, maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {cn}
+              </span>
+            ))}
+          </div>
         )}
       </div>
       <div style={{ padding: '10px 12px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>

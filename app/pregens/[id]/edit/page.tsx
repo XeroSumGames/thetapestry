@@ -141,7 +141,7 @@ export default function EditPregenPage() {
     if (linkErr) { setSaveError(linkErr.message); setSaving(false); return }
     setSaved(true)
     setSaving(false)
-    setTimeout(() => router.push('/characters'), 800)
+    setTimeout(() => router.push('/pregens'), 800)
   }
 
   function handlePrint() { window.print() }
@@ -329,14 +329,14 @@ function SkillsPanel({ state, onChange }: { state: WizardState; onChange: (u: Pa
           return (
             <div key={sk.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: `1px ${sk.vocational ? 'dashed' : 'solid'} #2e2e2e`, borderRadius: '3px', padding: '5px 7px', background: '#242424' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: raised ? '#f5a89a' : '#f5f2ee' }}>
+                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: raised ? '#7fc458' : '#f5f2ee' }}>
                   {sk.name}{sk.vocational ? '*' : ''}
                 </div>
                 <div style={{ fontSize: '13px', color: '#7a7068' }}>{sk.attribute} - {SKILL_LABELS[cumVal]}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                 <button onClick={() => adjustSkill(sk.name, -1)} disabled={cumVal <= baseVal} style={skPanelBtn(cumVal <= baseVal)}>-</button>
-                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : cumVal > 0 ? '#7fc458' : '#f5f2ee' }}>{disp}</span>
                 <button onClick={() => adjustSkill(sk.name, 1)} disabled={cumVal >= 3 || cdpLeft <= 0} style={skPanelBtn(cumVal >= 3 || cdpLeft <= 0)}>+</button>
               </div>
             </div>

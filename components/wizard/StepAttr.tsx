@@ -224,7 +224,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
               borderRadius: '3px', padding: '5px 7px', background: '#242424',
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: deltaThisStep > 0 ? '#7fc458' : '#f5f2ee', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
                   <HelpTooltip
                     title={`${sk.name}${sk.vocational ? ' (vocational)' : ''} - ${sk.attribute}`}
@@ -238,7 +238,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                 <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
-                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : cumVal > 0 ? '#7fc458' : '#f5f2ee' }}>
                   {disp}
                 </span>
                 <button onClick={() => changeSkill(sk.name, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
