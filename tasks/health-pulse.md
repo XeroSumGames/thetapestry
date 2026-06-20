@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-20 06:07 UTC
+
+**Status:** DRIFT (carry-forward #8 — HOPED-FOR trio persists; stale-open recorder todo shipped; ws/vite HIGH vulns cleared)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files] (+8 vs last run)
+
+**Audit:** clean (0 high, 0 critical) — ws CVSS 7.5 + vite HIGH from 06-17 RED are now RESOLVED
+
+**CI:** last 5 runs all success — latest 2026-06-19 22:30 UTC. Fully green.
+
+**Drift:**
+- HOPED-FOR trio persists (#8): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. No code changes addressing these since Session 24 (2026-06-16).
+- Stale-as-open todo: "Recorder captures clicks only - blind to where bugs live" (`tasks/todo.md`) — shipped by `b043904` (Items 1-4: net/realtime/snapshot/richer-click). Checkbox should be marked done.
+- `scripts/check-realtime-wrap.mjs` still not created. Recorder `window.prompt` still present at `components/PlaytestRecorder.tsx:355`.
+
+**Action:** Mark recorder observability todo done. Drain HOPED-FOR trio at Beta-500 dry-run. ws/vite HIGH vulns resolved — no action needed there.
+
+---
+
 ## 2026-06-19 21:07 UTC
 
 **Status:** DRIFT (carry-forward #7 — CI fully green, pregen edit wizard shipped, HOPED-FOR trio persists)
