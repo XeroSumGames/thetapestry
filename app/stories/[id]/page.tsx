@@ -189,8 +189,11 @@ export default function CampaignPage() {
       const myMembership = mems.find((m: any) => m.user_id === user.id) as any
       if (myMembership?.character_id) {
         setSelectedCharId(myMembership.character_id)
-        setAssignedCharName((myMembership.characters as any)?.name ?? '')
-        setAssignedPortrait((myMembership.characters as any)?.portrait_url ?? null)
+        // Use the direct characters query for portrait — the PostgREST join
+        // omits large base64 portrait_url values silently.
+        const assignedChar = (chars ?? []).find((c: any) => c.id === myMembership.character_id)
+        setAssignedCharName(assignedChar?.name ?? (myMembership.characters as any)?.name ?? '')
+        setAssignedPortrait(assignedChar?.portrait_url ?? (myMembership.characters as any)?.portrait_url ?? null)
       }
 
       // Module publish + subscriber-update state moved to
