@@ -248,6 +248,9 @@ export default function Sidebar() {
       <Link href="/characters/quick"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</Link>
       <Link href="/characters/random"    style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</Link>
       <Link href="/characters/paradigms"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Paradigms</Link>
+      {roleIsThriver(userRole) && (
+        <Link href="/pregens" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Pregens</Link>
+      )}
 
       {divider}
 
