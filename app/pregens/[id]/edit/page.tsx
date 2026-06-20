@@ -123,7 +123,7 @@ export default function EditPregenPage() {
       name: character.name || pregenName || 'Unnamed Character',
       data: character as unknown as import('../../../../lib/database.types').Json,
       portrait_url: (character as any).photoDataUrl ?? null,
-      setting: pregenSetting.trim() || null,
+      setting: pregenSetting.trim().toLowerCase() || null,
       // Thriver edits stay approved; GM edits reset to pending for re-review
       moderation_status: isThriverUser ? 'approved' : 'pending',
       approved_by: isThriverUser ? undefined : null,

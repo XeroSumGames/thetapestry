@@ -92,7 +92,7 @@ export default function CampaignPage() {
   const [showPregens, setShowPregens] = useState(false)
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [libraryPregens, setLibraryPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null }>>([])
-  const [officialLibPregens, setOfficialLibPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null }>>([])
+  const [officialLibPregens, setOfficialLibPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null; setting: string | null }>>([])
   const [creatingLibraryPregen, setCreatingLibraryPregen] = useState<string | null>(null)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
@@ -143,7 +143,8 @@ export default function CampaignPage() {
           loadOfficialPregens(),
         ])
         setLibraryPregens(libP ?? [])
-        setOfficialLibPregens((offP ?? []).filter((p: any) => !p.setting || p.setting === camp.setting))
+        const settingLower = camp.setting?.toLowerCase() ?? null
+        setOfficialLibPregens((offP ?? []).filter((p: any) => !p.setting || p.setting.toLowerCase() === settingLower))
       }
 
       // Seed GM Tools form state from the loaded campaign row. GM-or-
@@ -630,47 +631,71 @@ export default function CampaignPage() {
                 </a>
               </div>
 
-              {(campaign.setting && SETTING_PREGENS[campaign.setting] || libraryPregens.length > 0) && (
-                <>
-                  <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>Pre-generated for this story</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                    {(campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []).map(p => {
-                      const libMatch = officialLibPregens.find(lp => lp.name === p.name)
-                      return libMatch ? (
-                        <button key={p.name} onClick={() => handleSelectLibraryPregen(libMatch)} disabled={!!creatingLibraryPregen}
+              {(() => {
+                const settingSeeds = campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []
+                const seedNames = new Set(settingSeeds.map((p: any) => p.name))
+                // Official library pregens for this setting that aren't covered by a seed
+                const extraOfficial = officialLibPregens.filter(p =>
+                  p.setting && !seedNames.has(p.name)
+                )
+                const hasAny = settingSeeds.length > 0 || extraOfficial.length > 0 || libraryPregens.length > 0
+                if (!hasAny) return null
+                return (
+                  <>
+                    <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>Pre-generated for this story</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                      {settingSeeds.map((p: any) => {
+                        const libMatch = officialLibPregens.find(lp => lp.name === p.name)
+                        return libMatch ? (
+                          <button key={p.name} onClick={() => handleSelectLibraryPregen(libMatch)} disabled={!!creatingLibraryPregen}
+                            style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
+                            <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
+                              {libMatch.portrait_url
+                                ? <img src={libMatch.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7ab3d4', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
+                            </div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                          </button>
+                        ) : (
+                          <button key={p.name} onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
+                            style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingPregen ? 0.6 : 1 }}>
+                            <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
+                              {p.name.charAt(0)}
+                            </div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                          </button>
+                        )
+                      })}
+                      {extraOfficial.map(p => (
+                        <button key={p.id} onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
                           style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
                           <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
-                            {libMatch.portrait_url
-                              ? <img src={libMatch.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            {p.portrait_url
+                              ? <img src={p.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7ab3d4', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
                           </div>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                          <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                          {p.data?.profession && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.data.profession}</div>}
                         </button>
-                      ) : (
-                        <button key={p.name} onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
-                          style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingPregen ? 0.6 : 1 }}>
-                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
-                            {p.name.charAt(0)}
+                      ))}
+                      {libraryPregens.slice(0, 3).map((p: any) => (
+                        <button key={p.id} onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
+                          style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
+                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #2d5a1b', margin: '0 auto 6px', background: '#1a2e10' }}>
+                            {p.portrait_url
+                              ? <img src={p.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7fc458', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
                           </div>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                          <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                          {p.data?.profession && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.data.profession}</div>}
                         </button>
-                      )
-                    })}
-                    {libraryPregens.slice(0, 3).map((p: any) => (
-                      <button key={p.id} onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
-                        style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
-                        <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
-                          {p.name.charAt(0)}
-                        </div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                        {p.data?.profession && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.data.profession}</div>}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+                      ))}
+                    </div>
+                  </>
+                )
+              })()}
               <div style={{ marginTop: '12px' }}>
                 <a href={`/pregens?return=${id}`} style={{ display: 'inline-block', padding: '8px 16px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#7ab3d4', textDecoration: 'none', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
                   Or pick from a different pre-generated character &rarr;
@@ -775,13 +800,13 @@ export default function CampaignPage() {
                   const isThisGM = m.user_id === campaign.gm_user_id
                   const uname = (m.profiles as any)?.username ?? 'Unknown'
                   return (
-                    <div key={m.id} style={{ background: '#171717', border: '1px solid #222', borderRadius: '5px', padding: '10px 12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <div style={{ width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, flexShrink: 0, background: isThisGM ? '#2a1210' : '#0f2035', border: isThisGM ? '2px solid #c0392b' : '1px solid #1a3a5c', color: isThisGM ? '#f5a89a' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
+                    <div key={m.id} style={{ background: '#171717', border: '1px solid #222', borderRadius: '5px', padding: '10px 12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                      <div style={{ width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, flexShrink: 0, marginTop: '1px', background: isThisGM ? '#2a1210' : '#0f2035', border: isThisGM ? '2px solid #c0392b' : '1px solid #1a3a5c', color: isThisGM ? '#f5a89a' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
                         {uname.charAt(0).toUpperCase()}
                       </div>
-                      {/* Name + sub-line + joined date stacked in the flex:1 column */}
+                      {/* All text + action buttons in one column - eliminates horizontal overflow */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{uname}</span>
                           {isThisGM && <span style={{ fontSize: '13px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>GM</span>}
                         </div>
@@ -793,22 +818,21 @@ export default function CampaignPage() {
                           <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '1px', fontFamily: 'Carlito, sans-serif' }}>No character assigned</div>
                         )}
                         <div style={{ fontSize: '13px', color: '#555', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{formatDate(m.joined_at)}</div>
+                        {((m.user_id && m.user_id !== userId) || (gmLike && !isThisGM)) && (
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                            {m.user_id && m.user_id !== userId && (
+                              <a href={`/messages?dm=${m.user_id}`} style={{ padding: '4px 9px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                💬 Msg
+                              </a>
+                            )}
+                            {gmLike && !isThisGM && (
+                              <button onClick={() => handleRemoveMember(m)} style={{ padding: '4px 9px', background: 'transparent', border: '1px solid #3a1a18', borderRadius: '3px', color: '#7a3028', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {/* Action buttons - no date here, so they always fit */}
-                      {(m.user_id && m.user_id !== userId) || (gmLike && !isThisGM) ? (
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
-                          {m.user_id && m.user_id !== userId && (
-                            <a href={`/messages?dm=${m.user_id}`} style={{ padding: '4px 9px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                              💬 Msg
-                            </a>
-                          )}
-                          {gmLike && !isThisGM && (
-                            <button onClick={() => handleRemoveMember(m)} style={{ padding: '4px 9px', background: 'transparent', border: '1px solid #3a1a18', borderRadius: '3px', color: '#7a3028', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      ) : null}
                     </div>
                   )
                 })}
