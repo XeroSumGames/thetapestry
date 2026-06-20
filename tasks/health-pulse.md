@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-20 15:06 UTC
+
+**Status:** DRIFT (carry-forward #10 — zero new signal since 09:07 entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — latest 12:09 UTC (success). Fully green.
+
+**Drift:**
+- HOPED-FOR trio (#10): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. 4 days since last session (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01.
+- Stale-open: recorder observability todo `[ ]` — `b043904` (2026-06-19) shipped all 4 items; checkbox not ticked.
+- `scripts/check-realtime-wrap.mjs` not created. Recorder `window.prompt` at `PlaytestRecorder.tsx:355` not replaced.
+
+**Action:** No new action beyond 09:07 entry. Drain HOPED-FOR trio at next playtest / Beta-500 dry-run. Tick recorder observability todo.
+
+---
+
 ## 2026-06-20 09:07 UTC
 
 **Status:** DRIFT (carry-forward #9 — HOPED-FOR trio persists; new stale-todo candidate)
