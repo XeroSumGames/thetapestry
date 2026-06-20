@@ -36,6 +36,7 @@ export default function EditPregenPage() {
   const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(true)
   const [isThriverUser, setIsThriverUser] = useState(false)
+  const [pregenSetting, setPregenSetting] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -53,6 +54,7 @@ export default function EditPregenPage() {
       if (!thriver && (pregen as any).author_id !== user.id) { router.push('/characters'); return }
 
       setPregenName((pregen as any).name ?? '')
+      setPregenSetting((pregen as any).setting ?? '')
       const d = (pregen as any).data as any
 
       const skillDeltas: Partial<Record<string, number>> = {}
@@ -121,6 +123,7 @@ export default function EditPregenPage() {
       name: character.name || pregenName || 'Unnamed Character',
       data: character as unknown as import('../../../../lib/database.types').Json,
       portrait_url: (character as any).photoDataUrl ?? null,
+      setting: pregenSetting.trim() || null,
       // Thriver edits stay approved; GM edits reset to pending for re-review
       moderation_status: isThriverUser ? 'approved' : 'pending',
       approved_by: isThriverUser ? undefined : null,
@@ -150,8 +153,18 @@ export default function EditPregenPage() {
       <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '4px' }}>
         Editing Pregen
       </div>
-      <div style={{ fontSize: '26px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
+      <div style={{ fontSize: '26px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem' }}>
         {pregenName}
+      </div>
+
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <label style={{ fontSize: '13px', color: '#7a7068', textTransform: 'uppercase', letterSpacing: '.08em', whiteSpace: 'nowrap' }}>Story / Module</label>
+        <input
+          value={pregenSetting}
+          onChange={e => setPregenSetting(e.target.value)}
+          placeholder="e.g. empty, chased (leave blank for general library)"
+          style={{ flex: 1, padding: '6px 10px', background: '#171717', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
+        />
       </div>
 
       <div style={{ display: 'flex', gap: '6px', marginBottom: '1.25rem', flexWrap: 'wrap' }}>

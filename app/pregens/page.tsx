@@ -30,6 +30,7 @@ export default function PregenPage() {
   const [settingFilter, setSettingFilter] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [isThriverUser, setIsThriverUser] = useState(false)
+  const [storySetting, setStorySetting] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -45,31 +46,47 @@ export default function PregenPage() {
         ...p,
         author_username: (p.profiles as any)?.username ?? 'unknown',
       })))
+
+      if (returnStoryId) {
+        const { setting } = await getStoryCampaignSetting(returnStoryId)
+        if (setting) {
+          setStorySetting(setting)
+          setSettingFilter(setting)
+        }
+      }
+
       setLoading(false)
     }
     load()
-  }, [])
+  }, [returnStoryId])
+
+  const allPregens = useMemo(() => [...officialPregens, ...libraryPregens], [officialPregens, libraryPregens])
 
   const availableSettings = useMemo(() => {
     const s = new Set<string>()
-    libraryPregens.forEach(p => { if (p.setting) s.add(p.setting) })
-    return [...s]
-  }, [libraryPregens])
+    allPregens.forEach(p => { if (p.setting) s.add(p.setting) })
+    return [...s].sort()
+  }, [allPregens])
 
-  function matchesFilter(name: string, extra: string) {
+  const filteredPregens = useMemo(() => {
     const q = search.toLowerCase()
-    if (q && !name.toLowerCase().includes(q) && !extra.toLowerCase().includes(q)) return false
-    return true
-  }
+    return allPregens.filter(p => {
+      const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.data?.profession ?? '').toLowerCase().includes(q)
+      const matchesSetting = !settingFilter || p.setting === settingFilter
+      return matchesSearch && matchesSetting
+    })
+  }, [allPregens, search, settingFilter])
 
-  // Official pregens show regardless of setting filter (all have null setting)
-  const filteredOfficial = officialPregens.filter(p =>
-    matchesFilter(p.name, p.data?.profession ?? '')
+  const pregensWithSetting = useMemo(() =>
+    availableSettings
+      .map(s => ({ setting: s, pregens: filteredPregens.filter(p => p.setting === s) }))
+      .filter(g => g.pregens.length > 0),
+    [availableSettings, filteredPregens]
   )
 
-  const filteredLibrary = libraryPregens.filter(p =>
-    matchesFilter(p.name, p.data?.profession ?? '') &&
-    (!settingFilter || p.setting === settingFilter)
+  const pregensNoSetting = useMemo(() =>
+    filteredPregens.filter(p => !p.setting),
+    [filteredPregens]
   )
 
   async function usePregen(pregen: DBPregen) {
@@ -89,9 +106,7 @@ export default function PregenPage() {
   async function maybeAssign(userId: string, charId: string) {
     if (returnStoryId) {
       const { campaignId } = await getStoryCampaignSetting(returnStoryId)
-      if (campaignId) {
-        await assignMemberCharacter(campaignId, userId, charId)
-      }
+      if (campaignId) await assignMemberCharacter(campaignId, userId, charId)
       router.push(`/stories/${returnStoryId}`)
     } else {
       router.push('/characters')
@@ -129,7 +144,14 @@ export default function PregenPage() {
           style={filterChip(settingFilter === null)}>
           All
         </button>
-        {availableSettings.map(s => (
+        {storySetting && (
+          <button onClick={() => setSettingFilter(storySetting)}
+            className={`pregen-chip${settingFilter === storySetting ? ' active' : ''}`}
+            style={filterChip(settingFilter === storySetting)}>
+            For this story
+          </button>
+        )}
+        {availableSettings.filter(s => s !== storySetting).map(s => (
           <button key={s} onClick={() => setSettingFilter(settingFilter === s ? null : s)}
             className={`pregen-chip${settingFilter === s ? ' active' : ''}`}
             style={filterChip(settingFilter === s)}>
@@ -144,52 +166,55 @@ export default function PregenPage() {
         />
       </div>
 
-      {/* Official group */}
-      {filteredOfficial.length > 0 && (
-        <div style={{ marginBottom: '32px' }}>
+      {loading && <div style={{ fontSize: '13px', color: '#cce0f5' }}>Loading...</div>}
+
+      {/* Setting-grouped sections */}
+      {pregensWithSetting.map(group => (
+        <div key={group.setting} style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
             <span style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#7ab3d4', fontWeight: 700 }}>
-              Official Characters
+              {storySetting && group.setting === storySetting ? '★ ' : ''}Authored for &ldquo;{group.setting.charAt(0).toUpperCase() + group.setting.slice(1)}&rdquo;
             </span>
-            <span style={{ fontSize: '13px', color: '#f5f2ee' }}>{filteredOfficial.length}</span>
+            <span style={{ fontSize: '13px', color: '#5a5a5a' }}>{group.pregens.length} {group.pregens.length === 1 ? 'character' : 'characters'}</span>
             <div style={{ flex: 1, height: '1px', background: '#1a1a1a' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-            {filteredOfficial.map(p => (
+            {group.pregens.map(p => (
               <PregenCard
                 key={p.id}
                 name={p.name}
                 subtitle={p.data?.profession ?? ''}
                 blurb={Array.isArray(p.data?.threeWords) ? p.data.threeWords.join(', ') : (p.data?.threeWords ?? '')}
                 portraitUrl={p.portrait_url}
+                setting={p.setting}
                 isCreating={creating === p.id}
                 onUse={() => usePregen(p)}
-                editHref={isThriverUser ? `/pregens/${p.id}/edit` : undefined}
+                editHref={(isThriverUser || p.author_id === userId) ? `/pregens/${p.id}/edit` : undefined}
               />
             ))}
           </div>
         </div>
-      )}
+      ))}
 
-      {/* Community group */}
-      {loading && <div style={{ fontSize: '13px', color: '#cce0f5' }}>Loading community pregens...</div>}
-      {!loading && filteredLibrary.length > 0 && (
+      {/* General library - pregens with no setting */}
+      {pregensNoSetting.length > 0 && (
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
             <span style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#7ab3d4', fontWeight: 700 }}>
-              Community Library
+              General Library
             </span>
-            <span style={{ fontSize: '13px', color: '#f5f2ee' }}>{filteredLibrary.length}</span>
+            <span style={{ fontSize: '13px', color: '#5a5a5a' }}>{pregensNoSetting.length} {pregensNoSetting.length === 1 ? 'character' : 'characters'}</span>
             <div style={{ flex: 1, height: '1px', background: '#1a1a1a' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-            {filteredLibrary.map(p => (
+            {pregensNoSetting.map(p => (
               <PregenCard
                 key={p.id}
                 name={p.name}
                 subtitle={p.data?.profession ?? ''}
                 blurb={Array.isArray(p.data?.threeWords) ? p.data.threeWords.join(', ') : (p.data?.threeWords ?? '')}
                 portraitUrl={p.portrait_url}
+                setting={null}
                 isCreating={creating === p.id}
                 onUse={() => usePregen(p)}
                 editHref={(isThriverUser || p.author_id === userId) ? `/pregens/${p.id}/edit` : undefined}
@@ -199,7 +224,7 @@ export default function PregenPage() {
         </div>
       )}
 
-      {!loading && filteredOfficial.length === 0 && filteredLibrary.length === 0 && (
+      {!loading && pregensWithSetting.length === 0 && pregensNoSetting.length === 0 && (
         <div style={{ fontSize: '14px', color: '#cce0f5', padding: '2rem', textAlign: 'center' }}>
           No pregens match your filters.
         </div>
@@ -208,8 +233,8 @@ export default function PregenPage() {
   )
 }
 
-function PregenCard({ name, subtitle, blurb, portraitUrl, isCreating, onUse, editHref }: {
-  name: string; subtitle: string; blurb: string; portraitUrl: string | null
+function PregenCard({ name, subtitle, blurb, portraitUrl, setting, isCreating, onUse, editHref }: {
+  name: string; subtitle: string; blurb: string; portraitUrl: string | null; setting: string | null
   isCreating: boolean; onUse: () => void; editHref?: string
 }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -223,7 +248,11 @@ function PregenCard({ name, subtitle, blurb, portraitUrl, isCreating, onUse, edi
             {initials}
           </div>
         )}
-        <span style={{ position: 'absolute', top: '6px', right: '6px', fontSize: '13px', padding: '2px 7px', borderRadius: '3px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, background: 'rgba(0,0,0,.6)', color: '#7fc458' }}>Common</span>
+        {setting && (
+          <span style={{ position: 'absolute', top: '6px', right: '6px', fontSize: '13px', padding: '2px 7px', borderRadius: '3px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, background: 'rgba(0,0,0,.75)', color: '#cce0f5' }}>
+            {setting}
+          </span>
+        )}
       </div>
       <div style={{ padding: '10px 12px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', letterSpacing: '.02em' }}>{name}</div>
