@@ -1,8 +1,8 @@
 'use client'
 import { useState, useRef } from 'react'
 import { WizardState } from '../../lib/xse-engine'
-import { resizeImage } from '../../lib/image-utils'
 import PortraitBankPicker from '../PortraitBankPicker'
+import PhotoCropModal from '../PhotoCropModal'
 
 const ALL_WORDS = ["Adaptable","Adventurous","Affectionate","Altruistic","Ambitious","Argumentative","Articulate","Assertive","Authentic","Authoritative","Bold","Braggadocious","Calm","Candid","Charismatic","Clever","Collaborative","Combative","Compassionate","Confident","Conscientious","Contrarian","Courageous","Creative","Cultured","Cunning","Curious","Daring","Decisive","Deliberate","Determined","Dignified","Diligent","Diplomatic","Discreet","Eloquent","Empathetic","Energetic","Enterprising","Fair","Fervent","Fierce","Flexible","Focused","Forgiving","Generous","Genuine","Gregarious","Grounded","Honorable","Humble","Idealistic","Imaginative","Independent","Insightful","Intelligent","Intuitive","Inventive","Joyful","Just","Loyal","Mature","Meticulous","Observant","Original","Passionate","Patient","Perceptive","Persuasive","Philanthropic","Pragmatic","Precise","Principled","Prudent","Purposeful","Rational","Realistic","Reflective","Reliable","Resilient","Resourceful","Sensitive","Sincere","Sociable","Steadfast","Strategic","Tactful","Tenacious","Thoughtful","Tolerant","Trusting","Trustworthy","Understanding","Unique","Versatile","Vigilant","Visionary","Wise","Witty","Zealous"]
 
@@ -15,6 +15,7 @@ export default function StepXero({ state, onChange }: Props) {
   const [search, setSearch] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const [showPicker, setShowPicker] = useState(false)
+  const [cropFile, setCropFile] = useState<File | null>(null)
 
   const used = state.threeWords.map(w => w.toLowerCase())
   const filtered = ALL_WORDS.filter(w =>
@@ -36,11 +37,11 @@ export default function StepXero({ state, onChange }: Props) {
     onChange({ threeWords: words })
   }
 
-  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+  function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const resized = await resizeImage(file, 256)
-    onChange({ photoDataUrl: resized })
+    setCropFile(file)
+    e.target.value = ''
   }
 
   return (
@@ -112,6 +113,13 @@ export default function StepXero({ state, onChange }: Props) {
           }
           onPick={url => onChange({ photoDataUrl: url })}
           onClose={() => setShowPicker(false)}
+        />
+      )}
+      {cropFile && (
+        <PhotoCropModal
+          file={cropFile}
+          onCrop={dataUrl => { onChange({ photoDataUrl: dataUrl }); setCropFile(null) }}
+          onClose={() => setCropFile(null)}
         />
       )}
 

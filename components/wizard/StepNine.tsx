@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, EQUIPMENT, RATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
 import { ALL_WEAPONS } from '../../lib/weapons'
-import { resizeImage } from '../../lib/image-utils'
+import PhotoCropModal from '../PhotoCropModal'
 
 const INCIDENTAL_ITEMS: string[] = [
   'Bible', 'Deck of Cards', 'Disposable Lighters', 'Eye Glasses', 'Map of Area',
@@ -28,6 +28,7 @@ interface Props {
 
 export default function StepNine({ state, onChange }: Props) {
   const [notes, setNotes] = useState('')
+  const [cropFile, setCropFile] = useState<File | null>(null)
   const rapid = getCumulativeAttributes(state.steps)
   const equipmentPool = useMemo(() => EQUIPMENT.filter(e => !EQUIPMENT_INCIDENTAL_NAMES.has(e.name)), [])
   const derived = deriveSecondaryStats(rapid)
@@ -69,11 +70,11 @@ export default function StepNine({ state, onChange }: Props) {
                 <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', marginTop: '2px' }}>Upload</div>
               </div>
             )}
-            <input type="file" accept="image/*" hidden onChange={async e => {
+            <input type="file" accept="image/*" hidden onChange={e => {
               const file = e.target.files?.[0]
               if (!file) return
-              const resized = await resizeImage(file, 256)
-              onChange({ photoDataUrl: resized })
+              setCropFile(file)
+              e.target.value = ''
             }} />
           </label>
           <div style={{ flex: 1 }}>
@@ -339,6 +340,13 @@ export default function StepNine({ state, onChange }: Props) {
           mounts. The parent's container is always print-sheet-active;
           this child no longer needs one. */}
 
+      {cropFile && (
+        <PhotoCropModal
+          file={cropFile}
+          onCrop={dataUrl => { onChange({ photoDataUrl: dataUrl }); setCropFile(null) }}
+          onClose={() => setCropFile(null)}
+        />
+      )}
     </div>
   )
 }
