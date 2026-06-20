@@ -8,7 +8,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
-import { loadApprovedPregens } from '../../../lib/data/pregens'
+import { loadApprovedPregens, loadOfficialPregens } from '../../../lib/data/pregens'
 import { createCharacterForUser } from '../../../lib/data/characters'
 import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover, removeCampaignCover } from '../../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
@@ -92,6 +92,7 @@ export default function CampaignPage() {
   const [showPregens, setShowPregens] = useState(false)
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [libraryPregens, setLibraryPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null }>>([])
+  const [officialLibPregens, setOfficialLibPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null }>>([])
   const [creatingLibraryPregen, setCreatingLibraryPregen] = useState<string | null>(null)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
@@ -137,8 +138,12 @@ export default function CampaignPage() {
       }
 
       if (camp.setting) {
-        const { data: libP } = await loadApprovedPregens(camp.setting)
+        const [{ data: libP }, { data: offP }] = await Promise.all([
+          loadApprovedPregens(camp.setting),
+          loadOfficialPregens(),
+        ])
         setLibraryPregens(libP ?? [])
+        setOfficialLibPregens((offP ?? []).filter((p: any) => !p.setting || p.setting === camp.setting))
       }
 
       // Seed GM Tools form state from the loaded campaign row. GM-or-
@@ -629,16 +634,30 @@ export default function CampaignPage() {
                 <>
                   <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>Pre-generated for this story</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                    {(campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []).map(p => (
-                      <button key={p.name} onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
-                        style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingPregen ? 0.6 : 1 }}>
-                        <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
-                          {p.name.charAt(0)}
-                        </div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                        <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
-                      </button>
-                    ))}
+                    {(campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []).map(p => {
+                      const libMatch = officialLibPregens.find(lp => lp.name === p.name)
+                      return libMatch ? (
+                        <button key={p.name} onClick={() => handleSelectLibraryPregen(libMatch)} disabled={!!creatingLibraryPregen}
+                          style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
+                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
+                            {libMatch.portrait_url
+                              ? <img src={libMatch.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7ab3d4', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
+                          </div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                          <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                        </button>
+                      ) : (
+                        <button key={p.name} onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
+                          style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingPregen ? 0.6 : 1 }}>
+                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
+                            {p.name.charAt(0)}
+                          </div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                          <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                        </button>
+                      )
+                    })}
                     {libraryPregens.slice(0, 3).map((p: any) => (
                       <button key={p.id} onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
                         style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
