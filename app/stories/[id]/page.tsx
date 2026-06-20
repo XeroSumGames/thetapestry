@@ -240,7 +240,7 @@ export default function CampaignPage() {
       const { data: created, error: charErr } = await supabase
         .from('characters')
         .insert({ user_id: userId, name: char.name, data: char })
-        .select('id, name')
+        .select('id, name, portrait_url')
         .single()
       if (charErr || !created) { console.error('[Pregen] character create error:', charErr?.message); return }
       // Auto-assign to campaign
@@ -262,11 +262,11 @@ export default function CampaignPage() {
     }
   }
 
-  async function handleSelectLibraryPregen(row: { id: string; name: string; data: any }) {
+  async function handleSelectLibraryPregen(row: { id: string; name: string; data: any; portrait_url?: string | null }) {
     if (!userId || !campaign || creatingLibraryPregen) return
     setCreatingLibraryPregen(row.id)
     try {
-      const { data: created, error: charErr } = await createCharacterForUser(userId, row.name, row.data)
+      const { data: created, error: charErr } = await createCharacterForUser(userId, row.name, row.data, row.portrait_url)
       if (charErr || !created) { console.error('[LibraryPregen] character create error:', charErr?.message); return }
       const { error: assignErr } = await assignMemberCharacter(id, userId, created.id)
       if (!assignErr) {

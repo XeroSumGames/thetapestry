@@ -1,9 +1,13 @@
 import type { Json } from '../database.types'
 import { db } from './db'
 
-/** Create a character row for a user. Returns {data: {id, name}, error}. */
-export function createCharacterForUser(userId: string, name: string, data: unknown) {
-  return db().from('characters').insert({ user_id: userId, name, data: data as Json }).select('id, name').single()
+/** Create a character row for a user. Returns {data: {id, name, portrait_url}, error}. */
+export function createCharacterForUser(userId: string, name: string, data: unknown, portraitUrl?: string | null) {
+  return db()
+    .from('characters')
+    .insert({ user_id: userId, name, data: data as Json, ...(portraitUrl ? { portrait_url: portraitUrl } : {}) })
+    .select('id, name, portrait_url')
+    .single()
 }
 
 /**

@@ -106,7 +106,7 @@ export default function PregenPage() {
     try {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
-      const { data: created, error } = await createCharacterForUser(user.id, pregen.name, pregen.data)
+      const { data: created, error } = await createCharacterForUser(user.id, pregen.name, pregen.data, pregen.portrait_url)
       if (error || !created) return
       await maybeAssign(user.id, created.id)
     } finally {
