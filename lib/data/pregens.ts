@@ -73,3 +73,36 @@ export function loadModulesForPregenDropdown() {
     .neq('visibility', 'draft')
     .order('sort_order', { ascending: true })
 }
+
+/** Approved pregens linked to a campaign, for module snapshot capture. */
+export function loadPregensByCampaignForSnapshot(campaignId: string) {
+  return db()
+    .from('pregen_library')
+    .select('id, name, data, portrait_url')
+    .eq('campaign_id', campaignId)
+    .eq('moderation_status', 'approved')
+    .order('created_at', { ascending: true })
+}
+
+/** Stamp module_id on all approved pregens for a campaign (called after publish). */
+export function stampModuleIdOnPregens(campaignId: string, moduleId: string) {
+  return db()
+    .from('pregen_library')
+    .update({ module_id: moduleId } as any)
+    .eq('campaign_id', campaignId)
+    .eq('moderation_status', 'approved')
+}
+
+/** Insert pregens cloned from a module snapshot into pregen_library. */
+export function insertClonedPregens(rows: Array<{
+  campaign_id: string
+  module_id: string
+  name: string
+  data: any
+  portrait_url: string | null
+  author_id: null
+  moderation_status: string
+  approved_at: string
+}>) {
+  return db().from('pregen_library').insert(rows as any)
+}

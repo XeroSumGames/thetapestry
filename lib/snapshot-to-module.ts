@@ -53,7 +53,7 @@ export function snapshotToModuleSnapshot(
   }
 
   const snapshot: ModuleSnapshot = {}
-  const counts: SnapshotCounts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0 }
+  const counts: SnapshotCounts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0, pregens: 0 }
 
   if (opts.includePins && Array.isArray(file.pins)) {
     snapshot.pins = file.pins.map((p: any) => ({

@@ -76,6 +76,7 @@ export default function ModulePublishModal({
   const [includeNpcs, setIncludeNpcs] = useState(true)
   const [includeScenes, setIncludeScenes] = useState(true)
   const [includeHandouts, setIncludeHandouts] = useState(true)
+  const [includePregens, setIncludePregens] = useState(true)
 
   const [counts, setCounts] = useState<SnapshotCounts | null>(initialCounts ?? null)
   const [previewing, setPreviewing] = useState(false)
@@ -112,6 +113,7 @@ export default function ModulePublishModal({
           includeNpcs,
           includeScenes,
           includeHandouts,
+          includePregens,
         })
         if (!cancelled) setCounts(counts)
       } catch (e: any) {
@@ -121,7 +123,7 @@ export default function ModulePublishModal({
       }
     })()
     return () => { cancelled = true }
-  }, [supabase, campaignId, includePins, includeNpcs, includeScenes, includeHandouts, isSnapshotSource])
+  }, [supabase, campaignId, includePins, includeNpcs, includeScenes, includeHandouts, includePregens, isSnapshotSource])
 
   const nextVersion = isRepublish && existingModule?.latest_version
     ? bumpSemver(existingModule.latest_version.version, bumpKind)
@@ -143,7 +145,7 @@ export default function ModulePublishModal({
         snapshotToPublish = initialSnapshot
       } else if (campaignId) {
         const result = await buildCampaignSnapshot(supabase, campaignId, {
-          includePins, includeNpcs, includeScenes, includeHandouts,
+          includePins, includeNpcs, includeScenes, includeHandouts, includePregens,
         })
         snapshotToPublish = result.snapshot
       } else {
@@ -364,6 +366,10 @@ export default function ModulePublishModal({
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includeHandouts} onChange={e => setIncludeHandouts(e.target.checked)} />
                   📄 Handouts{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includeHandouts ? counts.handouts : 0}</span>}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#f5f2ee', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
+                  <input type="checkbox" checked={includePregens} onChange={e => setIncludePregens(e.target.checked)} />
+                  🧍 Pre-generated characters{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includePregens ? counts.pregens : 0}</span>}
                 </label>
               </div>
               {previewing && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', fontFamily: 'Carlito, sans-serif' }}>Reading campaign…</div>}

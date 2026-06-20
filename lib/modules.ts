@@ -15,6 +15,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getCachedAuth } from './auth-cache'
 import { logEvent } from './events'
+import {
+  loadPregensByCampaignForSnapshot,
+  stampModuleIdOnPregens,
+  insertClonedPregens,
+} from './data/pregens'
 
 // ── Shapes that a module snapshot carries ──────────────────────
 // These are loose on purpose: the publish wizard (Sprint 2) is the
@@ -93,11 +98,20 @@ export interface ModuleSnapshotHandout {
   [key: string]: any
 }
 
+export interface ModuleSnapshotPregen {
+  _external_id?: string  // original pregen_library.id at publish time
+  name: string
+  data: any              // full XSECharacter JSONB
+  portrait_url?: string | null
+  [key: string]: any
+}
+
 export interface ModuleSnapshot {
   npcs?: ModuleSnapshotNpc[]
   pins?: ModuleSnapshotPin[]
   scenes?: ModuleSnapshotScene[]
   handouts?: ModuleSnapshotHandout[]
+  pregens?: ModuleSnapshotPregen[]
   [key: string]: any
 }
 
@@ -139,6 +153,7 @@ export interface CloneResult {
     scenes: number
     tokens: number
     handouts: number
+    pregens: number
   }
 }
 
@@ -148,6 +163,7 @@ export interface SnapshotCounts {
   scenes: number
   tokens: number
   handouts: number
+  pregens: number
 }
 
 export interface BuildSnapshotOptions {
@@ -155,6 +171,7 @@ export interface BuildSnapshotOptions {
   includeNpcs?: boolean
   includeScenes?: boolean
   includeHandouts?: boolean
+  includePregens?: boolean
 }
 
 export interface ModuleForCampaign {
@@ -270,7 +287,7 @@ export async function cloneModuleIntoCampaign(
   const source_module_id = version.module_id as string
   const source_module_version_id = version.id as string
 
-  const counts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0 }
+  const counts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0, pregens: 0 }
 
   // 2. Pins first - NPCs and (in the future) pin-anchored content
   // reference them. We key the remap on _external_id when present,
@@ -487,6 +504,25 @@ export async function cloneModuleIntoCampaign(
     counts.handouts = handoutRows.length
   }
 
+  // 5.5. Pregens → pregen_library. Clone each pregen from the snapshot
+  // as an approved official pregen on the new campaign so they appear
+  // in the story-page picker immediately on clone.
+  if (snapshot.pregens && snapshot.pregens.length > 0) {
+    const pregenRows = (snapshot.pregens as any[]).map((p: any) => ({
+      campaign_id: campaignId,
+      module_id: source_module_id,
+      name: p.name,
+      data: p.data,
+      portrait_url: p.portrait_url ?? null,
+      author_id: null,
+      moderation_status: 'approved',
+      approved_at: new Date().toISOString(),
+    }))
+    const { error: prErr } = await insertClonedPregens(pregenRows)
+    if (prErr) throw new Error(`pregens: ${prErr.message}`)
+    counts.pregens = pregenRows.length
+  }
+
   // 6. Subscription record. Duplicates the (campaign, module) pair
   // are blocked by UNIQUE; if the campaign was already subscribed to
   // this module we skip.
@@ -583,10 +619,11 @@ export async function buildCampaignSnapshot(
     includeNpcs: options.includeNpcs ?? true,
     includeScenes: options.includeScenes ?? true,
     includeHandouts: options.includeHandouts ?? true,
+    includePregens: options.includePregens ?? true,
   }
 
   const snapshot: ModuleSnapshot = {}
-  const counts: SnapshotCounts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0 }
+  const counts: SnapshotCounts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0, pregens: 0 }
 
   if (opts.includePins) {
     const { data: pins, error } = await supabase
@@ -707,6 +744,18 @@ export async function buildCampaignSnapshot(
     counts.handouts = snapshot.handouts.length
   }
 
+  if (opts.includePregens) {
+    const { data: pregens, error } = await loadPregensByCampaignForSnapshot(campaignId)
+    if (error) throw new Error(`Read pregens: ${error.message}`)
+    snapshot.pregens = (pregens ?? []).map((p: any) => ({
+      _external_id: p.id,
+      name: p.name,
+      data: p.data,
+      portrait_url: p.portrait_url ?? null,
+    }))
+    counts.pregens = snapshot.pregens.length
+  }
+
   return { snapshot, counts }
 }
 
@@ -810,6 +859,12 @@ export async function publishModuleVersion(
     .select('id')
     .single()
   if (vErr || !versionRow) throw new Error(`Publish version failed: ${vErr?.message ?? 'unknown'}`)
+
+  // Stamp module_id on every pregen linked to the source campaign so
+  // they remain findable by module even if the campaign is later deleted.
+  if (params.campaignId) {
+    await stampModuleIdOnPregens(params.campaignId, moduleId as string)
+  }
 
   void logEvent('module_published', {
     module_id: moduleId,
