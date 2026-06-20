@@ -657,6 +657,10 @@ export default function CampaignPage() {
               {(() => {
                 const settingSeeds = campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []
                 const seedNames = new Set(settingSeeds.map((p: any) => p.name))
+                // Names of pregens already claimed by another player in this campaign.
+                const claimedNames = new Set(
+                  members.filter(m => m.character_id && m.user_id !== userId).map(m => m.characters?.name).filter(Boolean)
+                )
                 // Official library pregens not already covered by a hardcoded seed.
                 // Do NOT re-filter by p.setting here — officialLibPregens is already
                 // scoped to this campaign (via join table) or this setting (via bySetting).
@@ -672,52 +676,59 @@ export default function CampaignPage() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
                       {settingSeeds.map((p: any) => {
                         const libMatch = officialLibPregens.find(lp => lp.name === p.name)
+                        const claimed = claimedNames.has(p.name)
                         return libMatch ? (
-                          <button key={p.name} onClick={() => handleSelectLibraryPregen(libMatch)} disabled={!!creatingLibraryPregen}
-                            style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
+                          <button key={p.name} onClick={() => !claimed && handleSelectLibraryPregen(libMatch)} disabled={!!creatingLibraryPregen || claimed}
+                            style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#252525'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingLibraryPregen ? 0.6 : 1, position: 'relative' }}>
                             <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
                               {libMatch.portrait_url
-                                ? <img src={libMatch.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ? <img src={libMatch.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: claimed ? 'grayscale(1)' : 'none' }} />
                                 : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7ab3d4', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
                             </div>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                            <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: claimed ? '#4a4a4a' : '#f5f2ee' }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: claimed ? '#3a3a3a' : '#7ab3d4', marginTop: '1px' }}>{claimed ? 'Taken' : p.profession}</div>
                           </button>
                         ) : (
-                          <button key={p.name} onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
-                            style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingPregen ? 0.6 : 1 }}>
+                          <button key={p.name} onClick={() => !claimed && handleSelectPregen(p)} disabled={creatingPregen || claimed}
+                            style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#252525'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingPregen ? 0.6 : 1 }}>
                             <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
                               {p.name.charAt(0)}
                             </div>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                            <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.profession}</div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: claimed ? '#4a4a4a' : '#f5f2ee' }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: claimed ? '#3a3a3a' : '#7ab3d4', marginTop: '1px' }}>{claimed ? 'Taken' : p.profession}</div>
                           </button>
                         )
                       })}
-                      {extraOfficial.map(p => (
-                        <button key={p.id} onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
-                          style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
-                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
-                            {p.portrait_url
-                              ? <img src={p.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7ab3d4', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
-                          </div>
-                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                          {p.data?.profession && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.data.profession}</div>}
-                        </button>
-                      ))}
-                      {libraryPregens.slice(0, 3).map((p: any) => (
-                        <button key={p.id} onClick={() => handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen}
-                          style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '12px 6px', cursor: creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: creatingLibraryPregen ? 0.6 : 1 }}>
-                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #2d5a1b', margin: '0 auto 6px', background: '#1a2e10' }}>
-                            {p.portrait_url
-                              ? <img src={p.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7fc458', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
-                          </div>
-                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
-                          {p.data?.profession && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>{p.data.profession}</div>}
-                        </button>
-                      ))}
+                      {extraOfficial.map(p => {
+                        const claimed = claimedNames.has(p.name)
+                        return (
+                          <button key={p.id} onClick={() => !claimed && handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen || claimed}
+                            style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#252525'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingLibraryPregen ? 0.6 : 1 }}>
+                            <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
+                              {p.portrait_url
+                                ? <img src={p.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: claimed ? 'grayscale(1)' : 'none' }} />
+                                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7ab3d4', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
+                            </div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: claimed ? '#4a4a4a' : '#f5f2ee' }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: claimed ? '#3a3a3a' : '#7ab3d4', marginTop: '1px' }}>{claimed ? 'Taken' : p.data?.profession}</div>
+                          </button>
+                        )
+                      })}
+                      {libraryPregens.slice(0, 3).map((p: any) => {
+                        const claimed = claimedNames.has(p.name)
+                        return (
+                          <button key={p.id} onClick={() => !claimed && handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen || claimed}
+                            style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#2d5a1b'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingLibraryPregen ? 0.6 : 1 }}>
+                            <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: `1px solid ${claimed ? '#1e1e1e' : '#2d5a1b'}`, margin: '0 auto 6px', background: '#1a2e10' }}>
+                              {p.portrait_url
+                                ? <img src={p.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: claimed ? 'grayscale(1)' : 'none' }} />
+                                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7fc458', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
+                            </div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: claimed ? '#4a4a4a' : '#f5f2ee' }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: claimed ? '#3a3a3a' : '#7ab3d4', marginTop: '1px' }}>{claimed ? 'Taken' : p.data?.profession}</div>
+                          </button>
+                        )
+                      })}
                     </div>
                   </>
                 )
