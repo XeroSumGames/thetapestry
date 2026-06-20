@@ -1,9 +1,20 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
-import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
+import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, EQUIPMENT, RATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
 import { ALL_WEAPONS } from '../../lib/weapons'
 import { resizeImage } from '../../lib/image-utils'
+
+const INCIDENTAL_ITEMS: string[] = [
+  'Bible', 'Deck of Cards', 'Disposable Lighters', 'Eye Glasses', 'Map of Area',
+  'Musical Instrument', 'Personal Item (Photo)', 'Pocket Knife', 'Walkman', 'Zippo Lighter',
+  'Pocket Watch', 'Hip Flask', 'Battered Paperback', 'Rosary / Prayer Beads', 'Lucky Coin',
+  'Worn Bandana', 'Compass', 'Pre-Distemper ID Card', 'Sketchbook & Pencil Stub', 'Wedding Band',
+]
+const EQUIPMENT_INCIDENTAL_NAMES = new Set([
+  'Bible', 'Deck of Cards', 'Disposable Lighters', 'Eye Glasses', 'Map of Area',
+  'Musical Instrument', 'Personal Item (Photo)', 'Pocket Knife', 'Walkman', 'Zippo Lighter',
+])
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<string, string> = {
@@ -18,6 +29,7 @@ interface Props {
 export default function StepNine({ state, onChange }: Props) {
   const [notes, setNotes] = useState('')
   const rapid = getCumulativeAttributes(state.steps)
+  const equipmentPool = useMemo(() => EQUIPMENT.filter(e => !EQUIPMENT_INCIDENTAL_NAMES.has(e.name)), [])
   const derived = deriveSecondaryStats(rapid)
   const skills = getCumulativeSkills(state.steps)
   const step4 = state.steps[3] ?? {}
@@ -236,19 +248,49 @@ export default function StepNine({ state, onChange }: Props) {
               ))}
             </select>
           </div>
-          {/* Ammo - readonly (set on Step 8 via the Roll 1d3 button) */}
-          {([
-            ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : '-'],
-            ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : '-'],
-            ['Equipment',        state.equipment],
-            ['Incidental item',  state.incidentalItem],
-            ['Rations',          state.rations ? `2 × ${state.rations}` : ''],
-          ] as [string, string][]).map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <label style={fieldLabel}>{label}</label>
-              <input style={{ ...fieldInput, opacity: label.includes('ammo') ? 0.5 : 1 }} defaultValue={value} readOnly={label.includes('ammo')} />
-            </div>
-          ))}
+          {/* Primary ammo - editable number (no Roll 1d3 in review) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <label style={fieldLabel}>Primary ammo (reloads)</label>
+            <input type="number" min={0} max={10}
+              value={state.primaryAmmo ?? 0}
+              onChange={e => onChange({ primaryAmmo: Math.max(0, parseInt(e.target.value) || 0) })}
+              style={fieldInput} />
+          </div>
+          {/* Secondary ammo */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <label style={fieldLabel}>Secondary ammo (reloads)</label>
+            <input type="number" min={0} max={10}
+              value={state.secondaryAmmo ?? 0}
+              onChange={e => onChange({ secondaryAmmo: Math.max(0, parseInt(e.target.value) || 0) })}
+              style={fieldInput} />
+          </div>
+          {/* Equipment dropdown */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <label style={fieldLabel}>Equipment</label>
+            <select value={state.equipment} onChange={e => onChange({ equipment: e.target.value })}
+              style={{ ...fieldInput, cursor: 'pointer', appearance: 'none' }}>
+              <option value="">- None -</option>
+              {equipmentPool.map(eq => <option key={eq.name} value={eq.name}>{eq.name}</option>)}
+            </select>
+          </div>
+          {/* Incidental item dropdown */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <label style={fieldLabel}>Incidental item</label>
+            <select value={state.incidentalItem} onChange={e => onChange({ incidentalItem: e.target.value })}
+              style={{ ...fieldInput, cursor: 'pointer', appearance: 'none' }}>
+              <option value="">- None -</option>
+              {INCIDENTAL_ITEMS.map(name => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </div>
+          {/* Rations dropdown */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <label style={fieldLabel}>Rations (you start with 2)</label>
+            <select value={state.rations} onChange={e => onChange({ rations: e.target.value })}
+              style={{ ...fieldInput, cursor: 'pointer', appearance: 'none' }}>
+              <option value="">- None -</option>
+              {RATIONS.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
+            </select>
+          </div>
         </div>
       </div>
 
