@@ -4,7 +4,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { getUserRole, loadGmCampaigns } from '../../../../lib/data/campaigns'
-import { loadPregenById, updatePregen, loadModulesForPregenDropdown } from '../../../../lib/data/pregens'
+import { loadPregenById, updatePregen, loadPregenCampaignLinks, syncPregenCampaignLinks } from '../../../../lib/data/pregens'
 import { createWizardState, WizardState, buildCharacter, getCumulativeSkills, skillStepUp, skillStepDown } from '../../../../lib/xse-engine'
 import { SKILLS, SKILL_LABELS, PROFESSIONS, normalizeRations } from '../../../../lib/xse-schema'
 import StepXero from '../../../../components/wizard/StepXero'
@@ -36,7 +36,7 @@ export default function EditPregenPage() {
   const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(true)
   const [isThriverUser, setIsThriverUser] = useState(false)
-  const [pregenCampaignId, setPregenCampaignId] = useState<string | null>(null)
+  const [linkedCampaignIds, setLinkedCampaignIds] = useState<Set<string>>(new Set())
   const [gmCampaigns, setGmCampaigns] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => {
@@ -55,7 +55,6 @@ export default function EditPregenPage() {
       if (!thriver && (pregen as any).author_id !== user.id) { router.push('/characters'); return }
 
       setPregenName((pregen as any).name ?? '')
-      setPregenCampaignId((pregen as any).campaign_id ?? null)
       const d = (pregen as any).data as any
 
       const skillDeltas: Partial<Record<string, number>> = {}
@@ -106,8 +105,12 @@ export default function EditPregenPage() {
       }
       setState(reconstructed)
 
-      const { data: campaigns } = await loadGmCampaigns(user.id)
+      const [{ data: campaigns }, { data: links }] = await Promise.all([
+        loadGmCampaigns(user.id),
+        loadPregenCampaignLinks(id),
+      ])
       setGmCampaigns((campaigns ?? []) as { id: string; name: string }[])
+      setLinkedCampaignIds(new Set(((links ?? []) as any[]).map((l: any) => l.campaign_id)))
 
       setLoading(false)
     }
@@ -128,13 +131,14 @@ export default function EditPregenPage() {
       name: character.name || pregenName || 'Unnamed Character',
       data: character as unknown as import('../../../../lib/database.types').Json,
       portrait_url: (character as any).photoDataUrl ?? null,
-      campaign_id: pregenCampaignId ?? null,
       // Thriver edits stay approved; GM edits reset to pending for re-review
       moderation_status: isThriverUser ? 'approved' : 'pending',
       approved_by: isThriverUser ? undefined : null,
       approved_at: isThriverUser ? now : null,
     })
     if (error) { setSaveError(error.message); setSaving(false); return }
+    const { error: linkErr } = await syncPregenCampaignLinks(id, [...linkedCampaignIds])
+    if (linkErr) { setSaveError(linkErr.message); setSaving(false); return }
     setSaved(true)
     setSaving(false)
     setTimeout(() => router.push('/characters'), 800)
@@ -162,22 +166,38 @@ export default function EditPregenPage() {
         {pregenName}
       </div>
 
-      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <label style={{ fontSize: '13px', color: '#7a7068', textTransform: 'uppercase', letterSpacing: '.08em', whiteSpace: 'nowrap' }}>Story / Module</label>
-        <select
-          value={pregenCampaignId ?? ''}
-          onChange={e => setPregenCampaignId(e.target.value || null)}
-          style={{ flex: 1, padding: '6px 10px', background: '#171717', border: '1px solid #2e2e2e', borderRadius: '3px', color: pregenCampaignId ? '#f5f2ee' : '#7a7068', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', cursor: 'pointer' }}
-        >
-          <option value="">General library (no specific story)</option>
-          {gmCampaigns.length > 0 && (
-            <optgroup label="My Stories">
-              {gmCampaigns.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </optgroup>
-          )}
-        </select>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <div style={{ fontSize: '13px', color: '#7a7068', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '8px' }}>Appears In</div>
+        {gmCampaigns.length === 0 ? (
+          <div style={{ fontSize: '13px', color: '#5a5a5a', fontStyle: 'italic' }}>No stories found.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {gmCampaigns.map(c => {
+              const checked = linkedCampaignIds.has(c.id)
+              return (
+                <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '7px 10px', background: checked ? '#141e10' : '#171717', border: `1px solid ${checked ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px' }}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => {
+                      setLinkedCampaignIds(prev => {
+                        const next = new Set(prev)
+                        if (next.has(c.id)) next.delete(c.id)
+                        else next.add(c.id)
+                        return next
+                      })
+                    }}
+                    style={{ accentColor: '#7fc458', width: '15px', height: '15px', cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: '13px', color: checked ? '#f5f2ee' : '#7a7068', fontFamily: 'Carlito, sans-serif' }}>{c.name}</span>
+                </label>
+              )
+            })}
+            <div style={{ fontSize: '13px', color: '#5a5a5a', marginTop: '2px' }}>
+              Uncheck all to add to the general library only.
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: '6px', marginBottom: '1.25rem', flexWrap: 'wrap' }}>

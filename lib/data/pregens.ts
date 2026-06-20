@@ -5,22 +5,30 @@ export function insertPregen(row: Insert<'pregen_library'>) {
   return db().from('pregen_library').insert(row)
 }
 
+/** Official pregens, including all campaign associations for display/grouping. */
 export function loadOfficialPregens() {
   return db()
     .from('pregen_library')
-    .select('id, name, data, portrait_url, setting, campaign_id')
+    .select('id, name, data, portrait_url, setting, campaign_id, pregen_campaign_map(campaign_id, campaigns:campaign_id(id, name))')
     .is('author_id', null)
     .eq('moderation_status', 'approved')
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: true }) as any
 }
 
-/** Official pregens assigned to a specific campaign (for story-page picker). */
-export function loadOfficialPregensByCampaign(campaignId: string) {
+/** Official pregens assigned to a specific campaign via the join table (for story-page picker). */
+export async function loadOfficialPregensByCampaign(campaignId: string) {
+  const { data: links, error: linksErr } = await db()
+    .from('pregen_campaign_map' as any)
+    .select('pregen_id')
+    .eq('campaign_id', campaignId)
+  if (linksErr) return { data: null, error: linksErr }
+  const ids = (links ?? []).map((l: any) => l.pregen_id) as string[]
+  if (!ids.length) return { data: [] as any[], error: null }
   return db()
     .from('pregen_library')
     .select('id, name, data, portrait_url, setting, campaign_id')
+    .in('id', ids)
     .is('author_id', null)
-    .eq('campaign_id', campaignId)
     .eq('moderation_status', 'approved')
     .order('created_at', { ascending: true })
 }
@@ -74,22 +82,59 @@ export function loadModulesForPregenDropdown() {
     .order('sort_order', { ascending: true })
 }
 
-/** Approved pregens linked to a campaign, for module snapshot capture. */
-export function loadPregensByCampaignForSnapshot(campaignId: string) {
+/** All campaign links for a pregen (for the editor multi-select). */
+export function loadPregenCampaignLinks(pregenId: string) {
+  return db()
+    .from('pregen_campaign_map' as any)
+    .select('campaign_id')
+    .eq('pregen_id', pregenId)
+}
+
+/** Replace all campaign associations for a pregen atomically. */
+export async function syncPregenCampaignLinks(pregenId: string, campaignIds: string[]) {
+  const client = db()
+  const { error: delErr } = await client
+    .from('pregen_campaign_map' as any)
+    .delete()
+    .eq('pregen_id', pregenId)
+  if (delErr) return { error: delErr }
+  if (!campaignIds.length) return { error: null }
+  const rows = campaignIds.map(campaign_id => ({ pregen_id: pregenId, campaign_id }))
+  const { error: insErr } = await client
+    .from('pregen_campaign_map' as any)
+    .insert(rows)
+  return { error: insErr }
+}
+
+/** Approved pregens linked to a campaign via the join table, for module snapshot capture. */
+export async function loadPregensByCampaignForSnapshot(campaignId: string) {
+  const { data: links, error: linksErr } = await db()
+    .from('pregen_campaign_map' as any)
+    .select('pregen_id')
+    .eq('campaign_id', campaignId)
+  if (linksErr) return { data: null, error: linksErr }
+  const ids = (links ?? []).map((l: any) => l.pregen_id) as string[]
+  if (!ids.length) return { data: [] as any[], error: null }
   return db()
     .from('pregen_library')
     .select('id, name, data, portrait_url')
-    .eq('campaign_id', campaignId)
+    .in('id', ids)
     .eq('moderation_status', 'approved')
     .order('created_at', { ascending: true })
 }
 
-/** Stamp module_id on all approved pregens for a campaign (called after publish). */
-export function stampModuleIdOnPregens(campaignId: string, moduleId: string) {
+/** Stamp module_id on pregens linked to a campaign via the join table (called after publish). */
+export async function stampModuleIdOnPregens(campaignId: string, moduleId: string) {
+  const { data: links } = await db()
+    .from('pregen_campaign_map' as any)
+    .select('pregen_id')
+    .eq('campaign_id', campaignId)
+  const ids = (links ?? []).map((l: any) => l.pregen_id) as string[]
+  if (!ids.length) return { data: null, error: null }
   return db()
     .from('pregen_library')
     .update({ module_id: moduleId } as any)
-    .eq('campaign_id', campaignId)
+    .in('id', ids)
     .eq('moderation_status', 'approved')
 }
 

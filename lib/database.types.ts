@@ -2614,6 +2614,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pregen_campaign_map: {
+        Row: {
+          campaign_id: string
+          pregen_id: string
+        }
+        Insert: {
+          campaign_id: string
+          pregen_id: string
+        }
+        Update: {
+          campaign_id?: string
+          pregen_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pregen_campaign_map_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pregen_campaign_map_pregen_id_fkey"
+            columns: ["pregen_id"]
+            isOneToOne: false
+            referencedRelation: "pregen_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pregen_library: {
         Row: {
           approved_at: string | null
