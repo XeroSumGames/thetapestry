@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-20 09:07 UTC
+
+**Status:** DRIFT (carry-forward #9 — HOPED-FOR trio persists; new stale-todo candidate)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — all from 2026-06-20 00:09–01:40 UTC. Fully green.
+
+**Drift:**
+- HOPED-FOR trio persists (#9): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. No code changes since Session 24 (2026-06-16). Drain target: Beta-500 dry-run.
+- **New stale-todo candidate:** `todo.md L605` says "Intimidation skill removal — still in `lib/npc-generator.ts` Politics". Grep finds zero hits for `intimidat` or `politics` in that file today — removal may already be done. Needs 30-second audit + checkbox mark.
+- `scripts/check-realtime-wrap.mjs` still not created (L93). Recorder `window.prompt` still at `PlaytestRecorder.tsx:355` (L57).
+
+**Action:** Audit `lib/npc-generator.ts` for Intimidation — todo L605 may already be done, mark it. Carry-forward HOPED-FOR trio to Beta-500 dry-run.
+
+---
+
 ## 2026-06-20 06:07 UTC
 
 **Status:** DRIFT (carry-forward #8 — HOPED-FOR trio persists; stale-open recorder todo shipped; ws/vite HIGH vulns cleared)
