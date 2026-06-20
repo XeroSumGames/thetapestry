@@ -195,12 +195,26 @@ export default function EditPregenPage() {
   )
 }
 
+const SKILL_CDP_BUDGET = 15
+
+function computeCDPSpent(skillDeltas: Record<string, number | undefined>): number {
+  return Object.entries(skillDeltas).reduce((acc, [name, delta]) => {
+    if ((delta ?? 0) <= 0) return acc
+    const skill = SKILLS.find(s => s.name === name)
+    if (!skill) return acc
+    // Vocational: -3→+1 costs 1 CDP (delta=4), each subsequent level +1 CDP
+    // Non-vocational: each +1 level costs 1 CDP (delta = CDP)
+    return acc + (skill.vocational ? (delta! - 3) : delta!)
+  }, 0)
+}
+
 function SkillsPanel({ state, onChange }: { state: WizardState; onChange: (u: Partial<WizardState>) => void }) {
   const [filter, setFilter] = useState('')
   const cumulativeSkills = getCumulativeSkills(state.steps)
   const step3 = state.steps[3] ?? {}
   const skillDeltas = step3.skillDeltas ?? {}
-  const raisedCount = Object.values(skillDeltas).filter(v => (v ?? 0) > 0).length
+  const totalCDPSpent = computeCDPSpent(skillDeltas as Record<string, number | undefined>)
+  const cdpLeft = SKILL_CDP_BUDGET - totalCDPSpent
 
   function adjustSkill(skillName: string, dir: 1 | -1) {
     const skill = SKILLS.find(s => s.name === skillName)!
@@ -208,7 +222,7 @@ function SkillsPanel({ state, onChange }: { state: WizardState; onChange: (u: Pa
     const baseVal = skill.vocational ? -3 : 0
     let newLevel: number
     if (dir === 1) {
-      if (cumVal >= 3) return
+      if (cumVal >= 3 || cdpLeft <= 0) return
       newLevel = skillStepUp(cumVal, skill.vocational)
     } else {
       if (cumVal <= baseVal) return
@@ -252,7 +266,7 @@ function SkillsPanel({ state, onChange }: { state: WizardState; onChange: (u: Pa
 
       <div style={{ ...panelSh, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem' }}>
         <span>Skills</span>
-        <span style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 400, letterSpacing: 0, textTransform: 'none' }}>{raisedCount} raised above base</span>
+        <span style={{ fontSize: '13px', color: cdpLeft <= 0 ? '#f5a89a' : '#7ab3d4', fontWeight: 400, letterSpacing: 0, textTransform: 'none' }}>{totalCDPSpent} / {SKILL_CDP_BUDGET} CDP{cdpLeft > 0 ? ` (${cdpLeft} left)` : ' - budget full'}</span>
       </div>
       <input
         value={filter}
@@ -277,7 +291,7 @@ function SkillsPanel({ state, onChange }: { state: WizardState; onChange: (u: Pa
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                 <button onClick={() => adjustSkill(sk.name, -1)} disabled={cumVal <= baseVal} style={skPanelBtn(cumVal <= baseVal)}>-</button>
                 <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
-                <button onClick={() => adjustSkill(sk.name, 1)} disabled={cumVal >= 3} style={skPanelBtn(cumVal >= 3)}>+</button>
+                <button onClick={() => adjustSkill(sk.name, 1)} disabled={cumVal >= 3 || cdpLeft <= 0} style={skPanelBtn(cumVal >= 3 || cdpLeft <= 0)}>+</button>
               </div>
             </div>
           )
