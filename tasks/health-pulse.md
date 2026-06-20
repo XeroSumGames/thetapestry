@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-20 21:06 UTC
+
+**Status:** DRIFT (carry-forward #12 — same drift items; 4 new commits landed since 18:06 entry, all clean)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — latest cluster 19:00–19:15 UTC (4 pushes in ~15 min, active dev session). Fully green.
+
+**New commits since 18:06:** `ecfa0dd fix(rls): allow any authed user to read module_subscriptions` — broadens read permissions on `module_subscriptions`; intentional (authed users need to see their sub status). Gates passed. `a1f636a` / `2c41445` / `d69cafe` — pregen claiming + portrait write + GM panel roster. All CI-pass.
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#12): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. 4 days since Session 24 (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01.
+- Recorder observability todo checkbox still un-ticked (`b043904` shipped Items 1-4 on 2026-06-19).
+
+**Action:** No new action. RLS change looks intentional. Tick recorder observability checkbox when convenient.
+
+---
+
 ## 2026-06-20 18:06 UTC
 
 **Status:** DRIFT (carry-forward #11 — zero new signal since 15:06 entry)
