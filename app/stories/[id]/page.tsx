@@ -811,6 +811,46 @@ export default function CampaignPage() {
                   <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>No custom center - map uses default view</div>
                 )}
               </div>
+              {/* Pregen roster for GM reference */}
+              {(() => {
+                const settingSeeds = campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []
+                const seedNames = new Set(settingSeeds.map((p: any) => p.name))
+                const claimedNames = new Set(
+                  members.filter(m => m.character_id).map(m => m.characters?.name).filter(Boolean)
+                )
+                const extraOfficial = officialLibPregens.filter(p => !seedNames.has(p.name))
+                const allPregens = [
+                  ...settingSeeds.map((p: any) => {
+                    const libMatch = officialLibPregens.find(lp => lp.name === p.name)
+                    return { name: p.name, profession: p.profession, portrait_url: libMatch?.portrait_url ?? null }
+                  }),
+                  ...extraOfficial.map(p => ({ name: p.name, profession: p.data?.profession ?? '', portrait_url: p.portrait_url })),
+                  ...libraryPregens.slice(0, 3).map((p: any) => ({ name: p.name, profession: p.data?.profession ?? '', portrait_url: p.portrait_url })),
+                ]
+                if (allPregens.length === 0) return null
+                return (
+                  <div style={{ marginBottom: '18px' }}>
+                    <label style={lbl}>Pre-generated characters</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '8px' }}>
+                      {allPregens.map(p => {
+                        const claimed = claimedNames.has(p.name)
+                        return (
+                          <div key={p.name} style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#252525'}`, borderRadius: '6px', padding: '10px 6px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : 1 }}>
+                            <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 5px', background: '#0f2035' }}>
+                              {p.portrait_url
+                                ? <img src={p.portrait_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: claimed ? 'grayscale(1)' : 'none' }} />
+                                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7ab3d4', fontSize: '13px', fontWeight: 700 }}>{p.name.charAt(0)}</div>}
+                            </div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: claimed ? '#4a4a4a' : '#f5f2ee', lineHeight: 1.2 }}>{p.name}</div>
+                            <div style={{ fontSize: '13px', color: claimed ? '#3a3a3a' : '#7ab3d4', marginTop: '2px' }}>{claimed ? 'Taken' : p.profession}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
+
               {editError && (
                 <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', marginBottom: '12px' }}>
                   {editError}
