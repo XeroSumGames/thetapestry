@@ -8,7 +8,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
-import { loadApprovedPregens, loadOfficialPregens } from '../../../lib/data/pregens'
+import { loadApprovedPregens, loadOfficialPregens, loadOfficialPregensByCampaign } from '../../../lib/data/pregens'
 import { createCharacterForUser } from '../../../lib/data/characters'
 import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover, removeCampaignCover } from '../../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
@@ -92,7 +92,7 @@ export default function CampaignPage() {
   const [showPregens, setShowPregens] = useState(false)
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [libraryPregens, setLibraryPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null }>>([])
-  const [officialLibPregens, setOfficialLibPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null; setting: string | null }>>([])
+  const [officialLibPregens, setOfficialLibPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null; setting: string | null; campaign_id: string | null }>>([])
   const [creatingLibraryPregen, setCreatingLibraryPregen] = useState<string | null>(null)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
@@ -137,14 +137,22 @@ export default function CampaignPage() {
         if (modCover) setHeroCoverUrl(modCover)
       }
 
-      if (camp.setting) {
-        const [{ data: libP }, { data: offP }] = await Promise.all([
-          loadApprovedPregens(camp.setting),
-          loadOfficialPregens(),
+      {
+        // Load official pregens by campaign_id (new) + setting fallback (old) + community pregens
+        const settingLower = camp.setting?.toLowerCase() ?? null
+        const [{ data: libP }, { data: offByCampaign }, { data: offBySetting }] = await Promise.all([
+          loadApprovedPregens(camp.setting ?? undefined),
+          loadOfficialPregensByCampaign(id),
+          camp.setting ? loadOfficialPregens() : Promise.resolve({ data: [] }),
         ])
         setLibraryPregens(libP ?? [])
-        const settingLower = camp.setting?.toLowerCase() ?? null
-        setOfficialLibPregens((offP ?? []).filter((p: any) => !p.setting || p.setting.toLowerCase() === settingLower))
+        const byCampaign = (offByCampaign ?? []) as any[]
+        const bySetting = ((offBySetting ?? []) as any[]).filter(
+          (p: any) => !p.campaign_id && p.setting && p.setting.toLowerCase() === settingLower
+        )
+        // Deduplicate: campaign_id entries take precedence over setting entries
+        const campaignIds = new Set(byCampaign.map((p: any) => p.id))
+        setOfficialLibPregens([...byCampaign, ...bySetting.filter((p: any) => !campaignIds.has(p.id))])
       }
 
       // Seed GM Tools form state from the loaded campaign row. GM-or-

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
-import { getUserRole, loadGmCampaignSettings } from '../../../../lib/data/campaigns'
+import { getUserRole, loadGmCampaigns } from '../../../../lib/data/campaigns'
 import { loadPregenById, updatePregen, loadModulesForPregenDropdown } from '../../../../lib/data/pregens'
 import { createWizardState, WizardState, buildCharacter, getCumulativeSkills, skillStepUp, skillStepDown } from '../../../../lib/xse-engine'
 import { SKILLS, SKILL_LABELS, PROFESSIONS, normalizeRations } from '../../../../lib/xse-schema'
@@ -36,8 +36,8 @@ export default function EditPregenPage() {
   const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(true)
   const [isThriverUser, setIsThriverUser] = useState(false)
-  const [pregenSetting, setPregenSetting] = useState('')
-  const [storyOptions, setStoryOptions] = useState<{ label: string; value: string; group: string }[]>([])
+  const [pregenCampaignId, setPregenCampaignId] = useState<string | null>(null)
+  const [gmCampaigns, setGmCampaigns] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => {
     async function load() {
@@ -55,7 +55,7 @@ export default function EditPregenPage() {
       if (!thriver && (pregen as any).author_id !== user.id) { router.push('/characters'); return }
 
       setPregenName((pregen as any).name ?? '')
-      setPregenSetting((pregen as any).setting ?? '')
+      setPregenCampaignId((pregen as any).campaign_id ?? null)
       const d = (pregen as any).data as any
 
       const skillDeltas: Partial<Record<string, number>> = {}
@@ -106,28 +106,8 @@ export default function EditPregenPage() {
       }
       setState(reconstructed)
 
-      // Load dropdown options: published modules + GM's own campaigns
-      const [{ data: modules }, { data: gmCampaigns }] = await Promise.all([
-        loadModulesForPregenDropdown(),
-        loadGmCampaignSettings(user.id),
-      ])
-      const mods: { name: string; parent_setting: string }[] = ((modules ?? []) as any[]).filter(m => m.parent_setting)
-      const moduleSettings = new Set<string>(mods.map(m => m.parent_setting))
-      const opts: { label: string; value: string; group: string }[] = []
-      const seen = new Set<string>()
-      for (const m of mods) {
-        if (!seen.has(m.parent_setting)) {
-          seen.add(m.parent_setting)
-          opts.push({ label: m.name, value: m.parent_setting, group: 'Modules' })
-        }
-      }
-      for (const c of (gmCampaigns ?? [])) {
-        if (c.setting && !moduleSettings.has(c.setting) && !seen.has(c.setting)) {
-          seen.add(c.setting)
-          opts.push({ label: c.name, value: c.setting, group: 'My Stories' })
-        }
-      }
-      setStoryOptions(opts)
+      const { data: campaigns } = await loadGmCampaigns(user.id)
+      setGmCampaigns((campaigns ?? []) as { id: string; name: string }[])
 
       setLoading(false)
     }
@@ -148,7 +128,7 @@ export default function EditPregenPage() {
       name: character.name || pregenName || 'Unnamed Character',
       data: character as unknown as import('../../../../lib/database.types').Json,
       portrait_url: (character as any).photoDataUrl ?? null,
-      setting: pregenSetting.trim().toLowerCase() || null,
+      campaign_id: pregenCampaignId ?? null,
       // Thriver edits stay approved; GM edits reset to pending for re-review
       moderation_status: isThriverUser ? 'approved' : 'pending',
       approved_by: isThriverUser ? undefined : null,
@@ -185,25 +165,17 @@ export default function EditPregenPage() {
       <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <label style={{ fontSize: '13px', color: '#7a7068', textTransform: 'uppercase', letterSpacing: '.08em', whiteSpace: 'nowrap' }}>Story / Module</label>
         <select
-          value={pregenSetting}
-          onChange={e => setPregenSetting(e.target.value)}
-          style={{ flex: 1, padding: '6px 10px', background: '#171717', border: '1px solid #2e2e2e', borderRadius: '3px', color: pregenSetting ? '#f5f2ee' : '#7a7068', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', cursor: 'pointer' }}
+          value={pregenCampaignId ?? ''}
+          onChange={e => setPregenCampaignId(e.target.value || null)}
+          style={{ flex: 1, padding: '6px 10px', background: '#171717', border: '1px solid #2e2e2e', borderRadius: '3px', color: pregenCampaignId ? '#f5f2ee' : '#7a7068', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', cursor: 'pointer' }}
         >
           <option value="">General library (no specific story)</option>
-          {(['Modules', 'My Stories'] as const).map(group => {
-            const groupOpts = storyOptions.filter(o => o.group === group)
-            if (!groupOpts.length) return null
-            return (
-              <optgroup key={group} label={group}>
-                {groupOpts.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </optgroup>
-            )
-          })}
-          {/* Preserve any existing value not yet in the list */}
-          {pregenSetting && !storyOptions.find(o => o.value === pregenSetting) && (
-            <option value={pregenSetting}>{pregenSetting}</option>
+          {gmCampaigns.length > 0 && (
+            <optgroup label="My Stories">
+              {gmCampaigns.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </optgroup>
           )}
         </select>
       </div>

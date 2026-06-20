@@ -735,6 +735,7 @@ export type Database = {
       campaigns: {
         Row: {
           clock: Json
+          cover_image_url: string | null
           created_at: string | null
           description: string | null
           gm_user_id: string
@@ -755,6 +756,7 @@ export type Database = {
         }
         Insert: {
           clock?: Json
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           gm_user_id: string
@@ -775,6 +777,7 @@ export type Database = {
         }
         Update: {
           clock?: Json
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           gm_user_id?: string
@@ -2616,6 +2619,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           author_id: string | null
+          campaign_id: string | null
           created_at: string
           data: Json
           id: string
@@ -2629,6 +2633,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           author_id?: string | null
+          campaign_id?: string | null
           created_at?: string
           data: Json
           id?: string
@@ -2642,6 +2647,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           author_id?: string | null
+          campaign_id?: string | null
           created_at?: string
           data?: Json
           id?: string
@@ -2652,6 +2658,13 @@ export type Database = {
           setting?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pregen_library_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pregen_library_module_id_fkey"
             columns: ["module_id"]

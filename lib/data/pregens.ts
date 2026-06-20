@@ -8,8 +8,19 @@ export function insertPregen(row: Insert<'pregen_library'>) {
 export function loadOfficialPregens() {
   return db()
     .from('pregen_library')
-    .select('id, name, data, portrait_url, setting')
+    .select('id, name, data, portrait_url, setting, campaign_id')
     .is('author_id', null)
+    .eq('moderation_status', 'approved')
+    .order('created_at', { ascending: true })
+}
+
+/** Official pregens assigned to a specific campaign (for story-page picker). */
+export function loadOfficialPregensByCampaign(campaignId: string) {
+  return db()
+    .from('pregen_library')
+    .select('id, name, data, portrait_url, setting, campaign_id')
+    .is('author_id', null)
+    .eq('campaign_id', campaignId)
     .eq('moderation_status', 'approved')
     .order('created_at', { ascending: true })
 }

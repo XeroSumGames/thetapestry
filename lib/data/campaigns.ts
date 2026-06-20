@@ -85,11 +85,11 @@ export async function removeCampaignCover(campaignId: string): Promise<{ error?:
   return error ? { error: error.message } : {}
 }
 
-/** Campaigns the user GMs, with their setting identifier, for the pregen story/module dropdown. */
-export function loadGmCampaignSettings(userId: string) {
+/** Campaigns the user GMs, for the pregen story/module dropdown. */
+export function loadGmCampaigns(userId: string) {
   return db()
     .from('campaigns')
-    .select('name, setting')
+    .select('id, name, setting')
     .eq('gm_user_id', userId)
-    .not('setting', 'is', null)
+    .order('last_accessed_at', { ascending: false })
 }
