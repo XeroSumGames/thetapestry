@@ -642,9 +642,12 @@ export default function CampaignPage() {
               {(() => {
                 const settingSeeds = campaign.setting ? SETTING_PREGENS[campaign.setting] ?? [] : []
                 const seedNames = new Set(settingSeeds.map((p: any) => p.name))
-                // Official library pregens for this setting that aren't covered by a seed
+                // Official library pregens not already covered by a hardcoded seed.
+                // Do NOT re-filter by p.setting here — officialLibPregens is already
+                // scoped to this campaign (via join table) or this setting (via bySetting).
+                // The p.setting guard was excluding campaign-linked pregens with no setting set.
                 const extraOfficial = officialLibPregens.filter(p =>
-                  p.setting && !seedNames.has(p.name)
+                  !seedNames.has(p.name)
                 )
                 const hasAny = settingSeeds.length > 0 || extraOfficial.length > 0 || libraryPregens.length > 0
                 if (!hasAny) return null
