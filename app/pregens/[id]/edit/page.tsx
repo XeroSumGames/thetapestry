@@ -227,10 +227,8 @@ export default function EditPregenPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 4 && <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>Print</button>}
-          {step < 5
-            ? <button onClick={() => setStep(s => Math.min(5, s + 1))} style={navBtn(true)}>Next</button>
-            : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Pregen'}</button>
-          }
+          <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458', opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Pregen'}</button>
+          {step < 5 && <button onClick={() => setStep(s => Math.min(5, s + 1))} style={navBtn(true)}>Next</button>}
         </div>
       </div>
 
