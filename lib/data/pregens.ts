@@ -52,3 +52,13 @@ export function updatePregen(id: string, patch: Update<'pregen_library'>) {
 export function deletePregen(id: string) {
   return db().from('pregen_library').delete().eq('id', id)
 }
+
+/** Published modules for the story/module dropdown in the pregen editor. */
+export function loadModulesForPregenDropdown() {
+  return db()
+    .from('modules')
+    .select('name, parent_setting')
+    .not('parent_setting', 'is', null)
+    .neq('visibility', 'draft')
+    .order('sort_order', { ascending: true })
+}

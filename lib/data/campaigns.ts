@@ -84,3 +84,12 @@ export async function removeCampaignCover(campaignId: string): Promise<{ error?:
   const { error } = await db().from('campaigns').update({ cover_image_url: null } as any).eq('id', campaignId)
   return error ? { error: error.message } : {}
 }
+
+/** Campaigns the user GMs, with their setting identifier, for the pregen story/module dropdown. */
+export function loadGmCampaignSettings(userId: string) {
+  return db()
+    .from('campaigns')
+    .select('name, setting')
+    .eq('gm_user_id', userId)
+    .not('setting', 'is', null)
+}
