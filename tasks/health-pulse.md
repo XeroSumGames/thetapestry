@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-21 12:07 UTC
+
+**Status:** DRIFT (carry-forward #16 — no new app commits since 09:05 entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** GitHub MCP token expired — skipped. Prior entry (09:05 UTC) confirmed last 5 runs all success.
+
+**New commits since 09:05:** none (only the 09:05 health-pulse commit).
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#16): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 6 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01.
+- Recorder observability `[ ]` todo stale-as-open: `b043904` (2026-06-19) shipped Items 1-4 (`net`/`realtime`/`snapshot`/richer-click kinds confirmed in `lib/playtest-recorder.ts:38`). Checkbox in `tasks/todo.md` still `[ ]` — audit-correction needed. Separate LOW item (recorder mark `window.prompt` → in-app) is correctly still open (`components/PlaytestRecorder.tsx:355`).
+
+**Action:** Tick recorder observability checkbox in todo.md. HOPED-FOR trio clears at Beta-500 dry-run.
+
+---
+
 ## 2026-06-21 09:05 UTC
 
 **Status:** DRIFT (carry-forward #15 — no new app commits since 06:06 entry)
