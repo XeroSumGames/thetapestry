@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-21 09:05 UTC
+
+**Status:** DRIFT (carry-forward #15 — no new app commits since 06:06 entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — latest 06:12 UTC (2026-06-21). Fully green.
+
+**New commits since 06:06:** none (only the 06:06 health-pulse commit).
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#15): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 5 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01.
+- Recorder `window.prompt` todo `[ ]`: still open — `components/PlaytestRecorder.tsx:355` still uses `window.prompt`. Low priority.
+
+**Action:** No new action. HOPED-FOR trio clears at Beta-500 dry-run.
+
+---
+
 ## 2026-06-21 06:06 UTC
 
 **Status:** DRIFT (carry-forward #14 — 2 new commits since 00:06 entry, all clean)
