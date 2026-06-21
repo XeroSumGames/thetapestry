@@ -828,7 +828,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       lng: newPin.lng,
       notes: pinForm.notes.trim() || null,
       category: pinForm.category,
-      revealed: false,
+      // GM pins are immediately visible; player-submitted pins stay hidden
+      // until the GM reviews and reveals them.
+      revealed: isGM,
       sort_order: nextSort,
     }).select().single()
 

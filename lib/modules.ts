@@ -1030,7 +1030,7 @@ export async function applyModuleUpdate(
         lng: p.lng,
         notes: p.notes ?? '',
         category: p.category ?? 'location',
-        revealed: false,
+        revealed: true,
         sort_order: p.sort_order ?? 9000 + i,
         source_module_id: sourceModuleId,
         source_module_version_id: newVersionId,

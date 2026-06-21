@@ -263,7 +263,7 @@ export default function NewCampaignPage() {
       const pinRows = pinSource.map((p: any, i: number) => ({
         campaign_id: data.id, name: p.name ?? p.title, lat: p.lat, lng: p.lng,
         notes: p.notes ?? '', category: p.category ?? 'location',
-        revealed: false, sort_order: p.sort_order ?? i + 1,
+        revealed: true, sort_order: p.sort_order ?? i + 1,
       }))
       const { data: createdPins, error: pinErr } = await supabase.from('campaign_pins').insert(pinRows).select('id, name')
       if (pinErr) seedErrors.push(`pins: ${pinErr.message}`)

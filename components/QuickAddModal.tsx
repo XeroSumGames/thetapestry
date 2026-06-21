@@ -33,6 +33,9 @@ export interface QuickAddModalProps {
   // Controls the Community panel visibility (campaign mode only).
   // Default false = show both panels; true = pin only.
   hideCommunity?: boolean
+  // GM-created pins are immediately revealed to players; player pins
+  // land hidden and require GM review before they appear.
+  isGM?: boolean
   // World mode - used to set pin_type + status on map_pins.
   userRole?: 'survivor' | 'thriver' | null
   userId?: string | null
@@ -68,7 +71,7 @@ const WORLD_CATEGORIES: { value: string; label: string; emoji: string }[] = [
 export default function QuickAddModal({
   mode, onClose, initialLat, initialLng,
   campaignId, hideCommunity: hideCommunityProp = false,
-  userRole, userId,
+  isGM = false, userRole, userId,
   onPinSaved, onCommunitySaved,
 }: QuickAddModalProps) {
   const supabase = createClient()
@@ -211,7 +214,7 @@ export default function QuickAddModal({
         lat, lng,
         notes: pinNotes.trim() || null,
         category: pinCategory,
-        revealed: false,
+        revealed: isGM,
         sort_order: nextSort,
       }).select('id').single()
       if (error || !data) {

@@ -8795,6 +8795,7 @@ export default function TablePage() {
           hideCommunity={qaHideCommunity}
           initialLat={qaPinLat}
           initialLng={qaPinLng}
+          isGM={gmLike}
           userRole={null}
           userId={userId}
           onClose={closeQuickAdd}

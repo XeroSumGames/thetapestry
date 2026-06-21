@@ -189,7 +189,7 @@ export async function applyReseedPlan(
       campaign_id: plan.campaignId,
       name: p.name, lat: p.lat, lng: p.lng,
       notes: p.notes, category: p.category,
-      revealed: false,
+      revealed: true,
       sort_order: i + 1,
     }))
     const { data, error } = await supabase.from('campaign_pins').insert(rows).select('id, name')
