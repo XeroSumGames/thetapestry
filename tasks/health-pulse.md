@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-21 15:07 UTC
+
+**Status:** DRIFT (carry-forward #17 — no new app commits since 12:07 entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — latest 12:10 UTC (2026-06-21). Fully green.
+
+**New commits since 12:07:** none (only the 12:07 health-pulse commit).
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#17): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 6 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01.
+- Recorder observability `[ ]` todo stale-as-open: `b043904` (2026-06-19) shipped Items 1-4. Checkbox in `tasks/todo.md` still unchecked — audit-correction needed (flagged since #16).
+
+**Action:** No new signal. Tick recorder observability checkbox in todo.md when next in the file.
+
+---
+
 ## 2026-06-21 12:07 UTC
 
 **Status:** DRIFT (carry-forward #16 — no new app commits since 09:05 entry)
