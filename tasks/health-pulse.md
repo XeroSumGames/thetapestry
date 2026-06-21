@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-21 06:06 UTC
+
+**Status:** DRIFT (carry-forward #14 — 2 new commits since 00:06 entry, all clean)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — latest 04:54 UTC (2026-06-21). Fully green.
+
+**New commits since 00:06:** `2be85c1 fix(pins): GM-created pins revealed to players by default` + `a77d813 fix(map): merge GM-shared-route label into route banner for players` — both feature-clean, all gates pass, CI green.
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#14): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 5 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01.
+- Recorder observability todo `[ ]` still un-ticked — recorder code has `net`/`realtime`/`snapshot` kinds in filesystem; stale-open since Items 1-4 shipped.
+
+**Action:** No new action. HOPED-FOR trio clears at Beta-500 dry-run; tick recorder checkbox when convenient.
+
+---
+
 ## 2026-06-21 00:06 UTC
 
 **Status:** DRIFT (carry-forward #13 — 2 new commits since 21:06 entry, all clean)
