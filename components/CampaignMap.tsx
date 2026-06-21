@@ -1385,27 +1385,29 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Route planner banner - mirrors the measure-tool banner but
-          orange-tinted to keep the two visually distinct. Shows the
-          current step (click start, click destination, plotting, or
-          final distance + ETA). */}
+      {/* Route planner banner. GM view: full planner with mode switcher and
+          Share Route button. Player view when a GM-shared route is active:
+          folds the "GM shared a route" label into this banner to avoid two
+          overlapping chips at the same bottom position. */}
       {(routeMode || routeDistanceMeters !== null) && (
-        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,15,40,0.95)', border: '1px solid #a855f7', borderRadius: '3px', color: '#a855f7', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px', pointerEvents: routeMode ? 'none' : 'auto' }}>
-          <span>🛣 {routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point... (Shift-click to add waypoints; Alt+click a pin to snap)')}</span>
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,15,40,0.95)', border: `1px solid ${!isGM && sharedToast === 'GM shared a route' ? '#7ab3d4' : '#a855f7'}`, borderRadius: '3px', color: !isGM && sharedToast === 'GM shared a route' ? '#7ab3d4' : '#a855f7', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px', pointerEvents: routeMode ? 'none' : 'auto' }}>
+          <span>
+            {!isGM && sharedToast === 'GM shared a route'
+              ? `👁 GM shared a route  ·  ${routeLoading ? 'Plotting...' : (routeStatus || '')}`
+              : `🛣 ${routeLoading ? 'Plotting...' : (routeStatus || 'Click your starting point... (Shift-click to add waypoints; Alt+click a pin to snap)')}`
+            }
+          </span>
           {routeMode
-            ? <span style={{ marginLeft: 'auto', color: '#a855f7', fontSize: '13px' }}>Esc to clear</span>
-            : <button type="button" onClick={clearRoute} title="Clear route" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#a855f7', fontSize: '13px', cursor: 'pointer', padding: '0', lineHeight: 1 }}>✕</button>
+            ? <span style={{ marginLeft: 'auto', fontSize: '13px' }}>Esc to clear</span>
+            : <button type="button" onClick={clearRoute} title="Clear route" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'inherit', fontSize: '13px', cursor: 'pointer', padding: '0', lineHeight: 1 }}>✕</button>
           }
         </div>
       )}
 
-      {/* Player view-share / route-share chip. Stays visible until a new
-          share replaces it. View-share: clicking flies back to the GM's
-          last shared position (useful after the player has navigated away).
-          Route-share: non-interactive label only (no coords to fly back to).
-          GM never sees this; their own confirmation is on the Share button. */}
-      {sharedToast && !isGM && (
-        lastSharedView && sharedToast === 'GM shared a view' ? (
+      {/* Player view-share chip. Only shown for "GM shared a view" — route
+          shares are folded into the route banner above to avoid overlap. */}
+      {sharedToast && !isGM && sharedToast === 'GM shared a view' && (
+        lastSharedView ? (
           <button
             onClick={() => {
               const map = mapInstanceRef.current
@@ -1418,7 +1420,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           </button>
         ) : (
           <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
-            👁 {sharedToast}
+            👁 GM shared a view
           </div>
         )
       )}
