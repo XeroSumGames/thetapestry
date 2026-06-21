@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-21 00:06 UTC
+
+**Status:** DRIFT (carry-forward #13 — 2 new commits since 21:06 entry, all clean)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success — latest 23:23 UTC (2026-06-20). Fully green.
+
+**New commits since 21:06:** `6262624 fix(story-page): use direct chars query for assigned portrait` + `0a1fb4b feat(story-page): stack MSG/Remove buttons under avatar in party list` — both story-page cosmetics/fixes, all gates pass, CI green.
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#13): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. 5 days since Session 24 (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01.
+- Recorder observability todo `[ ]` still un-ticked — `b043904` shipped Items 1-4 on 2026-06-19.
+
+**Action:** No new action. Tick recorder observability checkbox when convenient; HOPED-FOR trio clears at Beta-500 dry-run.
+
+---
+
 ## 2026-06-20 21:06 UTC
 
 **Status:** DRIFT (carry-forward #12 — same drift items; 4 new commits landed since 18:06 entry, all clean)
