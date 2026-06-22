@@ -120,7 +120,6 @@ export default function CampaignPage() {
   const [editSyncing, setEditSyncing] = useState(false)
   const [editSyncResult, setEditSyncResult] = useState('')
   const editDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [gmToolsOpen, setGmToolsOpen] = useState(false)
   const [heroCoverUrl, setHeroCoverUrl] = useState<string | null>(null)
   const [coverUploading, setCoverUploading] = useState(false)
   // Module publish + subscriber-update state moved to StoryActionBar
@@ -599,7 +598,7 @@ export default function CampaignPage() {
                 {campaign.description}
               </p>
             )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <a href={`/stories/${id}/table`} target="_blank" rel="noopener noreferrer"
                 style={{ padding: '13px 40px', background: '#c0392b', border: '2px solid #c0392b', borderRadius: '4px', color: '#fff', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}>
                 &#9654; Launch
@@ -617,10 +616,7 @@ export default function CampaignPage() {
                 </button>
               )}
               {gmLike && (
-                <button onClick={() => setGmToolsOpen(o => !o)}
-                  style={{ padding: '11px 22px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '4px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  GM tools {gmToolsOpen ? '▲' : '▼'}
-                </button>
+                <StoryActionBar campaignId={id} compact />
               )}
             </div>
           </div>
@@ -969,36 +965,21 @@ export default function CampaignPage() {
           </div>
         </div>
 
-        {/* GM Tools (collapsible) - GM or Thriver only */}
-        {gmLike && (
-          <div style={{ borderTop: '1px solid #1a1a1a' }}>
-            <div onClick={() => setGmToolsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', cursor: 'pointer', background: '#0d0d0d' }}>
-              <span style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#EF9F27', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>&#9881; GM tools</span>
-              <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{gmToolsOpen ? '▲ collapse' : '▼ expand'}</span>
+        {/* Seed Management - Thriver-only. Lifted out of the retired GM Tools
+            collapsible (the action buttons now sit beside Launch in the hero). */}
+        {gmLike && isThriver && campaign.setting && campaign.setting !== 'custom' && (
+          <div style={{ borderTop: '1px solid #1a1a1a', padding: '20px 28px 24px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Seed Management</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '10px', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif' }}>
+              Update the seed data for <strong style={{ color: '#f5f2ee' }}>{SETTINGS[campaign.setting] ?? campaign.setting}</strong> using this campaign's NPCs, pins, scenes, and handouts. All future campaigns using this setting will start with this data.
             </div>
-            {gmToolsOpen && (
-              <div style={{ padding: '20px 28px 24px', borderTop: '1px solid #1a1a1a' }}>
-                {/* StoryActionBar in compact mode: hides title header + Launch
-                    (both already shown in the hero above). Shows GM Notes,
-                    Snapshot, Publish, Archive, Module update, Delete, GM Kit. */}
-                <StoryActionBar campaignId={id} compact />
-                {isThriver && campaign.setting && campaign.setting !== 'custom' && (
-                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Seed Management</div>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '10px', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif' }}>
-                      Update the seed data for <strong style={{ color: '#f5f2ee' }}>{SETTINGS[campaign.setting] ?? campaign.setting}</strong> using this campaign's NPCs, pins, scenes, and handouts. All future campaigns using this setting will start with this data.
-                    </div>
-                    <button onClick={handleEditSyncSeed} disabled={editSyncing}
-                      style={{ padding: '10px 24px', background: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSyncing ? 'wait' : 'pointer', fontWeight: 700, opacity: editSyncing ? 0.6 : 1 }}>
-                      {editSyncing ? 'Syncing...' : 'Update Seed Data'}
-                    </button>
-                    {editSyncResult && (
-                      <div style={{ marginTop: '8px', fontSize: '13px', color: editSyncResult.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>
-                        {editSyncResult}
-                      </div>
-                    )}
-                  </div>
-                )}
+            <button onClick={handleEditSyncSeed} disabled={editSyncing}
+              style={{ padding: '10px 24px', background: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: editSyncing ? 'wait' : 'pointer', fontWeight: 700, opacity: editSyncing ? 0.6 : 1 }}>
+              {editSyncing ? 'Syncing...' : 'Update Seed Data'}
+            </button>
+            {editSyncResult && (
+              <div style={{ marginTop: '8px', fontSize: '13px', color: editSyncResult.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>
+                {editSyncResult}
               </div>
             )}
           </div>

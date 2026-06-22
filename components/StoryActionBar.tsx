@@ -227,8 +227,13 @@ export default function StoryActionBar({ campaignId, extraButtons, compact }: Pr
         </div>
       )}
 
-      {/* Action bar */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.25rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Action bar. Compact mode (GM Tools beside Launch on the hub) lays
+          the buttons out as a 3-column grid -> two rows of 3. Full mode is
+          the centered single-row bar used on the sub-pages. */}
+      <div style={compact
+        ? { display: 'grid', gridTemplateColumns: 'repeat(3, max-content)', gap: '6px', alignItems: 'stretch' }
+        : { display: 'flex', gap: '4px', marginBottom: '1.25rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }
+      }>
       {/* In compact mode (GM Tools collapsible on the hub), Launch is
           already in the hero so we skip it here to avoid duplication. */}
       {!compact && (
