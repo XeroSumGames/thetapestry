@@ -14,6 +14,7 @@ import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover, rem
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
+import PregenSheetModal from '../../../components/PregenSheetModal'
 import { prepareUpload } from '../../../lib/safe-upload'
 import { usePostgresSubscription } from '../../../lib/realtime/usePostgresSubscription'
 
@@ -96,6 +97,9 @@ export default function CampaignPage() {
   const [libraryPregens, setLibraryPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null }>>([])
   const [officialLibPregens, setOfficialLibPregens] = useState<Array<{ id: string; name: string; data: any; portrait_url: string | null; setting: string | null; campaign_id: string | null }>>([])
   const [creatingLibraryPregen, setCreatingLibraryPregen] = useState<string | null>(null)
+  // Pregen preview modal. Clicking a pre-generated card opens a read-only
+  // sheet; the actual assignment runs from the modal's SELECT button.
+  const [previewPregen, setPreviewPregen] = useState<{ character: any; portraitUrl: string | null; onSelect: () => Promise<void> | void } | null>(null)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
@@ -302,6 +306,25 @@ export default function CampaignPage() {
     } finally {
       setCreatingLibraryPregen(null)
     }
+  }
+
+  // Open the read-only preview for a hardcoded setting seed. The SELECT
+  // button in the modal runs the same assignment path as before.
+  function previewSeed(seed: PregenSeed) {
+    setPreviewPregen({
+      character: buildCharacterFromPregen(seed),
+      portraitUrl: null,
+      onSelect: () => handleSelectPregen(seed),
+    })
+  }
+
+  // Open the read-only preview for an official/community library pregen.
+  function previewLibrary(row: { id: string; name: string; data: any; portrait_url?: string | null }) {
+    setPreviewPregen({
+      character: row.data,
+      portraitUrl: row.portrait_url ?? null,
+      onSelect: () => handleSelectLibraryPregen(row),
+    })
   }
 
   async function handleLeave() {
@@ -706,7 +729,7 @@ export default function CampaignPage() {
                         const libMatch = officialLibPregens.find(lp => lp.name === p.name)
                         const claimed = claimedNames.has(p.name)
                         return libMatch ? (
-                          <button key={p.name} onClick={() => !claimed && handleSelectLibraryPregen(libMatch)} disabled={!!creatingLibraryPregen || claimed}
+                          <button key={p.name} onClick={() => !claimed && previewLibrary(libMatch)} disabled={!!creatingLibraryPregen || claimed}
                             style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#252525'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingLibraryPregen ? 0.6 : 1, position: 'relative' }}>
                             <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
                               {libMatch.portrait_url
@@ -717,7 +740,7 @@ export default function CampaignPage() {
                             <div style={{ fontSize: '13px', color: claimed ? '#3a3a3a' : '#7ab3d4', marginTop: '1px' }}>{claimed ? 'Taken' : p.profession}</div>
                           </button>
                         ) : (
-                          <button key={p.name} onClick={() => !claimed && handleSelectPregen(p)} disabled={creatingPregen || claimed}
+                          <button key={p.name} onClick={() => !claimed && previewSeed(p)} disabled={creatingPregen || claimed}
                             style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#252525'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingPregen ? 0.6 : 1 }}>
                             <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, margin: '0 auto 6px' }}>
                               {p.name.charAt(0)}
@@ -730,7 +753,7 @@ export default function CampaignPage() {
                       {extraOfficial.map(p => {
                         const claimed = claimedNames.has(p.name)
                         return (
-                          <button key={p.id} onClick={() => !claimed && handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen || claimed}
+                          <button key={p.id} onClick={() => !claimed && previewLibrary(p)} disabled={!!creatingLibraryPregen || claimed}
                             style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#252525'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingLibraryPregen ? 0.6 : 1 }}>
                             <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #1a3a5c', margin: '0 auto 6px', background: '#0f2035' }}>
                               {p.portrait_url
@@ -745,7 +768,7 @@ export default function CampaignPage() {
                       {libraryPregens.slice(0, 3).map((p: any) => {
                         const claimed = claimedNames.has(p.name)
                         return (
-                          <button key={p.id} onClick={() => !claimed && handleSelectLibraryPregen(p)} disabled={!!creatingLibraryPregen || claimed}
+                          <button key={p.id} onClick={() => !claimed && previewLibrary(p)} disabled={!!creatingLibraryPregen || claimed}
                             style={{ background: claimed ? '#111' : '#171717', border: `1px solid ${claimed ? '#1e1e1e' : '#2d5a1b'}`, borderRadius: '6px', padding: '12px 6px', cursor: claimed ? 'not-allowed' : creatingLibraryPregen ? 'not-allowed' : 'pointer', textAlign: 'center', fontFamily: 'Carlito, sans-serif', opacity: claimed ? 0.45 : creatingLibraryPregen ? 0.6 : 1 }}>
                             <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', border: `1px solid ${claimed ? '#1e1e1e' : '#2d5a1b'}`, margin: '0 auto 6px', background: '#1a2e10' }}>
                               {p.portrait_url
@@ -1001,6 +1024,16 @@ export default function CampaignPage() {
         </div>
 
       </div>
+
+      {previewPregen && (
+        <PregenSheetModal
+          character={previewPregen.character}
+          portraitUrl={previewPregen.portraitUrl}
+          selecting={creatingPregen || !!creatingLibraryPregen}
+          onSelect={async () => { await previewPregen.onSelect(); setPreviewPregen(null) }}
+          onClose={() => setPreviewPregen(null)}
+        />
+      )}
     </div>
   )
 }
