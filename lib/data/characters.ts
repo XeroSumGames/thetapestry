@@ -10,12 +10,21 @@ export function createCharacterForUser(userId: string, name: string, data: unkno
     .single()
 }
 
-/** Batch-fetch portrait_url for a set of character ids. Returns a map keyed by id. */
+/** Batch-fetch portrait for a set of character ids. Returns a map keyed by id.
+ *  Prefers portrait_url column; falls back to data->>'photoDataUrl' for characters
+ *  built before the portrait_url column existed. */
 export async function getCharacterPortraits(charIds: string[]): Promise<Record<string, string | null>> {
   if (charIds.length === 0) return {}
-  const { data } = await db().from('characters').select('id, portrait_url').in('id', charIds)
+  const { data } = await db().from('characters').select('id, portrait_url, data').in('id', charIds)
   const map: Record<string, string | null> = {}
-  for (const row of (data ?? [])) map[row.id] = (row as any).portrait_url ?? null
+  for (const row of (data ?? [])) {
+    const col = (row as any).portrait_url as string | null
+    const blob = (row as any).data
+    const legacy = (blob && typeof blob === 'object' && !Array.isArray(blob))
+      ? (blob as Record<string, unknown>).photoDataUrl as string | null ?? null
+      : null
+    map[row.id] = col ?? legacy
+  }
   return map
 }
 
