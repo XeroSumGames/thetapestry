@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-22 21:09 UTC
+
+**Status:** DRIFT (carry-forward #26 — 2 new commits since #25: `d95d6cf` + `3d45bf3`)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-22T20:44 UTC). Fully green.
+
+**New since #25:**
+- `d95d6cf` fix(story-page): photoDataUrl fallback for legacy character portraits. Gates + CI clean.
+- `3d45bf3` chore(db): backfill portrait_url from legacy data.photoDataUrl. Gates + CI clean.
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#26): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 6 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run (~9 days, 2026-07-01).
+- Recorder observability `[ ]` todo stale-as-open: `b043904` (2026-06-19) shipped Items 1-4. Checkbox in `tasks/todo.md` still unchecked — audit-correction needed (flagged since #16).
+
+**Action:** No new signal. Gates clean, CI green. Portrait/backfill fixes landed cleanly. HOPED-FOR trio unchanged — Beta-500 dry-run is the drain event.
+
+---
+
 ## 2026-06-22 18:06 UTC
 
 **Status:** DRIFT (carry-forward #25 — no new app commits since #24)
