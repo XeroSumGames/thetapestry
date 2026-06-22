@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-22 15:07 UTC
+
+**Status:** DRIFT (carry-forward #24 — 2 new commits since #23: `a6f8c5a` + `d58fc8d`)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-22T13:22 UTC). Fully green.
+
+**New since #23:**
+- `a6f8c5a` fix(storage): repaired campaign-covers bucket RLS — INSERT/UPDATE policies had wrong role check, blocking story cover uploads. Passed all gates + CI.
+- `d58fc8d` feat(story-page): character portraits in party list avatars. Passed all gates + CI.
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#24): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 6 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run (~9 days, 2026-07-01).
+- Recorder observability `[ ]` todo stale-as-open: `b043904` (2026-06-19) shipped Items 1-4. Checkbox in `tasks/todo.md` still unchecked — audit-correction needed (flagged since #16).
+
+**Action:** Gates clean, CI green. Storage RLS fix landed cleanly. HOPED-FOR trio unchanged — Beta-500 dry-run is the drain event.
+
+---
+
 ## 2026-06-22 12:09 UTC
 
 **Status:** DRIFT (carry-forward #23 — no new app commits since `a77d813` 2026-06-21 04:54 UTC)
