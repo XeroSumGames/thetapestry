@@ -34,6 +34,15 @@ export function assignMemberCharacter(campaignId: string, userId: string, charId
   return db().from('campaign_members' as any).update({ character_id: charId }).eq('campaign_id', campaignId).eq('user_id', userId)
 }
 
+/**
+ * Flip the observer flag on an existing campaign member. Used by the join
+ * flow when someone follows the observer link while already seated - the
+ * on-conflict insert is a no-op and drops the flag, so we set it explicitly.
+ */
+export function setMemberObserver(campaignId: string, userId: string, observer: boolean) {
+  return db().from('campaign_members' as any).update({ observer }).eq('campaign_id', campaignId).eq('user_id', userId)
+}
+
 /** Get a user's profile role. */
 export function getUserRole(userId: string) {
   return db().from('profiles' as any).select('role').eq('id', userId).single()

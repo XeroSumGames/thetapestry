@@ -43,6 +43,7 @@ interface Member {
   id: string
   user_id: string
   character_id: string | null
+  observer: boolean
   joined_at: string
   profiles: { username: string; role: string }
   characters: { id: string; name: string; portrait_url: string | null } | null
@@ -57,7 +58,7 @@ interface Character {
 async function fetchMembersWithProfiles(supabase: any, campaignId: string): Promise<Member[]> {
   const { data: mems } = await supabase
     .from('campaign_members')
-    .select(`id, user_id, character_id, joined_at, characters:character_id(id, name, portrait_url)`)
+    .select(`id, user_id, character_id, observer, joined_at, characters:character_id(id, name, portrait_url)`)
     .eq('campaign_id', campaignId)
     .order('joined_at', { ascending: true })
   if (!mems) return []
@@ -98,6 +99,10 @@ export default function CampaignPage() {
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
+  // True when the current viewer joined via the observer link. Observers
+  // watch silently - no survivor, no player-bar seat, no combat slot - so
+  // the lobby shows them a watch panel instead of the survivor picker.
+  const [amObserver, setAmObserver] = useState(false)
   // Keyed by character_id — separate direct query because the PostgREST
   // join in fetchMembersWithProfiles silently drops large base64 portrait_url values.
   const [memberPortraits, setMemberPortraits] = useState<Record<string, string | null>>({})
@@ -197,6 +202,7 @@ export default function CampaignPage() {
       setMyCharacters(chars ?? [])
 
       const myMembership = mems.find((m: any) => m.user_id === user.id) as any
+      setAmObserver(!!myMembership?.observer)
       if (myMembership?.character_id) {
         setSelectedCharId(myMembership.character_id)
         // Use the direct characters query for portrait — the PostgREST join
@@ -581,8 +587,8 @@ export default function CampaignPage() {
               <span style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: '3px', fontWeight: 700, background: '#1a2e10', color: '#7fc458', border: '1px solid #2d5a1b', fontFamily: 'Carlito, sans-serif' }}>
                 {SETTINGS[campaign.setting] ?? campaign.setting ?? 'Custom'}
               </span>
-              <span style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: '3px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', ...(gmLike ? { background: '#2a1808', color: '#EF9F27', border: '1px solid #6b4310' } : { background: '#0f2035', color: '#7ab3d4', border: '1px solid #1a3a5c' }) }}>
-                {isGM ? 'Game master' : isThriver ? 'Admin' : 'Player'}
+              <span style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: '3px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', ...(gmLike ? { background: '#2a1808', color: '#EF9F27', border: '1px solid #6b4310' } : amObserver ? { background: '#1a2e10', color: '#7fc458', border: '1px solid #2d5a1b' } : { background: '#0f2035', color: '#7ab3d4', border: '1px solid #1a3a5c' }) }}>
+                {isGM ? 'Game master' : isThriver ? 'Admin' : amObserver ? 'Observer' : 'Player'}
               </span>
             </div>
             <div style={{ fontSize: '34px', fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase' as const, color: '#fff', marginBottom: '10px', lineHeight: 1.05, fontFamily: 'Carlito, sans-serif' }}>
@@ -623,8 +629,18 @@ export default function CampaignPage() {
         {/* Body - two-column */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 270px' }}>
 
+          {/* LEFT: Observer view - no survivor picker, just a watch panel */}
+          {!gmLike && amObserver && (
+            <div style={{ padding: '22px 24px', borderRight: '1px solid #1a1a1a' }}>
+              <div style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#7fc458', fontWeight: 700, marginBottom: '12px', fontFamily: 'Carlito, sans-serif' }}>Observer mode</div>
+              <div style={{ background: '#1a2010', border: '1px solid #2d5a1b', borderRadius: '6px', padding: '16px', fontSize: '13px', color: '#7fc458', lineHeight: 1.7, fontFamily: 'Carlito, sans-serif' }}>
+                You&apos;re watching this story as an observer. You won&apos;t appear in the player bar or take a combat slot, and you don&apos;t need a survivor. Click <b>Launch</b> above to watch the table.
+              </div>
+            </div>
+          )}
+
           {/* LEFT: Player view */}
-          {!gmLike && (
+          {!gmLike && !amObserver && (
             <div style={{ padding: '22px 24px', borderRight: '1px solid #1a1a1a' }}>
               <div style={{ fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', fontWeight: 700, marginBottom: '12px', fontFamily: 'Carlito, sans-serif' }}>My survivor</div>
               <div style={{ background: '#171717', border: '1px solid #252525', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>

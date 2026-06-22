@@ -4,6 +4,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
+import { setMemberObserver } from '../../../lib/data/campaigns'
 
 export default function JoinCampaignPage() {
   const [code, setCode] = useState('')
@@ -39,6 +40,10 @@ export default function JoinCampaignPage() {
       return
     }
 
+    // Observers go straight to the table to watch silently; players land
+    // at the lobby to assign a survivor first.
+    const destination = isObserver ? `/stories/${campaign.id}/table` : `/stories/${campaign.id}`
+
     const { error: joinErr } = await supabase.from('campaign_members').insert({
       campaign_id: campaign.id,
       user_id: user.id,
@@ -47,8 +52,14 @@ export default function JoinCampaignPage() {
 
     if (joinErr) {
       if (joinErr.code === '23505') {
-        // Already a member - just redirect
-        router.push(`/stories/${campaign.id}`)
+        // Already a member. The insert is a no-op on conflict, so the
+        // observer flag would be silently dropped - someone who followed
+        // the observer link while already seated would never actually
+        // become an observer. Upgrade the existing seat explicitly.
+        if (isObserver) {
+          await setMemberObserver(campaign.id, user.id, true)
+        }
+        router.push(destination)
         return
       }
       setError(joinErr.message)
@@ -57,7 +68,7 @@ export default function JoinCampaignPage() {
     }
 
     if (!isObserver) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
-    router.push(`/stories/${campaign.id}`)
+    router.push(destination)
   }
 
   return (

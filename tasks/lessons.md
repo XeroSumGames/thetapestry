@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## A feature flag honored at ONE surface is not "wired" - trace it through every landing point (2026-06-22)
+
+Observer mode (`campaign_members.observer`) was correctly respected at the table (player-bar filter, combat-slot filter, presence) but the JOIN flow dropped observers at the player **lobby**, which had zero `observer` branch - so an observer saw the full "pick a survivor" onboarding instead of watching silently. Two compounding gaps: (1) the join page redirected observers to `/stories/[id]` (lobby) instead of `/stories/[id]/table`; (2) the 23505 "already a member" branch did a no-op insert that silently dropped the observer flag, so an existing member who followed the observer link never actually became one.
+
+**Rule:** when a boolean/role flag changes behavior, grep every surface the user can reach (`/join`, lobby, table, any redirect target) and confirm each one reads the flag. "Handled at the table" is necessary, not sufficient. ON-CONFLICT inserts (`23505`) drop the conflicting row's columns - if intent must persist, follow with an explicit UPDATE. Fixed in `app/stories/join/page.tsx` + `app/stories/[id]/page.tsx`.
+
 ## Arch ratchet: force-rebaseline is correct for intentional god-component growth (2026-06-18)
 
 When adding a legitimate new feature section to a god-component (like the Pregens queue in `moderate/page.tsx`), the `--force` flag on `check-arch.mjs --save --force` is the correct tool. `--save` alone refuses to raise LOC ceilings; `--force` re-baselines the exact current values. Use `--force` only when the growth is intentional and clearly bounded - document why in the commit message. Seam leakage (`.from outside lib/data`) still gets zero tolerance: add `lib/data/` helpers to absorb new raw calls rather than re-baselining upward.
