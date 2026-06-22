@@ -6,6 +6,7 @@ import { loadOfficialPregens, loadApprovedPregens } from '../../lib/data/pregens
 import { createCharacterForUser } from '../../lib/data/characters'
 import { assignMemberCharacter, getStoryCampaignSetting, getUserRole } from '../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
+import PregenSheetModal from '../../components/PregenSheetModal'
 
 interface DBPregen {
   id: string
@@ -32,6 +33,8 @@ export default function PregenPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [isThriverUser, setIsThriverUser] = useState(false)
   const [storyCampaignName, setStoryCampaignName] = useState<string | null>(null)
+  // Read-only sheet preview opened by the VIEW button on each card.
+  const [viewing, setViewing] = useState<DBPregen | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -193,6 +196,7 @@ export default function PregenPage() {
                 campaignNames={p.campaignNames}
                 isCreating={creating === p.id}
                 onUse={() => usePregen(p)}
+                onView={() => setViewing(p)}
                 editHref={(isThriverUser || p.author_id === userId) ? `/pregens/${p.id}/edit` : undefined}
               />
             ))}
@@ -221,6 +225,7 @@ export default function PregenPage() {
                 campaignNames={[]}
                 isCreating={creating === p.id}
                 onUse={() => usePregen(p)}
+                onView={() => setViewing(p)}
                 editHref={(isThriverUser || p.author_id === userId) ? `/pregens/${p.id}/edit` : undefined}
               />
             ))}
@@ -233,13 +238,24 @@ export default function PregenPage() {
           No pregens match your filters.
         </div>
       )}
+
+      {viewing && (
+        <PregenSheetModal
+          character={viewing.data}
+          portraitUrl={viewing.portrait_url}
+          selecting={creating === viewing.id}
+          selectLabel="Use this character"
+          onSelect={async () => { const v = viewing; setViewing(null); await usePregen(v) }}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </div>
   )
 }
 
-function PregenCard({ name, subtitle, blurb, portraitUrl, campaignNames, isCreating, onUse, editHref }: {
+function PregenCard({ name, subtitle, blurb, portraitUrl, campaignNames, isCreating, onUse, onView, editHref }: {
   name: string; subtitle: string; blurb: string; portraitUrl: string | null; campaignNames: string[]
-  isCreating: boolean; onUse: () => void; editHref?: string
+  isCreating: boolean; onUse: () => void; onView: () => void; editHref?: string
 }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   const badgeColors = [
@@ -271,8 +287,12 @@ function PregenCard({ name, subtitle, blurb, portraitUrl, campaignNames, isCreat
         <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', letterSpacing: '.02em' }}>{name}</div>
         {subtitle && <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '2px' }}>{subtitle}</div>}
         {blurb && <div style={{ fontSize: '13px', color: '#6a635c', marginTop: '7px', lineHeight: 1.45, flex: 1 }}>{blurb}</div>}
+        <button onClick={onView} disabled={isCreating}
+          style={{ marginTop: '10px', padding: '7px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '4px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isCreating ? 'not-allowed' : 'pointer', opacity: isCreating ? 0.6 : 1 }}>
+          View this character
+        </button>
         <button onClick={onUse} disabled={isCreating} className="pregen-use-btn"
-          style={{ marginTop: '10px', padding: '7px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isCreating ? 'not-allowed' : 'pointer', opacity: isCreating ? 0.6 : 1 }}>
+          style={{ marginTop: '6px', padding: '7px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: isCreating ? 'not-allowed' : 'pointer', opacity: isCreating ? 0.6 : 1 }}>
           {isCreating ? 'Creating...' : 'Use this character'}
         </button>
         {editHref && (

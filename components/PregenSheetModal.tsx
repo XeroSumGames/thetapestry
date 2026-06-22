@@ -11,13 +11,14 @@ interface Props {
   character: any
   portraitUrl?: string | null
   selecting?: boolean
+  selectLabel?: string
   onSelect: () => void
   onClose: () => void
 }
 
 const FONT = 'Carlito, sans-serif'
 
-export default function PregenSheetModal({ character, portraitUrl, selecting, onSelect, onClose }: Props) {
+export default function PregenSheetModal({ character, portraitUrl, selecting, selectLabel, onSelect, onClose }: Props) {
   // Close on Escape - registered unconditionally so hook order is stable;
   // the early return below still skips render when there's no character.
   useEffect(() => {
@@ -161,7 +162,7 @@ export default function PregenSheetModal({ character, portraitUrl, selecting, on
           </button>
           <button onClick={onSelect} disabled={selecting}
             style={{ padding: '10px 28px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '4px', color: '#fff', fontSize: '14px', fontFamily: FONT, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: selecting ? 'wait' : 'pointer', opacity: selecting ? 0.7 : 1 }}>
-            {selecting ? 'Selecting...' : 'Select this character'}
+            {selecting ? 'Selecting...' : (selectLabel ?? 'Select this character')}
           </button>
         </div>
       </div>
