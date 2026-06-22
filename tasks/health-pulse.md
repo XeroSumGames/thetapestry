@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-22 06:09 UTC
+
+**Status:** DRIFT (carry-forward #21 — no new app commits since `a77d813` 2026-06-21 04:54 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success. Fully green.
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#21): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 6 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run before 2026-07-01 (~9 days).
+- Recorder observability `[ ]` todo stale-as-open: `b043904` (2026-06-19) shipped Items 1-4. Checkbox in `tasks/todo.md` still unchecked — audit-correction needed (flagged since #16).
+
+**Action:** No new signal since #20. Schedule Beta-500 dry-run to drain HOPED-FOR trio.
+
+---
+
 ## 2026-06-22 00:09 UTC
 
 **Status:** DRIFT (carry-forward #20 — no new app commits since `a77d813` 2026-06-21 04:54 UTC)
