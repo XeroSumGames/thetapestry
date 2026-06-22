@@ -9,7 +9,7 @@ import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 import { loadApprovedPregens, loadOfficialPregens, loadOfficialPregensByCampaign } from '../../../lib/data/pregens'
-import { createCharacterForUser } from '../../../lib/data/characters'
+import { createCharacterForUser, getCharacterPortraits } from '../../../lib/data/characters'
 import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover, removeCampaignCover } from '../../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
@@ -98,6 +98,9 @@ export default function CampaignPage() {
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
+  // Keyed by character_id — separate direct query because the PostgREST
+  // join in fetchMembersWithProfiles silently drops large base64 portrait_url values.
+  const [memberPortraits, setMemberPortraits] = useState<Record<string, string | null>>({})
   // GM Tools (edit form) state - lifted from the retired /edit page.
   // These are GM-or-Thriver-only; non-GM members never see this surface.
   const [editName, setEditName] = useState('')
@@ -179,6 +182,13 @@ export default function CampaignPage() {
       const mems = await fetchMembersWithProfiles(supabase, id)
       setMembers(mems)
 
+      // Batch-fetch portrait URLs for every assigned character. The PostgREST
+      // join above silently drops large base64 values, so we go direct.
+      const charIds = mems.filter((m: any) => m.character_id).map((m: any) => m.character_id as string)
+      if (charIds.length > 0) {
+        setMemberPortraits(await getCharacterPortraits(charIds))
+      }
+
       const { data: chars } = await supabase
         .from('characters')
         .select('id, name, portrait_url')
@@ -229,6 +239,9 @@ export default function CampaignPage() {
       const chosen = myCharacters.find(c => c.id === selectedCharId)
       setAssignedCharName(chosen?.name ?? '')
       setAssignedPortrait(chosen?.portrait_url ?? null)
+      if (userId && selectedCharId) {
+        setMemberPortraits(prev => ({ ...prev, [selectedCharId]: chosen?.portrait_url ?? null }))
+      }
       const mems = await fetchMembersWithProfiles(supabase, id)
       setMembers(mems)
     }
@@ -883,8 +896,11 @@ export default function CampaignPage() {
                     <div key={m.id} style={{ background: '#171717', border: '1px solid #222', borderRadius: '5px', padding: '10px 12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                       {/* LEFT: avatar + action buttons stacked */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                        <div style={{ width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, background: isThisGM ? '#2a1210' : '#0f2035', border: isThisGM ? '2px solid #c0392b' : '1px solid #1a3a5c', color: isThisGM ? '#f5a89a' : '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
-                          {uname.charAt(0).toUpperCase()}
+                        <div style={{ width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, background: isThisGM ? '#2a1210' : '#0f2035', border: isThisGM ? '2px solid #c0392b' : '1px solid #1a3a5c', color: isThisGM ? '#f5a89a' : '#7ab3d4', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>
+                          {m.character_id && memberPortraits[m.character_id]
+                            ? <img src={memberPortraits[m.character_id]!} alt={uname} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : uname.charAt(0).toUpperCase()
+                          }
                         </div>
                         {((m.user_id && m.user_id !== userId) || (gmLike && !isThisGM)) && (
                           <>

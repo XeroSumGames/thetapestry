@@ -10,6 +10,15 @@ export function createCharacterForUser(userId: string, name: string, data: unkno
     .single()
 }
 
+/** Batch-fetch portrait_url for a set of character ids. Returns a map keyed by id. */
+export async function getCharacterPortraits(charIds: string[]): Promise<Record<string, string | null>> {
+  if (charIds.length === 0) return {}
+  const { data } = await db().from('characters').select('id, portrait_url').in('id', charIds)
+  const map: Record<string, string | null> = {}
+  for (const row of (data ?? [])) map[row.id] = (row as any).portrait_url ?? null
+  return map
+}
+
 /**
  * Merge a partial data blob into a character's JSON data column.
  * Used on /characters to persist between-sessions stat changes (WP, stress, etc.)
