@@ -7824,11 +7824,26 @@ export default function TablePage() {
 
       {/* Bottom portrait strip */}
       <div style={{ borderTop: '1px solid #2e2e2e', display: 'flex', flexShrink: 0, background: '#0f0f0f', height: '80px' }}>
+        {(() => {
+          // GM whisper target works even when the GM has no assigned
+          // character (gmEntry null) - key off the GM's user id directly.
+          const gmWhisperId = gmEntry?.userId ?? gmInfo?.userId ?? null
+          const isWhisperingGm = !!gmWhisperId && whisperTarget?.userId === gmWhisperId
+          const baseBg = isWhisperingGm ? '#2a102a' : gmEntry ? '#1a1a1a' : '#111'
+          return (
         <button
+          title={!gmLike && gmWhisperId ? 'Double-click to whisper the GM' : undefined}
           onClick={() => { if (gmEntry) { if (selectedEntry?.stateId === gmEntry.stateId) { setSelectedEntry(null); setSheetPos(null) } else { setSelectedEntry(gmEntry); setViewingNpcs([]); setSheetPos(null) } } }}
-          style={{ width: '120px', flexShrink: 0, background: gmEntry ? '#1a1a1a' : '#111', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: '1px solid #2e2e2e', cursor: gmEntry ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
-          onMouseEnter={e => { if (gmEntry) (e.currentTarget as HTMLElement).style.background = '#242424' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = gmEntry ? '#1a1a1a' : '#111' }}
+          onDoubleClick={() => {
+            // Players double-click the GM icon to whisper the GM. GM/admin
+            // viewers skip - whispering yourself is a no-op.
+            if (gmLike || !gmWhisperId) return
+            if (isWhisperingGm) { setWhisperTarget(null) }
+            else { setWhisperTarget({ userId: gmWhisperId, characterName: `${gmEntry?.username ?? gmInfo?.username ?? 'GM'} (GM)` }); setFeedTab('chat') }
+          }}
+          style={{ width: '120px', flexShrink: 0, background: baseBg, borderTop: isWhisperingGm ? '2px solid #8b2e8b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: '1px solid #2e2e2e', cursor: gmEntry || !gmLike ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#242424' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = baseBg }}
         >
           <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
             {gmEntry && getCharPhoto(gmEntry) ? (
@@ -7854,6 +7869,8 @@ export default function TablePage() {
             {(gmEntry ? gmEntry.username : (gmInfo?.username ?? 'GM'))} (GM)
           </div>
         </button>
+          )
+        })()}
 
         {(() => {
           const slotCount = Math.max(playerEntries.length, 3)
