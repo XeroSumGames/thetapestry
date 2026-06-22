@@ -73,6 +73,10 @@ export default function GMNotesPopoutPage() {
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
+  // Reading-surface zoom. GMs often read this popout across the table or
+  // project it, so a +/- control scales the whole overview. Clamped
+  // 80-200% and persisted per-browser in localStorage.
+  const [fontScale, setFontScale] = useState(1)
 
   useEffect(() => {
     if (!campaignId) { setLoading(false); return }
@@ -120,6 +124,23 @@ export default function GMNotesPopoutPage() {
     })()
     return () => { cancelled = true }
   }, [supabase, campaignId])
+
+  // Restore the saved zoom on mount (effect, not a lazy useState init, to
+  // avoid an SSR/client hydration mismatch on the initial render).
+  useEffect(() => {
+    try {
+      const saved = parseFloat(localStorage.getItem('gmNotesFontScale') ?? '')
+      if (!isNaN(saved) && saved >= 0.8 && saved <= 2) setFontScale(saved)
+    } catch { /* localStorage blocked - ignore */ }
+  }, [])
+
+  function adjustScale(delta: number) {
+    setFontScale(prev => {
+      const next = Math.min(2, Math.max(0.8, Math.round((prev + delta) * 10) / 10))
+      try { localStorage.setItem('gmNotesFontScale', String(next)) } catch { /* ignore */ }
+      return next
+    })
+  }
 
   // ── Save helpers (optimistic + rollback on RLS reject) ────────────
   // Every mutation rolls forward the local cache, fires .update().select()
@@ -204,7 +225,14 @@ export default function GMNotesPopoutPage() {
   }
 
   return (
-    <div style={shellStyle}>
+    <>
+      {/* Zoom control - fixed so it never scales with the content below. */}
+      <div style={{ position: 'fixed', top: '10px', right: '14px', zIndex: 50, display: 'flex', alignItems: 'center', gap: '6px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '4px 6px', fontFamily: 'Carlito, sans-serif', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+        <button onClick={() => adjustScale(-0.1)} disabled={fontScale <= 0.8} title="Smaller text" style={zoomBtnStyle(fontScale <= 0.8)}>A-</button>
+        <span style={{ fontSize: '13px', color: '#cce0f5', minWidth: '42px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>{Math.round(fontScale * 100)}%</span>
+        <button onClick={() => adjustScale(0.1)} disabled={fontScale >= 2} title="Larger text" style={zoomBtnStyle(fontScale >= 2)}>A+</button>
+      </div>
+      <div style={{ ...shellStyle, zoom: fontScale } as React.CSSProperties}>
       {/* Header */}
       <div style={{ borderBottom: '2px solid #c0392b', paddingBottom: '12px', marginBottom: '20px' }}>
         <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>GM Notes - Story Overview</div>
@@ -385,6 +413,7 @@ export default function GMNotesPopoutPage() {
         Click any field to edit - changes save automatically. Adding new beats / NPCs / pins still happens on the main /table page.
       </div>
     </div>
+    </>
   )
 }
 
@@ -661,6 +690,21 @@ const shellStyle: React.CSSProperties = {
   minHeight: '100vh',
   padding: '20px 24px',
   fontFamily: 'Carlito, sans-serif',
+}
+
+function zoomBtnStyle(disabled: boolean): React.CSSProperties {
+  return {
+    fontSize: '15px',
+    fontWeight: 700,
+    fontFamily: 'Carlito, sans-serif',
+    background: '#242424',
+    color: disabled ? '#5a5a5a' : '#cce0f5',
+    border: '1px solid #3a3a3a',
+    borderRadius: '3px',
+    padding: '2px 9px',
+    cursor: disabled ? 'default' : 'pointer',
+    lineHeight: 1.2,
+  }
 }
 
 const cardTitleStyle: React.CSSProperties = {
