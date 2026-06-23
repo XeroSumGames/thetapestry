@@ -6,6 +6,35 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-23 06:07 UTC
+
+**Status:** DRIFT (carry-forward #28 — 26 new commits since #27: `f73d193`..`a6abd4f`)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-23T04:31 UTC). Fully green.
+
+**New since #27 (session 2026-06-23, all clean):**
+- `659183b` fix(rls): close untrusted-user read + storage-write holes (pre-Beta-500 HIGH)
+- `6fdd7ce` feat(combat): Disarm action + fix looted weapons landing in dead slot
+- `bceeeb9` perf(sidebar): debounce + delta-cache global-presence username resolution (T2-2)
+- `a6abd4f` feat(onboarding): Tier-3 cold-signup fixes (Join-a-Story, random spinner, path framing)
+- `365d267` feat(loot): generated NPC ranged weapons spawn with scarce loaded ammo
+- `10e8710` feat(combat): pistol-whip - melee with equipped ranged weapon
+- `10eda3e` feat(tactical-map): auto-center map on received ping
+- `65c4bf7` feat(combat): searching a container costs 1 action (combat-only)
+- + 18 doc/fix/chore commits
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#28): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 7 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run (~8 days, 2026-07-01).
+- Recorder observability `[ ]` todo stale-as-open: `b043904` (2026-06-19) shipped Items 1-4. Checkbox in `tasks/todo.md` still unchecked — audit-correction needed (flagged since #16).
+
+**Action:** No new signal. Highly productive session: HIGH RLS security fix + Disarm feature + T2-2 perf + Tier-3 onboarding all landed clean. HOPED-FOR trio unchanged — Beta-500 dry-run is the drain event.
+
+---
+
 ## 2026-06-23 00:09 UTC
 
 **Status:** DRIFT (carry-forward #27 — 8 new commits since #26: `4db42a5`..`91dc693`)
