@@ -398,10 +398,13 @@ function InitiativeBarImpl({
                 <button onClick={() => onGrantAction(entry)}
                   style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Grant +1 action">+</button>
               )}
-              {/* Skip ⊘ - GM only, zeroes actions for the round */}
-              {isGM && (entry.actions_remaining ?? 0) > 0 && (
+              {/* Skip ⊘ - GM skips anyone; a player can skip their OWN turn
+                  (pass). Zeroes actions for the round; handleSkipTurn advances
+                  if they were active. RLS lets any campaign member update the
+                  initiative row, so the player path works the same as the GM's. */}
+              {(isGM || entry.user_id === userId) && (entry.actions_remaining ?? 0) > 0 && (
                 <button onClick={() => onSkipTurn(entry)}
-                  style={{ background: 'none', border: 'none', color: '#EF9F27', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Skip this round (burn remaining actions)">⊘</button>
+                  style={{ background: 'none', border: 'none', color: '#EF9F27', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title={isGM ? 'Skip this round (burn remaining actions)' : 'Skip your turn (pass - burns your remaining actions this round)'}>⊘</button>
               )}
               {/* × - GM removes; player ends own active turn */}
               {(isGM || (entry.user_id === userId && entry.is_active)) && (
