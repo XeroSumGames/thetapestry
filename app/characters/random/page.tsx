@@ -13,6 +13,7 @@ import {
   AttributeName
 } from '../../../lib/xse-schema'
 import { fetchRandomPortrait } from '../../../lib/data/portrait-bank'
+import GhostWall from '../../../components/GhostWall'
 
 const FIRST_NAMES = [
   'Mara','Cole','Jesse','Petra','Dex','Avery','Rook','Sloane','Cas','Wren',
@@ -91,12 +92,15 @@ export default function RandomCharacterPage() {
   // instead of a random pick. Otherwise behave as before.
   const requestedParadigmName = searchParams.get('paradigm')
   const [status, setStatus] = useState('Generating character...')
+  // Logged-out visitors used to sit on an endless "ready" spinner here (cold-
+  // signup bounce). Now we surface the GhostWall account prompt instead.
+  const [showGhostWall, setShowGhostWall] = useState(false)
 
   useEffect(() => {
     async function generate() {
       const supabase = createClient()
       const { user } = await getCachedAuth()
-      if (!user) { setStatus('ready'); return }
+      if (!user) { setStatus('ghost'); setShowGhostWall(true); return }
 
       // Use the explicitly-requested Paradigm if /characters/paradigms
       // sent us here; otherwise pick at random.
@@ -201,6 +205,7 @@ export default function RandomCharacterPage() {
       setStatus('Saving...')
 
       const character = buildCharacter(state)
+      character.creationMethod = 'random'
 
       const { error, data: newChar } = await supabase.from('characters').insert({
         user_id: user.id,
@@ -224,19 +229,31 @@ export default function RandomCharacterPage() {
     generate()
   }, [])
 
+  const isGhost = status === 'ghost'
+
   return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>
           Random Character
         </div>
-        <div style={{ fontSize: '14px', color: '#f5f2ee', letterSpacing: '.06em' }}>{status}</div>
-        <div style={{ marginTop: '24px', display: 'flex', gap: '6px', justifyContent: 'center' }}>
-          {[0,1,2].map(i => (
-            <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#c0392b', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-          ))}
-        </div>
+        {isGhost ? (
+          // Logged out: no endless spinner - calm prompt + the GhostWall CTA.
+          <div style={{ fontSize: '14px', color: '#f5f2ee', letterSpacing: '.06em', maxWidth: '320px' }}>
+            Create an account to roll up a random survivor and save them.
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', letterSpacing: '.06em' }}>{status}</div>
+            <div style={{ marginTop: '24px', display: 'flex', gap: '6px', justifyContent: 'center' }}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#c0392b', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
+      <GhostWall show={showGhostWall} onClose={() => setShowGhostWall(false)} message="Create an account to roll up a random survivor and save them." />
       <style>{`@keyframes pulse { 0%,100%{opacity:.2} 50%{opacity:1} }`}</style>
     </div>
   )

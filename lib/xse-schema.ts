@@ -23,7 +23,7 @@ export type ItemTrait =
   | 'Stunned'
   | 'Tracking'
   | 'Unwieldy';
-export type CreationMethod = 'backstory' | 'pregen';
+export type CreationMethod = 'backstory' | 'pregen' | 'quick' | 'random';
 
 // ----------------------------
 // ATTRIBUTE MODIFIER TABLE

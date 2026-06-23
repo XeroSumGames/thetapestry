@@ -83,7 +83,7 @@ export default function QuickCharacterPage() {
   const [skillFilter, setSkillFilter] = useState('')
   const [profession, setProfession] = useState('')
 
-  // Quick build state � stored in steps[3] (profession step equivalent)
+  // Quick build state - stored in steps[3] (profession step equivalent)
   const attrSpent: Partial<Record<AttributeName, number>> = state.steps[3].attrSpent ?? {}
   const skillDeltas: Partial<Record<string, number>> = state.steps[3].skillDeltas ?? {}
   const skillCDPMap: Partial<Record<string, number>> = state.steps[3].skillCDPMap ?? {}
@@ -167,7 +167,7 @@ export default function QuickCharacterPage() {
     const { user } = await getCachedAuth()
     if (!user) { setSaveError('Not logged in.'); setSaving(false); return }
     const character = buildCharacter(state)
-    character.creationMethod = 'backstory'
+    character.creationMethod = 'quick'
     const { error } = await supabase.from('characters').insert({
       user_id: user.id,
       name: character.name || 'Unnamed Character',
@@ -242,7 +242,7 @@ export default function QuickCharacterPage() {
           Quick Character Creation
         </div>
         <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
-          20 CDP � No Life-Stage Structure
+          20 CDP - No Life-Stage Structure
         </div>
       </div>
 
@@ -288,7 +288,7 @@ export default function QuickCharacterPage() {
             </div>
 
             {/* Attribute spend */}
-            <div style={sh}>Attributes � {ATTR_BUDGET - attrCDPSpent} CDP remaining</div>
+            <div style={sh}>Attributes - {ATTR_BUDGET - attrCDPSpent} CDP remaining</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
               <div style={{ display: 'flex', gap: '3px' }}>
                 {Array.from({ length: ATTR_BUDGET }).map((_, i) => (
@@ -321,7 +321,7 @@ export default function QuickCharacterPage() {
             </div>
 
             {/* Skill spend */}
-            <div style={sh}>Skills � {SKILL_BUDGET - skillCDPSpent} CDP remaining</div>
+            <div style={sh}>Skills - {SKILL_BUDGET - skillCDPSpent} CDP remaining</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
               <div style={{ display: 'flex', gap: '3px' }}>
                 {Array.from({ length: SKILL_BUDGET }).map((_, i) => (
@@ -350,7 +350,7 @@ export default function QuickCharacterPage() {
                       <div style={{ fontSize: '11.5px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee' }}>
                         {sk.name}{sk.vocational ? '*' : ''}{isVoc ? ' ?' : ''}
                       </div>
-                      <div style={{ fontSize: '9.5px', color: '#f5f2ee' }}>{sk.attribute} � {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}</div>
+                      <div style={{ fontSize: '9.5px', color: '#f5f2ee' }}>{sk.attribute} - {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                       <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>

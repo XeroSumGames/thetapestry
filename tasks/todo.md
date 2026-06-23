@@ -16,6 +16,15 @@
 - [ ] **[T2-5 MED - QUEUED/LOW-PRIORITY, HP] batch campaign-clock drainers.** `lib/campaign-clock.ts` per-row `await update().eq(id)` in drainer loops -> `.in()` reads + batched writes. NOTE on reassessment: loops are party-sized (handful of PCs) and run once per GM time-advance (not a concurrency hot path); multi-row writes need upsert-with-full-row (clobber risk) on an 838-line load-bearing file. Modest benefit / real risk - low priority.
 - [ ] **[T2-6 LOW -> ROUTED TO PUFFER] verify indexes exist** (roll_log/chat_messages `(campaign_id,created_at)`; character_states/campaign_npcs `campaign_id`; notifications.user_id; conversation_participants). Needs live DB = Puffer's lane.
 
+### 🚪 PRE-BETA-500 ONBOARDING (Tier 3, HP handoff 2026-06-23) - mostly SHIPPED
+Live-verify: [tasks/onboarding-tier3-testplan-2026-06-23.md](onboarding-tier3-testplan-2026-06-23.md). Shipped together; commit below.
+- [x] **[T3-1 HIGH - SHIPPED] discoverable "Join a Story".** Added to the dashboard empty state (`app/dashboard/page.tsx`, "Got an invite code from your GM? Join a Story" -> `/stories/join`) + a "Join a Story" sidebar link after "My Stories" (`components/Sidebar.tsx`). Cold players who came to join a friend's game no longer bounce.
+- [x] **[T3-2 HIGH - SHIPPED] /characters/random logged-out spinner.** Was an endless pulsing-dots "ready" state. Now sets a `ghost` state -> calm prompt + `GhostWall` account CTA (`app/characters/random/page.tsx`).
+- [x] **[T3-3 HIGH - SHIPPED] stop styling Backstory (hardest path) as the default.** Sidebar: "Random Character" is now the lit (green) default, listed first; Backstory de-emphasized to grey. Creating-a-character page: "Recommended" badge moved off Backstory (now "Full Custom") onto Random ("Recommended for New Players").
+- [x] **[T3-4 MED - SHIPPED] mojibake in quick/page.tsx.** 5 U+FFFD replacement chars (L86/245/291/324/353) -> ASCII hyphens.
+- [x] **[T3-5 MED - SHIPPED] creationMethod mis-stamp.** quick/page stamped 'backstory'; now 'quick'. Random page also mis-stamped via buildCharacter default; now 'random'. Extended `CreationMethod` union ('backstory'|'pregen'|'quick'|'random') - field is write-only provenance, nothing branches on it.
+- [ ] **[T3-6 MED - QUEUED, HP] jargon inline tooltips** (CDP/RAPID/AMod/SMod/CMod) for first-timers. Broader/subjective copy + tooltip-component work; deferred to a focused pass. + LOW doc polish.
+
 ### 🐛 SESSION FIXES 2026-06-23 (HP)
 - [x] **[SHIPPED] Recorder snapshot over-redaction (Puffer Fish handoff)** - `redact()` strips any key containing 'token', so the snapshot's `selected_token_id` / `token_count` came back "[redacted]", defeating the diagnostic. Fix A: renamed to `selected_piece_id` / `piece_count` (off the 'token' substring) in `usePlaytestSnapshot.ts` + page.tsx provider + the test. redact() left dumb-and-safe (still strips real auth tokens). Added the survival assertion the original test was missing. TSC + 14 recorder tests green.
 

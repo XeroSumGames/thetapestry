@@ -122,9 +122,19 @@ export default function DashboardPage() {
         </div>
 
         {/* Primary CTA */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
           <Link href="/stories/new" style={{ display: 'inline-block', padding: '14px 48px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '16px', letterSpacing: '.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Create Your First Story
+          </Link>
+        </div>
+
+        {/* Join CTA - the cold-signup who came to play in a friend's game, not
+            GM their own. Without this they bounce (no obvious "where do I put
+            my invite code"). */}
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem', fontSize: '14px', color: '#8a8a8a' }}>
+          Got an invite code from your GM?{' '}
+          <Link href="/stories/join" style={{ color: '#7ab3d4', textDecoration: 'none', letterSpacing: '.04em', textTransform: 'uppercase', fontSize: '13px', fontWeight: 700 }}>
+            Join a Story
           </Link>
         </div>
 

@@ -243,6 +243,7 @@ export default function Sidebar() {
       <Link href="/map"         style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</Link>
       <Link href="/characters"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</Link>
       <Link href="/stories"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</Link>
+      <Link href="/stories/join" style={linkStyle('#7ab3d4')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Join a Story</Link>
       <Link href="/communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</Link>
       <Link href="/campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
       <Link href="/rumors"   style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rumors</Link>
@@ -265,9 +266,13 @@ export default function Sidebar() {
       {/* Survivors - character creation paths */}
       <div style={sectionHeading}>Survivors</div>
       <Link href="/creating-a-character" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</Link>
-      <Link href="/characters/new"       style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</Link>
+      {/* Random (under 2 min, paradigm-built) is the lit/default path for
+          newcomers; Backstory is the full-custom deep dive, no longer the lone
+          highlighted default (T3-3 onboarding - don't lead first-timers into
+          the hardest path). */}
+      <Link href="/characters/random"    style={linkStyle('#7fc458')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</Link>
       <Link href="/characters/quick"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</Link>
-      <Link href="/characters/random"    style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</Link>
+      <Link href="/characters/new"       style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</Link>
       <Link href="/characters/paradigms"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Paradigms</Link>
       {roleIsThriver(userRole) && (
         <Link href="/pregens" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Pregens</Link>
