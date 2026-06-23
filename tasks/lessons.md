@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## Loot wrote weapons to a dead slot - verify the FULL pickup loop, not just the drop (2026-06-23)
+
+Building Disarm (drop a foe's weapon as a lootable ground token "so the next combatant loots + Readies it"), I traced the loop end-to-end before trusting the handoff's "all helpers confirmed to exist." Both loot paths (`ObjectCard` self-loot/give, `CampaignObjects` give/loot-all) pushed the weapon NAME into `character.data.equipment[]` - a legacy string list that NOTHING in combat reads. Ready Weapon's "Equip from Inventory", the Melee action, and encumbrance all read `inventory[]` (`InventoryItem[]`). So every looted weapon was functionally inert: it could never be Readied, fired, or meleed. The same gap silently broke loot-bullets and NPC-corpse loot.
+
+Root cause: `equipment[]` (creation/sheet display) and `inventory[]` (the functional list) are two separate arrays that never sync. Loot targeted the wrong one.
+
+**Rule:** when a feature's payoff is "X then the player can USE it," verify the use step against the code, not the spec - a handoff claiming a loop works is a hypothesis. Drop + pickup + equip + fire are four links; test all four. Fix: `lib/loot.ts` `routeLootedItem` routes weapons -> `inventory[]` (stacking qty) and other gear -> `equipment[]`, wired into all four loot sites. Commit `6fdd7ce6`.
+
 ## PostgREST embedded joins require FK to public.profiles, not auth.users (2026-06-23)
 
 `pregen_library.author_id` pointed to `auth.users(id)`. The Supabase data layer called `.select('*, profiles!pregen_library_author_id_fkey(username)')`. This produced PGRST200: "Could not find a relationship between 'pregen_library' and 'profiles' in the schema cache." at the story lobby - discovered in the 2026-06-23 playtest logs.
