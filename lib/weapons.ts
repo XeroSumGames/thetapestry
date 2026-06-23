@@ -67,6 +67,7 @@ export const MELEE_WEAPONS: Weapon[] = [
   { name: 'Brass Knuckles', category: 'melee', skill: 'Unarmed Combat', range: 'Engaged', rarity: 'Uncommon', damage: '+1', rpPercent: 100, enc: 0, traits: [] },
   { name: 'Bullwhip', category: 'melee', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '1+1d3', rpPercent: 100, enc: 1, traits: ['Unwieldy (2)'] },
   { name: 'Club', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '5+1d6', rpPercent: 100, enc: 2, traits: ['Cumbersome (1)'] },
+  { name: 'Crowbar', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '4+1d6', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Fire Axe', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '3+2d3', rpPercent: 50, enc: 1, traits: [] },
   { name: 'Hatchet', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '3+1d3', rpPercent: 50, enc: 1, traits: [] },
   { name: 'Hunting Knife', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '2+2d3', rpPercent: 50, enc: 1, traits: ['Unwieldy (1)'] },
@@ -176,7 +177,7 @@ export function getWeaponByName(name: string): Weapon | undefined {
 // weapons default to true (assume an open wound). Bullwhip is the one
 // debatable melee call - classified blunt (welts, not a deep open wound).
 const BLUNT_MELEE_WEAPONS = new Set<string>([
-  'Baseball Bat', 'Brass Knuckles', 'Club', 'Makeshift Club',
+  'Baseball Bat', 'Brass Knuckles', 'Club', 'Crowbar', 'Makeshift Club',
   'Sledgehammer', 'Staff', 'Tactical Baton', 'Bullwhip',
 ])
 export function weaponCausesWoundInfection(weaponName: string | null | undefined): boolean {
