@@ -13,8 +13,11 @@
 
 import { updateCharacterState } from './character-states'
 import { updateCampaignNpc } from './campaign-npcs'
+import { updateCharacterDataField } from './characters'
+import { insertTokens } from './tactical'
 import { insertRollLog } from './roll-log'
 import { applyDamageTransition, type DamageInput, type DamageTransition } from '../combat-damage'
+import { routeLootedItem } from '../loot'
 import { OUTCOME } from '../roll-outcomes'
 
 export interface DamageContext {
@@ -65,4 +68,84 @@ export async function applyDamageToNpc(
   await updateCampaignNpc(npcId, patch)
   await emitTransitionLogs(t, ctx, false)
   return { patch, transition: t }
+}
+
+export interface DisarmOutcome {
+  /** Name of the weapon knocked loose, or null if the defender was unarmed. */
+  weaponName: string | null
+  /** true = a lootable ground token was spawned; false = no map, so the weapon
+   *  fell back into the defender's own inventory (recoverable, just unreadied). */
+  droppedToGround: boolean
+  /** New characters.data for the PC's optimistic setState (slot cleared). */
+  pcData?: Record<string, any>
+  /** New skills blob for the NPC's optimistic setState (weapon cleared). */
+  npcSkills?: Record<string, any>
+  error: any
+}
+
+/**
+ * Disarm: knock the defender's equipped weapon loose. Clears their slot
+ * (PC weaponPrimary / NPC skills.weapon) and, when a tactical scene + cell are
+ * given, spawns a lootable ground token at that cell holding the weapon so any
+ * combatant can loot + Ready it (loot routing sends weapons to inventory[]).
+ * With no map, the weapon falls back into the defender's own inventory so it is
+ * never destroyed - they just lose the tempo of having it readied.
+ *
+ * Does the DB writes only; the caller owns its optimistic React setState (it
+ * holds state this module can't touch) and reads weaponName/pcData/npcSkills
+ * back to apply it. Returns weaponName=null (no writes) if nothing was equipped.
+ */
+export async function disarmAndDrop(opts: {
+  scene?: { id: string; gridX: number; gridY: number } | null
+  pc?: { charId: string; data: Record<string, any> } | null
+  npc?: { id: string; skills: Record<string, any> } | null
+}): Promise<DisarmOutcome> {
+  const onMap = !!opts.scene
+  const lootRow = (name: string) => [{ type: 'weapon' as const, name, quantity: 1 }]
+
+  if (opts.pc) {
+    const weaponName: string | null = opts.pc.data?.weaponPrimary?.weaponName ?? null
+    if (!weaponName) return { weaponName: null, droppedToGround: false, error: null }
+    // On a map the weapon leaves the PC entirely (becomes a ground token);
+    // with no map it drops into their own inventory.
+    const fallbackInv = onMap ? {} : routeLootedItem(opts.pc.data, { type: 'weapon', name: weaponName, quantity: 1 })
+    const pcData = { ...opts.pc.data, weaponPrimary: null, ...fallbackInv }
+    const { error } = await updateCharacterDataField(opts.pc.charId, { weaponPrimary: null, ...fallbackInv })
+    if (error) return { weaponName, droppedToGround: false, pcData, error }
+    if (!onMap) return { weaponName, droppedToGround: false, pcData, error: null }
+    const { error: tokErr } = await insertTokens(groundToken(opts.scene!, weaponName, lootRow(weaponName)))
+    return { weaponName, droppedToGround: true, pcData, error: tokErr }
+  }
+
+  if (opts.npc) {
+    const weaponName: string | null = opts.npc.skills?.weapon?.weaponName ?? null
+    if (!weaponName) return { weaponName: null, droppedToGround: false, error: null }
+    // Clear the NPC's single weapon slot. Off-map (no ground token to spawn)
+    // the weapon is just unequipped - the GM can re-arm via Ready Weapon.
+    const npcSkills = { ...opts.npc.skills, weapon: null }
+    const { error } = await updateCampaignNpc(opts.npc.id, { skills: npcSkills } as any)
+    if (error) return { weaponName, droppedToGround: false, npcSkills, error }
+    if (!onMap) return { weaponName, droppedToGround: false, npcSkills, error: null }
+    const { error: tokErr } = await insertTokens(groundToken(opts.scene!, weaponName, lootRow(weaponName)))
+    return { weaponName, droppedToGround: true, npcSkills, error: tokErr }
+  }
+
+  return { weaponName: null, droppedToGround: false, error: null }
+}
+
+/** Shape a lootable object token for a dropped weapon at a grid cell. */
+function groundToken(scene: { id: string; gridX: number; gridY: number }, name: string, contents: any[]) {
+  return {
+    scene_id: scene.id,
+    name,
+    token_type: 'object',
+    grid_x: scene.gridX,
+    grid_y: scene.gridY,
+    is_visible: true,
+    color: '#EF9F27',
+    wp_max: null,
+    wp_current: null,
+    lootable: true,
+    contents,
+  } as any
 }

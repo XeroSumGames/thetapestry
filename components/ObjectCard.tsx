@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { routeLootedItem } from '../lib/loot'
 
 interface TokenProperty {
   key: string
@@ -114,9 +115,9 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
     if (!myCharacter) return
     setGiving(itemKey(item))
     try {
-      const currentEquip: string[] = myCharacter.data?.equipment ?? []
-      const updatedEquip = [...currentEquip, item.name]
-      const { error: charErr } = await supabase.from('characters').update({ data: { ...myCharacter.data, equipment: updatedEquip } }).eq('id', myCharacter.id)
+      // Route weapons to inventory[] (readyable) and other gear to equipment[].
+      const routed = routeLootedItem(myCharacter.data, { ...item, quantity: 1 })
+      const { error: charErr } = await supabase.from('characters').update({ data: { ...myCharacter.data, ...routed } }).eq('id', myCharacter.id)
       if (charErr) {
         alert(`Couldn't take item: ${charErr.message}`)
         return
@@ -142,10 +143,10 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
     if (!charEntry) return
     setGiving(itemKey(item))
     try {
-      // Give 1 of this item to the PC's equipment list (string array in character.data.equipment)
-      const currentEquip: string[] = charEntry.character.data?.equipment ?? []
-      const updatedEquip = [...currentEquip, item.name]
-      await supabase.from('characters').update({ data: { ...charEntry.character.data, equipment: updatedEquip } }).eq('id', charId)
+      // Give 1 of this item to the PC, routing weapons to inventory[] (so they
+      // can be Readied) and other gear to the legacy equipment[] list.
+      const routed = routeLootedItem(charEntry.character.data, { ...item, quantity: 1 })
+      await supabase.from('characters').update({ data: { ...charEntry.character.data, ...routed } }).eq('id', charId)
 
       // Decrement (or remove) on the crate side
       const newContents = contents

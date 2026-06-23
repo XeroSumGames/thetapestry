@@ -10,6 +10,7 @@ import ObjectImageCropper from './ObjectImageCropper'
 import { LABEL_STYLE_TIGHT, ModalBackdrop } from '../lib/style-helpers'
 import { defaultSpawnCell } from '../lib/tactical-spawn'
 import { OUTCOME } from '../lib/roll-outcomes'
+import { routeLootedItem } from '../lib/loot'
 
 const OBJECT_ICONS = [
   { value: 'car', emoji: '🚗', label: 'Car' },
@@ -720,16 +721,15 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                           const charEntry = entries.find(e => e.character.id === charId)
                           if (!charEntry) return
                           setGivingItemIdx(i)
-                          const currentEquip: string[] = charEntry.character.data?.equipment ?? []
-                          const additions: string[] = []
-                          for (let q = 0; q < item.quantity; q++) additions.push(item.name)
-                          const updatedEquip = [...currentEquip, ...additions]
+                          // Route weapons to inventory[] (so they can be Readied);
+                          // other gear stays in the legacy equipment[] list.
+                          const routed = routeLootedItem(charEntry.character.data, item)
                           // Bail before mutating the object if the character
                           // write fails - otherwise the item would disappear
                           // (RLS denial / network hiccup, etc.).
                           const { error: charErr } = await supabase
                             .from('characters')
-                            .update({ data: { ...charEntry.character.data, equipment: updatedEquip } })
+                            .update({ data: { ...charEntry.character.data, ...routed } })
                             .eq('id', charId)
                           if (charErr) {
                             alert(`Give failed: ${charErr.message}`)
@@ -788,18 +788,20 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   if (!lootCharId) return
                   const charEntry = entries.find(e => e.character.id === lootCharId)
                   if (!charEntry) return
-                  const currentEquip: string[] = charEntry.character.data?.equipment ?? []
-                  const newItems: string[] = []
+                  // Accumulate every item through routeLootedItem so weapons land
+                  // in inventory[] (readyable) and other gear in equipment[];
+                  // working blob carries both lists forward across items.
+                  let workingData = { ...charEntry.character.data }
                   for (const item of lootingObj.contents) {
-                    for (let q = 0; q < item.quantity; q++) newItems.push(item.name)
+                    const routed = routeLootedItem(workingData, item)
+                    workingData = { ...workingData, ...routed }
                   }
-                  const updatedEquip = [...currentEquip, ...newItems]
                   // Bail before clearing the object if the character write
                   // fails - otherwise the loot vanishes (RLS denial, network
                   // hiccup, etc. all silently dropped items pre-fix).
                   const { error: charErr } = await supabase
                     .from('characters')
-                    .update({ data: { ...charEntry.character.data, equipment: updatedEquip } })
+                    .update({ data: workingData })
                     .eq('id', lootCharId)
                   if (charErr) {
                     alert(`Loot failed: ${charErr.message}`)

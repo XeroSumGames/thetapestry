@@ -74,7 +74,7 @@ import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { sceneTokenPositions, updateToken as updateSceneToken, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy, setInitiativePendingActionLoss } from '../../../../lib/data/tactical'
-import { applyDamageToPc, applyDamageToNpc } from '../../../../lib/data/combat'
+import { applyDamageToPc, applyDamageToNpc, disarmAndDrop } from '../../../../lib/data/combat'
 import { playChatPing } from '../../../../lib/sound'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { useSceneNav } from './useSceneNav'
@@ -715,11 +715,17 @@ export default function TablePage() {
   const groupCheckPayloadRef = useRef<{ participants: string[]; skill: string } | null>(null)
   const [showReadyWeaponModal, setShowReadyWeaponModal] = useState(false)
   const [showGrappleModal, setShowGrappleModal] = useState(false)
-  // The grapple modal serves three opposed-check moves that share the same
-  // PHY+Unarmed vs PHY+(Unarmed|Athletics) roll: 'grapple' (restrain),
-  // 'subdue' (the choke on a pinned defender - 1 WP + (1d3+PHY+Unarmed) RP),
-  // and 'breakfree' (defender escapes; grappler contests reactively).
-  const [grappleMode, setGrappleMode] = useState<'grapple' | 'subdue' | 'breakfree'>('grapple')
+  // The grapple modal serves four opposed-check moves that share the same
+  // PHY+(Unarmed|Athletics) vs PHY+max(Unarmed,Athletics) roll: 'grapple'
+  // (restrain), 'subdue' (the choke on a pinned defender - 1 WP +
+  // (1d3+PHY+Unarmed) RP), 'breakfree' (defender escapes; grappler contests
+  // reactively), and 'disarm' (knock the defender's weapon to the ground as a
+  // lootable token so any combatant can grab + Ready it).
+  const [grappleMode, setGrappleMode] = useState<'grapple' | 'subdue' | 'breakfree' | 'disarm'>('grapple')
+  // Disarm only: which skill the attacker rolls (Unarmed Combat or Athletics).
+  // Defender always contests with max(Unarmed, Athletics). Ignored by the
+  // other three modes, which are Unarmed-only.
+  const [grappleSkill, setGrappleSkill] = useState<'Unarmed Combat' | 'Athletics'>('Unarmed Combat')
   // Two-step grapple flow: click a target → confirm + optionally spend
   // an Insight Die (3d6 or +3 CMod) → roll. Previously the click rolled
   // instantly which meant there was no window to spend insight - all
@@ -742,10 +748,14 @@ export default function TablePage() {
     rpTarget: string | null
     insightSpent?: boolean
     // Which move produced this result - drives the verdict banner copy.
-    mode?: 'grapple' | 'subdue' | 'breakfree'
+    mode?: 'grapple' | 'subdue' | 'breakfree' | 'disarm'
     // Subdue-only: WP + RP dealt on a successful choke (for the result line).
     subWP?: number
     subRP?: number
+    // Disarm-only: the weapon knocked loose (null = defender was unarmed) and
+    // whether it hit the ground as a lootable token (vs no map -> recoverable).
+    disarmedWeapon?: string | null
+    disarmToGround?: boolean
   } | null>(null)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
@@ -6221,6 +6231,11 @@ export default function TablePage() {
                 <button onClick={() => { setGrappleMode('grapple'); setGrappleResult(null); setShowGrappleModal(true) }}
                   style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Grapple</button>
 
+                {/* ── DISARM: opposed PHY+(Unarmed|Athletics) vs PHY+max(Unarmed,Athletics);
+                    on a win the target's weapon drops as a lootable ground token ── */}
+                <button onClick={() => { setGrappleMode('disarm'); setGrappleSkill('Unarmed Combat'); setGrappleResult(null); setShowGrappleModal(true) }}
+                  style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Disarm</button>
+
                 {/* ── INSPIRE - opens social-target picker (no roll, auto-applies) ── */}
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Inspire' ? null : { action: 'Inspire' }) }}
                   style={actBtn(socialTarget?.action === 'Inspire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Inspire' ? '#7fc458' : '#f5f2ee', socialTarget?.action === 'Inspire' ? '#2d5a1b' : '#3a3a3a')}>Inspire</button>
@@ -8900,6 +8915,14 @@ export default function TablePage() {
         const aUnarmed = charEntry
           ? charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
           : (npcAttacker && Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Unarmed Combat')?.level ?? 0 : 0)
+        const aAthletics = charEntry
+          ? charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
+          : (npcAttacker && Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
+        // Disarm lets the attacker roll Unarmed OR Athletics (player's pick);
+        // every other mode is Unarmed-only. aSkillMod is the SMod actually
+        // applied to the attacker roll + shown in the modal subtitle/breakdown.
+        const isDisarm = grappleMode === 'disarm'
+        const aSkillMod = isDisarm && grappleSkill === 'Athletics' ? aAthletics : aUnarmed
 
         // Build engaged target list (within 5ft)
         const aTok = mapTokens.find(t => (active.character_id && t.character_id === active.character_id) || (active.npc_id && t.npc_id === active.npc_id))
@@ -9000,7 +9023,9 @@ export default function TablePage() {
           // resolve to 0 - the input is text, so guard explicitly.
           const manualCmod = parseInt(grappleCmod, 10) || 0
           const totalCmod = aBonusCmod + manualCmod
-          const aTotal = aDie1 + aDie2 + aPhyMod + aUnarmed + totalCmod
+          // aSkillMod === aUnarmed for grapple/subdue/breakfree; only disarm can
+          // swap in Athletics. So this stays identical for the other three modes.
+          const aTotal = aDie1 + aDie2 + aPhyMod + aSkillMod + totalCmod
           const aOutcome = getOutcome(aTotal)
 
           const dDie1 = rollD6()
@@ -9115,6 +9140,63 @@ export default function TablePage() {
             return
           }
 
+          // DISARM branch: the opposed roll above already decided it. On an
+          // attacker win we knock the defender's equipped weapon loose - it
+          // drops as a lootable ground token at their cell (any combatant can
+          // loot + Ready it; loot routing sends weapons to inventory[]), or
+          // falls back into their own inventory when there's no tactical map.
+          // All DB writes go through disarmAndDrop (no inline .from in this
+          // god-component); we keep the optimistic setState + log here since
+          // they need React state the helper can't touch.
+          if (grappleMode === 'disarm') {
+            let disarmedWeapon: string | null = null
+            let disarmToGround = false
+            if (attackerWins) {
+              // Resolve the active scene + the defender's cell so the dropped
+              // token lands on them. No scene/token -> off-map fallback.
+              const sid = await activeSceneId(supabase, id)
+              const defTok = sid ? mapTokens.find(t =>
+                (defCharEntry && t.character_id === defCharEntry.character.id) ||
+                (defNpc && t.npc_id === defNpc.id)
+              ) : null
+              const scene = (sid && defTok) ? { id: sid, gridX: defTok.grid_x, gridY: defTok.grid_y } : null
+              const outcome = await disarmAndDrop({
+                scene,
+                pc: defCharEntry ? { charId: defCharEntry.character.id, data: defCharEntry.character.data ?? {} } : null,
+                npc: defNpc ? { id: defNpc.id, skills: defNpc.skills ?? {} } : null,
+              })
+              disarmedWeapon = outcome.weaponName
+              disarmToGround = outcome.droppedToGround
+              // Optimistic local state so the disarmed party's combat bar /
+              // sheet drops the weapon without waiting on the realtime round-trip.
+              if (outcome.pcData && defCharEntry) {
+                setEntries(prev => prev.map(e => e.character.id === defCharEntry.character.id ? { ...e, character: { ...e.character, data: outcome.pcData } } : e))
+              }
+              if (outcome.npcSkills && defNpc) {
+                setCampaignNpcs(prev => prev.map((n: any) => n.id === defNpc.id ? { ...n, skills: outcome.npcSkills } : n))
+                setRosterNpcs(prev => prev.map((n: any) => n.id === defNpc.id ? { ...n, skills: outcome.npcSkills } : n))
+              }
+              if (disarmToGround) { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }
+            }
+            const wonWithWeapon = attackerWins && !!disarmedWeapon
+            await insertRollLog({
+              campaign_id: id, user_id: userId, character_name: active.character_name,
+              label: `${active.character_name} - Disarm ${targetEntry.character_name}${attackerWins ? (disarmedWeapon ? ` (drops ${disarmedWeapon}${disarmToGround ? '' : ' - no map'})` : ' (already unarmed)') : ' (holds on)'}${insightSpent ? (insightMode === '3d6' ? ' (3d6 Insight)' : ' (+3 CMod Insight)') : ''}`,
+              die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aSkillMod, cmod: totalCmod,
+              total: aTotal, outcome: wonWithWeapon ? OUTCOME.Grappled : OUTCOME.GrappleFailed,
+            })
+            setGrappleResult({
+              attackerName: active.character_name, defenderName: targetEntry.character_name,
+              aDie1, aDie2, aTotal, aOutcome, aCmod: totalCmod, aDiceRolled,
+              dDie1, dDie2, dTotal, dOutcome,
+              result: wonWithWeapon ? 'grappled' : 'failed',
+              rpTarget: null,
+              insightSpent, mode: 'disarm', disarmedWeapon, disarmToGround,
+            })
+            await consumeAction(active.id)
+            return
+          }
+
           // Apply effects
           if (attackerWins) {
             // Target is grappled, take 1 RP
@@ -9179,12 +9261,14 @@ export default function TablePage() {
           setGrappleInsight('none')
           setGrappleCmod('0')
           setGrappleMode('grapple')
+          setGrappleSkill('Unarmed Combat')
         }
         const isSubdue = grappleMode === 'subdue'
         const isBreakFree = grappleMode === 'breakfree'
         // Subdue + Break Free both target a fixed opponent (the pinned defender /
-        // the grappler) - no picker, no "Change".
-        const isFixedTarget = grappleMode !== 'grapple'
+        // the grappler) - no picker, no "Change". Grapple + Disarm pick an
+        // engaged target.
+        const isFixedTarget = isSubdue || isBreakFree
 
         // Shell `result` shape - attacker dice/total drive the top dice
         // tiles; the opposed comparison + verdict live in renderOutcome,
@@ -9195,7 +9279,7 @@ export default function TablePage() {
           die2: grappleResult.aDie2,
           diceRolled: grappleResult.aDiceRolled,
           amod: aPhyMod,
-          smod: aUnarmed,
+          smod: aSkillMod,
           cmod: grappleResult.aCmod,
           total: grappleResult.aTotal,
           outcome: grappleResult.aOutcome,
@@ -9206,19 +9290,38 @@ export default function TablePage() {
             open={showGrappleModal}
             onClose={closeGrapple}
             title={active.character_name}
-            eyebrow={isSubdue ? 'Subdue' : isBreakFree ? 'Break Free' : 'Grapple'}
+            eyebrow={isSubdue ? 'Subdue' : isBreakFree ? 'Break Free' : isDisarm ? 'Disarm' : 'Grapple'}
             accent="#c0392b"
             dimBackdrop={false}
-            subtitle={`PHY ${aPhyMod >= 0 ? '+' : ''}${aPhyMod} · Unarmed ${aUnarmed >= 0 ? '+' : ''}${aUnarmed}`}
-            rollFormula="2d6 + PHY + Unarmed + CMod"
+            subtitle={`PHY ${aPhyMod >= 0 ? '+' : ''}${aPhyMod} · ${isDisarm && grappleSkill === 'Athletics' ? 'Athletics' : 'Unarmed'} ${aSkillMod >= 0 ? '+' : ''}${aSkillMod}`}
+            rollFormula={isDisarm ? `2d6 + PHY + ${grappleSkill === 'Athletics' ? 'Athletics' : 'Unarmed'} + CMod` : '2d6 + PHY + Unarmed + CMod'}
             amod={aPhyMod}
-            smod={aUnarmed}
+            smod={aSkillMod}
             cmod={parseInt(grappleCmod, 10) || 0}
             setCmod={grappleResult ? undefined : (n) => setGrappleCmod(String(n))}
             userInsightDice={charEntry?.liveState?.insight_dice ?? 0}
             preRollInsight={grappleInsight}
             setPreRollInsight={setGrappleInsight}
             preRollExtras={!grappleResult ? (
+              <>
+              {isDisarm && (
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '6px' }}>Disarm Skill</div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {(['Unarmed Combat', 'Athletics'] as const).map(sk => {
+                      const lvl = sk === 'Athletics' ? aAthletics : aUnarmed
+                      const sel = grappleSkill === sk
+                      return (
+                        <button key={sk} onClick={() => setGrappleSkill(sk)}
+                          style={{ flex: 1, padding: '8px 10px', background: sel ? '#1a2e10' : '#242424', border: `1px solid ${sel ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: sel ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          {sk === 'Athletics' ? 'Athletics' : 'Unarmed'} {lvl >= 0 ? '+' : ''}{lvl}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {(
               !grappleTarget ? (
                 <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '6px' }}>Select Target (Engaged)</div>
@@ -9250,10 +9353,12 @@ export default function TablePage() {
                   </div>
                 </div>
               )
+              )}
+              </>
             ) : null}
             onRoll={() => { if (grappleTarget) executeGrapple(grappleTarget, grappleInsight) }}
             rollDisabled={!grappleTarget}
-            rollLabel={grappleInsight === '3d6' ? '🎲 Roll 3d6' : (isSubdue ? '🎲 Roll Subdue' : isBreakFree ? '🎲 Break Free' : '🎲 Roll Grapple')}
+            rollLabel={grappleInsight === '3d6' ? '🎲 Roll 3d6' : (isSubdue ? '🎲 Roll Subdue' : isBreakFree ? '🎲 Break Free' : isDisarm ? '🎲 Roll Disarm' : '🎲 Roll Grapple')}
             result={grappleRollResult}
             renderOutcome={() => {
               const gr = grappleResult!
@@ -9266,7 +9371,7 @@ export default function TablePage() {
                   <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '4px' }}>
                     [{Array.isArray(gr.aDiceRolled) && gr.aDiceRolled.length > 0 ? gr.aDiceRolled.join('+') : `${gr.aDie1}+${gr.aDie2}`}]
                     {aPhyMod !== 0 && <span style={{ color: aPhyMod > 0 ? '#7fc458' : '#c0392b' }}> {aPhyMod > 0 ? '+' : ''}{aPhyMod} PHY</span>}
-                    {aUnarmed !== 0 && <span style={{ color: aUnarmed > 0 ? '#7fc458' : '#c0392b' }}> {aUnarmed > 0 ? '+' : ''}{aUnarmed} Unarmed</span>}
+                    {aSkillMod !== 0 && <span style={{ color: aSkillMod > 0 ? '#7fc458' : '#c0392b' }}> {aSkillMod > 0 ? '+' : ''}{aSkillMod} {isDisarm && grappleSkill === 'Athletics' ? 'Athletics' : 'Unarmed'}</span>}
                     {gr.aCmod !== 0 && <span style={{ color: gr.aCmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {gr.aCmod > 0 ? '+' : ''}{gr.aCmod} CMod</span>}
                     <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {gr.aTotal}</span>
                     <span style={{ color: outcomeColor(gr.aOutcome), fontWeight: 700 }}>  ·  {gr.aOutcome}</span>
@@ -9286,12 +9391,21 @@ export default function TablePage() {
                       ? (gr.result === 'grappled' ? `${gr.defenderName} is Subdued!` : `${gr.defenderName} slips the choke`)
                       : gr.mode === 'breakfree'
                       ? (gr.result === 'grappled' ? `${gr.attackerName} breaks free!` : `${gr.attackerName} is still held!`)
+                      : gr.mode === 'disarm'
+                      ? (gr.result === 'grappled'
+                          ? (gr.disarmedWeapon ? `${gr.defenderName} drops the ${gr.disarmedWeapon}!` : `${gr.defenderName} was already unarmed`)
+                          : `${gr.defenderName} keeps their grip!`)
                       : (<>
                           {gr.result === 'grappled' && `${gr.defenderName} is Grappled!`}
                           {gr.result === 'failed' && 'Grapple Failed!'}
                           {gr.result === 'no_victor' && 'No Clear Victor'}
                         </>)}
                   </div>
+                  {gr.mode === 'disarm' && gr.result === 'grappled' && gr.disarmedWeapon && (
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '1rem' }}>
+                      {gr.disarmToGround ? 'On the ground - loot it to claim it' : 'Knocked from their grip (no map - recoverable)'}
+                    </div>
+                  )}
                   {gr.rpTarget && (
                     <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textAlign: 'center', marginBottom: '1rem' }}>
                       {gr.mode === 'subdue'
