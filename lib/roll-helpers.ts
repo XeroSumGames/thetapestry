@@ -635,15 +635,21 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     // / "fails to use X" was placeholder. First Impression also has
     // distinct copy per failure tier (plain Failure vs. Low Insight
     // soft-pedal vs. catastrophic) per SRD First Impression flavor.
+    // Perception + Gut Instinct return NAMELESS fragments (matching the
+    // generic "successfully uses X" skill convention) - the feed row header
+    // already shows the actor, so leading with the name printed it twice
+    // ("David Battersby / David Battersby successfully Perceives..."). Per
+    // Xero's log-trimming pass 2026-06-22. First Impression is deliberately
+    // a name-led full sentence (locked + tested 2026-05-10/11) so it stays.
     if (check === 'Perception Check') {
       return hit
-        ? `${r.character_name} successfully Perceives something useful${outcomeTag}`
-        : `${r.character_name} does not Perceive anything useful${outcomeTag}`
+        ? `successfully Perceives something useful${outcomeTag}`
+        : `does not Perceive anything useful${outcomeTag}`
     }
     if (check === 'Gut Instinct') {
       return hit
-        ? `${r.character_name}'s Gut Instinct lets them know something is amiss${outcomeTag}`
-        : `${r.character_name}'s Gut Instinct is quiet${outcomeTag}`
+        ? `has a Gut Instinct that something is amiss${outcomeTag}`
+        : `has a quiet Gut Instinct${outcomeTag}`
     }
     if (check === 'First Impression') {
       // Six outcome bands per SRD §07 ladder. HI and LI keep their FI-
