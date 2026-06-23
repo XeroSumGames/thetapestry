@@ -173,6 +173,25 @@ The chat block IS the deliverable. Never end a handoff by pointing at this file.
 
 ---
 
+# Session state - 2026-06-23 (Hunt & Peck: post-playtest batch + Disarm design)
+
+**IMMEDIATE NEXT ACTION — build DISARM.** Design is DONE + committed (`16bc7caf`); full implementation plan lives in `tasks/todo.md` under "PLAYTEST NOTES 2026-06-23" → the DISARM item. Reuse the Grapple opposed-check engine (`executeGrapple` in `app/stories/[id]/table/page.tsx` ~8953) via a new `'disarm'` mode. Defender's `dSmod = max(Unarmed, Athletics)` already matches spec. On attacker win: clear the defender's equipped slot AND spawn a lootable ground token (`scene_tokens` object, `lootable:true`, `contents:[<weapon item>]`) at their cell so the next combatant loots+Readies it; costs 1 action. SEAM RULE: new DB writes via a `lib/data/combat.ts` helper (`updateCharacterDataField` PC slot / `updateCampaignNpc` NPC / `insertTokens` token), NOT inline `.from`. Skill dropdown (Unarmed/Athletics) in the modal when mode==='disarm'. Verify 2-client: disarm → weapon token on ground → another PC loots + Readies. All helpers confirmed present.
+
+**THEN — hidden-NPC fog occlusion (heaviest, not started):** a token set to SHOW should stay invisible to a player who can't see that cell (per-player LOS gating in TacticalMap render). Ties to the parked Group/Individual dynamic-lighting work — one build settles both.
+
+**SHIPPED THIS SESSION (all on main, 885 unit green, gates pass):** observer-mode lands at table not lobby; double-click GM icon = whisper GM; GM-notes popout zoom +/-; GM Tools = 3×2 grid (dropdown removed); pregen preview modal + "View this character" on /pregens; Crowbar melee weapon; log-trim (Perception/Gut Instinct/secondary-melee narratives); social-target picker restyled. Playtest batch: Loot/Search=1 action combat-only; Ping auto-centers map; Pistol-whip (`forceMelee` flag); Loot bullets (generated NPC ranged guns spawn 1d6-1 loaded); recorder snapshot over-redaction fix (`selected_token_id`→`selected_piece_id`, `token_count`→`piece_count`).
+
+**PARKED / AWAITING XERO:**
+- Loot-bullets flags: kept `reloads` (looted gun = 1d6-1 loaded + spare clips); applies to newly-generated NPCs only. Xero can ask to zero reloads.
+- Gus ready-from-inventory bug: inventory gun whose name ≠ a catalog weapon won't show in Ready-Weapon "Equip from Inventory" (`page.tsx:9527` filters `getWeaponByName`). Xero watching for repro.
+- David Battersby pregen bio is Chased-era (farm lost/Jenny dead) but contradicts EMPTY (farm intact); needs Xero's corrected text. Pregen shared to EMPTY + THE HOUSE.
+
+**HIGHEST-LEVERAGE BLOCKER (untouched):** `/publiclanding` KS landing page (copy/screenshots/CTA + cold-visitor routing from `/`) — the real 9/1 gate.
+
+**FACTS:** Playtest campaign (EMPTY) id `7219ea37-b25a-4319-965f-26d49b451588`. Commit via `git commit -F .git/COMMIT_EDITMSG_*.txt` (PowerShell here-strings break). Table page + TacticalMap are LOC-tracked god-components; feature growth needs `node scripts/check-arch.mjs --save --force` (seam metrics hold at 1030/22/0).
+
+---
+
 # Session state - 2026-06-12 (Puffer: full stability audit + M1/M2 closed)
 
 ## Current HEAD: `14f5939` (verify with `git rev-parse --short HEAD`). Tests: 875 vitest green. All guardrails green + check:db-emdashes CLEAN. Working tree has 8 untracked H&P SQL + spec files (not Puffer's to commit). Everything ships to main (Vercel = live/dev env).
