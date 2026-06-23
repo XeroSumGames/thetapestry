@@ -6,6 +6,34 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-23 00:09 UTC
+
+**Status:** DRIFT (carry-forward #27 — 8 new commits since #26: `4db42a5`..`91dc693`)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [885 passed / 48 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-23T00:04 UTC). Fully green.
+
+**New since #26 (session 2026-06-22, all clean):**
+- `7879ac4` fix(observer): route observers to table + observer-aware lobby
+- `2570744` feat(table): double-click GM icon to whisper GM
+- `acbb245` feat(gm-notes): font-size zoom control in GM notes popout
+- `5a291de` feat(story-hub): GM Tools beside Launch as 3x2 grid
+- `7154f58` feat(story-hub): pregen sheet preview popup before selecting
+- `8d21819` feat(pregens): "View this character" button on library cards
+- `4db42a5` feat(weapons): Crowbar as a melee weapon
+- `91dc693` docs: session lessons + todo update
+
+**Drift (carry-forward):**
+- HOPED-FOR trio (#27): vehicle popout broadcasts, Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV), FI Insight Die award path. Day 7 since Session 24 (2026-06-16). Drain target: Beta-500 dry-run (~8 days, 2026-07-01).
+- Recorder observability `[ ]` todo stale-as-open: `b043904` (2026-06-19) shipped Items 1-4. Checkbox in `tasks/todo.md` still unchecked — audit-correction needed (flagged since #16).
+
+**Action:** No new signal. Productive session landed 8 clean commits. HOPED-FOR trio unchanged — Beta-500 dry-run is the drain event. Recorder checkbox still needs a manual tick.
+
+---
+
 ## 2026-06-22 21:09 UTC
 
 **Status:** DRIFT (carry-forward #26 — 2 new commits since #25: `d95d6cf` + `3d45bf3`)
