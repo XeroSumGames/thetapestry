@@ -3707,9 +3707,13 @@ export default function TablePage() {
     setShowSpecialCheck('perception' as any)
   }
   function startSpecialCheckGut() {
+    // Open the roll modal directly with a default PC; the modal's own
+    // "Rolling PC" selector lets the GM switch who's reading the room
+    // (replaces the old separate list-picker step). 2026-06-22.
     const sc = shortCircuitForSpecialCheck()
-    if (sc) { triggerGutInstinct(sc.name); return }
-    setShowSpecialCheck('gut' as any)
+    const eligible = entries.filter(e => gmLike || e.userId === userId)
+    const defaultName = sc?.name ?? eligible[0]?.character.name
+    if (defaultName) triggerGutInstinct(defaultName)
   }
 
   function triggerGutInstinct(characterName: string) {
@@ -10494,12 +10498,26 @@ export default function TablePage() {
           setGutInstinctRollResult(null)
           setGutInstinctCmod(0)
         }}
-        title="Gut Instinct"
+        title={gutInstinctPending?.characterName ?? 'Gut Instinct'}
         eyebrow="Gut Instinct" accent="#5aa0c0" dimBackdrop={false}
-        subtitle={gutInstinctPending
-          ? `${gutInstinctPending.characterName} reads the room`
-          : undefined}
+        subtitle={gutInstinctPending ? 'Reads the room' : undefined}
         rollFormula="2d6 + PER (RSN + ACU) + Sub-skill + CMod"
+        preRollExtras={gutInstinctPending && !gutInstinctRollResult ? (() => {
+          // In-modal "Rolling PC" picker (mirrors FirstImpressionModal) so
+          // the GM can switch who reads the room without a separate step.
+          const eligible = entries.filter(e => gmLike || e.userId === userId)
+          if (eligible.length <= 1) return null
+          return (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px', fontFamily: 'Carlito, sans-serif' }}>Rolling PC</div>
+              <select value={gutInstinctPending.characterName}
+                onChange={e => triggerGutInstinct(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                {eligible.map(e => <option key={e.character.id} value={e.character.name}>{e.character.name}</option>)}
+              </select>
+            </div>
+          )
+        })() : undefined}
         amod={gutInstinctPending?.amod ?? 0}
         smod={gutInstinctPending?.smod ?? 0}
         cmod={gutInstinctCmod}
