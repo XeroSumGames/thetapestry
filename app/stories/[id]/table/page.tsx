@@ -350,6 +350,11 @@ export default function TablePage() {
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal - refs survive React batching. RESET in closeRollModal after the consume-gate logic reads it (the guard is per-roll, not per-modal-open).
   const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn - prevents races where realtime echo + optimistic call both advance, silently skipping a combatant. RESET in the try/finally of nextTurn itself (set true at top, false in finally) - guard is per-nextTurn-call, not session-scoped.
   const consumeActionInFlightRef = useRef<Set<string>>(new Set())   // Per-entry lock for consumeAction - prevents double-click races from decrementing actions_remaining twice (e.g. Aim button hit twice fast burning both actions instead of one)
+  // Loot/Search costs the active combatant 1 action per container per combat
+  // (search the box once, grab everything inside for free) - combat-only.
+  // Tracks containers already searched THIS combat so repeat item-pulls don't
+  // each burn an action; cleared when combat ends (effect below).
+  const searchedContainersRef = useRef<Set<string>>(new Set())
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
@@ -2289,6 +2294,23 @@ export default function TablePage() {
    *  belong (memory rule: feedback_progression_log_curation.md). */
   async function appendProgressionLog(characterId: string, type: any, text: string) {
     return appendProgressionEntry(supabase, characterId, type, text)
+  }
+
+  // Clear the per-combat searched-container set whenever combat ends so the
+  // next combat starts everyone fresh (searching a box again costs an action).
+  useEffect(() => { if (!combatActive) searchedContainersRef.current.clear() }, [combatActive])
+
+  // Charge the active combatant 1 action the first time they search a given
+  // container this combat. Free out of combat; deduped per container so
+  // grabbing multiple items only costs the single search action; only charges
+  // when the looter IS the active combatant (a GM looting off-turn is free).
+  function chargeContainerSearch(containerKey: string, looterCharacterId: string) {
+    if (!combatActive) return
+    if (searchedContainersRef.current.has(containerKey)) return
+    const activeEntry = initiativeOrder.find(e => e.is_active)
+    if (!activeEntry || activeEntry.character_id !== looterCharacterId) return
+    searchedContainersRef.current.add(containerKey)
+    void consumeAction(activeEntry.id, `${activeEntry.character_name} - Search ${containerKey}`)
   }
 
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
@@ -6990,6 +7012,7 @@ export default function TablePage() {
                     return me ? { id: me.character.id, name: me.character.name, data: me.character.data } : null
                   })()}
                   onLoot={async (objectName, item, characterId, characterName) => {
+                    chargeContainerSearch(objectName, characterId)
                     await insertRollLog({
                       campaign_id: id, user_id: userId, character_name: 'System',
                       label: `🎒 ${characterName} looted ${item.name} from ${objectName}`,
@@ -6998,6 +7021,7 @@ export default function TablePage() {
                     await Promise.all([loadEntries(id), rollsFeed.refetch()])
                   }}
                   onSearchEmpty={async (objectName, characterId, characterName) => {
+                    chargeContainerSearch(objectName, characterId)
                     await insertRollLog({
                       campaign_id: id, user_id: userId, character_name: characterName,
                       label: `🎒 ${characterName} looked through the remains of ${objectName} and found nothing`,
@@ -7706,6 +7730,7 @@ export default function TablePage() {
                       }
                     }}
                     onLoot={async (objectName, item, characterId, characterName) => {
+                      chargeContainerSearch(objectName, characterId)
                       await insertRollLog({
                         campaign_id: id, user_id: userId, character_name: 'System',
                         label: `🎒 ${characterName} looted ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} from ${objectName}`,

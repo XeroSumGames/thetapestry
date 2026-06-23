@@ -10,7 +10,7 @@
 
 ### 🎮 PLAYTEST NOTES 2026-06-23 (recorder marks, session 01-18-24) - SPEC LOCKED, TO SHIP
 All decisions confirmed by Xero 2026-06-23. Build order: loot-action -> ping -> pistol-whip -> loot-bullets -> Disarm -> hidden-NPC-fog. Gus parked. Weapons audit separate.
-- [ ] **[MECHANIC] Loot/Search costs 1 action, COMBAT-ONLY** - out of combat it's free.
+- [x] **[SHIPPED] Loot/Search costs 1 action, COMBAT-ONLY** - searching a container charges the active combatant 1 action, deduped per container per combat (grab everything inside for free), free out of combat. `searchedContainersRef` + `chargeContainerSearch()` wired into both ObjectCard loot paths (onLoot/onSearchEmpty x3 sites). Corpse "Search Remains" already charged; this closes the object/container gap.
 - [ ] **[FEATURE] Player PING auto-centers the map to the PING LOCATION for all other viewers.**
 - [ ] **[FEATURE] Pistol-whip: melee with an equipped RANGED weapon** - damage `2+1d3` blunt (improvised); to-hit uses **Melee Combat** skill ("swinging any piece of metal is melee"). NOTE: needs an isMelee OVERRIDE in the damage calc (page.tsx ~5008 keys isMelee off getWeaponByName(name).category, which is 'ranged' for a gun) so target defense uses PHY not DEX and it counts as blunt.
 - [ ] **[FEATURE] Loot bullets: a looted ranged weapon comes with `1d6 - 1` rounds** (0-5, so a chance it's empty) of its ammo type. No standalone loose-ammo on a plain search.
