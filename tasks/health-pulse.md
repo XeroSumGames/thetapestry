@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-23 09:07 UTC
+
+**Status:** DRIFT (carry-forward #29)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-23T06:10 UTC)
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — 7 days since last session (Test Bed S24, 2026-06-16); `roll-helpers.ts` touched in last 3 days for unrelated narrative fix, stress-check path still unverified
+- HOPED-FOR: FI Insight Die AWARD path — 7 days, no code touch
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — 7 days, no code touch
+
+**Action:** HOPED-FOR trio stale 7 days. Next playtest target: trigger a Stress Check that exercises one of the 8 uncaptured strings (HEAL/UNJAM/REPAIR etc.) and watch the feed row for a narrative.
+
+---
+
 ## 2026-06-23 06:07 UTC
 
 **Status:** DRIFT (carry-forward #28 — 26 new commits since #27: `f73d193`..`a6abd4f`)
