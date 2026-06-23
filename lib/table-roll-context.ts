@@ -233,7 +233,7 @@ export function resolveTargetDefense(
  */
 export function computeAttackCmod(
   targetName: string,
-  weapon: { weaponName: string; conditionCmod?: number | null },
+  weapon: { weaponName: string; conditionCmod?: number | null; forceMelee?: boolean | null },
   ctx: AttackCmodCtx,
 ): { net: number; sources: CmodSources } {
   const activeEntry = ctx.initiative.find(e => e.is_active)
@@ -249,7 +249,9 @@ export function computeAttackCmod(
     }
   }
   const w = getWeaponByName(weapon.weaponName)
-  const isMelee = w?.category === 'melee'
+  // forceMelee = pistol-whip: a ranged weapon swung as an improvised club,
+  // so it defends vs PHY (melee) not DEX (ranged).
+  const isMelee = !!weapon.forceMelee || w?.category === 'melee'
   const def = resolveTargetDefense(targetName, isMelee, ctx)
   const myInitEntry = ctx.initiative.find(ie =>
     (activeEntry?.character_id && ie.character_id === activeEntry.character_id) ||

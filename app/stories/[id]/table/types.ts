@@ -65,6 +65,10 @@ export interface WeaponContext {
   traitCmod?: number
   traitLabel?: string
   traits?: string[]
+  /** Improvised melee with a RANGED weapon (pistol-whip): forces melee
+   *  resolution - PHY defense, +PHY damage, blunt (no wound infection) -
+   *  even though the weapon's catalog category is ranged. */
+  forceMelee?: boolean
 }
 
 export interface PendingRoll {

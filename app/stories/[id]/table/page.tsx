@@ -5027,7 +5027,7 @@ export default function TablePage() {
     if (pendingRoll?.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
       const weapon = pendingRoll.weapon
       const w = getWeaponByName(weapon.weaponName)
-      const isMelee = w?.category === 'melee' || weapon.weaponName === 'Unarmed'
+      const isMelee = !!weapon.forceMelee || w?.category === 'melee' || weapon.weaponName === 'Unarmed'
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
       const targetNpcObj = !targetEntry
@@ -5051,7 +5051,7 @@ export default function TablePage() {
 
       // Apply damage to target
       if (targetEntry?.liveState) {
-        if (finalWP > 0 && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetEntry.character.name)
+        if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetEntry.character.name)
         const tNewWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const tNewRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
         const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
@@ -5077,7 +5077,7 @@ export default function TablePage() {
           })
         }
       } else if (targetNpcObj) {
-        if (finalWP > 0 && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetNpcObj.name)
+        if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetNpcObj.name)
         const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
         const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
         const tNewWP = Math.max(0, tNpcWP - finalWP)
@@ -6260,6 +6260,23 @@ export default function TablePage() {
                       handleRollRequest(`${activeEntry.character_name} - Attack (${mw.name})`, amod, smod, { weaponName: mw.name, damage: mw.damage, rpPercent: mw.rpPercent, conditionCmod: 0, traits: mw.traits ?? [] })
                     }}
                       style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Melee ({mw.name})</button>
+                  ) : (w && w.category === 'ranged') ? (
+                    // Pistol-whip: no carried melee weapon, but an equipped ranged
+                    // weapon can be swung as an improvised club. Blunt 2+1d3, Melee
+                    // Combat to-hit, forceMelee so it defends vs PHY (not DEX) and
+                    // lands blunt (no wound infection). Per Xero 2026-06-23.
+                    <button onClick={() => {
+                      clearAimIfActive(activeEntry.id)
+                      const rapid = charEntry?.character.data?.rapid ?? {}
+                      const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                      const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                      const smod = npcAttacker
+                        ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Melee Combat')?.level ?? 0 : 0)
+                        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
+                      handleRollRequest(`${activeEntry.character_name} - Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: '2+1d3', rpPercent: 100, conditionCmod: 0, traits: [], forceMelee: true })
+                    }}
+                      title={`Pistol-whip - improvised melee strike with your ${w.name} (blunt)`}
+                      style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Melee ({w.name})</button>
                   ) : (
                     <button disabled title="No melee weapon in inventory" style={disabledBtn('#242424', '#f5f2ee', '#3a3a3a')}>Melee</button>
                   )
