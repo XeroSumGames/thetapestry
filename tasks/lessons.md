@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## PostgREST embedded joins require FK to public.profiles, not auth.users (2026-06-23)
+
+`pregen_library.author_id` pointed to `auth.users(id)`. The Supabase data layer called `.select('*, profiles!pregen_library_author_id_fkey(username)')`. This produced PGRST200: "Could not find a relationship between 'pregen_library' and 'profiles' in the schema cache." at the story lobby - discovered in the 2026-06-23 playtest logs.
+
+Root cause: PostgREST resolves embedded joins exclusively through public-schema FKs. `auth.users` is a private schema; even though `profiles.id` references `auth.users.id` via CASCADE, a FK that points DIRECTLY to `auth.users` is invisible to the join resolver.
+
+**Rule:** Any table column that will be used in an embedded join with `.select('*, profiles!fk_name(col)')` MUST have its FK pointing to `public.profiles(id)`, not `auth.users(id)`. Cascade semantics are preserved: `profiles.id` cascades from `auth.users`, so SET NULL on the child still fires correctly when the user is deleted. Fix: drop + recreate the FK targeting `public.profiles`. Also run `NOTIFY pgrst, 'reload schema'` after DDL changes to flush the PostgREST schema cache without waiting for the next connection. Fixed in `sql/fix-pregen-author-fkey.sql`, commit `47380523`.
+
 ## A feature flag honored at ONE surface is not "wired" - trace it through every landing point (2026-06-22)
 
 Observer mode (`campaign_members.observer`) was correctly respected at the table (player-bar filter, combat-slot filter, presence) but the JOIN flow dropped observers at the player **lobby**, which had zero `observer` branch - so an observer saw the full "pick a survivor" onboarding instead of watching silently. Two compounding gaps: (1) the join page redirected observers to `/stories/[id]` (lobby) instead of `/stories/[id]/table`; (2) the 23505 "already a member" branch did a no-op insert that silently dropped the observer flag, so an existing member who followed the observer link never actually became one.
