@@ -8,6 +8,15 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
+### 🎮 PLAYTEST NOTES 2026-06-23 (recorder marks, session 01-18-24) - TO TRIAGE/SHIP
+- [ ] **[FEATURE] Player PING should auto-center the map to that location for everyone** - currently a ping doesn't recenter other viewers' maps. (Mark text truncated - confirm exact intent.)
+- [ ] **[INVESTIGATE/UX] How to place an NPC (Dylan) on the map hidden from players** - hidden_from_players + hidden tokens already exist (InitiativeBar HIDDEN chip + Reveal); likely a discoverability gap or the GM-place-hidden flow isn't obvious. Verify the flow works end to end.
+- [ ] **[BUG/INVESTIGATE] Disconnect between EQUIP WEAPON / INVENTORY / LOOT (Gus)** - some state-sync issue between equipping a weapon, the inventory panel, and loot. Vague - needs repro.
+- [ ] **[FEATURE] Char with a ranged weapon equipped should be able to melee with it (pistol-whip)** - the Melee button currently only surfaces a secondary MELEE inventory weapon; a holstered pistol/ranged should allow an improvised melee strike.
+- [ ] **[FEATURE - needs canon rules from Xero] DISARM combat mechanic** - new action; needs the rules (opposed check? skill? what happens to the weapon).
+- [ ] **[MECHANIC - needs canon decision] Loot/Search should consume an action** - should it cost 1 action always, or only during active combat?
+- [ ] **[FEATURE] Loot should include individual bullets/ammo for ranged weapons** - loot generation should drop loose rounds.
+
 ### 🐛 SESSION FIXES 2026-06-22 (HP)
 - [x] **[SHIPPED] Log trimming: secondary-melee-weapon attack showed the raw label** - the "Melee (weapon)" button (secondary melee weapon) logged `X - Melee (weapon)`, but the rolls-feed attack-narrative regex only matches Attack/Charge/Subdue/etc - not "Melee" - so it dumped the raw label instead of narrativizing. Changed the LOG label to `X - Attack (weapon)` (button text stays "Melee (weapon)"); it now reads "X Successfully Attacked Y using a Makeshift Club" like the primary attack. Nothing keys off the "Melee" label word. `app/stories/[id]/table/page.tsx:6234`.
 - [x] **[SHIPPED] Social-action target picker (Inspire/Cover Fire/Distract) restyled to match the standard modals** - was an ad-hoc 220-320px panel with a single small red header and 0.7 backdrop. Now matches RollModal chrome: eyebrow (action) + 20px title "Select Target", 340px / 1.5rem padding / boxShadow, 0.85 backdrop, roomier target buttons. One shared modal so it fixes all three social actions. `app/stories/[id]/table/page.tsx`. (Sibling Coordinate modal nearby could get the same treatment if wanted.)
