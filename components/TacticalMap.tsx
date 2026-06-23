@@ -833,7 +833,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const gx = p?.gx ?? (p as any)?.payload?.gx
         const gy = p?.gy ?? (p as any)?.payload?.gy
         const color = p?.color ?? (p as any)?.payload?.color ?? '#EF9F27'
-        if (gx != null && gy != null) setPing({ gx, gy, t: 0, color, count: 3 })
+        if (gx != null && gy != null) {
+          setPing({ gx, gy, t: 0, color, count: 3 })
+          // Auto-center the receiver's map on the ping (playtest 2026-06-23).
+          // Broadcasts don't echo to the sender, so only OTHER viewers recenter.
+          centerOnCell(gx, gy)
+        }
       },
     },
   })
@@ -866,6 +871,28 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         container.scrollLeft = Math.max(0, (cw - container.clientWidth) / 2)
         container.scrollTop = Math.max(0, (ch - container.clientHeight) / 2)
       }
+    }, 0)
+  }
+
+  // Scroll the viewport so a specific grid cell sits at center. Mirrors
+  // centerViewport's math but targets an explicit cell (used by the ping
+  // auto-center so a received ping snaps everyone to the same spot).
+  function centerOnCell(cellX: number, cellY: number, rawZoomOverride?: number) {
+    const container = containerRef.current
+    const canvas = canvasRef.current
+    if (!container || !canvas) return
+    setTimeout(() => {
+      if (!container || !canvas) return
+      const s = sceneRef.current
+      const cs = getCellSize()
+      const gridW = s ? s.grid_cols * cs : 0
+      const gridH = s ? s.grid_rows * cs : 0
+      const rawZ = rawZoomOverride ?? zoom
+      const scale = gridW > 0 ? effectiveScale(container.clientWidth, gridW, rawZ) : rawZ > 0 ? rawZ : 1
+      const cw = s ? Math.max(container.clientWidth, gridW * scale) : canvas.width
+      const ch = s ? Math.max(container.clientHeight, gridH * scale) : canvas.height
+      const { left, top } = centerScrollOnCell({ cellX, cellY, cellPx: cs, zoom: scale, canvasW: cw, canvasH: ch, viewW: container.clientWidth, viewH: container.clientHeight })
+      container.scrollLeft = left; container.scrollTop = top
     }, 0)
   }
 
