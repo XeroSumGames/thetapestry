@@ -59,6 +59,12 @@ export default function Sidebar() {
   const [presentUsernames, setPresentUsernames] = useState<string[]>([])
   const [presenceHover, setPresenceHover] = useState(false)
   const presenceRef = useRef<any>(null)
+  // Delta-cache id -> username so a presence 'sync' only queries profiles for
+  // ids we haven't resolved yet (scale: every join/leave platform-wide fires a
+  // sync; the old code re-queried ALL present ids each time). Plus a debounce
+  // timer so a burst of syncs collapses into one resolve.
+  const usernameCacheRef = useRef<Map<string, string>>(new Map())
+  const presenceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -86,17 +92,29 @@ export default function Sidebar() {
       // count, so we skip the username lookup for them.
       const isThriver = roleIsThriver(profile)
       presenceRef.current = supabase.channel('global_presence', { config: { presence: { key: user.id } } })
-      presenceRef.current.on('presence', { event: 'sync' }, async () => {
+      presenceRef.current.on('presence', { event: 'sync' }, () => {
         const ids = Object.keys(presenceRef.current.presenceState())
+        // Count is cheap and wanted immediately - no debounce.
         setOnlineCount(ids.length)
-        if (isThriver && ids.length > 0) {
-          const { data: rows } = await supabase.from('profiles').select('id, username').in('id', ids)
-          // Stable sort so the popup doesn't re-shuffle on every sync.
-          const names = (rows ?? []).map((r: any) => r.username as string).sort((a: string, b: string) => a.localeCompare(b))
+        if (!isThriver) { setPresentUsernames([]); return }
+        // Debounce + delta-resolve the username roster. Collapses a burst of
+        // syncs into one query, and only fetches ids not already cached.
+        if (presenceDebounceRef.current) clearTimeout(presenceDebounceRef.current)
+        presenceDebounceRef.current = setTimeout(async () => {
+          const cache = usernameCacheRef.current
+          const missing = ids.filter(id => !cache.has(id))
+          if (missing.length > 0) {
+            const { data: rows } = await supabase.from('profiles').select('id, username').in('id', missing)
+            for (const r of (rows ?? [])) cache.set((r as any).id, (r as any).username as string)
+          }
+          // Build the roster from cache for the currently-present ids only, so
+          // someone who left drops off even though their name stays cached.
+          const names = ids
+            .map(id => cache.get(id))
+            .filter((n): n is string => !!n)
+            .sort((a, b) => a.localeCompare(b))
           setPresentUsernames(names)
-        } else {
-          setPresentUsernames([])
-        }
+        }, 1200)
       })
       presenceRef.current.subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
@@ -105,7 +123,10 @@ export default function Sidebar() {
       })
     }
     load()
-    return () => { if (presenceRef.current) supabase.removeChannel(presenceRef.current) }
+    return () => {
+      if (presenceDebounceRef.current) clearTimeout(presenceDebounceRef.current)
+      if (presenceRef.current) supabase.removeChannel(presenceRef.current)
+    }
   }, [])
 
   if (!loaded) return null
