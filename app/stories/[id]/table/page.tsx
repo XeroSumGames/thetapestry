@@ -6231,7 +6231,11 @@ export default function TablePage() {
                       const smod = npcAttacker
                         ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Melee Combat')?.level ?? 0 : 0)
                         : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
-                      handleRollRequest(`${activeEntry.character_name} - Melee (${mw.name})`, amod, smod, { weaponName: mw.name, damage: mw.damage, rpPercent: mw.rpPercent, conditionCmod: 0, traits: mw.traits ?? [] })
+                      // Label uses "Attack (...)" - same as the primary attack -
+                      // so the rolls feed narrativizes it ("X Successfully Attacked
+                      // Y using a Makeshift Club") instead of dumping the raw
+                      // "X - Melee (...)" label. The button text below stays "Melee".
+                      handleRollRequest(`${activeEntry.character_name} - Attack (${mw.name})`, amod, smod, { weaponName: mw.name, damage: mw.damage, rpPercent: mw.rpPercent, conditionCmod: 0, traits: mw.traits ?? [] })
                     }}
                       style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Melee ({mw.name})</button>
                   ) : (
