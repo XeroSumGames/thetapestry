@@ -8,14 +8,16 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
-### 🎮 PLAYTEST NOTES 2026-06-23 (recorder marks, session 01-18-24) - TO TRIAGE/SHIP
-- [ ] **[FEATURE] Player PING should auto-center the map to that location for everyone** - currently a ping doesn't recenter other viewers' maps. (Mark text truncated - confirm exact intent.)
-- [ ] **[INVESTIGATE/UX] How to place an NPC (Dylan) on the map hidden from players** - hidden_from_players + hidden tokens already exist (InitiativeBar HIDDEN chip + Reveal); likely a discoverability gap or the GM-place-hidden flow isn't obvious. Verify the flow works end to end.
-- [ ] **[BUG/INVESTIGATE] Disconnect between EQUIP WEAPON / INVENTORY / LOOT (Gus)** - some state-sync issue between equipping a weapon, the inventory panel, and loot. Vague - needs repro.
-- [ ] **[FEATURE] Char with a ranged weapon equipped should be able to melee with it (pistol-whip)** - the Melee button currently only surfaces a secondary MELEE inventory weapon; a holstered pistol/ranged should allow an improvised melee strike.
-- [ ] **[FEATURE - needs canon rules from Xero] DISARM combat mechanic** - new action; needs the rules (opposed check? skill? what happens to the weapon).
-- [ ] **[MECHANIC - needs canon decision] Loot/Search should consume an action** - should it cost 1 action always, or only during active combat?
-- [ ] **[FEATURE] Loot should include individual bullets/ammo for ranged weapons** - loot generation should drop loose rounds.
+### 🎮 PLAYTEST NOTES 2026-06-23 (recorder marks, session 01-18-24) - SPEC LOCKED, TO SHIP
+All decisions confirmed by Xero 2026-06-23. Build order: loot-action -> ping -> pistol-whip -> loot-bullets -> Disarm -> hidden-NPC-fog. Gus parked. Weapons audit separate.
+- [ ] **[MECHANIC] Loot/Search costs 1 action, COMBAT-ONLY** - out of combat it's free.
+- [ ] **[FEATURE] Player PING auto-centers the map to the PING LOCATION for all other viewers.**
+- [ ] **[FEATURE] Pistol-whip: melee with an equipped RANGED weapon** - damage `2+1d3` blunt (improvised); to-hit uses **Melee Combat** skill ("swinging any piece of metal is melee"). NOTE: needs an isMelee OVERRIDE in the damage calc (page.tsx ~5008 keys isMelee off getWeaponByName(name).category, which is 'ranged' for a gun) so target defense uses PHY not DEX and it counts as blunt.
+- [ ] **[FEATURE] Loot bullets: a looted ranged weapon comes with `1d6 - 1` rounds** (0-5, so a chance it's empty) of its ammo type. No standalone loose-ammo on a plain search.
+- [ ] **[FEATURE] DISARM combat action** - opposed check; the ROLLER picks Unarmed or Athletics via a **dropdown** (both sides). On a win the disarmed weapon **drops to the ground as a map TOKEN** at the defender's cell; the next combatant in initiative can pick it up and spend another action to READY it. Disarm **costs 1 action**.
+- [ ] **[FEATURE] Hidden-NPC fog occlusion** - a token set to SHOW renders for a player ONLY when that player's character can see the cell (not fogged / has line-of-sight); otherwise hidden even with SHOW on. Rides on the per-player vision system (settles the Group/Individual lighting too).
+- [ ] **[BUG - PARKED, Xero watching] Gus couldn't ready an inventory gun** - "Equip from Inventory" list (page.tsx:9527) filters `inv.filter(i => getWeaponByName(i.name))`, so a gun whose inventory name doesn't exactly match a catalog weapon never appears; a looted (catalog-named) gun does. Xero will watch for repro detail (custom-typed vs from-catalog name).
+- [ ] **[AUDIT - Xero + HP] Revisit the weapons list for completeness + damage consistency** - add missing weapons (e.g. **Revolver**), then analyze damage values across the catalog for internal consistency/balance (`lib/weapons.ts`). Damage values are Xero's canon call.
 
 ### 🐛 SESSION FIXES 2026-06-22 (HP)
 - [x] **[SHIPPED] Log trimming: secondary-melee-weapon attack showed the raw label** - the "Melee (weapon)" button (secondary melee weapon) logged `X - Melee (weapon)`, but the rolls-feed attack-narrative regex only matches Attack/Charge/Subdue/etc - not "Melee" - so it dumped the raw label instead of narrativizing. Changed the LOG label to `X - Attack (weapon)` (button text stays "Melee (weapon)"); it now reads "X Successfully Attacked Y using a Makeshift Club" like the primary attack. Nothing keys off the "Melee" label word. `app/stories/[id]/table/page.tsx:6234`.
