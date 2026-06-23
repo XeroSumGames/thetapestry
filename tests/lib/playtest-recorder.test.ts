@@ -172,11 +172,11 @@ describe('playtest-recorder redact() body-strip rule', () => {
       scene_id: 'scene-abc',
       scene_kind: 'tactical',
       open_modal: null,
-      selected_token_id: null,
+      selected_piece_id: 'piece-uuid-9',
       selected_npc_id: null,
       combat_active: true,
       my_character_id: 'char-xyz',
-      token_count: 5,
+      piece_count: 5,
       initiative_count: 3,
     })
     expect(ev.kind).toBe('snapshot')
@@ -184,6 +184,11 @@ describe('playtest-recorder redact() body-strip rule', () => {
     expect(ev.data.active_combatant_name).toBe('Knox')
     expect(ev.data.my_character_id).toBe('char-xyz')
     expect(ev.data.combat_active).toBe(true)
+    // Regression guard: these used to be selected_token_id / token_count and
+    // got eaten by redact()'s 'token' substring rule. Renamed off "token" so
+    // they survive - the snapshot's whole point is diagnosing piece state.
+    expect(ev.data.selected_piece_id).toBe('piece-uuid-9')
+    expect(ev.data.piece_count).toBe(5)
   })
 
   it('slow net call gets slow:true flag', async () => {

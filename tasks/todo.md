@@ -8,6 +8,9 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
+### 🐛 SESSION FIXES 2026-06-23 (HP)
+- [x] **[SHIPPED] Recorder snapshot over-redaction (Puffer Fish handoff)** - `redact()` strips any key containing 'token', so the snapshot's `selected_token_id` / `token_count` came back "[redacted]", defeating the diagnostic. Fix A: renamed to `selected_piece_id` / `piece_count` (off the 'token' substring) in `usePlaytestSnapshot.ts` + page.tsx provider + the test. redact() left dumb-and-safe (still strips real auth tokens). Added the survival assertion the original test was missing. TSC + 14 recorder tests green.
+
 ### 🎮 PLAYTEST NOTES 2026-06-23 (recorder marks, session 01-18-24) - SPEC LOCKED, TO SHIP
 All decisions confirmed by Xero 2026-06-23. Build order: loot-action -> ping -> pistol-whip -> loot-bullets -> Disarm -> hidden-NPC-fog. Gus parked. Weapons audit separate.
 - [x] **[SHIPPED] Loot/Search costs 1 action, COMBAT-ONLY** - searching a container charges the active combatant 1 action, deduped per container per combat (grab everything inside for free), free out of combat. `searchedContainersRef` + `chargeContainerSearch()` wired into both ObjectCard loot paths (onLoot/onSearchEmpty x3 sites). Corpse "Search Remains" already charged; this closes the object/container gap.

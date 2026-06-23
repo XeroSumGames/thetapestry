@@ -3657,11 +3657,11 @@ export default function TablePage() {
     actions_remaining: _ase?.actions_remaining ?? null,
     scene_id: sharedSceneId, scene_kind: showTacticalMap ? 'tactical' : 'campaign',
     open_modal: _om,
-    selected_token_id: (selectedEntry as any)?.stateId ?? null,
+    selected_piece_id: (selectedEntry as any)?.stateId ?? null,
     selected_npc_id: [...selectedNpcIds][0] ?? null,
     combat_active: combatActive,
     my_character_id: (entries.find((e: any) => e.userId === userId) as any)?.character?.id ?? null,
-    token_count: mapTokens.length, initiative_count: initiativeOrder.length,
+    piece_count: mapTokens.length, initiative_count: initiativeOrder.length,
   })
 
   async function handlePublishNpc(npc: CampaignNpc) {

@@ -12,11 +12,14 @@ export interface PlaytestSnapshotFields {
   scene_id: string | null
   scene_kind: 'tactical' | 'campaign'
   open_modal: string | null
-  selected_token_id: string | null
+  // Renamed off "*token*" so the recorder's redact() (which strips any key
+  // containing 'token' as an auth-token guard) doesn't redact these
+  // game-domain fields. They're a scene-piece UUID + an int count - safe.
+  selected_piece_id: string | null
   selected_npc_id: string | null
   combat_active: boolean
   my_character_id: string | null
-  token_count: number
+  piece_count: number
   initiative_count: number
 }
 
