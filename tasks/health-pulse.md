@@ -10,6 +10,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-24 00:07 UTC
+
+**Status:** DRIFT (carry-forward #34 — no new app commits since #33)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (latest 2026-06-23T21:08 UTC — 1 new success since #33)
+
+**Drift (carry-forward, unchanged):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~31 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — ~8 days
+- HOPED-FOR: FI Insight Die AWARD path — ~8 days, no code touch
+- Recorder observability `[ ]` stale-as-open: `b043904` shipped Items 1-4, checkbox unchecked
+
+**Action:** health-endpoint DoS is the only escalating signal — 7th consecutive run deferred (~7 days to Beta-500). Route to HP: Upstash sliding window on `/api/health`. HOPED-FOR trio drains at Beta-500 dry-run (~2026-07-01).
+
+---
+
 ## 2026-06-23 21:06 UTC
 
 **Status:** DRIFT (carry-forward #33 — 1 new app commit since #32: rolls-feed narrative dedup fix)
