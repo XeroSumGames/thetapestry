@@ -10,6 +10,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-24 12:08 UTC
+
+**Status:** DRIFT (carry-forward #37 — no new app commits since #36)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** verified via MCP — all 5 runs pass (latest 2026-06-24T09:09 UTC)
+
+**Drift (carry-forward, unchanged):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~34 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — ~11 days; **drain target Beta-500 dry-run ~2026-07-01 = 7 days**
+- HOPED-FOR: FI Insight Die AWARD path — ~11 days, no code touch
+- Recorder observability `[ ]` stale-as-open: `b043904` shipped Items 1-4, checkbox unchecked
+
+**Action:** Stress 12-string is 7 days to Beta-500 drain target — needs a live session with HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAVIGATE rolls. health-endpoint DoS deferred 10th consecutive run — route to HP: Upstash sliding window on `/api/health`.
+
+---
+
 ## 2026-06-24 09:07 UTC
 
 **Status:** DRIFT (carry-forward #36 — no new app commits since #35)
