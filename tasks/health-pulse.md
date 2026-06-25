@@ -10,6 +10,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-25 00:07 UTC
+
+**Status:** DRIFT (carry-forward #41 — no new app commits since #37)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** all 5 runs pass (latest 2026-06-24T21:08 UTC)
+
+**Drift (carry-forward, unchanged from #40):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~31 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — ~9 days; **drain target Beta-500 dry-run = ~5.8 days out (2026-07-01)**
+- HOPED-FOR: FI Insight Die AWARD path — ~9 days, no code touch
+- Recorder observability `[ ]` stale-as-open: `b043904` shipped Items 1-4, checkbox unchecked
+
+**Action:** Same as #40 — Beta-500 now ~5.8 days out. HOPED-FOR trio needs live session before 7/1.
+
+---
+
 ## 2026-06-24 21:06 UTC
 
 **Status:** DRIFT (carry-forward #40 — no new app commits since #37)
