@@ -10,6 +10,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-26 15:08 UTC
+
+**Status:** DRIFT (carry-forward #50 — no new commits; gates clean; HOPED-FOR trio unchanged)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** all 5 runs pass (latest 2026-06-26T12:12 UTC)
+
+**Drift (carry-forward, unchanged since #49):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~33 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — ~10 days; **drain target Beta-500 dry-run ~4.4 days out (2026-07-01)**
+- HOPED-FOR: FI Insight Die AWARD path — ~16 days, no code touch
+- T3-6 `[ ]` (jargon inline tooltips CDP/RAPID/AMod/SMod/CMod): HelpTooltip in wizard steps covers these — carry-forward; checkbox may need audit-correction
+
+**Action:** No new issues. T3-6 checkbox still needs audit-correction. Beta-500 dry-run 2026-07-01 is the drain event for HOPED-FOR trio.
+
+---
+
 ## 2026-06-26 12:09 UTC
 
 **Status:** DRIFT (carry-forward #49 — gates clean; recorder stale-as-open claim corrected)
