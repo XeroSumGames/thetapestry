@@ -10,6 +10,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-26 12:09 UTC
+
+**Status:** DRIFT (carry-forward #49 — gates clean; recorder stale-as-open claim corrected)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** all 5 runs pass (latest 2026-06-26T09:10 UTC)
+
+**Drift (carry-forward):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~33 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — ~10 days; **drain target Beta-500 dry-run ~4.6 days out (2026-07-01)**
+- HOPED-FOR: FI Insight Die AWARD path — ~10 days, no code touch
+- T3-6 `[ ]` (jargon inline tooltips CDP/RAPID/AMod/SMod/CMod): HelpTooltip used in wizard steps for those terms — carry-forward, checkbox may need audit-correction
+
+**Correction from prior entries:**
+- Prior pulses cited `b043904` as "shipped recorder Items 1-4" — that commit hash does not exist in the repo. `'net'`/`'realtime'` event kinds are typed in `lib/playtest-recorder.ts:38` but not wired (zero call sites). Recorder observability todo checkbox is CORRECTLY open, not stale-as-open. Removing from stale-as-open list.
+
+**Action:** T3-6 tooltip checkbox needs audit-correction. Beta-500 dry-run 2026-07-01 drains HOPED-FOR trio.
+
+---
+
 ## 2026-06-26 09:09 UTC
 
 **Status:** DRIFT (carry-forward #48 — gates clean; one new stale-as-open finding)
