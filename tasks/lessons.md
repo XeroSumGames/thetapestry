@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## An RLS audit must also scan for tables with RLS DISABLED, not just loose policies (2026-06-23)
+
+My pre-Beta-500 RLS sub-audit walked `pg_policies` for over-broad policies (the `auth.role()='authenticated'` / `USING(true)` shadow-policy class) and found a real HIGH cluster. But it MISSED `public.pregen_campaign_map` entirely - because that table had RLS turned OFF, so it has zero policies and a `pg_policies`-based scan never surfaces it. Supabase's own database linter (`0013_rls_disabled_in_public`) caught it: anon AND authenticated both held full I/U/D grants, so with RLS off an unauthenticated request could wipe every pregen<->campaign mapping via REST. Fix: `sql/pregen-campaign-map-rls-2026-06-23.sql` (enable RLS + author/GM/thriver policies, reusing pregen_library's RLS via an EXISTS subquery for the read path).
+
+**Rule:** any RLS audit runs TWO scans, not one - (1) `pg_class.relrowsecurity=false` for public relkind='r' tables (RLS disabled entirely), THEN (2) `pg_policies` for loose/shadow policies on the rest. A no-policy table is invisible to scan #2 and is the more dangerous of the two. Also: run the Supabase advisor/linter as a standing pre-ship check - it catches exactly this class for free.
+
 ## Loot wrote weapons to a dead slot - verify the FULL pickup loop, not just the drop (2026-06-23)
 
 Building Disarm (drop a foe's weapon as a lootable ground token "so the next combatant loots + Readies it"), I traced the loop end-to-end before trusting the handoff's "all helpers confirmed to exist." Both loot paths (`ObjectCard` self-loot/give, `CampaignObjects` give/loot-all) pushed the weapon NAME into `character.data.equipment[]` - a legacy string list that NOTHING in combat reads. Ready Weapon's "Equip from Inventory", the Melee action, and encumbrance all read `inventory[]` (`InventoryItem[]`). So every looted weapon was functionally inert: it could never be Readied, fired, or meleed. The same gap silently broke loot-bullets and NPC-corpse loot.
