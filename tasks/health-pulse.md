@@ -10,6 +10,32 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-26 06:07 UTC
+
+**Status:** DRIFT (#48 — 3 new Puffer Fish commits; app gates green; HOPED-FOR trio unchanged)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** all 5 runs pass (latest 2026-06-26T03:52 UTC)
+
+**New commits since #47:**
+- `2af1871` perf+sec: index 11 hot user_id/campaign_id FKs + pin search_path on 33 SECURITY DEFINER functions
+- `7b78b3c` docs: Supabase advisor full triage (search_path, unindexed FKs, multi-policy)
+- `04527d9` fix(rls): enable RLS on pregen_campaign_map (Supabase linter 0013)
+
+**Drift (carry-forward, unchanged):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~33 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — ~11 days; **drain target Beta-500 dry-run = ~3.2 days out (2026-07-01)**
+- HOPED-FOR: FI Insight Die AWARD path — ~16 days, no code touch
+- Recorder observability `[ ]` stale-as-open: `b043904` shipped Items 1-4, checkbox unchecked
+- T2-6 `[ ]` (verify composite indexes): `2af1871` added user_id FK indexes — T2-6's asks (`roll_log/chat_messages (campaign_id,created_at)`, `campaign_npcs campaign_id`, `notifications.user_id`, `conversation_participants`) are a different set, still open
+
+**Action:** Beta-500 dry-run 2026-07-01 is the drain event for HOPED-FOR trio. T2-6 composite indexes still need a Puffer pass.
+
+---
+
 ## 2026-06-26 00:08 UTC
 
 **Status:** DRIFT (carry-forward #47 — no new app commits since #46)
