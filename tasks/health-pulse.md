@@ -10,6 +10,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-26 09:09 UTC
+
+**Status:** DRIFT (carry-forward #48 — gates clean; one new stale-as-open finding)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** all 5 runs pass (latest 2026-06-26T06:10 UTC)
+
+**Drift (carry-forward):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~33 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — ~11 days; **drain target Beta-500 dry-run = ~2.2 days out (2026-07-01)**
+- HOPED-FOR: FI Insight Die AWARD path — ~16 days, no code touch
+- Recorder observability `[ ]` stale-as-open: `b043904` shipped Items 1-4, checkbox unchecked (carry from #48)
+
+**New stale-as-open finding:**
+- T3-6 `[ ]` (jargon inline tooltips CDP/RAPID/AMod/SMod/CMod): `components/HelpTooltip.tsx` exists + is used in `wizard/StepSeven.tsx` + `wizard/StepAttr.tsx` for exactly these terms; component comment confirms "Used throughout character creation to explain RAPID attributes, skills, weapon traits, CDP / CMod / AMod / SMod." Strong evidence T3-6 shipped — checkbox needs audit-correction.
+
+**Action:** T3-6 checkbox likely needs checking off. Beta-500 dry-run 2026-07-01 is drain event for HOPED-FOR trio.
+
+---
+
 ## 2026-06-26 06:07 UTC
 
 **Status:** DRIFT (#48 — 3 new Puffer Fish commits; app gates green; HOPED-FOR trio unchanged)
