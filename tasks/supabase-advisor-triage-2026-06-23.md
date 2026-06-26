@@ -49,6 +49,6 @@ Per table+command+role, >1 permissive policy = each evaluated per row. Worst: `p
 ---
 
 ## Recommended action
-1. **P1 hot-FK indexes - do now** (safe, additive, reversible, real scale value; `campaigns(gm_user_id)` especially since the new RLS leans on it).
-2. **S1 search_path pin - do next, carefully** (generate the 33 ALTERs from the catalog, apply, smoke-test the write-path notify triggers).
-3. **Defer:** S2, P2, and the ~55 cold-FK indexes -> a LOW follow-up batch. Add the Supabase advisor/linter to the standing pre-ship checklist so this class is caught continuously (lesson logged 2026-06-23).
+1. **P1 hot-FK indexes - DONE 2026-06-23** (`sql/perf-fk-indexes-2026-06-23.sql`, applied live; 11 indexes CONCURRENTLY, all valid, 0 hot FKs still unindexed).
+2. **S1 search_path pin - DONE 2026-06-23** (`sql/definer-fn-search-path-2026-06-23.sql`, applied live; all 33 definer fns pinned to `public, extensions`, 0 remaining unpinned; verified `is_thriver()` callable + `notify_character_changed` fires clean in a rolled-back txn smoke test).
+3. **Defer (LOW follow-up batch):** S2 (23 non-definer fns), P2 (~42 multi-permissive policies), the ~55 cold-FK indexes. Add the Supabase advisor/linter to the standing pre-ship checklist so this class is caught continuously (lesson logged 2026-06-23).
