@@ -10,6 +10,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-28 21:06 UTC
+
+**Status:** DRIFT (carry-forward #66 — no new commits; gates clean; HOPED-FOR trio unchanged)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-06-28T18:08 UTC via MCP GitHub)
+
+**Drift (carry-forward, unchanged since #52):**
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — ~38 days, no code touch
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — drain target Beta-500 dry-run **~1.7 days out (2026-07-01)**
+- HOPED-FOR: FI Insight Die AWARD path — ~17 days, no code touch
+- T3-6 `[ ]` (jargon tooltips): carry-forward; checkbox may need audit-correction
+- Disarm live-verify still owed: `tasks/disarm-loot-testplan-2026-06-23.md` (shipped 2026-06-23, 2-client verify not confirmed)
+
+**Action:** No new app commits since June 25 Puffer indexes. Beta-500 dry-run 2026-07-01 (~1.7 days) — confirm dry-run is on track; HOPED-FOR trio + disarm verify drain on that session.
+
+---
+
 ## 2026-06-28 18:06 UTC
 
 **Status:** DRIFT (carry-forward #65 — no new commits; gates clean; HOPED-FOR trio unchanged)
