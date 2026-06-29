@@ -6,10 +6,18 @@ import { createClient } from '@supabase/supabase-js'
 // reachable, 503 if the DB ping fails. No auth required - uptime monitors
 // don't authenticate.
 //
-// The DB ping is a HEAD count against `profiles` with the anon key.
-// RLS will scope the count to 0 for an unauthed caller, but the round
-// trip still proves the DB is reachable and responding. Cost: one
-// indexed count query, no row payload returned.
+// The DB ping is a HEAD reachability probe against `profiles` with the anon
+// key. RLS scopes it to 0 visible rows for an unauthed caller, but the round
+// trip still proves the DB is reachable, authorizing, and responding. No
+// count is computed (the value was never read) - head + limit(1) keeps it O(1).
+//
+// DB-amplification guard (stability-audit 2026-06-29, M-1): this endpoint is
+// unauthenticated and unthrottled, so a flood of probes could amplify into a
+// flood of DB round-trips. A short in-memory success cache collapses that to
+// at most one DB ping per warm instance per CACHE_TTL_MS. ONLY success is
+// cached - a failing or over-TTL probe always re-checks the DB, so a real
+// outage still surfaces on the very next poll. The success response shape is
+// byte-identical cached vs live, so uptime monitors see no contract change.
 //
 // Output shape:
 //   { status: 'ok' | 'degraded', checks: { db: 'ok' | 'fail' }, ms: <int>, ts: <ISO> }
@@ -21,8 +29,17 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'  // never cache
 export const revalidate = 0
 
+const CACHE_TTL_MS = 10_000
+let cachedOkAt = 0  // epoch ms of the last successful DB ping (0 = none yet)
+
 export async function GET() {
   const start = Date.now()
+
+  // Serve a recent healthy result without touching the DB.
+  if (cachedOkAt && start - cachedOkAt < CACHE_TTL_MS) {
+    return NextResponse.json({ status: 'ok', checks: { db: 'ok' }, ms: Date.now() - start, ts: new Date().toISOString() })
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anon) {
@@ -33,7 +50,7 @@ export async function GET() {
   }
   const supabase = createClient(url, anon)
   try {
-    const { error } = await supabase.from('profiles').select('id', { count: 'exact', head: true })
+    const { error } = await supabase.from('profiles').select('id', { head: true }).limit(1)
     const ms = Date.now() - start
     if (error) {
       return NextResponse.json(
@@ -41,6 +58,7 @@ export async function GET() {
         { status: 503 },
       )
     }
+    cachedOkAt = Date.now()
     return NextResponse.json({ status: 'ok', checks: { db: 'ok' }, ms, ts: new Date().toISOString() })
   } catch {
     return NextResponse.json(
