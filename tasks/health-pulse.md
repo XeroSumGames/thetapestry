@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-29 18:06 UTC
+
+**Status:** DRIFT — 4 new security commits since last pulse; staged column-revoke requires HP PII rewire first; HOPED-FOR trio 13+ days unverified with Beta-500 ~1.2 days out.
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-06-29T17:29 UTC)
+
+**New since last pulse (landed 16:29–17:29 UTC today):**
+- `8c2412e` sec: PII RPCs — `get_profile_email` + `get_campaign_invite_code` live; column-revoke SQL staged; HP must rewire 3 email + 6 invite_code readers → see `tasks/handoff-hp-pii-revokes-2026-06-23.md`
+- `483e336` sec: sessions/campaign_members reads scoped + 3 storage buckets locked + portrait_bank
+- `e75f2a7` sec: find_campaign_by_invite_code RPC
+- `4f150fb` sec: Thriver self-escalation blocked + chat_messages whisper-scoped
+
+**Drift (carry-forward, unchanged since #52):**
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — drain target Beta-500 **~1.2 days out (2026-07-01)**
+- HOPED-FOR: FI Insight Die AWARD path — 13+ days no code touch
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — 38+ days no code touch
+- Disarm live-verify still owed: `tasks/disarm-loot-testplan-2026-06-23.md`
+- `check-realtime-wrap.mjs` still absent from scripts/ (stale-open todo)
+
+**Action:** HP rewire (email/invite_code readers → RPCs) must land BEFORE applying `sql/sec-pii-column-revokes-...-APPLY-AFTER-REWIRE.sql`. Handoff: `tasks/handoff-hp-pii-revokes-2026-06-23.md`. Beta-500 dry-run drains HOPED-FOR trio + disarm verify.
+
+---
+
 ## 2026-06-29 15:08 UTC
 
 **Status:** DRIFT (carry-forward #71 — no new commits; gates clean; HOPED-FOR trio unchanged; Beta-500 ~1.4 days out)
