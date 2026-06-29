@@ -85,3 +85,26 @@ this set == all campaigns columns minus invite_code, so `*` -> this list is loss
 None of the 3 read invite_code off the result anymore, so dropping it is safe. Once
 those ship, PF applies the campaigns half of `sql/sec-pii-column-revokes-2026-06-23-
 APPLY-AFTER-REWIRE.sql` (just the campaigns REVOKE+GRANT) and re-verifies the same way.
+
+---
+
+## HP DONE 2026-06-29 (`89ff1b84`) - campaigns select('*') converted, PF CLEARED to revoke
+
+All `campaigns.select('*')` converted to an explicit column list via a shared
+`CAMPAIGN_COLUMNS` const in `lib/data/campaigns.ts` (= the exact regrant set; a
+comment there says it must mirror this SQL if a column is ever added).
+
+**It was FIVE sites, not three.** A multi-line grep (`from('campaigns')` and
+`.select('*')` on separate lines) found two MORE that PF's list missed - both in
+`app/stories/page.tsx` (the My Stories GM list + player list). The original
+single-line grep couldn't see them; they would have 401'd the My Stories page on
+load post-revoke. All five now converted:
+- `lib/gm-kit.ts:60`
+- `app/stories/page.tsx` (gm list + player list)
+- `app/stories/[id]/page.tsx:141`
+- `app/stories/[id]/table/page.tsx:1227`
+
+tsc + 892 tests + arch/font/role gates green. **PF: cleared to apply the
+campaigns REVOKE+GRANT half.** When verifying, please load My Stories too (not
+just the table page) since that's where the two extra `*` reads lived. On
+success, close this out in active-lanes (Puffer row) + todo.md.
