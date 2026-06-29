@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-29 21:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-06-29T20:19 UTC)
+
+**New since 18:06 pulse (10 commits):**
+- `51d5f38` **PII gate CLOSED** — `campaigns.invite_code` revoke APPLIED; full 06-23 PII batch done (email + invite_code column revokes live). Closes the 18:06 warning about staged revoke.
+- `938e909` ops: log-visit M-2 body-cap deployed + smoke-verified live (3KB→413, normal→200)
+- 8 supporting sec/docs/handoff commits (PII rewire chain)
+
+**Drift:**
+- **vehicle popout broadcasts** — HOPED-FOR, last playtest 2026-06-16 (13 days); code in `lib/realtime/*` touched this week (sec/perf pass) but behavior not 2-client verified
+- **Stress Check 12-string narrative** — HOPED-FOR, 13 days, no code changes; 8 strings (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) unverified
+- **FI Insight Die award path** — HOPED-FOR, 13 days; `useRollResolution.ts:264` increment never fired in live play
+- **vehicles 3s poll** — `page.tsx:3098` `setInterval(refetchVehicles, 3000)` still live; scale issue found+routed to HP today (`tasks/finding-vehicles-poll-scale-2026-06-29.md`)
+
+**Action:** PII revoke is closed (good). Next playtest should drain HOPED-FOR trio. HP: prioritize vehicles poll removal before Beta-500.
+
+---
+
 ## 2026-06-29 18:06 UTC
 
 **Status:** DRIFT — 4 new security commits since last pulse; staged column-revoke requires HP PII rewire first; HOPED-FOR trio 13+ days unverified with Beta-500 ~1.2 days out.
