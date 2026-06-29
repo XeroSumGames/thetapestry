@@ -49,3 +49,39 @@ in one quick commit - then you re-run.
 
 profiles has no `select('*')` readers (confirmed), so the email revoke is
 unconditionally safe once the 3 email readers ship (they have).
+
+---
+
+## RESULT 2026-06-29 (PF applied) - email DONE, invite_code BOUNCED BACK TO HP
+
+**profiles.email revoke: APPLIED LIVE + verified.** `sql/sec-pii-revoke-profiles-email-2026-06-29.sql`.
+Rolled-back JWT impersonation confirms: `SELECT email FROM profiles` -> permission
+denied (leak closed); a real own-profile read of granted columns (id/username/role/
+avatar_url) with claims -> returns the row (no breakage); `get_profile_email` RPC ->
+returns the email (legit path intact). Re-verified no `profiles.select('*')` and no
+embedded `profiles(*)` first, so the `*` problem below cannot bite profiles.
+
+**campaigns.invite_code revoke: NOT applied - section 2's assumption was WRONG, routed
+back to HP.** I applied the campaigns half, tested the real REST path, and it BROKE:
+post-revoke `campaigns?select=*` returned `42501 permission denied for table campaigns`
+(HTTP 401) and stayed broken for 10s+ (not reload lag). This Supabase PostgREST does
+NOT omit an ungranted column from `select=*` - it errors. The authenticated role can
+read granted columns by EXPLICIT name (impersonation of `SELECT id, name` returns a
+row), so the fix is explicit column lists. I rolled back immediately (`GRANT SELECT ON
+public.campaigns TO anon, authenticated` + reload); verified `select=*` -> 200 restored.
+campaigns is back at baseline (functional, invite_code leak still open as it was all
+session).
+
+### HP: to land the invite_code half, convert these 3 `campaigns.select('*')` to explicit columns, then ping PF
+- `app/stories/[id]/page.tsx:141`
+- `app/stories/[id]/table/page.tsx:1227`
+- `lib/gm-kit.ts:60`
+
+Use the campaigns regrant set as the column list (everything EXCEPT invite_code):
+`id, name, description, setting, gm_user_id, status, created_at, session_status,
+session_count, session_started_at, map_style, map_center_lat, map_center_lng, vehicles,
+last_accessed_at, clock, start_canon_day, cover_image_url`. (Verified 2026-06-29 that
+this set == all campaigns columns minus invite_code, so `*` -> this list is lossless.)
+None of the 3 read invite_code off the result anymore, so dropping it is safe. Once
+those ship, PF applies the campaigns half of `sql/sec-pii-column-revokes-2026-06-23-
+APPLY-AFTER-REWIRE.sql` (just the campaigns REVOKE+GRANT) and re-verifies the same way.
