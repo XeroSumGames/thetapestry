@@ -9,13 +9,14 @@ Seam: `supabase.rpc('get_profile_email', { p_user_id })` (returns email only for
 3. **`app/moderate/users/[userId]/characters/page.tsx:38`** - `select('username, email, created_at')` (Thriver viewing a target): drop `email` from the select; fetch it via `rpc('get_profile_email', { p_user_id: userId })`.
 (There are no `profiles.select('*')` calls - confirmed - so nothing else breaks.)
 
-## B. campaigns.invite_code (anyone can harvest all codes -> join any game) - 6 readers
+## B. campaigns.invite_code (anyone can harvest all codes -> join any game) - 7 readers
 Seams: `rpc('find_campaign_by_invite_code', { p_code })` for JOIN (returns id/name/setting/description/cover_image_url/gm_user_id for an exact code, no enumeration); `rpc('get_campaign_invite_code', { p_campaign_id })` for the GM/member SHARE-link display.
 1. **`app/join/[code]/page.tsx:28`** - `from('campaigns').select('*').eq('invite_code', code)`: replace with `rpc('find_campaign_by_invite_code', { p_code: code }).single()`. (Also kills the `select('*')` that would otherwise break on revoke.)
-2. **`app/stories/join/page.tsx:31`** - same swap (it uppercases; the RPC trims+uppers too).
+2. **`app/stories/join/page.tsx:~31`** - same swap (it uppercases; the RPC trims+uppers too).
 3. **`app/stories/[id]/community/page.tsx:81`**, **`sessions/page.tsx:75`**, **`snapshots/page.tsx:47`**, **`components/StoryActionBar.tsx:97`** - these read `invite_code` by campaign id to DISPLAY the share link (member/GM context). Drop `invite_code` from those selects; fetch it via `rpc('get_campaign_invite_code', { p_campaign_id: id })` where the link is actually rendered.
+4. **`app/campfire/lfg/page.tsx:130-135`** (ADDED 2026-06-29, was missing from the original list) - `from('campaigns').select('id, name, invite_code').eq('gm_user_id', user.id)` populates the LFG "Invite" picker with the GM's own campaigns. Drop `invite_code` from this select; fetch it via `rpc('get_campaign_invite_code', { p_campaign_id })` at the point the picker actually emits an invite link/code. (GM-owned rows, so the RPC's member/GM gate passes.)
 
 ## Then ping PF
 Once A+B ship and you've confirmed in-app that account email shows, bug report works, moderation shows the user's email, joining by code works, and the GM still sees the invite link - PF applies the column-revoke SQL and re-verifies via impersonation. Reversible (re-GRANT the column) if anything surfaces.
 
-**Why PF didn't just do it:** the revoke is one SQL file, but it's only safe to land in the same window as your reader rewire - 9 app files across account/bug-report/moderate/join/community/sessions/snapshots/StoryActionBar are your lane, and need an in-app eyeball the CLI can't give.
+**Why PF didn't just do it:** the revoke is one SQL file, but it's only safe to land in the same window as your reader rewire - 10 app files (3 email + 7 invite_code) across account/bug-report/moderate/join/stories-join/community/sessions/snapshots/StoryActionBar/campfire-lfg are your lane, and need an in-app eyeball the CLI can't give.
