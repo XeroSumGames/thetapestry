@@ -23,8 +23,29 @@ Deno.serve(async (req) => {
     return new Response('Method not allowed', { status: 405 })
   }
 
+  // Body-size cap (stability-audit 2026-06-29, M-2): this function deploys
+  // --no-verify-jwt and its URL ships in the client bundle, so the body is
+  // fully attacker-controlled. Reject an oversized payload BEFORE parsing so a
+  // flood of huge POSTs can't burn parse CPU + invocation cost. content-length
+  // is the cheap front gate; the text-length recheck below catches a missing or
+  // spoofed header (e.g. chunked encoding). A legit visit payload is well under 2 KB.
+  const MAX_BODY_BYTES = 2048
+  if (Number(req.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
+    return new Response('Payload too large', {
+      status: 413,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    })
+  }
+
   try {
-    const { session_id, page, referrer, user_id, country_code, region, city, latitude, longitude, ip_hash } = await req.json()
+    const rawBody = await req.text()
+    if (rawBody.length > MAX_BODY_BYTES) {
+      return new Response('Payload too large', {
+        status: 413,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+    const { session_id, page, referrer, user_id, country_code, region, city, latitude, longitude, ip_hash } = JSON.parse(rawBody)
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? req.headers.get('x-real-ip')
