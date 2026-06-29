@@ -464,8 +464,8 @@ export default function TablePage() {
   useCampaignChannel(id, {
     channelName: `init-scene-tags-${id}`,
     postgres: [
-      { label: 'scene_tokens:UPDATE', event: 'UPDATE', table: 'scene_tokens', handler: () => setTokenScenesRefreshKey(k => k + 1) },
-      { label: 'scene_tokens:INSERT', event: 'INSERT', table: 'scene_tokens', handler: () => setTokenScenesRefreshKey(k => k + 1) },
+      { label: 'scene_tokens:UPDATE', event: 'UPDATE', table: 'scene_tokens', filter: `campaign_id=eq.${id}`, handler: () => setTokenScenesRefreshKey(k => k + 1) },
+      { label: 'scene_tokens:INSERT', event: 'INSERT', table: 'scene_tokens', filter: `campaign_id=eq.${id}`, handler: () => setTokenScenesRefreshKey(k => k + 1) },
       { label: 'tactical_scenes:UPDATE', event: 'UPDATE', table: 'tactical_scenes', filter: `campaign_id=eq.${id}`, handler: () => setTokenScenesRefreshKey(k => k + 1) },
     ],
   })
@@ -1586,12 +1586,12 @@ export default function TablePage() {
   })
   useCampaignChannel(id, {
     channelName: `community_members_${id}`,
-    postgres: [{ label: 'community_members:*', event: '*', table: 'community_members', handler: () => loadPlayerNpcCommunityMap(id) }],
+    postgres: [{ label: 'community_members:*', event: '*', table: 'community_members', filter: `campaign_id=eq.${id}`, handler: () => loadPlayerNpcCommunityMap(id) }],
   })
   useCampaignChannel(id, {
     channelName: `reveals_${id}`,
     postgres: [{
-      label: 'npc_relationships:*', event: '*', table: 'npc_relationships',
+      label: 'npc_relationships:*', event: '*', table: 'npc_relationships', filter: `campaign_id=eq.${id}`,
       handler: () => {
         if (gmLikeRef.current) loadRevealedNpcs(null, campaignNpcs)
         else if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, campaignNpcs)

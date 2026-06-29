@@ -668,17 +668,20 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // grid_cols/rows are now the ONLY shared map-scale fields - the bg renders
       // to the grid extent, so there is no separate img_scale to sync.
       const isFirstLoad = lastSyncedSceneIdRef.current !== active.id
+      // M-RT-1: apply cell_px + grid + lock for players on EVERY sync (and for
+      // everyone on first load) so a GM toggling grid/lock/cell-size mid-session
+      // reaches already-loaded players. GM main-window stays first-load-only
+      // (the !isGM guard) to avoid clobbering in-flight popout debounce writes.
+      // Grid render settings persist in tactical_scenes per
+      // sql/tactical-scenes-grid-persist.sql.
       if (isFirstLoad || !isGM) {
         if (active.cell_px) setCellPx(active.cell_px)
-      }
-      if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
-        // Grid render settings - persisted in tactical_scenes per
-        // sql/tactical-scenes-grid-persist.sql so a main-window
-        // refresh doesn't revert to the useState defaults.
         if (typeof active.show_grid === 'boolean') setShowGrid(active.show_grid)
         if (typeof active.grid_color === 'string' && active.grid_color) setGridColor(active.grid_color)
         if (typeof active.grid_opacity === 'number') setGridOpacity(active.grid_opacity)
+      }
+      if (isFirstLoad) {
         lastSyncedSceneIdRef.current = active.id
       }
     } else if (data && data.length > 0 && isGM) {
