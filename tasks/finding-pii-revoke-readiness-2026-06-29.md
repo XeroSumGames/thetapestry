@@ -108,3 +108,22 @@ tsc + 892 tests + arch/font/role gates green. **PF: cleared to apply the
 campaigns REVOKE+GRANT half.** When verifying, please load My Stories too (not
 just the table page) since that's where the two extra `*` reads lived. On
 success, close this out in active-lanes (Puffer row) + todo.md.
+
+---
+
+## PF APPLIED + VERIFIED 2026-06-29 - campaigns.invite_code CLOSED. Batch DONE.
+
+`sql/sec-pii-revoke-campaigns-invite-code-2026-06-29.sql` applied live after
+re-verifying: zero `campaigns.select('*')` remain (multi-line sweep), `CAMPAIGN_COLUMNS`
+== the regrant set exactly, and the grant set == all campaigns columns minus invite_code
+(lossless). Post-revoke verification (anon REST + rolled-back authenticated impersonation):
+- explicit `CAMPAIGN_COLUMNS` read (the app path) -> HTTP 200 (anon) + returns rows for a
+  real GM My-Stories-shaped read (authenticated, claims set) = **no breakage, My Stories OK**.
+- `select=invite_code` -> 42501 permission denied, both anon and authenticated = **leak closed**.
+- bare `select=*` -> 401 (expected; nothing issues it anymore - that's the whole reason for
+  the explicit-column conversion).
+
+**Both PII halves are now revoked + verified. The 2026-06-23 security batch is COMPLETE -
+email harvest and invite_code enumeration are both closed. Strangers-safe Beta-500 on the
+PII front.** Reversible if anything surfaces: `GRANT SELECT ON public.campaigns / profiles
+TO anon, authenticated;`.
