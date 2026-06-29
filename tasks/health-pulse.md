@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-29 12:09 UTC
+
+**Status:** DRIFT (carry-forward #70 — no new commits; gates clean; HOPED-FOR trio unchanged; Beta-500 ~1.75 days out)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-06-29T09:09 UTC)
+
+**Drift (carry-forward, unchanged since #52):**
+- HOPED-FOR: Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) — drain target Beta-500 dry-run **~1.75 days out (2026-07-01)** — 13+ days no code touch
+- HOPED-FOR: FI Insight Die AWARD path — 13+ days no code touch, also drains Beta-500
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — 38+ days, no code touch, also drains Beta-500
+- Disarm live-verify still owed: `tasks/disarm-loot-testplan-2026-06-23.md` (shipped 2026-06-23, 2-client verify not confirmed)
+- Last real code commit: 2026-06-25 (4 days ago); no new app code since
+
+**Action:** Beta-500 dry-run is ~1.75 days out. The HOPED-FOR trio all drain on that session — if it doesn't run before 7/1, they age past their target with no evidence. Consider whether a focused dry-run pass can still happen.
+
+---
+
 ## 2026-06-29 09:06 UTC
 
 **Status:** DRIFT (carry-forward #69 — no new commits; gates clean; HOPED-FOR trio unchanged)
