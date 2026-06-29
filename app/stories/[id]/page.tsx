@@ -32,7 +32,6 @@ interface Campaign {
   id: string
   name: string
   description: string
-  invite_code: string
   setting: string
   gm_user_id: string
   status: string
@@ -82,6 +81,9 @@ export default function CampaignPage() {
   const supabase = createClient()
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
+  // invite_code is no longer column-readable (enumeration leak; 2026-06-23);
+  // resolved via the get_campaign_invite_code RPC (GM/member/Thriver gated).
+  const [inviteCode, setInviteCode] = useState('')
   const [members, setMembers] = useState<Member[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [myCharacters, setMyCharacters] = useState<Character[]>([])
@@ -139,6 +141,9 @@ export default function CampaignPage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
+      // Resolve the share code via RPC (column SELECT revoked; 2026-06-23).
+      const { data: code } = await supabase.rpc('get_campaign_invite_code', { p_campaign_id: id })
+      if (code) setInviteCode(code)
 
       // Resolve hero cover: campaign's own upload wins; fall back to the
       // module subscription's cover if the campaign was created from a /rumors module.
@@ -513,8 +518,8 @@ export default function CampaignPage() {
   // invite-link panel below still call it directly.
 
   function copyInviteLink() {
-    if (!campaign) return
-    const link = `${window.location.origin}/join/${campaign.invite_code}`
+    if (!campaign || !inviteCode) return
+    const link = `${window.location.origin}/join/${inviteCode}`
     navigator.clipboard.writeText(link)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -547,7 +552,7 @@ export default function CampaignPage() {
   // GM see the GM-side hub (no Rejoin/Leave/My Survivor cards) and get
   // member-management controls via godmode RLS.
   const gmLike = isGM || isThriver
-  const inviteLink = typeof window !== 'undefined' ? `${window.location.origin}/join/${campaign.invite_code}` : ''
+  const inviteLink = typeof window !== 'undefined' && inviteCode ? `${window.location.origin}/join/${inviteCode}` : ''
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
@@ -979,7 +984,7 @@ export default function CampaignPage() {
               <div style={{ fontSize: '13px', color: '#7ab3d4', marginBottom: '8px', wordBreak: 'break-all', fontFamily: 'Carlito, sans-serif' }}>{inviteLink}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }}>Code</span>
-                <span style={{ color: '#c0392b', fontWeight: 700, letterSpacing: '.14em', fontFamily: 'Carlito, sans-serif', fontSize: '14px' }}>{campaign.invite_code}</span>
+                <span style={{ color: '#c0392b', fontWeight: 700, letterSpacing: '.14em', fontFamily: 'Carlito, sans-serif', fontSize: '14px' }}>{inviteCode || '…'}</span>
                 <button onClick={copyInviteLink} style={{ marginLeft: 'auto', padding: '5px 10px', background: copied ? '#1a2e10' : 'transparent', border: `1px solid ${copied ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {copied ? 'Copied!' : 'Copy link'}
                 </button>

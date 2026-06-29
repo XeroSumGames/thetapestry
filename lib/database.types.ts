@@ -1150,6 +1150,7 @@ export type Database = {
           apprentice_meta: Json | null
           apprentice_of_character_id: string | null
           assignment_pc_id: string | null
+          campaign_id: string | null
           character_id: string | null
           community_id: string
           current_task: string | null
@@ -1169,6 +1170,7 @@ export type Database = {
           apprentice_meta?: Json | null
           apprentice_of_character_id?: string | null
           assignment_pc_id?: string | null
+          campaign_id?: string | null
           character_id?: string | null
           community_id: string
           current_task?: string | null
@@ -1188,6 +1190,7 @@ export type Database = {
           apprentice_meta?: Json | null
           apprentice_of_character_id?: string | null
           assignment_pc_id?: string | null
+          campaign_id?: string | null
           character_id?: string | null
           community_id?: string
           current_task?: string | null
@@ -1216,6 +1219,13 @@ export type Database = {
             columns: ["assignment_pc_id"]
             isOneToOne: false
             referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_members_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
           {
@@ -2390,6 +2400,7 @@ export type Database = {
       }
       npc_relationships: {
         Row: {
+          campaign_id: string | null
           character_id: string
           created_at: string
           id: string
@@ -2401,6 +2412,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          campaign_id?: string | null
           character_id: string
           created_at?: string
           id?: string
@@ -2412,6 +2424,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          campaign_id?: string | null
           character_id?: string
           created_at?: string
           id?: string
@@ -2423,6 +2436,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "npc_relationships_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "npc_relationships_character_id_fkey"
             columns: ["character_id"]
@@ -2689,6 +2709,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "pregen_library_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pregen_library_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
@@ -2858,6 +2885,7 @@ export type Database = {
       scene_tokens: {
         Row: {
           archived_at: string | null
+          campaign_id: string | null
           campaign_pin_id: string | null
           character_id: string | null
           color: string | null
@@ -2896,6 +2924,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          campaign_id?: string | null
           campaign_pin_id?: string | null
           character_id?: string | null
           color?: string | null
@@ -2934,6 +2963,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          campaign_id?: string | null
           campaign_pin_id?: string | null
           character_id?: string | null
           color?: string | null
@@ -2971,6 +3001,13 @@ export type Database = {
           wp_max?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "scene_tokens_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scene_tokens_campaign_pin_id_fkey"
             columns: ["campaign_pin_id"]
@@ -3889,6 +3926,21 @@ export type Database = {
         Args: { p_action: string; p_max_per_hour: number }
         Returns: boolean
       }
+      find_campaign_by_invite_code: {
+        Args: { p_code: string }
+        Returns: {
+          cover_image_url: string
+          description: string
+          gm_user_id: string
+          id: string
+          name: string
+          setting: string
+        }[]
+      }
+      get_campaign_invite_code: {
+        Args: { p_campaign_id: string }
+        Returns: string
+      }
       get_latest_messages_for_conversations: {
         Args: { conv_ids: string[] }
         Returns: {
@@ -3899,6 +3951,7 @@ export type Database = {
         }[]
       }
       get_or_create_dm: { Args: { other_user_id: string }; Returns: string }
+      get_profile_email: { Args: { p_user_id: string }; Returns: string }
       get_visitor_map_data: {
         Args: never
         Returns: {
@@ -3934,6 +3987,7 @@ export type Database = {
         Returns: Json
       }
       increment_portrait_counter: { Args: { g: string }; Returns: number }
+      is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
       is_thriver: { Args: never; Returns: boolean }
       is_user_suspended: { Args: never; Returns: boolean }
       loot_npc_equipment_item: {

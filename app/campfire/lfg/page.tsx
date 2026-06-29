@@ -111,7 +111,7 @@ export default function LfgPage() {
   // Campaigns I GM - used by the 🎟 Invite picker on my own LFG posts so I
   // can DM an interested player a one-click join link without leaving this
   // page. Empty array = button is hidden (nothing to invite to).
-  const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string; invite_code: string }[]>([])
+  const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string }[]>([])
   // Which roster row's invite picker is open. Key shape: `${postId}:${userId}`.
   const [invitingFor, setInvitingFor] = useState<string | null>(null)
   // Per-row "✓ Invite sent" flash, same key shape as invitingFor.
@@ -127,12 +127,15 @@ export default function LfgPage() {
       // Fetch the user's GM'd campaigns once. Used by the 🎟 Invite picker;
       // cheap query that doesn't change during a session, so no need to
       // refetch on every loadPosts call.
+      // invite_code is no longer column-readable (enumeration leak; 2026-06-23)
+      // and the LFG invite flow no longer needs it - it sends a structured
+      // campaign_invitations row (Phase 4E), keyed on campaign id, not a code.
       const { data: campRows } = await supabase
         .from('campaigns')
-        .select('id, name, invite_code')
+        .select('id, name')
         .eq('gm_user_id', user.id)
         .order('name', { ascending: true })
-      setMyCampaigns((campRows ?? []) as { id: string; name: string; invite_code: string }[])
+      setMyCampaigns((campRows ?? []) as { id: string; name: string }[])
       await loadPosts()
     }
     init()
@@ -179,7 +182,7 @@ export default function LfgPage() {
     return () => document.removeEventListener('mousedown', onDoc)
   }, [invitingFor])
 
-  async function sendInvite(otherUserId: string, postId: string, campaign: { id: string; name: string; invite_code: string }) {
+  async function sendInvite(otherUserId: string, postId: string, campaign: { id: string; name: string }) {
     if (!myId) return
     // Phase 4E (final) - replaces the old DM-with-link flow with a
     // structured campaign_invitations row. The trigger creates a

@@ -72,10 +72,13 @@ export default function SessionHistoryPage() {
       const { user } = await getCachedAuth()
       if (!user) { router.push(loginPathForCurrent()); return }
 
-      const { data: camp } = await supabase.from('campaigns').select('name, gm_user_id, invite_code').eq('id', id).single()
+      const { data: camp } = await supabase.from('campaigns').select('name, gm_user_id').eq('id', id).single()
       if (!camp || camp.gm_user_id !== user.id) { router.push('/dashboard'); return }
       setCampaignName(camp.name)
-      setInviteCode(camp.invite_code ?? '')
+      // invite_code is no longer column-readable (enumeration leak; 2026-06-23).
+      // GM-only page, so the definer RPC returns the code.
+      const { data: code } = await supabase.rpc('get_campaign_invite_code', { p_campaign_id: id })
+      setInviteCode(code ?? '')
 
       const { data: sessData } = await supabase
         .from('sessions')

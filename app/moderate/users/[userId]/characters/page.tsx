@@ -35,9 +35,12 @@ export default function UserCharactersPage() {
       const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (!roleIsThriver(myProfile)) { router.push('/dashboard'); return }
 
-      const { data: profile } = await supabase.from('profiles').select('username, email, created_at').eq('id', userId).single()
+      const { data: profile } = await supabase.from('profiles').select('username, created_at').eq('id', userId).single()
       setUsername(profile?.username ?? 'Unknown')
-      setEmail(profile?.email ?? '')
+      // email is no longer column-readable (PII; 2026-06-23). Fetch the target's
+      // email via the definer RPC, which gates on own-row-or-Thriver (Thriver here).
+      const { data: targetEmail } = await supabase.rpc('get_profile_email', { p_user_id: userId })
+      setEmail(targetEmail ?? '')
       setJoinDate(profile?.created_at ?? '')
 
       const { data } = await supabase

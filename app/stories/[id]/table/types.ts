@@ -14,7 +14,6 @@ export interface Campaign {
   session_status: string
   session_count: number
   session_started_at: string | null
-  invite_code: string
 }
 
 export interface TableEntry {

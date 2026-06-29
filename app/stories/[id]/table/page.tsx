@@ -146,6 +146,11 @@ export default function TablePage() {
   const loadRevealedNpcsSeqRef = useRef(0)
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
+  // invite_code is no longer column-readable (enumeration leak; 2026-06-23);
+  // select('*') above no longer carries it. Resolved via the
+  // get_campaign_invite_code RPC (GM/member/Thriver gated) for the Share +
+  // observer-link affordances.
+  const [inviteCode, setInviteCode] = useState('')
   const [userId, setUserId] = useState<string | null>(null)
   const userIdRef = useRef<string | null>(null)
   useEffect(() => { userIdRef.current = userId }, [userId])
@@ -1237,6 +1242,8 @@ export default function TablePage() {
       setUserId(user.id)
       userIdRef.current = user.id  // Sync immediately so chat refetch sees the freshest viewer id
       setCampaign(camp)
+      // Resolve the share code via RPC (column SELECT revoked; 2026-06-23).
+      supabase.rpc('get_campaign_invite_code', { p_campaign_id: id }).then(({ data: code }: { data: string | null }) => { if (code) setInviteCode(code) })
       // Bump last_accessed_at so the My Stories list can sort by
       // most-recently-touched and surface "Last Run: <date>". Fire-and-
       // forget - failure here doesn't block the table view.
@@ -5570,9 +5577,9 @@ export default function TablePage() {
           [
             {
               label: 'Share',
-              hidden: !campaign?.invite_code,
+              hidden: !inviteCode,
               onClick: () => {
-                navigator.clipboard.writeText(`${window.location.origin}/join/${campaign.invite_code}`)
+                navigator.clipboard.writeText(`${window.location.origin}/join/${inviteCode}`)
                 alert('Invite link copied to clipboard!')
               },
             },
@@ -5725,8 +5732,9 @@ export default function TablePage() {
             },
             {
               label: 'Observer Link',
+              hidden: !inviteCode,
               onClick: () => {
-                const url = `${window.location.origin}/stories/join?code=${campaign.invite_code}&observer=1`
+                const url = `${window.location.origin}/stories/join?code=${inviteCode}&observer=1`
                 navigator.clipboard.writeText(url).then(() => {
                   alert('Observer link copied - share it with whoever should watch without appearing in the player bar or combat.')
                 }).catch(() => {

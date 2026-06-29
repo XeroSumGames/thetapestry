@@ -28,10 +28,10 @@ export default function JoinCampaignPage() {
     const { user } = await getCachedAuth()
     if (!user) { setError('Not logged in.'); setJoining(false); return }
 
+    // invite_code is no longer column-readable (enumeration leak; 2026-06-23).
+    // Look up by exact code via the definer RPC (it trims + uppercases too).
     const { data: campaign, error: findErr } = await supabase
-      .from('campaigns')
-      .select('*')
-      .eq('invite_code', code.trim().toUpperCase())
+      .rpc('find_campaign_by_invite_code', { p_code: code.trim() })
       .single()
 
     if (findErr || !campaign) {

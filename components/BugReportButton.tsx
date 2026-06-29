@@ -36,10 +36,12 @@ export default function BugReportButton() {
     ;(async () => {
       const { user } = await getCachedAuth()
       if (!user) { setReporter({ id: null, email: null, name: null }); return }
-      const { data: prof } = await supabase.from('profiles').select('username, email').eq('id', user.id).maybeSingle()
+      // email comes from the auth session (source of truth); profiles.email
+      // SELECT is revoked (PII; 2026-06-23). Only the username is read here.
+      const { data: prof } = await supabase.from('profiles').select('username').eq('id', user.id).maybeSingle()
       setReporter({
         id: user.id,
-        email: (prof as any)?.email ?? user.email ?? null,
+        email: user.email ?? null,
         name: (prof as any)?.username ?? null,
       })
     })()

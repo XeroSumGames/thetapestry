@@ -78,7 +78,7 @@ export default function CommunityDashboardPage() {
       if (!campaignId) return
       const { user } = await getCachedAuth()
       const [camp, coms, profile] = await Promise.all([
-        supabase.from('campaigns').select('name, gm_user_id, invite_code').eq('id', campaignId).maybeSingle(),
+        supabase.from('campaigns').select('name, gm_user_id').eq('id', campaignId).maybeSingle(),
         supabase.from('communities')
           .select('id, name, status, week_number, consecutive_failures, created_at, dissolved_at')
           .eq('campaign_id', campaignId)
@@ -88,7 +88,10 @@ export default function CommunityDashboardPage() {
       if (camp.data) {
         setCampaignName((camp.data as any).name)
         setIsGM(user?.id === (camp.data as any).gm_user_id)
-        setInviteCode((camp.data as any).invite_code ?? '')
+        // invite_code is no longer column-readable (enumeration leak; 2026-06-23).
+        // The definer RPC returns it only to the GM / a member / a Thriver.
+        const { data: code } = await supabase.rpc('get_campaign_invite_code', { p_campaign_id: campaignId })
+        setInviteCode(code ?? '')
       }
       if (profile?.data) setIsThriverState(roleIsThriver(profile.data))
       const list = (coms.data ?? []) as Community[]

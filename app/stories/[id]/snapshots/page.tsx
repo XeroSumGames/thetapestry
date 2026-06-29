@@ -23,7 +23,6 @@ interface CampaignRow {
   id: string
   name: string
   gm_user_id: string
-  invite_code: string
 }
 
 export default function StorySnapshotsPage() {
@@ -42,9 +41,12 @@ export default function StorySnapshotsPage() {
       if (cancelled) return
       if (!user) { router.push(`/login?redirect=/stories/${id}/snapshots`); return }
 
+      // invite_code intentionally not selected - unused here, and the column
+      // SELECT is being revoked (enumeration leak; 2026-06-23). The share link
+      // is rendered by StoryActionBar, which fetches the code via RPC.
       const { data, error } = await supabase
         .from('campaigns')
-        .select('id, name, gm_user_id, invite_code')
+        .select('id, name, gm_user_id')
         .eq('id', id)
         .maybeSingle()
       if (cancelled) return

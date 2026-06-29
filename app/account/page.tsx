@@ -30,7 +30,6 @@ import { prepareUpload } from '../../lib/safe-upload'
 interface ProfileRow {
   id: string
   username: string
-  email: string | null
   role: string | null
   avatar_url: string | null
 }
@@ -89,9 +88,12 @@ export default function AccountPage() {
       setUserId(user.id)
       setAuthEmail(user.email ?? '')
       setEmailDraft(user.email ?? '')
+      // email is intentionally NOT selected from profiles - it's read from the
+      // auth session (authEmail above), which is the source of truth. The
+      // profiles.email column SELECT is being revoked (PII/GDPR; 2026-06-23).
       const { data } = await supabase
         .from('profiles')
-        .select('id, username, email, role, avatar_url')
+        .select('id, username, role, avatar_url')
         .eq('id', user.id)
         .maybeSingle()
       if (data) {

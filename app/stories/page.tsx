@@ -11,7 +11,6 @@ interface Campaign {
   id: string
   name: string
   description: string
-  invite_code: string
   setting: string
   gm_user_id: string
   status: string
@@ -26,6 +25,10 @@ export default function CampaignsPage() {
   const [playerCampaigns, setPlayerCampaigns] = useState<Campaign[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [gmNames, setGmNames] = useState<Record<string, string>>({})
+  // campaign_id -> invite_code, resolved via the get_campaign_invite_code RPC.
+  // invite_code is no longer column-readable (enumeration leak; 2026-06-23), so
+  // select('*') no longer carries it - the share/display reads come from here.
+  const [inviteCodes, setInviteCodes] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   // campaign_id → ISO string of latest activity. Used both for sort and
   // for the "Last Run" display label on each card.
@@ -89,6 +92,18 @@ export default function CampaignsPage() {
           const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', gmIds)
           if (profiles) setGmNames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
         }
+      }
+
+      // Resolve share codes for every campaign in view via the definer RPC
+      // (GM/member/Thriver gated). Small N (the user's own stories), run in
+      // parallel; a null result just means no shareable code for that row.
+      const codeTargets = [...((gmRaw ?? []) as Campaign[]), ...playerRaw]
+      if (codeTargets.length > 0) {
+        const entries = await Promise.all(codeTargets.map(async (c) => {
+          const { data: code } = await supabase.rpc('get_campaign_invite_code', { p_campaign_id: c.id })
+          return [c.id, code ?? ''] as const
+        }))
+        setInviteCodes(Object.fromEntries(entries))
       }
 
       // Build a campaign_id → most-recent-activity map. We layer two
@@ -271,13 +286,13 @@ export default function CampaignsPage() {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>Invite Code</div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: accent, fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em' }}>{c.invite_code}</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: accent, fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em' }}>{inviteCodes[c.id] || '…'}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <a href={`/stories/${c.id}/table`} target="_blank" rel="noreferrer" style={{ padding: '5px 14px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
                   <a href={`/stories/${c.id}`} style={{ padding: '5px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>GM Tools</a>
-                  <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join/${c.invite_code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
+                  <button onClick={() => { const code = inviteCodes[c.id]; if (!code) { alert('No invite code available.'); return } navigator.clipboard.writeText(`${window.location.origin}/join/${code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
                   <button onClick={async () => {
                     const warning = isTemplate
                       ? `WARNING: This is the template for "${templateOf}". Deleting it disconnects the published module from its source - you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.`
@@ -313,7 +328,7 @@ export default function CampaignsPage() {
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <a href={`/stories/${c.id}/table`} target="_blank" rel="noreferrer" style={{ padding: '5px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
                   <a href={`/stories/${c.id}`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Story Page</a>
-                  <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join/${c.invite_code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
+                  <button onClick={() => { const code = inviteCodes[c.id]; if (!code) { alert('No invite code available.'); return } navigator.clipboard.writeText(`${window.location.origin}/join/${code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
                   <button onClick={async () => { if (!confirm(`Leave ${c.name}?`)) return; await supabase.from('campaign_members').delete().eq('campaign_id', c.id).eq('user_id', userId!); setPlayerCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Leave</button>
                 </div>
               </div>

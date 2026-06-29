@@ -25,7 +25,10 @@ export default function JoinByCodePage() {
         router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`)
         return
       }
-      const { data } = await supabase.from('campaigns').select('*').eq('invite_code', code).single()
+      // invite_code is no longer column-readable (enumeration leak; 2026-06-23).
+      // The definer RPC matches an EXACT code and returns the joinable fields
+      // (id/name/setting/description/cover_image_url/gm_user_id), never the code.
+      const { data } = await supabase.rpc('find_campaign_by_invite_code', { p_code: code }).single()
       if (!data) { setStatus('error'); return }
       setCampaign(data)
       setStatus('found')

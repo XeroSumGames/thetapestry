@@ -41,7 +41,6 @@ interface CampaignLite {
   id: string
   name: string
   description: string
-  invite_code: string
   setting: string
   gm_user_id: string
 }
@@ -79,6 +78,10 @@ export default function StoryActionBar({ campaignId, extraButtons, compact }: Pr
     currentVersion: string
     latestVersion: string
   } | null>(null)
+  // invite_code is no longer column-readable (enumeration leak; 2026-06-23).
+  // Fetched via the definer RPC at load (so the copy handler stays a synchronous
+  // clipboard write inside the user gesture). Empty for non-GM/non-members.
+  const [inviteCode, setInviteCode] = useState('')
   const [copied, setCopied] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [publishOpen, setPublishOpen] = useState(false)
@@ -94,13 +97,16 @@ export default function StoryActionBar({ campaignId, extraButtons, compact }: Pr
       const { user } = await getCachedAuth()
       const { data } = await supabase
         .from('campaigns')
-        .select('id, name, description, invite_code, setting, gm_user_id')
+        .select('id, name, description, setting, gm_user_id')
         .eq('id', campaignId)
         .maybeSingle()
       if (cancelled) return
       if (data) {
         setCampaign(data as CampaignLite)
         setIsGM(!!user && (data as any).gm_user_id === user.id)
+        // Resolve the share code via RPC (GM/member/Thriver only; null otherwise).
+        const { data: code } = await supabase.rpc('get_campaign_invite_code', { p_campaign_id: campaignId })
+        if (!cancelled && code) setInviteCode(code)
       }
       // Module lookup only matters for the GM (Publish/Archive labels).
       if (user && data && (data as any).gm_user_id === user.id) {
@@ -143,8 +149,8 @@ export default function StoryActionBar({ campaignId, extraButtons, compact }: Pr
   }, [campaignId])
 
   function copyInviteLink() {
-    if (!campaign) return
-    const link = `${window.location.origin}/join/${campaign.invite_code}`
+    if (!campaign || !inviteCode) return
+    const link = `${window.location.origin}/join/${inviteCode}`
     navigator.clipboard.writeText(link)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
