@@ -21,6 +21,7 @@
 // needed when the GM clicks Export, so skip pulling it into any bundle that
 // merely touches this module.
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { CAMPAIGN_COLUMNS } from './data/campaigns'
 
 interface ExportResult {
   ok: boolean
@@ -57,7 +58,7 @@ export async function exportGmKit(supabase: SupabaseClient, campaignId: string):
     { data: scenes },
     { data: notes },
   ] = await Promise.all([
-    supabase.from('campaigns').select('*').eq('id', campaignId).single(),
+    supabase.from('campaigns').select(CAMPAIGN_COLUMNS).eq('id', campaignId).single(),
     supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }),
     supabase.from('campaign_npcs').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }),
     supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId),

@@ -6,6 +6,7 @@ import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { SETTINGS } from '../../lib/settings'
 import { confirmDeleteByName } from '../../lib/confirm-delete'
+import { CAMPAIGN_COLUMNS } from '../../lib/data/campaigns'
 
 interface Campaign {
   id: string
@@ -70,7 +71,7 @@ export default function CampaignsPage() {
       // last-played below.
       const { data: gmRaw } = await supabase
         .from('campaigns')
-        .select('*')
+        .select(CAMPAIGN_COLUMNS)
         .eq('gm_user_id', user.id)
 
       const { data: memberships } = await supabase
@@ -83,7 +84,7 @@ export default function CampaignsPage() {
       if (memberIds.length > 0) {
         const { data: player } = await supabase
           .from('campaigns')
-          .select('*')
+          .select(CAMPAIGN_COLUMNS)
           .in('id', memberIds)
           .neq('gm_user_id', user.id)
         playerRaw = (player ?? []) as Campaign[]

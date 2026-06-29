@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
+import { CAMPAIGN_COLUMNS } from '../../../../lib/data/campaigns'
 import { activeSceneId } from '../../../../lib/data/scenes'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
@@ -1224,7 +1225,7 @@ export default function TablePage() {
       // hit - no lock contention, no network call.
       const [authSnapshot, campResult] = await Promise.all([
         getCachedAuth(),
-        supabase.from('campaigns').select('*').eq('id', id).single(),
+        supabase.from('campaigns').select(CAMPAIGN_COLUMNS).eq('id', id).single(),
       ])
       const user = authSnapshot.user
       const camp = campResult.data

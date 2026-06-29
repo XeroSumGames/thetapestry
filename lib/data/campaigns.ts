@@ -7,6 +7,17 @@
 
 import { db } from './db'
 
+// Every campaigns column EXCEPT invite_code. Use this in place of select('*')
+// on the campaigns table: invite_code's column SELECT grant is revoked (PII /
+// enumeration leak; 2026-06-23), and this Supabase PostgREST ERRORS on
+// `select=*` when a column is ungranted (it does not silently omit it -
+// verified live 2026-06-29), so a `*` read 401s. Fetch invite_code via the
+// get_campaign_invite_code / find_campaign_by_invite_code RPCs instead.
+// MUST mirror the regrant set in sql/sec-pii-column-revokes-2026-06-23-*.sql:
+// if a campaigns column is added, add it here AND to that grant.
+export const CAMPAIGN_COLUMNS =
+  'id, name, description, setting, gm_user_id, status, created_at, session_status, session_count, session_started_at, map_style, map_center_lat, map_center_lng, vehicles, last_accessed_at, clock, start_canon_day, cover_image_url'
+
 /**
  * Just the in-game clock for a campaign. Drop-in for
  * `supabase.from('campaigns').select('clock').eq('id', id).maybeSingle()`.

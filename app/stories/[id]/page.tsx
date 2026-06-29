@@ -10,7 +10,7 @@ import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 import { loadApprovedPregens, loadOfficialPregens, loadOfficialPregensByCampaign } from '../../../lib/data/pregens'
 import { createCharacterForUser, getCharacterPortraits } from '../../../lib/data/characters'
-import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover, removeCampaignCover } from '../../../lib/data/campaigns'
+import { assignMemberCharacter, getCampaignModuleCover, uploadCampaignCover, removeCampaignCover, CAMPAIGN_COLUMNS } from '../../../lib/data/campaigns'
 import { isThriver as roleIsThriver } from '../../../lib/auth/roles'
 import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import StoryActionBar from '../../../components/StoryActionBar'
@@ -138,7 +138,7 @@ export default function CampaignPage() {
       if (!user) { router.push(loginPathForCurrent()); return }
       setUserId(user.id)
 
-      const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
+      const { data: camp } = await supabase.from('campaigns').select(CAMPAIGN_COLUMNS).eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
       // Resolve the share code via RPC (column SELECT revoked; 2026-06-23).
