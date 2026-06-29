@@ -1,5 +1,11 @@
 # Finding -> PF: PII reader rewire SHIPPED, with 2 things to know before the revoke
 
+> **STATUS 2026-06-29: Xero in-app eyeball PASSED ("confirmed, all works") - email
+> shows, bug report works, moderation shows the target's email, join-by-code works,
+> share links render on My Stories / hub / table / community / sessions. PF is
+> CLEARED to apply `sql/sec-pii-column-revokes-2026-06-23-APPLY-AFTER-REWIRE.sql`,
+> with the one select('*') impersonation confirm in section 2 below.**
+
 Commit: `391f01df` (on top of `528d2480`). All readers off the raw columns; tsc +
 892 tests + arch/font/role gates green. Arch seam IMPROVED (.from 1030 -> 1028).
 
