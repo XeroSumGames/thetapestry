@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## NEVER run a mutating "test" against the live DB without an explicit rollback - a CTE/RETURNING UPDATE auto-commits (2026-06-23)
+
+Verifying the new role-escalation guard, I ran a one-off `WITH t AS (...), upd AS (UPDATE profiles SET role='thriver' ... RETURNING ...) SELECT ...` to confirm the admin path still worked. A data-modifying CTE in a plain query **commits** - there is no implicit transaction to roll back. It promoted a real user (Bernice) to Thriver on live. Caught it immediately (listed thrivers, saw the unexpected 2nd), reverted her to survivor. Net harm: a ~minute of an unintended god-mode account + a demotion of a user whose original role I had to infer (survivor).
+
+**Rule:** any live verification that WRITES must be wrapped so it cannot persist - either `DO $$ ... RAISE EXCEPTION 'rollback'; ... EXCEPTION WHEN OTHERS THEN IF SQLERRM<>'rollback' THEN RAISE; END $$;` (the pattern the notify-trigger smoke test used correctly the same night), or read-only assertions that evaluate the predicate WITHOUT mutating (the pattern used for the RLS read checks). Prefer non-mutating verification; when a write is unavoidable, the rollback wrapper is mandatory and must be proven (RETURNING/CTE is NOT a rollback). Don't mix the two styles under time pressure.
+
 ## An RLS audit must also scan for tables with RLS DISABLED, not just loose policies (2026-06-23)
 
 My pre-Beta-500 RLS sub-audit walked `pg_policies` for over-broad policies (the `auth.role()='authenticated'` / `USING(true)` shadow-policy class) and found a real HIGH cluster. But it MISSED `public.pregen_campaign_map` entirely - because that table had RLS turned OFF, so it has zero policies and a `pg_policies`-based scan never surfaces it. Supabase's own database linter (`0013_rls_disabled_in_public`) caught it: anon AND authenticated both held full I/U/D grants, so with RLS off an unauthenticated request could wipe every pregen<->campaign mapping via REST. Fix: `sql/pregen-campaign-map-rls-2026-06-23.sql` (enable RLS + author/GM/thriver policies, reusing pregen_library's RLS via an EXISTS subquery for the read path).
