@@ -1046,8 +1046,21 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     // map markers converge with the DB without a manual refresh.
     function handlePinsVisibility() { if (!document.hidden && mapInstanceRef.current) void loadPins() }
     document.addEventListener('visibilitychange', handlePinsVisibility)
+    // Convergence safety net. Realtime is best-effort: a still-visible,
+    // still-subscribed tab can silently miss BOTH the fire-and-forget
+    // pins_changed broadcast AND the (RLS-flaky) postgres_changes event,
+    // leaving a player's revealed/hidden markers stale until a manual refresh
+    // or map remount. The catch-up reloads above only fire on (re)subscribe
+    // and on tab-return-to-visible - neither happens for a tab the player
+    // leaves open and focused (the 2026-06-30 playtest: stale 21s, recovered
+    // only by toggling map views). A low-frequency reconcile poll closes that
+    // gap so convergence never depends on catching one ephemeral event.
+    const pinReconcile = setInterval(() => {
+      if (!document.hidden && mapInstanceRef.current) void loadPins()
+    }, 10000)
     return () => {
       document.removeEventListener('visibilitychange', handlePinsVisibility)
+      clearInterval(pinReconcile)
       // Unmount cleanup: drop active pulses and unsubscribe EVERY channel
       // (ping, view-share, pins, npcs) so /table doesn't accumulate
       // subscribed channels each time the map remounts (e.g. campaign <->
