@@ -6,6 +6,34 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-30 21:03 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-06-30T20:07 UTC)
+
+**New since 18:03 pulse (15 commits):**
+- `0b9151d` refactor(weapons): xse-schema catalogs now derive from weapons.ts (single source of truth) — all 892 tests pass
+- `3d72871` content: Revolver added; `8d77aa6` Automatic Rifle -> Assault Rifle rename
+- `3734ecb` / `f8a2751` fix(pins): name wrapping + button row layout
+- `436deca` staging env confirmed DONE + smoke-verified
+- `4a4f89c` audit: 6 KS mechanics stale todos closed
+- `91b63c8` docs: loose-ends/verification-debt register + HOPED-FOR trio code audit
+- `89335d4` chore: re-trigger Vercel deploy (main was 6 ahead of prod)
+
+**Drift (HOPED-FOR trio — unchanged, 14 days old):**
+- **Stress Check 12-string** (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — deadline tonight MDT (~8h left at 21:03 UTC)
+- FI Insight Die award path (rolling doubles) — unverified since 2026-06-16
+- Vehicle popout broadcasts — unverified since 2026-06-16
+
+**Action:** HOPED-FOR deadline tonight — run Beta-500 dry-run or explicitly push the date; weapons refactor + rename is green, no action needed.
+
+---
+
 ## 2026-06-30 18:03 UTC
 
 **Status:** DRIFT
