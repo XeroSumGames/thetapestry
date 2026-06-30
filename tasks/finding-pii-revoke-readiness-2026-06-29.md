@@ -111,6 +111,24 @@ success, close this out in active-lanes (Puffer row) + todo.md.
 
 ---
 
+## POST-REVOKE GAP FOUND + FIXED 2026-07-01 (`854f8dc4`) - WRITE paths also return `*`
+
+PF applied the campaigns revoke (`51d5f383`, "gate CLOSED"), but **Create Story
+then 401'd `permission denied for table campaigns`**. The read-path sweep above
+missed the WRITE-then-return paths: `.insert(...).select()` / `.update(...).select()`
+with a BARE `.select()` request the full `*` representation back, which 401s
+post-revoke just like a read `select=*`. Three sites fixed:
+- `app/stories/new/page.tsx` - insert-then-`.select().single()` -> `.select('id')` (only `data.id` used)
+- `app/campaigns/new/page.tsx` - same -> `.select('id')`
+- `app/gm-notes-popout/page.tsx` - `.update().eq().select()` -> dropped `.select()` (only `error` used)
+
+Verified no remaining bare `.select()` / `select('*')` on the campaigns table
+(reads OR writes). The gate is now genuinely fully closed. PF: no further SQL
+needed - the revoke stays as-is; this was purely an app-path gap. (Lesson updated
+in `tasks/lessons.md` - the pre-revoke grep must include write chains, not just reads.)
+
+---
+
 ## PF APPLIED + VERIFIED 2026-06-29 - campaigns.invite_code CLOSED. Batch DONE.
 
 `sql/sec-pii-revoke-campaigns-invite-code-2026-06-29.sql` applied live after
