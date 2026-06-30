@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-30 06:07 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-06-30T02:06 UTC)
+
+**New since 00:09 pulse (2 commits):**
+- `76c35ea` H-1c DONE — residual PII/secret-column sweep CLEAN; no third leak (bug_reports.reporter_email + visitor_logs.ip/ip_hash are Thriver-only; safe). Beta-500 PII front fully clear.
+- `7ba0d17` Vercel stall resolved — prod was ~2h behind main; redeploy trigger committed. Self-resolved, no player impact confirmed.
+
+**Drift (carry-forward — Stress Check deadline is TODAY):**
+- **Stress Check 12-string narrative** — drain target "before 2026-07-01" = **TODAY end-of-day**. No code changes since 2026-06-16 playtest. 8 strings (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) unverified in live play.
+- **FI Insight Die award path** — HOPED-FOR 15 days; `useRollResolution.ts:264` increment never fired live
+- **Vehicle popout broadcasts** (Section B) — HOPED-FOR 15 days; no code touch
+- **Vehicles 3s poll** — `page.tsx:3090` `setInterval(refetchVehicles, 3000)` still live (scale: ~167 req/s at Beta-500); fix routed to HP (`tasks/finding-vehicles-poll-scale-2026-06-29.md`)
+- **Disarm live-verify** still owed (`tasks/disarm-loot-testplan-2026-06-23.md`)
+
+**Stale-todo flag:** `[ ]` "6 mechanics still owe real code for 9/1 KS" parent is stale-open — all 6 sub-items are [x] verified elsewhere in todo.md. Audit-correction only; no code needed.
+
+**Action:** Stress Check 12-string deadline is TODAY. Run the Beta-500 dry-run (4 sections) specifically exercising the 8 unverified Stress Check paths. HP: vehicles poll removal (`page.tsx:3090`) is the remaining pre-Beta-500 scale item.
+
+---
+
 ## 2026-06-30 00:09 UTC
 
 **Status:** DRIFT
