@@ -7,7 +7,7 @@
 --
 -- Refresh: node scripts/capture-schema.mjs
 -- Publication membership lives separately in sql/_baseline/publication.sql.
--- Captured: 2026-05-24
+-- Captured: 2026-06-30
 
 -- ============================================================
 -- TABLES (columns; constraints + indexes follow below)
@@ -24,6 +24,24 @@ CREATE TABLE public.advantages (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   consumed_at timestamp with time zone,
   consumed_roll_log_id uuid
+);
+
+CREATE TABLE public.audit_log (
+  id bigint NOT NULL DEFAULT nextval('audit_log_id_seq'::regclass),
+  occurred_at timestamp with time zone NOT NULL DEFAULT now(),
+  actor_user_id uuid,
+  actor_role text,
+  campaign_id uuid,
+  table_name text NOT NULL,
+  row_id text NOT NULL,
+  operation text NOT NULL,
+  before_state jsonb,
+  after_state jsonb,
+  reason text,
+  client_ip text,
+  user_agent text,
+  recovery_attempted boolean NOT NULL DEFAULT false,
+  recovered_at timestamp with time zone
 );
 
 CREATE TABLE public.bug_reports (
@@ -197,7 +215,8 @@ CREATE TABLE public.campaigns (
   vehicles jsonb DEFAULT '[]'::jsonb,
   last_accessed_at timestamp with time zone,
   clock jsonb NOT NULL DEFAULT '{"hour": 0, "canon_day": 0}'::jsonb,
-  start_canon_day integer
+  start_canon_day integer,
+  cover_image_url text
 );
 
 CREATE TABLE public.character_states (
@@ -209,14 +228,13 @@ CREATE TABLE public.character_states (
   wp_max integer NOT NULL DEFAULT 10,
   rp_current integer NOT NULL DEFAULT 6,
   rp_max integer NOT NULL DEFAULT 6,
-  stress integer NOT NULL DEFAULT 0 CHECK (stress >= 0 AND stress <= 5),
+  stress integer NOT NULL DEFAULT 0,
   insight_dice integer NOT NULL DEFAULT 2,
   morality integer NOT NULL DEFAULT 3,
   updated_at timestamp with time zone DEFAULT now(),
   cdp integer NOT NULL DEFAULT 0,
   death_countdown integer,
   incap_rounds integer,
-  recovering_from_mortal_wound boolean NOT NULL DEFAULT false,
   kicked boolean NOT NULL DEFAULT false,
   infection_state text,
   infection_days_left smallint,
@@ -224,7 +242,8 @@ CREATE TABLE public.character_states (
   infection_started_at timestamp with time zone,
   infection_infected_by text,
   infection_severity text,
-  infection_pending_lasting_check boolean NOT NULL DEFAULT false
+  infection_pending_lasting_check boolean NOT NULL DEFAULT false,
+  recovering_from_mortal_wound boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE public.characters (
@@ -233,7 +252,8 @@ CREATE TABLE public.characters (
   name text NOT NULL,
   data jsonb NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  portrait_url text
 );
 
 CREATE TABLE public.chat_messages (
@@ -250,7 +270,7 @@ CREATE TABLE public.chat_messages (
 CREATE TABLE public.communities (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   campaign_id uuid NOT NULL,
-  name text NOT NULL,
+  name text,
   description text,
   homestead_pin_id uuid,
   status text NOT NULL DEFAULT 'forming'::text,
@@ -263,7 +283,8 @@ CREATE TABLE public.communities (
   published_at timestamp with time zone,
   world_visibility text NOT NULL DEFAULT 'private'::text,
   world_community_id uuid,
-  notified_community_milestone boolean NOT NULL DEFAULT false
+  notified_community_milestone boolean NOT NULL DEFAULT false,
+  stage text NOT NULL DEFAULT 'community'::text
 );
 
 CREATE TABLE public.community_encounters (
@@ -303,7 +324,8 @@ CREATE TABLE public.community_members (
   assignment_pc_id uuid,
   apprentice_meta jsonb,
   temporary_until_morale boolean NOT NULL DEFAULT false,
-  escape_pending boolean NOT NULL DEFAULT false
+  escape_pending boolean NOT NULL DEFAULT false,
+  campaign_id uuid
 );
 
 CREATE TABLE public.community_migrations (
@@ -467,6 +489,7 @@ CREATE TABLE public.initiative_order (
   coordinate_target text,
   coordinate_bonus integer NOT NULL DEFAULT 0,
   grappled_by text,
+  hidden_from_players boolean NOT NULL DEFAULT false,
   pending_action_loss boolean NOT NULL DEFAULT false
 );
 
@@ -604,7 +627,8 @@ CREATE TABLE public.modules (
   subscriber_count integer NOT NULL DEFAULT 0,
   avg_rating numeric(3,2) DEFAULT 0,
   rating_count integer DEFAULT 0,
-  start_canon_day integer
+  start_canon_day integer,
+  play_time text
 );
 
 CREATE TABLE public.notifications (
@@ -628,7 +652,8 @@ CREATE TABLE public.npc_relationships (
   revealed boolean NOT NULL DEFAULT false,
   reveal_level text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now()
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  campaign_id uuid
 );
 
 CREATE TABLE public.object_token_library (
@@ -679,6 +704,26 @@ CREATE TABLE public.portrait_counters (
   count integer NOT NULL DEFAULT 0
 );
 
+CREATE TABLE public.pregen_campaign_map (
+  pregen_id uuid NOT NULL,
+  campaign_id uuid NOT NULL
+);
+
+CREATE TABLE public.pregen_library (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  author_id uuid,
+  name text NOT NULL,
+  data jsonb NOT NULL,
+  portrait_url text,
+  setting text,
+  module_id uuid,
+  moderation_status text NOT NULL DEFAULT 'pending'::text,
+  approved_by uuid,
+  approved_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  campaign_id uuid
+);
+
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
   username text NOT NULL,
@@ -689,7 +734,8 @@ CREATE TABLE public.profiles (
   email text,
   avatar_url text,
   suspended_until timestamp with time zone,
-  suspended_reason text
+  suspended_reason text,
+  tableau_role text
 );
 
 CREATE TABLE public.rate_limits (
@@ -717,7 +763,8 @@ CREATE TABLE public.roll_log (
   target_name text,
   damage_json jsonb,
   insight_used text,
-  coord_chain_id uuid
+  coord_chain_id uuid,
+  session_id uuid
 );
 
 CREATE TABLE public.scene_tokens (
@@ -755,7 +802,9 @@ CREATE TABLE public.scene_tokens (
   door_open boolean NOT NULL DEFAULT true,
   is_wall boolean NOT NULL DEFAULT false,
   is_window boolean NOT NULL DEFAULT false,
-  sight_radius_cells integer NOT NULL DEFAULT 30
+  sight_radius_cells integer NOT NULL DEFAULT 30,
+  group_label text,
+  campaign_id uuid
 );
 
 CREATE TABLE public.session_attachments (
@@ -777,7 +826,8 @@ CREATE TABLE public.sessions (
   gm_summary text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   next_session_notes text,
-  cliffhanger text
+  cliffhanger text,
+  session_log text
 );
 
 CREATE TABLE public.setting_seed_handouts (
@@ -853,8 +903,6 @@ CREATE TABLE public.tactical_scenes (
   cell_feet integer NOT NULL DEFAULT 3,
   cell_px integer NOT NULL DEFAULT 35,
   img_scale real,
-  natural_w integer,
-  natural_h integer,
   is_locked boolean NOT NULL DEFAULT false,
   source_module_id uuid,
   source_module_version_id uuid,
@@ -865,7 +913,9 @@ CREATE TABLE public.tactical_scenes (
   fog_state jsonb NOT NULL DEFAULT '{}'::jsonb,
   walls jsonb NOT NULL DEFAULT '[]'::jsonb,
   reveal_state jsonb NOT NULL DEFAULT '{}'::jsonb,
-  lighting_mode text NOT NULL DEFAULT 'day'::text
+  lighting_mode text NOT NULL DEFAULT 'day'::text,
+  natural_w integer,
+  natural_h integer
 );
 
 CREATE TABLE public.user_blocks (
@@ -1015,6 +1065,12 @@ ALTER TABLE public.advantages ADD CONSTRAINT advantages_pkey PRIMARY KEY (id);
 
 ALTER TABLE public.advantages ADD CONSTRAINT advantages_source_roll_log_id_fkey FOREIGN KEY (source_roll_log_id) REFERENCES roll_log(id) ON DELETE SET NULL;
 
+ALTER TABLE public.audit_log ADD CONSTRAINT audit_log_actor_user_id_fkey FOREIGN KEY (actor_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE public.audit_log ADD CONSTRAINT audit_log_operation_check CHECK ((operation = ANY (ARRAY['DELETE'::text, 'BULK_DELETE'::text, 'CRITICAL_UPDATE'::text, 'CASCADE_DELETE'::text])));
+
+ALTER TABLE public.audit_log ADD CONSTRAINT audit_log_pkey PRIMARY KEY (id);
+
 ALTER TABLE public.bug_reports ADD CONSTRAINT bug_reports_pkey PRIMARY KEY (id);
 
 ALTER TABLE public.bug_reports ADD CONSTRAINT bug_reports_reporter_id_fkey FOREIGN KEY (reporter_id) REFERENCES auth.users(id) ON DELETE SET NULL;
@@ -1121,6 +1177,8 @@ ALTER TABLE public.character_states ADD CONSTRAINT character_states_pkey PRIMARY
 
 ALTER TABLE public.character_states ADD CONSTRAINT character_states_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
+ALTER TABLE public.character_states ADD CONSTRAINT check_stress_range CHECK (((stress >= 0) AND (stress <= 5)));
+
 ALTER TABLE public.characters ADD CONSTRAINT characters_pkey PRIMARY KEY (id);
 
 ALTER TABLE public.characters ADD CONSTRAINT characters_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
@@ -1140,6 +1198,8 @@ ALTER TABLE public.communities ADD CONSTRAINT communities_leader_npc_id_fkey FOR
 ALTER TABLE public.communities ADD CONSTRAINT communities_leader_user_id_fkey FOREIGN KEY (leader_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 ALTER TABLE public.communities ADD CONSTRAINT communities_pkey PRIMARY KEY (id);
+
+ALTER TABLE public.communities ADD CONSTRAINT communities_stage_chk CHECK ((stage = ANY (ARRAY['group'::text, 'community'::text])));
 
 ALTER TABLE public.communities ADD CONSTRAINT communities_status_check CHECK ((status = ANY (ARRAY['forming'::text, 'active'::text, 'dissolved'::text])));
 
@@ -1172,6 +1232,8 @@ ALTER TABLE public.community_members ADD CONSTRAINT community_member_one_subject
 ALTER TABLE public.community_members ADD CONSTRAINT community_members_apprentice_of_character_id_fkey FOREIGN KEY (apprentice_of_character_id) REFERENCES characters(id) ON DELETE SET NULL;
 
 ALTER TABLE public.community_members ADD CONSTRAINT community_members_assignment_pc_id_fkey FOREIGN KEY (assignment_pc_id) REFERENCES characters(id) ON DELETE SET NULL;
+
+ALTER TABLE public.community_members ADD CONSTRAINT community_members_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE;
 
 ALTER TABLE public.community_members ADD CONSTRAINT community_members_character_id_fkey FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE;
 
@@ -1391,6 +1453,8 @@ ALTER TABLE public.notifications ADD CONSTRAINT notifications_pkey PRIMARY KEY (
 
 ALTER TABLE public.notifications ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
+ALTER TABLE public.npc_relationships ADD CONSTRAINT npc_relationships_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE;
+
 ALTER TABLE public.npc_relationships ADD CONSTRAINT npc_relationships_character_id_fkey FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE;
 
 ALTER TABLE public.npc_relationships ADD CONSTRAINT npc_relationships_npc_char_uniq UNIQUE (npc_id, character_id);
@@ -1423,13 +1487,37 @@ ALTER TABLE public.portrait_bank ADD CONSTRAINT portrait_bank_created_by_fkey FO
 
 ALTER TABLE public.portrait_bank ADD CONSTRAINT portrait_bank_gender_number_key UNIQUE (gender, number);
 
+ALTER TABLE public.portrait_bank ADD CONSTRAINT portrait_bank_id_or_name CHECK (((name IS NOT NULL) OR ((number IS NOT NULL) AND (gender IS NOT NULL))));
+
 ALTER TABLE public.portrait_bank ADD CONSTRAINT portrait_bank_pkey PRIMARY KEY (id);
 
 ALTER TABLE public.portrait_counters ADD CONSTRAINT portrait_counters_pkey PRIMARY KEY (gender);
 
+ALTER TABLE public.pregen_campaign_map ADD CONSTRAINT pregen_campaign_map_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE;
+
+ALTER TABLE public.pregen_campaign_map ADD CONSTRAINT pregen_campaign_map_pkey PRIMARY KEY (pregen_id, campaign_id);
+
+ALTER TABLE public.pregen_campaign_map ADD CONSTRAINT pregen_campaign_map_pregen_id_fkey FOREIGN KEY (pregen_id) REFERENCES pregen_library(id) ON DELETE CASCADE;
+
+ALTER TABLE public.pregen_library ADD CONSTRAINT pregen_library_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE public.pregen_library ADD CONSTRAINT pregen_library_author_id_fkey FOREIGN KEY (author_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE public.pregen_library ADD CONSTRAINT pregen_library_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE SET NULL;
+
+ALTER TABLE public.pregen_library ADD CONSTRAINT pregen_library_moderation_status_check CHECK ((moderation_status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])));
+
+ALTER TABLE public.pregen_library ADD CONSTRAINT pregen_library_module_id_fkey FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE SET NULL;
+
+ALTER TABLE public.pregen_library ADD CONSTRAINT pregen_library_pkey PRIMARY KEY (id);
+
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
+
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_canonical CHECK ((role = ANY (ARRAY['thriver'::text, 'survivor'::text, 'ghost'::text])));
+
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_tableau_role_canonical CHECK (((tableau_role IS NULL) OR (tableau_role = ANY (ARRAY['operator'::text, 'director'::text]))));
 
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_key UNIQUE (username);
 
@@ -1441,7 +1529,11 @@ ALTER TABLE public.roll_log ADD CONSTRAINT roll_log_insight_used_check CHECK (((
 
 ALTER TABLE public.roll_log ADD CONSTRAINT roll_log_pkey PRIMARY KEY (id);
 
+ALTER TABLE public.roll_log ADD CONSTRAINT roll_log_session_id_fkey FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE SET NULL;
+
 ALTER TABLE public.roll_log ADD CONSTRAINT roll_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id);
+
+ALTER TABLE public.scene_tokens ADD CONSTRAINT scene_tokens_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE;
 
 ALTER TABLE public.scene_tokens ADD CONSTRAINT scene_tokens_campaign_pin_id_fkey FOREIGN KEY (campaign_pin_id) REFERENCES campaign_pins(id) ON DELETE SET NULL;
 
@@ -1486,6 +1578,8 @@ ALTER TABLE public.signup_codes ADD CONSTRAINT signup_codes_created_by_fkey FORE
 ALTER TABLE public.signup_codes ADD CONSTRAINT signup_codes_pkey PRIMARY KEY (code);
 
 ALTER TABLE public.tactical_scenes ADD CONSTRAINT tactical_scenes_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE;
+
+ALTER TABLE public.tactical_scenes ADD CONSTRAINT tactical_scenes_cell_px_range CHECK (((cell_px >= 5) AND (cell_px <= 300)));
 
 ALTER TABLE public.tactical_scenes ADD CONSTRAINT tactical_scenes_pkey PRIMARY KEY (id);
 
@@ -1592,6 +1686,14 @@ CREATE INDEX idx_advantages_campaign_created ON public.advantages USING btree (c
 
 CREATE INDEX idx_advantages_character_pending ON public.advantages USING btree (character_id, created_at DESC) WHERE (consumed_at IS NULL);
 
+CREATE INDEX idx_audit_log_actor_user_id ON public.audit_log USING btree (actor_user_id, occurred_at DESC);
+
+CREATE INDEX idx_audit_log_campaign_id ON public.audit_log USING btree (campaign_id, occurred_at DESC) WHERE (campaign_id IS NOT NULL);
+
+CREATE INDEX idx_audit_log_occurred_at ON public.audit_log USING btree (occurred_at DESC);
+
+CREATE INDEX idx_audit_log_table_row ON public.audit_log USING btree (table_name, row_id, occurred_at DESC);
+
 CREATE INDEX idx_bug_reports_created ON public.bug_reports USING btree (created_at DESC);
 
 CREATE INDEX idx_bug_reports_status ON public.bug_reports USING btree (status, created_at DESC);
@@ -1609,6 +1711,8 @@ CREATE INDEX campaign_members_campaign_id_idx ON public.campaign_members USING b
 CREATE INDEX campaign_members_campaign_user_idx ON public.campaign_members USING btree (campaign_id, user_id);
 
 CREATE INDEX campaign_members_user_id_idx ON public.campaign_members USING btree (user_id);
+
+CREATE INDEX idx_campaign_members_character_id ON public.campaign_members USING btree (character_id);
 
 CREATE INDEX idx_campaign_notes_edited_clone ON public.campaign_notes USING btree (source_module_version_id, edited_since_clone) WHERE (source_module_version_id IS NOT NULL);
 
@@ -1636,7 +1740,15 @@ CREATE INDEX campaign_portrait_usage_campaign_idx ON public.campaign_portrait_us
 
 CREATE INDEX idx_campaign_snapshots_campaign ON public.campaign_snapshots USING btree (campaign_id, created_at DESC);
 
+CREATE INDEX idx_campaigns_gm_user_id ON public.campaigns USING btree (gm_user_id);
+
+CREATE INDEX idx_character_states_user_id ON public.character_states USING btree (user_id);
+
+CREATE INDEX idx_characters_user_id ON public.characters USING btree (user_id);
+
 CREATE INDEX idx_chat_messages_campaign_created ON public.chat_messages USING btree (campaign_id, created_at DESC);
+
+CREATE INDEX idx_chat_messages_user_id ON public.chat_messages USING btree (user_id);
 
 CREATE INDEX idx_communities_campaign ON public.communities USING btree (campaign_id, status);
 
@@ -1651,6 +1763,8 @@ CREATE INDEX idx_community_events_type ON public.community_events USING btree (e
 CREATE INDEX idx_community_members_apprentice_pending ON public.community_members USING btree (((apprentice_meta ->> 'setup_complete'::text))) WHERE ((apprentice_meta IS NOT NULL) AND ((apprentice_meta ->> 'setup_complete'::text) = 'false'::text));
 
 CREATE INDEX idx_community_members_assignment_pc ON public.community_members USING btree (assignment_pc_id) WHERE (assignment_pc_id IS NOT NULL);
+
+CREATE INDEX idx_community_members_campaign_id ON public.community_members USING btree (campaign_id);
 
 CREATE INDEX idx_community_members_character ON public.community_members USING btree (character_id) WHERE (character_id IS NOT NULL);
 
@@ -1744,6 +1858,8 @@ CREATE INDEX map_pins_active_world_events_idx ON public.map_pins USING btree (ca
 
 CREATE INDEX idx_messages_conversation ON public.messages USING btree (conversation_id, created_at);
 
+CREATE INDEX idx_messages_sender_user_id ON public.messages USING btree (sender_user_id);
+
 CREATE INDEX idx_module_reviews_module ON public.module_reviews USING btree (module_id, created_at DESC);
 
 CREATE INDEX idx_module_reviews_user ON public.module_reviews USING btree (user_id);
@@ -1761,6 +1877,8 @@ CREATE INDEX idx_modules_sort_order ON public.modules USING btree (sort_order, c
 CREATE INDEX idx_modules_visibility ON public.modules USING btree (visibility, moderation_status) WHERE (visibility = 'listed'::text);
 
 CREATE INDEX idx_notifications_user_created ON public.notifications USING btree (user_id, created_at DESC);
+
+CREATE INDEX idx_npc_relationships_campaign_id ON public.npc_relationships USING btree (campaign_id);
 
 CREATE INDEX idx_npc_relationships_character ON public.npc_relationships USING btree (character_id);
 
@@ -1782,13 +1900,27 @@ CREATE INDEX idx_player_npc_notes_npc ON public.player_npc_notes USING btree (np
 
 CREATE INDEX portrait_bank_gender_idx ON public.portrait_bank USING btree (gender);
 
+CREATE INDEX idx_pregen_campaign_map_campaign ON public.pregen_campaign_map USING btree (campaign_id);
+
+CREATE INDEX idx_pregen_library_author ON public.pregen_library USING btree (author_id);
+
+CREATE INDEX idx_pregen_library_campaign_id ON public.pregen_library USING btree (campaign_id);
+
+CREATE INDEX idx_pregen_library_listing ON public.pregen_library USING btree (moderation_status, setting) WHERE (moderation_status = 'approved'::text);
+
 CREATE INDEX idx_rate_limits_bucket ON public.rate_limits USING btree (hour_bucket);
 
 CREATE INDEX idx_roll_log_campaign_created ON public.roll_log USING btree (campaign_id, created_at DESC);
 
 CREATE INDEX idx_roll_log_coord_chain_id ON public.roll_log USING btree (coord_chain_id) WHERE (coord_chain_id IS NOT NULL);
 
+CREATE INDEX idx_roll_log_session_created ON public.roll_log USING btree (session_id, created_at DESC);
+
+CREATE INDEX idx_roll_log_user_id ON public.roll_log USING btree (user_id);
+
 CREATE INDEX idx_scene_tokens_archived_at ON public.scene_tokens USING btree (scene_id) WHERE (archived_at IS NULL);
+
+CREATE INDEX idx_scene_tokens_campaign_id ON public.scene_tokens USING btree (campaign_id);
 
 CREATE INDEX idx_scene_tokens_edited_clone ON public.scene_tokens USING btree (source_module_version_id, edited_since_clone) WHERE (source_module_version_id IS NOT NULL);
 
@@ -1797,6 +1929,12 @@ CREATE INDEX idx_scene_tokens_source_module_version ON public.scene_tokens USING
 CREATE INDEX scene_tokens_campaign_pin_idx ON public.scene_tokens USING btree (campaign_pin_id) WHERE (campaign_pin_id IS NOT NULL);
 
 CREATE UNIQUE INDEX scene_tokens_unique_npc_per_scene ON public.scene_tokens USING btree (scene_id, npc_id) WHERE (npc_id IS NOT NULL);
+
+CREATE INDEX idx_session_attachments_session_id ON public.session_attachments USING btree (session_id);
+
+CREATE INDEX idx_sessions_campaign_id ON public.sessions USING btree (campaign_id);
+
+CREATE INDEX idx_tactical_scenes_campaign_id ON public.tactical_scenes USING btree (campaign_id);
 
 CREATE INDEX idx_tactical_scenes_edited_clone ON public.tactical_scenes USING btree (source_module_version_id, edited_since_clone) WHERE (source_module_version_id IS NOT NULL);
 
@@ -1834,6 +1972,8 @@ CREATE INDEX idx_world_community_links_b ON public.world_community_links USING b
 -- ROW LEVEL SECURITY (enable)
 -- ============================================================
 ALTER TABLE public.advantages ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.bug_reports ENABLE ROW LEVEL SECURITY;
 
@@ -1927,6 +2067,10 @@ ALTER TABLE public.portrait_bank ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.portrait_counters ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.pregen_campaign_map ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.pregen_library ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
@@ -2002,6 +2146,12 @@ CREATE POLICY advantages_update ON public.advantages AS PERMISSIVE FOR UPDATE TO
    FROM campaigns c
   WHERE ((c.id = advantages.campaign_id) AND (c.gm_user_id = auth.uid()))))));
 
+CREATE POLICY audit_log_self_read ON public.audit_log AS PERMISSIVE FOR SELECT TO public USING ((actor_user_id = auth.uid()));
+
+CREATE POLICY audit_log_thriver_read ON public.audit_log AS PERMISSIVE FOR SELECT TO public USING ((EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (lower(profiles.role) = 'thriver'::text)))));
+
 CREATE POLICY bug_reports_delete ON public.bug_reports AS PERMISSIVE FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
    FROM profiles p
   WHERE ((p.id = auth.uid()) AND (lower(p.role) = 'thriver'::text)))));
@@ -2050,7 +2200,9 @@ CREATE POLICY ci_update ON public.campaign_invitations AS PERMISSIVE FOR UPDATE 
 
 CREATE POLICY "Members can update their own row" ON public.campaign_members AS PERMISSIVE FOR UPDATE TO authenticated USING ((auth.uid() = user_id)) WITH CHECK ((auth.uid() = user_id));
 
-CREATE POLICY "Members can view their campaigns" ON public.campaign_members AS PERMISSIVE FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
+CREATE POLICY "Members can view their campaigns" ON public.campaign_members AS PERMISSIVE FOR SELECT TO public USING (((user_id = auth.uid()) OR is_campaign_member(campaign_id) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = campaign_members.campaign_id) AND (c.gm_user_id = auth.uid())))) OR is_thriver()));
 
 CREATE POLICY "Users can join campaigns" ON public.campaign_members AS PERMISSIVE FOR INSERT TO public WITH CHECK ((auth.uid() = user_id));
 
@@ -2170,7 +2322,11 @@ CREATE POLICY "GM can insert states for their campaigns" ON public.character_sta
    FROM campaigns
   WHERE (campaigns.id = character_states.campaign_id))));
 
-CREATE POLICY "Members can view all states in their campaign" ON public.character_states AS PERMISSIVE FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
+CREATE POLICY "Members and GM view states in their campaign" ON public.character_states AS PERMISSIVE FOR SELECT TO public USING (((EXISTS ( SELECT 1
+   FROM campaign_members cm
+  WHERE ((cm.campaign_id = character_states.campaign_id) AND (cm.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = character_states.campaign_id) AND (c.gm_user_id = auth.uid()))))));
 
 CREATE POLICY "Players can insert their own state" ON public.character_states AS PERMISSIVE FOR INSERT TO public WITH CHECK ((auth.uid() = user_id));
 
@@ -2183,7 +2339,15 @@ CREATE POLICY "Campaign members read each other's characters" ON public.characte
      JOIN campaign_members theirs ON ((theirs.campaign_id = me.campaign_id)))
   WHERE ((me.user_id = auth.uid()) AND (theirs.user_id = characters.user_id))))));
 
-CREATE POLICY "Characters viewable by authenticated users" ON public.characters AS PERMISSIVE FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
+CREATE POLICY "GM can update characters in their campaigns" ON public.characters AS PERMISSIVE FOR UPDATE TO public USING ((EXISTS ( SELECT 1
+   FROM (character_states cs
+     JOIN campaigns c ON ((c.id = cs.campaign_id)))
+  WHERE ((cs.character_id = characters.id) AND (c.gm_user_id = auth.uid())))));
+
+CREATE POLICY "GM reads member characters in their campaigns" ON public.characters AS PERMISSIVE FOR SELECT TO public USING ((EXISTS ( SELECT 1
+   FROM (campaign_members cm
+     JOIN campaigns c ON ((c.id = cm.campaign_id)))
+  WHERE ((c.gm_user_id = auth.uid()) AND (cm.character_id = characters.id)))));
 
 CREATE POLICY "Users can delete own characters" ON public.characters AS PERMISSIVE FOR DELETE TO public USING ((auth.uid() = user_id));
 
@@ -2195,7 +2359,13 @@ CREATE POLICY characters_thriver_bypass ON public.characters AS PERMISSIVE FOR A
 
 CREATE POLICY "Authenticated can insert chat" ON public.chat_messages AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK ((user_id = auth.uid()));
 
-CREATE POLICY "Campaign members can read chat" ON public.chat_messages AS PERMISSIVE FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Campaign members can read chat" ON public.chat_messages AS PERMISSIVE FOR SELECT TO public USING ((((EXISTS ( SELECT 1
+   FROM campaign_members cm
+  WHERE ((cm.campaign_id = chat_messages.campaign_id) AND (cm.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = chat_messages.campaign_id) AND (c.gm_user_id = auth.uid()))))) AND ((COALESCE(is_whisper, false) = false) OR (user_id = auth.uid()) OR (recipient_user_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = chat_messages.campaign_id) AND (c.gm_user_id = auth.uid())))))));
 
 CREATE POLICY chat_messages_delete_gm ON public.chat_messages AS PERMISSIVE FOR DELETE TO public USING ((EXISTS ( SELECT 1
    FROM campaigns c
@@ -2620,13 +2790,7 @@ CREATE POLICY module_subscriptions_insert ON public.module_subscriptions AS PERM
    FROM campaigns c
   WHERE ((c.id = module_subscriptions.campaign_id) AND (c.gm_user_id = auth.uid())))));
 
-CREATE POLICY module_subscriptions_read ON public.module_subscriptions AS PERMISSIVE FOR SELECT TO public USING (((EXISTS ( SELECT 1
-   FROM campaigns c
-  WHERE ((c.id = module_subscriptions.campaign_id) AND (c.gm_user_id = auth.uid())))) OR (EXISTS ( SELECT 1
-   FROM modules m
-  WHERE ((m.id = module_subscriptions.module_id) AND (m.author_user_id = auth.uid())))) OR (EXISTS ( SELECT 1
-   FROM profiles p
-  WHERE ((p.id = auth.uid()) AND (lower(p.role) = 'thriver'::text))))));
+CREATE POLICY module_subscriptions_read ON public.module_subscriptions AS PERMISSIVE FOR SELECT TO public USING ((auth.uid() IS NOT NULL));
 
 CREATE POLICY module_subscriptions_update ON public.module_subscriptions AS PERMISSIVE FOR UPDATE TO public USING ((EXISTS ( SELECT 1
    FROM campaigns c
@@ -2762,11 +2926,45 @@ CREATE POLICY pnn_update ON public.player_npc_notes AS PERMISSIVE FOR UPDATE TO 
    FROM characters c
   WHERE ((c.id = player_npc_notes.character_id) AND (c.user_id = auth.uid())))));
 
-CREATE POLICY "Anyone reads portrait bank metadata" ON public.portrait_bank AS PERMISSIVE FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Anyone reads portrait bank metadata" ON public.portrait_bank AS PERMISSIVE FOR SELECT TO public USING (((COALESCE(is_private, false) = false) OR (created_by = auth.uid()) OR is_thriver()));
 
-CREATE POLICY "Users insert portrait bank metadata" ON public.portrait_bank AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Users insert portrait bank metadata" ON public.portrait_bank AS PERMISSIVE FOR INSERT TO public WITH CHECK (((created_by = auth.uid()) OR is_thriver()));
 
 CREATE POLICY "Anyone reads portrait counters" ON public.portrait_counters AS PERMISSIVE FOR SELECT TO anon, authenticated USING (true);
+
+CREATE POLICY pregen_campaign_map_delete ON public.pregen_campaign_map AS PERMISSIVE FOR DELETE TO public USING ((is_thriver() OR (EXISTS ( SELECT 1
+   FROM pregen_library pl
+  WHERE ((pl.id = pregen_campaign_map.pregen_id) AND (pl.author_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = pregen_campaign_map.campaign_id) AND (c.gm_user_id = auth.uid()))))));
+
+CREATE POLICY pregen_campaign_map_insert ON public.pregen_campaign_map AS PERMISSIVE FOR INSERT TO public WITH CHECK ((is_thriver() OR (EXISTS ( SELECT 1
+   FROM pregen_library pl
+  WHERE ((pl.id = pregen_campaign_map.pregen_id) AND (pl.author_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = pregen_campaign_map.campaign_id) AND (c.gm_user_id = auth.uid()))))));
+
+CREATE POLICY pregen_campaign_map_read ON public.pregen_campaign_map AS PERMISSIVE FOR SELECT TO public USING ((is_thriver() OR (EXISTS ( SELECT 1
+   FROM pregen_library pl
+  WHERE (pl.id = pregen_campaign_map.pregen_id))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = pregen_campaign_map.campaign_id) AND (c.gm_user_id = auth.uid()))))));
+
+CREATE POLICY pregen_campaign_map_update ON public.pregen_campaign_map AS PERMISSIVE FOR UPDATE TO public USING ((is_thriver() OR (EXISTS ( SELECT 1
+   FROM pregen_library pl
+  WHERE ((pl.id = pregen_campaign_map.pregen_id) AND (pl.author_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = pregen_campaign_map.campaign_id) AND (c.gm_user_id = auth.uid()))))));
+
+CREATE POLICY pregen_library_delete ON public.pregen_library AS PERMISSIVE FOR DELETE TO public USING (((author_id = auth.uid()) OR is_thriver()));
+
+CREATE POLICY pregen_library_insert ON public.pregen_library AS PERMISSIVE FOR INSERT TO public WITH CHECK (((author_id = auth.uid()) AND (is_thriver() OR ((moderation_status = 'pending'::text) AND (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE (c.gm_user_id = auth.uid())))))));
+
+CREATE POLICY pregen_library_read ON public.pregen_library AS PERMISSIVE FOR SELECT TO public USING (((author_id = auth.uid()) OR (moderation_status = 'approved'::text) OR is_thriver()));
+
+CREATE POLICY pregen_library_update ON public.pregen_library AS PERMISSIVE FOR UPDATE TO public USING (((author_id = auth.uid()) OR is_thriver())) WITH CHECK ((is_thriver() OR ((author_id = auth.uid()) AND (moderation_status = 'pending'::text))));
 
 CREATE POLICY "Allow insert for own profile" ON public.profiles AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK ((id = auth.uid()));
 
@@ -2787,9 +2985,17 @@ CREATE POLICY profiles_thriver_bypass ON public.profiles AS PERMISSIVE FOR ALL T
 
 CREATE POLICY rate_limits_select ON public.rate_limits AS PERMISSIVE FOR SELECT TO authenticated USING (false);
 
-CREATE POLICY "Campaign members can view rolls" ON public.roll_log AS PERMISSIVE FOR SELECT TO public USING (true);
+CREATE POLICY "Campaign members can view rolls" ON public.roll_log AS PERMISSIVE FOR SELECT TO public USING (((EXISTS ( SELECT 1
+   FROM campaign_members cm
+  WHERE ((cm.campaign_id = roll_log.campaign_id) AND (cm.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = roll_log.campaign_id) AND (c.gm_user_id = auth.uid()))))));
 
-CREATE POLICY "Users can insert their own rolls" ON public.roll_log AS PERMISSIVE FOR INSERT TO public WITH CHECK ((auth.uid() = user_id));
+CREATE POLICY "Users can insert their own rolls" ON public.roll_log AS PERMISSIVE FOR INSERT TO public WITH CHECK (((auth.uid() = user_id) AND ((EXISTS ( SELECT 1
+   FROM campaign_members cm
+  WHERE ((cm.campaign_id = roll_log.campaign_id) AND (cm.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = roll_log.campaign_id) AND (c.gm_user_id = auth.uid())))))));
 
 CREATE POLICY roll_log_delete_gm ON public.roll_log AS PERMISSIVE FOR DELETE TO public USING ((EXISTS ( SELECT 1
    FROM campaigns c
@@ -2873,7 +3079,11 @@ CREATE POLICY "GMs can update sessions" ON public.sessions AS PERMISSIVE FOR UPD
    FROM campaigns c
   WHERE ((c.id = sessions.campaign_id) AND (c.gm_user_id = auth.uid())))));
 
-CREATE POLICY "Sessions viewable by authenticated users" ON public.sessions AS PERMISSIVE FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Sessions viewable by authenticated users" ON public.sessions AS PERMISSIVE FOR SELECT TO public USING (((EXISTS ( SELECT 1
+   FROM campaign_members cm
+  WHERE ((cm.campaign_id = sessions.campaign_id) AND (cm.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM campaigns c
+  WHERE ((c.id = sessions.campaign_id) AND (c.gm_user_id = auth.uid())))) OR is_thriver()));
 
 CREATE POLICY sessions_thriver_bypass ON public.sessions AS PERMISSIVE FOR ALL TO authenticated USING (is_thriver()) WITH CHECK (is_thriver());
 
@@ -3106,8 +3316,6 @@ CREATE TRIGGER trg_bug_reports_notify AFTER INSERT ON public.bug_reports FOR EAC
 
 CREATE TRIGGER trg_bug_reports_touch BEFORE UPDATE ON public.bug_reports FOR EACH ROW EXECUTE FUNCTION bug_reports_touch_updated_at();
 
-CREATE TRIGGER maintain_mortal_recovery_flag BEFORE UPDATE OF wp_current ON public.character_states FOR EACH ROW EXECUTE FUNCTION trg_maintain_mortal_recovery_flag();
-
 CREATE TRIGGER on_campaign_invitation_insert AFTER INSERT ON public.campaign_invitations FOR EACH ROW EXECUTE FUNCTION notify_campaign_invitation();
 
 CREATE TRIGGER on_campaign_invitation_response AFTER UPDATE ON public.campaign_invitations FOR EACH ROW EXECUTE FUNCTION handle_campaign_invitation_response();
@@ -3118,7 +3326,11 @@ CREATE TRIGGER on_player_joined AFTER INSERT ON public.campaign_members FOR EACH
 
 CREATE TRIGGER on_session_opened AFTER UPDATE ON public.campaigns FOR EACH ROW EXECUTE FUNCTION notify_session_opened();
 
+CREATE TRIGGER maintain_mortal_recovery_flag BEFORE UPDATE OF wp_current ON public.character_states FOR EACH ROW EXECUTE FUNCTION trg_maintain_mortal_recovery_flag();
+
 CREATE TRIGGER trg_community_encounter_notify AFTER INSERT ON public.community_encounters FOR EACH ROW EXECUTE FUNCTION notify_community_encounter();
+
+CREATE TRIGGER trg_community_member_campaign_id BEFORE INSERT ON public.community_members FOR EACH ROW EXECUTE FUNCTION set_community_member_campaign_id();
 
 CREATE TRIGGER trg_community_milestone AFTER INSERT OR UPDATE OF status, left_at ON public.community_members FOR EACH ROW EXECUTE FUNCTION notify_community_milestone();
 
@@ -3164,6 +3376,8 @@ CREATE TRIGGER on_new_pin AFTER INSERT ON public.map_pins FOR EACH ROW EXECUTE F
 
 CREATE TRIGGER on_pin_approved AFTER UPDATE ON public.map_pins FOR EACH ROW EXECUTE FUNCTION notify_pin_approved();
 
+CREATE TRIGGER trg_enforce_map_pin_moderation BEFORE INSERT ON public.map_pins FOR EACH ROW EXECUTE FUNCTION enforce_map_pin_moderation_on_insert();
+
 CREATE TRIGGER trg_module_reviews_aggregate AFTER INSERT OR DELETE OR UPDATE ON public.module_reviews FOR EACH ROW EXECUTE FUNCTION module_reviews_recompute_aggregate();
 
 CREATE TRIGGER trg_module_reviews_touch BEFORE UPDATE ON public.module_reviews FOR EACH ROW EXECUTE FUNCTION module_reviews_touch_updated_at();
@@ -3176,6 +3390,8 @@ CREATE TRIGGER trg_module_versions_bump_latest AFTER INSERT ON public.module_ver
 
 CREATE TRIGGER trg_module_submission_notify AFTER INSERT ON public.modules FOR EACH ROW EXECUTE FUNCTION notify_new_module_submission();
 
+CREATE TRIGGER trg_npc_relationship_campaign_id BEFORE INSERT ON public.npc_relationships FOR EACH ROW EXECUTE FUNCTION set_npc_relationship_campaign_id();
+
 CREATE TRIGGER player_notes_stamp_session BEFORE INSERT ON public.player_notes FOR EACH ROW EXECUTE FUNCTION player_notes_set_session_number();
 
 CREATE TRIGGER player_npc_notes_touch BEFORE UPDATE ON public.player_npc_notes FOR EACH ROW EXECUTE FUNCTION player_npc_notes_touch_updated_at();
@@ -3185,6 +3401,8 @@ CREATE TRIGGER on_new_survivor AFTER INSERT ON public.profiles FOR EACH ROW EXEC
 CREATE TRIGGER trg_normalize_role BEFORE INSERT OR UPDATE OF role ON public.profiles FOR EACH ROW EXECUTE FUNCTION normalize_profile_role();
 
 CREATE TRIGGER scene_token_reveals_npc AFTER INSERT ON public.scene_tokens FOR EACH ROW EXECUTE FUNCTION reveal_npc_on_scene_token_insert();
+
+CREATE TRIGGER trg_scene_token_campaign_id BEFORE INSERT ON public.scene_tokens FOR EACH ROW EXECUTE FUNCTION set_scene_token_campaign_id();
 
 CREATE TRIGGER trg_enforce_mod_war_stories BEFORE INSERT ON public.war_stories FOR EACH ROW EXECUTE FUNCTION enforce_moderation_on_insert();
 
@@ -3281,6 +3499,7 @@ CREATE OR REPLACE FUNCTION public.apply_community_migration_acceptance()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_target_campaign_id uuid;
@@ -3498,6 +3717,7 @@ CREATE OR REPLACE FUNCTION public.bump_world_community_subscriber_count()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 BEGIN
   IF TG_OP = 'INSERT' THEN
@@ -3520,25 +3740,24 @@ CREATE OR REPLACE FUNCTION public.call_notify_thriver(p_type text, p_title text,
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 BEGIN
   PERFORM net.http_post(
-    url := current_setting('app.settings.supabase_url', true) || '/functions/v1/notify-thriver',
+    url     := 'https://jbudzglgtxeoaufpejrv.supabase.co/functions/v1/notify-thriver',
     headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
+      'Content-Type',  'application/json',
+      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpidWR6Z2xndHhlb2F1ZnBlanJ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDgzNDk4NiwiZXhwIjoyMDkwNDEwOTg2fQ.e1gE_fovj51LVs-5CA9owGLFCNfn5xMJ_a9031ebGq8'
     ),
-    body := jsonb_build_object(
-      'type', p_type,
+    body    := jsonb_build_object(
+      'type',  p_type,
       'title', p_title,
-      'body', p_body,
-      'link', p_link
+      'body',  p_body,
+      'link',  p_link
     )
   );
 EXCEPTION WHEN OTHERS THEN
-  -- Silently swallow pg_net / Edge Function failures so the parent
-  -- transaction (the signup that triggered us) doesn't roll back.
-  NULL;
+  NULL; -- swallow pg_net / Edge Function failures so caller never rolls back
 END;
 $function$
 ;
@@ -3572,6 +3791,39 @@ BEGIN
     DO UPDATE SET count = rate_limits.count + 1
     RETURNING count INTO v_new_count;
   RETURN v_new_count <= p_max_per_hour;
+END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.enforce_map_pin_moderation_on_insert()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_is_thriver boolean;
+BEGIN
+  SELECT lower(role) = 'thriver' INTO v_is_thriver
+    FROM public.profiles WHERE id = auth.uid();
+
+  -- Thrivers are the moderation layer: respect their pin_type/status.
+  IF COALESCE(v_is_thriver, false) THEN
+    RETURN NEW;
+  END IF;
+
+  -- Non-Thrivers can never publish (gm) or self-approve.
+  IF NEW.pin_type = 'private' THEN
+    -- Genuine private pin: owner-only via SELECT. Block the private+approved
+    -- leak by clamping status to 'active'; leave the rest as-is.
+    NEW.status := 'active';
+  ELSE
+    -- Any shared/world pin attempt -> the moderation queue.
+    NEW.pin_type := 'rumor';
+    NEW.status := 'pending';
+  END IF;
+
+  RETURN NEW;
 END;
 $function$
 ;
@@ -3611,6 +3863,19 @@ BEGIN
 
   RETURN NEW;
 END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.find_campaign_by_invite_code(p_code text)
+ RETURNS TABLE(id uuid, name text, setting text, description text, cover_image_url text, gm_user_id uuid)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+  SELECT c.id, c.name, c.setting, c.description, c.cover_image_url, c.gm_user_id
+  FROM public.campaigns c
+  WHERE upper(c.invite_code) = upper(trim(p_code))
+  LIMIT 1
 $function$
 ;
 
@@ -3659,6 +3924,18 @@ END;
 $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.get_campaign_invite_code(p_campaign_id uuid)
+ RETURNS text
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+  SELECT c.invite_code FROM public.campaigns c
+  WHERE c.id = p_campaign_id
+    AND (c.gm_user_id = auth.uid() OR public.is_campaign_member(p_campaign_id) OR public.is_thriver());
+$function$
+;
+
 CREATE OR REPLACE FUNCTION public.get_latest_messages_for_conversations(conv_ids uuid[])
  RETURNS TABLE(conversation_id uuid, body text, created_at timestamp with time zone, sender_user_id uuid)
  LANGUAGE sql
@@ -3703,10 +3980,22 @@ END;
 $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.get_profile_email(p_user_id uuid)
+ RETURNS text
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+  SELECT email FROM public.profiles
+  WHERE id = p_user_id AND (p_user_id = auth.uid() OR public.is_thriver());
+$function$
+;
+
 CREATE OR REPLACE FUNCTION public.get_visitor_map_data()
  RETURNS TABLE(ip_hash text, lat numeric, lng numeric, city text, country_code text, visit_count bigint, first_visit timestamp with time zone, last_visit timestamp with time zone, is_ghost boolean)
  LANGUAGE sql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
     SELECT vl.ip_hash, MAX(vl.latitude) as lat, MAX(vl.longitude) as lng,
       MAX(vl.city) as city, MAX(vl.country_code) as country_code,
@@ -3718,10 +4007,262 @@ AS $function$
   $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.give_item_to_character(p_giver_id uuid, p_target_id uuid, p_item_name text, p_item_custom boolean, p_qty integer)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_uid          uuid := auth.uid();
+  v_is_owner     boolean;
+  v_is_gm        boolean;
+  v_giver_data   jsonb;
+  v_target_data  jsonb;
+  v_giver_inv    jsonb;
+  v_target_inv   jsonb;
+  v_have         integer;
+  v_target_have  integer;
+  v_template     jsonb;
+BEGIN
+  IF p_qty IS NULL OR p_qty < 1 THEN RAISE EXCEPTION 'qty must be >= 1'; END IF;
+  IF p_giver_id = p_target_id THEN RAISE EXCEPTION 'giver and target must differ'; END IF;
+
+  -- shared-campaign gate (both characters in the same game)
+  IF NOT EXISTS (
+    SELECT 1 FROM character_states g
+    JOIN character_states t ON t.campaign_id = g.campaign_id
+    WHERE g.character_id = p_giver_id AND t.character_id = p_target_id
+  ) THEN
+    RAISE EXCEPTION 'characters are not in the same campaign';
+  END IF;
+
+  -- authz: caller owns the giver, OR is GM of a shared campaign
+  SELECT EXISTS (SELECT 1 FROM characters WHERE id = p_giver_id AND user_id = v_uid) INTO v_is_owner;
+  SELECT EXISTS (
+    SELECT 1 FROM character_states g
+    JOIN character_states t ON t.campaign_id = g.campaign_id
+    JOIN campaigns c ON c.id = g.campaign_id
+    WHERE g.character_id = p_giver_id AND t.character_id = p_target_id AND c.gm_user_id = v_uid
+  ) INTO v_is_gm;
+  IF NOT (COALESCE(v_is_owner,false) OR COALESCE(v_is_gm,false)) THEN
+    RAISE EXCEPTION 'not authorized to give from this character';
+  END IF;
+
+  -- lock both rows for the duration of the transfer
+  SELECT data INTO v_giver_data  FROM characters WHERE id = p_giver_id  FOR UPDATE;
+  SELECT data INTO v_target_data FROM characters WHERE id = p_target_id FOR UPDATE;
+  IF v_giver_data IS NULL OR v_target_data IS NULL THEN RAISE EXCEPTION 'character not found'; END IF;
+
+  v_giver_inv  := COALESCE(v_giver_data->'inventory',  '[]'::jsonb);
+  v_target_inv := COALESCE(v_target_data->'inventory', '[]'::jsonb);
+
+  -- giver must hold enough of (name, custom) - summed across any stacks
+  SELECT COALESCE(SUM((e->>'qty')::int), 0) INTO v_have
+  FROM jsonb_array_elements(v_giver_inv) e
+  WHERE e->>'name' = p_item_name
+    AND COALESCE((e->>'custom')::boolean, false) = COALESCE(p_item_custom, false);
+  IF v_have < p_qty THEN RAISE EXCEPTION 'giver has only % of %, cannot give %', v_have, p_item_name, p_qty; END IF;
+
+  -- template = one matching entry (carries enc/rarity/notes shape)
+  SELECT e INTO v_template
+  FROM jsonb_array_elements(v_giver_inv) e
+  WHERE e->>'name' = p_item_name
+    AND COALESCE((e->>'custom')::boolean, false) = COALESCE(p_item_custom, false)
+  LIMIT 1;
+
+  -- GIVER: drop all matching stacks, re-add one consolidated remainder (if > 0)
+  v_giver_inv := (
+    SELECT COALESCE(jsonb_agg(e), '[]'::jsonb)
+    FROM jsonb_array_elements(v_giver_inv) e
+    WHERE NOT (e->>'name' = p_item_name
+      AND COALESCE((e->>'custom')::boolean, false) = COALESCE(p_item_custom, false))
+  );
+  IF (v_have - p_qty) > 0 THEN
+    v_giver_inv := v_giver_inv || jsonb_build_array(jsonb_set(v_template, '{qty}', to_jsonb(v_have - p_qty)));
+  END IF;
+
+  -- TARGET: consolidate existing matching qty + p_qty into one stack (worn reset)
+  SELECT COALESCE(SUM((e->>'qty')::int), 0) INTO v_target_have
+  FROM jsonb_array_elements(v_target_inv) e
+  WHERE e->>'name' = p_item_name
+    AND COALESCE((e->>'custom')::boolean, false) = COALESCE(p_item_custom, false);
+  v_target_inv := (
+    SELECT COALESCE(jsonb_agg(e), '[]'::jsonb)
+    FROM jsonb_array_elements(v_target_inv) e
+    WHERE NOT (e->>'name' = p_item_name
+      AND COALESCE((e->>'custom')::boolean, false) = COALESCE(p_item_custom, false))
+  );
+  v_target_inv := v_target_inv || jsonb_build_array(
+    jsonb_set(jsonb_set(v_template, '{qty}', to_jsonb(v_target_have + p_qty)), '{worn}', 'false'::jsonb)
+  );
+
+  -- write both sides atomically
+  UPDATE characters SET data = jsonb_set(v_giver_data,  '{inventory}', v_giver_inv)  WHERE id = p_giver_id;
+  UPDATE characters SET data = jsonb_set(v_target_data, '{inventory}', v_target_inv) WHERE id = p_target_id;
+END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.gm_apply_damage(p_campaign_id uuid, p_target_kind text, p_target_id uuid, p_wp_damage integer, p_infection_risk boolean DEFAULT false)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_uid                  uuid := auth.uid();
+  v_is_gm                boolean;
+  v_wp_before            integer;
+  v_wp_after             integer;
+  v_stress_before        integer;
+  v_stress_after         integer;
+  v_target_name          text;
+  v_crossed_zero         boolean := false;
+  v_damage_json          jsonb;
+  v_combat_start_at      timestamptz;
+  v_warning_already      boolean;
+  v_warning_inserted     boolean := false;
+BEGIN
+  -- input checks
+  IF p_campaign_id IS NULL OR p_target_id IS NULL THEN
+    RAISE EXCEPTION 'campaign_id and target_id required';
+  END IF;
+  IF p_wp_damage IS NULL OR p_wp_damage < 1 THEN
+    RAISE EXCEPTION 'wp_damage must be >= 1';
+  END IF;
+  IF p_target_kind NOT IN ('pc','npc') THEN
+    RAISE EXCEPTION 'target_kind must be pc or npc';
+  END IF;
+
+  -- authz: caller is the campaign GM
+  SELECT EXISTS (
+    SELECT 1 FROM campaigns WHERE id = p_campaign_id AND gm_user_id = v_uid
+  ) INTO v_is_gm;
+  IF NOT COALESCE(v_is_gm, false) THEN
+    RAISE EXCEPTION 'not authorized: caller is not the GM of this campaign';
+  END IF;
+
+  IF p_target_kind = 'pc' THEN
+    SELECT wp_current, stress
+      INTO v_wp_before, v_stress_before
+      FROM character_states
+     WHERE campaign_id = p_campaign_id AND character_id = p_target_id
+     FOR UPDATE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'character_states row not found for character % in campaign % (initialize state first)', p_target_id, p_campaign_id;
+    END IF;
+
+    SELECT name INTO v_target_name FROM characters WHERE id = p_target_id;
+
+    v_wp_after := GREATEST(0, v_wp_before - p_wp_damage);
+    v_stress_after := v_stress_before;
+    IF v_wp_before > 0 AND v_wp_after = 0 THEN
+      v_crossed_zero := true;
+      v_stress_after := LEAST(5, COALESCE(v_stress_before, 0) + 1);
+    END IF;
+
+    UPDATE character_states
+       SET wp_current = v_wp_after,
+           stress     = v_stress_after,
+           updated_at = now()
+     WHERE campaign_id = p_campaign_id AND character_id = p_target_id;
+
+  ELSE
+    SELECT wp_current, name
+      INTO v_wp_before, v_target_name
+      FROM campaign_npcs
+     WHERE id = p_target_id AND campaign_id = p_campaign_id
+     FOR UPDATE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'campaign_npcs row not found for id % in campaign %', p_target_id, p_campaign_id;
+    END IF;
+    v_wp_before := COALESCE(v_wp_before, 0);
+    v_wp_after  := GREATEST(0, v_wp_before - p_wp_damage);
+
+    UPDATE campaign_npcs
+       SET wp_current = v_wp_after
+     WHERE id = p_target_id AND campaign_id = p_campaign_id;
+
+    v_stress_before := NULL;
+    v_stress_after  := NULL;
+  END IF;
+
+  -- Build damage_json. v1 v2 callers see byte-identical shape (no
+  -- infection_risk field) when the gate doesn't fire.
+  v_damage_json := jsonb_build_object(
+    'via',           'gm_apply',
+    'target_kind',   p_target_kind,
+    'target_id',     p_target_id,
+    'wp_damage',     p_wp_damage,
+    'wp_before',     v_wp_before,
+    'wp_after',      v_wp_after,
+    'stress_before', v_stress_before,
+    'stress_after',  v_stress_after
+  );
+  IF COALESCE(p_infection_risk, false) AND p_target_kind = 'pc' AND v_crossed_zero THEN
+    v_damage_json := v_damage_json || jsonb_build_object('infection_risk', true);
+  END IF;
+
+  -- audit row (existing v2 behavior)
+  INSERT INTO roll_log (
+    campaign_id, user_id, character_name, label, target_name, damage_json
+  ) VALUES (
+    p_campaign_id, v_uid, 'GM', 'GM Apply Damage', v_target_name, v_damage_json
+  );
+
+  -- NEW v3: bridge to the user-visible RollsFeed banner. Same gate as the
+  -- damage_json.infection_risk flag (PC + crossed zero + flag passed),
+  -- then dedup against the most-recent combat to avoid double-banners.
+  IF COALESCE(p_infection_risk, false) AND p_target_kind = 'pc' AND v_crossed_zero THEN
+    SELECT created_at
+      INTO v_combat_start_at
+      FROM roll_log
+     WHERE campaign_id = p_campaign_id
+       AND outcome = 'combat_start'
+     ORDER BY created_at DESC
+     LIMIT 1;
+
+    SELECT EXISTS (
+      SELECT 1 FROM roll_log
+       WHERE campaign_id = p_campaign_id
+         AND outcome = 'wound_infection_warning'
+         AND character_name = v_target_name
+         AND created_at >= COALESCE(v_combat_start_at, '1970-01-01'::timestamptz)
+    ) INTO v_warning_already;
+
+    IF NOT COALESCE(v_warning_already, false) THEN
+      INSERT INTO roll_log (
+        campaign_id, user_id, character_name, label,
+        die1, die2, amod, smod, cmod, total, outcome
+      ) VALUES (
+        p_campaign_id, v_uid, v_target_name,
+        v_target_name || ' is wounded and may have to deal with infection',
+        0, 0, 0, 0, 0, 0, 'wound_infection_warning'
+      );
+      v_warning_inserted := true;
+    END IF;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'target_kind',                p_target_kind,
+    'target_id',                  p_target_id,
+    'wp_before',                  v_wp_before,
+    'wp_after',                   v_wp_after,
+    'stress_before',              v_stress_before,
+    'stress_after',               v_stress_after,
+    'infection_risk',             COALESCE(p_infection_risk, false) AND p_target_kind = 'pc' AND v_crossed_zero,
+    'wound_infection_warning',    v_warning_inserted
+  );
+END;
+$function$
+;
+
 CREATE OR REPLACE FUNCTION public.handle_campaign_invitation_response()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_recipient_name text;
@@ -3763,6 +4304,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 BEGIN
   BEGIN
@@ -3804,10 +4346,24 @@ END;
 $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.is_campaign_member(p_campaign_id uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.campaign_members
+    WHERE campaign_id = p_campaign_id AND user_id = auth.uid()
+  );
+$function$
+;
+
 CREATE OR REPLACE FUNCTION public.is_thriver()
  RETURNS boolean
  LANGUAGE sql
  STABLE SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
   -- profiles.role is auto-lowercased by trg_normalize_role (see
   -- tasks/lessons.md), so compare against 'thriver' (lowercase).
@@ -3872,6 +4428,159 @@ BEGIN
   NEW.updated_at := now();
   RETURN NEW;
 END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.loot_npc_equipment_item(p_npc_id uuid, p_character_id uuid, p_weapon_slot text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+declare
+  v_user_id    uuid := auth.uid();
+  v_npc        record;
+  v_pc         record;
+  v_skills     jsonb;
+  v_weapon     jsonb;
+  v_weapon_name text;
+  v_condition  text;
+  v_ammo_cur   int;
+  v_ammo_max   int;
+  v_reloads    int;
+  v_notes      text;
+  v_wp         int;
+  v_rp         int;
+  v_lootable   boolean;
+  v_pc_data    jsonb;
+  v_pc_inv     jsonb;
+  v_match_idx  int := -1;
+  v_existing   jsonb;
+  v_new_pc_inv jsonb;
+  v_new_item   jsonb;
+  i            int;
+begin
+  -- Basic validation
+  if v_user_id is null then
+    return jsonb_build_object('ok', false, 'error', 'not authenticated');
+  end if;
+  if p_weapon_slot not in ('weapon', 'weapon2') then
+    return jsonb_build_object('ok', false, 'error', 'invalid weapon slot (must be weapon or weapon2)');
+  end if;
+
+  -- 1. Fetch NPC (SECURITY DEFINER bypasses RLS; campaign check below is the real gate)
+  select * into v_npc from public.campaign_npcs where id = p_npc_id;
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'NPC not found');
+  end if;
+
+  -- 2. Fetch + verify character ownership
+  select * into v_pc from public.characters where id = p_character_id;
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'character not found');
+  end if;
+  if v_pc.user_id is null or v_pc.user_id <> v_user_id then
+    return jsonb_build_object('ok', false, 'error', 'not your character');
+  end if;
+
+  -- 3. Verify the looter is a member of the NPC's campaign
+  if not exists (
+    select 1 from public.campaign_members
+    where campaign_id = v_npc.campaign_id
+      and user_id     = v_user_id
+      and character_id = p_character_id
+  ) then
+    return jsonb_build_object('ok', false, 'error', 'character not in NPC''s campaign');
+  end if;
+
+  -- 4. Verify NPC is lootable
+  v_wp := coalesce(v_npc.wp_current, v_npc.wp_max, 10);
+  v_rp := coalesce(v_npc.rp_current, v_npc.rp_max, 6);
+  v_lootable := (v_npc.status = 'dead')
+             or (v_wp = 0)
+             or (v_rp = 0 and v_wp > 0);
+  if not v_lootable then
+    return jsonb_build_object('ok', false, 'error', 'NPC must be dead, mortally wounded, or unconscious to loot');
+  end if;
+
+  -- 5. Read the weapon from the skills slot
+  v_skills := coalesce(v_npc.skills, '{}'::jsonb);
+  v_weapon  := v_skills->p_weapon_slot;
+  if v_weapon is null or jsonb_typeof(v_weapon) = 'null' then
+    return jsonb_build_object('ok', false, 'error', 'no weapon in that slot');
+  end if;
+  v_weapon_name := v_weapon->>'weaponName';
+  if v_weapon_name is null or trim(v_weapon_name) = '' then
+    return jsonb_build_object('ok', false, 'error', 'weapon slot has no name');
+  end if;
+
+  -- 6. Build descriptive notes string for the PC's inventory entry
+  v_condition := coalesce(v_weapon->>'condition', 'Unknown');
+  v_ammo_cur  := coalesce((v_weapon->>'ammoCurrent')::int, 0);
+  v_ammo_max  := coalesce((v_weapon->>'ammoMax')::int, 0);
+  v_reloads   := coalesce((v_weapon->>'reloads')::int, 0);
+  if v_ammo_max > 0 then
+    v_notes := v_condition
+      || ' - ' || v_ammo_cur || '/' || v_ammo_max || ' ammo'
+      || ', ' || v_reloads || ' reload' || case when v_reloads <> 1 then 's' else '' end;
+  else
+    v_notes := v_condition;
+  end if;
+
+  -- 7. Null out the weapon slot in campaign_npcs.skills
+  update public.campaign_npcs
+     set skills = jsonb_set(v_skills, array[p_weapon_slot], 'null'::jsonb)
+   where id = p_npc_id;
+
+  -- 8. Find or build the PC's matching inventory entry
+  v_pc_data := coalesce(v_pc.data, '{}'::jsonb);
+  v_pc_inv  := coalesce(v_pc_data->'inventory', '[]'::jsonb);
+  if jsonb_typeof(v_pc_inv) <> 'array' then
+    v_pc_inv := '[]'::jsonb;
+  end if;
+  for i in 0 .. jsonb_array_length(v_pc_inv) - 1 loop
+    if (v_pc_inv->i->>'name') = v_weapon_name
+       and not coalesce((v_pc_inv->i->>'custom')::boolean, false) then
+      v_match_idx := i;
+      v_existing  := v_pc_inv->i;
+      exit;
+    end if;
+  end loop;
+  if v_match_idx >= 0 then
+    v_new_pc_inv := jsonb_set(
+      v_pc_inv,
+      array[v_match_idx::text, 'qty'],
+      to_jsonb(coalesce((v_existing->>'qty')::int, 1) + 1)
+    );
+  else
+    v_new_item := jsonb_strip_nulls(jsonb_build_object(
+      'name',   v_weapon_name,
+      'qty',    1,
+      'custom', false,
+      'notes',  v_notes
+    ));
+    v_new_pc_inv := v_pc_inv || jsonb_build_array(v_new_item);
+  end if;
+
+  -- 9. Persist PC inventory update
+  update public.characters
+     set data = jsonb_set(v_pc_data, '{inventory}', v_new_pc_inv)
+   where id = p_character_id;
+
+  -- 10. Audit log
+  insert into public.roll_log (
+    campaign_id, user_id, character_name, label,
+    die1, die2, amod, smod, cmod, total, outcome
+  ) values (
+    v_npc.campaign_id,
+    v_user_id,
+    v_pc.name,
+    v_pc.name || ' looted a ' || v_weapon_name || ' from ' || v_npc.name,
+    0, 0, 0, 0, 0, 0, 'loot'
+  );
+
+  return jsonb_build_object('ok', true);
+end;
 $function$
 ;
 
@@ -4038,144 +4747,13 @@ begin
     v_npc.campaign_id,
     v_user_id,
     v_pc.name,
-    '🎒 ' || v_pc.name || ' searched the corpse of ' || v_npc.name ||
-      ' and looted ' || p_item_name ||
-      case when v_take > 1 then ' ×' || v_take else '' end,
+    v_pc.name || ' searched the corpse of ' || v_npc.name ||
+      ' and looted a ' || p_item_name ||
+      case when v_take > 1 then ' x' || v_take else '' end,
     0, 0, 0, 0, 0, 0, 'loot'
   );
 
   return jsonb_build_object('ok', true, 'taken', v_take);
-end;
-$function$
-;
-
-CREATE OR REPLACE FUNCTION public.loot_npc_equipment_item(p_npc_id uuid, p_character_id uuid, p_weapon_slot text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-declare
-  v_user_id    uuid := auth.uid();
-  v_npc        record;
-  v_pc         record;
-  v_skills     jsonb;
-  v_weapon     jsonb;
-  v_weapon_name text;
-  v_condition  text;
-  v_ammo_cur   int;
-  v_ammo_max   int;
-  v_reloads    int;
-  v_notes      text;
-  v_wp         int;
-  v_rp         int;
-  v_lootable   boolean;
-  v_pc_data    jsonb;
-  v_pc_inv     jsonb;
-  v_match_idx  int := -1;
-  v_existing   jsonb;
-  v_new_pc_inv jsonb;
-  v_new_item   jsonb;
-  i            int;
-begin
-  if v_user_id is null then
-    return jsonb_build_object('ok', false, 'error', 'not authenticated');
-  end if;
-  if p_weapon_slot not in ('weapon', 'weapon2') then
-    return jsonb_build_object('ok', false, 'error', 'invalid weapon slot (must be weapon or weapon2)');
-  end if;
-  select * into v_npc from public.campaign_npcs where id = p_npc_id;
-  if not found then
-    return jsonb_build_object('ok', false, 'error', 'NPC not found');
-  end if;
-  select * into v_pc from public.characters where id = p_character_id;
-  if not found then
-    return jsonb_build_object('ok', false, 'error', 'character not found');
-  end if;
-  if v_pc.user_id is null or v_pc.user_id <> v_user_id then
-    return jsonb_build_object('ok', false, 'error', 'not your character');
-  end if;
-  if not exists (
-    select 1 from public.campaign_members
-    where campaign_id = v_npc.campaign_id
-      and user_id     = v_user_id
-      and character_id = p_character_id
-  ) then
-    return jsonb_build_object('ok', false, 'error', 'character not in NPC''s campaign');
-  end if;
-  v_wp := coalesce(v_npc.wp_current, v_npc.wp_max, 10);
-  v_rp := coalesce(v_npc.rp_current, v_npc.rp_max, 6);
-  v_lootable := (v_npc.status = 'dead')
-             or (v_wp = 0)
-             or (v_rp = 0 and v_wp > 0);
-  if not v_lootable then
-    return jsonb_build_object('ok', false, 'error', 'NPC must be dead, mortally wounded, or unconscious to loot');
-  end if;
-  v_skills := coalesce(v_npc.skills, '{}'::jsonb);
-  v_weapon  := v_skills->p_weapon_slot;
-  if v_weapon is null or jsonb_typeof(v_weapon) = 'null' then
-    return jsonb_build_object('ok', false, 'error', 'no weapon in that slot');
-  end if;
-  v_weapon_name := v_weapon->>'weaponName';
-  if v_weapon_name is null or trim(v_weapon_name) = '' then
-    return jsonb_build_object('ok', false, 'error', 'weapon slot has no name');
-  end if;
-  v_condition := coalesce(v_weapon->>'condition', 'Unknown');
-  v_ammo_cur  := coalesce((v_weapon->>'ammoCurrent')::int, 0);
-  v_ammo_max  := coalesce((v_weapon->>'ammoMax')::int, 0);
-  v_reloads   := coalesce((v_weapon->>'reloads')::int, 0);
-  if v_ammo_max > 0 then
-    v_notes := v_condition
-      || ' - ' || v_ammo_cur || '/' || v_ammo_max || ' ammo'
-      || ', ' || v_reloads || ' reload' || case when v_reloads <> 1 then 's' else '' end;
-  else
-    v_notes := v_condition;
-  end if;
-  update public.campaign_npcs
-     set skills = jsonb_set(v_skills, array[p_weapon_slot], 'null'::jsonb)
-   where id = p_npc_id;
-  v_pc_data := coalesce(v_pc.data, '{}'::jsonb);
-  v_pc_inv  := coalesce(v_pc_data->'inventory', '[]'::jsonb);
-  if jsonb_typeof(v_pc_inv) <> 'array' then
-    v_pc_inv := '[]'::jsonb;
-  end if;
-  for i in 0 .. jsonb_array_length(v_pc_inv) - 1 loop
-    if (v_pc_inv->i->>'name') = v_weapon_name
-       and not coalesce((v_pc_inv->i->>'custom')::boolean, false) then
-      v_match_idx := i;
-      v_existing  := v_pc_inv->i;
-      exit;
-    end if;
-  end loop;
-  if v_match_idx >= 0 then
-    v_new_pc_inv := jsonb_set(
-      v_pc_inv,
-      array[v_match_idx::text, 'qty'],
-      to_jsonb(coalesce((v_existing->>'qty')::int, 1) + 1)
-    );
-  else
-    v_new_item := jsonb_strip_nulls(jsonb_build_object(
-      'name',   v_weapon_name,
-      'qty',    1,
-      'custom', false,
-      'notes',  v_notes
-    ));
-    v_new_pc_inv := v_pc_inv || jsonb_build_array(v_new_item);
-  end if;
-  update public.characters
-     set data = jsonb_set(v_pc_data, '{inventory}', v_new_pc_inv)
-   where id = p_character_id;
-  insert into public.roll_log (
-    campaign_id, user_id, character_name, label,
-    die1, die2, amod, smod, cmod, total, outcome
-  ) values (
-    v_npc.campaign_id,
-    v_user_id,
-    v_pc.name,
-    chr(127890) || ' ' || v_pc.name || ' looted ' || v_weapon_name || ' from ' || v_npc.name,
-    0, 0, 0, 0, 0, 0, 'loot'
-  );
-  return jsonb_build_object('ok', true);
 end;
 $function$
 ;
@@ -4234,9 +4812,16 @@ CREATE OR REPLACE FUNCTION public.normalize_profile_role()
 AS $function$
 BEGIN
   NEW.role := LOWER(NEW.role);
+  IF TG_OP = 'UPDATE'
+     AND NEW.role = 'thriver'
+     AND OLD.role IS DISTINCT FROM 'thriver'
+     AND auth.uid() IS NOT NULL
+     AND NOT public.is_thriver()
+  THEN
+    NEW.role := OLD.role;  -- block self-promotion; leave other columns intact
+  END IF;
   RETURN NEW;
-END;
-$function$
+END $function$
 ;
 
 CREATE OR REPLACE FUNCTION public.notify_bug_report()
@@ -4264,6 +4849,7 @@ CREATE OR REPLACE FUNCTION public.notify_campaign_invitation()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_sender_name text;
@@ -4296,6 +4882,7 @@ CREATE OR REPLACE FUNCTION public.notify_character_changed()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
@@ -4314,7 +4901,7 @@ BEGIN
     INSERT INTO notifications (user_id, type, title, body, link)
     SELECT cm.user_id, 'player_joined', 'New Player',
       COALESCE(v_username, 'Someone') || ' joined ' || COALESCE(v_campaign_name, 'a campaign') || ' as ' || COALESCE(v_char_name, 'a character'),
-      '/campaigns/' || NEW.campaign_id
+      '/stories/' || NEW.campaign_id
     FROM campaign_members cm
     WHERE cm.campaign_id = NEW.campaign_id
       AND cm.user_id != NEW.user_id;
@@ -4322,7 +4909,7 @@ BEGIN
     INSERT INTO notifications (user_id, type, title, body, link)
     SELECT cm.user_id, 'player_joined', 'Character Change',
       COALESCE(v_username, 'Someone') || ' is now playing as ' || COALESCE(v_char_name, 'a new character') || ' in ' || COALESCE(v_campaign_name, 'a campaign'),
-      '/campaigns/' || NEW.campaign_id
+      '/stories/' || NEW.campaign_id
     FROM campaign_members cm
     WHERE cm.campaign_id = NEW.campaign_id
       AND cm.user_id != NEW.user_id;
@@ -4337,6 +4924,7 @@ CREATE OR REPLACE FUNCTION public.notify_community_encounter()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_recipient_user_id uuid;
@@ -4390,6 +4978,7 @@ CREATE OR REPLACE FUNCTION public.notify_community_link()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_recipient_user_id uuid;
@@ -4461,6 +5050,7 @@ CREATE OR REPLACE FUNCTION public.notify_community_link_response()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_proposer_user_id uuid;
@@ -4512,6 +5102,7 @@ CREATE OR REPLACE FUNCTION public.notify_community_migration()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_target_user_id uuid;
@@ -4560,6 +5151,7 @@ CREATE OR REPLACE FUNCTION public.notify_community_migration_response()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_target_community_name text;
@@ -4596,6 +5188,7 @@ CREATE OR REPLACE FUNCTION public.notify_community_milestone()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_community_id uuid;
@@ -4712,6 +5305,7 @@ CREATE OR REPLACE FUNCTION public.notify_lfg_interest()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_author uuid;
@@ -4749,6 +5343,7 @@ CREATE OR REPLACE FUNCTION public.notify_module_version_published()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_module_name text;
@@ -4800,13 +5395,23 @@ CREATE OR REPLACE FUNCTION public.notify_new_bug_report()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
-  v_label text;
-  v_body text;
+  v_label   text;
+  v_body    text;
+  v_thriver RECORD;
 BEGIN
   v_label := COALESCE(NULLIF(NEW.reporter_name, ''), NULLIF(NEW.reporter_email, ''), 'Anonymous');
   v_body := v_label || ' reported a bug at ' || COALESCE(NEW.page_url, '(no URL)') || E'\n\n' || COALESCE(NEW.description, '(no description)');
+
+  -- In-app notification for every Thriver
+  FOR v_thriver IN SELECT id FROM profiles WHERE role = 'thriver' LOOP
+    INSERT INTO notifications (user_id, type, title, body, link)
+    VALUES (v_thriver.id, 'moderation_bug', 'Bug Report', v_label || ': ' || left(COALESCE(NEW.description, ''), 120), '/moderate?tab=bugs');
+  END LOOP;
+
+  -- Email via Edge Function (requires app.settings.supabase_url configured)
   PERFORM call_notify_thriver('moderation_bug', 'New Bug Report', v_body, '/moderate?tab=bugs');
   RETURN NEW;
 END;
@@ -4817,14 +5422,22 @@ CREATE OR REPLACE FUNCTION public.notify_new_forum_thread()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
-  v_body text;
+  v_body     text;
+  v_thriver  RECORD;
 BEGIN
   IF NEW.moderation_status IS DISTINCT FROM 'pending' THEN RETURN NEW; END IF;
   SELECT username INTO v_username FROM profiles WHERE id = NEW.author_user_id;
   v_body := COALESCE(v_username, 'Someone') || ' started a forum thread: ' || COALESCE(NEW.title, 'Untitled');
+
+  FOR v_thriver IN SELECT id FROM profiles WHERE role = 'thriver' LOOP
+    INSERT INTO notifications (user_id, type, title, body, link)
+    VALUES (v_thriver.id, 'moderation_forum', 'New Forum Thread in Queue', v_body, '/moderate?tab=forums');
+  END LOOP;
+
   PERFORM call_notify_thriver('moderation_forum', 'New Forum Thread in Queue', v_body, '/moderate?tab=forums');
   RETURN NEW;
 END;
@@ -4835,14 +5448,22 @@ CREATE OR REPLACE FUNCTION public.notify_new_lfg_post()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
-  v_body text;
+  v_body     text;
+  v_thriver  RECORD;
 BEGIN
   IF NEW.moderation_status IS DISTINCT FROM 'pending' THEN RETURN NEW; END IF;
   SELECT username INTO v_username FROM profiles WHERE id = NEW.author_user_id;
   v_body := COALESCE(v_username, 'Someone') || ' posted to LFG: ' || COALESCE(NEW.title, 'Untitled');
+
+  FOR v_thriver IN SELECT id FROM profiles WHERE role = 'thriver' LOOP
+    INSERT INTO notifications (user_id, type, title, body, link)
+    VALUES (v_thriver.id, 'moderation_lfg', 'New LFG Post in Queue', v_body, '/moderate?tab=lfg');
+  END LOOP;
+
   PERFORM call_notify_thriver('moderation_lfg', 'New LFG Post in Queue', v_body, '/moderate?tab=lfg');
   RETURN NEW;
 END;
@@ -4853,14 +5474,22 @@ CREATE OR REPLACE FUNCTION public.notify_new_module_submission()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
-  v_body text;
+  v_body     text;
+  v_thriver  RECORD;
 BEGIN
   IF NEW.moderation_status IS DISTINCT FROM 'pending' THEN RETURN NEW; END IF;
   SELECT username INTO v_username FROM profiles WHERE id = NEW.author_user_id;
   v_body := COALESCE(v_username, 'Someone') || ' submitted a module: ' || COALESCE(NEW.name, 'Untitled');
+
+  FOR v_thriver IN SELECT id FROM profiles WHERE role = 'thriver' LOOP
+    INSERT INTO notifications (user_id, type, title, body, link)
+    VALUES (v_thriver.id, 'moderation_module', 'New Module in Queue', v_body, '/moderate?tab=modules');
+  END LOOP;
+
   PERFORM call_notify_thriver('moderation_module', 'New Module in Queue', v_body, '/moderate?tab=modules');
   RETURN NEW;
 END;
@@ -4871,6 +5500,7 @@ CREATE OR REPLACE FUNCTION public.notify_new_pin()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
@@ -4897,6 +5527,7 @@ CREATE OR REPLACE FUNCTION public.notify_new_survivor()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 BEGIN
   INSERT INTO public.notifications (user_id, type, title, body, link)
@@ -4922,14 +5553,22 @@ CREATE OR REPLACE FUNCTION public.notify_new_war_story_submission()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
-  v_body text;
+  v_body     text;
+  v_thriver  RECORD;
 BEGIN
   IF NEW.moderation_status IS DISTINCT FROM 'pending' THEN RETURN NEW; END IF;
   SELECT username INTO v_username FROM profiles WHERE id = NEW.author_user_id;
   v_body := COALESCE(v_username, 'Someone') || ' submitted a war story: ' || COALESCE(NEW.title, 'Untitled');
+
+  FOR v_thriver IN SELECT id FROM profiles WHERE role = 'thriver' LOOP
+    INSERT INTO notifications (user_id, type, title, body, link)
+    VALUES (v_thriver.id, 'moderation_war_story', 'New War Story in Queue', v_body, '/moderate?tab=war-stories');
+  END LOOP;
+
   PERFORM call_notify_thriver('moderation_war_story', 'New War Story in Queue', v_body, '/moderate?tab=war-stories');
   RETURN NEW;
 END;
@@ -4940,6 +5579,7 @@ CREATE OR REPLACE FUNCTION public.notify_new_world_community()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_submitter_username text;
@@ -4982,6 +5622,7 @@ CREATE OR REPLACE FUNCTION public.notify_new_world_npc()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
@@ -5008,6 +5649,7 @@ CREATE OR REPLACE FUNCTION public.notify_pin_approved()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 BEGIN
   IF OLD.status != 'approved' AND NEW.status = 'approved' THEN
@@ -5029,6 +5671,7 @@ CREATE OR REPLACE FUNCTION public.notify_player_joined()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_username text;
@@ -5045,7 +5688,7 @@ BEGIN
   INSERT INTO notifications (user_id, type, title, body, link)
   SELECT cm.user_id, 'player_joined', 'New Player',
     COALESCE(v_username, 'Someone') || ' joined ' || COALESCE(v_campaign_name, 'a campaign'),
-    '/campaigns/' || NEW.campaign_id
+    '/stories/' || NEW.campaign_id
   FROM campaign_members cm
   WHERE cm.campaign_id = NEW.campaign_id
     AND cm.user_id != NEW.user_id;
@@ -5059,13 +5702,14 @@ CREATE OR REPLACE FUNCTION public.notify_session_opened()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 BEGIN
   IF OLD.session_status = 'idle' AND NEW.session_status = 'active' THEN
     INSERT INTO notifications (user_id, type, title, body, link)
     SELECT cm.user_id, 'session_opened', 'Session Started',
       'Your GM has opened Session ' || NEW.session_count || ' in ' || NEW.name,
-      '/campaigns/' || NEW.id || '/table'
+      '/stories/' || NEW.id || '/table'
     FROM campaign_members cm
     WHERE cm.campaign_id = NEW.id
       AND cm.user_id != NEW.gm_user_id;
@@ -5079,6 +5723,7 @@ CREATE OR REPLACE FUNCTION public.notify_world_community_deletion()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 BEGIN
   IF OLD.published_by IS NULL THEN
@@ -5110,6 +5755,7 @@ CREATE OR REPLACE FUNCTION public.notify_world_community_moderation()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_recipient_user_id uuid;
@@ -5162,6 +5808,7 @@ CREATE OR REPLACE FUNCTION public.notify_world_community_public_update()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_editor_username text;
@@ -5232,6 +5879,7 @@ CREATE OR REPLACE FUNCTION public.notify_world_community_subscribers_update()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE
   v_editor_username text;
@@ -5289,21 +5937,6 @@ BEGIN
   WHERE s.world_community_id = NEW.id
     -- Don't notify the editor themselves about their own change.
     AND s.user_id IS DISTINCT FROM NEW.published_by;
-  RETURN NEW;
-END;
-$function$
-;
-
-CREATE OR REPLACE FUNCTION public.trg_maintain_mortal_recovery_flag()
- RETURNS trigger
- LANGUAGE plpgsql
-AS $function$
-BEGIN
-  IF NEW.wp_current = 0 THEN
-    NEW.recovering_from_mortal_wound := true;
-  ELSIF NEW.wp_current >= NEW.wp_max THEN
-    NEW.recovering_from_mortal_wound := false;
-  END IF;
   RETURN NEW;
 END;
 $function$
@@ -5445,6 +6078,45 @@ BEGIN
 END $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.set_community_member_campaign_id()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions'
+AS $function$
+BEGIN
+  IF NEW.campaign_id IS NULL AND NEW.community_id IS NOT NULL THEN
+    SELECT campaign_id INTO NEW.campaign_id FROM public.communities WHERE id = NEW.community_id;
+  END IF;
+  RETURN NEW;
+END $function$
+;
+
+CREATE OR REPLACE FUNCTION public.set_npc_relationship_campaign_id()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions'
+AS $function$
+BEGIN
+  IF NEW.campaign_id IS NULL AND NEW.npc_id IS NOT NULL THEN
+    SELECT campaign_id INTO NEW.campaign_id FROM public.campaign_npcs WHERE id = NEW.npc_id;
+  END IF;
+  RETURN NEW;
+END $function$
+;
+
+CREATE OR REPLACE FUNCTION public.set_scene_token_campaign_id()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions'
+AS $function$
+BEGIN
+  IF NEW.campaign_id IS NULL AND NEW.scene_id IS NOT NULL THEN
+    SELECT campaign_id INTO NEW.campaign_id FROM public.tactical_scenes WHERE id = NEW.scene_id;
+  END IF;
+  RETURN NEW;
+END $function$
+;
+
 CREATE OR REPLACE FUNCTION public.snap_token_to_seat(p_scene_id uuid, p_assignee_id uuid, p_kind text, p_target_x integer, p_target_y integer)
  RETURNS void
  LANGUAGE plpgsql
@@ -5498,6 +6170,66 @@ BEGIN
   ELSE
     RAISE EXCEPTION 'snap_token_to_seat: invalid kind %', p_kind;
   END IF;
+END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.toggle_wall_segment_door(p_scene_id uuid, p_segment_id text, p_open boolean)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_campaign_id uuid;
+BEGIN
+  -- Resolve the scene to its campaign
+  SELECT campaign_id INTO v_campaign_id
+  FROM tactical_scenes
+  WHERE id = p_scene_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'scene not found: %', p_scene_id;
+  END IF;
+
+  -- Membership gate: any campaign member may toggle doors/windows
+  IF NOT EXISTS (
+    SELECT 1 FROM campaign_members
+    WHERE campaign_id = v_campaign_id
+      AND user_id = auth.uid()
+  ) THEN
+    RAISE EXCEPTION 'not a member of campaign %', v_campaign_id;
+  END IF;
+
+  -- Read-modify-write: set door_open on the matching segment only.
+  -- walls is jsonb NOT NULL DEFAULT '[]', so no COALESCE needed.
+  UPDATE tactical_scenes
+  SET walls = (
+    SELECT jsonb_agg(
+      CASE
+        WHEN (elem->>'id') = p_segment_id
+          THEN jsonb_set(elem, '{door_open}', to_jsonb(p_open))
+        ELSE elem
+      END
+    )
+    FROM jsonb_array_elements(walls) AS elem
+  )
+  WHERE id = p_scene_id;
+END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.trg_maintain_mortal_recovery_flag()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  IF NEW.wp_current = 0 THEN
+    NEW.recovering_from_mortal_wound := true;
+  ELSIF NEW.wp_current >= NEW.wp_max THEN
+    NEW.recovering_from_mortal_wound := false;
+  END IF;
+  RETURN NEW;
 END;
 $function$
 ;

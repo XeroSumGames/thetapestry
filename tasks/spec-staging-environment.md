@@ -95,3 +95,37 @@ isolation.
    into chat.
 
 When PF has the ref + URL + anon key, PF replicates the schema (Step 2) and preps the rest.
+
+---
+
+## RESULT 2026-07-01 - Steps 1-2 DONE
+
+**Staging project created** (Xero): ref `vublqobsuzvzywlnebns`, URL
+`https://vublqobsuzvzywlnebns.supabase.co`, in a NEW free org ($0). Region us-east-2 (prod
+is us-west-2 - accepted; only affects latency, not correctness).
+
+**Schema replicated + EXACT parity (PF):** staging now matches current prod -
+**72 tables / 297 policies / 85 functions / 61 triggers / 21 publication tables.**
+
+Along the way: the baseline `sql/_baseline/schema.sql` was 5 weeks stale (captured 05-24,
+missing the 06-23 + this-session security/RPC work), so PF regenerated it from live prod
+(`node scripts/capture-schema.mjs`, +959/-227) and it is now current.
+
+The baseline is a drift-reference, NOT replayable as-is - four capture-script gaps had to be
+worked around to apply it to a fresh DB (now encoded in **`scripts/build-staging-schema.sh`**
+so future refreshes are one command):
+1. generated `tsvector` columns rendered as `DEFAULT` (need `GENERATED ALWAYS AS ... STORED`)
+2. `CREATE SEQUENCE` omitted for nextval()-backed columns (`audit_log_id_seq`)
+3. replay-hostile section order (FKs before PKs; functions after their callers)
+4. functions ordered by name -> SQL-function-to-function refs fail without `SET
+   check_function_bodies = false`
+
+Refresh procedure: `npx supabase link --project-ref vublqobsuzvzywlnebns --password ""`
+then `bash scripts/build-staging-schema.sh > /tmp/s.sql; npx supabase db query --linked -f
+/tmp/s.sql; npx supabase db query --linked -f sql/_baseline/publication.sql`; then re-link
+prod. (Re-link is repo-local via `supabase/.temp/project-ref`; `db query` auths via the
+Management API, no DB password needed.)
+
+**STILL TO DO:** Step 3 fixtures (defer - easier to create a test account via the staging
+app once Vercel is wired), Step 4 Vercel Preview env vars (Xero - click-by-click next),
+Step 5 `staging` branch + workflow doc, Step 6 end-to-end smoke.
