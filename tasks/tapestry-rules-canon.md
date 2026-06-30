@@ -679,7 +679,7 @@ Medic must be at **Engaged** range to treat (matches Stabilise). A Doctor's Bag 
 On Day 0 of a sick period, if Lasting Damage risk is still set (Failure was rolled and Medicine\* didn't clear it), the character makes a final **Physicality check** to avoid Lasting Damage. Failure rolls 2d6 on Table 12: Lasting Wounds. Dire Failure on the original Infection check skips this step - Lasting Damage applies automatically.
 
 ## §07 Weapons & Equipment
-### Melee Weapons (Table 16) - 18 canonical melee weapons
+### Melee Weapons (Table 16) - 20 canonical melee weapons
 
 Source: `lib/xse-schema.ts` MELEE_WEAPONS. Format: `name | skill | range | rarity | damage | RP% | enc | traits`.
 
@@ -687,30 +687,33 @@ Source: `lib/xse-schema.ts` MELEE_WEAPONS. Format: `name | skill | range | rarit
 - Brass Knuckles | Unarmed | Engaged | Uncommon | 1 | 100% | 0 | -
 - Bullwhip | Athletics | Close | Uncommon | 1+1d3 | 100% | 1 | Unwieldy(2)
 - Club | Melee | Engaged | Common | 5+1d6 | 100% | 2 | Cumbersome(1)
+- Crowbar | Melee | Engaged | Common | 4+1d6 | 100% | 1 | -
 - Fire Axe | Melee | Close | Uncommon | 3+2d3 | 50% | 1 | -
 - Hatchet | Melee | Engaged | Common | 3+1d3 | 50% | 1 | -
 - Hunting Knife | Melee | Engaged | Common | 2+2d3 | 50% | 1 | Unwieldy(1)
 - Kitchen Knife | Melee | Engaged | Common | 2+1d3 | 50% | 1 | -
-- Machete | Melee | Close | Uncommon | 3+2d3 | 50% | 1 | Unwieldy(2)
+- Machete | Melee | Engaged | Uncommon | 3+2d3 | 50% | 1 | Unwieldy(2)
 - Makeshift Club | Melee | Engaged | Common | 3+1d3 | 100% | 1 | -
 - Sledgehammer | Melee | Engaged | Uncommon | 3+3d3 | 100% | 2 | Cumbersome(2)
 - Spear | Melee | Close | Uncommon | 2+2d6 | 50% | 1 | Cumbersome(2)
 - Staff | Melee | Close | Common | 2+2d3 | 100% | 1 | Unwieldy(1)
 - Sword | Melee | Engaged | Uncommon | 3+3d3 | 50% | 1 | -
+- Katana | Melee | Engaged | Rare | 4+3d3 | 50% | 1 | Unwieldy(1)
 - Tactical Baton | Melee | Engaged | Uncommon | 4+2d3 | 100% | 1 | -
-- Cattle Prod | Melee | Engaged | Uncommon | 1 | 200% | 1 | Stunned
-- Stun Gun | Melee | Engaged | Uncommon | 1 | 400% | 1 | Stunned
+- Cattle Prod | Melee | Engaged | Uncommon | 2 | 400% | 1 | Stun
+- Stun Gun | Melee | Engaged | Uncommon | 1 | 400% | 1 | Stun
 - Wood Axe | Melee | Close | Uncommon | 5+1d3 | 50% | 1 | Cumbersome(1)
 
-### Ranged Weapons (Table 17) - 15 canonical ranged weapons
+### Ranged Weapons (Table 17) - 17 canonical ranged weapons
 
 Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 
 - Assault Rifle | Long | Uncommon | 5+2d6 | 50% | 2 | ammo Uncommon, clip 30 | Automatic Burst(3)
 - Black Powder Rifle | Long | Uncommon | 5+1d6 | 50% | 2 | ammo Uncommon, clip 1 | -
+- Bolt-Action / Pump Rifle | Long | Uncommon | 5+1d6 | 50% | 2 | ammo Uncommon, clip 1 | -
 - Bow | Medium | Common | 4+1d6 | 50% | 1 | ammo Common, clip 1 | Tracking
 - Carbine | Long | Uncommon | 5+1d6 | 50% | 1 | ammo Uncommon, clip 30 | Automatic Burst(3)
-- Compound Bow | Medium | Common | 4+2d3 | 50% | 2 | ammo Common, clip 1 | Tracking
+- Compound Bow | Long | Uncommon | 4+2d3 | 50% | 2 | ammo Common, clip 1 | Tracking
 - Crossbow | Medium | Uncommon | 4+1d6 | 50% | 2 | ammo Uncommon, clip 1 | Unwieldy(1)
 - Heavy Pistol | Medium | Common | 3+2d3 | 50% | 1 | ammo Uncommon, clip 9 | -
 - Hunting Rifle | Long | Common | 5+1d6 | 50% | 2 | ammo Uncommon, clip 12 | -
@@ -719,8 +722,9 @@ Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 - Shotgun (Pump-Action) | Medium | Common | 5+2d6 | 50% | 2 | ammo Common, clip 5 | Close-Up
 - Shotgun (Sawed-Off) | Close | Uncommon | 2+3d6 | 50% | 2 | ammo Common, clip 2 | Close-Up
 - Slingshot | Close | Common | 1+1d3 | 100% | 0 | ammo Common, clip 1 | Tracking
+- Tranquilizer Gun | Medium | Rare | 1d3 | 400% | 1 | ammo Rare, clip 1 | Stun
 - Sniper's Rifle | Distant | Rare | 2+3d6 | 50% | 2 | ammo Uncommon, clip 10 | -
-- Taser | Close | Uncommon | 1 | 600% | 1 | ammo Rare, clip 1 | Stunned
+- Taser | Close | Uncommon | 1 | 400% | 1 | ammo Rare, clip 1 | Stun
 
 ### Equipment (Table 20) - 36 canonical equipment items
 

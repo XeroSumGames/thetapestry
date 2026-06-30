@@ -6,6 +6,8 @@
 // ENUMS & CONSTANTS
 // ----------------------------
 
+import { MELEE_WEAPONS as RUNTIME_MELEE_WEAPONS, RANGED_WEAPONS as RUNTIME_RANGED_WEAPONS } from './weapons';
+
 export type AttributeName = 'RSN' | 'ACU' | 'PHY' | 'INF' | 'DEX';
 
 export type AttributeValue = -2 | -1 | 0 | 1 | 2 | 3 | 4;
@@ -194,26 +196,49 @@ export interface MeleeWeapon {
   traits: WeaponTrait[];
 }
 
-export const MELEE_WEAPONS: MeleeWeapon[] = [
-  { name: 'Baseball Bat',    skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 4, damageDice: '1d6', rpPercent: 100, enc: 1, traits: [] },
-  { name: 'Brass Knuckles',  skill: 'Unarmed',  range: 'Engaged', rarity: 'Uncommon', damageBase: 1, damageDice: '',    rpPercent: 100, enc: 0, traits: [] },
-  { name: 'Bullwhip',        skill: 'Athletics',range: 'Close',   rarity: 'Uncommon', damageBase: 1, damageDice: '1d3', rpPercent: 100, enc: 1, traits: [{ name: 'Unwieldy', value: 2 }] },
-  { name: 'Club',            skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 5, damageDice: '1d6', rpPercent: 100, enc: 2, traits: [{ name: 'Cumbersome', value: 1 }] },
-  { name: 'Fire Axe',        skill: 'Melee',    range: 'Close',   rarity: 'Uncommon', damageBase: 3, damageDice: '2d3', rpPercent:  50, enc: 1, traits: [] },
-  { name: 'Hatchet',         skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 3, damageDice: '1d3', rpPercent:  50, enc: 1, traits: [] },
-  { name: 'Hunting Knife',   skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 2, damageDice: '2d3', rpPercent:  50, enc: 1, traits: [{ name: 'Unwieldy', value: 1 }] },
-  { name: 'Kitchen Knife',   skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 2, damageDice: '1d3', rpPercent:  50, enc: 1, traits: [] },
-  { name: 'Machete',         skill: 'Melee',    range: 'Close',   rarity: 'Uncommon', damageBase: 3, damageDice: '2d3', rpPercent:  50, enc: 1, traits: [{ name: 'Unwieldy', value: 2 }] },
-  { name: 'Makeshift Club',  skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 3, damageDice: '1d3', rpPercent: 100, enc: 1, traits: [] },
-  { name: 'Sledgehammer',    skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 3, damageDice: '3d3', rpPercent: 100, enc: 2, traits: [{ name: 'Cumbersome', value: 2 }] },
-  { name: 'Spear',           skill: 'Melee',    range: 'Close',   rarity: 'Uncommon', damageBase: 2, damageDice: '2d6', rpPercent:  50, enc: 1, traits: [{ name: 'Cumbersome', value: 2 }] },
-  { name: 'Staff',           skill: 'Melee',    range: 'Close',   rarity: 'Common',   damageBase: 2, damageDice: '2d3', rpPercent: 100, enc: 1, traits: [{ name: 'Unwieldy', value: 1 }] },
-  { name: 'Sword',           skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 3, damageDice: '3d3', rpPercent:  50, enc: 1, traits: [] },
-  { name: 'Tactical Baton',  skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 4, damageDice: '2d3', rpPercent: 100, enc: 1, traits: [] },
-  { name: 'Cattle Prod',     skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 1, damageDice: '',    rpPercent: 200, enc: 1, traits: [{ name: 'Stunned' }] },
-  { name: 'Stun Gun',        skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 1, damageDice: '',    rpPercent: 400, enc: 1, traits: [{ name: 'Stunned' }] },
-  { name: 'Wood Axe',        skill: 'Melee',    range: 'Close',   rarity: 'Uncommon', damageBase: 5, damageDice: '1d3', rpPercent:  50, enc: 1, traits: [{ name: 'Cumbersome', value: 1 }] },
-];
+// Weapon catalogs DERIVE from lib/weapons.ts (the single source of truth) so the
+// canon view (export-canon snapshot) and LootModal can never drift from the runtime
+// the game actually uses. Reconciliation 2026-07-01. To change weapon data, edit
+// lib/weapons.ts ONLY - this regenerates automatically.
+function parseWeaponDamage(d: string): { damageBase: number; damageDice: string } {
+  const damageDice = d.match(/\d+d\d+/)?.[0] ?? '';
+  const baseMatch = d.replace(/\d+d\d+/, '').match(/\d+/);
+  return { damageBase: baseMatch ? parseInt(baseMatch[0], 10) : 0, damageDice };
+}
+function parseWeaponTraits(traits: string[]): WeaponTrait[] {
+  return traits.map((t) => {
+    const m = t.match(/^(.*?)\s*\((\d+)\)$/);
+    return m ? { name: m[1] as ItemTrait, value: parseInt(m[2], 10) } : { name: t as ItemTrait };
+  });
+}
+function toMeleeWeapon(w: typeof RUNTIME_MELEE_WEAPONS[number]): MeleeWeapon {
+  return {
+    name: w.name,
+    skill: w.skill === 'Unarmed Combat' ? 'Unarmed' : w.skill === 'Athletics' ? 'Athletics' : 'Melee',
+    range: w.range as 'Engaged' | 'Close',
+    rarity: w.rarity,
+    ...parseWeaponDamage(w.damage),
+    rpPercent: w.rpPercent,
+    enc: w.enc,
+    traits: parseWeaponTraits(w.traits),
+  };
+}
+function toRangedWeapon(w: typeof RUNTIME_RANGED_WEAPONS[number]): RangedWeapon {
+  return {
+    name: w.name,
+    skill: 'Ranged',
+    range: w.range,
+    rarity: w.rarity,
+    ...parseWeaponDamage(w.damage),
+    rpPercent: w.rpPercent,
+    enc: w.enc,
+    ammoRarity: w.ammo ?? 'Common',
+    clipSize: w.clip ?? 1,
+    traits: parseWeaponTraits(w.traits),
+  };
+}
+
+export const MELEE_WEAPONS: MeleeWeapon[] = RUNTIME_MELEE_WEAPONS.map(toMeleeWeapon);
 
 // ----------------------------
 // RANGED WEAPONS (Table 17)
@@ -233,23 +258,7 @@ export interface RangedWeapon {
   traits: WeaponTrait[];
 }
 
-export const RANGED_WEAPONS: RangedWeapon[] = [
-  { name: 'Assault Rifle',        skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '2d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst', value: 3 }] },
-  { name: 'Black Powder Rifle',   skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize:  1, traits: [] },
-  { name: 'Bow',                  skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 4, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
-  { name: 'Carbine',              skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst', value: 3 }] },
-  { name: 'Compound Bow',         skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 4, damageDice: '2d3', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
-  { name: 'Crossbow',             skill: 'Ranged', range: 'Medium',  rarity: 'Uncommon', damageBase: 4, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize:  1, traits: [{ name: 'Unwieldy', value: 1 }] },
-  { name: 'Heavy Pistol',         skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 3, damageDice: '2d3', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize:  9, traits: [] },
-  { name: 'Hunting Rifle',        skill: 'Ranged', range: 'Long',    rarity: 'Common',   damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 12, traits: [] },
-  { name: 'Light Pistol',         skill: 'Ranged', range: 'Close',   rarity: 'Common',   damageBase: 3, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  6, traits: [] },
-  { name: 'Revolver',             skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 4, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  6, traits: [] },
-  { name: 'Shotgun (Pump-Action)',skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 5, damageDice: '2d6', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  5, traits: [{ name: 'Close-Up' }] },
-  { name: 'Shotgun (Sawed-Off)',  skill: 'Ranged', range: 'Close',   rarity: 'Uncommon', damageBase: 2, damageDice: '3d6', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  2, traits: [{ name: 'Close-Up' }] },
-  { name: 'Slingshot',            skill: 'Ranged', range: 'Close',   rarity: 'Common',   damageBase: 1, damageDice: '1d3', rpPercent:100, enc: 0, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
-  { name: "Sniper's Rifle",       skill: 'Ranged', range: 'Distant', rarity: 'Rare',     damageBase: 2, damageDice: '3d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 10, traits: [] },
-  { name: 'Taser',                skill: 'Ranged', range: 'Close',   rarity: 'Uncommon', damageBase: 1, damageDice: '',    rpPercent: 600, enc: 1, ammoRarity: 'Rare',     clipSize:  1, traits: [{ name: 'Stunned' }] },
-];
+export const RANGED_WEAPONS: RangedWeapon[] = RUNTIME_RANGED_WEAPONS.map(toRangedWeapon);
 
 // ----------------------------
 // EQUIPMENT (Table 20)

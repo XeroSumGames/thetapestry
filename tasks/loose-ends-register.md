@@ -58,7 +58,16 @@ and correct; they need an eyeball/2-client run, NOT a fix. Best closed in ONE fo
   `give_item_to_character` SECURITY DEFINER RPC (PF) + rewire the give-flow (HP) to enable
   peer trade in beta, OR leave it off (zero work). No urgency either way.
 
-## GROUP F - weapon-catalog drift (found 2026-07-01 while adding Revolver) - PF/HP
+## GROUP F - weapon-catalog drift - RESOLVED 2026-07-01 (single source of truth)
+**DONE:** `lib/xse-schema.ts` MELEE/RANGED now DERIVE from `lib/weapons.ts` (the single source),
+so the two can never drift again. Fixed automatically: name (Assault Rifle), 5 missing weapons
+(Crowbar/Katana/Bolt-Action/Tranq/Revolver), stale stun stats (Taser 600->400, Cattle Prod
+200->400, "Stunned"->"Stun"), LootModal's stale list. Stun Gun (was canon-only, unplayable)
+preserved into weapons.ts as a melee Taser-equiv - **Xero: keep or drop?** Decision logged in
+`decisions.md`. (Melee/heavy/explosive not in xse-schema canon by design - only melee+ranged are.)
+Original finding below (kept for trail):
+
+### (original) weapon-catalog drift - PF/HP
 The canon `lib/xse-schema.ts RANGED_WEAPONS` is a drifted DUPLICATE of the real runtime
 source `lib/weapons.ts`. Name fixed (Automatic->Assault Rifle, both catalogs + snapshot,
 2026-07-01) but the rest remains:

@@ -302,7 +302,7 @@ function meleeWeapons(): string {
       const traits = w.traits.length
         ? w.traits.map(t => (t.value ? `${t.name}(${t.value})` : t.name)).join(', ')
         : '-'
-      const dmg = w.damageDice ? `${w.damageBase}+${w.damageDice}` : String(w.damageBase)
+      const dmg = w.damageDice ? (w.damageBase ? `${w.damageBase}+${w.damageDice}` : w.damageDice) : String(w.damageBase)
       return `- ${w.name} | ${w.skill} | ${w.range} | ${w.rarity} | ${dmg} | ${w.rpPercent}% | ${w.enc} | ${traits}`
     }),
   )
@@ -318,7 +318,7 @@ function rangedWeapons(): string {
       const traits = w.traits.length
         ? w.traits.map(t => (t.value ? `${t.name}(${t.value})` : t.name)).join(', ')
         : '-'
-      const dmg = w.damageDice ? `${w.damageBase}+${w.damageDice}` : String(w.damageBase)
+      const dmg = w.damageDice ? (w.damageBase ? `${w.damageBase}+${w.damageDice}` : w.damageDice) : String(w.damageBase)
       return `- ${w.name} | ${w.range} | ${w.rarity} | ${dmg} | ${w.rpPercent}% | ${w.enc} | ammo ${w.ammoRarity}, clip ${w.clipSize} | ${traits}`
     }),
   )

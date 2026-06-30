@@ -10,6 +10,24 @@ Newest first.
 
 ---
 
+## 2026-07-01: lib/weapons.ts is the single source of truth for weapon DATA; lib/xse-schema.ts derives its weapon catalogs from it
+
+**Decision:** `lib/weapons.ts` (the runtime catalog the game actually uses) is the single source of truth for weapon data. `lib/xse-schema.ts`'s `MELEE_WEAPONS` + `RANGED_WEAPONS` are now DERIVED from it (`RUNTIME_*.map(toMeleeWeapon/toRangedWeapon)` via a damage-string + trait parser), instead of being a second hand-maintained copy. To change weapon data, edit `lib/weapons.ts` only.
+
+**Why:** the two catalogs had silently drifted - xse-schema (consumed by the canon snapshot AND the live `LootModal`) was stale: it had "Automatic Rifle" (vs runtime "Assault Rifle"), was missing 5 playable weapons (Crowbar, Katana, Bolt-Action/Pump Rifle, Tranquilizer Gun, Revolver), and carried stale stun stats (Taser 600 / Cattle Prod 200 / trait "Stunned") that the 2026-05-09 stun-canon lock had superseded in the runtime (400 / "Stun"). A player looting via LootModal saw a different, stale list than what they could Ready/equip. Two hand-maintained copies WILL keep drifting; deriving makes drift structurally impossible.
+
+**Alternatives considered:**
+- A. Manually re-sync xse-schema to weapons.ts + add a guardrail test asserting they match. Lower refactor risk, but keeps two copies (a dev must still edit both; the test only catches drift post-hoc).
+- B. Derive xse-schema from weapons.ts (chosen). One source; the duplicate becomes computed and cannot diverge. Consumers (LootModal, export-canon) unchanged - same import, same shape.
+
+**Why B won:** eliminates the drift CLASS, not just the current instance. LootModal only reads name/enc/rarity (works off the derived list); export-canon needs the canon shape, which the transform produces; weapons.ts has no import of xse-schema, so no cycle.
+
+**Precedence nuance:** `CLAUDE.md` lists `lib/xse-schema.ts` as canon data (#1). That still holds for everything else (skills, complications, paradigms, etc.). For WEAPONS specifically, the curated truth (Xero overrides like the Tranq Gun + the stun-lock) lives in `weapons.ts`, and xse-schema now mirrors it - so canon and runtime agree by construction.
+
+**What would change our mind:** if weapons.ts's runtime shape (`damage: '4+1d6'` string) ever needs richer canon-only fields the parser can't produce, split the source into a shared structured module both derive from. The "Stun Gun" weapon was preserved into weapons.ts during this (was canon-only, never playable); if Xero drops it, it leaves both automatically.
+
+---
+
 ## 2026-05-24: Group->Community promotion counts party PCs + group NPCs (combined), not enrolled members
 
 **Decision:** the at-13 promotion threshold (recruit-into-a-Group Phase 3) is keyed off `combined = active campaign PCs (the party) + the group's recruited NPC members`, NOT the group's enrolled `community_members` count. Implemented as `combinedMemberCount(pcCount, npcCount)` / `shouldPromoteToCommunity()` in `lib/community-stage.ts`; the card sources PCs from the campaign roster (`chars.length`) and NPCs from the group's active members (`npcMems.length`).

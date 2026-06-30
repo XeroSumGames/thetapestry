@@ -81,6 +81,11 @@ export const MELEE_WEAPONS: Weapon[] = [
   { name: 'Katana', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Rare', damage: '4+3d3', rpPercent: 50, enc: 1, traits: ['Unwieldy (1)'] },
   { name: 'Tactical Baton', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '4+2d3', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Cattle Prod', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '2', rpPercent: 400, enc: 1, traits: ['Stun'] },
+  // Stun Gun - existed in the canon schema but was never in the playable runtime
+  // catalog (2026-07-01 reconciliation). Preserved here as a melee Taser-equivalent
+  // (1 WP / 4 RP contact stunner, weaker than the Cattle Prod's 2/8). Flagged for
+  // Xero: keep or drop. Stats a one-line swap if canon differs.
+  { name: 'Stun Gun', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '1', rpPercent: 400, enc: 1, traits: ['Stun'] },
   { name: 'Wood Axe', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '5+1d3', rpPercent: 50, enc: 1, traits: ['Cumbersome (1)'] },
 ]
 
