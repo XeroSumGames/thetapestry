@@ -197,5 +197,9 @@ the corrected `campaign_pins` titles so scene briefs reference them exactly.
 3. [ ] Drop-in pregen roster: author 4-6 newcomers, or repromote the 5 null-setting pregens
    (Carly McIntyre, Gus Gonzalez, Marv Calhoun, Morgan Lieu, Victor Williams) to
    `district_zero`. (Author's call; recommend a mix.)
-4. [ ] `campaign_notes` idempotency approach (unique index vs scoped delete). (Puffer.)
+4. [x] Idempotency RESOLVED - seed uses `INSERT ... SELECT ... WHERE NOT EXISTS`
+   guards keyed on (campaign_id, name|title). Non-destructive, re-runnable, no
+   schema change / no Puffer index needed. Part 1 (`sql/path-to-citizenship-seed.sql`:
+   2 NPC gaps + 2 foe statblocks + 2 player handouts) authored + dry-run verified
+   (rolled back) 2026-06-30. Not yet applied to live.
 5. [ ] Tactical map backgrounds - GM uploads art per map post-seed.
