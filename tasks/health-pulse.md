@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-30 15:00 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-06-30T12:11 UTC)
+
+**New since 12:08 pulse:** 0 code commits (only health-pulse records)
+
+**Drift (carry-forward — unchanged since 06:07):**
+- **Stress Check 12-string narrative** — deadline END OF TODAY (2026-06-30 MDT). 8 paths (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) still unverified. No code changes since 2026-06-16.
+- **FI Insight Die award path** — HOPED-FOR 15 days; `useRollResolution.ts:264` never fired live
+- **Vehicle popout broadcasts** (Section B) — HOPED-FOR 15 days; no code touch
+- **Vehicles 3s poll** — `page.tsx:3098` still live; routed to HP (`tasks/finding-vehicles-poll-scale-2026-06-29.md`)
+- **Disarm live-verify** still owed (`tasks/disarm-loot-testplan-2026-06-23.md`)
+
+**Action:** Stress Check deadline expires tonight. Either run the Beta-500 dry-run to drain it, or reset the deadline. HP vehicles poll removal still open pre-Beta-500.
+
+---
+
 ## 2026-06-30 12:08 UTC
 
 **Status:** DRIFT
