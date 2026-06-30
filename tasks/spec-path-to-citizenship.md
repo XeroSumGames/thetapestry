@@ -202,9 +202,11 @@ the corrected `campaign_pins` titles so scene briefs reference them exactly.
    NPC; "Dr Zee" is backstory only. Use this texture in Scene 21 + the clinic pin
    description (offer to enrich the live pin notes when authoring that scene).
 2. [ ] Confirm filler scenes 3+4 collapse to one "Lodging" or stay separate. (Author's call.)
-3. [ ] Drop-in pregen roster: author 4-6 newcomers, or repromote the 5 null-setting pregens
-   (Carly McIntyre, Gus Gonzalez, Marv Calhoun, Morgan Lieu, Victor Williams) to
-   `district_zero`. (Author's call; recommend a mix.)
+3. [x] DONE + LIVE 2026-06-30. Authored 6 District Zero newcomer pregens (Rae Okafor,
+   Boone Tucker, Imani Reyes, Hank Delgado, Lonnie Pace, Dot Mwangi),
+   `sql/path-to-citizenship-pregens.sql`, tagged `district_zero` + mapped to the campaign.
+   Canon-correct (5 attr pts, 15 skill pts, derived secondaries). Parts 1 (NPCs+handouts)
+   and 2 (pregens) BOTH APPLIED to live + verified (campaign_npcs 18 -> 22, 6 pregens mapped).
 4. [x] Idempotency RESOLVED - seed uses `INSERT ... SELECT ... WHERE NOT EXISTS`
    guards keyed on (campaign_id, name|title). Non-destructive, re-runnable, no
    schema change / no Puffer index needed. Part 1 (`sql/path-to-citizenship-seed.sql`:
