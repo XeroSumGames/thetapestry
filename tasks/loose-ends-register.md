@@ -58,6 +58,21 @@ and correct; they need an eyeball/2-client run, NOT a fix. Best closed in ONE fo
   `give_item_to_character` SECURITY DEFINER RPC (PF) + rewire the give-flow (HP) to enable
   peer trade in beta, OR leave it off (zero work). No urgency either way.
 
+## GROUP F - weapon-catalog drift (found 2026-07-01 while adding Revolver) - PF/HP
+The canon `lib/xse-schema.ts RANGED_WEAPONS` is a drifted DUPLICATE of the real runtime
+source `lib/weapons.ts`. Name fixed (Automatic->Assault Rifle, both catalogs + snapshot,
+2026-07-01) but the rest remains:
+- canon MISSING 2 live guns: `Bolt-Action / Pump Rifle`, `Tranquilizer Gun` (Xero override)
+- canon Taser is STALE: `rpPercent 600` / trait `Stunned` vs locked-canon + runtime `400` / `Stun`
+- trait vocab differs between the two arrays (`Stunned` vs `Stun`, `Automatic Burst (3)` vs `{name,value:3}`)
+- setting content still says "Automatic Rifle" in 4 spots: `lib/setting-handouts.ts:95`,
+  `lib/setting-vehicles.ts:123`, `lib/setting-npcs.ts:899,920` (the 2 NPC ones are bespoke
+  stat-blocks 4+2d3, not catalog refs - rename needs a stats decision)
+- **also un-diffed:** melee / explosive / heavy categories may have the same drift
+**The real fix is architectural:** two hand-maintained weapon catalogs WILL keep drifting.
+Decide a single source of truth (runtime `weapons.ts` is the curated/used one; `xse-schema`
+should derive from it or be retired as a separate array) - then one full reconciliation pass.
+
 ## GROUP E - bugs needing a repro before a fix
 - Gus inventory-gun "Equip from Inventory" filter drops non-catalog-named guns
 - CMod-on-NPC-target puzzle (the -2/-3 traces; recon done, needs canon + Xero expected values)

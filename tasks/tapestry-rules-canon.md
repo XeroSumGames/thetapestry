@@ -706,7 +706,7 @@ Source: `lib/xse-schema.ts` MELEE_WEAPONS. Format: `name | skill | range | rarit
 
 Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 
-- Automatic Rifle | Long | Uncommon | 5+2d6 | 50% | 2 | ammo Uncommon, clip 30 | Automatic Burst(3)
+- Assault Rifle | Long | Uncommon | 5+2d6 | 50% | 2 | ammo Uncommon, clip 30 | Automatic Burst(3)
 - Black Powder Rifle | Long | Uncommon | 5+1d6 | 50% | 2 | ammo Uncommon, clip 1 | -
 - Bow | Medium | Common | 4+1d6 | 50% | 1 | ammo Common, clip 1 | Tracking
 - Carbine | Long | Uncommon | 5+1d6 | 50% | 1 | ammo Uncommon, clip 30 | Automatic Burst(3)

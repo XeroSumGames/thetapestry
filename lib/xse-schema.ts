@@ -234,7 +234,7 @@ export interface RangedWeapon {
 }
 
 export const RANGED_WEAPONS: RangedWeapon[] = [
-  { name: 'Automatic Rifle',      skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '2d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst', value: 3 }] },
+  { name: 'Assault Rifle',        skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '2d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst', value: 3 }] },
   { name: 'Black Powder Rifle',   skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize:  1, traits: [] },
   { name: 'Bow',                  skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 4, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
   { name: 'Carbine',              skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst', value: 3 }] },
