@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-30 12:08 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not installed in sandbox — skipped
+
+**New since 06:07 pulse:** 0 code commits (only health-pulse record)
+
+**Drift (carry-forward — no change since 06:07):**
+- **Stress Check 12-string narrative** — deadline end-of-day TODAY (2026-06-30 MDT). 8 paths (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) still unverified in live play.
+- **FI Insight Die award path** — HOPED-FOR 15 days; `useRollResolution.ts:264` never fired live
+- **Vehicle popout broadcasts** (Section B) — HOPED-FOR 15 days; no code touch
+- **Vehicles 3s poll** — `page.tsx:3098` still live; routed to HP (`tasks/finding-vehicles-poll-scale-2026-06-29.md`)
+- **Disarm live-verify** still owed (`tasks/disarm-loot-testplan-2026-06-23.md`)
+
+**Action:** Same as 06:07 — Stress Check deadline is today. No new findings this run.
+
+---
+
 ## 2026-06-30 06:07 UTC
 
 **Status:** DRIFT
