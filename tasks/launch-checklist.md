@@ -35,7 +35,7 @@ Owners: `[PF]` Puffer Fish (arch/risk/SQL/infra) - `[HP]` Hunt & Peck (app code)
 ### Reliability, ops & incident readiness
 - [ ] Finish Sentry alert-rule routing (the split-out ~5-min task) `[Xero/PF]`
 - [ ] Written incident runbook: what players see if X breaks, how we know, rollback + speed `[PF]`
-- [ ] **Staging/preview environment** so we stop testing on live (currently push-straight-to-live) `[PF/Xero]`
+- [~] **Staging/preview environment** so we stop testing on live `[PF/Xero]` - IN PROGRESS: staging Supabase project live at EXACT prod-schema parity (72 tables/297 policies/85 fns/61 triggers/21 pub); refresh script `scripts/build-staging-schema.sh`. REMAINING: Vercel Preview env vars (Xero), `staging` branch + workflow doc (PF), end-to-end smoke. Spec: `tasks/spec-staging-environment.md`.
 - [ ] Confirm Supabase automated backups ON + run a test restore drill `[PF + Xero on plan]`
 - [ ] Backup of user-uploaded storage (images) separate from the DB `[PF]`
 
