@@ -39,8 +39,11 @@ and correct; they need an eyeball/2-client run, NOT a fix. Best closed in ONE fo
 - Encumbrance: halve tactical-map movement for overloaded tokens (not wired)
 - CampaignObjects spawn occupancy checks object tokens only
 - Grapple canon expansion (defender action loss + Subdue) [~ in progress]
-- "6 mechanics" residue - confirm which of vehicles-as-cover / item-condition+upkeep /
-  env-damage trio / travel times / conditions phase-2 still owe code (Rest finish is DONE)
+- ~~"6 mechanics" residue~~ - AUDITED 2026-07-01: all 6 (rest-finish, vehicles-as-cover,
+  item-condition+upkeep, env-damage trio, travel-times, conditions-p2) are code-complete +
+  unit-tested + wired into the app (vehicleCoverRdm -> table-roll-context combat RDM;
+  incapRounds -> table page; upkeep -> useRollResolution; env-damage/travel/rest -> CharacterCard).
+  NOT owed code; the 05-31 todo was stale. Live-eyeball moves to Group A.
 - Stuck-click clusters on canvas (E2E observation -> HP if a cause confirms)
 
 ## GROUP C - Xero canon / content call
@@ -49,8 +52,11 @@ and correct; they need an eyeball/2-client run, NOT a fix. Best closed in ONE fo
 
 ## GROUP D - PF can close now (staging available to de-risk)
 - `map_pins` "View pins" dead capital-`'Thriver'` clause - cleanup (test on staging first)
-- PC-PC trade: decision owed - disable peer trade for beta, OR PF writes a
-  `give_item_to_character` SECURITY DEFINER RPC + HP rewires `table/page.tsx:6930`
+- PC-PC trade - NOT a security hole (audited 2026-07-01: `characters` UPDATE RLS is
+  owner/GM/thriver-only, so cross-user writes are correctly blocked; peer trade is just
+  non-functional, no exposure). It's a FEATURE-SCOPE call for Xero: build a
+  `give_item_to_character` SECURITY DEFINER RPC (PF) + rewire the give-flow (HP) to enable
+  peer trade in beta, OR leave it off (zero work). No urgency either way.
 
 ## GROUP E - bugs needing a repro before a fix
 - Gus inventory-gun "Equip from Inventory" filter drops non-catalog-named guns
