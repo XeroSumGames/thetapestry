@@ -36,14 +36,14 @@ UPDATE campaign_pins SET folder='Watchtowers', sort_order=8,  lat=36.04660069123
 UPDATE campaign_pins SET folder='Watchtowers', sort_order=9,  lat=36.0469476776163, lng=-95.7721996307373 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Watchtower 9';
 UPDATE campaign_pins SET folder='Watchtowers', sort_order=10, lat=36.046756835294,  lng=-95.7799673080444 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Watchtower 10';
 UPDATE campaign_pins SET folder='Watchtowers', sort_order=11, lat=36.046861,         lng=-95.791211         WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Watchtower 11';
-UPDATE campaign_pins SET folder='Watchtowers', sort_order=12, lat=36.046514,         lng=-95.797327         WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Watertower 12';
+UPDATE campaign_pins SET folder='Watchtowers', sort_order=12, lat=36.046514,         lng=-95.797327         WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Watchtower 12';
 
 -- Town Buildings (19)
 UPDATE campaign_pins SET folder='Town Buildings', sort_order=1,  lat=36.0508988772024, lng=-95.7899397611618 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='City Hall';
 UPDATE campaign_pins SET folder='Town Buildings', sort_order=2,  lat=36.0488474009638, lng=-95.7911360263824 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Farmer''s Market';
 UPDATE campaign_pins SET folder='Town Buildings', sort_order=3,  lat=36.0510593498332, lng=-95.7911092042923 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Main Street Tavern';
 UPDATE campaign_pins SET folder='Town Buildings', sort_order=4,  lat=36.0505432339898, lng=-95.7916402816773 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='The Bike Clinic';
-UPDATE campaign_pins SET folder='Town Buildings', sort_order=5,  lat=36.0516491923675, lng=-95.7897734642029 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='The Clinic';
+UPDATE campaign_pins SET folder='Town Buildings', sort_order=5,  lat=36.0516491923675, lng=-95.7897734642029 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='Dr Zee''s Clinic';
 UPDATE campaign_pins SET folder='Town Buildings', sort_order=6,  lat=36.0516665406104, lng=-95.7904815673828 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='The Vault';
 UPDATE campaign_pins SET folder='Town Buildings', sort_order=7,  lat=36.0519961564993, lng=-95.7911145687103 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='The Kitchen';
 UPDATE campaign_pins SET folder='Town Buildings', sort_order=8,  lat=36.0527161021936, lng=-95.7886254787445 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='The College';
@@ -61,7 +61,7 @@ UPDATE campaign_pins SET folder='Town Buildings', sort_order=19, lat=36.04847439
 
 COMMIT;
 
--- Naming flags (not changed - record as authored, surfaced for Xero):
---   * "Watertower 12" looks like a typo for "Watchtower 12".
---   * "The Bike Clinic" (was "The Bike Shop" in the sourcebook) now coexists
---     with "The Clinic" (medical) - confirm the rename is intended.
+-- Naming (resolved by Xero 2026-06-30):
+--   * "Watchtower 12" - typo fixed (was "Watertower 12").
+--   * "The Bike Clinic" (bike repair) and "Dr Zee's Clinic" (medical, renamed
+--     from "The Clinic") are two distinct, intentional locations.

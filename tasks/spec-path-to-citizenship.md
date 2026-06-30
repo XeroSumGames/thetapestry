@@ -191,8 +191,11 @@ the corrected `campaign_pins` titles so scene briefs reference them exactly.
 
 1. [x] Pin reset DONE (2026-06-30). 35 pins, 3 folders (Gates 4 / Watchtowers 12 /
    Town Buildings 19). Locations captured in `sql/district-zero-pins-capture-2026-06-30.sql`.
-   Scene briefs reference these names. Naming to confirm: "Watertower 12" (typo for
-   Watchtower 12?) and "The Bike Clinic" coexisting with "The Clinic".
+   Scene briefs reference these names. Naming RESOLVED by Xero: "Watchtower 12"
+   (typo fixed), and two distinct locations - "The Bike Clinic" (bike repair) +
+   "Dr Zee's Clinic" (medical, renamed from "The Clinic"; Scene 21 Medical Crisis
+   uses this pin). Open content point for Part 2: is "Dr Zee" a new NPC running the
+   clinic, or does Morgan Lieu still run it under the new name?
 2. [ ] Confirm filler scenes 3+4 collapse to one "Lodging" or stay separate. (Author's call.)
 3. [ ] Drop-in pregen roster: author 4-6 newcomers, or repromote the 5 null-setting pregens
    (Carly McIntyre, Gus Gonzalez, Marv Calhoun, Morgan Lieu, Victor Williams) to
