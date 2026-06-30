@@ -36,7 +36,7 @@ Owners: `[PF]` Puffer Fish (arch/risk/SQL/infra) - `[HP]` Hunt & Peck (app code)
 - [ ] Finish Sentry alert-rule routing (the split-out ~5-min task) `[Xero/PF]`
 - [ ] Written incident runbook: what players see if X breaks, how we know, rollback + speed `[PF]`
 - [x] **Staging/preview environment - DONE + smoke-verified 2026-07-01** `[PF/Xero]`. Staging Supabase at exact prod parity; Vercel Preview env split (prod->Production, staging->Preview); `staging` branch -> Preview deploy. Smoke PASSED: a fresh signup on the Preview URL shows an empty world (no campaigns/stories/pins) = reading staging, not prod. Risky SQL/RLS/schema now route through `tasks/workflow-staging.md`. (Minor: staging Auth Site URL still defaults to localhost - email confirmation disabled on staging, so harmless; set Site URL if email flows ever need testing there.)
-- [ ] Confirm Supabase automated backups ON + run a test restore drill `[PF + Xero on plan]`
+- [ ] **[LAUNCH-WEEK - deferred by Xero 2026-07-01, not now]** Confirm Supabase automated backups ON + run a test restore drill (drillable safely on staging now that it exists) `[PF + Xero on plan]`. Timeline is slipping (real-life); this is a ~1-week-before-go-live task, do it then.
 - [ ] Backup of user-uploaded storage (images) separate from the DB `[PF]`
 
 ### Test coverage & proof
