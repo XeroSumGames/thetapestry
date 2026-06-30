@@ -79,7 +79,7 @@ export default function NewCampaignPage() {
       gm_user_id: user.id,
       invite_code,
       status: 'active',
-    }).select().single()
+    }).select('id').single()  // explicit col: post-revoke select() returns the full * representation which 401s (invite_code ungranted). Only data.id is used below.
     if (err) { setError(err.message); setSaving(false); return }
     // Critical follow-up: insert the GM as a member of their own
     // campaign. If this fails (RLS denial, network blip), the GM

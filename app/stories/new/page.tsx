@@ -190,7 +190,7 @@ export default function NewCampaignPage() {
       invite_code,
       status: 'active',
       ...clockSeed,
-    }).select().single()
+    }).select('id').single()  // explicit col: post-revoke select() returns the full * representation which 401s (invite_code ungranted). Only data.id is used below.
     if (err) { setError(err.message); setSaving(false); return }
     // GM auto-joins as member
     await supabase.from('campaign_members').insert({

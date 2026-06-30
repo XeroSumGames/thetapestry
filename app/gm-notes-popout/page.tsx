@@ -151,7 +151,9 @@ export default function GMNotesPopoutPage() {
     if (!campaign) return
     const prev = (campaign as any)[field]
     setCampaign({ ...campaign, [field]: value })
-    const { error } = await supabase.from('campaigns').update({ [field]: value }).eq('id', campaign.id).select()
+    // No .select() - it returns the full * representation, which 401s post-PII-
+    // revoke (invite_code ungranted). Only `error` is used here, so drop it.
+    const { error } = await supabase.from('campaigns').update({ [field]: value }).eq('id', campaign.id)
     if (error) {
       alert(`Save failed: ${error.message}`)
       setCampaign({ ...campaign, [field]: prev })
