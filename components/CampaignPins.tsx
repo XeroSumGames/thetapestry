@@ -613,10 +613,13 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                     onDoubleClick={() => { if (pin.tactical_scene_id && onOpenScene) onOpenScene(pin.tactical_scene_id) }}
                     title={pin.tactical_scene_id ? 'Double-click to open tactical map' : 'Show on map'}
                   >
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span title={getCategoryLabel(pin.category)} style={{ fontSize: '15px', lineHeight: 1, flexShrink: 0, ...(() => { const f = getCategoryFilter(pin.category); return f ? { filter: f, display: 'inline-block' } : {} })() }}>{getCategoryEmoji(pin.category)}</span>
-                      {pin.name}
-                      {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '13px', color: '#7ab3d4' }}>🗺️</span>}
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                      <span title={getCategoryLabel(pin.category)} style={{ fontSize: '15px', lineHeight: 1.3, flexShrink: 0, ...(() => { const f = getCategoryFilter(pin.category); return f ? { filter: f, display: 'inline-block' } : {} })() }}>{getCategoryEmoji(pin.category)}</span>
+                      {/* Wrap to full text instead of one-line truncation - several
+                          seed pins share a prefix (5 "Watchtower ..."), so an
+                          ellipsis made them indistinguishable. */}
+                      <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}>{pin.name}</span>
+                      {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '13px', color: '#7ab3d4', flexShrink: 0 }}>🗺️</span>}
                     </div>
                     {pin.notes && <div style={{ fontSize: '13px', color: '#cce0f5', overflow: expandedId === pin.id ? 'visible' : 'hidden', textOverflow: expandedId === pin.id ? 'unset' : 'ellipsis', whiteSpace: expandedId === pin.id ? 'normal' : 'nowrap' }}>{pin.notes}</div>}
                     {expandedId === pin.id && pinImages[pin.id] && pinImages[pin.id].length > 0 && (
