@@ -97,6 +97,10 @@ export const RANGED_WEAPONS: Weapon[] = [
   { name: 'Heavy Pistol', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '3+2d3', rpPercent: 50, enc: 1, ammo: 'Uncommon', clip: 9, traits: [] },
   { name: 'Hunting Rifle', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Common', damage: '5+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 12, traits: [] },
   { name: 'Light Pistol', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '3+1d6', rpPercent: 50, enc: 1, ammo: 'Common', clip: 6, traits: [] },
+  // Revolver - added 2026-07-01. Stats a PROPOSAL grounded in the handgun trio:
+  // hardest-hitting pistol (4+1d6) at Medium range, common ammo, but a 6-round
+  // cylinder (low capacity) vs the Heavy Pistol's 9. One-line swap if Xero's canon differs.
+  { name: 'Revolver', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '4+1d6', rpPercent: 50, enc: 1, ammo: 'Common', clip: 6, traits: [] },
   { name: 'Shotgun (Pump-Action)', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '5+2d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 5, traits: ['Close-Up'] },
   { name: 'Shotgun (Sawed-Off)', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Uncommon', damage: '2+3d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 2, traits: ['Close-Up'] },
   { name: 'Slingshot', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '1+1d3', rpPercent: 100, enc: 0, ammo: 'Common', clip: 1, traits: ['Tracking'] },

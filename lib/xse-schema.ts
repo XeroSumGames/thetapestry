@@ -243,6 +243,7 @@ export const RANGED_WEAPONS: RangedWeapon[] = [
   { name: 'Heavy Pistol',         skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 3, damageDice: '2d3', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize:  9, traits: [] },
   { name: 'Hunting Rifle',        skill: 'Ranged', range: 'Long',    rarity: 'Common',   damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 12, traits: [] },
   { name: 'Light Pistol',         skill: 'Ranged', range: 'Close',   rarity: 'Common',   damageBase: 3, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  6, traits: [] },
+  { name: 'Revolver',             skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 4, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  6, traits: [] },
   { name: 'Shotgun (Pump-Action)',skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 5, damageDice: '2d6', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  5, traits: [{ name: 'Close-Up' }] },
   { name: 'Shotgun (Sawed-Off)',  skill: 'Ranged', range: 'Close',   rarity: 'Uncommon', damageBase: 2, damageDice: '3d6', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  2, traits: [{ name: 'Close-Up' }] },
   { name: 'Slingshot',            skill: 'Ranged', range: 'Close',   rarity: 'Common',   damageBase: 1, damageDice: '1d3', rpPercent:100, enc: 0, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },

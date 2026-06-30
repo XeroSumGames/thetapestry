@@ -85,6 +85,7 @@ const WEAPON_PROFILE_MAP: Record<string, string> = {
   'Heavy Pistol': 'heavy_pistol',
   'Hunting Rifle': 'hunting_rifle',
   'Light Pistol': 'light_pistol',
+  'Revolver': 'heavy_pistol',
   'Shotgun (Pump-Action)': 'shotgun',
   'Shotgun (Sawed-Off)': 'shotgun_close',
   'Slingshot': 'slingshot',

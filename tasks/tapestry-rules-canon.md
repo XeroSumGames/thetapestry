@@ -702,7 +702,7 @@ Source: `lib/xse-schema.ts` MELEE_WEAPONS. Format: `name | skill | range | rarit
 - Stun Gun | Melee | Engaged | Uncommon | 1 | 400% | 1 | Stunned
 - Wood Axe | Melee | Close | Uncommon | 5+1d3 | 50% | 1 | Cumbersome(1)
 
-### Ranged Weapons (Table 17) - 14 canonical ranged weapons
+### Ranged Weapons (Table 17) - 15 canonical ranged weapons
 
 Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 
@@ -715,6 +715,7 @@ Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 - Heavy Pistol | Medium | Common | 3+2d3 | 50% | 1 | ammo Uncommon, clip 9 | -
 - Hunting Rifle | Long | Common | 5+1d6 | 50% | 2 | ammo Uncommon, clip 12 | -
 - Light Pistol | Close | Common | 3+1d6 | 50% | 1 | ammo Common, clip 6 | -
+- Revolver | Medium | Common | 4+1d6 | 50% | 1 | ammo Common, clip 6 | -
 - Shotgun (Pump-Action) | Medium | Common | 5+2d6 | 50% | 2 | ammo Common, clip 5 | Close-Up
 - Shotgun (Sawed-Off) | Close | Uncommon | 2+3d6 | 50% | 2 | ammo Common, clip 2 | Close-Up
 - Slingshot | Close | Common | 1+1d3 | 100% | 0 | ammo Common, clip 1 | Tracking
