@@ -6,6 +6,37 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-06-30 18:03 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical) — 3 moderate postcss/next/@sentry carry-overs (tracked in security-audit.md)
+
+**CI:** last 5 runs all pass (latest 2026-06-30T18:00 UTC)
+
+**New since 15:00 pulse (5 commits):**
+- Staging env spec + schema parity (`089182d`, `4f7a6b3`, `f21ea49`) — 2nd Supabase project + Vercel env-scoping; Vercel branch wiring still outstanding
+- Launch checklist Tier 1/2 split (`6a83a58`)
+- Weekly security audit committed (`ea52291`)
+
+**Security audit 2026-06-30 top findings (tasks/security-audit.md):**
+- `app/api/health` HTTP rate limit still missing — **6th consecutive audit**, explicit pre-paid-launch blocker; DB cache landed, Upstash 10/min sliding window still needed (HP)
+- `supabase/functions/log-visit` — no body-size cap (no-auth edge function); carry-over
+- `@supabase/ssr` ^0.9.0 → 0.12.0 — 6 audits deferred; auth-adjacent staleness risk
+
+**Drift (HOPED-FOR trio unchanged):**
+- **Stress Check 12-string narrative** — deadline END OF TODAY (2026-06-30 MDT); 8 paths (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) still unverified
+- **FI Insight Die award path** — HOPED-FOR 15 days; `useRollResolution.ts:264` never fired live
+- **Vehicle popout broadcasts** (Section B) — HOPED-FOR 15 days; no code touch
+
+**Stale-todo flag:** `[ ]` "catch-up loadPins on SUBSCRIBED" — already implemented (`CampaignPins.tsx:178` + `CampaignMap.tsx:963`); audit-correction needed in todo.md
+
+**Action:** (1) HP: add Upstash 10/min sliding window to `/api/health` — 6th-audit pre-launch item; (2) Stress Check deadline expires tonight MDT — run Beta-500 dry-run or reset; (3) Staging env Vercel branch still needs wiring (`f21ea49` checklist)
+
+---
+
 ## 2026-06-30 15:00 UTC
 
 **Status:** DRIFT
