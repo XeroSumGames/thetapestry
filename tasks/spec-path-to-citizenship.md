@@ -196,6 +196,11 @@ the corrected `campaign_pins` titles so scene briefs reference them exactly.
    "Dr Zee's Clinic" (medical, renamed from "The Clinic"; Scene 21 Medical Crisis
    uses this pin). Open content point for Part 2: is "Dr Zee" a new NPC running the
    clinic, or does Morgan Lieu still run it under the new name?
+   RESOLVED (Xero): Dr Zee was the Mile's original doctor; he died, and Morgan Lieu
+   (existing vet-tech NPC) took over. The clinic keeps his name because Morgan is
+   still too new for it to be renamed after her. NO new NPC - Morgan is the clinic
+   NPC; "Dr Zee" is backstory only. Use this texture in Scene 21 + the clinic pin
+   description (offer to enrich the live pin notes when authoring that scene).
 2. [ ] Confirm filler scenes 3+4 collapse to one "Lodging" or stay separate. (Author's call.)
 3. [ ] Drop-in pregen roster: author 4-6 newcomers, or repromote the 5 null-setting pregens
    (Carly McIntyre, Gus Gonzalez, Marv Calhoun, Morgan Lieu, Victor Williams) to
