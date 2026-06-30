@@ -68,7 +68,7 @@ const COMBAT_SKILLS = ['Ranged Combat', 'Melee Combat', 'Unarmed Combat', 'Heavy
 
 const COMPLICATIONS = [
   'Addiction', 'Betrayed', 'Code of Honor', 'Criminal Past', 'Daredevil', 'Dark Secret',
-  'Family Obligation', 'Famous', 'Loss', 'Outstanding Debt', 'Personal Enemy',
+  'Obligation', 'Famous', 'Loss', 'Outstanding Debt', 'Personal Enemy',
 ]
 
 const MOTIVATIONS = [

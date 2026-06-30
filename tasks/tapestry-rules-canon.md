@@ -1,7 +1,7 @@
 # Tapestry Rules Canon - XSE SRD v1.1.17
 
 **Source of truth**: `lib/xse-schema.ts` and `app/rules/*` pages on TheTapestry platform.
-**Generated**: 2026-05-24.
+**Generated**: 2026-06-30.
 **Regenerate**: `npx tsx scripts/export-canon.ts > tasks/tapestry-rules-canon.md`
 
 This file is the platform's canonical reference for rules content. Every term, formula,
@@ -288,7 +288,7 @@ Source: `lib/xse-schema.ts` COMPLICATIONS.
 | 5 | Criminal Past |
 | 6 | Daredevil |
 | 7 | Dark Secret |
-| 8 | Family Obligation |
+| 8 | Obligation |
 | 9 | Famous |
 | 10 | Loss |
 | 11 | Outstanding Debt |
@@ -679,7 +679,7 @@ Medic must be at **Engaged** range to treat (matches Stabilise). A Doctor's Bag 
 On Day 0 of a sick period, if Lasting Damage risk is still set (Failure was rolled and Medicine\* didn't clear it), the character makes a final **Physicality check** to avoid Lasting Damage. Failure rolls 2d6 on Table 12: Lasting Wounds. Dire Failure on the original Infection check skips this step - Lasting Damage applies automatically.
 
 ## §07 Weapons & Equipment
-### Melee Weapons (Table 16) - 17 canonical melee weapons
+### Melee Weapons (Table 16) - 18 canonical melee weapons
 
 Source: `lib/xse-schema.ts` MELEE_WEAPONS. Format: `name | skill | range | rarity | damage | RP% | enc | traits`.
 
@@ -698,7 +698,8 @@ Source: `lib/xse-schema.ts` MELEE_WEAPONS. Format: `name | skill | range | rarit
 - Staff | Melee | Close | Common | 2+2d3 | 100% | 1 | Unwieldy(1)
 - Sword | Melee | Engaged | Uncommon | 3+3d3 | 50% | 1 | -
 - Tactical Baton | Melee | Engaged | Uncommon | 4+2d3 | 100% | 1 | -
-- Cattle Prod | Melee | Engaged | Uncommon | 2 | 400% | 1 | Stunned
+- Cattle Prod | Melee | Engaged | Uncommon | 1 | 200% | 1 | Stunned
+- Stun Gun | Melee | Engaged | Uncommon | 1 | 400% | 1 | Stunned
 - Wood Axe | Melee | Close | Uncommon | 5+1d3 | 50% | 1 | Cumbersome(1)
 
 ### Ranged Weapons (Table 17) - 14 canonical ranged weapons
@@ -708,7 +709,7 @@ Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 - Automatic Rifle | Long | Uncommon | 5+2d6 | 50% | 2 | ammo Uncommon, clip 30 | Automatic Burst(3)
 - Black Powder Rifle | Long | Uncommon | 5+1d6 | 50% | 2 | ammo Uncommon, clip 1 | -
 - Bow | Medium | Common | 4+1d6 | 50% | 1 | ammo Common, clip 1 | Tracking
-- Carbine | Long | Uncommon | 5+1d6 | 50% | 1 | ammo Uncommon, clip 30 | Automatic Burst
+- Carbine | Long | Uncommon | 5+1d6 | 50% | 1 | ammo Uncommon, clip 30 | Automatic Burst(3)
 - Compound Bow | Medium | Common | 4+2d3 | 50% | 2 | ammo Common, clip 1 | Tracking
 - Crossbow | Medium | Uncommon | 4+1d6 | 50% | 2 | ammo Uncommon, clip 1 | Unwieldy(1)
 - Heavy Pistol | Medium | Common | 3+2d3 | 50% | 1 | ammo Uncommon, clip 9 | -
@@ -718,13 +719,13 @@ Source: `lib/xse-schema.ts` RANGED_WEAPONS.
 - Shotgun (Sawed-Off) | Close | Uncommon | 2+3d6 | 50% | 2 | ammo Common, clip 2 | Close-Up
 - Slingshot | Close | Common | 1+1d3 | 100% | 0 | ammo Common, clip 1 | Tracking
 - Sniper's Rifle | Distant | Rare | 2+3d6 | 50% | 2 | ammo Uncommon, clip 10 | -
-- Taser | Close | Uncommon | 1 | 400% | 1 | ammo Rare, clip 1 | Stunned
+- Taser | Close | Uncommon | 1 | 600% | 1 | ammo Rare, clip 1 | Stunned
 
-### Equipment (Table 20) - 35 canonical equipment items
+### Equipment (Table 20) - 36 canonical equipment items
 
 Source: `lib/xse-schema.ts` EQUIPMENT.
 
-Angler's Set, Backpack, Basic Survival Kit, Bicycle Repair Kit, Bolt Cutters, Binoculars, Canteen, Climbing Gear, Compass, Crowbar, Doctor's Bag, Fire-starting Kit, First Aid Kit, Fishing Kit, Flashbang, Flashlight, Grappling Hook, Handcuffs, Instant Camera, Lantern, Military Backpack, Multitool, Night Vision Goggles, Radio Scanner, Rope, Shovel, Survivalists Kit, Standard Lockpicks, Criminal Lockpicks, Hunting Traps, Toolkit, Walkie-Talkies, Weapons Toolkit, Workman's Toolkit, 55-Gallon Drum.
+Angler's Set, Backpack, Basic Survival Kit, Bicycle, Bicycle Repair Kit, Bolt Cutters, Binoculars, Canteen, Climbing Gear, Compass, Crowbar, Doctor's Bag, Fire-starting Kit, First Aid Kit, Fishing Kit, Flashbang, Flashlight, Grappling Hook, Handcuffs, Instant Camera, Lantern, Military Backpack, Multitool, Night Vision Goggles, Radio Scanner, Rope, Shovel, Survivalists Kit, Standard Lockpicks, Criminal Lockpicks, Hunting Traps, Toolkit, Walkie-Talkies, Weapons Toolkit, Workman's Toolkit, 55-Gallon Drum.
 
 ### Rations (Quickstart Table 16) - canon
 

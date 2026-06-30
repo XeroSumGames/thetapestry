@@ -19,7 +19,7 @@ const COMP_MOT: Array<[number, string, string]> = [
   [5, 'Criminal Past', 'Hedonism'],
   [6, 'Daredevil', 'Make Amends'],
   [7, 'Dark Secret', 'Preach'],
-  [8, 'Family Obligation', 'Protect'],
+  [8, 'Obligation', 'Protect'],
   [9, 'Famous', 'Reunite'],
   [10, 'Loss', 'Revenge'],
   [11, 'Outstanding Debt', 'Stay Alive'],

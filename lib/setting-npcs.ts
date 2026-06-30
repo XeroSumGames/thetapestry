@@ -731,7 +731,7 @@ export const CHASED_PREGENS: PregenSeed[] = [
   {
     name: 'Carly McIntyre', profession: 'Trail Guide', age: 29, gender: 'Female',
     height: "5'5\"", weight: '139lbs',
-    three_words: 'Sarcastic, Confident, Strong', complication: 'Family Obligation', motivation: 'Find Safety',
+    three_words: 'Sarcastic, Confident, Strong', complication: 'Obligation', motivation: 'Find Safety',
     reason: 0, acumen: 2, physicality: 2, influence: 0, dexterity: 1,
     skills: [
       { skillName: 'Melee Combat', level: 1 }, { skillName: 'Ranged Combat', level: 1 },

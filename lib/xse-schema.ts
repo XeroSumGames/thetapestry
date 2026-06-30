@@ -120,7 +120,7 @@ export const COMPLICATIONS: Record<number, string> = {
   5:  'Criminal Past',
   6:  'Daredevil',
   7:  'Dark Secret',
-  8:  'Family Obligation',
+  8:  'Obligation',
   9:  'Famous',
   10: 'Loss',
   11: 'Outstanding Debt',

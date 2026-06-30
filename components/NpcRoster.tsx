@@ -138,7 +138,7 @@ const PORTRAIT_BANK = [
 
 const COMPLICATIONS = [
   'Addiction', 'Betrayed', 'Code of Honor', 'Criminal Past', 'Daredevil', 'Dark Secret',
-  'Family Obligation', 'Famous', 'Loss', 'Outstanding Debt', 'Personal Enemy',
+  'Obligation', 'Famous', 'Loss', 'Outstanding Debt', 'Personal Enemy',
 ]
 
 const MOTIVATIONS = [
