@@ -8,6 +8,14 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
+### 💳 PRE-BETA-500 INFRA UPGRADES (Xero's dashboard calls; confirmed 2026-06-29 "I'll upgrade everything before going live")
+Full checklist + steps: [tasks/infra-upgrade-prebeta500-checklist.md](infra-upgrade-prebeta500-checklist.md). The whole stack is on FREE tiers; surfaced when Vercel free-tier throttling stalled main->prod deploys twice on 2026-06-29/30 (a free team also can't host a commercial product per Vercel TOS).
+- [ ] **Vercel -> Pro [NOW]** - unblocks the recurring deploy stalls + commercial-use compliance; also reconnect the thetapestry Git webhook (Settings -> Git -> disconnect/reconnect).
+- [ ] **Supabase -> Pro [before Beta-500]** - realtime concurrency + DB/egress caps + 7-day idle auto-pause; the realtime cap bites the live table hardest.
+- [ ] **Upstash [before Beta-500]** - daily Redis command cap on rate-limit hot paths; confirm fail-open vs fail-closed fallback.
+- [ ] **Sentry [before Beta-500]** - free ~5K errors/mo; don't go blind launch week.
+- [ ] Better Stack: verify free tier interval/alerts (low). Cloudflare Turnstile: free, no action. Stripe: post-KS, deferred.
+
 ### 🚀 PRE-BETA-500 SCALE (Tier 2, HP handoff 2026-06-23) - triaged
 - [x] **[T2-1 HIGH - SHIPPED + 2-CLIENT VERIFIED 2026-06-29] campaign-scope the 3 unfiltered postgres_changes subs.** Puffer denormalized `campaign_id` onto `scene_tokens`/`npc_relationships`/`community_members` (backfill + BEFORE-INSERT trigger deriving from parent + publication) last session; HP added the one-line `filter: campaign_id=eq.${id}` to each sub (`07a0f495`). VERIFIED 2026-06-29 via two synchronized recorder dumps (GM+player): token moves + grid/lock + NPC restore all deliver GM->player at 100-600ms, no sub killed by the filter; DB-layer re-confirmed (0 NULL campaign_id, triggers correct, all 3 in publication). `npc_relationships`/`community_members` not write-exercised this run (same construction, high confidence). Detail: `tasks/realtime-2client-verify-testplan-2026-06-29.md`.
 - [ ] **[SCALE -> ROUTED TO HP, found 2026-06-29] remove the redundant 3s vehicles poll.** `page.tsx:3090` `setInterval(refetchVehicles, 3000)` re-reads `campaigns.vehicles` every 3s per client forever (~167 req/s at Beta-500), but `campaigns:UPDATE` sub (line 1557) already applies `vehicles` from the realtime payload AND `vehicle_updated` broadcast already drives an event refetch - the poll is the 5th, weakest, only-idle-costly mechanism. Remove the interval (or >=30s if a net is wanted). Root cause + verify steps: `tasks/finding-vehicles-poll-scale-2026-06-29.md`.
