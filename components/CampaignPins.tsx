@@ -599,7 +599,8 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                 </div>
               ) : (
                 /* View mode */
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                   <div
                     draggable
                     onDragStart={() => setDragId(pin.id)}
@@ -632,8 +633,8 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       </div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
-                    {!canManage && (() => {
+                  {/* Status dot stays top-right, next to the name. */}
+                  {!canManage && (() => {
                       // Player radio: GREEN = on my map, RED = hidden on MY map
                       // (local declutter only; never touches the GM's reveal).
                       const shown = !isPinHiddenLocally(pin.id)
@@ -644,39 +645,42 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                           style={{ width: '15px', height: '15px', borderRadius: '50%', padding: 0, flexShrink: 0, cursor: 'pointer', background: shown ? '#7fc458' : '#c0392b', border: `1px solid ${shown ? '#2d5a1b' : '#7a1f16'}`, boxShadow: shown ? '0 0 4px rgba(127,196,88,.6)' : 'none' }} />
                       )
                     })()}
-                    {canManage && (
-                      <>
-                        {/* Visibility radio: GREEN = shown to players, RED = hidden. Click toggles. */}
-                        <button onClick={() => toggleReveal(pin)}
-                          title={pin.revealed ? 'Visible to players - click to hide' : 'Hidden from players - click to reveal'}
-                          aria-label={pin.revealed ? 'Hide pin from players' : 'Reveal pin to players'}
-                          style={{ width: '15px', height: '15px', borderRadius: '50%', padding: 0, flexShrink: 0, cursor: 'pointer', background: pin.revealed ? '#7fc458' : '#c0392b', border: `1px solid ${pin.revealed ? '#2d5a1b' : '#7a1f16'}`, boxShadow: pin.revealed ? '0 0 4px rgba(127,196,88,.6)' : 'none' }} />
-                        <div style={{ display: 'flex', gap: '2px' }}>
-                          {pin.reader_mode === 'comic' && (
-                            <button
-                              onClick={() => openPopout(`/reader-popout?pin=${pin.id}`, `reader-${pin.id}`, { w: 980, h: 1100 })}
-                              title="Open comic reader"
-                              style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>📖</button>
-                          )}
-                          <button onClick={() => startEdit(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Edit</button>
-                          {showTacticalMap && onPlaceOnTacticalMap ? (
-                            <button onClick={() => onPlaceOnTacticalMap(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to tactical map">🗺️</button>
-                          ) : (
-                            <button onClick={() => promoteToWorld(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to world map">🌍</button>
-                          )}
-                          {showTacticalMap && onRemoveFromTacticalMap ? (
-                            <button onClick={() => onRemoveFromTacticalMap(pin)}
-                              title="Remove pin marker from tactical map (campaign pin survives)"
-                              style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
-                          ) : (
-                            <button onClick={() => deletePin(pin.id)}
-                              title="Delete pin"
-                              style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
-                          )}
-                        </div>
-                      </>
-                    )}
+                  {canManage && (
+                    /* Visibility radio: GREEN = shown to players, RED = hidden. Click toggles. */
+                    <button onClick={() => toggleReveal(pin)}
+                      title={pin.revealed ? 'Visible to players - click to hide' : 'Hidden from players - click to reveal'}
+                      aria-label={pin.revealed ? 'Hide pin from players' : 'Reveal pin to players'}
+                      style={{ width: '15px', height: '15px', borderRadius: '50%', padding: 0, flexShrink: 0, cursor: 'pointer', background: pin.revealed ? '#7fc458' : '#c0392b', border: `1px solid ${pin.revealed ? '#2d5a1b' : '#7a1f16'}`, boxShadow: pin.revealed ? '0 0 4px rgba(127,196,88,.6)' : 'none' }} />
+                  )}
                   </div>
+                  {/* Action buttons on their own full-width row below the name, so
+                      long pin names (e.g. "East Gate (Farm Gate)" and the 5
+                      "Watchtower ..." pins) get the whole width and read in full. */}
+                  {canManage && (
+                    <div style={{ display: 'flex', gap: '2px', justifyContent: 'flex-end' }}>
+                      {pin.reader_mode === 'comic' && (
+                        <button
+                          onClick={() => openPopout(`/reader-popout?pin=${pin.id}`, `reader-${pin.id}`, { w: 980, h: 1100 })}
+                          title="Open comic reader"
+                          style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>📖</button>
+                      )}
+                      <button onClick={() => startEdit(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Edit</button>
+                      {showTacticalMap && onPlaceOnTacticalMap ? (
+                        <button onClick={() => onPlaceOnTacticalMap(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to tactical map">🗺️</button>
+                      ) : (
+                        <button onClick={() => promoteToWorld(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to world map">🌍</button>
+                      )}
+                      {showTacticalMap && onRemoveFromTacticalMap ? (
+                        <button onClick={() => onRemoveFromTacticalMap(pin)}
+                          title="Remove pin marker from tactical map (campaign pin survives)"
+                          style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
+                      ) : (
+                        <button onClick={() => deletePin(pin.id)}
+                          title="Delete pin"
+                          style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
