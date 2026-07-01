@@ -1,6 +1,9 @@
 # Feature Spec - Path to Citizenship (District Zero onboarding + drop-in campaign)
 
-**Status**: Authoring spec. Approved direction 2026-06-30. Not yet seeded.
+**Status**: SEEDED + LIVE 2026-06-30. Parts 1 (NPC gaps + handouts), 2 (6 drop-in
+pregens), and 3 (22 scene briefs) all authored, applied to the DZ campaign, and verified.
+Remaining: GM builds the 4 tactical combat maps with uploaded art at run time (each combat
+brief states the grid size). Solo/GM-less oracle layer = future spec (deferred).
 
 **One line**: A GM-run, Western-Marches-style onboarding arc + hook pool seeded into the
 existing **District Zero** persistent world, so a table is never dead when a player is
@@ -201,7 +204,8 @@ the corrected `campaign_pins` titles so scene briefs reference them exactly.
    still too new for it to be renamed after her. NO new NPC - Morgan is the clinic
    NPC; "Dr Zee" is backstory only. Use this texture in Scene 21 + the clinic pin
    description (offer to enrich the live pin notes when authoring that scene).
-2. [ ] Confirm filler scenes 3+4 collapse to one "Lodging" or stay separate. (Author's call.)
+2. [x] Filler 3+4 collapsed to one "Lodging" brief (Scene 3); numbering skips 4 to keep
+   NPC/foe cross-refs (7, 11, 15, 20, 21, 22) stable. DONE.
 3. [x] DONE + LIVE 2026-06-30. Authored 6 District Zero newcomer pregens (Rae Okafor,
    Boone Tucker, Imani Reyes, Hank Delgado, Lonnie Pace, Dot Mwangi),
    `sql/path-to-citizenship-pregens.sql`, tagged `district_zero` + mapped to the campaign.
@@ -212,4 +216,6 @@ the corrected `campaign_pins` titles so scene briefs reference them exactly.
    schema change / no Puffer index needed. Part 1 (`sql/path-to-citizenship-seed.sql`:
    2 NPC gaps + 2 foe statblocks + 2 player handouts) authored + dry-run verified
    (rolled back) 2026-06-30. Not yet applied to live.
-5. [ ] Tactical map backgrounds - GM uploads art per map post-seed.
+5. [ ] Tactical maps (Scenes 11, 15, 16, 22) - NOT seeded as blank rows (avoids cluttering
+   the Tactical Map list + the art dependency). Each combat brief states the grid size
+   (~20x15, cell 35px); GM builds the map with uploaded art when running that scene.
