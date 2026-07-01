@@ -6,6 +6,34 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-01 00:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox — skipped
+
+**New since 2026-06-30 21:03 UTC (6 commits):**
+- `02f61c5` fix(map): 10s reconcile poll — pins now converge without manual refresh (closes pin-reveal TWO-report todo)
+- `5297b5a` docs: pin-reveal lesson logged
+- `6eda9d3`/`f443aa4`/`fad857b`/`73d0b3c` content(ptc/dz): PtC seed part 1 + NPC gaps + 6 drop-in pregens + DZ pin name syncs
+
+**Drift (HOPED-FOR — Stress Check deadline expired):**
+- **Stress Check 12-string** — deadline was "before 2026-07-01"; TODAY is that date; 8 strings (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) still unverified; no code touch since 2026-06-16
+- **FI Insight Die award path** — >15 days unverified; `useRollResolution.ts:264` never fired live
+- **Vehicle popout broadcasts** (Section B) — >15 days unverified; no code touch
+
+**Note:** force-push flag on git pull (`8c2412e...73d0b3c`); history intact; content/fix commits on top.
+
+**Stale-todo flag:** `[PUFFER - pin realtime propagation; TWO corroborating reports]` — `02f61c5` adds the reconcile poll that was the missing fix; audit-correction likely needed in todo.md.
+
+**Action:** Stress Check drain target EXPIRED — run Beta-500 dry-run ASAP (this was the 7/1 gate); pin fix worth 2-client smoke.
+
+---
+
 ## 2026-06-30 21:03 UTC
 
 **Status:** DRIFT
