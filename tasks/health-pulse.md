@@ -6,6 +6,34 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-01 06:09 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-01T00:34 UTC) — confirmed this run (was skipped at 00:06)
+
+**New since 00:06 pulse (2 commits):**
+- `aba5264` content(ptc): 22 scene briefs seeded live — Path to Citizenship COMPLETE
+- `3b9eac8` docs: campaign-seeding pattern + PtC ship log
+
+**Drift (HOPED-FOR — same 3 items, all past deadline):**
+- **Stress Check 12-string** (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — drain target was before 7/1; TODAY is 7/1 = Beta-500 day
+- **FI Insight Die award path** — `useRollResolution.ts:264` never fired live; >15 days unverified
+- **Vehicle popout broadcasts** (Section B) — no code touch since 2026-06-16
+
+**Infra gap on Beta-500 day:**
+- Vercel still FREE tier (tagged [NOW] in todo; yesterday had deploy stalls + commercial TOS issue)
+- Supabase still FREE tier (realtime concurrency + DB/egress caps hit at live table scale)
+- Upstash + Sentry not yet upgraded (rate-limit failover + error visibility blind pre-launch)
+
+**Action:** TODAY is Beta-500 day — Vercel Pro upgrade is the immediate unblock (deploy stalls + TOS); Supabase Pro before sending invites; run Beta-500 dry-run to drain the HOPED-FOR trio.
+
+---
+
 ## 2026-07-01 00:06 UTC
 
 **Status:** DRIFT
