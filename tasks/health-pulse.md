@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-01 15:03 UTC
+
+**Status:** DRIFT (unchanged from 12:03)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-01T12:06 UTC)
+
+**New commits since 12:03:** 1 (`945d68c` docs: Xero eyeball PASSED — PF cleared to apply invite_code column revoke)
+
+**Drift:** same 3 HOPED-FOR items + infra gaps — see 06:09 entry for detail. No code touched in HOPED-FOR areas.
+
+**Action:** see 06:09 — infra upgrades (Vercel Pro/Supabase Pro) + Beta-500 dry-run still pending.
+
+---
+
 ## 2026-07-01 12:03 UTC
 
 **Status:** DRIFT (unchanged from 09:03)
