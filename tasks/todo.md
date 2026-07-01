@@ -8,6 +8,9 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
+### 🗺️ CONTENT
+- [x] **[SHIPPED + LIVE 2026-06-30] Path to Citizenship** - District Zero drop-in / Western-Marches onboarding campaign seeded into the DZ campaign `6dd8611b`. Parts 1-3 live: 4 NPCs (George Meeker, Marty, 2 foe statblocks), 6 canon drop-in pregens, 2 player handouts, 22 GM scene briefs. Spec `tasks/spec-path-to-citizenship.md`; seeds `sql/path-to-citizenship-*.sql`. Remaining: GM builds 4 tactical maps at run time (Scenes 11/15/16/22); GM-less solo oracle layer = future spec (deferred by Xero, build for GM-run now).
+
 ### 💳 PRE-BETA-500 INFRA UPGRADES (Xero's dashboard calls; confirmed 2026-06-29 "I'll upgrade everything before going live")
 Full checklist + steps: [tasks/infra-upgrade-prebeta500-checklist.md](infra-upgrade-prebeta500-checklist.md). The whole stack is on FREE tiers; surfaced when Vercel free-tier throttling stalled main->prod deploys twice on 2026-06-29/30 (a free team also can't host a commercial product per Vercel TOS).
 - [ ] **Vercel -> Pro [NOW]** - unblocks the recurring deploy stalls + commercial-use compliance; also reconnect the thetapestry Git webhook (Settings -> Git -> disconnect/reconnect).
