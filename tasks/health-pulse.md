@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-02 15:05 UTC
+
+**Status:** DRIFT (unchanged from 12:00)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-02T12:06 UTC)
+
+**New commits since 12:00:** `77a21b3` content/canon rename ("Family Obligation" -> "Obligation") — unrelated to open items.
+
+**Drift:** same carry-overs — see 2026-07-01 06:09 for detail. No code touched in HOPED-FOR or infra areas.
+
+**Action:** Vercel Pro + Supabase Pro remain pre-Beta-500 blockers (see infra-upgrade-prebeta500-checklist.md). HOPED-FOR drain target is Beta-500 dry-run.
+
+---
+
 ## 2026-07-02 12:00 UTC
 
 **Status:** DRIFT (unchanged from 09:00)
