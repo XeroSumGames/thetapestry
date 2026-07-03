@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-03 18:05 UTC
+
+**Status:** DRIFT (unchanged from 15:03)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-03T15:05 UTC)
+
+**Drift:** same carry-overs — see 2026-07-01 06:09 for detail. No code touched in HOPED-FOR or infra areas.
+- HOPED-FOR trio (Stress Check 12-string, FI Insight Die award path, vehicle popout broadcasts) — drain target "Beta-500 dry-run before 2026-07-01" now 2 days overdue.
+- Infra upgrades (Vercel Pro, Supabase Pro, Upstash, Sentry) still pending Xero dashboard action.
+- Vehicles 3s poll (`page.tsx:3098`) still present.
+
+**Action:** Infra upgrades are the pre-Beta-500 blocker. HOPED-FOR trio needs a playtest entry or explicit HP routing.
+
+---
+
 ## 2026-07-03 15:03 UTC
 
 **Status:** DRIFT (unchanged from 12:03)
