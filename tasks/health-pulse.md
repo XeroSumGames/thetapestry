@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-03 12:03 UTC
+
+**Status:** DRIFT (unchanged from 09:04)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-03T09:06 UTC)
+
+**Drift:** same carry-overs — see 2026-07-01 06:09 for detail.
+- HOPED-FOR trio drain target was **"Beta-500 dry-run before 2026-07-01" — deadline passed 2 days ago.** Items still open: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die award path, vehicle popout broadcasts.
+- Infra upgrades (Vercel Pro, Supabase Pro, Upstash, Sentry) still pending Xero dashboard action.
+- Vehicles 3s poll (`page.tsx:3098`) still present; `check-realtime-wrap.mjs` guardrail not yet created.
+
+**Action:** HOPED-FOR drain target overdue — either confirm these shipped via a playtest entry or route explicitly to HP.
+
+---
+
 ## 2026-07-03 09:04 UTC
 
 **Status:** DRIFT (unchanged from 06:04)
