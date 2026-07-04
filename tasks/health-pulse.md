@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-04 15:03 UTC
+
+**Status:** DRIFT (unchanged from 12:03)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-04T12:06 UTC)
+
+**Drift:** same carry-overs — see 2026-07-01 06:09 for detail.
+- HOPED-FOR trio (Stress Check 12-string, FI Insight Die award path, vehicle popout broadcasts) — no code touches in 14+ days; drain target "Beta-500 dry-run before 2026-07-01" overdue.
+- Infra upgrades (Vercel Pro, Supabase Pro, Upstash, Sentry) still pending Xero dashboard action.
+- Vehicles 3s poll (`page.tsx:3098`) still present; `tasks/finding-vehicles-poll-scale-2026-06-29.md`.
+
+**Action:** No new code issues. Infra upgrades + HOPED-FOR playtest remain the only open items.
+
+---
+
 ## 2026-07-04 12:03 UTC
 
 **Status:** DRIFT (unchanged from 09:03)
