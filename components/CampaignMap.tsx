@@ -611,13 +611,51 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     }, 1600)
   }
 
+  // loadPins call plumbing (post-review hardening, 2026-07-01):
+  // - loadPinsRef: the channel callbacks, visibilitychange handler, and the
+  //   reconcile interval are all registered ONCE inside the [campaignId]
+  //   effect, so calling loadPins directly from them freezes this component's
+  //   props at mount (a GM's mid-session NPC reveal was being filtered back
+  //   OUT of popups by the mount-time revealedNpcIds). They must go through
+  //   loadPinsRef.current, which is re-pointed at the fresh closure each render.
+  // - loadSeqRef: concurrent calls (poll tick + broadcast + pinRefreshKey can
+  //   overlap on slow connections) raced on clusterGroupRef - the slower/staler
+  //   call could finish last and overwrite fresher markers, or orphan a
+  //   duplicate cluster layer. Every await is followed by a seq check; only
+  //   the newest call mutates the map.
+  // - pinsFingerprintRef: the marker teardown/rebuild closes any open popup
+  //   and aborts an in-progress GM drag, so unchanged data must be a no-op.
+  //   Fingerprint covers everything the markers/popups render from; it is
+  //   only committed AFTER a completed rebuild so an aborted call can't make
+  //   a newer one skip a rebuild the map never got.
+  const loadPinsRef = useRef<(L?: any) => Promise<void>>(undefined)
+  useEffect(() => { loadPinsRef.current = loadPins })
+  const loadSeqRef = useRef(0)
+  const pinsFingerprintRef = useRef('')
+
   async function loadPins(L?: any) {
+    const seq = ++loadSeqRef.current
     const [{ data: pinData }, { data: npcData }] = await Promise.all([
       supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId),
       supabase.from('campaign_npcs').select('id, name, campaign_pin_id, npc_type, status').eq('campaign_id', campaignId),
     ])
+    if (seq !== loadSeqRef.current) return // superseded by a newer call
     const allPins = pinData ?? []
     const visible = isGM ? allPins : allPins.filter((p: any) => p.revealed)
+
+    // Skip the destructive rebuild when nothing the markers/popups render
+    // from has changed. Rows are sorted by id inside the fingerprint only
+    // (Postgres row order is not stable without ORDER BY) so the map render
+    // path stays byte-identical to the pre-fingerprint behavior.
+    const fingerprint = JSON.stringify([
+      [...allPins].sort((a: any, b: any) => String(a.id).localeCompare(String(b.id))),
+      [...(npcData ?? [])].sort((a: any, b: any) => String(a.id).localeCompare(String(b.id))),
+      // Spread (not Array-dot-from) - the check-arch seam ratchet's regex
+      // would count that static call outside lib/data as a DB read.
+      isGM ? null : [...(revealedNpcIds ?? [])].sort(),
+      [...(locallyHiddenPinsRef.current ?? [])].sort(),
+    ])
+    if (fingerprint === pinsFingerprintRef.current && clusterGroupRef.current) return
     setPins(visible)
 
     // Group NPCs by pin, filtering out NPCs hidden from non-GM players.
@@ -634,6 +672,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     await import('leaflet.markercluster')
     await import('leaflet.markercluster/dist/MarkerCluster.css')
     await import('leaflet.markercluster/dist/MarkerCluster.Default.css')
+    if (seq !== loadSeqRef.current) return // superseded while imports resolved
 
     if (clusterGroupRef.current) { map.removeLayer(clusterGroupRef.current) }
     markersRef.current = {}
@@ -753,6 +792,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
     clusterGroup.addTo(map)
     clusterGroupRef.current = clusterGroup
+    pinsFingerprintRef.current = fingerprint
   }
 
   // React to GM changing map style from header
@@ -952,18 +992,21 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       //     postgres_changes; a GM's "Show pin" click reliably updated
       //     the sidebar list but NOT the map markers until refresh.
       //     Adding the broadcast listener closes the gap.
+      // NOTE: these callbacks live for the [campaignId] effect's lifetime, so
+      // they must call loadPinsRef.current (fresh closure) - see the ref's
+      // comment above loadPins.
       pinsChannelRef.current = supabase.channel(`campaign_pins_${campaignId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_pins', () => loadPins()))
-        .on('broadcast', { event: 'pins_changed' }, wrapBroadcast('pins_changed', () => loadPins()))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_pins', () => loadPinsRef.current?.()))
+        .on('broadcast', { event: 'pins_changed' }, wrapBroadcast('pins_changed', () => loadPinsRef.current?.()))
         // Catch-up reload on (re)subscribe: the pins_changed broadcast is
         // fire-and-forget, so a client that dropped/late-joined never reloads
         // and shows stale markers until refresh. Reloading on SUBSCRIBED (and
         // on tab-return-to-visible below) makes convergence not depend on
         // catching one ephemeral broadcast.
-        .subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadPins() })
+        .subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadPinsRef.current?.() })
 
       npcsMapChannelRef.current = supabase.channel(`campaign_npcs_map_${campaignId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_npcs_map', () => loadPins()))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_npcs_map', () => loadPinsRef.current?.()))
         .subscribe()
 
       // Ping broadcast channel - receive only. The sender draws its
@@ -1044,7 +1087,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     // Tab-return catch-up: a backgrounded tab can miss the pins_changed
     // broadcast (Chrome pauses the socket); reload on hidden->visible so the
     // map markers converge with the DB without a manual refresh.
-    function handlePinsVisibility() { if (!document.hidden && mapInstanceRef.current) void loadPins() }
+    function handlePinsVisibility() { if (!document.hidden && mapInstanceRef.current) void loadPinsRef.current?.() }
     document.addEventListener('visibilitychange', handlePinsVisibility)
     // Convergence safety net. Realtime is best-effort: a still-visible,
     // still-subscribed tab can silently miss BOTH the fire-and-forget
@@ -1055,9 +1098,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     // leaves open and focused (the 2026-06-30 playtest: stale 21s, recovered
     // only by toggling map views). A low-frequency reconcile poll closes that
     // gap so convergence never depends on catching one ephemeral event.
+    // 30s cadence (was 10s): the broadcast still delivers the common case
+    // sub-second - the poll is only the guarantee - and the fingerprint skip
+    // inside loadPins makes an unchanged tick a no-op (no marker teardown, no
+    // popup close, no re-render), so the only steady cost is the fetch.
     const pinReconcile = setInterval(() => {
-      if (!document.hidden && mapInstanceRef.current) void loadPins()
-    }, 10000)
+      if (!document.hidden && mapInstanceRef.current) void loadPinsRef.current?.()
+    }, 30000)
     return () => {
       document.removeEventListener('visibilitychange', handlePinsVisibility)
       clearInterval(pinReconcile)

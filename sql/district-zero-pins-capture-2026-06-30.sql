@@ -20,7 +20,7 @@ BEGIN;
 
 -- Gates (4)
 UPDATE campaign_pins SET folder='Gates', sort_order=1,  lat=36.0521826490883, lng=-95.7974982261658 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='West Gate';
-UPDATE campaign_pins SET folder='Gates', sort_order=3,  lat=36.0608757492369, lng=-95.7907846570015 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='North Gate';
+UPDATE campaign_pins SET folder='Gates', sort_order=2,  lat=36.0608757492369, lng=-95.7907846570015 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='North Gate';
 UPDATE campaign_pins SET folder='Gates', sort_order=3,  lat=36.0554613768467, lng=-95.7617899775505 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='East Gate (Farm Gate)';
 UPDATE campaign_pins SET folder='Gates', sort_order=4,  lat=36.046496595018,  lng=-95.7908463478088 WHERE campaign_id='6dd8611b-62ef-4810-b998-b9c5682d0a62' AND name='South Gate';
 

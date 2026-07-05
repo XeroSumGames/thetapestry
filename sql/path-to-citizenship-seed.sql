@@ -13,9 +13,10 @@
 -- RP = 6+PHY (lib/xse-schema.ts deriveSecondaryStats); skill names from SKILLS;
 -- motivations from MOTIVATIONS. Weapon stats from lib/weapons.ts.
 --
--- NOT YET APPLIED to live - confirm intent, then apply with:
+-- APPLIED TO LIVE 2026-06-30 (verified present). Kept as the idempotent repo
+-- artifact - re-running is a no-op thanks to the NOT EXISTS guards:
 --   npx supabase db query --linked -f sql/path-to-citizenship-seed.sql
--- Parts 2+ (drop-in pregens, 21 scene briefs, tactical maps) land in follow-ups.
+-- Parts 2 (pregens) + 3 (scene briefs) shipped in sibling files, also live.
 -- ============================================================
 
 -- ── NPC gaps ────────────────────────────────────────────────────────────────
