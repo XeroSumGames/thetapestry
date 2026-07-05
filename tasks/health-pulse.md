@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-05 21:03 UTC
+
+**Status:** DRIFT (unchanged from 18:03)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-05T18:05 UTC)
+
+**Drift:**
+- HOPED-FOR trio stale (>19 days, no code touches):
+  - Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+  - FI Insight Die award path (rolling doubles)
+  - Vehicle popout broadcasts (vehicle_updated / firing_arc_toggle)
+  - Drain target was "Beta-500 dry-run before 2026-07-01" — now 4 days overdue
+- Puffer-lane todo: `check-arch Array.from(` regex false-positive (ROUTED TO PUFFER 2026-07-01, 4 days unaddressed)
+- Infra upgrades (Vercel Pro, Supabase Pro, Upstash, Sentry) pending Xero dashboard action
+- Vehicles 3s poll (page.tsx:3098) still present
+
+**Action:** HOPED-FOR drain target slipped past 2026-07-01 — recommend scheduling a focused Beta-500 dry-run pass to close the trio. Puffer lane: pick up the check-arch regex fix.
+
+---
+
 ## 2026-07-05 18:03 UTC
 
 **Status:** DRIFT (unchanged from 15:04)
