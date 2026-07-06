@@ -1,5 +1,12 @@
 # Lessons Learned
 
+## Don't dismiss infrastructure we already run - reach for the platform before a workaround (2026-07-06)
+
+Asked for a persistent feature checklist, I built a localStorage HTML file, then told Xero real cross-device persistence "needs a login/backend" as if that were out of reach. His (correct, blunt) reply: we run two live sites on Supabase auth - "you couldn't add this page to one of those?" I had defaulted to the standalone-artifact framing and forgot the whole stack sitting right there. The right build was trivial on our own platform: a Thriver-gated `/tools/feature-manifest` page + a `feature_checklist_state` table (per-user JSONB, RLS own-row) via `lib/data/` helpers, upserted on each tick - progress follows the user across any browser/device they log into. ~30 min, done.
+
+**Rule:** before proposing a workaround (local file, "you'll have to remember", manual export), ask "does our existing platform already solve this?" We have Supabase auth + DB + RLS + a data layer and two deployed Next.js apps - persistence, per-user state, sharing, and gating are all one small page away, not a hypothetical "backend build." When a limitation I'm about to cite ("needs a login/backend", "would need a server") is a thing the project ALREADY HAS, that's the tell I've framed the problem too small. Build it into the product. Also: new inline `.from()` DB calls in a component trip the check-arch seam ratchet - put reads/writes in `lib/data/**` (the `db()` factory), which is where they belong anyway.
+
+
 ## Seeding a campaign's content into a live campaign: match live shapes, derive from canon, guard idempotency, dry-run before apply (2026-06-30)
 
 Authoring the Path to Citizenship campaign (NPCs + pregens + scene briefs) into the live District Zero campaign. What made it clean and reusable for the next seeded campaign:
