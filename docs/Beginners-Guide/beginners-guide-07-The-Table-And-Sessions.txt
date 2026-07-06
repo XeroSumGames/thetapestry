@@ -60,18 +60,17 @@ Click a character or NPC token (or their entry in the left panel) to open their 
 
 RIGHT PANEL: TABS
 -----------------
-The GM sees:
-  NPCs          full NPC roster (Chapter 10).
-  Pins          campaign pins, drag to reorder, GM-shared folders.
-  GM Notes      private notes, auto-saved.
-  Player Notes  submissions from players.
-  Advantages    grant Advantages to PCs (see below).
+Four tabs across the top of the panel: PINS, NPCs, ASSETS, and NOTES (labeled GM NOTES when you're the GM).
 
-Players see:
-  NPCs          only revealed NPCs.
-  Pins          only revealed pins.
-  Notes         your own session notes.
-  Advantages    your pending Advantages.
+The tab order flips when combat or the tactical map is active: NPCs sits first so you can reach the roster faster during a fight. Otherwise Pins leads.
+
+  PINS      Campaign pins, drag to reorder, GM-shared folders. Players see only the pins the GM has revealed.
+
+  NPCs      Full NPC roster (Chapter 10). Players see only the NPCs the GM has revealed.
+
+  ASSETS    Loot, vehicles, and object tokens tied to the campaign - the physical stuff on the world.
+
+  NOTES     For the GM: private auto-saved notes plus a Player Notes section showing anything players have submitted, plus an Advantages section for granting and awarding Advantages (see below). For players: your own session notes plus your pending Advantages inline in the same tab.
 
 
 THE PLAYER BAR
@@ -125,7 +124,7 @@ ADVANTAGES
 ----------
 The GM can grant an Advantage to a player at any time. An Advantage is a one-shot bonus the player can hold and spend later: a +2 on a roll, a re-roll, a skill substitution, a narrative favor.
 
-GMs grant via the Advantages tab on the right panel, or by clicking "Award" on a notable roll in the feed. Players see their pending Advantages in their own tab. Clicking "Use" on an Advantage opens the matching skill roll modal with the Advantage's bonus pre-applied. The Advantage isn't consumed until the roll actually resolves, so cancelling the modal returns it to your pool.
+GMs grant via the Advantages section inside the Notes tab, or by clicking "Award" on a notable roll in the feed. Players see their pending Advantages in their own Notes tab. Clicking "Use" on an Advantage opens the matching skill roll modal with the Advantage's bonus pre-applied. The Advantage isn't consumed until the roll actually resolves, so cancelling the modal returns it to your pool.
 
 
 ENDING A SESSION (GM)

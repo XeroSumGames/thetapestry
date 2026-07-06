@@ -12,14 +12,11 @@ Click "My Stories" in the sidebar, then "+ New Story." Fill in:
   - Name (required).
   - Description (optional).
   - Setting - pick one:
-      Custom         start blank.
-      District Zero  pre-loaded with the District Zero sourcebook NPCs, locations, and pins.
-      Chased         the Delaware setting from the Chased magazine.
-      Mongrels       the canonical demo campaign.
-      The Arena      the gladiator sandbox.
-      Empty          truly blank, no seed content.
+      Custom Setting     start blank, no pre-seeded content.
+      District Zero      pre-loaded with the District Zero sourcebook NPCs, locations, and pins.
+      Kings Crossroads   the Delaware setting, a small strip-mall community in Sussex County.
   - Map style and starting location (the campaign map's default view).
-  - OR - start from a Rumor (a published module). See Chapter 14.
+  - OR - start from a Rumor (a published module) instead of a setting. See Chapter 14. Older packaged settings (Mongrels, The Arena, and others) live in the Rumors marketplace as modules; pick them from there.
 
 You become this Story's GM automatically.
 
@@ -28,19 +25,19 @@ When created, the Story gets an INVITE CODE / LINK. Share it with your players. 
 
 THE STORY PAGE
 --------------
-Lists everything about your Story:
+The GM action bar sits at the top of the Story page:
 
-  Launch        opens the Table (Chapter 7).
-  Edit          inline form on the page itself - name, description, map style, map center.
-  Clone         copy the entire Story as a new one.
-  Share         copies the invite link to your clipboard.
-  Pregens       drop-in pre-built characters seeded from the chosen setting.
-  Sessions      full session history.
-  Snapshots     saved states of the campaign you can roll back to. New snapshots are also captured on demand from the Table (Chapter 7).
-  Publish       publish this Story's content as a Rumor module (Chapter 14).
-  Delete        permanent. Asks you to type the Story's name to confirm so a misclick can't end a campaign.
+  Launch      opens the Table (Chapter 7) in a new tab.
+  GM Notes    opens the GM Notes popout in its own window - story overview, scenes, NPC list, plot beats. Docks nicely on a second monitor.
+  Snapshot    view or roll back to a saved campaign state. New snapshots are also captured on demand from the Table's GM Tools dropdown.
+  Publish     publishes this Story's content as a Rumor module. Once published, this button re-labels to "Module vX.Y.Z" and shows the current version. See Chapter 14.
+  Archive     appears once you've published a module. Archives the module (pulls it from the marketplace, notifies subscribers) while keeping the Story itself intact.
+  Delete      permanent. Asks you to type the Story's name to confirm so a misclick can't end a campaign.
+  GM Kit      packages every pin, NPC, scene, token, and handout (with images) into a portable .zip. Handy for offline reference or backups.
 
-The GM Tools area is inline on the page now - no separate edit page to chase.
+An "Update available" purple button appears in-line when your Story is subscribed to a Rumor module that has a newer version - click through to the version history to review and pull the update.
+
+Below the action bar the Story page lists your player roster, pending pregens (if the setting ships with them), and inline GM Tools for editing name, description, map style, and starting location.
 
 [screenshot: story landing page with action buttons]
 

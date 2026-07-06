@@ -48,14 +48,16 @@ You'll get a notification for things like:
   - New Player joined your Story
   - Player Left your Story
   - Session Opened (your GM started a session)
-  - Module Updated (a Rumor you've subscribed to has a new version - see Chapter 14)
-  - Pin Approved or Rejected (your world-map pin was reviewed)
-  - Bug Report Replied (a moderator answered your bug report)
-  - Lasting Wound, Infection (combat consequences - see Chapter 9)
+  - Campaign Invitation (a GM invited you to their Story - accept or decline in place)
+  - Rumor Approved or Rejected (your world-map submission was reviewed)
+  - Community Encounter (another party's PCs interacted with one of your communities - accept or decline)
+  - Community Link Proposal (a GM asked to link one of their communities with yours - accept or decline)
+  - Community Migration (a member of one of your communities wants to migrate to another - accept or decline)
+  - Community Milestone (a big weekly result - a Wild Success, a dissolution, etc.)
   - New Survivor signed up (Admins only)
-  - Pin Submitted, awaiting moderation (Admins only)
+  - Moderation queue items: Pin, NPC, or Community awaiting review (Admins only)
 
-Click any notification to jump to it. Use "Mark all read" to clear the red dot, or "Delete all" to wipe the list.
+Click any notification to jump to it. Notifications that carry an accept-or-decline action render inline buttons on the card. Use "Mark all read" to clear the red dot, or "Delete all" to wipe the list.
 
 
 ROLES - INSIDE A STORY

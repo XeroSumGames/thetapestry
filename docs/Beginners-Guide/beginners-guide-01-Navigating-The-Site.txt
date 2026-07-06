@@ -13,8 +13,8 @@ At the top, a green "Survivors present: N" counter appears when other players ar
 
   USER PANEL
     Your username and four icons:
-      - Messages
       - Notifications (red dot if anything is unread)
+      - Messages
       - The Campfire shortcut
       - Bug report (opens a form that emails Xero directly)
 
@@ -25,6 +25,7 @@ At the top, a green "Survivors present: N" counter appears when other players ar
     The World                - the global world map (Chapter 3).
     My Survivors             - your characters (Chapter 4).
     My Stories               - your campaigns (Chapter 6).
+    Join a Story             - paste an invite code from a GM (Chapter 6).
     My Communities           - communities you're in (Chapter 12).
     The Campfire             - community hub (Chapter 13).
     Rumors                   - published adventure content (Chapter 14).
@@ -33,13 +34,14 @@ At the top, a green "Survivors present: N" counter appears when other players ar
 
   SURVIVORS - the four ways to make a character (Chapter 4):
     Creating a Survivor      - tutorial page.
-    Backstory Generation     - a life-pathing method.
+    Random Character         - produces an instant character. The default first path for newcomers.
     Quick Character          - a fast, truncated build.
-    Random Character         - produces an instant character.
+    Backstory Generation     - a life-pathing method for the deepest custom character.
     Paradigms                - pick from 12 archetypes and then customize.
+    Pregens                  - drop-in pre-built characters (Admin-only).
 
   TOOLS (Admins only)
-    Moderation Queue, Token Creator (Chapter 10), Resize Portraits, Rescale Tactical Scenes, Logs, Copy Map Position, Publish Module from Snapshot.
+    Moderation Queue, Logs, Feature Manifest, Character Photos, Rescale Tactical Scenes, Reseed Campaign, Campaign Explorer, Copy Map Position, Token Creator (Chapter 10).
 
 
 THE MAIN AREA
