@@ -13,106 +13,108 @@ import { isThriverUser, loadFeatureChecklist, saveFeatureChecklist } from '../..
 type Cell = { d?: boolean; f?: boolean }   // d = verified, f = flagged
 type State = Record<string, Cell>
 
-const DATA: { name: string; items: [string, string, string?][] }[] = [
+// [id, label, explanation]. The explanation is hidden until the title is
+// clicked (accordion), so the list stays scannable but the detail is a click away.
+const DATA: { name: string; items: [string, string, string][] }[] = [
   { name: 'Character', items: [
-    ['char-create', 'Character creation - three paths', 'Random, Quick, and Full Backstory paradigms'],
-    ['rapid', 'RAPID attributes', 'Reason, Acumen, Physicality, Influence, Dexterity'],
-    ['secondary', 'Secondary stats', 'Wound + Resolve points, defenses, initiative, perception, encumbrance'],
-    ['skills', '29 skills across the five attributes', ''],
-    ['comp-motiv', 'Complications & Motivations', ''],
-    ['insight', 'Insight Dice', ''],
-    ['evolution', 'Character evolution / leveling', 'CDP progression + the Evolution modal'],
-    ['apprentices', 'Apprentices', ''],
-    ['pregens', 'Pregenerated characters', 'Library + one-click Use into a campaign'],
-    ['char-sheet', 'Play-view character sheet', ''],
-    ['portraits', 'Portraits & photos', ''],
+    ['char-create', 'Character creation - three paths', "Build a character three ways: fully Random for instant play, a guided Quick build, or Full Backstory for players who want to shape every detail."],
+    ['rapid', 'RAPID attributes', "The five core attributes every roll draws on - Reason, Acumen, Physicality, Influence, and Dexterity."],
+    ['secondary', 'Secondary stats', "Stats derived from your attributes: Wound and Resolve points, melee and ranged defense, initiative, perception, encumbrance, and stress modifier."],
+    ['skills', '29 skills across the five attributes', "Twenty-nine skills, each tied to an attribute, covering everything from Ranged Combat to Medicine to Barter."],
+    ['comp-motiv', 'Complications & Motivations', "A Complication that haunts your character and a Motivation that drives them, shaping roleplay and some mechanics."],
+    ['insight', 'Insight Dice', "A pool of Insight Dice you spend to boost a roll or bank for a bigger swing, earned back through dramatic moments."],
+    ['evolution', 'Character evolution / leveling', "Spend earned CDP through the Evolution modal to raise attributes, skills, and traits as your character grows."],
+    ['apprentices', 'Apprentices', "Take on an apprentice who learns from your character and can carry the torch if they fall."],
+    ['pregens', 'Pregenerated characters', "A library of ready-made characters players can grab and drop into a game in one click."],
+    ['char-sheet', 'Play-view character sheet', "The live in-play view of a character - stats, inventory, conditions, and actions in one place."],
+    ['portraits', 'Portraits & photos', "Give each character a portrait or uploaded photo shown on their card and token."],
   ] },
   { name: 'Core Play & Checks', items: [
-    ['dice-check', 'The 2d6 dice-check engine', ''],
-    ['attr-check', 'Attribute checks', ''],
-    ['skill-check', 'Skill checks', ''],
-    ['modifiers', 'Modifier stack', 'AMod / SMod / CMod'],
-    ['first-imp', 'First Impressions', 'Stored per PC + per NPC, auto-applied to later social rolls'],
-    ['insight-award', 'Insight spend & award', ''],
-    ['group-check', 'Coordinated Effort / group checks', ''],
-    ['negotiations', 'Negotiations & Making the Case', ''],
-    ['gaps', 'Filling in the Gaps', ''],
+    ['dice-check', 'The 2d6 dice-check engine', "The heart of the system: roll 2d6, add your modifiers, and compare to a target to see how well you did."],
+    ['attr-check', 'Attribute checks', "A raw test of a single attribute when no specific skill applies."],
+    ['skill-check', 'Skill checks', "Roll an attribute plus a trained skill against a difficulty."],
+    ['modifiers', 'Modifier stack', "Three stacking modifiers - Attribute (AMod), Skill (SMod), and Circumstance (CMod) - that add up to your roll bonus."],
+    ['first-imp', 'First Impressions', "The first time a character meets an NPC they roll a First Impression; the result is stored and quietly colors every later interaction with that NPC."],
+    ['insight-award', 'Insight spend & award', "Spend Insight Dice for a mechanical edge, and earn them back on standout successes and failures."],
+    ['group-check', 'Coordinated Effort / group checks', "Several characters combine on one task, pooling their efforts into a single coordinated roll."],
+    ['negotiations', 'Negotiations & Making the Case', "A structured back-and-forth for talking your way to what you want."],
+    ['gaps', 'Filling in the Gaps', "Collaborative worldbuilding where players fill in details the GM leaves open."],
   ] },
   { name: 'Combat', items: [
-    ['initiative', 'Turn order & combat rounds', ''],
-    ['attacks', 'Ranged & melee attacks', ''],
-    ['damage', 'Damage to Wound / Resolve', ''],
-    ['incap', 'Incapacitation & mortal wounds', ''],
-    ['stress', 'Stress & stress checks', 'The 8 special-check narratives'],
-    ['healing', 'Healing', ''],
-    ['infection', 'Wound infection & sickness', ''],
-    ['disarm', 'Disarm', ''],
-    ['grapple', 'Grapple', ''],
-    ['pistol-whip', 'Pistol-whip - improvised melee with a gun', ''],
-    ['range', 'Range bands', ''],
-    ['bestiary', 'Bestiary / NPC statblocks', ''],
-    ['env-dmg', 'Environmental damage', ''],
+    ['initiative', 'Turn order & combat rounds', "Turn-based rounds where order is set by initiative and each character acts on their turn."],
+    ['attacks', 'Ranged & melee attacks', "Make ranged or melee attacks, rolling to hit against a target's defense."],
+    ['damage', 'Damage to Wound / Resolve', "Hits deal damage to Wound Points (your body) or Resolve Points (your will to keep fighting)."],
+    ['incap', 'Incapacitation & mortal wounds', "Drop to zero and you are incapacitated; push further and you face mortal wounds."],
+    ['stress', 'Stress & stress checks', "Stress builds under pressure and is resolved with Stress Checks - eight kinds, each producing its own outcome line."],
+    ['healing', 'Healing', "Recover Wound and Resolve over time or through medical care."],
+    ['infection', 'Wound infection & sickness', "Untreated wounds can turn to infection and sickness, tracked over days with the GM's controls."],
+    ['disarm', 'Disarm', "Knock a weapon out of an opponent's hands, dropping it to the ground to be grabbed."],
+    ['grapple', 'Grapple', "Grab and control an opponent, with options to subdue or break free."],
+    ['pistol-whip', 'Pistol-whip - improvised melee with a gun', "Out of ammo or up close? Strike with a gun as an improvised melee weapon."],
+    ['range', 'Range bands', "Distance matters - a weapon works best within its range band and suffers outside it."],
+    ['bestiary', 'Bestiary / NPC statblocks', "Ready-to-use statblocks for enemies and creatures the GM can drop into a fight."],
+    ['env-dmg', 'Environmental damage', "Fire, falls, cold, and other hazards deal damage from the world itself."],
   ] },
   { name: 'Equipment & Inventory', items: [
-    ['inventory', 'Character inventory', ''],
-    ['custom-items', 'Custom items', ''],
-    ['encumbrance', 'Encumbrance (Resolve drain)', ''],
-    ['weapons', 'Weapons catalog', ''],
-    ['armor', 'Armor - worn, condition, upkeep', ''],
-    ['item-cond', 'Item condition & traits', ''],
-    ['weapon-repair', 'Weapon repair', ''],
-    ['rations', 'Rations', 'Standard, Luxury, Military'],
-    ['upkeep', 'Upkeep phase', ''],
-    ['loot', 'Loot & search - containers and corpses', ''],
-    ['npc-trade', 'Trade with NPCs', ''],
-    ['stockpile', 'Stockpiles & vehicle cargo', ''],
-    ['tokens', 'Token & object library', ''],
+    ['inventory', 'Character inventory', "Every character carries an inventory of gear, weapons, and supplies."],
+    ['custom-items', 'Custom items', "Create your own items when the catalog does not have what you need."],
+    ['encumbrance', 'Encumbrance (Resolve drain)', "Carry too much and your Resolve drains faster - weight has a cost."],
+    ['weapons', 'Weapons catalog', "A full catalog of weapons with damage, range, and traits."],
+    ['armor', 'Armor - worn, condition, upkeep', "Wear armor to soak damage; it degrades with use and needs upkeep to stay effective."],
+    ['item-cond', 'Item condition & traits', "Gear has a condition that wears down and traits that change how it behaves."],
+    ['weapon-repair', 'Weapon repair', "Fix damaged weapons before they fail you mid-fight."],
+    ['rations', 'Rations', "Food comes in Standard, Luxury, and Military grades, each with different value."],
+    ['upkeep', 'Upkeep phase', "A phase for maintaining gear - repairs, condition, and consumables."],
+    ['loot', 'Loot & search - containers and corpses', "Search containers and bodies to take what is useful."],
+    ['npc-trade', 'Trade with NPCs', "Barter and trade goods with NPCs."],
+    ['stockpile', 'Stockpiles & vehicle cargo', "Pool supplies in a shared stockpile or a vehicle's cargo hold."],
+    ['tokens', 'Token & object library', "A library of tokens and map objects to place on the tactical map."],
   ] },
   { name: 'The Table', items: [
-    ['tac-map', 'Tactical map - grid, tokens, movement', ''],
-    ['fog', 'Fog of war, vision & lighting', ''],
-    ['walls', 'Walls & line of sight', ''],
-    ['camp-map', 'Campaign map with pins', ''],
-    ['pin-reveal', 'Reveal / hide pins to players', ''],
-    ['pings', 'Pings, measure tool, route & view sharing', ''],
-    ['table-npcs', 'NPCs on the table', 'Reveal + "Also Here" on pins'],
-    ['init-track', 'Initiative tracker', ''],
-    ['roll-feed', 'Live dice roll feed', ''],
-    ['chat', 'Table chat + GM whispers', ''],
-    ['notes', 'GM notes & handouts', 'Shared vs GM-only split'],
-    ['vehicles', 'Vehicles - popout, seats, firing arcs, cargo', ''],
-    ['realtime', 'Real-time multi-client sync', ''],
-    ['recorder', 'Playtest recorder', ''],
+    ['tac-map', 'Tactical map - grid, tokens, movement', "The grid battle map where you place tokens and move them cell by cell."],
+    ['fog', 'Fog of war, vision & lighting', "Fog of war and lighting hide the map until characters can actually see it."],
+    ['walls', 'Walls & line of sight', "Walls block movement and line of sight, so you cannot see or shoot through them."],
+    ['camp-map', 'Campaign map with pins', "A real-world-style campaign map dotted with location pins."],
+    ['pin-reveal', 'Reveal / hide pins to players', "Reveal or hide map pins so players only see the places they have discovered."],
+    ['pings', 'Pings, measure tool, route & view sharing', "Ping a spot, measure distances, and share a route or your whole view with the table."],
+    ['table-npcs', 'NPCs on the table', "Place NPCs on the map and reveal them; a pin shows who is 'Also Here'."],
+    ['init-track', 'Initiative tracker', "A tracker showing whose turn it is and the full initiative order."],
+    ['roll-feed', 'Live dice roll feed', "A live feed of every roll at the table as it happens."],
+    ['chat', 'Table chat + GM whispers', "In-table chat, including private GM whispers to individual players."],
+    ['notes', 'GM notes & handouts', "GM notes and player handouts, with a clear split between GM-only and shared."],
+    ['vehicles', 'Vehicles - popout, seats, firing arcs, cargo', "Vehicles with a dedicated popout for crew seats, firing arcs, and cargo."],
+    ['realtime', 'Real-time multi-client sync', "Everything syncs live across every player's screen in real time."],
+    ['recorder', 'Playtest recorder', "A recorder that captures a session for playback and debugging."],
   ] },
   { name: 'Campaigns & Content', items: [
-    ['stories', 'Stories / campaigns', ''],
-    ['members', 'Members & invite codes', ''],
-    ['settings', 'Settings', 'District Zero, Kings Crossroads, Custom'],
-    ['modules', 'Modules / Rumors', 'Publish, version, marketplace, import'],
-    ['gm-kit', 'GM Kit import', ''],
-    ['snapshots', 'Progression log & session snapshots', ''],
-    ['clock', 'Campaign clock & in-world time', ''],
-    ['world-map', 'World map (global pins)', ''],
+    ['stories', 'Stories / campaigns', "Create and run campaigns that hold your world, cast, and sessions."],
+    ['members', 'Members & invite codes', "Invite players with a code and manage who is in the campaign."],
+    ['settings', 'Settings', "Start from a built-in setting - District Zero or Kings Crossroads - or a blank Custom world."],
+    ['modules', 'Modules / Rumors', "Package a campaign as a Rumor to publish, version, and share in a marketplace."],
+    ['gm-kit', 'GM Kit import', "Import a prepared GM kit to seed a campaign fast."],
+    ['snapshots', 'Progression log & session snapshots', "A progression log and session snapshots that record how the story unfolds."],
+    ['clock', 'Campaign clock & in-world time', "An in-world clock that tracks the passage of time in your campaign."],
+    ['world-map', 'World map (global pins)', "A global world map with pins spanning the whole setting."],
   ] },
   { name: 'Communities', items: [
-    ['comm-struct', 'Community creation & structure', ''],
-    ['morale', 'Morale', ''],
-    ['recruit', 'Recruitment', ''],
-    ['activity', 'Activity blocks', ''],
-    ['comm-stock', 'Community stockpile', ''],
-    ['migrations', 'Migrations & events', ''],
-    ['growth', 'Growth notifications', ''],
+    ['comm-struct', 'Community creation & structure', "Build and structure a survivor community with roles and buildings."],
+    ['morale', 'Morale', "Community morale rises and falls and is tested with checks."],
+    ['recruit', 'Recruitment', "Recruit new members into the community."],
+    ['activity', 'Activity blocks', "Assign community activity blocks to get work done between sessions."],
+    ['comm-stock', 'Community stockpile', "A shared community stockpile of pooled resources."],
+    ['migrations', 'Migrations & events', "Communities grow, shrink, and weather events over time."],
+    ['growth', 'Growth notifications', "Notifications when a community hits a growth milestone."],
   ] },
   { name: 'Social & Meta', items: [
-    ['campfire', 'Campfire hub', ''],
-    ['forums', 'Forums', ''],
-    ['war-stories', 'War Stories', ''],
-    ['lfg', 'Looking for Group', ''],
-    ['messages', 'Direct messages', ''],
-    ['notifs', 'Notifications', ''],
-    ['roles', 'Roles & moderation', 'Thriver / Survivor / Ghost'],
-    ['onboarding', 'Onboarding & user guide', ''],
-    ['rules-ref', 'In-app rules reference', 'The full compendium at /rules'],
+    ['campfire', 'Campfire hub', "The Campfire hub tying together the game's community features."],
+    ['forums', 'Forums', "Discussion forums for the community."],
+    ['war-stories', 'War Stories', "Share memorable session tales as War Stories."],
+    ['lfg', 'Looking for Group', "Looking-for-Group posts to find players and games."],
+    ['messages', 'Direct messages', "Direct messages between users."],
+    ['notifs', 'Notifications', "Notifications for invites, replies, and activity."],
+    ['roles', 'Roles & moderation', "Account roles - Thriver, Survivor, Ghost - plus the moderation tools."],
+    ['onboarding', 'Onboarding & user guide', "A guided onboarding flow and user guide for newcomers."],
+    ['rules-ref', 'In-app rules reference', "The full rules compendium, browsable in-app at /rules."],
   ] },
 ]
 
@@ -141,6 +143,16 @@ export default function FeatureManifestPage() {
   const [filter, setFilter] = useState<'all' | 'todo' | 'flag'>('all')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+
+  function toggleExpand(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   useEffect(() => {
     (async () => {
@@ -227,8 +239,9 @@ export default function FeatureManifestPage() {
               </span>
             </div>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {rows.map(([id, label, note]) => {
+              {rows.map(([id, label, explain]) => {
                 const c = state[id] || {}
+                const isOpen = expanded.has(id)
                 return (
                   <li key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '11px 4px', borderBottom: `1px solid ${C.panel}`, background: c.f ? 'linear-gradient(90deg, rgba(217,154,43,.09), transparent 70%)' : 'transparent' }}>
                     <button
@@ -240,11 +253,19 @@ export default function FeatureManifestPage() {
                         background: c.d ? C.green : C.panel, color: C.panel, fontSize: '14px', lineHeight: '17px', padding: 0,
                       }}
                     >{c.d ? '✓' : ''}</button>
-                    <div onClick={() => toggle(id, 'd')} style={{ flex: '1 1 auto', cursor: 'pointer' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: sans, color: c.d ? C.faint : C.ink, textDecoration: c.d ? 'line-through' : 'none' }}>
-                        {label}{c.f && <span style={{ color: C.amber, fontWeight: 600, fontSize: '13px', textDecoration: 'none' }}> - needs a look</span>}
+                    <div style={{ flex: '1 1 auto' }}>
+                      <div
+                        onClick={() => toggleExpand(id)} role="button" tabIndex={0} aria-expanded={isOpen}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(id) } }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                        title="Click for the explanation"
+                      >
+                        <span aria-hidden="true" style={{ flex: '0 0 auto', color: c.d ? C.faint : C.red, fontSize: '13px', display: 'inline-block', transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>{'▸'}</span>
+                        <span style={{ fontSize: '15px', fontWeight: 600, fontFamily: sans, color: c.d ? C.faint : C.ink, textDecoration: c.d ? 'line-through' : 'none' }}>
+                          {label}{c.f && <span style={{ color: C.amber, fontWeight: 600, fontSize: '13px', textDecoration: 'none' }}> - needs a look</span>}
+                        </span>
                       </div>
-                      {note ? <div style={{ fontSize: '13px', fontFamily: sans, color: c.d ? C.faint : C.muted, marginTop: '1px' }}>{note}</div> : null}
+                      {isOpen ? <div style={{ fontSize: '13.5px', fontFamily: sans, color: C.muted, margin: '5px 0 2px 18px', lineHeight: 1.5, maxWidth: '64ch' }}>{explain}</div> : null}
                     </div>
                     <button
                       onClick={() => toggle(id, 'f')} title="Flag - needs a look" aria-label={`Flag: ${label}`}
