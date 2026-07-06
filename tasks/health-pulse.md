@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-06 12:03 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest: 2026-07-06 09:07 UTC)
+
+**Drift:**
+- HOPED-FOR trio still unresolved (no git activity in 3 days on any of these areas):
+  - Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — owed since Session 63 (2026-06-12), 24 days stale
+  - FI Insight Die AWARD path — owed since Session 63 (2026-06-12), 24 days stale
+  - Vehicle popout broadcasts — owed since Test Bed Session 24 (2026-06-16), 20 days stale
+- `check-arch Array.from(` ratchet bug — ROUTED TO PUFFER 2026-07-01, 5 days unaddressed
+- Shared realtime-reconcile hook — ROUTED TO HP 2026-07-01, 5 days unaddressed
+- Vehicles 3s poll (`page.tsx:3090`) — ROUTED TO HP 2026-06-29, 7 days unaddressed
+- **NEW stale-todo (audit-correction):** `todo.md:L679` says "Intimidation skill removal - gone from canon; still in lib/npc-generator.ts" but zero `Intimidation` references remain anywhere in `lib/` or `app/`. Appears already removed — mark complete.
+
+**Action:** Flag L679 as already shipped; HOPED-FOR trio drain remains highest-signal open item (6+ days past 2026-07-01 target).
+
+---
+
 ## 2026-07-06 09:05 UTC
 
 **Status:** DRIFT (unchanged from 06:03)
