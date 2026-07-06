@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-06 09:05 UTC
+
+**Status:** DRIFT (unchanged from 06:03)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest: 06:05 UTC)
+
+**Drift:** no code changes since 06:03. Same carry-overs:
+- HOPED-FOR trio (Stress Check 12-string, FI Insight Die award path, vehicle popout broadcasts) — drain target was 2026-07-01, now 5 days overdue
+- `check-arch Array.from(` regex false-positive (`scripts/check-arch.mjs:96`) — ROUTED TO PUFFER 2026-07-01, 5 days unaddressed
+- Infra upgrades (Vercel Pro, Supabase Pro, Upstash, Sentry) pending Xero dashboard action
+- Vehicles 3s poll (`page.tsx:3098`) still present
+
+**Action:** Drift carry-over — HOPED-FOR drain remains the highest-signal open item.
+
+---
+
 ## 2026-07-06 06:03 UTC
 
 **Status:** DRIFT (unchanged from 00:06)
