@@ -35,6 +35,7 @@ import RecorderToggleButton from './RecorderToggleButton'
 //   Tools (header, Thriver-only)
 //     Moderation Queue
 //     Logs
+//     Ape Generator Log
 //     Feature Manifest
 //     Create Tokens
 //     Character Photos
@@ -297,6 +298,7 @@ export default function Sidebar() {
             {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
           </Link>
           <Link href="/logging"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</Link>
+          <Link href="/ape-log"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Ape Generator Log</Link>
           <Link href="/tools/feature-manifest"        style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Feature Manifest</Link>
           <Link href="/tools/token-creator"          style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Create Tokens</Link>
           <Link href="/tools/migrate-character-photos" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Character Photos</Link>

@@ -942,3 +942,42 @@ function restart(){
 renderStepTrack();
 renderStep0();
 </script>
+<script>
+/* Visit beacon -> log-visit edge function (mirrors lib/events.ts logVisit).
+   This is a static page, so the site-wide VisitLogger never fires here; this
+   sends a page='/apegenerator' visit. ip_address is captured server-side (from
+   the request), geo comes from the geo_* cookies set by middleware, and
+   ip_hash = SHA-256(geo_ip) to match hashIP so it dedups with the rest of the
+   system. Respects the owner opt-out (localStorage tapestry_no_log = '1'). */
+(function () {
+  try {
+    if (localStorage.getItem('tapestry_no_log') === '1') return;
+    var ck = function (n) { var m = document.cookie.match('(^|; )' + n + '=([^;]*)'); return m ? decodeURIComponent(m[2]) : null; };
+    var sid = localStorage.getItem('tapestry_session_id');
+    if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); localStorage.setItem('tapestry_session_id', sid); }
+    var lat = ck('geo_lat'), lng = ck('geo_lng');
+    var send = function (ipHash) {
+      fetch('https://jbudzglgtxeoaufpejrv.supabase.co/functions/v1/log-visit', {
+        method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: String(sid).slice(0, 64),
+          page: '/apegenerator',
+          referrer: document.referrer || null,
+          country_code: ck('geo_country'),
+          region: ck('geo_region'),
+          city: ck('geo_city'),
+          latitude: lat ? parseFloat(lat) : null,
+          longitude: lng ? parseFloat(lng) : null,
+          ip_hash: ipHash
+        })
+      }).catch(function () {});
+    };
+    var rawIP = ck('geo_ip');
+    if (rawIP && crypto.subtle) {
+      crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawIP)).then(function (buf) {
+        send(Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join(''));
+      }).catch(function () { send(null); });
+    } else { send(null); }
+  } catch (e) {}
+})();
+</script>
