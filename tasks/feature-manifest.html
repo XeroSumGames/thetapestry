@@ -43,8 +43,14 @@
   .filters button:hover,.reset:hover{color:var(--ink);border-color:var(--hair-2)}
   .filters button[aria-pressed="true"]{color:var(--ink);border-color:var(--red-dim);background:var(--panel-2)}
   .flagpill{color:var(--amber)}
-  .reset{margin-left:auto}
+  #exportBtn{margin-left:auto}
+  #importBtn{position:relative;display:inline-flex;align-items:center}
   .reset[data-armed="1"]{color:var(--red);border-color:var(--red-dim)}
+  .saved{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--green);opacity:0;transition:opacity .2s;white-space:nowrap}
+  .saved.show{opacity:1}
+  .savehint{max-width:940px;margin:0 auto;padding:2px 20px 11px;color:var(--amber);
+    font-size:12.5px;font-family:var(--mono);letter-spacing:.03em;line-height:1.45}
 
   /* ---- sections ---- */
   section{margin-top:34px}
@@ -115,8 +121,12 @@
         <button data-f="todo" aria-pressed="false">To verify</button>
         <button data-f="flag" aria-pressed="false">Flagged</button>
       </div>
+      <span id="saved" class="saved" aria-live="polite"></span>
+      <button class="reset" id="exportBtn" title="Download your progress as a file">Save to file</button>
+      <label class="reset" id="importBtn" title="Restore progress from a file">Load file<input type="file" id="importFile" accept="application/json,.json" hidden></label>
       <button class="reset" id="reset" data-armed="0">Reset</button>
     </div>
+    <div id="savehint" class="savehint" hidden></div>
   </div>
 
   <main id="mount"></main>
@@ -272,7 +282,17 @@ DATA.forEach((sec,si)=>{
 });
 document.getElementById("totalN").textContent=total;
 
-function save(){try{localStorage.setItem(VER,JSON.stringify(state))}catch(e){}}
+let lsOk=true;
+function save(){
+  try{ localStorage.setItem(VER,JSON.stringify(state)); if(!lsOk){lsOk=true;updateHint();} flashSaved(); }
+  catch(e){ if(lsOk){lsOk=false;updateHint();} }
+}
+function flashSaved(){ const s=document.getElementById("saved"); if(!s)return;
+  s.textContent="saved ✓"; s.classList.add("show"); clearTimeout(s._t);
+  s._t=setTimeout(()=>s.classList.remove("show"),1200); }
+function updateHint(){ const h=document.getElementById("savehint"); if(!h)return;
+  h.hidden=lsOk;
+  h.textContent=lsOk?"":"Auto-save is off in this view (the online copy can't keep state between visits). Open the local file for automatic saving, or use Save to file to keep a backup you can Load later."; }
 function get(id){return state[id]||(state[id]={})}
 
 function toggle(id,key){const st=get(id);st[key]=!st[key];if(!st.d&&!st.f)delete state[id];save();paint()}
@@ -330,6 +350,29 @@ reset.addEventListener("click",()=>{
     armed=setTimeout(()=>{reset.dataset.armed="0";reset.textContent="Reset"},3000);
   }
 });
+
+// Save-to-file: a portable backup that never depends on browser storage, and
+// carries progress to another browser or device via Load file.
+document.getElementById("exportBtn").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="tapestry-progress.json"; document.body.appendChild(a); a.click();
+  a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+document.getElementById("importFile").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const o=JSON.parse(r.result);
+    if(o&&typeof o==="object"&&!Array.isArray(o)){
+      for(const k in state)delete state[k]; Object.assign(state,o); save(); paint(); } }catch(err){} };
+  r.readAsText(f); e.target.value="";
+});
+
+// Probe storage up front so the auto-save-off hint shows immediately, not only
+// after the first click.
+try{ localStorage.setItem(VER+"__probe","1"); localStorage.removeItem(VER+"__probe"); }
+catch(e){ lsOk=false; }
+updateHint();
 
 paint();
 </script>
