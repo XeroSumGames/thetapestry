@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-06 15:05 UTC
+
+**Status:** DRIFT + NEW POLICY VIOLATION
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-06T14:57 UTC)
+
+**New finding (not in prior pulses):**
+- **AGENTS.md violation — `public/apegenerator/index.html` committed to wrong repo.** Commit `d28bc67` (2026-07-06 14:51 UTC) adds a 944-line standalone POTA RPG character generator (Planet of the Apes, D6 Magnetic Variant). AGENTS.md is explicit: "not even isolated in a side folder." Needs to be removed from `thetapestry` and moved to its own repo. Not a Claude-lane error; Xero committed directly — but it needs a decision + cleanup.
+
+**Drift (unchanged from 12:03):**
+- HOPED-FOR trio still unresolved (25+ days stale, no playtest update):
+  - Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+  - FI Insight Die AWARD path (`useRollResolution.ts:264`)
+  - Vehicle popout broadcasts
+- `check-arch Array.from(` ratchet bug (`scripts/check-arch.mjs:96`) — ROUTED TO PUFFER 2026-07-01, 5 days unaddressed
+- Shared realtime-reconcile hook (RollsFeed, TableChat, CampaignPins, PlayerNotes) — ROUTED TO HP 2026-07-01, 5 days unaddressed
+- Vehicles 3s poll (`page.tsx:3090`) — ROUTED TO HP 2026-06-29, 7 days unaddressed
+- Infra upgrades (Vercel Pro, Supabase Pro, Upstash, Sentry) pending Xero dashboard action
+
+**Action:** Remove `public/apegenerator/index.html` from this repo (move to its own repo per AGENTS.md). Then: HOPED-FOR dry-run is next.
+
+---
+
 ## 2026-07-06 12:03 UTC
 
 **Status:** DRIFT
