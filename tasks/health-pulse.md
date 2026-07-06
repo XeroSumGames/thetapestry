@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-06 18:03 UTC
+
+**Status:** DRIFT (escalation on prior AGENTS.md violation)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-06T16:34 UTC)
+
+**Escalation since 15:05 pulse:**
+- `public/apegenerator/index.html` still in repo. The 15:05 pulse flagged the AGENTS.md violation. Since then, **8 more polish commits** were pushed to it (13548bd → 45e06a7, 09:19–10:33 MDT) — work continued on the violating file AFTER the flag. Needs a decision: move to its own repo + revert from thetapestry, OR Xero explicitly waives the rule for this file.
+
+**Drift (carry-over, no new movement):**
+- HOPED-FOR trio (25+ days stale): Stress Check 12-string, FI Insight Die AWARD path, Vehicle popout broadcasts
+- `check-arch Array.from(` ratchet bug (`scripts/check-arch.mjs:96`) — ROUTED TO PUFFER, 5 days unaddressed
+- Shared realtime-reconcile hook (RollsFeed/TableChat/CampaignPins/PlayerNotes) — ROUTED TO HP, 5 days unaddressed
+- Vehicles 3s poll (`page.tsx:3090`) — ROUTED TO HP, 7 days unaddressed
+
+**Action:** Decide apegenerator fate (remove + own repo, or explicit waiver). Then HOPED-FOR drain.
+
+---
+
 ## 2026-07-06 15:05 UTC
 
 **Status:** DRIFT + NEW POLICY VIOLATION
