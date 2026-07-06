@@ -420,6 +420,21 @@ const ARCHETYPES={
     {id:'veteran',name:'Veteran Ape',desc:'Battle-scarred survivor who has seen the worst the world offers.',
      attrs:{DEX:'2D+2',PER:'4D',KNO:'2D',STR:'4D+2',MEC:'2D',WIL:'2D+2'},
      money:{base:25,savings:true},memento:{name:'Unit Photo',bonus:'+2 Bonus to STR (Resist Damage) and STR (Stamina)'}},
+    {id:'ind-chimp',name:'Indentured Chimpanzee',desc:'A servant ape of the Conquest Era figuring out how to secure freedom one act at a time.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'3D+2',STR:'3D+2',MEC:'1D+2',WIL:'3D'},
+     money:{base:null,savings:false,label:'None (indentured servant; no personal funds)'},
+     memento:{name:"Friend's Cloth",bonus:'+1D to any Skill roll after spending a Basic Action to smell it first'}},
+    {id:'ind-gorilla',name:'Indentured Gorilla',desc:'A servant ape assigned to labor and muscle in a world that constantly underestimates him.',
+     attrs:{DEX:'3D+2',PER:'3D+1',KNO:'1D+1',STR:'5D',MEC:'1D+1',WIL:'3D+1'},
+     money:{base:null,savings:false,label:'None (indentured servant; no personal funds)'},
+     memento:{name:'Scrap of Foil',bonus:'+1 Bonus to complete any assigned task'}},
+    {id:'ind-orang',name:'Indentured Orangutan',desc:'A quiet, observant servant ape absorbing everything -- and waiting for the right moment.',
+     attrs:{DEX:'3D',PER:'3D+1',KNO:'3D+2',STR:'3D+1',MEC:'1D',WIL:'3D+2'},
+     money:{base:null,savings:false,label:'None (indentured servant; no personal funds)'},
+     memento:{name:'Shiny Button',bonus:'+2 Bonus to WIL (Grit) Skill rolls'}},
+    {id:'outrider',name:'Ape Outrider',desc:'A hard-riding Battle Era ape of action who trusts a horse more than any ape or human.',
+     attrs:{DEX:'4D',PER:'4D',KNO:'1D+1',STR:'4D+2',MEC:'1D',WIL:'3D'},
+     money:{base:25,savings:true},memento:{name:'Charro Saddle Horse Whip',bonus:'+1D PER (Investigate); also a melee weapon (STR +1D)'}},
   ],
   human:[
     {id:'lookout',name:'Tribal Human Lookout',desc:'Silent watcher whose keen senses keep the tribe safe from ape patrols.',
@@ -446,6 +461,37 @@ const ARCHETYPES={
     {id:'engineer',name:'Astro-naut Technical Engineer',desc:'Problem-solver keeping impossible technology functional in a primitive world.',
      attrs:{DEX:'3D',PER:'3D',KNO:'3D',STR:'2D',MEC:'4D',WIL:'3D'},
      money:{base:null,savings:false},memento:{name:"Granddad's Multi-tool Pocketknife",bonus:'+2 Bonus to MEC (Repair/Disable)'}},
+    {id:'mil-officer',name:'Military Officer',desc:'A decorated ANSA test pilot and career officer proud to serve until the last order.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'3D',STR:'3D',MEC:'3D',WIL:'3D'},
+     money:{base:50,savings:false,unit:'$'},memento:{name:"Pappy's Watch",bonus:'Reroll any failed WIL (Grit) Skill roll; take the second result'}},
+    {id:'ansa-sci',name:'Scientist (ANSA)',desc:'A top-of-their-field ANSA researcher whose curiosity outpaces their patience for people.',
+     attrs:{DEX:'2D',PER:'3D+1',KNO:'4D+1',STR:'2D',MEC:'4D+1',WIL:'2D'},
+     money:{base:100,savings:false,unit:'$'},memento:{name:'Old Penny (train-smashed)',bonus:'+2 Bonus to any MEC or PER-based Skill roll'}},
+    {id:'covert-agent',name:'Covert Agent (NSA)',desc:'An NSA operative whose knack for finding trouble became a government-sanctioned career.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'3D+2',STR:'3D',MEC:'2D+1',WIL:'3D'},
+     money:{base:500,savings:false,unit:'$'},memento:{name:'Fancy Sunglasses',bonus:'+1D to all DEX (Stealth) or PER (Investigate) Skill rolls'}},
+    {id:'reporter',name:'Investigative Reporter',desc:'Freelance truth-seeker whose stories get them fired -- and eventually make history.',
+     attrs:{DEX:'2D',PER:'3D+2',KNO:'3D+2',STR:'3D',MEC:'2D',WIL:'3D+2'},
+     money:{base:50,savings:false,unit:'$'},memento:{name:'First-place Ribbon (junior high)',bonus:'+2D Bonus when Trusting to Luck'}},
+    {id:'detective',name:'Police Detective',desc:'A hard-boiled plainclothes cop whose stained tie hides a heart that still cares.',
+     attrs:{DEX:'3D',PER:'3D+2',KNO:'3D',STR:'3D',MEC:'2D+1',WIL:'3D'},
+     money:{base:25,savings:false,unit:'$'},memento:{name:'Pork Pie Hat',bonus:'+1D Bonus to WIL (Grit and Intimidation) Skill rolls'}},
+    {id:'advocate',name:'Animal Advocate',desc:'An outspoken activist whose love of animals turns out to be on the right side of history.',
+     attrs:{DEX:'2D+2',PER:'3D+1',KNO:'3D+1',STR:'2D+2',MEC:'2D+1',WIL:'3D+2'},
+     money:{base:10,savings:false,unit:'$'},memento:{name:"Picture of Kitty Adrien",bonus:'Roll two results for one Skill roll per Scene; keep the better one'}},
+    {id:'bounty-hunter',name:'Ape Bounty Hunter',desc:'A cold, efficient tracker who hunts escaped apes for profit -- no questions asked.',
+     attrs:{DEX:'3D',PER:'4D',KNO:'2D+2',STR:'3D+1',MEC:'2D+1',WIL:'2D+2'},
+     money:{base:100,savings:false,unit:'$'},memento:{name:'Wide-brimmed Black Hunting Hat',bonus:'+1D Bonus to PER (Investigate) Skill rolls'}},
+    {id:'sympathizer',name:'Ape Sympathizer',desc:'A human outspoken against ape servitude, willing to risk everything to be heard.',
+     attrs:{DEX:'2D+2',PER:'3D+1',KNO:'3D+2',STR:'2D+1',MEC:'2D+1',WIL:'3D+2'},
+     money:{base:10,savings:false,unit:'$'},memento:{name:'Picture (you and your first ape friend)',bonus:'+1D Bonus to WIL (Grit) Skill rolls'}},
+    {id:'gov-official',name:'Government Official',desc:'A bureaucratic climber who believes the system can be changed from the inside.',
+     attrs:{DEX:'2D',PER:'3D',KNO:'4D',STR:'3D',MEC:'2D',WIL:'4D'},
+     money:{base:1000,savings:false,unit:'$'},memento:{name:'Agency Lapel Pin',bonus:'+1D Bonus to any WIL (Charm or Command) Skill rolls'}},
+    {id:'ind-human',name:'Indentured Human',desc:'A human servant of the apes who sees a path to equality and walks it very carefully.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'3D',STR:'3D',MEC:'3D',WIL:'3D'},
+     money:{base:null,savings:false,label:'None (indentured; no personal funds)'},
+     memento:{name:'Past Life Postcard',bonus:'+1D Bonus to WIL (Grit) and STR (Stamina) Skill rolls'}},
   ],
   mutant:[
     {id:'exile',name:'Mutant Exile',desc:'Outcast from underground mutant society, discovering the surface world.',
@@ -465,6 +511,11 @@ const ARCHETYPES={
      psi:null,
      cyborg:true,
      money:{base:null,savings:false},memento:{name:'Piece of Former Life',bonus:'+2 Bonus to DEX (Melee) and STR (Brawl) vs. Makers or mutants'}},
+    {id:'raider',name:'Irradiated Raider',desc:'A hard mutant survivor of the post-atomic Battle Era who takes what is needed to live another day.',
+     attrs:{DEX:'2D+2',PER:'3D',KNO:'3D',STR:'2D+2',MEC:'3D+1',WIL:'3D+1'},
+     psi:null,
+     money:{base:null,savings:false,label:'None (post-apocalyptic; no currency)'},
+     memento:{name:'Half-melted Doll',bonus:'+1D Bonus to all DEX (Melee) Skill rolls'}},
   ]
 };
 
@@ -783,12 +834,15 @@ function renderStep3(){
 
   // Money
   let moneyHtml='';
-  if(arch.money.base===null){
+  if(arch.money.label){
+    moneyHtml=`<div class="money-text">${arch.money.label}</div>`;
+  } else if(arch.money.base===null){
     moneyHtml=`<div class="money-text">No currency (${factionLabel} does not use gridgens)</div>`;
   } else if(arch.money.base===0){
     moneyHtml=`<div class="money-text">None (tribal humans do not use ape currency)</div>`;
   } else {
-    moneyHtml=`<div class="money-text">${arch.money.base}<em>g</em> starting${arch.money.savings?' + roll 2Dx10 for savings':''}</div>`;
+    const u=arch.money.unit||'g';
+    moneyHtml=`<div class="money-text">${arch.money.base}<em>${u}</em> starting${arch.money.savings?' + roll 2Dx10 for savings':''}</div>`;
   }
 
   document.getElementById('dossier').innerHTML=`
@@ -941,43 +995,4 @@ function restart(){
 // ============================================================
 renderStepTrack();
 renderStep0();
-</script>
-<script>
-/* Visit beacon -> log-visit edge function (mirrors lib/events.ts logVisit).
-   This is a static page, so the site-wide VisitLogger never fires here; this
-   sends a page='/apegenerator' visit. ip_address is captured server-side (from
-   the request), geo comes from the geo_* cookies set by middleware, and
-   ip_hash = SHA-256(geo_ip) to match hashIP so it dedups with the rest of the
-   system. Respects the owner opt-out (localStorage tapestry_no_log = '1'). */
-(function () {
-  try {
-    if (localStorage.getItem('tapestry_no_log') === '1') return;
-    var ck = function (n) { var m = document.cookie.match('(^|; )' + n + '=([^;]*)'); return m ? decodeURIComponent(m[2]) : null; };
-    var sid = localStorage.getItem('tapestry_session_id');
-    if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); localStorage.setItem('tapestry_session_id', sid); }
-    var lat = ck('geo_lat'), lng = ck('geo_lng');
-    var send = function (ipHash) {
-      fetch('https://jbudzglgtxeoaufpejrv.supabase.co/functions/v1/log-visit', {
-        method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: String(sid).slice(0, 64),
-          page: '/apegenerator',
-          referrer: document.referrer || null,
-          country_code: ck('geo_country'),
-          region: ck('geo_region'),
-          city: ck('geo_city'),
-          latitude: lat ? parseFloat(lat) : null,
-          longitude: lng ? parseFloat(lng) : null,
-          ip_hash: ipHash
-        })
-      }).catch(function () {});
-    };
-    var rawIP = ck('geo_ip');
-    if (rawIP && crypto.subtle) {
-      crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawIP)).then(function (buf) {
-        send(Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join(''));
-      }).catch(function () { send(null); });
-    } else { send(null); }
-  } catch (e) {}
-})();
 </script>
