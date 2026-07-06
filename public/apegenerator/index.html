@@ -19,7 +19,7 @@ body{background:var(--ground);color:var(--bone);font-family:var(--ff-b);font-siz
 
 /* STEP TRACK */
 .step-track{display:flex;justify-content:center;background:var(--surface);border-bottom:1px solid var(--ghost);overflow-x:auto}
-.step-item{display:flex;align-items:center;gap:7px;padding:11px 18px;font-family:var(--ff-m);font-size:10px;letter-spacing:.16em;color:var(--ghost);text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr)}
+.step-item{display:flex;align-items:center;gap:7px;padding:11px 18px;font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;color:var(--ghost);text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr)}
 .step-item.active{color:var(--amber);border-bottom-color:var(--amber)}
 .step-item.done{color:var(--moss);border-bottom-color:var(--moss)}
 .step-num{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid currentColor;font-size:11px;flex-shrink:0}
@@ -56,8 +56,8 @@ body{background:var(--ground);color:var(--bone);font-family:var(--ff-b);font-siz
 .persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:580px){.persona-grid{grid-template-columns:1fr}}
 .p-block{background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);padding:18px}
-.p-title{font-family:var(--ff-m);font-size:10px;letter-spacing:.18em;color:var(--copper);text-transform:uppercase;margin-bottom:12px}
-.roll-btn{display:inline-flex;align-items:center;gap:5px;background:var(--ghost);border:1px solid var(--copper-dim);border-radius:var(--r);color:var(--bone);font-family:var(--ff-m);font-size:10px;letter-spacing:.1em;padding:5px 11px;cursor:pointer;transition:all var(--tr);margin-bottom:10px}
+.p-title{font-family:var(--ff-m);font-size:11px;letter-spacing:.18em;color:var(--copper);text-transform:uppercase;margin-bottom:12px}
+.roll-btn{display:inline-flex;align-items:center;gap:5px;background:var(--ghost);border:1px solid var(--copper-dim);border-radius:var(--r);color:var(--bone);font-family:var(--ff-m);font-size:11px;letter-spacing:.1em;padding:5px 11px;cursor:pointer;transition:all var(--tr);margin-bottom:10px}
 .roll-btn:hover{background:var(--copper-dim);border-color:var(--copper)}
 .d66-roll{font-family:var(--ff-m);font-size:11px;color:var(--copper);margin-left:4px}
 select.sel{width:100%;background:var(--surface);border:1px solid var(--ghost);border-radius:var(--r);color:var(--bone);font-family:var(--ff-b);font-size:13px;padding:7px 10px;cursor:pointer;margin-bottom:8px}
@@ -71,9 +71,9 @@ select.sel option{background:var(--surface)}
 
 /* SKILLS */
 .pool-bar{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
-.pool-label{font-family:var(--ff-m);font-size:10px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase;white-space:nowrap}
+.pool-label{font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase;white-space:nowrap}
 .pool-dice{display:flex;gap:5px;flex-wrap:wrap}
-.die-pip{width:26px;height:26px;border-radius:3px;border:1px solid var(--copper);background:var(--amber);display:flex;align-items:center;justify-content:center;font-family:var(--ff-m);font-size:10px;font-weight:bold;color:var(--ground);transition:all var(--tr)}
+.die-pip{width:26px;height:26px;border-radius:3px;border:1px solid var(--copper);background:var(--amber);display:flex;align-items:center;justify-content:center;font-family:var(--ff-m);font-size:11px;font-weight:bold;color:var(--ground);transition:all var(--tr)}
 .die-pip.used{background:var(--ghost);border-color:var(--ghost);color:var(--dust)}
 .pool-rem{font-family:var(--ff-m);font-size:22px;color:var(--amber);font-weight:bold;margin-left:auto}
 .pool-rem small{font-size:11px;color:var(--dust)}
@@ -92,7 +92,7 @@ select.sel option{background:var(--surface)}
 .sk-total{font-family:var(--ff-m);font-size:13px;color:var(--amber);width:54px;text-align:right}
 .sk-total.boosted{color:var(--amber);font-weight:bold}
 .stepper{display:flex;gap:3px}
-.sb{width:31px;height:27px;background:var(--surface);border:1px solid var(--ghost);border-radius:var(--r);color:var(--dust);font-family:var(--ff-m);font-size:10px;cursor:pointer;transition:all var(--tr)}
+.sb{width:31px;height:27px;background:var(--surface);border:1px solid var(--ghost);border-radius:var(--r);color:var(--dust);font-family:var(--ff-m);font-size:11px;cursor:pointer;transition:all var(--tr)}
 .sb:hover:not(:disabled){background:var(--ghost);color:var(--bone)}
 .sb.act{background:var(--copper-dim);border-color:var(--copper);color:var(--amber)}
 .sb:disabled{opacity:.28;cursor:not-allowed}
@@ -120,14 +120,14 @@ select.sel option{background:var(--surface)}
 .attr-sum-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:13px}
 @media(max-width:560px){.attr-sum-grid{grid-template-columns:repeat(3,1fr)}}
 .asb{background:var(--surface);border-radius:var(--r);padding:9px 7px;text-align:center}
-.asb .asl{font-family:var(--ff-m);font-size:8px;letter-spacing:.12em;color:var(--dust);text-transform:uppercase}
+.asb .asl{font-family:var(--ff-m);font-size:11px;letter-spacing:.12em;color:var(--dust);text-transform:uppercase}
 .asb .asv{font-family:var(--ff-m);font-size:16px;color:var(--amber);font-weight:bold;margin-top:2px}
 
 .srp-row{display:flex;gap:12px;flex-wrap:wrap}
 .srp-b{flex:1;min-width:90px;background:var(--surface);border-radius:var(--r);padding:11px 10px;text-align:center}
-.srp-b .sl{font-family:var(--ff-m);font-size:8px;letter-spacing:.14em;color:var(--dust);text-transform:uppercase}
+.srp-b .sl{font-family:var(--ff-m);font-size:11px;letter-spacing:.14em;color:var(--dust);text-transform:uppercase}
 .srp-b .sv{font-family:var(--ff-m);font-size:28px;color:var(--amber);font-weight:bold}
-.srp-b .sd{font-size:10px;color:var(--dust)}
+.srp-b .sd{font-size:11px;color:var(--dust)}
 
 .hp-block{display:inline-flex;align-items:center;gap:10px;background:var(--surface);border-radius:var(--r);padding:9px 15px}
 .hp-block .hl{font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase}
@@ -157,10 +157,10 @@ select.sel option{background:var(--surface)}
 .money-text em{color:var(--copper);font-style:normal}
 
 .dos-actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
-.btn-print{background:transparent;border:1px solid var(--copper);border-radius:var(--r);color:var(--copper);font-family:var(--ff-m);font-size:10px;letter-spacing:.16em;padding:8px 17px;text-transform:uppercase;cursor:pointer;transition:all var(--tr)}
+.btn-print{background:transparent;border:1px solid var(--copper);border-radius:var(--r);color:var(--copper);font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;padding:8px 17px;text-transform:uppercase;cursor:pointer;transition:all var(--tr)}
 .btn-print:hover{background:var(--copper);color:var(--ground)}
 
-.sec-head{font-family:var(--ff-m);font-size:10px;letter-spacing:.2em;color:var(--copper);text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--ghost);margin-bottom:18px}
+.sec-head{font-family:var(--ff-m);font-size:11px;letter-spacing:.2em;color:var(--copper);text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--ghost);margin-bottom:18px}
 .hidden{display:none!important}
 .step-content{display:none}
 .step-content.active{display:block}
@@ -215,7 +215,7 @@ select.sel option{background:var(--surface)}
         <div class="name-hint">Your character's name -- ape, human, or otherwise.</div>
       </div>
       <div class="p-block">
-        <div class="p-title">Quirk <span style="color:var(--dust);font-size:9px">(OPTIONAL)</span></div>
+        <div class="p-title">Quirk <span style="color:var(--dust);font-size:11px">(OPTIONAL)</span></div>
         <button class="roll-btn" onclick="rollD66('quirk')">Roll D66 <span class="d66-roll" id="quirkRollResult"></span></button>
         <select class="sel" id="quirkSel" onchange="pickQuirk(this.value)">
           <option value="">-- None (no Remarkable Ability) --</option>
@@ -574,7 +574,7 @@ function renderStep0(){
       <div class="arch-attrs">
         ${Object.entries(attrs).map(([k,v])=>`<div class="ac"><span class="al">${k}</span><span class="av">${v}</span></div>`).join('')}
         ${psiRows}
-        ${a.cyborg?'<div class="ac" style="grid-column:span 3;text-align:left;font-size:10px;color:var(--dust);padding:3px 5px">+1D Resist Damage (cybernetics; starts with 17D)</div>':''}
+        ${a.cyborg?'<div class="ac" style="grid-column:span 3;text-align:left;font-size:11px;color:var(--dust);padding:3px 5px">+1D Resist Damage (cybernetics; starts with 17D)</div>':''}
       </div>
       <div class="arch-srp">SRP: <span>${srp}</span></div>
       <div class="arch-mem"><strong>${a.memento.name}</strong>${a.memento.bonus}</div>
