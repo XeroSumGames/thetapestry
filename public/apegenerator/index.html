@@ -1,0 +1,944 @@
+<title>POTA RPG -- Character Generator</title>
+<style>
+:root {
+  --ground:#100d09;--surface:#1c1610;--panel:#261d13;--card:#2e2418;--card-ho:#372c1e;
+  --copper:#c0873a;--copper-dim:#8a5f28;--amber:#e8a940;--bone:#cfc0a8;--dust:#7d7165;
+  --ghost:#4a3e32;--moss:#5a8048;--blood:#7a2020;--psi-border:#3a1e4a;--psi-bg:#1e1228;
+  --ff-d:"Palatino Linotype",Palatino,Georgia,"Book Antiqua",serif;
+  --ff-m:"Courier New",Courier,monospace;
+  --ff-b:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:2px;--tr:0.15s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ground);color:var(--bone);font-family:var(--ff-b);font-size:15px;line-height:1.55;min-height:100vh}
+
+/* HEADER */
+.hdr{background:var(--surface);border-bottom:1px solid var(--ghost);padding:14px 24px;text-align:center}
+.hdr-title{font-family:var(--ff-d);font-size:20px;letter-spacing:.12em;color:var(--copper);text-transform:uppercase}
+.hdr-sub{font-size:11px;letter-spacing:.22em;color:var(--dust);text-transform:uppercase;margin-top:2px;font-family:var(--ff-m)}
+
+/* STEP TRACK */
+.step-track{display:flex;justify-content:center;background:var(--surface);border-bottom:1px solid var(--ghost);overflow-x:auto}
+.step-item{display:flex;align-items:center;gap:7px;padding:11px 18px;font-family:var(--ff-m);font-size:10px;letter-spacing:.16em;color:var(--ghost);text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr)}
+.step-item.active{color:var(--amber);border-bottom-color:var(--amber)}
+.step-item.done{color:var(--moss);border-bottom-color:var(--moss)}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid currentColor;font-size:9px;flex-shrink:0}
+
+/* MAIN */
+.main{max-width:880px;margin:0 auto;padding:28px 20px 64px}
+
+/* FACTION TABS */
+.faction-tabs{display:flex;gap:8px;margin-bottom:22px}
+.fac-btn{flex:1;padding:13px 10px;background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);color:var(--dust);font-family:var(--ff-m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all var(--tr);text-align:center}
+.fac-btn:hover{background:var(--card-ho);color:var(--bone);border-color:var(--copper-dim)}
+.fac-btn.active{background:var(--card);color:var(--amber);border-color:var(--copper)}
+.fac-btn .fac-count{display:block;font-size:9px;color:var(--dust);margin-top:3px;letter-spacing:.1em}
+.fac-btn.active .fac-count{color:var(--copper-dim)}
+
+/* ARCHETYPE GRID */
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:11px}
+.arch-card{background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);padding:15px;cursor:pointer;transition:all var(--tr);position:relative}
+.arch-card:hover{background:var(--card-ho);border-color:var(--copper-dim)}
+.arch-card.selected{background:var(--card);border-color:var(--copper);box-shadow:0 0 0 1px var(--copper-dim)}
+.arch-name{font-family:var(--ff-d);font-size:15px;color:var(--bone);margin-bottom:3px}
+.arch-desc{font-size:12px;color:var(--dust);margin-bottom:11px;line-height:1.38}
+.arch-attrs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:9px}
+.ac{background:var(--surface);border-radius:var(--r);padding:4px 5px;text-align:center}
+.ac .al{font-family:var(--ff-m);font-size:8px;color:var(--dust);letter-spacing:.1em;display:block}
+.ac .av{font-family:var(--ff-m);font-size:13px;color:var(--amber);display:block;font-weight:bold}
+.arch-srp{font-family:var(--ff-m);font-size:11px;color:var(--dust);margin-bottom:8px}
+.arch-srp span{color:var(--copper)}
+.arch-mem{font-size:11px;color:var(--dust);border-top:1px solid var(--ghost);padding-top:8px;margin-top:4px;line-height:1.35}
+.arch-mem strong{color:var(--bone);font-size:12px}
+.sel-badge{position:absolute;top:8px;right:8px;width:16px;height:16px;background:var(--moss);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff}
+
+/* PERSONA */
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:580px){.persona-grid{grid-template-columns:1fr}}
+.p-block{background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);padding:18px}
+.p-title{font-family:var(--ff-m);font-size:10px;letter-spacing:.18em;color:var(--copper);text-transform:uppercase;margin-bottom:12px}
+.roll-btn{display:inline-flex;align-items:center;gap:5px;background:var(--ghost);border:1px solid var(--copper-dim);border-radius:var(--r);color:var(--bone);font-family:var(--ff-m);font-size:10px;letter-spacing:.1em;padding:5px 11px;cursor:pointer;transition:all var(--tr);margin-bottom:10px}
+.roll-btn:hover{background:var(--copper-dim);border-color:var(--copper)}
+.d66-roll{font-family:var(--ff-m);font-size:11px;color:var(--copper);margin-left:4px}
+select.sel{width:100%;background:var(--surface);border:1px solid var(--ghost);border-radius:var(--r);color:var(--bone);font-family:var(--ff-b);font-size:13px;padding:7px 10px;cursor:pointer;margin-bottom:8px}
+select.sel option{background:var(--surface)}
+.picked-desc{font-size:12px;color:var(--dust);font-style:italic;padding:8px;background:var(--surface);border-radius:var(--r);border-left:2px solid var(--copper-dim);line-height:1.4}
+.name-inp{width:100%;background:var(--surface);border:1px solid var(--ghost);border-radius:var(--r);color:var(--bone);font-family:var(--ff-d);font-size:18px;padding:10px 13px;outline:none;transition:border-color var(--tr)}
+.name-inp:focus{border-color:var(--copper)}
+.name-inp::placeholder{color:var(--ghost)}
+.name-hint{font-size:11px;color:var(--dust);margin-top:6px}
+.ra-note{font-size:12px;color:var(--dust);font-style:italic;padding:8px;text-align:center}
+
+/* SKILLS */
+.pool-bar{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
+.pool-label{font-family:var(--ff-m);font-size:10px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase;white-space:nowrap}
+.pool-dice{display:flex;gap:5px;flex-wrap:wrap}
+.die-pip{width:26px;height:26px;border-radius:3px;border:1px solid var(--copper);background:var(--amber);display:flex;align-items:center;justify-content:center;font-family:var(--ff-m);font-size:10px;font-weight:bold;color:var(--ground);transition:all var(--tr)}
+.die-pip.used{background:var(--ghost);border-color:var(--ghost);color:var(--dust)}
+.pool-rem{font-family:var(--ff-m);font-size:22px;color:var(--amber);font-weight:bold;margin-left:auto}
+.pool-rem small{font-size:11px;color:var(--dust)}
+
+.attr-sec{margin-bottom:14px;background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);overflow:hidden}
+.attr-sec.psi{border-color:var(--psi-border)}
+.attr-hdr{background:var(--surface);padding:9px 15px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--ghost)}
+.attr-sec.psi .attr-hdr{background:var(--psi-bg);border-bottom-color:var(--psi-border)}
+.ah-name{font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase}
+.attr-sec.psi .ah-name{color:#a07ac8}
+.ah-die{font-family:var(--ff-m);font-size:14px;color:var(--amber);font-weight:bold}
+.ah-full{font-size:11px;color:var(--dust);margin-left:auto}
+.skill-row{display:flex;align-items:center;padding:7px 15px;border-bottom:1px solid var(--ghost);gap:10px}
+.skill-row:last-child{border-bottom:none}
+.sk-name{flex:1;font-size:13px;color:var(--bone)}
+.sk-total{font-family:var(--ff-m);font-size:13px;color:var(--amber);width:54px;text-align:right}
+.sk-total.boosted{color:var(--amber);font-weight:bold}
+.stepper{display:flex;gap:3px}
+.sb{width:31px;height:27px;background:var(--surface);border:1px solid var(--ghost);border-radius:var(--r);color:var(--dust);font-family:var(--ff-m);font-size:10px;cursor:pointer;transition:all var(--tr)}
+.sb:hover:not(:disabled){background:var(--ghost);color:var(--bone)}
+.sb.act{background:var(--copper-dim);border-color:var(--copper);color:var(--amber)}
+.sb:disabled{opacity:.28;cursor:not-allowed}
+.psi-note{padding:8px 15px;font-size:11px;color:#7a6098;font-style:italic}
+
+/* NAV */
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:28px;gap:14px}
+.btn-p{background:var(--copper);border:none;border-radius:var(--r);color:var(--ground);font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;padding:11px 26px;text-transform:uppercase;cursor:pointer;transition:all var(--tr)}
+.btn-p:hover{background:var(--amber)}
+.btn-p:disabled{opacity:.38;cursor:not-allowed}
+.btn-s{background:transparent;border:1px solid var(--ghost);border-radius:var(--r);color:var(--dust);font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;padding:11px 26px;text-transform:uppercase;cursor:pointer;transition:all var(--tr)}
+.btn-s:hover{border-color:var(--copper-dim);color:var(--bone)}
+.btn-s.danger:hover{border-color:var(--blood);color:var(--blood)}
+
+/* DOSSIER */
+.dossier{background:var(--panel);border:1px solid var(--ghost);border-radius:var(--r);overflow:hidden}
+.dos-hdr{background:var(--surface);padding:22px 26px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--ghost);gap:16px;flex-wrap:wrap}
+.dos-name{font-family:var(--ff-d);font-size:26px;color:var(--amber)}
+.dos-arch{font-family:var(--ff-m);font-size:11px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase;margin-top:3px}
+.dos-badge{font-family:var(--ff-m);font-size:9px;letter-spacing:.2em;color:var(--dust);text-transform:uppercase;padding:5px 11px;border:1px solid var(--ghost);border-radius:var(--r);align-self:flex-start;white-space:nowrap}
+.dos-sec{padding:18px 26px;border-bottom:1px solid var(--ghost)}
+.dos-sec:last-child{border-bottom:none}
+.dos-sec-title{font-family:var(--ff-m);font-size:9px;letter-spacing:.26em;color:var(--copper);text-transform:uppercase;margin-bottom:13px}
+
+.attr-sum-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:13px}
+@media(max-width:560px){.attr-sum-grid{grid-template-columns:repeat(3,1fr)}}
+.asb{background:var(--surface);border-radius:var(--r);padding:9px 7px;text-align:center}
+.asb .asl{font-family:var(--ff-m);font-size:8px;letter-spacing:.12em;color:var(--dust);text-transform:uppercase}
+.asb .asv{font-family:var(--ff-m);font-size:16px;color:var(--amber);font-weight:bold;margin-top:2px}
+
+.srp-row{display:flex;gap:12px;flex-wrap:wrap}
+.srp-b{flex:1;min-width:90px;background:var(--surface);border-radius:var(--r);padding:11px 10px;text-align:center}
+.srp-b .sl{font-family:var(--ff-m);font-size:8px;letter-spacing:.14em;color:var(--dust);text-transform:uppercase}
+.srp-b .sv{font-family:var(--ff-m);font-size:28px;color:var(--amber);font-weight:bold}
+.srp-b .sd{font-size:10px;color:var(--dust)}
+
+.hp-block{display:inline-flex;align-items:center;gap:10px;background:var(--surface);border-radius:var(--r);padding:9px 15px}
+.hp-block .hl{font-family:var(--ff-m);font-size:9px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase}
+.hp-block .hv{font-family:var(--ff-m);font-size:24px;color:var(--amber);font-weight:bold}
+
+.skills-sum{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.skills-sum{grid-template-columns:1fr}}
+.sab{background:var(--surface);border-radius:var(--r);padding:11px 13px}
+.sab-title{font-family:var(--ff-m);font-size:9px;letter-spacing:.16em;color:var(--copper);text-transform:uppercase;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--ghost)}
+.sl-row{display:flex;justify-content:space-between;padding:2px 0;font-size:12px}
+.sl-row .sln{color:var(--dust)}
+.sl-row .slv{font-family:var(--ff-m);color:var(--dust)}
+.sl-row.boosted .sln{color:var(--bone)}
+.sl-row.boosted .slv{color:var(--amber);font-weight:bold}
+
+.per-sum{display:flex;flex-direction:column;gap:9px}
+.per-item{display:flex;gap:11px;align-items:flex-start}
+.per-item .pil{font-family:var(--ff-m);font-size:9px;letter-spacing:.13em;color:var(--dust);text-transform:uppercase;min-width:84px;padding-top:1px}
+.per-item .piv{font-size:13px;color:var(--bone)}
+.per-item .pid{font-size:11px;color:var(--dust);font-style:italic;margin-top:1px}
+
+.mem-block{background:var(--surface);border-left:2px solid var(--copper-dim);padding:9px 13px;border-radius:0 var(--r) var(--r) 0}
+.mem-block strong{color:var(--bone);font-size:13px;display:block;margin-bottom:3px}
+.mem-block span{color:var(--dust);font-size:12px}
+
+.money-text{font-family:var(--ff-m);font-size:13px;color:var(--bone)}
+.money-text em{color:var(--copper);font-style:normal}
+
+.dos-actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+.btn-print{background:transparent;border:1px solid var(--copper);border-radius:var(--r);color:var(--copper);font-family:var(--ff-m);font-size:10px;letter-spacing:.16em;padding:8px 17px;text-transform:uppercase;cursor:pointer;transition:all var(--tr)}
+.btn-print:hover{background:var(--copper);color:var(--ground)}
+
+.sec-head{font-family:var(--ff-m);font-size:10px;letter-spacing:.2em;color:var(--copper);text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--ghost);margin-bottom:18px}
+.hidden{display:none!important}
+.step-content{display:none}
+.step-content.active{display:block}
+.empty-state{text-align:center;padding:36px;color:var(--dust);font-style:italic}
+
+.site-footer{text-align:center;padding:18px 20px;border-top:1px solid var(--ghost);font-family:var(--ff-m);font-size:11px;color:var(--dust);letter-spacing:.06em;line-height:1.6}
+.site-footer a{color:var(--dust);text-decoration:none}
+
+@media print{
+  body{background:#fff;color:#000}
+  .hdr{border-bottom:2px solid #000;background:#fff}
+  .hdr-title,.hdr-sub{color:#000}
+  .step-track,.nav-row,.dos-actions{display:none!important}
+  .step-content{display:block!important}
+  #step0,#step1,#step2{display:none!important}
+  #step3{display:block!important}
+  .dossier{border:1px solid #aaa;background:#fff}
+  .dos-hdr{background:#f4f4f4}
+  .dos-name,.asv,.sv,.hv,.slv{color:#000!important}
+  .asb,.srp-b,.hp-block,.sab,.mem-block{background:#f4f4f4;border:1px solid #ddd}
+  .dos-sec-title,.dos-arch,.pil,.asl,.sl,.hl{color:#555!important}
+  .sln{color:#333!important}
+  .copper,.amber{color:#555!important}
+  .site-footer{color:#555;border-top:1px solid #ccc}
+}
+</style>
+
+<div class="hdr">
+  <div class="hdr-title">Planet of the Apes RPG</div>
+  <div class="hdr-sub">Character Generator -- D6 Magnetic Variant</div>
+</div>
+
+<div class="step-track" id="stepTrack"></div>
+
+<div class="main">
+  <div id="step0" class="step-content active">
+    <div class="sec-head">Choose Your Archetype</div>
+    <div class="faction-tabs" id="facTabs"></div>
+    <div class="arch-grid" id="archGrid"></div>
+    <div class="nav-row">
+      <div></div>
+      <button class="btn-p" id="toStep1" disabled onclick="goTo(1)">Persona &rarr;</button>
+    </div>
+  </div>
+
+  <div id="step1" class="step-content">
+    <div class="sec-head">Determine Your Persona</div>
+    <div class="persona-grid">
+      <div class="p-block">
+        <div class="p-title">Character Name</div>
+        <input class="name-inp" id="charName" type="text" placeholder="Enter a name..." oninput="state.name=this.value;updateStepUI()">
+        <div class="name-hint">Your character's name -- ape, human, or otherwise.</div>
+      </div>
+      <div class="p-block">
+        <div class="p-title">Quirk <span style="color:var(--dust);font-size:9px">(OPTIONAL)</span></div>
+        <button class="roll-btn" onclick="rollD66('quirk')">Roll D66 <span class="d66-roll" id="quirkRollResult"></span></button>
+        <select class="sel" id="quirkSel" onchange="pickQuirk(this.value)">
+          <option value="">-- None (no Remarkable Ability) --</option>
+        </select>
+        <div class="picked-desc" id="quirkDesc" style="display:none"></div>
+      </div>
+      <div class="p-block">
+        <div class="p-title">Remarkable Ability</div>
+        <div id="raContainer">
+          <div class="ra-note">Select a Quirk first to unlock a Remarkable Ability.</div>
+        </div>
+      </div>
+      <div class="p-block">
+        <div class="p-title">Motive</div>
+        <button class="roll-btn" onclick="rollD66('motive')">Roll D66 <span class="d66-roll" id="motiveRollResult"></span></button>
+        <select class="sel" id="motiveSel" onchange="pickMotive(this.value)">
+          <option value="">-- Choose or roll --</option>
+        </select>
+        <div class="picked-desc" id="motiveDesc" style="display:none">Your Motive drives how you play and can earn bonus XP each session.</div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-s" onclick="goTo(0)">&larr; Archetype</button>
+      <button class="btn-p" onclick="goTo(2)">Skills &rarr;</button>
+    </div>
+  </div>
+
+  <div id="step2" class="step-content">
+    <div class="sec-head">Allocate Skills</div>
+    <div class="pool-bar">
+      <div class="pool-label">Skill Dice<br>Remaining</div>
+      <div class="pool-dice" id="poolDice"></div>
+      <div class="pool-rem" id="poolRem">7 <small>/ 7D</small></div>
+    </div>
+    <div id="skillSections"></div>
+    <div class="nav-row">
+      <button class="btn-s" onclick="goTo(1)">&larr; Persona</button>
+      <button class="btn-p" onclick="goTo(3)">Dossier &rarr;</button>
+    </div>
+  </div>
+
+  <div id="step3" class="step-content">
+    <div class="sec-head">Character Dossier</div>
+    <div class="dossier" id="dossier"></div>
+    <div class="dos-actions">
+      <button class="btn-print" onclick="window.print()">Print Dossier</button>
+      <button class="btn-s danger" onclick="restart()">Start Over</button>
+      <button class="btn-s" onclick="goTo(2)">&larr; Back to Skills</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  &copy; All content copyright of Magnetic Press and 20th Century Fox. All rights reserved.<br>
+  This character generator is an unofficial fan tool. <em>Planet of the Apes RPG</em> is published by Magnetic Press Play.
+</footer>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const QUIRKS=[
+  {code:'11',name:'Impulsive',desc:'"Plan" is a four-letter word.'},
+  {code:'12',name:'Restless',desc:"You're always on the move."},
+  {code:'13',name:'Sticky Fingers',desc:"Things just seem to end up in your pockets!"},
+  {code:'14',name:'Egotistical',desc:"The planet does revolve around you, actually."},
+  {code:'15',name:'Cruel',desc:"You enjoy seeing the light of life fade from your enemy's eyes."},
+  {code:'16',name:'Wallflower',desc:"You're easily ignored and overlooked."},
+  {code:'21',name:'Absent-Minded',desc:"...I'm sorry, what were we talking about?"},
+  {code:'22',name:'Paranoid',desc:"They're out to get you."},
+  {code:'23',name:'Gruesome',desc:"You like to see what makes apes, humans, and/or mutants tick -- literally."},
+  {code:'24',name:'Sheltered',desc:"You're all theory and no practice."},
+  {code:'25',name:'Aversion',desc:"You try to avoid a particular something that makes you uncomfortable."},
+  {code:'26',name:'Forward-Looking',desc:"You look to tomorrow at the expense of today."},
+  {code:'31',name:'Rigid Thinker',desc:"Why think outside the box? It's nice in here."},
+  {code:'32',name:'Firebug',desc:"You love to watch things burn... and make them burn."},
+  {code:'33',name:'Reckless',desc:"You don't like to be told the odds."},
+  {code:'34',name:'Tinkerer',desc:"You like to take things apart and 'fix' them."},
+  {code:'35',name:'Boisterous',desc:"You're loud and everyone always knows you are there."},
+  {code:'36',name:'Know-It-All',desc:"Not every-ape is as smart as you are. In fact, no ape is."},
+  {code:'41',name:'Nosy',desc:"Every-ape's business is your business."},
+  {code:'42',name:'Suspicious',desc:"Trust no one."},
+  {code:'43',name:'Greedy',desc:"Money can buy happiness."},
+  {code:'44',name:'Judgmental',desc:"You have criticisms and aren't shy about sharing them."},
+  {code:'45',name:'Hothead',desc:"Short-tempered, you blow up at the drop of a hat."},
+  {code:'46',name:'Altruistic',desc:"Your first thought is of others -- including the plight of lesser animals like humans."},
+  {code:'51',name:'Aggressive',desc:"You won't back down."},
+  {code:'52',name:'Adventurous',desc:"The planet needs heroes!"},
+  {code:'53',name:'Competitive',desc:"Anything they can do, you can do better."},
+  {code:'54',name:'Gullible',desc:"Humans can fly! You'll literally believe anything."},
+  {code:'55',name:'Stubborn',desc:"Your way or the highway."},
+  {code:'56',name:'Distant',desc:"You keep every-ape at arm's length."},
+  {code:'61',name:'Devout',desc:"The Lawgiver is always right! You believe even when others don't."},
+  {code:'62',name:'Talkative',desc:"So you like to talk (or sign, or thought-project) -- all the time! What's wrong with that?"},
+  {code:'63',name:'Compulsive Liar',desc:"You can't seem to tell the truth... or can you?"},
+  {code:'64',name:'Stoic',desc:"Death comes for us all. Until then, we must do what we can."},
+  {code:'65',name:'Vain',desc:"Make sure you get my good side. (It's either side.)"},
+  {code:'66',name:'Vindictive',desc:"An eye for an eye balances the scales."}
+];
+
+const MOTIVES=[
+  {code:'11',name:'Acceptance'},{code:'12',name:'Achievement'},{code:'13',name:'Addiction'},
+  {code:'14',name:'Ambition'},{code:'15',name:'Atonement'},{code:'16',name:'Debt'},
+  {code:'21',name:'Desire'},{code:'22',name:'Destruction'},{code:'23',name:'Devotion'},
+  {code:'24',name:'Discovery'},{code:'25',name:'Duty'},{code:'26',name:'Escape'},
+  {code:'31',name:'Exploration'},{code:'32',name:'Fame'},{code:'33',name:'Faith'},
+  {code:'34',name:'Family'},{code:'35',name:'Fear'},{code:'36',name:'Freedom'},
+  {code:'41',name:'Greed'},{code:'42',name:'Hatred'},{code:'43',name:'Heroism'},
+  {code:'44',name:'Honor'},{code:'45',name:'Knowledge'},{code:'46',name:'Law'},
+  {code:'51',name:'Loneliness'},{code:'52',name:'Love'},{code:'53',name:'Martyrdom'},
+  {code:'54',name:'Obsession'},{code:'55',name:'Poverty'},{code:'56',name:'Power'},
+  {code:'61',name:'Protect'},{code:'62',name:'Rebellion'},{code:'63',name:'Redemption'},
+  {code:'64',name:'Revenge'},{code:'65',name:'Self-loathing'},{code:'66',name:'Selfishness'}
+];
+
+const ABILITIES=[
+  {name:'Able Inventor',desc:'+2D Bonus to all MEC (Engineer) Skill rolls.'},
+  {name:'Athletic or Aquatic',desc:'+1D Bonus to all STR (Climb/Jump) or STR (Swimming) Skill rolls.'},
+  {name:'Blaster',desc:'+2D Bonus to all MEC (Demolitions) Skill rolls.'},
+  {name:'Born Brawler',desc:'+2D Bonus to all STR (Brawl) Skill rolls.'},
+  {name:'Born for Secrecy',desc:'+2D Bonus to all KNO (Espionage) Skill rolls.'},
+  {name:'Brutal',desc:'+1D DMG Bonus to all armed melee attacks.'},
+  {name:'Bullseye',desc:'+1D DMG Bonus to all ranged attacks.'},
+  {name:'Canny Cannoneer',desc:'+2D Bonus to all MEC (Gunner) Skill rolls.'},
+  {name:'Close-Combat Expert',desc:'+2D Bonus to all DEX (Melee) Skill rolls.'},
+  {name:'Crack Shot',desc:'+2D Bonus to all PER (Marksmanship) Skill rolls.'},
+  {name:'Cunning Liar',desc:'+2D Bonus to all WIL (Con) Skill rolls.'},
+  {name:'Danger Sense',desc:'+1D Bonus to all DEX (Reflex) or PER (Instinct) Skill rolls.'},
+  {name:'Death Stare',desc:'+2D Bonus to all WIL (Intimidation) Skill rolls.'},
+  {name:'Educated',desc:'+1D Bonus to all KNO-based Attribute and Skill rolls.'},
+  {name:'Eye for Detail',desc:'+2D Bonus to all PER (Evaluate or Investigate) Skill rolls.'},
+  {name:'Fists of Fury',desc:'+1D DMG with all unarmed attacks.'},
+  {name:'Force of Personality',desc:'+1D on all rolls using WIL.'},
+  {name:'Gestural Language',desc:'+2D on all KNO (Espionage) Skill rolls to communicate covertly.'},
+  {name:'Haggler',desc:'+2D Bonus to all WIL (Bargain) Skill rolls.'},
+  {name:'Hardened',desc:'Ignore mental attacks and trauma equal to or less than twice your Psyche.'},
+  {name:'Heck of an Arm',desc:'+2D Bonus to all STR (Throwing) Skill rolls.'},
+  {name:'Helpful',desc:'When you aid another character, they get +2D instead of +1D.'},
+  {name:'Heroic Destiny',desc:'You gain 1D Hero Points at the start of every session.'},
+  {name:'High Roller',desc:'+2D Bonus to all PER (Gambling) Skill rolls.'},
+  {name:'Hotshot Aeronaut',desc:'+2D Bonus to all MEC (Pilot) Skill rolls.'},
+  {name:'Leadfoot',desc:'+2D Bonus to all MEC (Drive) Skill rolls.'},
+  {name:'Legerdemain',desc:'+2D Bonus to all DEX (Sleight of Hand) Skill rolls.'},
+  {name:'Lucky',desc:'Once per Round, when you roll a 1 on the Wild Die, you may reroll it.'},
+  {name:'Mediciner',desc:'When making a KNO (Medical) roll, reduce the DN by 5.'},
+  {name:'Natural Leader',desc:'+2D Bonus to all WIL (Command) Skill rolls.'},
+  {name:'Perfect Balance',desc:'+2D Bonus to all DEX (Acrobatics) Skill rolls.'},
+  {name:'Quick Fix',desc:'Once per Round, you can make a MEC (Repair/Disable) Skill roll as a Quick Action.'},
+  {name:'Ready for Action',desc:'+2D Bonus to all DEX (Reflex) Skill rolls.'},
+  {name:'Rugged',desc:'+10 Bonus to all STR (Stamina) rolls to resist Fatigue.'},
+  {name:'Saddle Tramp',desc:'+2D Bonus to all DEX (Ride) Skill rolls.'},
+  {name:'Scientific Mind',desc:'+2D Bonus to all KNO (Sciences) Skill rolls.'},
+  {name:'Scrounger',desc:'+2D Bonus to all PER (Streetwise) Skill rolls.'},
+  {name:'Silver Tongue',desc:'+2D Bonus to all WIL (Charm) Skill rolls.'},
+  {name:'Sneaky',desc:'+2D Bonus to all DEX (Stealth) Skill rolls.'},
+  {name:'Sterner Stuff',desc:'Increase your Psyche by 5.'},
+  {name:'Strapping',desc:'+1D Bonus to all STR (Lifting) and STR (Stamina) Skill rolls.'},
+  {name:'Studious',desc:'+2D Bonus to all KNO (Scholar) Skill rolls.'},
+  {name:'Survivalist',desc:'+2D Bonus to all KNO (Survival) Skill rolls.'},
+  {name:'Technician',desc:'+2D Bonus to all KNO (Technical) Skill rolls.'},
+  {name:'Thick-Skinned',desc:'You ignore Penalties from being Stunned or Wounded.'},
+  {name:'Tinkerer (Ability)',desc:'+2D Bonus to all MEC (Repair/Disable) Skill rolls.'},
+  {name:'Tough as Nails',desc:'+1D Bonus on all STR rolls to Resist Damage.'},
+  {name:'True Grit',desc:'+2D Bonus to all WIL (Grit) Skill rolls.'}
+];
+
+const ARCHETYPES={
+  ape:[
+    {id:'activist',name:'Ape Activist',desc:'A passionate voice challenging the hierarchies of Ape City.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'4D',STR:'3D+2',MEC:'1D',WIL:'3D+1'},
+     money:{base:25,savings:true},memento:{name:'Peace Bead Necklace',bonus:'+1D WIL (Grit)'}},
+    {id:'journalist',name:'Ape Journalist',desc:'Truth-seeker navigating the dangerous press of simian society.',
+     attrs:{DEX:'2D',PER:'4D',KNO:'3D',STR:'3D+2',MEC:'2D',WIL:'3D+1'},
+     money:{base:50,savings:true},memento:{name:'Favorite Hat',bonus:'+1D PER (Investigate)'}},
+    {id:'scientist',name:'Ape Scientist',desc:'Knowledge-driven investigator pushing the boundaries of ape understanding.',
+     attrs:{DEX:'2D',PER:'3D+1',KNO:'5D',STR:'3D+2',MEC:'2D',WIL:'2D'},
+     money:{base:100,savings:true},memento:{name:"Mentor's Notes",bonus:'+2 Bonus to KNO Skill rolls'}},
+    {id:'statesape',name:'Statesape',desc:'Wielder of political power and keeper of ape authority.',
+     attrs:{DEX:'2D',PER:'2D',KNO:'4D',STR:'4D',MEC:'1D',WIL:'5D'},
+     money:{base:200,savings:true},memento:{name:'Signet Ring',bonus:'+1D WIL (Command)'}},
+    {id:'adventurer',name:'Ape Adventurer',desc:'Wanderer driven by curiosity about the wider world beyond Ape City.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'3D',STR:'3D+2',MEC:'2D+1',WIL:'3D'},
+     money:{base:25,savings:true},memento:{name:'Worn Travel Journal',bonus:'+2 Hero Points per session'}},
+    {id:'lawgiver',name:'Ape Lawgiver',desc:'Religious authority and interpreter of the Sacred Scrolls.',
+     attrs:{DEX:'2D',PER:'2D+1',KNO:'3D+2',STR:'4D',MEC:'1D',WIL:'5D'},
+     money:{base:20,savings:true},memento:{name:'Pocket Scrolls',bonus:'+1D WIL (Charm/Command/Intimidation)'}},
+    {id:'inspector',name:'Ape Inspector',desc:'Investigator of crime and mystery within Ape City and the provinces.',
+     attrs:{DEX:'2D',PER:'4D+1',KNO:'3D+2',STR:'3D+2',MEC:'1D',WIL:'3D+1'},
+     money:{base:150,savings:true},memento:{name:'Polished Quartz Magnifying Glass',bonus:'+1D PER (Investigate)'}},
+    {id:'philosopher',name:'Philosopher Ape',desc:'Seeker of wisdom and questioner of established ape doctrine.',
+     attrs:{DEX:'2D',PER:'2D+1',KNO:'4D',STR:'4D',MEC:'1D',WIL:'4D+2'},
+     money:{base:100,savings:true},memento:{name:'Clay Pipe and Herb Pouch',bonus:'+1D PER (Evaluate) when used'}},
+    {id:'serviceape',name:'Serviceape',desc:'Laborer whose strength and skill keep ape civilization running.',
+     attrs:{DEX:'3D',PER:'2D',KNO:'2D',STR:'5D+2',MEC:'2D+2',WIL:'2D+2'},
+     money:{base:49,savings:true},memento:{name:'First Frailin',bonus:'+1D PER (Gambling / Trusting to Luck)'}},
+    {id:'constable',name:'Constable Ape',desc:'Enforcer of law and order in the provinces and outposts of Simia.',
+     attrs:{DEX:'3D',PER:'3D+1',KNO:'2D+1',STR:'5D',MEC:'2D',WIL:'2D+1'},
+     money:{base:25,savings:true},memento:{name:'Pounded-iron Glyph Badge',bonus:'+1D WIL (Intimidation)'}},
+    {id:'soldier',name:'Ape Soldier',desc:'Trained combatant in the gorilla armies of Ape City.',
+     attrs:{DEX:'3D+2',PER:'4D',KNO:'1D',STR:'5D',MEC:'2D',WIL:'2D+1'},
+     money:{base:20,savings:true},memento:{name:'Medal of Bravery',bonus:'+1D WIL (Grit); reroll one Exceptional Failure'}},
+    {id:'veteran',name:'Veteran Ape',desc:'Battle-scarred survivor who has seen the worst the world offers.',
+     attrs:{DEX:'2D+2',PER:'4D',KNO:'2D',STR:'4D+2',MEC:'2D',WIL:'2D+2'},
+     money:{base:25,savings:true},memento:{name:'Unit Photo',bonus:'+2 Bonus to STR (Resist Damage) and STR (Stamina)'}},
+  ],
+  human:[
+    {id:'lookout',name:'Tribal Human Lookout',desc:'Silent watcher whose keen senses keep the tribe safe from ape patrols.',
+     attrs:{DEX:'4D',PER:'4D',KNO:'2D+1',STR:'3D+1',MEC:'1D',WIL:'3D+1'},
+     money:{base:0,savings:false},memento:{name:'Raptor Feather',bonus:'+2 Bonus to PER (Investigate)'}},
+    {id:'protector',name:'Tribal Human Protector',desc:'Fierce defender who places the tribe above all else.',
+     attrs:{DEX:'4D',PER:'4D',KNO:'1D',STR:'4D',MEC:'1D',WIL:'4D'},
+     money:{base:0,savings:false},memento:{name:'Necklace of Colors',bonus:'+2 Bonus to DEX (Melee)'}},
+    {id:'gatherer',name:'Tribal Human Gatherer',desc:'Provider and forager skilled at reading the land for food and water.',
+     attrs:{DEX:'3D+2',PER:'3D+2',KNO:'2D+1',STR:'3D',MEC:'1D+2',WIL:'3D+2'},
+     money:{base:0,savings:false},memento:{name:'Shiny Rock',bonus:'+2 Bonus to KNO (Survival)'}},
+    {id:'healer',name:'Tribal Human Healer',desc:'Keeper of natural remedies and the tribe\'s living medical knowledge.',
+     attrs:{DEX:'3D',PER:'4D',KNO:'3D',STR:'3D',MEC:'1D',WIL:'4D'},
+     money:{base:0,savings:false},memento:{name:"Healer's Herb Pouch",bonus:'+1D KNO (Medical), 6 uses'}},
+    {id:'commander',name:'Astro-naut Commander',desc:'Disciplined ANSA officer responsible for crew and mission objectives.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'3D',STR:'3D',MEC:'3D',WIL:'3D'},
+     money:{base:null,savings:false},memento:{name:'First Set of Wings',bonus:'+1D WIL (Command)'}},
+    {id:'scienceofficer',name:'Astro-naut Science Officer',desc:'Scientist and analyst grappling with the impossible discoveries of this world.',
+     attrs:{DEX:'2D+1',PER:'3D',KNO:'4D+1',STR:'2D+1',MEC:'3D',WIL:'3D'},
+     money:{base:null,savings:false},memento:{name:'Lucky Magnetic Disc',bonus:'Reroll Wild Die; second result stands'}},
+    {id:'security',name:'Astro-naut Security Specialist',desc:'Combat-trained specialist in survival, security, and personal protection.',
+     attrs:{DEX:'3D+1',PER:'3D+1',KNO:'3D',STR:'3D',MEC:'2D',WIL:'3D+1'},
+     money:{base:null,savings:false},memento:{name:'Fired Bullet',bonus:'+1D Bonus to Initiative rolls'}},
+    {id:'engineer',name:'Astro-naut Technical Engineer',desc:'Problem-solver keeping impossible technology functional in a primitive world.',
+     attrs:{DEX:'3D',PER:'3D',KNO:'3D',STR:'2D',MEC:'4D',WIL:'3D'},
+     money:{base:null,savings:false},memento:{name:"Granddad's Multi-tool Pocketknife",bonus:'+2 Bonus to MEC (Repair/Disable)'}},
+  ],
+  mutant:[
+    {id:'exile',name:'Mutant Exile',desc:'Outcast from underground mutant society, discovering the surface world.',
+     attrs:{DEX:'2D+1',PER:'2D+1',KNO:'3D',STR:'2D',MEC:'2D',WIL:'3D+1'},
+     psi:{DIV:'1D+2',MAN:'1D+1'},
+     money:{base:null,savings:false},memento:{name:'Pressed Flower',bonus:'+1D DEX (Sleight of Hand)'}},
+    {id:'orator',name:'Mutant Orator',desc:'Voice of the Divine Bomb, spreading the word of the Fellowship underground.',
+     attrs:{DEX:'1D',PER:'2D',KNO:'3D',STR:'2D+2',MEC:'2D',WIL:'4D+1'},
+     psi:{DIV:'2D',MAN:'1D'},
+     money:{base:null,savings:false},memento:{name:'Blessed Jewelry',bonus:'+2 Bonus to any PSI Skill rolls'}},
+    {id:'vanguard',name:'Mutant Vanguard',desc:'Mental warrior protecting the mutant way of life with mind over matter.',
+     attrs:{DEX:'2D+1',PER:'2D+1',KNO:'1D',STR:'3D+1',MEC:'2D',WIL:'4D'},
+     psi:{DIV:'1D',MAN:'2D'},
+     money:{base:null,savings:false},memento:{name:'None',bonus:'What one needs, one is given.'}},
+    {id:'gorilloid',name:'Rogue Gorilloid',desc:'Cybernetic gorilla wrestling free from the Makers\' control.',
+     attrs:{DEX:'3D+2',PER:'2D',KNO:'1D',STR:'6D',MEC:'2D',WIL:'2D+1'},
+     psi:null,
+     cyborg:true,
+     money:{base:null,savings:false},memento:{name:'Piece of Former Life',bonus:'+2 Bonus to DEX (Melee) and STR (Brawl) vs. Makers or mutants'}},
+  ]
+};
+
+const SKILL_ATTRS=['DEX','KNO','MEC','PER','STR','WIL'];
+const SKILLS_BY_ATTR={
+  DEX:['Acrobatics','Melee','Reflex','Ride','Sleight of Hand','Stealth'],
+  KNO:['Espionage','Medical','Scholar','Sciences','Survival','Technical'],
+  MEC:['Demolitions','Drive','Engineer','Gunner','Pilot','Repair/Disable'],
+  PER:['Evaluate','Gambling','Instinct','Investigate','Marksmanship','Streetwise'],
+  STR:['Brawl','Climb/Jump','Lifting','Stamina','Swimming','Throwing'],
+  WIL:['Bargain','Charm','Command','Con','Grit','Intimidation']
+};
+const ATTR_FULL={DEX:'Dexterity',KNO:'Knowledge',MEC:'Mechanical',PER:'Perception',STR:'Strength',WIL:'Willpower'};
+
+// ============================================================
+// STATE
+// ============================================================
+const state={
+  step:0, faction:'ape', archId:null,
+  name:'', quirk:null, ability:null, motive:null,
+  skills:{}
+};
+
+function initSkills(){
+  state.skills={};
+  const arch=getArch();
+  if(!arch)return;
+  for(const attr of SKILL_ATTRS){
+    for(const sk of SKILLS_BY_ATTR[attr]){
+      state.skills[attr+'.'+sk]=0;
+    }
+  }
+  if(arch.psi){
+    for(const psi of Object.keys(arch.psi)){
+      state.skills['PSI.'+psi]=0;
+    }
+  }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function parseDie(s){
+  if(!s||s==='0D')return{d:0,p:0};
+  const m=s.match(/(\d+)D(?:\+(\d+))?/i);
+  return m?{d:+m[1],p:+(m[2]||0)}:{d:0,p:0};
+}
+function dieStr(d,p){return p?`${d}D+${p}`:`${d}D`}
+function skillTotal(attrCode,bonus){const{d,p}=parseDie(attrCode);return dieStr(d+bonus,p)}
+function getSRP(attrCode){return parseDie(attrCode).d*3}
+function poolUsed(){return Object.values(state.skills).reduce((a,b)=>a+b,0)}
+function poolLeft(){return 7-poolUsed()}
+
+function getArch(){
+  if(!state.archId)return null;
+  for(const arr of Object.values(ARCHETYPES)){
+    const a=arr.find(x=>x.id===state.archId);
+    if(a)return a;
+  }
+  return null;
+}
+
+function rollD66Num(){
+  const d1=Math.ceil(Math.random()*6);
+  const d2=Math.ceil(Math.random()*6);
+  return{num:d1*10+d2,code:`${d1}${d2}`};
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const STEP_LABELS=['Archetype','Persona','Skills','Dossier'];
+
+function renderStepTrack(){
+  document.getElementById('stepTrack').innerHTML=STEP_LABELS.map((l,i)=>{
+    let cls='step-item';
+    if(i===state.step)cls+=' active';
+    else if(i<state.step)cls+=' done';
+    return`<div class="${cls}"><span class="step-num">${i<state.step?'&#10003;':i+1}</span>${l}</div>`;
+  }).join('');
+}
+
+function renderStep0(){
+  // Faction tabs
+  const facs=[
+    {key:'ape',label:'Ape Society',count:ARCHETYPES.ape.length},
+    {key:'human',label:'Human',count:ARCHETYPES.human.length},
+    {key:'mutant',label:'Mutant',count:ARCHETYPES.mutant.length}
+  ];
+  document.getElementById('facTabs').innerHTML=facs.map(f=>
+    `<button class="fac-btn${f.key===state.faction?' active':''}" onclick="setFaction('${f.key}')">
+      ${f.label}<span class="fac-count">${f.count} Archetypes</span>
+    </button>`
+  ).join('');
+
+  // Archetype grid
+  const archs=ARCHETYPES[state.faction];
+  document.getElementById('archGrid').innerHTML=archs.map(a=>{
+    const attrs=a.attrs;
+    const srp=`S:${getSRP(attrs.PER)} R:${getSRP(attrs.DEX)} P:${getSRP(attrs.WIL)}`;
+    const psiRows=a.psi?Object.entries(a.psi).map(([k,v])=>`<div class="ac"><span class="al">${k}</span><span class="av" style="color:#a07ac8">${v}</span></div>`).join(''):'';
+    const sel=a.id===state.archId;
+    return`<div class="arch-card${sel?' selected':''}" onclick="selectArch('${a.id}')">
+      ${sel?'<div class="sel-badge">&#10003;</div>':''}
+      <div class="arch-name">${a.name}</div>
+      <div class="arch-desc">${a.desc}</div>
+      <div class="arch-attrs">
+        ${Object.entries(attrs).map(([k,v])=>`<div class="ac"><span class="al">${k}</span><span class="av">${v}</span></div>`).join('')}
+        ${psiRows}
+        ${a.cyborg?'<div class="ac" style="grid-column:span 3;text-align:left;font-size:10px;color:var(--dust);padding:3px 5px">+1D Resist Damage (cybernetics; starts with 17D)</div>':''}
+      </div>
+      <div class="arch-srp">SRP: <span>${srp}</span></div>
+      <div class="arch-mem"><strong>${a.memento.name}</strong>${a.memento.bonus}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('toStep1').disabled=!state.archId;
+}
+
+function renderStep1(){
+  // Populate quirk select
+  const qSel=document.getElementById('quirkSel');
+  if(qSel.options.length===1){
+    QUIRKS.forEach(q=>{
+      const o=document.createElement('option');
+      o.value=q.code;
+      o.textContent=`[${q.code}] ${q.name}`;
+      qSel.appendChild(o);
+    });
+  }
+  if(state.quirk) qSel.value=state.quirk.code;
+
+  // Populate motive select
+  const mSel=document.getElementById('motiveSel');
+  if(mSel.options.length===1){
+    MOTIVES.forEach(m=>{
+      const o=document.createElement('option');
+      o.value=m.code;
+      o.textContent=`[${m.code}] ${m.name}`;
+      mSel.appendChild(o);
+    });
+  }
+  if(state.motive) mSel.value=state.motive.code;
+
+  // Name
+  document.getElementById('charName').value=state.name;
+
+  updateQuirkUI();
+  updateMotiveUI();
+  updateRAUI();
+}
+
+function updateQuirkUI(){
+  const qd=document.getElementById('quirkDesc');
+  if(state.quirk){
+    qd.textContent=state.quirk.desc;
+    qd.style.display='block';
+  } else {
+    qd.style.display='none';
+  }
+}
+
+function updateRAUI(){
+  const c=document.getElementById('raContainer');
+  if(!state.quirk){
+    c.innerHTML='<div class="ra-note">Select a Quirk first to unlock a Remarkable Ability.</div>';
+    return;
+  }
+  let html='<select class="sel" id="abilitySel" onchange="pickAbility(this.value)"><option value="">-- Choose an ability --</option>';
+  ABILITIES.forEach(a=>{
+    const sel=state.ability&&state.ability.name===a.name?' selected':'';
+    html+=`<option value="${a.name}"${sel}>${a.name}</option>`;
+  });
+  html+='</select>';
+  if(state.ability){
+    html+=`<div class="picked-desc">${state.ability.desc}</div>`;
+  }
+  c.innerHTML=html;
+}
+
+function updateMotiveUI(){
+  const md=document.getElementById('motiveDesc');
+  if(state.motive){
+    md.textContent=`Your Motive: ${state.motive.name}. Staying true to it each session earns bonus XP.`;
+    md.style.display='block';
+  } else {
+    md.style.display='none';
+  }
+}
+
+function renderStep2(){
+  renderPoolBar();
+  renderSkillSections();
+}
+
+function renderPoolBar(){
+  const left=poolLeft();
+  const dice=[];
+  for(let i=0;i<7;i++) dice.push(`<div class="die-pip${i>=left?' used':''}">D</div>`);
+  document.getElementById('poolDice').innerHTML=dice.join('');
+  document.getElementById('poolRem').innerHTML=`${left} <small>/ 7D</small>`;
+}
+
+function renderSkillSections(){
+  const arch=getArch();
+  if(!arch){document.getElementById('skillSections').innerHTML='';return;}
+  let html='';
+
+  for(const attr of SKILL_ATTRS){
+    const attrCode=arch.attrs[attr]||'0D';
+    html+=`<div class="attr-sec">
+      <div class="attr-hdr">
+        <span class="ah-name">${attr}</span>
+        <span class="ah-die">${attrCode}</span>
+        <span class="ah-full">${ATTR_FULL[attr]}</span>
+      </div>`;
+    for(const sk of SKILLS_BY_ATTR[attr]){
+      const key=attr+'.'+sk;
+      const alloc=state.skills[key]||0;
+      const total=skillTotal(attrCode,alloc);
+      const left=poolLeft();
+      html+=`<div class="skill-row">
+        <span class="sk-name">${sk}</span>
+        <div class="stepper">
+          <button class="sb${alloc===0?' act':''}" onclick="setSkill('${key}',0)">+0D</button>
+          <button class="sb${alloc===1?' act':''}" onclick="setSkill('${key}',1)"${alloc<1&&left<1?' disabled':''}>+1D</button>
+          <button class="sb${alloc===2?' act':''}" onclick="setSkill('${key}',2)"${alloc<2&&left<1?' disabled':''}>+2D</button>
+        </div>
+        <span class="sk-total${alloc>0?' boosted':''}">${total}</span>
+      </div>`;
+    }
+    html+='</div>';
+  }
+
+  // PSI section for mutants
+  if(arch.psi){
+    html+=`<div class="attr-sec psi">
+      <div class="attr-hdr"><span class="ah-name">PSI Skills</span><span class="ah-full" style="color:#7a6098">Psionic -- not governed by an Attribute</span></div>
+      <div class="psi-note">PSI Skills (DIV, MAN) roll their own die code. TRA starts at 0D and requires 6 XP to acquire after play begins.</div>`;
+    for(const [psi,psiCode] of Object.entries(arch.psi)){
+      const key='PSI.'+psi;
+      const alloc=state.skills[key]||0;
+      const base=parseDie(psiCode);
+      const total=dieStr(base.d+alloc,base.p);
+      const left=poolLeft();
+      const psiNames={DIV:'Divination',MAN:'Manipulation'};
+      html+=`<div class="skill-row">
+        <span class="sk-name" style="color:#a07ac8">${psiNames[psi]||psi} (${psi})</span>
+        <div class="stepper">
+          <button class="sb${alloc===0?' act':''}" onclick="setSkill('${key}',0)">+0D</button>
+          <button class="sb${alloc===1?' act':''}" onclick="setSkill('${key}',1)"${alloc<1&&left<1?' disabled':''}>+1D</button>
+          <button class="sb${alloc===2?' act':''}" onclick="setSkill('${key}',2)"${alloc<2&&left<1?' disabled':''}>+2D</button>
+        </div>
+        <span class="sk-total${alloc>0?' boosted':''}" style="color:#a07ac8">${total}</span>
+      </div>`;
+    }
+    html+='</div>';
+  }
+
+  document.getElementById('skillSections').innerHTML=html;
+}
+
+function renderStep3(){
+  const arch=getArch();
+  if(!arch){document.getElementById('dossier').innerHTML='<div class="empty-state">No archetype selected.</div>';return;}
+
+  const factionLabel={ape:'Ape Society',human:'Human',mutant:'Mutant'}[state.faction]||'';
+  const name=state.name||'[Unnamed]';
+  const attrs=arch.attrs;
+  const psi=arch.psi||{};
+
+  // SRP
+  const sur=getSRP(attrs.PER),read=getSRP(attrs.DEX),psy=getSRP(attrs.WIL);
+  const heroMod=state.ability&&state.ability.name==='Heroic Destiny'?' + 1D/session':'';
+
+  // Attrs block
+  const attrOrder=['DEX','PER','KNO','STR','MEC','WIL'];
+  let attrHtml=`<div class="attr-sum-grid">
+    ${attrOrder.map(a=>`<div class="asb"><span class="asl">${a}</span><span class="asv">${attrs[a]||'0D'}</span></div>`).join('')}
+    ${Object.entries(psi).map(([k,v])=>`<div class="asb"><span class="asl" style="color:#a07ac8">${k}</span><span class="asv" style="color:#a07ac8">${v}</span></div>`).join('')}
+    ${arch.cyborg?'<div class="asb" style="grid-column:span 2"><span class="asl">CYBORG</span><span class="asv" style="font-size:11px;color:var(--dust)">+1D Resist Dmg</span></div>':''}
+  </div>`;
+
+  // Skills by attr
+  let skillsHtml='<div class="skills-sum">';
+  for(const attr of SKILL_ATTRS){
+    const attrCode=attrs[attr]||'0D';
+    skillsHtml+=`<div class="sab"><div class="sab-title">${attr} -- ${ATTR_FULL[attr]}</div>`;
+    for(const sk of SKILLS_BY_ATTR[attr]){
+      const key=attr+'.'+sk;
+      const alloc=state.skills[key]||0;
+      const total=skillTotal(attrCode,alloc);
+      skillsHtml+=`<div class="sl-row${alloc>0?' boosted':''}">
+        <span class="sln">${sk}</span>
+        <span class="slv">${total}</span>
+      </div>`;
+    }
+    skillsHtml+='</div>';
+  }
+  if(Object.keys(psi).length){
+    skillsHtml+=`<div class="sab"><div class="sab-title" style="color:#a07ac8">PSI Skills</div>`;
+    for(const [psiKey,psiCode] of Object.entries(psi)){
+      const key='PSI.'+psiKey;
+      const alloc=state.skills[key]||0;
+      const base=parseDie(psiCode);
+      const total=dieStr(base.d+alloc,base.p);
+      const psiNames={DIV:'Divination',MAN:'Manipulation'};
+      skillsHtml+=`<div class="sl-row${alloc>0?' boosted':''}">
+        <span class="sln" style="color:#a07ac8">${psiNames[psiKey]||psiKey}</span>
+        <span class="slv" style="color:#a07ac8">${total}</span>
+      </div>`;
+    }
+    skillsHtml+='</div>';
+  }
+  skillsHtml+='</div>';
+
+  // Money
+  let moneyHtml='';
+  if(arch.money.base===null){
+    moneyHtml=`<div class="money-text">No currency (${factionLabel} does not use gridgens)</div>`;
+  } else if(arch.money.base===0){
+    moneyHtml=`<div class="money-text">None (tribal humans do not use ape currency)</div>`;
+  } else {
+    moneyHtml=`<div class="money-text">${arch.money.base}<em>g</em> starting${arch.money.savings?' + roll 2Dx10 for savings':''}</div>`;
+  }
+
+  document.getElementById('dossier').innerHTML=`
+    <div class="dos-hdr">
+      <div>
+        <div class="dos-name">${name}</div>
+        <div class="dos-arch">${arch.name}</div>
+      </div>
+      <div class="dos-badge">${factionLabel}</div>
+    </div>
+
+    <div class="dos-sec">
+      <div class="dos-sec-title">Attributes</div>
+      ${attrHtml}
+      <div class="srp-row">
+        <div class="srp-b"><div class="sl">Surprised (S)</div><div class="sv">${sur}</div><div class="sd">PER ${parseDie(attrs.PER).d} x 3</div></div>
+        <div class="srp-b"><div class="sl">Readied (R)</div><div class="sv">${read}</div><div class="sd">DEX ${parseDie(attrs.DEX).d} x 3</div></div>
+        <div class="srp-b"><div class="sl">Psyche (P)</div><div class="sv">${psy}</div><div class="sd">WIL ${parseDie(attrs.WIL).d} x 3</div></div>
+      </div>
+    </div>
+
+    <div class="dos-sec">
+      <div class="dos-sec-title">Skills (7D allocated -- max 2D per skill)</div>
+      ${skillsHtml}
+    </div>
+
+    <div class="dos-sec">
+      <div class="dos-sec-title">Persona</div>
+      <div class="per-sum">
+        ${state.quirk?`<div class="per-item"><span class="pil">Quirk</span><div><div class="piv">${state.quirk.name} [${state.quirk.code}]</div><div class="pid">${state.quirk.desc}</div></div></div>`:'<div class="per-item"><span class="pil">Quirk</span><div class="piv" style="color:var(--dust)">None chosen</div></div>'}
+        ${state.ability?`<div class="per-item"><span class="pil">Ability</span><div><div class="piv">${state.ability.name}</div><div class="pid">${state.ability.desc}</div></div></div>`:''}
+        ${state.motive?`<div class="per-item"><span class="pil">Motive</span><div class="piv">${state.motive.name} [${state.motive.code}]</div></div>`:'<div class="per-item"><span class="pil">Motive</span><div class="piv" style="color:var(--dust)">None chosen</div></div>'}
+      </div>
+    </div>
+
+    <div class="dos-sec">
+      <div class="dos-sec-title">Memento</div>
+      <div class="mem-block">
+        <strong>${arch.memento.name}</strong>
+        <span>${arch.memento.bonus}</span>
+      </div>
+    </div>
+
+    <div class="dos-sec" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="dos-sec-title">Hero Points</div>
+        <div class="hp-block"><span class="hl">Starting</span><span class="hv">6${heroMod}</span></div>
+      </div>
+      <div>
+        <div class="dos-sec-title">Starting Money</div>
+        ${moneyHtml}
+      </div>
+    </div>
+    ${arch.cyborg?`<div class="dos-sec" style="border-top:1px solid var(--psi-border)">
+      <div class="dos-sec-title" style="color:#a07ac8">Cyborg Components</div>
+      <div style="font-size:13px;color:var(--dust)">Starts with 17D Attribute Dice (18D minus 1D in cybernetics). Grants +1D Bonus to Resist Damage. Medical healing (KNO) has base DN +10; MEC (Repair/Disable) can be used instead with no Penalty.</div>
+    </div>`:''}
+  `;
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+function setFaction(f){
+  state.faction=f;
+  if(state.archId){
+    const inFaction=ARCHETYPES[f].find(a=>a.id===state.archId);
+    if(!inFaction){state.archId=null;state.skills={};}
+  }
+  renderStep0();
+}
+
+function selectArch(id){
+  state.archId=id;
+  initSkills();
+  renderStep0();
+}
+
+function goTo(step){
+  if(step===2&&Object.keys(state.skills).length===0) initSkills();
+  state.step=step;
+  document.querySelectorAll('.step-content').forEach(el=>el.classList.remove('active'));
+  document.getElementById('step'+step).classList.add('active');
+  renderStepTrack();
+  if(step===0) renderStep0();
+  if(step===1) renderStep1();
+  if(step===2) renderStep2();
+  if(step===3) renderStep3();
+  window.scrollTo(0,0);
+}
+
+function rollD66(type){
+  const{num,code}=rollD66Num();
+  if(type==='quirk'){
+    const q=QUIRKS.find(x=>x.code===code)||QUIRKS[0];
+    document.getElementById('quirkRollResult').textContent=`[${code}]`;
+    document.getElementById('quirkSel').value=code;
+    pickQuirk(code);
+  } else {
+    const m=MOTIVES.find(x=>x.code===code)||MOTIVES[0];
+    document.getElementById('motiveRollResult').textContent=`[${code}]`;
+    document.getElementById('motiveSel').value=code;
+    pickMotive(code);
+  }
+}
+
+function pickQuirk(code){
+  if(!code){state.quirk=null;state.ability=null;}
+  else{
+    state.quirk=QUIRKS.find(x=>x.code===code)||null;
+    if(!state.quirk) state.ability=null;
+  }
+  updateQuirkUI();
+  updateRAUI();
+}
+
+function pickAbility(name){
+  state.ability=name?ABILITIES.find(a=>a.name===name)||null:null;
+  updateRAUI();
+}
+
+function pickMotive(code){
+  state.motive=code?MOTIVES.find(m=>m.code===code)||null:null;
+  updateMotiveUI();
+}
+
+function setSkill(key,val){
+  const prev=state.skills[key]||0;
+  const left=poolLeft();
+  const delta=val-prev;
+  if(delta>left) return; // not enough pool
+  state.skills[key]=val;
+  renderPoolBar();
+  renderSkillSections();
+}
+
+function updateStepUI(){
+  // only needed for step 0 disable state
+  if(state.step===0) document.getElementById('toStep1').disabled=!state.archId;
+}
+
+function restart(){
+  state.step=0;state.faction='ape';state.archId=null;
+  state.name='';state.quirk=null;state.ability=null;state.motive=null;state.skills={};
+  goTo(0);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderStepTrack();
+renderStep0();
+</script>
