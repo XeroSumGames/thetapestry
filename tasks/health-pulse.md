@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-06 21:04 UTC
+
+**Status:** DRIFT (AGENTS.md violation now embedded in app)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (latest 2026-07-06T20:28 UTC)
+
+**New since 18:03 pulse — apegenerator violation deepened:**
+- `ac3eb10` (18:55 UTC) `feat: /ape-log visitor dashboard` — adds `app/ape-log/page.tsx` + `lib/data/ape-log.ts` + Sidebar link. The apegenerator is now a Next.js route + data library inside the Tapestry codebase, not just a static file.
+- `28bca62` (20:13 UTC) `feat(apegenerator): add 15 ANSA Sourcebook archetypes` — more content work.
+- Total: 10+ apegenerator commits in thetapestry since first flag at 15:05 UTC. Each one deepens the removal cost.
+
+**Positive update:**
+- `631b234` reconcile hook foundation shipped — `usePostgresSubscription` opt-in `reconcile` net is live; migration of RollsFeed/TableChat/CampaignPins/PlayerNotes still pending.
+
+**Drift (carry-over):**
+- HOPED-FOR trio (25+ days stale): Stress Check 12-string, FI Insight Die AWARD path, Vehicle popout broadcasts
+- `check-arch Array.from(` ratchet bug (`scripts/check-arch.mjs:96`) — 6 days unaddressed
+- Vehicles 3s poll (`page.tsx:3090`) — 7 days unaddressed
+
+**Action:** Apegenerator decision needed NOW — removal + own repo is getting harder with each commit. `app/ape-log/`, `lib/data/ape-log.ts`, Sidebar changes, and `public/apegenerator/` all need to move. Then HOPED-FOR drain.
+
+---
+
 ## 2026-07-06 18:03 UTC
 
 **Status:** DRIFT (escalation on prior AGENTS.md violation)
