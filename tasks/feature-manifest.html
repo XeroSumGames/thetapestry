@@ -1,0 +1,335 @@
+<title>TheTapestry - Feature Manifest</title>
+<style>
+  :root{
+    --ground:#17130f; --panel:#211b15; --panel-2:#2a2219;
+    --hair:#3a2f26; --hair-2:#4a3c30;
+    --ink:#f2ede4; --muted:#a89a8c; --faint:#7a6e62;
+    --red:#c0392b; --red-dim:#8f2d23;
+    --green:#7fc458; --amber:#d99a2b;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(1200px 600px at 80% -10%,rgba(192,57,43,.07),transparent 60%);}
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px 80px}
+
+  /* ---- masthead ---- */
+  header{padding:38px 0 22px;border-bottom:1px solid var(--hair)}
+  .stamp{font-family:var(--mono);font-size:13px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--red);display:flex;align-items:center;gap:10px}
+  .stamp::before{content:"";width:26px;height:2px;background:var(--red)}
+  h1{font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-.02em;text-wrap:balance;
+    margin:.28em 0 .15em;line-height:1.02}
+  .sub{color:var(--muted);max-width:60ch;font-size:15px;margin:0}
+
+  /* ---- progress dock ---- */
+  .dock{position:sticky;top:0;z-index:20;background:rgba(23,19,15,.93);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--hair);margin-top:22px}
+  .dock-in{max-width:940px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .tally{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--muted);
+    display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+  .tally b{font-size:20px;color:var(--green);font-variant-numeric:tabular-nums;font-weight:700}
+  .tally .of{color:var(--faint)}
+  .bar{flex:1 1 200px;height:8px;background:var(--panel-2);border-radius:6px;overflow:hidden;
+    border:1px solid var(--hair)}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--amber) 55%,var(--green));
+    transition:width .4s ease}
+  .filters{display:flex;gap:6px}
+  .filters button, .reset{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--panel);color:var(--muted);border:1px solid var(--hair);border-radius:5px;
+    padding:6px 11px;cursor:pointer;transition:color .15s,border-color .15s,background .15s}
+  .filters button:hover,.reset:hover{color:var(--ink);border-color:var(--hair-2)}
+  .filters button[aria-pressed="true"]{color:var(--ink);border-color:var(--red-dim);background:var(--panel-2)}
+  .flagpill{color:var(--amber)}
+  .reset{margin-left:auto}
+  .reset[data-armed="1"]{color:var(--red);border-color:var(--red-dim)}
+
+  /* ---- sections ---- */
+  section{margin-top:34px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:9px;
+    border-bottom:1px solid var(--hair);margin-bottom:4px}
+  .sec-head h2{font-size:17px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0}
+  .sec-idx{font-family:var(--mono);font-size:12px;color:var(--red);letter-spacing:.1em}
+  .sec-count{font-family:var(--mono);font-size:12px;color:var(--faint);margin-left:auto;
+    letter-spacing:.08em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sec-count b{color:var(--green)}
+
+  ul{list-style:none;margin:0;padding:0}
+  li.row{display:flex;align-items:flex-start;gap:12px;padding:11px 6px;border-bottom:1px solid rgba(58,47,38,.5)}
+  li.row:last-child{border-bottom:0}
+  .box{flex:0 0 auto;width:20px;height:20px;margin-top:1px;border:1.5px solid var(--hair-2);border-radius:4px;
+    background:var(--panel);cursor:pointer;position:relative;transition:border-color .15s,background .15s}
+  .box:hover{border-color:var(--green)}
+  .box::after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;
+    border:solid var(--ground);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);
+    transition:transform .12s ease}
+  .lbl{flex:1 1 auto;cursor:pointer}
+  .lbl-t{font-size:15.5px;font-weight:600}
+  .lbl-n{font-size:13px;color:var(--muted);margin-top:1px}
+  .flag{flex:0 0 auto;width:26px;height:26px;border:0;background:transparent;cursor:pointer;
+    color:var(--faint);font-size:15px;line-height:1;border-radius:5px;transition:color .15s,background .15s}
+  .flag:hover{color:var(--amber);background:var(--panel)}
+
+  li.row.done .box{background:var(--green);border-color:var(--green)}
+  li.row.done .box::after{transform:rotate(45deg) scale(1)}
+  li.row.done .lbl-t{color:var(--faint);text-decoration:line-through;text-decoration-color:var(--hair-2)}
+  li.row.done .lbl-n{color:var(--faint)}
+  li.row.flagged{background:linear-gradient(90deg,rgba(217,154,43,.09),transparent 70%)}
+  li.row.flagged .flag{color:var(--amber)}
+  li.row.flagged .lbl-t::after{content:" - needs a look";color:var(--amber);font-weight:600;font-size:12.5px;
+    letter-spacing:.04em;text-decoration:none;display:inline}
+
+  body.f-todo li.row.done{display:none}
+  body.f-flag li.row:not(.flagged){display:none}
+  body.f-todo section[data-empty="1"],body.f-flag section[data-empty="1"]{display:none}
+
+  /* ---- gaps ---- */
+  .gaps{margin-top:44px;background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:20px 22px}
+  .gaps h2{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 4px}
+  .gaps p{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:64ch}
+  .gaps ul{display:grid;gap:9px}
+  .gaps li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px}
+  .gaps li::before{content:"\2014";color:var(--amber);flex:0 0 auto}
+  .gaps .g-n{color:var(--faint);font-size:13px}
+  footer{margin-top:36px;color:var(--faint);font-size:12.5px;font-family:var(--mono);
+    letter-spacing:.05em;text-align:center}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="stamp">Supply Manifest &middot; District Zero</div>
+    <h1>TheTapestry &mdash; Feature Manifest</h1>
+    <p class="sub">Everything the engine can do, laid out crate by crate. Walk the table, confirm each one works on live, and tick it off. Flag anything that limps. Your checks are saved on this device.</p>
+  </header>
+
+  <div class="dock">
+    <div class="dock-in">
+      <div class="tally"><b id="doneN">0</b><span class="of">/</span><span id="totalN">0</span><span>verified</span>
+        <span id="flagN" class="flagpill" hidden>&nbsp;&middot; <span id="flagC">0</span> flagged</span></div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="filters" role="group" aria-label="Filter">
+        <button data-f="all" aria-pressed="true">All</button>
+        <button data-f="todo" aria-pressed="false">To verify</button>
+        <button data-f="flag" aria-pressed="false">Flagged</button>
+      </div>
+      <button class="reset" id="reset" data-armed="0">Reset</button>
+    </div>
+  </div>
+
+  <main id="mount"></main>
+
+  <div class="gaps">
+    <h2>Not built yet &middot; deferred, off the pre-launch path</h2>
+    <p>Named here so the manifest tells the whole truth. None of these block go-live; the canon calls wait on you.</p>
+    <ul>
+      <li><div><strong>Lv4 Skill Traits</strong> &mdash; auto-bonuses (Beacon of Hope, Insightful Counselor, etc.) <span class="g-n">Ships together once you hand over the full trait list. The Evolution modal reaches Lv4 but has no trait picker yet.</span></div></li>
+      <li><div><strong>Weapon damage-balance pass</strong> <span class="g-n">Revolver added; a consistency review across the whole catalog is your canon call on the numbers.</span></div></li>
+      <li><div><strong>Player-to-player item trade</strong> <span class="g-n">Not a security hole, just not wired. A feature call: build it for beta or leave it off.</span></div></li>
+      <li><div><strong>Hidden-NPC fog occlusion</strong> <span class="g-n">A revealed token showing only when a player's PC can see the cell. Nice-to-have, rides on per-player vision.</span></div></li>
+      <li><div><strong>Encumbrance movement-halving</strong> <span class="g-n">The RP-drain half is live; halving an overloaded token's tactical movement is not wired.</span></div></li>
+    </ul>
+  </div>
+
+  <footer id="foot">MANIFEST v1 &middot; built from live routes + rules pages</footer>
+</div>
+
+<script>
+const DATA = [
+  {name:"Character", items:[
+    ["char-create","Character creation - three paths","Random, Quick, and Full Backstory paradigms"],
+    ["rapid","RAPID attributes","Reason, Acumen, Physicality, Influence, Dexterity"],
+    ["secondary","Secondary stats","Wound + Resolve points, defenses, initiative, perception, encumbrance"],
+    ["skills","29 skills across the five attributes",""],
+    ["comp-motiv","Complications & Motivations",""],
+    ["insight","Insight Dice",""],
+    ["evolution","Character evolution / leveling","CDP progression + the Evolution modal"],
+    ["apprentices","Apprentices",""],
+    ["pregens","Pregenerated characters","Library + one-click Use into a campaign"],
+    ["char-sheet","Play-view character sheet",""],
+    ["portraits","Portraits & photos",""],
+  ]},
+  {name:"Core Play & Checks", items:[
+    ["dice-check","The 2d6 dice-check engine",""],
+    ["attr-check","Attribute checks",""],
+    ["skill-check","Skill checks",""],
+    ["modifiers","Modifier stack","AMod / SMod / CMod"],
+    ["first-imp","First Impressions","Stored per PC + per NPC, auto-applied to later social rolls"],
+    ["insight-award","Insight spend & award",""],
+    ["group-check","Coordinated Effort / group checks",""],
+    ["negotiations","Negotiations & Making the Case",""],
+    ["gaps","Filling in the Gaps",""],
+  ]},
+  {name:"Combat", items:[
+    ["initiative","Turn order & combat rounds",""],
+    ["attacks","Ranged & melee attacks",""],
+    ["damage","Damage to Wound / Resolve",""],
+    ["incap","Incapacitation & mortal wounds",""],
+    ["stress","Stress & stress checks","The 8 special-check narratives"],
+    ["healing","Healing",""],
+    ["infection","Wound infection & sickness",""],
+    ["disarm","Disarm",""],
+    ["grapple","Grapple",""],
+    ["pistol-whip","Pistol-whip - improvised melee with a gun",""],
+    ["range","Range bands",""],
+    ["bestiary","Bestiary / NPC statblocks",""],
+    ["env-dmg","Environmental damage",""],
+  ]},
+  {name:"Equipment & Inventory", items:[
+    ["inventory","Character inventory",""],
+    ["custom-items","Custom items",""],
+    ["encumbrance","Encumbrance (Resolve drain)",""],
+    ["weapons","Weapons catalog",""],
+    ["armor","Armor - worn, condition, upkeep",""],
+    ["item-cond","Item condition & traits",""],
+    ["weapon-repair","Weapon repair",""],
+    ["rations","Rations","Standard, Luxury, Military"],
+    ["upkeep","Upkeep phase",""],
+    ["loot","Loot & search - containers and corpses",""],
+    ["npc-trade","Trade with NPCs",""],
+    ["stockpile","Stockpiles & vehicle cargo",""],
+    ["tokens","Token & object library",""],
+  ]},
+  {name:"The Table", items:[
+    ["tac-map","Tactical map - grid, tokens, movement",""],
+    ["fog","Fog of war, vision & lighting",""],
+    ["walls","Walls & line of sight",""],
+    ["camp-map","Campaign map with pins",""],
+    ["pin-reveal","Reveal / hide pins to players",""],
+    ["pings","Pings, measure tool, route & view sharing",""],
+    ["table-npcs","NPCs on the table","Reveal + “Also Here” on pins"],
+    ["init-track","Initiative tracker",""],
+    ["roll-feed","Live dice roll feed",""],
+    ["chat","Table chat + GM whispers",""],
+    ["notes","GM notes & handouts","Shared vs GM-only split"],
+    ["vehicles","Vehicles - popout, seats, firing arcs, cargo",""],
+    ["realtime","Real-time multi-client sync",""],
+    ["recorder","Playtest recorder",""],
+  ]},
+  {name:"Campaigns & Content", items:[
+    ["stories","Stories / campaigns",""],
+    ["members","Members & invite codes",""],
+    ["settings","Settings","District Zero, Kings Crossroads, Custom"],
+    ["modules","Modules / Rumors","Publish, version, marketplace, import"],
+    ["gm-kit","GM Kit import",""],
+    ["snapshots","Progression log & session snapshots",""],
+    ["clock","Campaign clock & in-world time",""],
+    ["world-map","World map (global pins)",""],
+  ]},
+  {name:"Communities", items:[
+    ["comm-struct","Community creation & structure",""],
+    ["morale","Morale",""],
+    ["recruit","Recruitment",""],
+    ["activity","Activity blocks",""],
+    ["comm-stock","Community stockpile",""],
+    ["migrations","Migrations & events",""],
+    ["growth","Growth notifications",""],
+  ]},
+  {name:"Social & Meta", items:[
+    ["campfire","Campfire hub",""],
+    ["forums","Forums",""],
+    ["war-stories","War Stories",""],
+    ["lfg","Looking for Group",""],
+    ["messages","Direct messages",""],
+    ["notifs","Notifications",""],
+    ["roles","Roles & moderation","Thriver / Survivor / Ghost"],
+    ["onboarding","Onboarding & user guide",""],
+    ["rules-ref","In-app rules reference","The full compendium at /rules"],
+  ]},
+];
+
+const VER="tapestry-features-v1";
+// id -> {d:bool,f:bool}. localStorage wrapped so a browser that blocks it
+// (private mode, sandboxed frame) degrades to in-session state instead of a
+// blank page.
+let state={};
+try{ state=JSON.parse(localStorage.getItem(VER)||"{}") }catch(e){ state={} }
+const mount=document.getElementById("mount");
+let total=0;
+
+DATA.forEach((sec,si)=>{
+  const s=document.createElement("section");
+  s.dataset.sec=si;
+  const idx=String(si+1).padStart(2,"0");
+  s.innerHTML=`<div class="sec-head"><span class="sec-idx">${idx}</span>
+    <h2>${sec.name}</h2><span class="sec-count" data-cc></span></div>`;
+  const ul=document.createElement("ul");
+  sec.items.forEach(([id,label,note])=>{
+    total++;
+    const st=state[id]||{};
+    const li=document.createElement("li");
+    li.className="row"+(st.d?" done":"")+(st.f?" flagged":"");
+    li.dataset.id=id;
+    li.innerHTML=`<span class="box" role="checkbox" tabindex="0" aria-checked="${!!st.d}" aria-label="Verified"></span>
+      <span class="lbl"><span class="lbl-t">${label}</span>${note?`<span class="lbl-n">${note}</span>`:""}</span>
+      <button class="flag" title="Flag - needs a look" aria-label="Flag this feature">⚑</button>`;
+    ul.appendChild(li);
+  });
+  s.appendChild(ul);
+  mount.appendChild(s);
+});
+document.getElementById("totalN").textContent=total;
+
+function save(){try{localStorage.setItem(VER,JSON.stringify(state))}catch(e){}}
+function get(id){return state[id]||(state[id]={})}
+
+function toggle(id,key){const st=get(id);st[key]=!st[key];if(!st.d&&!st.f)delete state[id];save();paint()}
+
+function paint(){
+  let done=0,flag=0;
+  document.querySelectorAll("li.row").forEach(li=>{
+    const st=state[li.dataset.id]||{};
+    li.classList.toggle("done",!!st.d);
+    li.classList.toggle("flagged",!!st.f);
+    li.querySelector(".box").setAttribute("aria-checked",!!st.d);
+    if(st.d)done++; if(st.f)flag++;
+  });
+  document.querySelectorAll("section[data-sec]").forEach(s=>{
+    const rows=[...s.querySelectorAll("li.row")];
+    const dn=rows.filter(r=>(state[r.dataset.id]||{}).d).length;
+    s.querySelector("[data-cc]").innerHTML=`<b>${String(dn).padStart(2,"0")}</b> / ${String(rows.length).padStart(2,"0")}`;
+    const vis=rows.some(r=>getComputedStyle(r).display!=="none");
+    s.dataset.empty=vis?"0":"1";
+  });
+  document.getElementById("doneN").textContent=done;
+  document.getElementById("barFill").style.width=(total?done/total*100:0)+"%";
+  const fp=document.getElementById("flagN");
+  fp.hidden=flag===0; document.getElementById("flagC").textContent=flag;
+}
+
+mount.addEventListener("click",e=>{
+  const li=e.target.closest("li.row"); if(!li)return;
+  if(e.target.closest(".flag")) return toggle(li.dataset.id,"f");
+  if(e.target.closest(".box")||e.target.closest(".lbl")) return toggle(li.dataset.id,"d");
+});
+mount.addEventListener("keydown",e=>{
+  if((e.key===" "||e.key==="Enter")&&e.target.classList.contains("box")){
+    e.preventDefault(); toggle(e.target.closest("li.row").dataset.id,"d");
+  }
+});
+
+const fbtns=[...document.querySelectorAll(".filters button")];
+fbtns.forEach(b=>b.addEventListener("click",()=>{
+  fbtns.forEach(x=>x.setAttribute("aria-pressed",x===b));
+  document.body.classList.remove("f-todo","f-flag");
+  if(b.dataset.f==="todo")document.body.classList.add("f-todo");
+  if(b.dataset.f==="flag")document.body.classList.add("f-flag");
+  paint();
+}));
+
+const reset=document.getElementById("reset");
+let armed=null;
+reset.addEventListener("click",()=>{
+  if(reset.dataset.armed==="1"){
+    clearTimeout(armed); reset.dataset.armed="0"; reset.textContent="Reset";
+    for(const k in state)delete state[k]; save(); paint();
+  }else{
+    reset.dataset.armed="1"; reset.textContent="Tap again to clear";
+    armed=setTimeout(()=>{reset.dataset.armed="0";reset.textContent="Reset"},3000);
+  }
+});
+
+paint();
+</script>
