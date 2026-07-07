@@ -8,6 +8,44 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-07-07 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (carry-overs), rate-limit / DoS (carry-over), dependency drift
+
+**Progress since last audit (2026-06-30):**
+- `next` bumped 16.2.6 → 16.2.9 (patch — addressed from last week's item 4).
+- `@sentry/nextjs` bumped 10.51.0 → 10.58.0 (4 minor behind now, down from 11).
+
+**Sections clean this cycle:** auth/role gates (guardrail: 347 files, 0 violations), RLS gaps (all accessed tables have RLS-enable SQL files), file uploads (all paths route through `prepareUpload` or canvas-resize pipeline — portrait-bank/npc-portraits upload canvas-processed blobs with hardcoded `image/jpeg`, not raw user files), secrets exposure (no committed .env files, no hardcoded tokens), injection/XSS (both `dangerouslySetInnerHTML` and `innerHTML` hits are static strings — not user-controlled), permission boundaries (all `isThriver` state variables populate via `roleIsThriver(profile)` from `lib/auth/roles.ts`).
+
+### npm audit (moderate+)
+
+All three are unchanged carry-overs. No new advisories this cycle.
+
+- `postcss` 8.4.31 — moderate — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — **carry-over; low runtime risk** (build-time only; app does not process user CSS at runtime)
+- `next` 9.3.4-canary.0–16.3.0-canary.5 — moderate — isDirect: true — via postcss chain — fix: breaking major downgrade — hold
+- `@sentry/nextjs` >=6.3.6 — moderate — isDirect: true — via next chain — fix: breaking downgrade to 6.3.5 — hold
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` — GET, unauthenticated — DB ping cached 10s (mitigates DB amplification) — **still no HTTP-level rate limit** — a flood of requests still hits Next.js worker threads with no back-pressure — **7th consecutive audit, HTTP-level rate limit still missing** — add Upstash sliding window (10 req/min per IP) before paid launch.
+- `supabase/functions/log-visit` — `--no-verify-jwt`, no rate limit, no body-size cap — carry-over (advisory: `content-length` guard, reject >2 KB).
+
+### Dependency drift
+
+(`npm outdated` returned empty — likely registry unreachable in sandbox; versions from lockfile + last known latest.)
+
+- `@sentry/nextjs` — 10.58.0 installed → 10.62.0 latest (4 minor behind) — bump clears advisory residue.
+- `@supabase/supabase-js` — 2.100.1 installed → ~2.110.0 latest (10 minor behind) — **7th consecutive audit carry-over** — auth-adjacent; changelog review before bump.
+- `@supabase/ssr` — 0.9.0 installed → 0.12.0 latest — **7th consecutive audit carry-over** — review and bump.
+
+**Top 3 priorities:**
+1. `app/api/health/route.ts` — 7 audits deferred on HTTP rate limit; DB cache is in place, Upstash 10/min sliding window needed to close the HTTP flood surface before paid launch.
+2. `@supabase/supabase-js` 2.100.1 → ~2.110 and `@supabase/ssr` 0.9.0 → 0.12.0 — both 7 audits deferred; auth-adjacent staleness is rising risk.
+3. `supabase/functions/log-visit` — add `content-length` guard (reject >2 KB) on the no-auth edge function.
+
+---
+
 ## 2026-06-30 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (carry-overs), rate-limit / DoS (partial fix landed, HTTP layer still open), dependency drift
