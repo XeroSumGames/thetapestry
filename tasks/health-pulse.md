@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-07 09:03 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-07T06:05Z)
+
+**Drift (same 3 items — no code change, no playtest since 2026-06-16):**
+- **FI Insight Die award path** (~21 days stale) — `lib/useRollResolution.ts:264` never fired in live play; trigger is rolling doubles on FI check.
+- **Stress Check 12-string narrative** (~21 days stale) — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE unverified.
+- **Vehicle popout broadcasts** (~44 days stale) — `vehicle_updated`/`firing_arc_toggle` 2-client verification pending.
+
+**Action:** Persistent DRIFT — no playtest in 21 days. Schedule a session to hit these items before Beta-500 dry-run.
+
+---
+
 ## 2026-07-07 06:03 UTC
 
 **Status:** DRIFT
