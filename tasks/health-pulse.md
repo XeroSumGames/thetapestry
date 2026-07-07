@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-07 12:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-07T09:05Z)
+
+**Drift:**
+- **FI Insight Die award path** (~21 days stale) — `lib/useRollResolution.ts:264` never fired in live play.
+- **Stress Check 12-string narrative** (~21 days stale) — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE unverified.
+- **Vehicle popout broadcasts** (~44 days stale) — `vehicle_updated`/`firing_arc_toggle` 2-client confirmation pending.
+- **Stale-todo audit:** `todo.md` item "pin realtime propagation" is `[ ]` unchecked but its body says "SHIPPED 2026-05-27 - all 5 surfaces" — needs checkbox flipped to `[x]` by owning lane (HP/PF).
+
+**Action:** Same 3 HOPED-FOR items repeating; mark pin-realtime todo `[x]` and schedule a playtest to close the remaining 3.
+
+---
+
 ## 2026-07-07 09:03 UTC
 
 **Status:** DRIFT
