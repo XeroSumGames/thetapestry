@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-07 06:03 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-07T00:06Z)
+
+**Drift (same 3 items as 00:09 UTC run — no change):**
+- **FI Insight Die award path** (HOPED-FOR, ~21 days stale) — `lib/useRollResolution.ts:264` `insight_dice +1` has never fired in live play. Trigger: rolling doubles on a 2d6 FI check. No code activity on this path.
+- **Stress Check 12-string narrative** (HOPED-FOR, ~21 days stale) — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE strings unverified. Drain target: Beta-500 dry-run.
+- **Vehicle popout broadcasts** (HOPED-FOR, ~44 days stale since 2026-05-24) — `vehicle_updated`/`firing_arc_toggle` 2-client verification pending. Recent `631b234` touched adjacent realtime infra but doesn't close this gap.
+
+**Action:** No new gate failures. Playtest needed — target FI doubles roll + stress narrative triggers + vehicle 2-client broadcast confirmation.
+
+---
+
 ## 2026-07-07 00:09 UTC
 
 **Status:** DRIFT
