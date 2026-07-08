@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-08 18:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-08T15:06Z)
+
+**Drift:**
+- **FI Insight Die award path** (~26 days) — `lib/useRollResolution.ts:264` never fired in live play; drain target Beta-500 dry-run.
+- **Stress Check 12-string narrative** (~26 days) — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE unverified.
+- **Vehicle popout broadcasts** (~45 days) — `vehicle_updated`/`firing_arc_toggle` 2-client confirmation pending.
+
+**Note:** `check-arch.mjs` returns OK this run (previous 15:03 entry flagged it as unfixed). Either Array.from usage is currently absent from non-lib/data paths or baseline absorbed it. No block.
+
+**Action:** No change from prior runs. All 3 HOPED-FOR items need a playtest cycle to drain.
+
+---
+
 ## 2026-07-08 15:03 UTC
 
 **Status:** DRIFT (no change from 12:06 run; + 1 stale-todo finding)
