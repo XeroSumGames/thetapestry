@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-08 15:03 UTC
+
+**Status:** DRIFT (no change from 12:06 run; + 1 stale-todo finding)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-08T12:06Z)
+
+**Drift:**
+- **FI Insight Die award path** (~22 days) — `lib/useRollResolution.ts:264` never fired in live play.
+- **Stress Check 12-string narrative** (~22 days) — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE unverified.
+- **Vehicle popout broadcasts** (~45 days) — `vehicle_updated`/`firing_arc_toggle` 2-client confirmation pending.
+- **[NEW - stale-todo] check-arch Array.from bug** — `scripts/check-arch.mjs:96` regex `/\.from\(/g` still unfixed; ROUTED TO PUFFER in todo.md. Confirmed present. Causes false-positive seam-leakage counts on any `Array.from(` call outside `lib/data/`.
+
+**Action:** Same 3 playtest-needed items + Puffer should fix `check-arch.mjs:96` regex (negative-lookbehind or tighten pattern).
+
+---
+
 ## 2026-07-08 12:06 UTC
 
 **Status:** DRIFT (no change from 09:06 run)
