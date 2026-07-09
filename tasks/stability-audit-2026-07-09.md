@@ -12,12 +12,26 @@ auth/join/upload paths. NO code was changed in this pass (audit only).
 
 Tally: **1 CRITICAL, 15 HIGH, 17 MEDIUM, 8 LOW.**
 
-> **UPDATE 2026-07-09 (Puffer) - cluster 1 SHIPPED.** The CRITICAL + the T1
-> read-swallow cluster are fixed and on main: **C1** (characters.ts, +4 unit
-> tests), **H6** (modules archive gm_user_id), **H7** (reseed abort-on-read-err),
-> **M6** (scenes dup-token abort), **M9** (gm-kit fail-loud), **M10** (pending-heal
-> retry-not-consume). tsc + 913 tests + gates green. Remaining clusters 2-8
-> below still OPEN (mostly HP app-code + a few Puffer lib/realtime).
+> **UPDATE 2026-07-09 (Puffer) - clusters 1 + 4 SHIPPED.**
+> **Cluster 1 (T1 read-swallow):** C1 (characters.ts, +4 tests), H6 (modules
+> archive gm_user_id), H7 (reseed abort-on-read-err), M6 (scenes dup-token
+> abort), M9 (gm-kit fail-loud), M10 (pending-heal retry-not-consume).
+> **Cluster 4 (T4 realtime channel-reuse):** H13 (drainInfectionDays no longer
+> hangs the table - routed through broadcastOnce, no subscribe/removeChannel),
+> H15 (broadcastOnce rewritten to reuse-holder-or-REST, never subscribe; fixes
+> vehicle firing-arc + dismount), M12 (clock advance/setClock no longer
+> removeChannel the campaign sheet's live topic), M13 (presence tracker joined
+> with presence DISABLED -> track() dropped -> user invisible in "Survivors
+> present"; fixed with config.presence.enabled=true). New primitive
+> `sendBroadcastRaw` + typed `broadcastOnce` wrapper; +8 tests; channel seam
+> ratcheted 22->19. tsc + 917 tests + gates green. **M13 REMAINDER (follow-up,
+> LOW):** the tracker<->Sidebar transition race (grabbing the other's leaving
+> `global_presence` instance) is untouched - the enabled flag fixes the
+> deterministic majority case (fresh channel on a full-width route); the race
+> needs a coordinated single-owner refactor + 2-client verify.
+> **2-client verify owed** (Xero): clock-advance-during-infection doesn't hang;
+> pin reveal still propagates; vehicle firing-arc toggles cross-window; presence
+> count shows table users. Remaining clusters 2,3,5-8 still OPEN (mostly HP).
 
 ---
 

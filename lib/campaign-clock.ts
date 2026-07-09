@@ -13,6 +13,7 @@ import { createClient } from './supabase-browser'
 import { normalizeRations, LASTING_WOUNDS } from './xse-schema'
 import { OUTCOME } from './roll-outcomes'
 import { reportSupabaseError } from './supabase-errors'
+import { broadcastOnce, sendBroadcastRaw } from './realtime/broadcastOnce'
 
 export interface ClockState {
   canon_day: number
@@ -133,18 +134,10 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
   // clock state immediately, without waiting for postgres_changes to
   // propagate (faster + works around postgres_changes' UPDATE event
   // dropping when the row stays in RLS scope).
-  try {
-    const ch = supabase.channel(`campaign_clock_${campaignId}`)
-    await ch.send({
-      type: 'broadcast',
-      event: 'clock_advanced',
-      payload: { campaign_id: campaignId, clock: next, hours_advanced: hours },
-    })
-    supabase.removeChannel(ch)
-  } catch {
-    // Realtime broadcast best-effort; the postgres_changes
-    // subscription on campaigns also catches the update.
-  }
+  // Reuse the campaign sheet's live `campaign_clock_${id}` channel if it holds
+  // one (send over it), else REST. The old inline removeChannel tore down the
+  // sheet's own subscription when the GM advanced FROM the sheet.
+  await sendBroadcastRaw(`campaign_clock_${campaignId}`, 'clock_advanced', { campaign_id: campaignId, clock: next, hours_advanced: hours })
   return next
 }
 
@@ -554,24 +547,14 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
       // Check branch when the modal resolves; until then it sits and
       // re-opens the modal on every reload until someone rolls it.
       const targetUserId = isPc ? row.characters?.user_id : null
-      const ch = supabase.channel(`initiative_${campaignId}`)
-      try {
-        await new Promise<void>((resolve) => {
-          ch.subscribe(async (status: string) => {
-            if (status !== 'SUBSCRIBED') return
-            await ch.send({
-              type: 'broadcast',
-              event: 'lasting_damage_check_request',
-              payload: { targetUserId, name, kind, isPc },
-            })
-            resolve()
-          })
-        })
-      } catch (e) {
-        console.error('[drainInfectionDays] broadcast failed for', name, e)
-      } finally {
-        await supabase.removeChannel(ch)
-      }
+      // The table page holds a LIVE `initiative_${id}` channel. Hand-rolling
+      // channel().subscribe(send) here reused that instance, whose subscribe()
+      // no-ops (never fires) so this Promise hung forever and stalled the whole
+      // clock advance, and the finally removeChannel tore down the page's
+      // channel. broadcastOnce sends over the holder (or REST if none) without
+      // subscribing or removing. `kind` was vestigial - the receiver
+      // (table page lasting_damage_check_request handler) never read it.
+      await broadcastOnce(`initiative_${campaignId}`, 'lasting_damage_check_request', { targetUserId, name, isPc })
       // Clear the sick period AND raise the persistent pending flag.
       const clearAndFlag = { ...clear, infection_pending_lasting_check: true }
       await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update(clearAndFlag).eq('id', row.id)
@@ -830,14 +813,8 @@ export async function setClock(campaignId: string, canonDay: number, hour: numbe
     reportSupabaseError(error, 'campaign-clock:setClock')
     return null
   }
-  try {
-    const ch = supabase.channel(`campaign_clock_${campaignId}`)
-    await ch.send({
-      type: 'broadcast',
-      event: 'clock_set',
-      payload: { campaign_id: campaignId, clock: next },
-    })
-    supabase.removeChannel(ch)
-  } catch {}
+  // Reuse the campaign sheet's live channel if present (send only); the old
+  // inline removeChannel killed the sheet's own subscription.
+  await sendBroadcastRaw(`campaign_clock_${campaignId}`, 'clock_set', { campaign_id: campaignId, clock: next })
   return next
 }

@@ -24,7 +24,13 @@ export function useGlobalPresenceTracker(): void {
     ;(async () => {
       const { user } = await getCachedAuth()
       if (cancelled || !user) return
-      channel = supabase.channel('global_presence', { config: { presence: { key: user.id } } })
+      // `enabled: true` is REQUIRED for track() to work. realtime-js computes
+      // presence_enabled = (has a presence binding) OR config.presence.enabled.
+      // This tracker registers NO `.on('presence')` binding (only Sidebar reads
+      // the roster), so without the flag the channel joined with presence
+      // DISABLED and track() was silently dropped - the user never appeared in
+      // "Survivors present" on any full-width route (table/vehicle/popouts).
+      channel = supabase.channel('global_presence', { config: { presence: { key: user.id, enabled: true } } })
       channel.subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') await channel.track({ user_id: user.id })
       })
