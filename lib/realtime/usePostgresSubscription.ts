@@ -19,6 +19,7 @@ import { useEffect, useRef } from 'react'
 import { createClient } from '../supabase-browser'
 import { wrapDbChange } from '../sentry-realtime'
 import { record } from '../playtest-recorder'
+import { createReconcileScheduler } from './reconcileScheduler'
 
 export interface PostgresSubscriptionConfig {
   /** A short stable label for Sentry tagging (e.g. 'map_pins:*'). */
@@ -39,6 +40,12 @@ export interface PostgresSubscriptionConfig {
    * convergence never depends on catching one ephemeral event. Mirrors the
    * hardened CampaignMap pin-sync pattern. Make its presence stable across
    * renders (the interval/listener are wired once per channel).
+   *
+   * The three triggers route through a reconcileScheduler: runs are
+   * serialized (never overlap, so a slow stale refetch can't resolve after
+   * and clobber a newer one) and bursts coalesce (min 5s between starts, one
+   * trailing run queued while in flight). If the refetch races this hook's
+   * own `handler` writes, guard inside the caller (loadSeqRef pattern).
    */
   reconcile?: () => void | Promise<void>
   /** Reconcile poll cadence in ms (default 30000). Ignored without reconcile. */
@@ -58,6 +65,15 @@ export function usePostgresSubscription(
     if (!channelName) return
     const supabase = createClient()
     const c = configRef.current
+
+    // Reconcile safety net (opt-in). Only wired when a reconcile fn is given,
+    // so callers that don't need it (e.g. map_pins/whispers) keep exactly their
+    // old behavior - no extra interval or listener. All triggers route through
+    // the scheduler: serialized + burst-coalesced (see reconcileScheduler.ts).
+    const scheduler = c.reconcile
+      ? createReconcileScheduler(() => configRef.current.reconcile?.())
+      : null
+
     const channel = supabase
       .channel(channelName)
       .on(
@@ -69,24 +85,22 @@ export function usePostgresSubscription(
         record('realtime', { direction: 'status', channel: channelName, status })
         // Catch-up on (re)subscribe: a dropped or late-joined channel reloads
         // instead of sitting on stale data until a manual refresh.
-        if (status === 'SUBSCRIBED') void configRef.current.reconcile?.()
+        if (status === 'SUBSCRIBED') scheduler?.request()
       })
 
-    // Reconcile safety net (opt-in). Only wired when a reconcile fn is given,
-    // so callers that don't need it (e.g. map_pins/whispers) keep exactly their
-    // old behavior - no extra interval or listener.
     let onVisible: (() => void) | null = null
     let poll: ReturnType<typeof setInterval> | null = null
-    if (c.reconcile) {
-      onVisible = () => { if (!document.hidden) void configRef.current.reconcile?.() }
+    if (scheduler) {
+      onVisible = () => { if (!document.hidden) scheduler.request() }
       document.addEventListener('visibilitychange', onVisible)
-      poll = setInterval(() => { if (!document.hidden) void configRef.current.reconcile?.() }, c.reconcileMs ?? 30000)
+      poll = setInterval(() => { if (!document.hidden) scheduler.request() }, c.reconcileMs ?? 30000)
     }
 
     return () => {
       try { supabase.removeChannel(channel) } catch { /* already torn down */ }
       if (onVisible) document.removeEventListener('visibilitychange', onVisible)
       if (poll) clearInterval(poll)
+      scheduler?.dispose()
     }
     // ONLY channelName - the handler + reconcile stay fresh via the ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
