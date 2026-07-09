@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
+  async rewrites() {
+    return [
+      // apegenerator lives in its own repo (github.com/XeroSumGames/apegenerator)
+      // per AGENTS.md; proxy /apegenerator to its Vercel deployment so the public
+      // URL is unchanged and the page runs on THIS origin - its visit beacon then
+      // posts page='/apegenerator' to log-visit, which the /ape-log dashboard reads.
+      // Use the stable production alias (never the per-build hashed URL, which is
+      // behind Vercel's auth wall and changes every deploy).
+      { source: '/apegenerator', destination: 'https://apegenerator.vercel.app' },
+      { source: '/apegenerator/:path*', destination: 'https://apegenerator.vercel.app/:path*' },
+    ]
+  },
 };
 
 // Wrap with Sentry. When SENTRY_AUTH_TOKEN isn't set (local dev or
