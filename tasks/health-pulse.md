@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-09 21:04 UTC
+
+**Status:** DRIFT (3 HOPED-FOR stale; vehicle fix just landed, needs 2-client verify)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [917 passed / 53 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-09T18:07Z)
+
+**Drift:**
+- **Vehicle popout broadcasts** (~49 days HOPED-FOR) - `128145b` (this run) rewrote `broadcastOnce` to fix firing-arc toggle + post-dismount broadcast (H15). Fix is live; 2-client verify plan at `tasks/realtime-cluster-verify-testplan-2026-07-09.md`. Run the plan to close HOPED-FOR.
+- **FI Insight Die award path** (~30 days) - `lib/useRollResolution.ts:264` doubles path never fired in live play; drain target Beta-500 dry-run.
+- **Stress Check 12-string narrative** (~30 days) - HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE unverified; drain target Beta-500 dry-run.
+
+**Action:** Run `tasks/realtime-cluster-verify-testplan-2026-07-09.md` (2-client, ~20 min) to close the vehicle popout HOPED-FOR - the code fix is already in prod. FI Insight + Stress 12-string defer to Beta-500 dry-run as before.
+
+---
+
 ## 2026-07-09 18:03 UTC
 
 **Status:** DRIFT (same 3 HOPED-FOR items; notable: Puffer stability audit landed since 12:03 run)
