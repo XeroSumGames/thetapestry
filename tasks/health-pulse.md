@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-09 00:03 UTC
+
+**Status:** DRIFT (no change from 21:03 run)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [892 passed / 49 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-08T21:06Z)
+
+**Drift:**
+- **FI Insight Die award path** (~28 days) — `lib/useRollResolution.ts:264` never fired in live play; drain target Beta-500 dry-run.
+- **Stress Check 12-string narrative** (~28 days) — HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE unverified.
+- **Vehicle popout broadcasts** (~47 days) — `vehicle_updated`/`firing_arc_toggle` 2-client confirmation pending.
+
+**Action:** No change from prior runs. All 3 HOPED-FOR items need a playtest cycle to drain.
+
+---
+
 ## 2026-07-08 21:03 UTC
 
 **Status:** DRIFT (no change from 18:04 run)
