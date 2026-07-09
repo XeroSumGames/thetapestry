@@ -4,8 +4,10 @@ import { getCachedAuth } from '../../lib/auth-cache'
 import { isThriverUser } from '../../lib/data/feature-checklist'
 import { loadApeVisits, type ApeVisit } from '../../lib/data/ape-log'
 
-// /ape-log - Thriver-only dashboard of visitors to the static /apegenerator
-// page. Visits are logged by the beacon in public/apegenerator/index.html.
+// /ape-log - Thriver-only dashboard of visitors to /apegenerator. That page
+// lives in its own repo (github.com/XeroSumGames/apegenerator) and is proxied
+// here via a next.config rewrite, so it runs on this origin; its visit beacon
+// posts page='/apegenerator' to log-visit -> visitor_logs, which this reads.
 
 const LIMIT = 5000
 const C = {
