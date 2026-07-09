@@ -62,7 +62,11 @@ export default function ApeLogPage() {
       if (v.country_code) countries.add(v.country_code)
       if (v.is_ghost) ghostCount++
       if (new Date(v.created_at).getTime() >= d7) last7++
-      const key = v.ip_hash || v.ip_address || v.id
+      // Prefer the server-observed ip_address (present on ~every row) over the
+      // client ip_hash (only set when the geo_ip cookie exists). Keying on
+      // ip_hash first split one visitor across cookie-present vs cookie-absent
+      // visits, inflating the unique count.
+      const key = v.ip_address || v.ip_hash || v.id
       const ex = byKey.get(key)
       if (ex) {
         ex.count++
@@ -97,10 +101,10 @@ export default function ApeLogPage() {
         <>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '22px' }}>
             <Stat label="Total visits" value={totals.visits} note={totals.capped ? `capped at ${LIMIT}` : ''} />
-            <Stat label="Unique visitors" value={totals.unique} />
-            <Stat label="Countries" value={totals.countries} />
-            <Stat label="Last 7 days" value={totals.last7} />
-            <Stat label="Signed-out" value={totals.ghost} />
+            <Stat label="Unique visitors" value={totals.unique} note={totals.capped ? `newest ${LIMIT} only` : ''} />
+            <Stat label="Countries" value={totals.countries} note={totals.capped ? `newest ${LIMIT} only` : ''} />
+            <Stat label="Last 7 days" value={totals.last7} note={totals.capped ? `newest ${LIMIT} only` : ''} />
+            <Stat label="Signed-out" value={totals.ghost} note={totals.capped ? `newest ${LIMIT} only` : ''} />
           </div>
 
           {visitors.length === 0 ? (
@@ -177,7 +181,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '28px 20px 80px' }}>
       <div style={{ fontFamily: mono, fontSize: '13px', letterSpacing: '.24em', textTransform: 'uppercase', color: C.red, marginBottom: '6px' }}>Visitor Log</div>
       <h1 style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '30px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: C.ink, margin: '0 0 6px', borderBottom: `1px solid ${C.red}`, paddingBottom: '12px' }}>Ape Generator Log</h1>
-      <p style={{ color: C.muted, fontFamily: sans, fontSize: '14.5px', maxWidth: '64ch', margin: '0 0 8px' }}>Everyone who has opened the ape generator - where they are, their IP, and how many times they have come back. Your own visits are hidden.</p>
+      <p style={{ color: C.muted, fontFamily: sans, fontSize: '14.5px', maxWidth: '64ch', margin: '0 0 8px' }}>Everyone who has opened the ape generator - where they are, their IP, and how many times they have come back. The site owner's own visits are not logged.</p>
       {children}
     </div>
   )

@@ -1,7 +1,11 @@
-// Data layer for the /ape-log visitor dashboard (visits to the static
-// /apegenerator page, logged via the beacon in public/apegenerator/index.html
-// -> the log-visit edge function -> visitor_logs). Reads are Thriver-gated by
-// RLS (visitor_logs.ip_address is Thriver-only); the page also gates in the UI.
+// Data layer for the /ape-log visitor dashboard. The /apegenerator page lives
+// in its own repo (github.com/XeroSumGames/apegenerator) and is served here via
+// a proxy rewrite, so it runs on this origin; its visit beacon posts
+// page='/apegenerator' to the log-visit edge function -> visitor_logs. Reads are
+// Thriver-gated by RLS (visitor_logs.ip_address is Thriver-only); the page also
+// gates in the UI. NOTE (follow-up): aggregation is client-side over a 5000-row
+// cap; a page-filtered visitor-aggregate RPC (see sql/visitor-map-rpc.sql) would
+// remove the cap and the ~1.5MB fetch.
 import { db } from './db'
 
 export interface ApeVisit {
