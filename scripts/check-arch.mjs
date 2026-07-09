@@ -93,7 +93,10 @@ for (const f of files) {
   const norm = f.replace(/\\/g, '/')
   let text
   try { text = readFileSync(f, 'utf8') } catch { continue }
-  if (!norm.includes(DATA_SEAM)) fromOutsideData += countMatches(text, /\.from\(/g)
+  // Receiver starting with an uppercase identifier (Array.from, Uint8Array.from,
+  // SomeClass.from) is a JS static call, never a supabase query builder - only
+  // lowercase/call-expression receivers (db().from, supabase.from) count.
+  if (!norm.includes(DATA_SEAM)) fromOutsideData += countMatches(text, /(?<![A-Z][A-Za-z0-9_$]*)\.from\(/g)
   if (!norm.includes(REALTIME_SEAM)) channelOutsideRealtime += countMatches(text, /\.channel\(/g)
   // lib/playtest-recorder.ts is the ONE sanctioned console home: trace()'s
   // diagnostic echo there is process.env.NODE_ENV==='development' gated, so it

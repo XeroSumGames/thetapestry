@@ -650,8 +650,6 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const fingerprint = JSON.stringify([
       [...allPins].sort((a: any, b: any) => String(a.id).localeCompare(String(b.id))),
       [...(npcData ?? [])].sort((a: any, b: any) => String(a.id).localeCompare(String(b.id))),
-      // Spread (not Array-dot-from) - the check-arch seam ratchet's regex
-      // would count that static call outside lib/data as a DB read.
       isGM ? null : [...(revealedNpcIds ?? [])].sort(),
       [...(locallyHiddenPinsRef.current ?? [])].sort(),
     ])
