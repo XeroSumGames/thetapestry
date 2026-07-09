@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-09 18:03 UTC
+
+**Status:** DRIFT (same 3 HOPED-FOR items; notable: Puffer stability audit landed since 12:03 run)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [913 passed / 52 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-09T17:09Z)
+
+**Drift:**
+- **FI Insight Die award path** (~29 days) - `lib/useRollResolution.ts:264` never fired in live play; drain target Beta-500 dry-run.
+- **Stress Check 12-string narrative** (~29 days) - HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE unverified.
+- **Vehicle popout broadcasts** (~48 days) - `vehicle_updated`/`firing_arc_toggle` 2-client confirmation pending.
+
+**Since 12:03 run:** Puffer stability audit committed (`08b2523`) -- 1 CRITICAL + 15 HIGH + 17 MED + 8 LOW. CRITICAL (`updateCharacterDataField` read-swallow) already fixed (`c5b2ffa`, +4 tests). 15 new HIGH todos now in `tasks/todo.md` (HP lane). Realtime reconcile net shipped (`19dc72e`). Test count +21 (892->913).
+
+**Action:** Review new HIGH bugs in `tasks/todo.md` from today's Puffer sweep -- top items: `broadcastOnce.ts:29` hang (#29), `CampaignPins`/`CampaignMap` topic collision (#28), `CharacterCard` shared-clock bug (#23), bulk-upload Thriver gate missing (#30). Then drain the 3 HOPED-FOR items at Beta-500 dry-run.
+
+---
+
 ## 2026-07-09 12:03 UTC
 
 **Status:** DRIFT (no change from 09:03 run)
