@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { getCachedAuth } from '../../../lib/auth-cache'
-import { isThriverUser, loadFeatureChecklist, saveFeatureChecklist } from '../../../lib/data/feature-checklist'
+import { isThriverUser, loadFeatureChecklist, pruneChecklistToKnownIds, saveFeatureChecklist } from '../../../lib/data/feature-checklist'
 
 // /tools/feature-manifest - Thriver-only verification checklist of every game
 // feature, grouped by system. State persists per-user to
@@ -9,14 +9,20 @@ import { isThriverUser, loadFeatureChecklist, saveFeatureChecklist } from '../..
 // so a Thriver's progress follows them across browsers + devices. Superseded
 // the standalone localStorage HTML (tasks/feature-manifest.html) - that one
 // couldn't persist off the owner's device.
+//
+// Because every save is a WHOLE-BLOB upsert, the list stays inert until the
+// saved blob has loaded successfully: a tick before (or after a failed) load
+// would overwrite the user's real checklist with a near-empty one.
 
 type Cell = { d?: boolean; f?: boolean }   // d = verified, f = flagged
 type State = Record<string, Cell>
 
 // [id, label, explanation]. The explanation is hidden until the title is
 // clicked (accordion). Sections mirror the beginners' guide chapters so the list
-// reads as a complete click-through of the game. Feature ids are stable - reused
-// across restructures so saved verified/flagged state survives.
+// reads as a complete click-through of the game. Keep feature ids stable across
+// restructures so saved verified/flagged state survives; any id that IS dropped
+// gets pruned from saved blobs at load time (KNOWN_IDS) so orphaned cells can't
+// inflate the done/flagged counts.
 const DATA: { name: string; items: [string, string, string][] }[] = [
   { name: 'Navigating the Site', items: [
     ['nav-sidebar', 'Left-sidebar navigation', "The always-present left sidebar is how you move around; the main area renders each page."],
@@ -230,6 +236,7 @@ const GAPS: [string, string][] = [
 ]
 
 const TOTAL = DATA.reduce((n, s) => n + s.items.length, 0)
+const KNOWN_IDS: ReadonlySet<string> = new Set(DATA.flatMap(s => s.items.map(([id]) => id)))
 
 const C = {
   ink: '#f5f2ee', muted: '#cce0f5', faint: '#8a8178',
@@ -243,6 +250,9 @@ export default function FeatureManifestPage() {
   const [allowed, setAllowed] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [state, setState] = useState<State>({})
+  // 'ready' means the saved blob loaded successfully - saves are blocked in
+  // every other phase so a whole-blob upsert can never destroy unloaded state.
+  const [loadPhase, setLoadPhase] = useState<'loading' | 'ready' | 'error'>('loading')
   const [filter, setFilter] = useState<'all' | 'todo' | 'flag'>('all')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -263,13 +273,21 @@ export default function FeatureManifestPage() {
       if (!user) { setAuthChecked(true); return }
       const ok = await isThriverUser(user.id)
       setAllowed(ok); setUserId(user.id); setAuthChecked(true)
-      if (ok) setState(await loadFeatureChecklist(user.id))
+      if (ok) await loadSaved(user.id)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  async function loadSaved(uid: string) {
+    setLoadPhase('loading')
+    const saved = await loadFeatureChecklist(uid)
+    if (saved === null) { setLoadPhase('error'); return } // query failed - stay inert, offer retry
+    setState(pruneChecklistToKnownIds(saved, KNOWN_IDS))
+    setLoadPhase('ready')
+  }
+
   function persist(next: State) {
-    if (!userId) return
+    if (!userId || loadPhase !== 'ready') return
     setSaveStatus('saving')
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
@@ -280,6 +298,7 @@ export default function FeatureManifestPage() {
   }
 
   function toggle(id: string, key: 'd' | 'f') {
+    if (loadPhase !== 'ready') return
     setState(prev => {
       const cell: Cell = { ...(prev[id] || {}) }
       cell[key] = !cell[key]
@@ -298,6 +317,15 @@ export default function FeatureManifestPage() {
   if (!authChecked) return <Shell><p style={{ color: C.muted, fontFamily: sans }}>Loading...</p></Shell>
   if (!userId) return <Shell><p style={{ color: C.muted, fontFamily: sans, fontSize: '15px' }}>Please sign in to use the Feature Manifest.</p></Shell>
   if (!allowed) return <Shell><p style={{ color: C.muted, fontFamily: sans, fontSize: '15px' }}>This tool is Thriver-only.</p></Shell>
+  if (loadPhase === 'loading') return <Shell><p style={{ color: C.muted, fontFamily: sans, fontSize: '15px' }}>Loading your saved checklist...</p></Shell>
+  if (loadPhase === 'error') return (
+    <Shell>
+      <p style={{ color: C.amber, fontFamily: sans, fontSize: '15px', maxWidth: '62ch' }}>
+        Couldn&apos;t reach your saved checklist, so the list is locked - ticking now could overwrite the copy on your account.
+      </p>
+      <button onClick={() => { void loadSaved(userId) }} style={filterBtn(true)}>Retry</button>
+    </Shell>
+  )
 
   const saveLabel = saveStatus === 'saving' ? 'saving...' : saveStatus === 'saved' ? 'saved to your account' : saveStatus === 'error' ? 'save failed - retrying next tick' : ''
   const saveColor = saveStatus === 'error' ? C.amber : C.green

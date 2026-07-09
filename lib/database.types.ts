@@ -1622,6 +1622,24 @@ export type Database = {
           },
         ]
       }
+      feature_checklist_state: {
+        Row: {
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       forum_replies: {
         Row: {
           author_user_id: string
