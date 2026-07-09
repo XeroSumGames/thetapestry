@@ -14,8 +14,13 @@ export interface PartyPc { characterId: string; name: string; portraitUrl: strin
 // campaign has - they're never run at the same time."
 export async function ensurePartyOnScene(supabase: SupabaseClient, sceneId: string, party: PartyPc[]): Promise<boolean> {
   if (party.length === 0) return false
-  const { data: existing } = await supabase
+  const { data: existing, error: existingErr } = await supabase
     .from('scene_tokens').select('id, character_id, archived_at, grid_x, grid_y').eq('scene_id', sceneId)
+  // A failed read must NOT be read as "no tokens on this scene" - that
+  // classifies every PC as never-placed and inserts a duplicate token per PC
+  // (positions reset to top-left) on every scene switch during the outage.
+  // Abort with no change; the caller retries next switch.
+  if (existingErr) return false
   const byChar = new Map<string, any>()
   for (const t of existing ?? []) if ((t as any).character_id) byChar.set((t as any).character_id, t)
   const occupied = (existing ?? []).filter((t: any) => !t.archived_at).map((t: any) => ({ grid_x: t.grid_x, grid_y: t.grid_y }))

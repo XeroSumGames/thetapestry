@@ -31,12 +31,22 @@ export async function getCharacterPortraits(charIds: string[]): Promise<Record<s
 /**
  * Merge a partial data blob into a character's JSON data column.
  * Used on /characters to persist between-sessions stat changes (WP, stress, etc.)
- * without a campaign context. We do a read-then-write here to avoid clobbering
+ * without a campaign context. We do a read-then-write to avoid clobbering
  * unrelated fields in the blob.
+ *
+ * CRITICAL: the read error must abort the write. If the read fails (network,
+ * expired token, statement timeout) we do NOT treat a null result as "empty
+ * blob" - merging the patch into `{}` and writing it back would replace the
+ * ENTIRE data column (name, RAPID, skills, inventory) with just the patch,
+ * destroying the character sheet. On a failed or empty read we return the
+ * error and write nothing. (Same class as the 2026-07-09 Feature Manifest bug.)
  */
 export async function updateCharacterDataField(charId: string, patch: Record<string, unknown>) {
-  const { data: existing } = await db().from('characters').select('data').eq('id', charId).single()
-  const base = (existing?.data && typeof existing.data === 'object' && !Array.isArray(existing.data)) ? existing.data as Record<string, Json> : {}
+  const { data: existing, error: readErr } = await db().from('characters').select('data').eq('id', charId).single()
+  if (readErr || !existing) {
+    return { data: null, error: readErr ?? { message: `character ${charId} not found`, details: '', hint: '', code: 'PGRST116', name: 'PostgrestError' } as any }
+  }
+  const base = (existing.data && typeof existing.data === 'object' && !Array.isArray(existing.data)) ? existing.data as Record<string, Json> : {}
   const merged: Json = { ...base, ...patch as Record<string, Json> }
   return db().from('characters').update({ data: merged }).eq('id', charId)
 }

@@ -124,6 +124,13 @@ export async function computeReseedPlan(
     supabase.from('campaign_notes').select('id, title').eq('campaign_id', campaignId),
   ])
 
+  // A failed existing-content read must NOT be treated as "campaign has
+  // nothing" - that would list every seed item as missing and let
+  // applyReseedPlan mass-insert duplicate pins/NPCs/scenes/handouts over a
+  // campaign that already has them. Abort the plan instead.
+  const readErr = exPinsR.error ?? exNpcsR.error ?? exScenesR.error ?? exHandoutsR.error
+  if (readErr) return { error: `existing content: ${readErr.message}` }
+
   const havePinNames     = new Set((exPinsR.data ?? []).map((r: any) => r.name))
   const haveNpcNames     = new Set((exNpcsR.data ?? []).map((r: any) => r.name))
   const haveSceneNames   = new Set((exScenesR.data ?? []).map((r: any) => r.name))

@@ -1367,18 +1367,23 @@ export async function archiveModule(
     .single()
   if (modErr || !mod) throw new Error(`Archive failed: ${modErr?.message ?? 'unknown'}`)
 
-  // Fetch subscriber campaign owners to notify them.
+  // Fetch subscriber campaign owners to notify them. The GM owner column is
+  // `campaigns.gm_user_id` - the embed said `campaigns(user_id)`, a column that
+  // does not exist, so PostgREST 400'd, the error was swallowed, and NO
+  // subscriber ever got the "module archived" notice while the call returned
+  // success. Now we embed the real column and surface a read failure.
   if (subscriberCount > 0) {
-    const { data: subs } = await supabase
+    const { data: subs, error: subsErr } = await supabase
       .from('module_subscriptions')
-      .select('campaign_id, campaigns(user_id)')
+      .select('campaign_id, campaigns(gm_user_id)')
       .eq('module_id', moduleId)
       .eq('status', 'active')
+    if (subsErr) throw new Error(`Archive notify failed: ${subsErr.message}`)
 
     const notifyUserIds = [
       ...new Set(
         (subs ?? [])
-          .map((s: any) => (Array.isArray(s.campaigns) ? s.campaigns[0]?.user_id : s.campaigns?.user_id))
+          .map((s: any) => (Array.isArray(s.campaigns) ? s.campaigns[0]?.gm_user_id : s.campaigns?.gm_user_id))
           .filter((id: string | null) => id && id !== user.id),
       ),
     ]

@@ -652,12 +652,17 @@ async function drainPendingHeals(campaignId: string, clock: ClockState): Promise
       continue
     }
     try {
-      const { data: state } = await supabase
+      const { data: state, error: stateErr } = await supabase
         .from('character_states')
         .select('id, wp_current, wp_max, character_id, characters!inner(name)')
         .eq('character_id', ev.target_character_id)
         .eq('campaign_id', campaignId)
         .maybeSingle()
+      // A query ERROR must not consume the heal - leave the event unstamped so
+      // the next advance retries it. Only a genuinely absent row (error null,
+      // data null: the character left / was deleted) is stamped applied so it
+      // stops re-processing forever.
+      if (stateErr) continue
       if (!state) {
         await supabase.from('campaign_events').update({ applied_canon_day: clock.canon_day, applied_canon_hour: clock.hour }).eq('id', ev.id)
         continue

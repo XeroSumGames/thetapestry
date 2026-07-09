@@ -53,10 +53,10 @@ export async function exportGmKit(supabase: SupabaseClient, campaignId: string):
   // Wave 1 - campaign + every directly-filterable table in parallel.
   const [
     { data: campaign, error: campErr },
-    { data: pins },
-    { data: npcs },
-    { data: scenes },
-    { data: notes },
+    { data: pins, error: pinsErr },
+    { data: npcs, error: npcsErr },
+    { data: scenes, error: scenesErr },
+    { data: notes, error: notesErr },
   ] = await Promise.all([
     supabase.from('campaigns').select(CAMPAIGN_COLUMNS).eq('id', campaignId).single(),
     supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }),
@@ -65,6 +65,12 @@ export async function exportGmKit(supabase: SupabaseClient, campaignId: string):
     supabase.from('campaign_notes').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
   ])
   if (campErr || !campaign) return { ok: false, error: campErr?.message ?? 'Campaign not found' }
+  // A swallowed read here would ship a zip whose pins/npcs/scenes/notes
+  // sections are silently empty - a GM's "complete backup" that isn't. Fail
+  // the whole export instead so the loss surfaces at export time, not the day
+  // they need to restore.
+  const contentErr = pinsErr ?? npcsErr ?? scenesErr ?? notesErr
+  if (contentErr) return { ok: false, error: `Export read failed: ${contentErr.message}` }
 
   // Wave 2 - scene_tokens scoped to THIS campaign's scenes only.
   // Pre-fix this lived in Wave 1 as an UNFILTERED `select('*')`, so every
@@ -72,9 +78,10 @@ export async function exportGmKit(supabase: SupabaseClient, campaignId: string):
   // and relied on RLS as the only real defense. Now we hold the filter
   // server-side via .in('scene_id', sceneIds).
   const sceneIds = (scenes ?? []).map((s: any) => s.id)
-  const { data: scopedTokensData } = sceneIds.length > 0
+  const { data: scopedTokensData, error: tokensErr } = sceneIds.length > 0
     ? await supabase.from('scene_tokens').select('*').in('scene_id', sceneIds)
-    : { data: [] as any[] }
+    : { data: [] as any[], error: null }
+  if (tokensErr) return { ok: false, error: `Export read failed: ${tokensErr.message}` }
   const scopedTokens = (scopedTokensData ?? []) as any[]
 
   // Lazy-load JSZip - top-level import previously pulled ~50KB into any

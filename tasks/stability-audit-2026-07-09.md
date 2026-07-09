@@ -12,6 +12,13 @@ auth/join/upload paths. NO code was changed in this pass (audit only).
 
 Tally: **1 CRITICAL, 15 HIGH, 17 MEDIUM, 8 LOW.**
 
+> **UPDATE 2026-07-09 (Puffer) - cluster 1 SHIPPED.** The CRITICAL + the T1
+> read-swallow cluster are fixed and on main: **C1** (characters.ts, +4 unit
+> tests), **H6** (modules archive gm_user_id), **H7** (reseed abort-on-read-err),
+> **M6** (scenes dup-token abort), **M9** (gm-kit fail-loud), **M10** (pending-heal
+> retry-not-consume). tsc + 913 tests + gates green. Remaining clusters 2-8
+> below still OPEN (mostly HP app-code + a few Puffer lib/realtime).
+
 ---
 
 ## Cross-cutting themes (fix by theme, not one-off)

@@ -45,10 +45,18 @@ export default function CharactersPage() {
     }
     const dataKey = fieldToDataPath[field]
     if (!dataKey || value == null) return
+    // Snapshot the prior value so a failed write can roll the optimistic
+    // update back instead of leaving local state ahead of the DB.
+    const prevValue = characters.find(c => c.id === charId)?.data?.[dataKey]
     setCharacters(prev => prev.map(c =>
       c.id === charId ? { ...c, data: { ...c.data, [dataKey]: value } } : c
     ))
-    await updateCharacterDataField(charId, { [dataKey]: value })
+    const { error } = await updateCharacterDataField(charId, { [dataKey]: value })
+    if (error) {
+      setCharacters(prev => prev.map(c =>
+        c.id === charId ? { ...c, data: { ...c.data, [dataKey]: prevValue } } : c
+      ))
+    }
   }
 
   useEffect(() => {
