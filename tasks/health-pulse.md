@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-10 12:05 UTC
+
+**Status:** DRIFT (no change from 09:05 run)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [917 passed / 53 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-10T09:05Z)
+
+**Drift:**
+- HOPED-FOR stale ~47d: vehicle popout broadcasts -- 128145b fix in prod, 2-client verify plan at tasks/realtime-cluster-verify-testplan-2026-07-09.md -- still not run
+- HOPED-FOR stale ~29d: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) -- drain target Beta-500 dry-run (target date 2026-07-01 passed)
+- HOPED-FOR stale ~29d: FI Insight Die AWARD path (roll doubles -> insight pool +1) -- never fired in live play
+
+**Action:** No change since 09:05 run. Priority: run realtime-cluster-verify-testplan-2026-07-09.md before next playtest to drain the vehicle-popout HOPED-FOR.
+
+---
+
 ## 2026-07-10 09:05 UTC
 
 **Status:** DRIFT (no change from 06:05 run)
