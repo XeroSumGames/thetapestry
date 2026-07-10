@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-10 21:04 UTC
+
+**Status:** DRIFT (same 3 HOPED-FOR items; no change from 18:05 run)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [917 passed / 53 files]
+
+**Audit:** npm audit [clean]
+
+**CI:** last 5 runs all success (latest 2026-07-10T20:27Z; 4 of 5 are Space: 1999 proxy ships - all green)
+
+**Drift:**
+- HOPED-FOR stale ~48d: vehicle popout broadcasts -- 128145b fix in prod, verify plan at tasks/realtime-cluster-verify-testplan-2026-07-09.md -- still not run
+- HOPED-FOR stale ~30d: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) -- drain target Beta-500 dry-run (deadline 2026-07-01 passed)
+- HOPED-FOR stale ~30d: FI Insight Die AWARD path (roll doubles -> insight pool +1) -- never fired in live play
+- NEW TODAY: Space: 1999 character gen proxy shipped (4 commits: next.config.ts rewrite + /space1999-log Thriver dashboard + docs; its own Vercel repo per AGENTS.md - compliant)
+
+**Action:** Unchanged. Run realtime-cluster-verify-testplan-2026-07-09.md to drain vehicle-popout HOPED-FOR before next playtest.
+
+---
+
 ## 2026-07-10 18:05 UTC
 
 **Status:** DRIFT (no change from 15:03 run)
