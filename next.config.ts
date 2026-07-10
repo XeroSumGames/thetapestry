@@ -24,6 +24,12 @@ const nextConfig: NextConfig = {
       // behind Vercel's auth wall and changes every deploy).
       { source: '/apegenerator', destination: 'https://apegenerator.vercel.app' },
       { source: '/apegenerator/:path*', destination: 'https://apegenerator.vercel.app/:path*' },
+      // space1999generator: same pattern - its own repo
+      // (github.com/XeroSumGames/space1999generator), proxied so /space1999 runs
+      // on THIS origin and its beacon posts page='/space1999' to log-visit for
+      // the /ape-log dashboard. Stable production alias, not the hashed URL.
+      { source: '/space1999', destination: 'https://space1999generator.vercel.app' },
+      { source: '/space1999/:path*', destination: 'https://space1999generator.vercel.app/:path*' },
     ]
   },
 };
