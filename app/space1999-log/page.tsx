@@ -43,6 +43,9 @@ export default function Space1999LogPage() {
   const [allowed, setAllowed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [visits, setVisits] = useState<Space1999Visit[]>([])
+  // Captured at fetch time (in the effect, not during render) so the "last 7
+  // days" cutoff stays a pure input to the aggregation memo below.
+  const [nowTs, setNowTs] = useState(0)
 
   useEffect(() => {
     (async () => {
@@ -50,7 +53,7 @@ export default function Space1999LogPage() {
       if (!user) { setAuthChecked(true); return }
       const ok = await isThriverUser(user.id)
       setAllowed(ok); setAuthChecked(true)
-      if (ok) { setVisits(await loadSpace1999Visits(LIMIT)); setLoading(false) }
+      if (ok) { setNowTs(Date.now()); setVisits(await loadSpace1999Visits(LIMIT)); setLoading(false) }
     })()
   }, [])
 
@@ -58,8 +61,7 @@ export default function Space1999LogPage() {
     const byKey = new Map<string, VisitorRow>()
     const countries = new Set<string>()
     let ghostCount = 0
-    const now = Date.now()
-    const d7 = now - 7 * 864e5
+    const d7 = nowTs - 7 * 864e5
     let last7 = 0
     for (const v of visits) {
       if (v.country_code) countries.add(v.country_code)
@@ -93,7 +95,7 @@ export default function Space1999LogPage() {
         last7, ghost: ghostCount, capped: visits.length >= LIMIT,
       },
     }
-  }, [visits])
+  }, [visits, nowTs])
 
   if (!authChecked) return <Shell><p style={p()}>Loading...</p></Shell>
   if (!allowed) return <Shell><p style={p()}>This dashboard is Thriver-only.</p></Shell>
@@ -184,7 +186,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '28px 20px 80px' }}>
       <div style={{ fontFamily: mono, fontSize: '13px', letterSpacing: '.24em', textTransform: 'uppercase', color: C.red, marginBottom: '6px' }}>Visitor Log</div>
       <h1 style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '30px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: C.ink, margin: '0 0 6px', borderBottom: `1px solid ${C.red}`, paddingBottom: '12px' }}>Space: 1999 Generator Log</h1>
-      <p style={{ color: C.muted, fontFamily: sans, fontSize: '14.5px', maxWidth: '64ch', margin: '0 0 8px' }}>Everyone who has opened the Space: 1999 character generator - where they are, their IP, and how many times they have come back. The site owner's own visits are not logged.</p>
+      <p style={{ color: C.muted, fontFamily: sans, fontSize: '14.5px', maxWidth: '64ch', margin: '0 0 8px' }}>Everyone who has opened the Space: 1999 character generator - where they are, their IP, and how many times they have come back. Visits from the site owner are not logged.</p>
       {children}
     </div>
   )
