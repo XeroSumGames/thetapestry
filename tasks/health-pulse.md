@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-12 21:05 UTC
+
+**Status:** DRIFT (unchanged from prior runs)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [917 passed / 53 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success
+
+**Drift:**
+- Vehicle popout broadcasts (Section B) - HOPED-FOR, no code touch in 3+ days; awaiting next playtest
+- Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - HOPED-FOR, drain target Beta-500 dry-run
+- FI Insight Die AWARD path (rolling doubles) - HOPED-FOR, has never fired in live play
+- Note: these 3 items have been stale 30+ days; flagged repeatedly; no change this cycle
+
+**Action:** No new action needed - same 3 HOPED-FOR items as every prior run. Resolve at next Beta-500 dry-run / playtest.
+
+---
+
 ## 2026-07-12 18:05 UTC
 
 **Status:** DRIFT (unchanged from 15:04 run)
