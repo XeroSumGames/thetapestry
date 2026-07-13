@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-13 18:03 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 17:59 UTC)
+
+**Drift:**
+- HOPED-FOR unchanged (same 3 items from 15:04 run, all stale 27-50+ days): vehicle popout broadcasts, Stress Check 12-string narrative, FI Insight Die AWARD path.
+- Stale-open todo items (5 confirmed shipped but unchecked):
+  - `[ ] [MED] Newly-joined player doesn't appear` -> SHIPPED `9998f86` (09:34 UTC today)
+  - `[ ] [MED] Open char sheet stale on damage` -> SHIPPED `1a8161e` (09:38 UTC today)
+  - `[ ] [HIGH] CampaignPins share campaign_pins_${id} topic` -> SHIPPED `989030f` (08:39 UTC today, H14)
+  - `[ ] [HIGH] combat viewer-vs-attacker misattribution (H1/H2)` -> SHIPPED `fde0f7a` (09:53 UTC today)
+  - `[ ] [HIGH] insight reroll double damage (H3)` -> SHIPPED `ab9c149` (10:57 UTC today)
+- Note: the 15:04 run listed the first 2 items above as "new MED bugs added" -- they were already fixed by that run. Corrected here.
+
+**Action:** todo.md needs a cleanup pass to check off 5 stale items. H1/H2/H3 and H14 are DONE in code. HOPED-FOR drain at Beta-500 dry-run.
+
+---
+
 ## 2026-07-13 15:04 UTC
 
 **Status:** DRIFT (new context since 12:07 run - playtest + H14 fix; chronic HOPED-FOR items unchanged)
