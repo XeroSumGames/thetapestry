@@ -91,6 +91,7 @@ import { useStableCallback } from '../../../../lib/useStableCallback'
 import { appendProgressionEntry } from '../../../../lib/progression-log'
 import ApprenticeCreationWizard from '../../../../components/ApprenticeCreationWizard'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD, weaponCausesWoundInfection } from '../../../../lib/weapons'
+import { rangedLoadout } from '../../../../lib/weapon-loadout'
 import { getOutcome, outcomeColor, compactRollSummary } from '../../../../lib/roll-helpers'
 import { OUTCOME } from '../../../../lib/roll-outcomes'
 import { isStabilizeSuccess, rollIncapRounds, stabilizeNarrative } from '../../../../lib/stabilize-helpers'
@@ -9509,9 +9510,7 @@ export default function TablePage() {
             const newSlotData = {
               weaponName: invItemName,
               condition: 'Used',
-              ammoCurrent: w.clip ?? 0,
-              ammoMax: w.clip ?? 0,
-              reloads: w.ammo ? Math.floor(Math.random() * 3) + 1 : 0,
+              ...rangedLoadout(w.clip, 'pc'),
             }
             const newData = slot === 'primary'
               ? { ...charData, weaponPrimary: newSlotData, inventory: newInv }
@@ -9537,9 +9536,7 @@ export default function TablePage() {
             const newWeapon = {
               weaponName: invItemName,
               condition: 'Used',
-              ammoCurrent: w.clip ?? 0,
-              ammoMax: w.clip ?? 0,
-              reloads: w.ammo ? Math.floor(Math.random() * 3) + 1 : 0,
+              ...rangedLoadout(w.clip, 'npc'),
             }
             const newSkills = { ...(npcForWeapon.skills ?? {}), weapon: newWeapon }
             await supabase.from('campaign_npcs').update({ skills: newSkills, inventory: newInv }).eq('id', npcForWeapon.id)

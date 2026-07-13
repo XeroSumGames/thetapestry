@@ -6,6 +6,7 @@ import { logEvent } from '../lib/events'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
+import { rangedLoadout } from '../lib/weapon-loadout'
 import { EQUIPMENT } from '../lib/xse-schema'
 import { ANIMALS, type AnimalSeed } from '../lib/animals'
 import type { InventoryItem } from '../lib/inventory'
@@ -1912,7 +1913,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 const w = getWeaponByName(weaponName)
                 // Explosives (grenade/molotov/etc) are thrown consumables -
                 // seed a carry quantity so the NPC tracks how many they have.
-                setForm(f => ({ ...f, weapon: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? Math.ceil(Math.random() * 3) : 0, ...(w?.category === 'explosive' ? { qty: 1 } : {}) } } as any))
+                setForm(f => ({ ...f, weapon: { weaponName, condition: 'Used', ...rangedLoadout(w?.clip, 'npc'), ...(w?.category === 'explosive' ? { qty: 1 } : {}) } } as any))
               }}
                 style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                 <option value="">- None -</option>
@@ -1954,7 +1955,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   const weaponName = e.target.value
                   if (!weaponName) { setForm(f => ({ ...f, weapon2: null } as any)); return }
                   const w = getWeaponByName(weaponName)
-                  setForm(f => ({ ...f, weapon2: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? Math.ceil(Math.random() * 3) : 0, ...(w?.category === 'explosive' ? { qty: 1 } : {}) } } as any))
+                  setForm(f => ({ ...f, weapon2: { weaponName, condition: 'Used', ...rangedLoadout(w?.clip, 'npc'), ...(w?.category === 'explosive' ? { qty: 1 } : {}) } } as any))
                 }}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">- None -</option>

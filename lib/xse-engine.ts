@@ -11,6 +11,7 @@ import {
   MOTIVATIONS,
 } from './xse-schema'
 import { getWeaponByName } from './weapons'
+import { rangedLoadout } from './weapon-loadout'
 
 export function getBaseSkillValue(skillName: string): SkillValue {
   const skill = SKILLS.find(s => s.name === skillName)
@@ -229,23 +230,23 @@ char.creationMethod = 'backstory'
   // melee has no clip. floor(random*3)+1 = 1..3.
   const wP = getWeaponByName(state.weaponPrimary)
   const wS = getWeaponByName(state.weaponSecondary)
-  const d3 = () => Math.floor(Math.random() * 3) + 1
   char.weaponPrimary = {
     weaponName: state.weaponPrimary,
     condition: 'Used',
     // Explosives are thrown consumables (qty), not clip-fed; everything else
-    // ranged gets a full clip + 1d3 reloads. Spread so `qty` (not on the
-    // CharacterWeapon type) doesn't trip the excess-property check.
+    // ranged uses the PC loadout canon (full clip + 1d6 reloads) via
+    // rangedLoadout. Spread so `qty` (not on the CharacterWeapon type) doesn't
+    // trip the excess-property check.
     ...(wP?.category === 'explosive'
       ? { ammoCurrent: state.primaryAmmo, qty: state.primaryQty ?? 1 }
-      : { ammoCurrent: wP?.clip ?? 0, ammoMax: wP?.clip ?? 0, reloads: wP?.clip ? d3() : 0 }),
+      : rangedLoadout(wP?.clip, 'pc')),
   }
   char.weaponSecondary = {
     weaponName: state.weaponSecondary,
     condition: 'Used',
     ...(wS?.category === 'explosive'
       ? { ammoCurrent: state.secondaryAmmo, qty: state.secondaryQty ?? 1 }
-      : { ammoCurrent: wS?.clip ?? 0, ammoMax: wS?.clip ?? 0, reloads: wS?.clip ? d3() : 0 }),
+      : rangedLoadout(wS?.clip, 'pc')),
   }
   char.equipment = state.equipment ? [state.equipment] : []
   char.incidentalItem = state.incidentalItem

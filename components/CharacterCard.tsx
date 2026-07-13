@@ -21,6 +21,7 @@ import { fetchApprenticeNpc } from '../lib/data/community'
 import { openPopout } from '../lib/popout'
 import RollModal, { type RollResult } from './RollModal'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
+import { rangedLoadout } from '../lib/weapon-loadout'
 import { computeEncumbrance } from '../lib/encumbrance'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
@@ -270,7 +271,7 @@ function CharacterCardImpl({
     const w = getWeaponByName(weaponName)
     // Thrown explosives (grenade/molotov) are consumables - seed a carry
     // quantity so the sheet tracks how many the PC has.
-    const newData = { weaponName, condition: 'Used' as Condition, ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? Math.floor(Math.random() * 3) + 1 : 0, ...(w?.category === 'explosive' ? { qty: 1 } : {}) }
+    const newData = { weaponName, condition: 'Used' as Condition, ...rangedLoadout(w?.clip, 'pc'), ...(w?.category === 'explosive' ? { qty: 1 } : {}) }
     saveWeapon(slot, newData)
   }
 
