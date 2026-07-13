@@ -22,6 +22,7 @@ import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } f
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../../lib/table-roll-context'
 import { insertRollLog } from '../../../../../lib/data/roll-log'
 import { setGrappledBy } from '../../../../../lib/data/tactical'
+import { updateCampaignNpc } from '../../../../../lib/data/campaign-npcs'
 import { applyDamageToPc, applyDamageToNpc, type DamageContext } from '../../../../../lib/data/combat'
 import { trace } from '../../../../../lib/playtest-recorder'
 import { queuePendingHeal } from '../../../../../lib/campaign-clock'
@@ -143,6 +144,22 @@ export function useRollResolution(deps: RollResolutionDeps) {
     // insight option on a GM-rolled unarmed attack). Falls back to myEntry for
     // self-rolls, where roller == viewer anyway.
     const insightHolder = entries.find(e => e.character.name === characterName) ?? myEntry
+    // The ATTACKER = the character the roll is attributed to (characterName),
+    // NOT myEntry (the viewer). A GM rolling an attack FOR an NPC or another PC
+    // made melee-damage PHY, ammo spend, weapon jam, and kill-credit all read
+    // the GM's OWN PC (or zero) - so NPCs dealt wrong melee damage + never spent
+    // ammo, and a GM viewer's PC could have its ammo/condition silently mangled
+    // by an NPC's shot (2026-07-13 playtest; audit H1/H2). Resolve the attacker
+    // once here: a PC in `entries`, else an NPC row. myEntry is only the
+    // last-resort fallback for a self-roll where roller == viewer anyway.
+    const attackerEntry = entries.find(e => e.character.name === characterName) ?? null
+    const attackerNpc: CampaignNpc | null = attackerEntry
+      ? null
+      : ((campaignNpcs.find((n: any) => n.name === characterName) ?? rosterNpcs.find((n: any) => n.name === characterName)) ?? null)
+    const attackerPhy = attackerEntry?.character.data?.rapid?.PHY
+      ?? (attackerNpc as any)?.physicality
+      ?? myEntry?.character.data?.rapid?.PHY
+      ?? 0
     // CMod is itemized by source (3c). The modal field holds the auto-computed
     // net (from computeAttackCmod) plus any manual GM tweak; range / sick /
     // insight are layered on here. Each non-zero source becomes its own labeled
@@ -362,7 +379,8 @@ export function useRollResolution(deps: RollResolutionDeps) {
       // never added to damage (rollDamage skips phyBonus) and the defensive
       // mod uses DEX instead of PHY, easily producing 0 damage.
       const isMelee = w?.category === 'melee' || weapon.weaponName === 'Unarmed'
-      const attackerPhy = myEntry?.character.data?.rapid?.PHY ?? 0
+      // attackerPhy resolved once at the top of executeRoll from the roller
+      // (PC or NPC), not myEntry - see the attacker-resolution comment there.
       const traits = weapon.traits ?? []
       const isStun = getTraitValue(traits, 'Stun') !== null
       const burstCount = getTraitValue(traits, 'Automatic Burst')
@@ -585,20 +603,36 @@ export function useRollResolution(deps: RollResolutionDeps) {
 
       damageResult = { base: totalBase, diceRoll: totalDice, diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc, phyBonus: totalPhy, totalWP: totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
-      // Auto-decrement ammo for ranged attacks. Explosives are excluded -
-      // they carry clip:1 but are consumables tracked by qty (decremented
-      // above), not by the clip/reload system.
-      if (w && !isMelee && w.clip && w.category !== 'explosive' && myEntry) {
-        const charData = myEntry.character.data ?? {}
-        const slots = ['weaponPrimary', 'weaponSecondary'] as const
-        for (const slot of slots) {
-          if (charData[slot]?.weaponName === weapon.weaponName && charData[slot]?.ammoCurrent > 0) {
-            const ammoUsed = rolls > 1 ? rolls : 1
-            const newAmmo = Math.max(0, charData[slot].ammoCurrent - ammoUsed)
-            await supabase.from('characters').update({
-              data: { ...charData, [slot]: { ...charData[slot], ammoCurrent: newAmmo } }
-            }).eq('id', myEntry.character.id)
-            break
+      // Auto-decrement ammo for ranged attacks on the ATTACKER's weapon, PC or
+      // NPC (not myEntry - that gave NPCs infinite ammo and let an NPC's shot
+      // drain a GM viewer's own PC clip; audit H2 / 2026-07-13 playtest).
+      // Explosives are excluded - they carry clip:1 but are consumables tracked
+      // by qty (decremented above), not by the clip/reload system.
+      if (w && !isMelee && w.clip && w.category !== 'explosive') {
+        const ammoUsed = rolls > 1 ? rolls : 1
+        if (attackerEntry) {
+          const charData = attackerEntry.character.data ?? {}
+          for (const slot of ['weaponPrimary', 'weaponSecondary'] as const) {
+            if (charData[slot]?.weaponName === weapon.weaponName && charData[slot]?.ammoCurrent > 0) {
+              const newAmmo = Math.max(0, charData[slot].ammoCurrent - ammoUsed)
+              const newData = { ...charData, [slot]: { ...charData[slot], ammoCurrent: newAmmo } }
+              await supabase.from('characters').update({ data: newData }).eq('id', attackerEntry.character.id)
+              setEntries(prev => prev.map(e => e.character.id === attackerEntry.character.id
+                ? { ...e, character: { ...e.character, data: newData } } : e))
+              break
+            }
+          }
+        } else if (attackerNpc) {
+          const sk: any = attackerNpc.skills ?? {}
+          for (const slot of ['weapon', 'weapon2'] as const) {
+            if (sk[slot]?.weaponName === weapon.weaponName && sk[slot]?.ammoCurrent > 0) {
+              const newAmmo = Math.max(0, sk[slot].ammoCurrent - ammoUsed)
+              const newSkills = { ...sk, [slot]: { ...sk[slot], ammoCurrent: newAmmo } }
+              await updateCampaignNpc(attackerNpc.id, { skills: newSkills })
+              setCampaignNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } : n))
+              setRosterNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } as any : n))
+              break
+            }
           }
         }
       }
@@ -751,9 +785,11 @@ export function useRollResolution(deps: RollResolutionDeps) {
             label: `${targetNpc.name} has been mortally wounded by ${characterName}, and will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.death,
           })
-          // Kill log entry on the attacker's progression log (PCs only).
-          if (myEntry?.character?.id) {
-            void appendProgressionLog(myEntry.character.id, 'kill', `Mortally wounded ${targetNpc.name} with ${weapon.weaponName}`)
+          // Kill log entry on the attacker's progression log (PCs only). Use
+          // the resolved attacker, not myEntry - a GM rolling an NPC's kill
+          // must not credit the GM's own PC (and an NPC attacker gets none).
+          if (attackerEntry?.character?.id) {
+            void appendProgressionLog(attackerEntry.character.id, 'kill', `Mortally wounded ${targetNpc.name} with ${weapon.weaponName}`)
           }
         }
         // Incapacitation - NPC loses consciousness when RP first hits 0
@@ -1199,23 +1235,36 @@ export function useRollResolution(deps: RollResolutionDeps) {
       // (feed order: attack first, malfunction below). characterName
       // is in scope from earlier in executeRoll.
       pendingJamLogRef.current = characterName
-      if (myEntry) {
-        const charData = myEntry.character.data ?? {}
-        const slots = ['weaponPrimary', 'weaponSecondary'] as const
-        for (const slot of slots) {
+      // Degrade the ATTACKER's weapon (PC or NPC), not myEntry - an NPC's Low
+      // Insight was jamming the GM viewer's own PC gun (audit H2).
+      const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
+      if (attackerEntry) {
+        const charData = attackerEntry.character.data ?? {}
+        for (const slot of ['weaponPrimary', 'weaponSecondary'] as const) {
           if (charData[slot]?.weaponName === pendingRoll.weapon.weaponName) {
-            const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
             const currentIdx = conditions.indexOf(charData[slot].condition ?? 'Used')
             const newCondition = conditions[Math.min(currentIdx + 1, conditions.length - 1)]
-            const nextSlotData = { ...charData[slot], condition: newCondition, jammed: true }
-            const newData = { ...charData, [slot]: nextSlotData }
-            await supabase.from('characters').update({ data: newData }).eq('id', myEntry.character.id)
-            // Local optimistic patch - without this the Ready Weapon
-            // modal that opens on the next round would still see the
-            // pre-Low-Insight slot data until the next loadEntries.
-            setEntries(prev => prev.map(e => e.character.id === myEntry.character.id
+            const newData = { ...charData, [slot]: { ...charData[slot], condition: newCondition, jammed: true } }
+            await supabase.from('characters').update({ data: newData }).eq('id', attackerEntry.character.id)
+            // Local optimistic patch - without this the Ready Weapon modal that
+            // opens on the next round would still see the pre-Low-Insight slot
+            // data until the next loadEntries.
+            setEntries(prev => prev.map(e => e.character.id === attackerEntry.character.id
               ? { ...e, character: { ...e.character, data: newData } }
               : e))
+            break
+          }
+        }
+      } else if (attackerNpc) {
+        const sk: any = attackerNpc.skills ?? {}
+        for (const slot of ['weapon', 'weapon2'] as const) {
+          if (sk[slot]?.weaponName === pendingRoll.weapon.weaponName) {
+            const currentIdx = conditions.indexOf(sk[slot].condition ?? 'Used')
+            const newCondition = conditions[Math.min(currentIdx + 1, conditions.length - 1)]
+            const newSkills = { ...sk, [slot]: { ...sk[slot], condition: newCondition, jammed: true } }
+            await updateCampaignNpc(attackerNpc.id, { skills: newSkills })
+            setCampaignNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } : n))
+            setRosterNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } as any : n))
             break
           }
         }
@@ -1903,8 +1952,8 @@ export function useRollResolution(deps: RollResolutionDeps) {
                   : (campaignNpcs.find((n: any) => n.name === grapplerName) ?? rosterNpcs.find(n => n.name === grapplerName)))
               : null
             if (grapplerEntry?.liveState || grapplerNpc) {
-              // Compute weapon damage against the grappler
-              const attackerPhy = myEntry?.character.data?.rapid?.PHY ?? 0
+              // Compute weapon damage against the grappler. attackerPhy is the
+              // roller's, resolved at the top of executeRoll (not myEntry).
               const unarmedBonus = strayWeapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
               const strayTraits = strayWeapon.traits ?? []
               const isStunWeapon = getTraitValue(strayTraits, 'Stun') !== null
