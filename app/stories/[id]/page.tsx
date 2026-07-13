@@ -543,6 +543,26 @@ export default function CampaignPage() {
     },
   })
 
+  // Keep the roster live. Players joining, leaving, picking a character, or
+  // toggling observer all write campaign_members, and the lobby is where the
+  // GM seats players before launch - but the lobby had no members subscription,
+  // so a new join didn't appear until a manual refresh (2026-07-13 playtest,
+  // step 5/6). campaign_members is in the realtime publication. Distinct channel
+  // name (not the table page's `members_${id}`) so the two never share an
+  // instance. Refetch the roster + portraits on any change.
+  usePostgresSubscription(`lobby-members-${id}`, {
+    label: `campaign_members:lobby:${id}`,
+    event: '*',
+    table: 'campaign_members',
+    filter: `campaign_id=eq.${id}`,
+    handler: async () => {
+      const mems = await fetchMembersWithProfiles(supabase, id)
+      setMembers(mems)
+      const charIds = mems.filter((m: any) => m.character_id).map((m: any) => m.character_id as string)
+      if (charIds.length > 0) setMemberPortraits(await getCharacterPortraits(charIds))
+    },
+  })
+
   if (loading || !campaign) return (
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>Loading...</div>
   )
