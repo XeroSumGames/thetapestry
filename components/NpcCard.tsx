@@ -337,13 +337,18 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           {w && (
             <span style={{ fontSize: '13px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
               {w.name} · {w.damage} · {w.range}{w.category === 'explosive' ? ` · ×${(weapon as any)?.qty ?? 1}` : ''}{weapon?.condition && weapon.condition !== 'Used' ? ` · ${weapon.condition}` : ''}
+              {/* Ammo readout - clip-fed firearms only. NPC ammo was tracked but
+                  shown NOWHERE (2026-07-13 smoke 6b), making scarcity invisible. */}
+              {w.clip && w.category !== 'explosive' ? <span style={{ color: '#EF9F27' }}> · {(weapon as any)?.ammoCurrent ?? 0}/{w.clip}{((weapon as any)?.reloads ?? 0) > 0 ? ` +${(weapon as any).reloads} clip${(weapon as any).reloads === 1 ? '' : 's'}` : ''}</span> : null}
             </span>
           )}
           {npc.skills?.weapon2 && (() => {
             const w2 = getWeaponByName(npc.skills.weapon2.weaponName)
+            const s2: any = npc.skills.weapon2
             return w2 ? (
               <span style={{ fontSize: '13px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
-                {w2.name} · {w2.damage} · {w2.range}{w2.category === 'explosive' ? ` · ×${(npc.skills.weapon2 as any)?.qty ?? 1}` : ''}
+                {w2.name} · {w2.damage} · {w2.range}{w2.category === 'explosive' ? ` · ×${s2?.qty ?? 1}` : ''}
+                {w2.clip && w2.category !== 'explosive' ? <span style={{ color: '#EF9F27' }}> · {s2?.ammoCurrent ?? 0}/{w2.clip}{(s2?.reloads ?? 0) > 0 ? ` +${s2.reloads} clip${s2.reloads === 1 ? '' : 's'}` : ''}</span> : null}
               </span>
             ) : null
           })()}
@@ -361,12 +366,19 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             👊 Unarmed
           </button>
-          {w && (
-            <button onClick={handleWeaponAttack}
-              style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-              ⚔️ {w.name} ({w.damage})
-            </button>
-          )}
+          {w && (() => {
+            // Empty-clip gate: clip-fed firearms with 0 loaded can't fire (the
+            // PC combat bar has the same gate; NPCs spawn scarce - 1d6-1 - so
+            // an empty gun is common and must read as empty, not attack).
+            const outOfAmmo = !!w.clip && w.category !== 'explosive' && ((weapon as any)?.ammoCurrent ?? 0) <= 0
+            return (
+              <button onClick={outOfAmmo ? undefined : handleWeaponAttack} disabled={outOfAmmo}
+                title={outOfAmmo ? `${w.name} is empty - no loaded rounds` : undefined}
+                style={{ padding: '2px 6px', background: outOfAmmo ? '#2a1210' : '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: outOfAmmo ? 'not-allowed' : 'pointer', opacity: outOfAmmo ? 0.6 : 1 }}>
+                ⚔️ {w.name} {outOfAmmo ? '(EMPTY)' : `(${w.damage})`}
+              </button>
+            )
+          })()}
           {(npc.equipment ?? []).map((eq, i) => {
             const eqWeapon = getWeaponByName(eq.name)
             if (!eqWeapon) return null
