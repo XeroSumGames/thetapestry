@@ -8,6 +8,9 @@ beta-readiness-roadmap-2026-07-10.md, the 2026-07-13 playtest.
 
 Sizes: S = under an hour, M = a focused session, L = multi-session.
 
+> **PROGRESS 2026-07-13 (autonomous run):** Gate 5 (5.1/5.2/5.3/5.5) DONE, Gate 4 (all) DONE, Gate 3 (3.2/3.4) DONE. All shipped + pushed, 924 tests green. REMAINING: Gate 1 verifies (Xero, 2 browsers), Gate 2 (H4/H10 need careful passes; M7/M8/M4 clean), Gate 3.1/3.3 (atomic give/barter RPCs), Gate 6 polish.
+
+
 ---
 
 ## GATE 1 - PROVE the shipped batch (needs Xero, 2 browsers; blocks everything)
@@ -58,44 +61,44 @@ runs pass, "stable" is unproven.
       `InventoryPanel.tsx:171` - receiver write is fire-and-forget, giver
       decremented unconditionally. Build an atomic RPC per PC->PC's
       `give_item_to_character` precedent (Puffer builds SQL, wires the 3 paths).
-- [ ] **3.2 (S) H11 CDP deduct-then-apply, no rollback.**
+- [x] **3.2 (S) H11 CDP deduct-then-apply, no rollback.**
       `CharacterEvolution.tsx:221` - a failed raise write eats the CDP.
       Apply-then-deduct, or refund on the catch.
 - [ ] **3.3 (M) M11 barter half-applies + Dire Failure re-rolls free.**
       `page.tsx:10849` PC write commits before target write with no rollback
       (dupe+loss); `TradeNegotiationModal.tsx:365` allows unlimited re-rolls
       until success. Atomic trade RPC + disable re-roll after a Dire.
-- [ ] **3.4 (S) M5 campaign clock non-atomic read-modify-write.**
+- [x] **3.4 (S) M5 campaign clock non-atomic read-modify-write.**
       `lib/campaign-clock.ts:56` - two concurrent advances lose one bump AND
       double-run the drainers (2x rations/infection). Compare-and-set
       (`.eq` on the old clock value, retry on 0 rows) or a tiny RPC.
 
 ## GATE 4 - Communities flagship correctness
 
-- [ ] **4.1 (S) M1 a successful Retention Check cancels the morale departures
+- [x] **4.1 (S) M1 a successful Retention Check cancels the morale departures
       it must preserve** + writes `members_after: 0` for a community that kept
       everyone. `CommunityMoraleModal.tsx:405,438,548`.
-- [ ] **4.2 (S) M2 Retention Check drops every CMod slot except Mood**,
+- [x] **4.2 (S) M2 Retention Check drops every CMod slot except Mood**,
       contradicting its own spec comment. `CommunityMoraleModal.tsx:463`.
-- [ ] **4.3 (S) M3 recruit "Current group" default inline-creates a NEW group
+- [x] **4.3 (S) M3 recruit "Current group" default inline-creates a NEW group
       every recruit** (party fragments into duplicate one-member groups; the
       2026-06-12 ship changed the label, not the semantics). `page.tsx:3970` -
       default must RESOLVE to the roller's existing group when one exists.
-- [ ] **4.4 (S) L6 a founding leader who leaves keeps the leader seat**
+- [x] **4.4 (S) L6 a founding leader who leaves keeps the leader seat**
       (Clear Voice CMod wrong forever after). `CampaignCommunity.tsx:1456` -
       departure check matches `invited_by_user_id`, which founder rows never set.
 
 ## GATE 5 - Strangers-proofing (500 unknown users, app-layer doors)
 
-- [ ] **5.1 (S) H16 token-creator Bulk Upload has NO Thriver gate** and
+- [x] **5.1 (S) H16 token-creator Bulk Upload has NO Thriver gate** and
       `portrait_bank` INSERT RLS does not backstop - any signed-in user can
       inject images into the shared portrait pool every campaign browses.
       `app/tools/token-creator/page.tsx:618` + `handleBulkUploadAll:567`.
-- [ ] **5.2 (S) M15 stuck-observer joins.** An existing observer re-joining
+- [x] **5.2 (S) M15 stuck-observer joins.** An existing observer re-joining
       via a normal invite stays invisible forever. `app/stories/join/page.tsx:56`
       (23505 branch never clears the flag) + `app/join/[code]/page.tsx:45`
       (never touches it).
-- [ ] **5.3 (S) M16 pin/community attachment uploads bypass prepareUpload** -
+- [x] **5.3 (S) M16 pin/community attachment uploads bypass prepareUpload** -
       no size cap, no MIME whitelist, raw filename in the path.
       `QuickAddModal.tsx:267,374`.
 - [ ] **5.4 (M) M14 initiative-channel broadcasts are fully trusted.** Any
@@ -103,7 +106,7 @@ runs pass, "stable" is unproven.
       (force-redirect players off the table), `recorder_stop`, `logs_cleared`,
       or spam `turn_advance_requested`. Add a sender/GM check in the handlers
       (payload sender + membership/GM validation), `page.tsx:191-214`.
-- [ ] **5.5 (S) M17 module publish / GM-kit export silently truncate at
+- [x] **5.5 (S) M17 module publish / GM-kit export silently truncate at
       PostgREST's 1000-row cap.** `lib/modules.ts:686` + `lib/gm-kit.ts:62` -
       paginate with `.range()` loops. At 500 users someone WILL publish a big
       campaign and ship a truncated module.
