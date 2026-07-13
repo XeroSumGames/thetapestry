@@ -16,8 +16,8 @@ describe('upkeepTransition - canon state machine', () => {
     it('Broken -> Damaged', () => {
       expect(upkeepTransition('Broken', 'Wild Success').next).toBe('Damaged')
     })
-    it('Pristine -> Used (defensive: never goes below floor)', () => {
-      expect(upkeepTransition('Pristine', 'Wild Success').next).toBe('Used')
+    it('Pristine -> Pristine (a great roll must never DEGRADE an already-best item)', () => {
+      expect(upkeepTransition('Pristine', 'Wild Success').next).toBe('Pristine')
     })
   })
 
@@ -33,6 +33,9 @@ describe('upkeepTransition - canon state machine', () => {
     })
     it('Broken -> Worn (2-level full improve)', () => {
       expect(upkeepTransition('Broken', 'High Insight').next).toBe('Worn')
+    })
+    it('Pristine -> Pristine (a great roll must never DEGRADE an already-best item)', () => {
+      expect(upkeepTransition('Pristine', 'High Insight').next).toBe('Pristine')
     })
   })
 

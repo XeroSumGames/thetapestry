@@ -444,7 +444,7 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
   const [pcsRes, npcsRes] = await Promise.all([
     supabase
       .from('character_states')
-      .select('id, character_id, characters!inner(id, name, user_id, data), infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max, wp_current, wp_max')
+      .select('id, character_id, characters!inner(id, name, user_id, data), infection_state, infection_days_left, infection_lasting_risk, infection_severity, rp_current, rp_max, wp_current, wp_max, stress')
       .eq('campaign_id', campaignId)
       .not('infection_state', 'is', null),
     supabase
@@ -527,6 +527,14 @@ async function drainInfectionDays(campaignId: string, dayDelta: number): Promise
           : (row.physicality ?? 0)
         mortalUpdates.wp_current = 0
         mortalUpdates.death_countdown = Math.max(1, 4 + phy)
+        // Entering WP=0 auto-fills 1 Stress pip (cap 5), on-entry - locked canon,
+        // applied by every other mortal-wound site (drainSubsistenceDamage, the
+        // gm_apply_damage RPC). Stress is a PC mechanic; guard on a prior wp>0
+        // so the pip is on-ENTRY (a re-drain of an already-downed PC doesn't
+        // stack another).
+        if (isPc && (row.wp_current ?? 0) > 0) {
+          mortalUpdates.stress = Math.min(5, (row.stress ?? 0) + 1)
+        }
       }
       await supabase.from(isPc ? 'character_states' : 'campaign_npcs').update({ ...clear, ...mortalUpdates }).eq('id', row.id)
       outcomes.push({ name, kind, severity, daysLeft: 0, triggered: true, wound: { roll: sum, name: wound.name, effect: wound.effect } })

@@ -50,12 +50,19 @@ export function upkeepTransition(current: ItemCondition, outcome: UpkeepOutcome)
   // never crashes on legacy data with a typo or missing field.
   const safeIdx = currentIdx >= 0 ? currentIdx : UPKEEP_FLOOR_IDX
   switch (outcome) {
+    // Improve, but NEVER degrade: an item already better than the Used floor
+    // (i.e. Pristine, idx 0) must not be pushed DOWN to Used by a great roll.
+    // `max(floor, idx-N)` alone did exactly that for Pristine (max(1,-1)=Used),
+    // so a Wild Success made a Pristine weapon worse than a plain Success kept
+    // it. Clamp with min(safeIdx, ...) so the result is never worse than the
+    // current condition. (Canon: upkeep can't raise you TO Pristine - the floor
+    // is Used - but it must not knock an already-Pristine item down either.)
     case 'Wild Success': {
-      const next = UPKEEP_CONDITIONS[Math.max(UPKEEP_FLOOR_IDX, safeIdx - 1)]
+      const next = UPKEEP_CONDITIONS[Math.min(safeIdx, Math.max(UPKEEP_FLOOR_IDX, safeIdx - 1))]
       return { next, breakWP: 0, message: 'Condition improved by 1 level' }
     }
     case 'High Insight': {
-      const next = UPKEEP_CONDITIONS[Math.max(UPKEEP_FLOOR_IDX, safeIdx - 2)]
+      const next = UPKEEP_CONDITIONS[Math.min(safeIdx, Math.max(UPKEEP_FLOOR_IDX, safeIdx - 2))]
       return { next, breakWP: 0, message: 'Condition improved by 2 levels' }
     }
     case 'Success':
