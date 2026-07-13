@@ -408,12 +408,14 @@ export default function CommunityMoraleModal({
     const willDissolve = consecutiveFailuresAfter >= 3
     const pct = outcomeToDeparturePct(moraleOutcome)
     const departCount = Math.floor(memberCount * pct)
-    // Departures: weighted NPC-only pool. If the community will dissolve,
-    // mark everyone as departing (dissolved_reason='dissolved') - handled
-    // in persistence, not here.
-    const departureIds = willDissolve
-      ? [] // dissolution path handles all members at persist-time
-      : pickDeparturesWeighted(memberLite, departCount)
+    // Departures: weighted NPC-only pool. ALWAYS compute them from the morale
+    // outcome, even when this is the 3rd failure - if a Retention Check then
+    // SAVES the community, these departures still apply (SRD p.22: saved but
+    // battered). The all-members-leave dissolution path only fires at persist
+    // time when the community REALLY dissolves (retention failed/skipped), and
+    // it ignores departureIds anyway. Previously this was [] on willDissolve, so
+    // a retention-saved community lost nobody (bug).
+    const departureIds = pickDeparturesWeighted(memberLite, departCount)
 
     setResult({
       fed, clothed, morale,
@@ -444,7 +446,9 @@ export default function CommunityMoraleModal({
       willDissolve,
       departureIds,
       membersBefore: memberCount,
-      membersAfter: willDissolve ? 0 : memberCount - departureIds.length,
+      // Departures apply whether or not it dissolves; the all-leave dissolution
+      // is a separate outcome resolved at persist time after the Retention Check.
+      membersAfter: memberCount - departureIds.length,
     })
     setStage('result')
     // Seed the Retention skill picker from whatever drove the failed
@@ -469,7 +473,15 @@ export default function CommunityMoraleModal({
     setRollingRetention(true)
     const mood = outcomeToMoraleCmod(result.morale.outcome)
     const dice = roll2d6()
-    const total = dice.die1 + dice.die2 + moraleAmod + retentionSmod + mood
+    // Retention is a full Morale Check with ONLY the Mood slot swapped for the
+    // failed Morale's cmod_for_next (SRD p.22 + the interface comment above).
+    // The staffing/safety/world slots STAY at their current values and still
+    // count - dropping them (as this did) made a well-staffed community as
+    // likely to dissolve as a wrecked one.
+    const s = result.moraleSlots
+    const nonMoodSlots = (s.fed ?? 0) + (s.clothed ?? 0) + (s.enoughHands ?? 0)
+      + (s.clearVoice ?? 0) + (s.safety ?? 0) + (s.worldEvents ?? 0) + (s.additional ?? 0)
+    const total = dice.die1 + dice.die2 + moraleAmod + retentionSmod + mood + nonMoodSlots
     const outcome = classifyRoll(total, dice.die1, dice.die2)
     const survived = !isMoraleFailure(outcome)
     setRetention({
@@ -525,6 +537,15 @@ export default function CommunityMoraleModal({
       else if (r === 'safety') roleSnap.safety++
       else roleSnap.unassigned++ // 'unassigned' or legacy 'assigned'
     }
+    // Retention overrides dissolution if a successful Retention Check was rolled
+    // on this Result stage. Per SRD p.22 the community is saved; departures from
+    // the failed Morale still apply, and consecutive_failures drops to 2 (a
+    // week's cushion). If retention FAILED/was skipped, it dissolves as planned.
+    // Computed BEFORE the history insert so members_after is truthful (a saved
+    // community kept everyone-minus-departures, NOT 0).
+    const retentionSucceeded = !!retention?.survived
+    const reallyDissolves = willDissolve && !retentionSucceeded
+
     await supabase.from('community_morale_checks').insert({
       community_id: community.id,
       week_number: newWeek,
@@ -534,18 +555,10 @@ export default function CommunityMoraleModal({
       total: morale.total, outcome: morale.outcome.toLowerCase().replace(/ /g, '_'),
       cmod_for_next: nextMoraleCmod,
       modifiers_json: moraleSlots,
-      members_before: membersBefore, members_after: membersAfter,
+      members_before: membersBefore,
+      members_after: reallyDissolves ? 0 : membersAfter,
       role_snapshot: roleSnap,
     })
-
-    // Retention overrides dissolution if a successful Retention Check
-    // was rolled on this Result stage. Per SRD p.22 the community is
-    // saved; departures from the failed Morale still apply, and we
-    // drop consecutive_failures to 2 (one week's cushion - they're
-    // battered but not dead). If the retention attempt FAILED, the
-    // community dissolves as originally planned.
-    const retentionSucceeded = !!retention?.survived
-    const reallyDissolves = willDissolve && !retentionSucceeded
 
     // 3) Apply member consequence
     if (reallyDissolves) {

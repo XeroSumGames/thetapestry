@@ -1457,6 +1457,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const wasLeader = !!c && (
       (c.leader_npc_id && m.npc_id === c.leader_npc_id)
       || (c.leader_user_id && m.invited_by_user_id === c.leader_user_id)
+      // A founding leader's own row never sets invited_by_user_id (nobody
+      // invited them), so without this clause the founder leaving left the
+      // leader seat dangling forever (Clear Voice CMod stuck wrong). Matches
+      // the founder detection at handleRemoveMember (line ~1247).
+      || (c.leader_user_id && m.recruitment_type === 'founder' && !!m.character_id)
     )
     if (wasLeader) {
       // Null both fields; pickAutoSuccessor now runs against the

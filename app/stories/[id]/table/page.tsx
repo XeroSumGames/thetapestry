@@ -3983,22 +3983,21 @@ export default function TablePage() {
       // (the user types nothing) but no null-name crash risk in the community
       // panel; Phase 3 overwrites it with the real Community name at 13.
       const groupName = recruitNewCommunityName.trim() || `${rollerEntry.character.name}'s Group`
-      const { data: newComm, error: commErr } = await supabase
-        .from('communities')
-        .insert({
-          campaign_id: id,
-          name: groupName,
-          stage: 'group',
-          status: 'forming',
-        })
-        .select('id, name')
-        .single()
-      if (commErr || !newComm) {
-        alert(`Failed to create group: ${commErr?.message ?? 'unknown error'}`)
-        return
+      // "Current group" default (no custom name): JOIN the roller's existing
+      // same-named group instead of spawning a duplicate every recruit (the
+      // party fragmented into identical one-member groups, none reaching 13).
+      const existingGroup = !recruitNewCommunityName.trim() ? recruitCommunityList.find(c => c.name === groupName) : undefined
+      if (existingGroup) {
+        finalCommunityId = existingGroup.id
+        finalCommunityName = existingGroup.name
+      } else {
+        const { data: newComm, error: commErr } = await supabase
+          .from('communities').insert({ campaign_id: id, name: groupName, stage: 'group', status: 'forming' })
+          .select('id, name').single()
+        if (commErr || !newComm) { alert(`Failed to create group: ${commErr?.message ?? 'unknown error'}`); return }
+        finalCommunityId = newComm.id
+        finalCommunityName = newComm.name ?? groupName
       }
-      finalCommunityId = newComm.id
-      finalCommunityName = newComm.name ?? `${rollerEntry.character.name}'s Group`
     } else if (finalCommunityId) {
       finalCommunityName = recruitCommunityList.find(c => c.id === finalCommunityId)?.name ?? 'Unnamed Group'
     } else {
