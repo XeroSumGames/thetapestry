@@ -370,6 +370,46 @@ export function useRollResolution(deps: RollResolutionDeps) {
       }
     }
 
+    // Fire spends ammo on ANY outcome and even with NO target (Xero canon
+    // 2026-07-13: "if a weapon is fired, it uses ammo regardless of the
+    // outcome"). Runs BEFORE the hit block so a miss / no-target shot still
+    // burns the round(s). Only clip-fed firearms: melee, thrown explosives,
+    // and pistol-whip (forceMelee) don't consume clip ammo. Decrements the
+    // ATTACKER's weapon (PC or NPC), never myEntry.
+    if (pendingRoll.weapon && !pendingRoll.weapon.forceMelee) {
+      const fw = getWeaponByName(pendingRoll.weapon.weaponName)
+      if (fw && fw.category !== 'melee' && fw.category !== 'explosive' && fw.clip) {
+        const fireBurst = getTraitValue(pendingRoll.weapon.traits ?? [], 'Automatic Burst')
+        const ammoUsed = fireBurst && fireBurst > 1 ? fireBurst : 1
+        const fireName = pendingRoll.weapon.weaponName
+        if (attackerEntry) {
+          const cd = attackerEntry.character.data ?? {}
+          for (const slot of ['weaponPrimary', 'weaponSecondary'] as const) {
+            if (cd[slot]?.weaponName === fireName && (cd[slot]?.ammoCurrent ?? 0) > 0) {
+              const newAmmo = Math.max(0, cd[slot].ammoCurrent - ammoUsed)
+              const newData = { ...cd, [slot]: { ...cd[slot], ammoCurrent: newAmmo } }
+              await supabase.from('characters').update({ data: newData }).eq('id', attackerEntry.character.id)
+              setEntries(prev => prev.map(e => e.character.id === attackerEntry.character.id
+                ? { ...e, character: { ...e.character, data: newData } } : e))
+              break
+            }
+          }
+        } else if (attackerNpc) {
+          const sk: any = attackerNpc.skills ?? {}
+          for (const slot of ['weapon', 'weapon2'] as const) {
+            if (sk[slot]?.weaponName === fireName && (sk[slot]?.ammoCurrent ?? 0) > 0) {
+              const newAmmo = Math.max(0, sk[slot].ammoCurrent - ammoUsed)
+              const newSkills = { ...sk, [slot]: { ...sk[slot], ammoCurrent: newAmmo } }
+              await updateCampaignNpc(attackerNpc.id, { skills: newSkills })
+              setCampaignNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } : n))
+              setRosterNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } as any : n))
+              break
+            }
+          }
+        }
+      }
+    }
+
     if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight' || isGrenadeFumble)) {
       const weapon = pendingRoll.weapon
       const w = getWeaponByName(weapon.weaponName)
@@ -603,39 +643,8 @@ export function useRollResolution(deps: RollResolutionDeps) {
 
       damageResult = { base: totalBase, diceRoll: totalDice, diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc, phyBonus: totalPhy, totalWP: totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
-      // Auto-decrement ammo for ranged attacks on the ATTACKER's weapon, PC or
-      // NPC (not myEntry - that gave NPCs infinite ammo and let an NPC's shot
-      // drain a GM viewer's own PC clip; audit H2 / 2026-07-13 playtest).
-      // Explosives are excluded - they carry clip:1 but are consumables tracked
-      // by qty (decremented above), not by the clip/reload system.
-      if (w && !isMelee && w.clip && w.category !== 'explosive') {
-        const ammoUsed = rolls > 1 ? rolls : 1
-        if (attackerEntry) {
-          const charData = attackerEntry.character.data ?? {}
-          for (const slot of ['weaponPrimary', 'weaponSecondary'] as const) {
-            if (charData[slot]?.weaponName === weapon.weaponName && charData[slot]?.ammoCurrent > 0) {
-              const newAmmo = Math.max(0, charData[slot].ammoCurrent - ammoUsed)
-              const newData = { ...charData, [slot]: { ...charData[slot], ammoCurrent: newAmmo } }
-              await supabase.from('characters').update({ data: newData }).eq('id', attackerEntry.character.id)
-              setEntries(prev => prev.map(e => e.character.id === attackerEntry.character.id
-                ? { ...e, character: { ...e.character, data: newData } } : e))
-              break
-            }
-          }
-        } else if (attackerNpc) {
-          const sk: any = attackerNpc.skills ?? {}
-          for (const slot of ['weapon', 'weapon2'] as const) {
-            if (sk[slot]?.weaponName === weapon.weaponName && sk[slot]?.ammoCurrent > 0) {
-              const newAmmo = Math.max(0, sk[slot].ammoCurrent - ammoUsed)
-              const newSkills = { ...sk, [slot]: { ...sk[slot], ammoCurrent: newAmmo } }
-              await updateCampaignNpc(attackerNpc.id, { skills: newSkills })
-              setCampaignNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } : n))
-              setRosterNpcs(prev => prev.map(n => n.id === attackerNpc.id ? { ...n, skills: newSkills } as any : n))
-              break
-            }
-          }
-        }
-      }
+      // (Ammo is decremented in the fire-spends-ammo block that runs for ALL
+      // outcomes, above - a hit is not required to burn the round.)
 
       // Auto-apply damage to target (PC or NPC)
       trace('damage', { targetLookup: true, targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })

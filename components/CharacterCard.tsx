@@ -987,6 +987,13 @@ function CharacterCardImpl({
               { label: 'Secondary', slot: 'weaponSecondary' as const, weapon: weaponSecondary, setWeapon: (d: any) => saveWeapon('weaponSecondary', d) },
             ]).map(({ label, slot, weapon, setWeapon }) => {
               const w = getWeaponByName(weapon.weaponName)
+              // Normalize reloads: characters created before the loadout rule
+              // (wizard/quick/random/pregen) never set `reloads`, so `undefined
+              // <= 0` was false and the Reload button stayed live forever =
+              // infinite ammo. Coalesce to 0 so an unset value reads as "no
+              // spare clips" (disabled) rather than infinite. The first Reload
+              // /+/- write stamps a concrete number back.
+              const reloads = weapon.reloads ?? 0
               const cond = (weapon.condition as Condition) ?? 'Used'
               const cmodVal = CONDITION_CMOD[cond]
               return (
@@ -1077,26 +1084,26 @@ function CharacterCardImpl({
                             ))}
                           </div>
                           <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
-                          <button onClick={() => { if (!canEdit || weapon.reloads <= 0) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: weapon.reloads - 1 }) }}
-                            disabled={!canEdit || weapon.reloads <= 0}
-                            style={{ padding: '2px 8px', background: weapon.reloads > 0 ? '#1a2e10' : '#2a1210', border: `1px solid ${weapon.reloads > 0 ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: weapon.reloads > 0 ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5 }}>
+                          <button onClick={() => { if (!canEdit || reloads <= 0) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: reloads - 1 }) }}
+                            disabled={!canEdit || reloads <= 0}
+                            style={{ padding: '2px 8px', background: reloads > 0 ? '#1a2e10' : '#2a1210', border: `1px solid ${reloads > 0 ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: reloads > 0 ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: canEdit && reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5 }}>
                             Reload
                           </button>
                           {/* Reload tracker - 5 pips */}
                           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>Clips</span>
                           <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
-                            <button disabled={!canEdit || weapon.reloads <= 0}
-                              onClick={() => canEdit && weapon.reloads > 0 && setWeapon({ ...weapon, reloads: weapon.reloads - 1 })}
-                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads > 0 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>-</button>
-                            {Array.from({ length: Math.max(5, weapon.reloads + 1) }).map((_, i) => (
-                              <div key={i} style={{ width: '10px', height: '14px', borderRadius: '2px', background: i < weapon.reloads ? '#7fc458' : '#242424', border: `1px solid ${i < weapon.reloads ? '#7fc458' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
+                            <button disabled={!canEdit || reloads <= 0}
+                              onClick={() => canEdit && reloads > 0 && setWeapon({ ...weapon, reloads: reloads - 1 })}
+                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && reloads > 0 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>-</button>
+                            {Array.from({ length: Math.max(5, reloads + 1) }).map((_, i) => (
+                              <div key={i} style={{ width: '10px', height: '14px', borderRadius: '2px', background: i < reloads ? '#7fc458' : '#242424', border: `1px solid ${i < reloads ? '#7fc458' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
                             ))}
-                            <button disabled={!canEdit || weapon.reloads >= 5}
-                              onClick={() => canEdit && weapon.reloads < 10 && setWeapon({ ...weapon, reloads: weapon.reloads + 1 })}
-                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads < 10 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
+                            <button disabled={!canEdit || reloads >= 5}
+                              onClick={() => canEdit && reloads < 10 && setWeapon({ ...weapon, reloads: reloads + 1 })}
+                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && reloads < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && reloads < 10 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
                           </div>
-                          {weapon.reloads > 0 && (
-                            <span style={{ fontSize: '13px', color: '#8a8a8a', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>{weapon.reloads * w.clip} bullets</span>
+                          {reloads > 0 && (
+                            <span style={{ fontSize: '13px', color: '#8a8a8a', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>{reloads * w.clip} bullets</span>
                           )}
                         </div>
                       )}

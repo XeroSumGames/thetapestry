@@ -97,16 +97,12 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-// 1d3 — same reload budget as PC character creation (StepEight rolls 1d3 per ranged weapon)
+// 1d3 — reload budget: every character (PC or NPC) with a ranged weapon starts
+// with a FULL clip + 1d3 reloads (Xero canon 2026-07-13, superseding the earlier
+// 1d6-1 loaded-scarcity call). floor(random*3)+1, NOT ceil(random*3) - ceil
+// returns 0 when random() lands exactly on 0.
 function d3(): number {
-  return Math.ceil(Math.random() * 3)
-}
-
-// 1d6 — loot scarcity: a generated NPC's ranged weapon spawns with 1d6-1
-// loaded rounds (0-5, so a chance it's empty). The looted weapon inherits
-// this, so picking a gun off a body yields scarce ammo. Per Xero 2026-06-23.
-function d6(): number {
-  return Math.floor(Math.random() * 6) + 1
+  return Math.floor(Math.random() * 3) + 1
 }
 
 function pickN<T>(arr: T[], n: number): T[] {
@@ -270,21 +266,21 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
     const commonRanged = RANGED_WEAPONS.filter(w => w.rarity === 'Common')
     const pool = [...commonMelee, ...commonRanged]
     const w = pick(pool)
-    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ? Math.max(0, d6() - 1) : 0, ammoMax: w.clip ?? 0, reloads: w.ammo ? d3() : 0 }
+    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ?? 0, ammoMax: w.clip ?? 0, reloads: w.clip ? d3() : 0 }
   } else if (npcType === 'foe') {
     // Uncommon weapons
     const uncommonMelee = MELEE_WEAPONS.filter(w => w.rarity === 'Uncommon')
     const uncommonRanged = RANGED_WEAPONS.filter(w => w.rarity === 'Uncommon')
     const pool = [...uncommonMelee, ...uncommonRanged]
     const w = pick(pool)
-    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ? Math.max(0, d6() - 1) : 0, ammoMax: w.clip ?? 0, reloads: w.ammo ? d3() : 0 }
+    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ?? 0, ammoMax: w.clip ?? 0, reloads: w.clip ? d3() : 0 }
   } else if (npcType === 'antagonist') {
     // Uncommon or rare - favour ranged
     const goodRanged = RANGED_WEAPONS.filter(w => w.rarity === 'Uncommon' || w.rarity === 'Rare')
     const goodMelee = MELEE_WEAPONS.filter(w => w.rarity === 'Uncommon')
     const pool = [...goodRanged, ...goodRanged, ...goodMelee] // double weight ranged
     const w = pick(pool)
-    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ? Math.max(0, d6() - 1) : 0, ammoMax: w.clip ?? 0, reloads: w.ammo ? d3() : 0 }
+    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ?? 0, ammoMax: w.clip ?? 0, reloads: w.clip ? d3() : 0 }
   }
   // Friendly: no weapon assigned by default
 

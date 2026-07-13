@@ -224,18 +224,28 @@ char.creationMethod = 'backstory'
   char.motivation = step6?.motivation ?? ''
   char.motivationNote = step6?.motivationNote ?? ''
 
+  // Loadout rule (Xero canon 2026-07-13): every ranged weapon starts with a
+  // FULL clip + 1d3 reloads. Explosives are qty-tracked (no clip/reloads);
+  // melee has no clip. floor(random*3)+1 = 1..3.
+  const wP = getWeaponByName(state.weaponPrimary)
+  const wS = getWeaponByName(state.weaponSecondary)
+  const d3 = () => Math.floor(Math.random() * 3) + 1
   char.weaponPrimary = {
     weaponName: state.weaponPrimary,
     condition: 'Used',
-    ammoCurrent: state.primaryAmmo,
-    // Carry count only for thrown explosives; omitted for other weapons.
-    ...(getWeaponByName(state.weaponPrimary)?.category === 'explosive' ? { qty: state.primaryQty ?? 1 } : {}),
+    // Explosives are thrown consumables (qty), not clip-fed; everything else
+    // ranged gets a full clip + 1d3 reloads. Spread so `qty` (not on the
+    // CharacterWeapon type) doesn't trip the excess-property check.
+    ...(wP?.category === 'explosive'
+      ? { ammoCurrent: state.primaryAmmo, qty: state.primaryQty ?? 1 }
+      : { ammoCurrent: wP?.clip ?? 0, ammoMax: wP?.clip ?? 0, reloads: wP?.clip ? d3() : 0 }),
   }
   char.weaponSecondary = {
     weaponName: state.weaponSecondary,
     condition: 'Used',
-    ammoCurrent: state.secondaryAmmo,
-    ...(getWeaponByName(state.weaponSecondary)?.category === 'explosive' ? { qty: state.secondaryQty ?? 1 } : {}),
+    ...(wS?.category === 'explosive'
+      ? { ammoCurrent: state.secondaryAmmo, qty: state.secondaryQty ?? 1 }
+      : { ammoCurrent: wS?.clip ?? 0, ammoMax: wS?.clip ?? 0, reloads: wS?.clip ? d3() : 0 }),
   }
   char.equipment = state.equipment ? [state.equipment] : []
   char.incidentalItem = state.incidentalItem
