@@ -25,6 +25,7 @@ import {
   logDissolution,
 } from '../lib/community-events'
 import type { Community, Member } from '../lib/types/community'
+import { combinedMemberCount, COMMUNITY_THRESHOLD } from '../lib/community-stage'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { OUTCOME } from '../lib/roll-outcomes'
 
@@ -42,6 +43,11 @@ interface Props {
   onClose: () => void
   community: Community
   members: Member[]
+  // Active party PCs count as community members too (Xero canon 2026-07-13:
+  // "4 players + 9 members = 13"), so the weekly-check eligibility uses the
+  // SAME combined count as promotion. Departures/morale math still operate on
+  // the NPC `members` only - a dice roll never removes a player's character.
+  pcCount: number
   memberNameById: Map<string, string>  // for pretty departure list - member.id → display name
   campaignId: string
   userId: string | null
@@ -127,7 +133,7 @@ function roll2d6(): { die1: number; die2: number } {
 }
 
 export default function CommunityMoraleModal({
-  open, onClose, community, members, memberNameById,
+  open, onClose, community, members, pcCount, memberNameById,
   campaignId, userId, onComplete,
 }: Props) {
   const supabase = createClient()
@@ -330,10 +336,13 @@ export default function CommunityMoraleModal({
   const dissolved = community.status === 'dissolved'
   // Status is 'forming' for new communities and nothing auto-promotes it
   // to 'active' - the "Community" chip is driven by the 13+ count, not
-  // status. Eligibility gate mirrors that: any non-dissolved community
-  // at 13+ can run a weekly check. The first successful finalize flips
-  // status → 'active' to mark the community as having completed a cycle.
-  const eligible = memberCount >= 13 && !dissolved
+  // status. Eligibility uses the COMBINED count (party PCs + NPC members),
+  // the same total promotion uses - otherwise a group promoted at 13 combined
+  // (e.g. 4 PCs + 9 NPCs) could never run the check it just unlocked, because
+  // this gate only saw the 9 NPC rows (H9 deadlock). The first successful
+  // finalize flips status → 'active' to mark a completed cycle.
+  const totalMemberCount = combinedMemberCount(pcCount, memberCount)
+  const eligible = totalMemberCount >= COMMUNITY_THRESHOLD && !dissolved
 
   // Effective CMods (override or auto)
   const slotMood = slotMoodOverride ?? moodFromPrior
@@ -897,7 +906,7 @@ export default function CommunityMoraleModal({
                 Weekly Check - {community.name}
               </div>
               <div style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
-                Week {community.week_number + 1} · {memberCount} members · {community.consecutive_failures}/3 consecutive failures
+                Week {community.week_number + 1} · {totalMemberCount} members · {community.consecutive_failures}/3 consecutive failures
               </div>
             </div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
@@ -912,9 +921,9 @@ export default function CommunityMoraleModal({
                 This community has already dissolved. No further checks possible.
               </div>
             )}
-            {!dissolved && memberCount < 13 && (
+            {!dissolved && totalMemberCount < COMMUNITY_THRESHOLD && (
               <div style={{ padding: '10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '17px' }}>
-                Only {memberCount} member{memberCount === 1 ? '' : 's'}. Morale Checks require 13+ (this is a Group, not a Community).
+                Only {totalMemberCount} member{totalMemberCount === 1 ? '' : 's'} ({pcCount} PC{pcCount === 1 ? '' : 's'} + {memberCount} NPC{memberCount === 1 ? '' : 's'}). Morale Checks require {COMMUNITY_THRESHOLD}+ (this is a Group, not a Community).
               </div>
             )}
             {community.consecutive_failures === 2 && !dissolved && (

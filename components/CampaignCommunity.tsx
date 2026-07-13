@@ -3073,6 +3073,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
             onClose={() => setMoraleCommunityId(null)}
             community={comm}
             members={mems}
+            pcCount={chars.length}
             memberNameById={nameMap}
             campaignId={campaignId}
             userId={myUserId}
