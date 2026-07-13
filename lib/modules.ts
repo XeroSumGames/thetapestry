@@ -15,6 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getCachedAuth } from './auth-cache'
 import { logEvent } from './events'
+import { fetchAllRows } from './supabase-paginate'
 import {
   loadPregensByCampaignForSnapshot,
   stampModuleIdOnPregens,
@@ -683,12 +684,14 @@ export async function buildCampaignSnapshot(
     const sceneIds = sceneRows.map((s: any) => s.id)
     const tokensByScene: Record<string, any[]> = {}
     if (sceneIds.length > 0) {
-      const { data: tokens, error: tErr } = await supabase
+      // Paginate - a campaign with >1000 scene_tokens would otherwise publish a
+      // silently truncated module (PostgREST's 1000-row cap).
+      const tokens = await fetchAllRows((from, to) => supabase
         .from('scene_tokens')
         .select('*')
         .in('scene_id', sceneIds)
-      if (tErr) throw new Error(`Read scene_tokens: ${tErr.message}`)
-      for (const t of tokens ?? []) {
+        .range(from, to))
+      for (const t of tokens) {
         ;(tokensByScene[t.scene_id] ??= []).push(t)
       }
     }

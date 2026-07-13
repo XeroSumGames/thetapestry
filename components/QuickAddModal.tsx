@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { appendProgressionEntry } from '../lib/progression-log'
+import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
 import { LABEL_STYLE, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import { PIN_CATEGORIES, getCategoryFilter, getCategoryLabel } from '../lib/pin-categories'
@@ -263,8 +264,10 @@ export default function QuickAddModal({
     if (pinAttachments.length > 0 && newPinId) {
       const scope = mode === 'campaign' ? campaignId : 'world'
       for (const file of pinAttachments) {
-        const path = `${scope}/${newPinId}/${file.name}`
-        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
+        const check = prepareUpload('pin-attachments', file)
+        if (!check.ok) { console.error('[quick-add] attachment rejected:', file.name, check.reason); continue }
+        const path = `${scope}/${newPinId}/${check.filename}`
+        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file, { contentType: check.contentType })
         if (upErr) console.error('[quick-add] attachment upload failed:', file.name, upErr.message)
       }
     }
@@ -370,8 +373,10 @@ export default function QuickAddModal({
     }
     if (commAttachments.length > 0) {
       for (const file of commAttachments) {
-        const path = `${campaignId}/community-${data.id}/${file.name}`
-        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
+        const check = prepareUpload('pin-attachments', file)
+        if (!check.ok) { console.error('[quick-add] community attachment rejected:', file.name, check.reason); continue }
+        const path = `${campaignId}/community-${data.id}/${check.filename}`
+        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file, { contentType: check.contentType })
         if (upErr) console.error('[quick-add] community attachment upload failed:', file.name, upErr.message)
       }
     }

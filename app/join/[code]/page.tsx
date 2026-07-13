@@ -5,7 +5,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
-import { getCampaignModuleCover } from '../../../lib/data/campaigns'
+import { getCampaignModuleCover, setMemberObserver } from '../../../lib/data/campaigns'
 import { SETTINGS } from '../../../lib/settings'
 
 export default function JoinByCodePage() {
@@ -44,6 +44,9 @@ export default function JoinByCodePage() {
     if (!user) { router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`); return }
     const { error } = await supabase.from('campaign_members').insert({ campaign_id: campaign.id, user_id: user.id })
     if (error && error.code !== '23505') { setStatus('error'); return }
+    // This is a PLAYER invite link. If they were already seated as an observer,
+    // a bare re-join left them stuck invisible - explicitly downgrade to player.
+    if (error?.code === '23505') await setMemberObserver(campaign.id, user.id, false)
     if (!error) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
     router.push(`/stories/${campaign.id}`)
   }

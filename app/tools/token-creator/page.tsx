@@ -600,6 +600,16 @@ export default function PortraitResizerPage() {
       Sign in to upload portraits.
     </div>
   )
+  // Thriver-only gate for the WHOLE tool. This uploads into the SHARED public
+  // portrait-bank that every campaign browses, so a non-Thriver must not reach
+  // any tab or handler here (the Bulk Upload tab + handleBulkUploadAll were the
+  // ungated hole). RLS is not a sufficient backstop - portrait_bank INSERT
+  // allows created_by=auth.uid(), so a non-Thriver could inject with their own id.
+  if (!isThriver) return (
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+      This tool is Thriver-only.
+    </div>
+  )
 
   const pendingCount = bulkItems.filter(i => i.status === 'pending').length
 

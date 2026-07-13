@@ -52,13 +52,12 @@ export default function JoinCampaignPage() {
 
     if (joinErr) {
       if (joinErr.code === '23505') {
-        // Already a member. The insert is a no-op on conflict, so the
-        // observer flag would be silently dropped - someone who followed
-        // the observer link while already seated would never actually
-        // become an observer. Upgrade the existing seat explicitly.
-        if (isObserver) {
-          await setMemberObserver(campaign.id, user.id, true)
-        }
+        // Already a member. The insert is a no-op on conflict, so the observer
+        // flag would be silently dropped - reconcile the existing seat to the
+        // CURRENT link BOTH ways: an observer-link re-join upgrades to observer,
+        // and a normal-link re-join DOWNGRADES a stale observer back to player
+        // (else someone who first joined as observer stays invisible forever).
+        await setMemberObserver(campaign.id, user.id, isObserver)
         router.push(destination)
         return
       }
