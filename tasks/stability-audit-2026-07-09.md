@@ -112,7 +112,7 @@ another Success, and the reroll block subtracts full WP/RP a SECOND time. The
 reroll damage calc also omits `armor`/`attackerCategory`, so it ignores worn
 armor the original path applied. OWNER: **HP**.
 
-**H4. [VERIFIED] `app/stories/[id]/table/page.tsx:4574` - Cover Fire's -2 CMod is written to the target's `aim_bonus`, then wiped before it can apply.**
+**H4. [LIVE-CONFIRMED 2026-07-13 playtest step 13 - Cover Fire no penalty] `app/stories/[id]/table/page.tsx:4574` - Cover Fire's -2 CMod is written to the target's `aim_bonus`, then wiped before it can apply.**
 Only readers of `aim_bonus` read the ACTIVE entry's; `activateUpdate` (:2423)
 sets `aim_bonus: 0` when the target's turn starts. The penalty is erased with
 zero effect on any roll, but the action is still consumed. Guaranteed no-op.
@@ -169,10 +169,11 @@ instance; `.subscribe(cb)` no-ops; the awaited Promise never resolves; the drain
 stalls mid-row (pending-lasting-check never set, summary never written,
 AdvanceTimeModal stuck). The `finally removeChannel` then tears down the page's
 live initiative channel. Fires when an infection is severity='check' at Day 0.
-T4. OWNER: **Puffer** (lib) - needs the same "reuse ref if present, else REST"
+T4. **LIVE-VERIFIED FIXED 2026-07-13 (playtest step 20: advance-time on infected PC did NOT hang; infection -> lasting wound, table stayed live).** OWNER: **Puffer** (lib) - needs the same "reuse ref if present, else REST"
 pattern GmNotes uses.
 
-**H14. [VERIFIED-by-source-facts] `components/CampaignPins.tsx:169` + `CampaignMap.tsx:996` share the `campaign_pins_${id}` topic while co-mounted (the table page's default pairing).**
+**H14. [LIVE-CONFIRMED 2026-07-13 playtest, step 18 - top pin blocker] `components/CampaignPins.tsx:169` + `CampaignMap.tsx:996` share the `campaign_pins_${id}` topic while co-mounted (the table page's default pairing).**
+> Playtest: pin reveal/hide did NOT reach the sidebar for GM or player without a manual refresh / tab toggle. See tasks/playtest-analysis-2026-07-13.md P1.
 Second mount gets the first's channel: its SUBSCRIBED catch-up never fires and
 its postgres binding is dead (or errors the shared channel via bindings
 mismatch); first unmount `removeChannel`s the shared instance, killing the
