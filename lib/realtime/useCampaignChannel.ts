@@ -29,6 +29,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { createClient } from '../supabase-browser'
 import { wrapBroadcast, wrapDbChange } from '../sentry-realtime'
 import { record } from '../playtest-recorder'
+import { createReconcileScheduler } from './reconcileScheduler'
 import type { CampaignBroadcastEvent, CampaignBroadcastPayloads } from './events'
 
 /** A broadcast handler receives the (typed) payload directly. */
@@ -60,6 +61,23 @@ export interface CampaignChannelConfig {
    * channel is part of Phase 3).
    */
   channelName?: string
+  /**
+   * Opt-in reconcile net. postgres_changes is best-effort: a still-connected
+   * client can silently drop a single UPDATE (background-tab throttling, a
+   * flaky RLS'd delivery) and then sit on stale state until some user action
+   * triggers a manual refetch - the 2026-07-13 playtest saw RP damage not
+   * reach the character card until a refresh. When a reconcile fn is supplied
+   * it runs on (re)subscribe, on tab-return-to-visible, and on a slow poll
+   * (serialized + coalesced via the reconcile scheduler), so convergence never
+   * depends on catching one ephemeral event. Mirrors usePostgresSubscription's
+   * reconcile + the hardened CampaignMap pin-sync pattern. Make its identity
+   * stable-enough across renders (it is read from a ref, so the body stays
+   * fresh; only presence at mount matters). The reconcile fn should guard its
+   * own handler-vs-reconcile races (e.g. loadEntries' seq guard).
+   */
+  reconcile?: () => void | Promise<void>
+  /** Reconcile poll cadence in ms (default 30000). Ignored without reconcile. */
+  reconcileMs?: number
 }
 
 export interface CampaignChannelHandle {
@@ -116,13 +134,35 @@ export function useCampaignChannel(
       )
     }
 
+    // Opt-in reconcile net (only wired when a reconcile fn is given, so
+    // channels that don't pass one keep exactly their old behavior - no
+    // scheduler, no listener, no poll). Read through the ref so the body
+    // stays fresh across renders.
+    const scheduler = configRef.current.reconcile
+      ? createReconcileScheduler(() => configRef.current.reconcile?.())
+      : null
+
     channel.subscribe((status: string) => {
       record('realtime', { direction: 'status', channel: name, status })
+      // Catch-up on (re)subscribe: a dropped or late-joined channel reloads
+      // instead of sitting on stale data until a manual refetch.
+      if (status === 'SUBSCRIBED') scheduler?.request()
     })
     channelRef.current = channel
 
+    let onVisible: (() => void) | null = null
+    let poll: ReturnType<typeof setInterval> | null = null
+    if (scheduler) {
+      onVisible = () => { if (!document.hidden) scheduler.request() }
+      document.addEventListener('visibilitychange', onVisible)
+      poll = setInterval(() => { if (!document.hidden) scheduler.request() }, configRef.current.reconcileMs ?? 30000)
+    }
+
     return () => {
       try { supabase.removeChannel(channel) } catch { /* already torn down */ }
+      if (onVisible) document.removeEventListener('visibilitychange', onVisible)
+      if (poll) clearInterval(poll)
+      scheduler?.dispose()
       channelRef.current = null
     }
     // ONLY campaignId. This is the whole point - do not add deps.

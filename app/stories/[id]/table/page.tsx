@@ -1536,6 +1536,12 @@ export default function TablePage() {
   useCampaignChannel(id, {
     channelName: `table_${id}`,
     postgres: [{ label: 'character_states:*', event: '*', table: 'character_states', filter: `campaign_id=eq.${id}`, handler: () => loadEntries(id) }],
+    // Reconcile net: character_states carries WP/RP/stress/damage to every
+    // card + the open sheet. A single dropped UPDATE left the card stale until
+    // a manual refresh (2026-07-13 playtest: "RP damage didn't reflect till a
+    // refresh"). loadEntries has its own seq guard, so a reconcile refetch is
+    // safe to race the event-driven one.
+    reconcile: () => loadEntries(id),
   })
   useCampaignChannel(id, {
     channelName: `members_${id}`,
