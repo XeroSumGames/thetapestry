@@ -114,9 +114,7 @@ runs pass, "stable" is unproven.
       table-page combat gates (broken-weapon attack `page.tsx:~5994`, out-of-
       ammo/out-of-throws siblings, session-kick alerts at `:187/:194`). The
       other ~330 sites can wait; these fire mid-fight.
-- [ ] **6.2 (S) NPC ammo visibility.** Playtest: "very unclear where to see an
-      NPC's ammo." Surface loaded/reloads on the NPC combat card where the GM
-      attacks from.
+- [x] **6.2 SHIPPED 2026-07-13 (`58943ba9`).** NpcCard weapon chips show an amber loaded/clip (+N clips) readout; the Attack button gates on an empty clip (EMPTY, disabled). Also answers smoke 10: the NPC's Attack IS the sword button on its card.
 - [ ] **6.3 (M) T3-6 jargon tooltips** (CDP / RAPID / AMod / SMod / CMod) on
       first-encounter surfaces - sheet + roll modal.
 - [ ] **6.4 (S) David Battersby pregen bio** - Chased-era backstory shipping in
@@ -137,5 +135,13 @@ runs pass, "stable" is unproven.
 4. **Gate 3 + 4** (1-2 sessions; the two RPCs are the only real weight).
 5. **Gate 6** while Gates 3/4 verify; **Gate 1.3** E2E re-cert last.
 6. Final: one full playtest evening with 3-4 real players on the release build.
+
+PROGRESS 2026-07-13 (post-smoke): Gate 1.1 RUN by Xero - realtime trio VERIFIED,
+PC ammo canon verified; owed re-verify: reroll (11), NPC-side ammo spend (10a,
+now visible), stress pip (14b), firing arc (20). Fixed from the run: reloads
+retune 1d6->1d3 (`c079466f`), NPC ammo display + empty gate (`58943ba9`),
+PHY-check alerts -> in-card notice (`e6e10cec`). Open question to Xero: smoke
+14a "no PHY check" is likely the LOCKED Dire-Failure='auto' canon (2026-05-09),
+not a bug - awaiting his confirm or canon change.
 
 Everything here is file:line-precise; any lane can pick any box up cold.
