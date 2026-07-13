@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-13 21:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files] (+7 tests vs 18:03 run)
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 20:46 UTC)
+
+**Drift:**
+- HOPED-FOR unchanged (same 3 chronic items, 27-51+ days): vehicle popout broadcasts, Stress Check 12-string (8 uncaptured strings), FI Insight Die AWARD path.
+- Stale-open todo items shipped since 18:03 UTC run:
+  - `[ ] [HIGH] lib/upkeep.ts:54 Pristine item degrades on Wild/High-Insight (H5)` -> SHIPPED `c0d1e3d`
+  - `[ ] [HIGH] lib/campaign-clock.ts:530 sickness Day-0 skips +1 Stress pip (H8)` -> SHIPPED `c0d1e3d`
+  - `[ ] [HIGH] Community 13-member boundary double-defined (H9)` -> SHIPPED `5879d39`
+  - `[ ] [LOW/UX] NPC ammo not surfaced anywhere` -> SHIPPED `58943ba` (ammo shown on card + Attack gated)
+
+**Action:** todo.md cleanup pass needed - H5/H8/H9 and NPC ammo item are DONE in code. HOPED-FOR drain at Beta-500 dry-run.
+
+---
+
 ## 2026-07-13 18:03 UTC
 
 **Status:** DRIFT
