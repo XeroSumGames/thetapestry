@@ -223,6 +223,9 @@ function CharacterCardImpl({
   const [breakingPointResult, setBreakingPointResult] = useState<(RollResult & { table_name: string; table_effect: string; durationHours: number }) | null>(null)
   const [lastingWoundPending, setLastingWoundPending] = useState(false)
   const [lastingWoundCmod, setLastingWoundCmod] = useState<number>(0)
+  // In-card status line for PHY-check / infection outcomes (replaces the old
+  // browser alert()s - no-browser-dialogs rule, 2026-07-13 smoke step 14).
+  const [checkNotice, setCheckNotice] = useState<string | null>(null)
   const [lastingWoundResult, setLastingWoundResult] = useState<(RollResult & { table_name: string; table_effect: string }) | null>(null)
   const [showRestModal, setShowRestModal] = useState(false)
   const [showInventory, setShowInventory] = useState(false)
@@ -591,7 +594,7 @@ function CharacterCardImpl({
                             const dc = Math.max(1, 4 + phyAmod)
                             onStatUpdate(localState.id, 'wp_current', 0)
                             onStatUpdate(localState.id, 'death_countdown', dc as any)
-                            alert(`${c.name} has progressed to Mortally Wounded. Death countdown: ${dc} rounds.`)
+                            setCheckNotice(`${c.name} has progressed to Mortally Wounded. Death countdown: ${dc} rounds.`)
                           }
                           // Clear infection state regardless.
                           onStatUpdate?.(localState.id, 'infection_state', null as any)
@@ -768,6 +771,12 @@ function CharacterCardImpl({
           <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginBottom: '10px' }}>
             <div style={{ display: 'flex', gap: '24px', marginBottom: '10px' }}>
               <div style={{ flex: 1 }}>
+                {checkNotice && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', padding: '6px 8px', background: '#1a2210', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                    <span style={{ flex: 1 }}>{checkNotice}</span>
+                    <button onClick={() => setCheckNotice(null)} style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: 0 }}>×</button>
+                  </div>
+                )}
                 <DotTracker label="Wound Points" current={localState.wp_current} max={localState.wp_max} field="wp_current" color="#c0392b" />
                 {localState.wp_current === 0 && (
                   <div style={{ marginTop: '4px' }}>
@@ -788,8 +797,9 @@ function CharacterCardImpl({
                           const phyMod = rapid.PHY ?? 0
                           const total = d1 + d2 + phyMod
                           if (total >= 9) {
-                            alert(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} - Success! No lasting wound.`)
+                            setCheckNotice(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} - Success! No lasting wound.`)
                           } else {
+                            setCheckNotice(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} - Failed. Roll the Lasting Wound.`)
                             setLastingWoundCmod(0)
                             setLastingWoundPending(true)
                           }
