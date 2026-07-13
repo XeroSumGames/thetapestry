@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
-import { wrapBroadcast } from '../lib/sentry-realtime'
+import { wrapBroadcast, wrapDbChange } from '../lib/sentry-realtime'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel, getCategoryFilter } from '../lib/pin-categories'
@@ -153,12 +153,23 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   }
 
   // Realtime sync - pins channel. Every CampaignPins instance for the
-  // same campaign (GM screen + each player's screen) subscribes to
-  // `campaign_pins_<campaignId>`. Mutations (reveal toggle, folder
-  // bulk reveal/hide, edit save, delete, reorder) broadcast a
-  // `pins_changed` event; everyone refetches. Broadcast > postgres_
-  // changes because the latter is flaky on RLS'd tables (see lessons
-  // memo entry 2026-04-11 about npc_relationships).
+  // same campaign (GM screen + each player's screen) refetches on any pin
+  // mutation (reveal toggle, folder bulk reveal/hide, edit save, delete,
+  // reorder).
+  //
+  // TOPIC MUST STAY DISTINCT FROM CampaignMap's `campaign_pins_${id}` (H14,
+  // 2026-07-13 playtest: "pin reveal didn't reach the sidebar for GM or player
+  // without a manual refresh/toggle"). The map + Pins sidebar mount TOGETHER,
+  // and asking supabase for a channel on a shared topic returns the SAME
+  // instance - so the second subscriber's SUBSCRIBED catch-up silently no-ops
+  // and either
+  // component's unmount removeChannel()s the OTHER's still-live channel. A
+  // dedicated `campaign_pins_sidebar_${id}` topic keeps the two independent.
+  //
+  // Convergence is belt-and-suspenders: postgres_changes on campaign_pins (the
+  // DB is the source of truth for every mutation, and campaign_pins is in the
+  // realtime publication - the map has relied on this for pins for months) PLUS
+  // the low-latency pins_changed broadcast PLUS SUBSCRIBED / visibility catch-up.
   const pinsChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   function broadcastPinsChanged() {
     pinsChannelRef.current?.send({ type: 'broadcast', event: 'pins_changed', payload: {} })
@@ -166,15 +177,15 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   }
   useEffect(() => {
     loadPins(); loadScenes()
-    const ch = supabase.channel(`campaign_pins_${campaignId}`)
+    const ch = supabase.channel(`campaign_pins_sidebar_${campaignId}`)
+    ch.on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, wrapDbChange('campaign_pins_sidebar', () => { void loadPins() }))
     ch.on('broadcast', { event: 'pins_changed' }, wrapBroadcast('pins_changed', () => { void loadPins() }))
     // Catch-up reloads. The pins_changed broadcast is fire-and-forget with
     // no delivery guarantee, so a client that was disconnected, subscribed
     // late, or dropped the packet never reloads and shows a stale pin set
-    // until a manual refresh (playtest: "shared a pin, didn't show without a
-    // refresh"). Reloading on the SUBSCRIBED (re)connect and on tab-return-
-    // to-visible makes convergence stop depending on catching one ephemeral
-    // broadcast. Mirrors the RollsFeed / TableChat catch-up pattern.
+    // until a manual refresh. Reloading on the SUBSCRIBED (re)connect and on
+    // tab-return-to-visible makes convergence stop depending on catching one
+    // ephemeral broadcast. Mirrors the RollsFeed / TableChat catch-up pattern.
     ch.subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadPins() })
     pinsChannelRef.current = ch
     function handleVisibility() { if (!document.hidden) void loadPins() }
