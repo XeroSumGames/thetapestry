@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-13 15:04 UTC
+
+**Status:** DRIFT (new context since 12:07 run - playtest + H14 fix; chronic HOPED-FOR items unchanged)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [917 passed / 53 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 14:40 UTC)
+
+**New since 12:07 run:**
+- `989030f` H14 FIXED - CampaignPins/CampaignMap shared-topic collision closed (was HIGH todo item L34)
+- Playtest ran 14:21 UTC (Xero GM + Tony Bushell, 2-client). Verdict: core loop PLAYABLE. H13 infection-resolve fix verified green.
+- 4 new MED bugs added to todo (N1-N4): player roster not live on join, open char sheet stale on damage, no player pin popup, NPC ammo not surfaced.
+
+**Drift:** Same 3 HOPED-FOR stale items (no code touch):
+- Vehicle popout broadcasts (Section B) - stale 50+ days
+- Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale 27 days
+- FI Insight Die AWARD path (doubles -> pool increment) - stale 31 days
+
+**Action:** Drain HOPED-FOR items at next Beta-500 dry-run. H14 closed. Playtest bugs N1-N4 in todo queue for HP.
+
+---
+
 ## 2026-07-13 12:07 UTC
 
 **Status:** DRIFT (same as 09:07 run - no new signal)
