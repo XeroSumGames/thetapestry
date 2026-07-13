@@ -5051,6 +5051,11 @@ export default function TablePage() {
     let rerollDamage: DamageResult | undefined
     if (pendingRoll?.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
       const weapon = pendingRoll.weapon
+      // Reroll REPLACES the original (Xero canon 2026-07-13): if the original hit
+      // applied damage, this baseline is the target's PRE-hit state - restore it
+      // and reapply the reroll from it instead of stacking (double damage). No
+      // baseline = original missed, so live state already IS the pre-hit state.
+      const baseline = rollResult.damage?.rerollBaseline
       const w = getWeaponByName(weapon.weaponName)
       const isMelee = !!weapon.forceMelee || w?.category === 'melee' || weapon.weaponName === 'Unarmed'
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
@@ -5072,25 +5077,28 @@ export default function TablePage() {
       const { finalWP: rawFinalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP + unarmedBonus, weapon.rpPercent, defensiveMod, { rpFromRaw: isStunReroll, wpPercent: weapon.wpPercent })
       const finalWP = isStunReroll ? 0 : rawFinalWP
 
-      rerollDamage = { base: dmg.base, diceRoll: dmg.diceRoll, diceDesc: dmg.diceDesc, phyBonus: dmg.phyBonus, totalWP: dmg.totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
+      // Carry the original baseline forward so a 2nd reroll still replaces back
+      // to the pre-attack state, not the 1st reroll's result.
+      rerollDamage = { base: dmg.base, diceRoll: dmg.diceRoll, diceDesc: dmg.diceDesc, phyBonus: dmg.phyBonus, totalWP: dmg.totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName, rerollBaseline: baseline }
 
       // Apply damage to target
       if (targetEntry?.liveState) {
         if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetEntry.character.name)
-        const tNewWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
-        const tNewRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
-        const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
-        let rerollStressReason: string | null = null
-        if (tNewWP === 0 && targetEntry.liveState.wp_current > 0) {
-          update.death_countdown = mortalWoundCountdown(targetEntry.character.data?.rapid?.PHY ?? 0)
-          update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
-          rerollStressReason = 'Mortally Wounded'
+        const phy = targetEntry.character.data?.rapid?.PHY ?? 0
+        const ls = targetEntry.liveState
+        const eb = baseline?.targetKind === 'pc' && baseline.id === targetEntry.stateId ? baseline
+          : { wp: ls.wp_current, rp: ls.rp_current, deathCountdown: ls.death_countdown ?? 0, incapRounds: ls.incap_rounds ?? 0, stress: ls.stress ?? 0 }
+        const tNewWP = Math.max(0, eb.wp - finalWP)
+        const tNewRP = Math.max(0, eb.rp - finalRP)
+        const mortalNow = tNewWP === 0 && eb.wp > 0
+        const incapNow = tNewRP === 0 && eb.rp > 0 && tNewWP > 0
+        const update: any = {
+          wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString(),
+          death_countdown: mortalNow ? mortalWoundCountdown(phy) : eb.deathCountdown,
+          incap_rounds: incapNow ? Math.max(1, 4 - phy) : eb.incapRounds,
+          stress: Math.min(5, eb.stress + (mortalNow || incapNow ? 1 : 0)),
         }
-        if (tNewRP === 0 && targetEntry.liveState.rp_current > 0 && tNewWP > 0) {
-          update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
-          update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
-          rerollStressReason = 'Incapacitated'
-        }
+        const rerollStressReason: string | null = mortalNow ? 'Mortally Wounded' : incapNow ? 'Incapacitated' : null
         await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
         setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
         initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: update } })
@@ -5103,13 +5111,18 @@ export default function TablePage() {
         }
       } else if (targetNpcObj) {
         if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetNpcObj.name)
-        const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
-        const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
-        const tNewWP = Math.max(0, tNpcWP - finalWP)
-        const tNewRP = Math.max(0, tNpcRP - finalRP)
-        const npcUpdate: any = { wp_current: tNewWP, rp_current: tNewRP }
-        if (tNewWP === 0 && tNpcWP > 0) npcUpdate.death_countdown = mortalWoundCountdown(targetNpcObj.physicality ?? 0)
-        if (tNewRP === 0 && tNpcRP > 0 && tNewWP > 0) npcUpdate.incap_rounds = Math.max(1, 4 - (targetNpcObj.physicality ?? 0))
+        const npcPhy = targetNpcObj.physicality ?? 0
+        const eb = baseline?.targetKind === 'npc' && baseline.id === targetNpcObj.id ? baseline
+          : { wp: targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10, rp: targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6, deathCountdown: (targetNpcObj as any).death_countdown ?? 0, incapRounds: (targetNpcObj as any).incap_rounds ?? 0 }
+        const tNewWP = Math.max(0, eb.wp - finalWP)
+        const tNewRP = Math.max(0, eb.rp - finalRP)
+        const mortalNow = tNewWP === 0 && eb.wp > 0
+        const incapNow = tNewRP === 0 && eb.rp > 0 && tNewWP > 0
+        const npcUpdate: any = {
+          wp_current: tNewWP, rp_current: tNewRP,
+          death_countdown: mortalNow ? mortalWoundCountdown(npcPhy) : eb.deathCountdown,
+          incap_rounds: incapNow ? Math.max(1, 4 - npcPhy) : eb.incapRounds,
+        }
         await supabase.from('campaign_npcs').update(npcUpdate).eq('id', targetNpcObj.id)
         const npcId = targetNpcObj.id
         const patch = { ...npcUpdate }

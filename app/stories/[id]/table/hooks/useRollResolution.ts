@@ -660,6 +660,15 @@ export function useRollResolution(deps: RollResolutionDeps) {
         const currentWP = freshState?.wp_current ?? targetEntry.liveState.wp_current
         const currentRP = freshState?.rp_current ?? targetEntry.liveState.rp_current
         const currentInsight = freshState?.insight_dice ?? targetEntry.liveState.insight_dice ?? 0
+        // Snapshot the pre-hit state so an Insight reroll can REPLACE (not
+        // stack on) this hit - see DamageResult.rerollBaseline.
+        if (damageResult) damageResult.rerollBaseline = {
+          targetKind: 'pc', id: targetEntry.stateId,
+          wp: currentWP, rp: currentRP,
+          deathCountdown: freshState?.death_countdown ?? targetEntry.liveState.death_countdown ?? 0,
+          incapRounds: freshState?.incap_rounds ?? targetEntry.liveState.incap_rounds ?? 0,
+          stress: freshState?.stress ?? targetEntry.liveState.stress ?? 0,
+        }
         const newWP = Math.max(0, currentWP - finalWP)
         const newRP = Math.max(0, currentRP - finalRP)
         trace('damage', { pcTarget: targetEntry.character.name, wp: { from: currentWP, to: newWP }, rp: { from: currentRP, to: newRP } })
@@ -778,6 +787,14 @@ export function useRollResolution(deps: RollResolutionDeps) {
         // NPC target - use campaign_npcs
         const npcWP = targetNpc.wp_current ?? targetNpc.wp_max ?? 10
         const npcRP = targetNpc.rp_current ?? targetNpc.rp_max ?? 6
+        // Snapshot pre-hit state for the reroll-replaces-original path.
+        if (damageResult) damageResult.rerollBaseline = {
+          targetKind: 'npc', id: targetNpc.id,
+          wp: npcWP, rp: npcRP,
+          deathCountdown: (targetNpc as any).death_countdown ?? 0,
+          incapRounds: (targetNpc as any).incap_rounds ?? 0,
+          stress: 0,
+        }
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
         trace('damage', { npcTarget: targetNpc.name, id: targetNpc.id, wp: { from: npcWP, to: newWP }, rp: { from: npcRP, to: newRP } })

@@ -92,6 +92,20 @@ export interface DamageResult {
   finalRP: number
   mitigated: number
   targetName: string
+  // The target's state IMMEDIATELY BEFORE this hit applied. An Insight reroll
+  // REPLACES the original outcome (Xero canon 2026-07-13), so the reroll
+  // restores this baseline and reapplies from it - otherwise the reroll's
+  // damage stacked on top of the original hit (double damage). Only set for
+  // hits that actually applied damage to a PC/NPC/object target.
+  rerollBaseline?: {
+    targetKind: 'pc' | 'npc' | 'object'
+    id: string
+    wp: number
+    rp: number
+    deathCountdown: number
+    incapRounds: number
+    stress: number
+  }
 }
 
 export interface RollResult {
