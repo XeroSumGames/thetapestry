@@ -34,6 +34,7 @@ import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../li
 import { appendProgressionEntry } from '../lib/progression-log'
 import { OUTCOME } from '../lib/roll-outcomes'
 import { insertRollLog } from '../lib/data/roll-log'
+import { updateCharacterState } from '../lib/data/character-states'
 import { makeCharacterEvolutionSpend } from '../lib/damage-payload'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
@@ -213,6 +214,10 @@ export default function CharacterEvolution({
     }
     setSaving(true)
     setError(null)
+    // Track whether the CDP debit landed so a later failure in this same save
+    // can refund it - otherwise a failed raise write ate the CDP with no
+    // stat change (deduct-then-apply, no rollback).
+    let cdpDeducted = false
     try {
       const newCdp = cdpBalance - pending.cost
       // 1) Deduct CDP from the per-campaign character_states row.
@@ -223,6 +228,7 @@ export default function CharacterEvolution({
         .update({ cdp: newCdp, updated_at: new Date().toISOString() })
         .eq('id', stateId)
       if (stErr) throw new Error(`deduct CDP: ${stErr.message}`)
+      cdpDeducted = true
 
       // 2) Apply the raise. Forks by target - PC writes to
       //    characters.data (cross-campaign source of truth); Apprentice
@@ -377,6 +383,11 @@ export default function CharacterEvolution({
       onSaved()
       onClose()
     } catch (err: any) {
+      // Refund the CDP if it was debited but the raise then failed, so the
+      // player doesn't lose points for a raise that never applied.
+      if (cdpDeducted) {
+        try { await updateCharacterState(stateId, { cdp: cdpBalance, updated_at: new Date().toISOString() }) } catch { /* best-effort refund */ }
+      }
       setError(err?.message ?? 'unknown error')
     } finally {
       setSaving(false)

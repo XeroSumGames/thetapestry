@@ -57,21 +57,30 @@ function hoursBetween(a: ClockState, b: ClockState): number {
 export async function advance(campaignId: string, hours: number): Promise<ClockState | null> {
   if (hours <= 0) return readClock(campaignId)
   const supabase = createClient()
-  const current = await readClock(campaignId)
-  const totalHours = current.hour + hours
-  const dayDelta = Math.floor(totalHours / 24)
-  const next: ClockState = {
-    canon_day: current.canon_day + dayDelta,
-    hour: ((totalHours % 24) + 24) % 24,
+  // Compare-and-set with retry so two concurrent advances (GM double-tab, a
+  // retry, or the campaign-sheet +8h racing the table's Advance Time) can't
+  // both read day N and both write N+1 - that lost a day AND ran the per-day
+  // drainers for a crossing the clock never reflected. Each attempt re-reads
+  // and only writes if the clock is still the value it read; a lost race
+  // re-reads and stacks correctly (N -> N+1 -> N+2).
+  let current!: ClockState
+  let next!: ClockState
+  let won = false
+  for (let attempt = 0; attempt < 5 && !won; attempt++) {
+    current = await readClock(campaignId)  // campaigns.clock is NOT NULL (schema default)
+    const totalHours = current.hour + hours
+    const dayDelta = Math.floor(totalHours / 24)
+    next = { canon_day: current.canon_day + dayDelta, hour: ((totalHours % 24) + 24) % 24 }
+    // Guard the write on the exact prior (canon_day, hour) - if a concurrent
+    // advance already moved the clock, this hits 0 rows and we re-read + retry.
+    const { data: updated, error: updErr } = await supabase
+      .from('campaigns').update({ clock: next }).eq('id', campaignId)
+      .eq('clock->>canon_day', String(current.canon_day)).eq('clock->>hour', String(current.hour))
+      .select('id')
+    if (updErr) { reportSupabaseError(updErr, 'campaign-clock:advance'); return null }
+    won = !!updated && updated.length > 0
   }
-  const { error } = await supabase
-    .from('campaigns')
-    .update({ clock: next })
-    .eq('id', campaignId)
-  if (error) {
-    reportSupabaseError(error, 'campaign-clock:advance')
-    return null
-  }
+  if (!won) return readClock(campaignId)  // lost 5 races - bail without double-draining
   // Drain pending events that should fire by the new clock. Best-
   // effort: each event type drains independently so a failure in one
   // type's apply path doesn't poison the others.
@@ -118,7 +127,7 @@ export async function advance(campaignId: string, hours: number): Promise<ClockS
     const gmUserId = (camp as any)?.gm_user_id ?? null
     if (gmUserId) {
       const hoursText = hours === 1 ? '1 hour' : `${hours} hours`
-      const dayCrossed = dayDelta > 0 ? ` (Day ${current.canon_day} -> ${next.canon_day})` : ''
+      const dayCrossed = next.canon_day > current.canon_day ? ` (Day ${current.canon_day} -> ${next.canon_day})` : ''
       await supabase.from('roll_log').insert({
         campaign_id: campaignId, user_id: gmUserId, character_name: 'System',
         label: `Time advances ${hoursText}${dayCrossed}`,
