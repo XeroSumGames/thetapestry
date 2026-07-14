@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-14 09:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 01:12 UTC 2026-07-14)
+
+**Drift:**
+- HOPED-FOR unchanged (30-52 days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path. Stress check drain target was 2026-07-01 - 13 days overdue.
+- NEW stale-open since 00:04 pulse: Gate 2 `4fb1aea` (M4/M8/M7 combat holes) shipped - no corresponding todo items checked off. Plus prior stale items (H1/H2/H3/H5/H8/H11/H16/M5) noted in earlier pulses remain unchecked in todo.md.
+- Testplan xlsx `06bb8cb` pushed (docs only - Gate 2-5 smoke results).
+
+**Action:** Run todo.md audit pass - sweep all [ ] HIGH items against recent beta500 commits (H1-H11/H16/M4/M5/M7/M8) and check them off. HOPED-FOR Stress Check strings need a targeted playtest trigger (not blocking KS but 13 days past own deadline).
+
+---
+
 ## 2026-07-14 00:04 UTC
 
 **Status:** DRIFT
