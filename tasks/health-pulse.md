@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-14 00:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 22:22 UTC 2026-07-13)
+
+**Drift:**
+- HOPED-FOR unchanged (same 3 chronic items, now 29-51+ days): vehicle popout broadcasts, Stress Check 12-string (8 strings), FI Insight Die AWARD path.
+- Stale-open todo items (shipped 22:10-22:22 UTC 2026-07-13, after the 21:04 pulse, not yet checked in todo.md):
+  - `[ ] [HIGH] CharacterEvolution.tsx:221 CDP deduct-then-apply no rollback (H11)` -> SHIPPED d331a67
+  - `[ ] [HIGH] token-creator/page.tsx:618 Bulk Upload no Thriver gate (H16)` -> SHIPPED 4c031fa
+  - Gate 4 M1/M2/M3/L6 communities correctness -> SHIPPED 24b4a40 (tracked in beta500-readiness.md, not separate todo lines)
+  - Gate 3.4 M5 atomic clock advance -> SHIPPED d331a67 (same commit as H11)
+
+**Action:** todo.md cleanup - H11 (line 38) + H16 (line 43) still `[ ]` in the audit block. Beta500-readiness.md is current (0743803 updated it). HOPED-FOR drain at Beta-500 dry-run.
+
+---
+
 ## 2026-07-13 21:04 UTC
 
 **Status:** DRIFT
