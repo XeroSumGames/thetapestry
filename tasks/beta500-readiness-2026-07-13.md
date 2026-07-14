@@ -42,16 +42,16 @@ runs pass, "stable" is unproven.
       advances the clock ONCE and recovers all party PCs (drainers already
       handle rations/infection globally). `CharacterCard.tsx:1293` (Rest),
       `:680` (Travel).
-- [ ] **2.3 (S) M7 mortal/incap transition uses stale local state.**
+- [x] **2.3 (S) M7 mortal/incap transition uses stale local state.**
       `useRollResolution.ts` ~:655/:689 - the "was previously >0" compare
       reads `targetEntry.liveState` while damage math uses freshState; a
       cross-client window misses or double-fires the countdown + stress.
       Compare against freshState.
-- [ ] **2.4 (S) M8 two contradictory Env-Damage buttons.**
+- [x] **2.4 (S) M8 two contradictory Env-Damage buttons.**
       `CharacterCard.tsx:531` vs `:619` - opposite Drowning math (flat
       rounds*3 with no hold-breath window vs canon `drowningDamage`).
       Collapse to ONE canon button; restores the locked button-order too.
-- [ ] **2.5 (S) M4 applyDamageToPc/Npc announce deaths the DB rejected.**
+- [x] **2.5 (S) M4 applyDamageToPc/Npc announce deaths the DB rejected.**
       `lib/data/combat.ts:52` - check the write result BEFORE emitting the
       mortal-wound feed row / returning the optimistic patch.
 

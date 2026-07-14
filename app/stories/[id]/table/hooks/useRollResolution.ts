@@ -660,6 +660,11 @@ export function useRollResolution(deps: RollResolutionDeps) {
         const currentWP = freshState?.wp_current ?? targetEntry.liveState.wp_current
         const currentRP = freshState?.rp_current ?? targetEntry.liveState.rp_current
         const currentInsight = freshState?.insight_dice ?? targetEntry.liveState.insight_dice ?? 0
+        // Use FRESH values for the on-entry transition + stress too (M7) - the
+        // "was previously > 0" checks below read targetEntry.liveState, which a
+        // cross-client heal/hit can leave stale, so the countdown/stress pip was
+        // missed or double-fired. currentWP/currentRP/currentStress are fresh.
+        const currentStress = freshState?.stress ?? targetEntry.liveState.stress ?? 0
         // Snapshot the pre-hit state so an Insight reroll can REPLACE (not
         // stack on) this hit - see DamageResult.rerollBaseline.
         if (damageResult) damageResult.rerollBaseline = {
@@ -704,9 +709,9 @@ export function useRollResolution(deps: RollResolutionDeps) {
           // pip (capped at 5). Mortal preempts incap when both transitions
           // would fire on the same hit, so only one pip per event.
           let stressReason: string | null = null
-          if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
+          if (newWP === 0 && currentWP > 0) {
             update.death_countdown = mortalWoundCountdown(targetEntry.character.data?.rapid?.PHY ?? 0)
-            update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
+            update.stress = Math.min(5, currentStress + 1)
             stressReason = 'Mortally Wounded'
             await insertRollLog({
               campaign_id: id, user_id: userId,
@@ -738,9 +743,9 @@ export function useRollResolution(deps: RollResolutionDeps) {
             } })
           }
           // Set incapacitation when RP first hits 0
-          if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
+          if (newRP === 0 && currentRP > 0 && newWP > 0) {
             update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
-            update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
+            update.stress = Math.min(5, currentStress + 1)
             stressReason = 'Incapacitated'
             await insertRollLog({
               campaign_id: id, user_id: userId,

@@ -49,7 +49,11 @@ export async function applyDamageToPc(
   const patch: Record<string, any> = { wp_current: t.newWP, rp_current: t.newRP, stress: t.newStress, updated_at: new Date().toISOString() }
   if (t.deathCountdown != null) patch.death_countdown = t.deathCountdown
   if (t.incapRounds != null) patch.incap_rounds = t.incapRounds
-  await updateCharacterState(stateId, patch)
+  // Confirm the write BEFORE announcing the outcome - otherwise a rejected
+  // update still emitted "X is mortally wounded" to the feed and returned an
+  // optimistic patch, so players saw a death that never hit the DB (M4).
+  const { error } = await updateCharacterState(stateId, patch)
+  if (error) throw new Error(`applyDamageToPc: ${error.message}`)
   await emitTransitionLogs(t, ctx, true)
   return { patch, transition: t }
 }
@@ -65,7 +69,8 @@ export async function applyDamageToNpc(
   const patch: Record<string, any> = { wp_current: t.newWP, rp_current: t.newRP }
   if (t.deathCountdown != null) patch.death_countdown = t.deathCountdown
   if (t.incapRounds != null) patch.incap_rounds = t.incapRounds
-  await updateCampaignNpc(npcId, patch)
+  const { error } = await updateCampaignNpc(npcId, patch)
+  if (error) throw new Error(`applyDamageToNpc: ${error.message}`)
   await emitTransitionLogs(t, ctx, false)
   return { patch, transition: t }
 }

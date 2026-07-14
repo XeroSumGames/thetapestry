@@ -532,35 +532,45 @@ function CharacterCardImpl({
                       onStatUpdate?.(localState.id, 'stress', newStress)
                     }
                   }} style={btn('#3a3a3a', '#EF9F27')}>Reduce Stress</button>
-                  <button onClick={() => {
+                  <button onClick={async () => {
+                    // The ONE Env. Damage button (locked button-order slot). Uses
+                    // CANON math via lib/env-damage - Falling = fallingDamage,
+                    // Drowning = drowningDamage with the 6+PHY hold-breath window
+                    // (a duplicate button used flat rounds*3 with no window - M8).
+                    // Subsistence is NOT here: it auto-drains via the campaign clock.
                     if (!localState) return
-                    const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP per round underwater)\n3 = Subsistence (1 WP + 1 RP/day, day 2+)')
-                    if (type === '1') {
-                      const ft = parseInt(prompt('How many feet fallen?') ?? '0', 10)
-                      const dmg = Math.floor(ft / 10) * 3
-                      if (dmg > 0) {
-                        onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
-                        onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmg))
-                        alert(`Falling: ${dmg} WP and ${dmg} RP damage`)
-                      }
-                    } else if (type === '2') {
-                      const rounds = parseInt(prompt('How many rounds underwater (after held breath)?') ?? '0', 10)
-                      const dmg = Math.max(0, rounds) * 3
-                      if (dmg > 0) {
-                        onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
-                        onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmg))
-                        alert(`Drowning: ${dmg} WP and ${dmg} RP damage (${rounds} round${rounds === 1 ? '' : 's'} × 3)`)
-                      }
-                    } else if (type === '3') {
-                      const days = parseInt(prompt('How many days without food/water? (Day 1 is free.)') ?? '0', 10)
-                      const dmgDays = Math.max(0, days - 1)
-                      if (dmgDays > 0) {
-                        onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmgDays))
-                        onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmgDays))
-                        alert(`Subsistence: ${dmgDays} WP and ${dmgDays} RP damage (${days} day${days === 1 ? '' : 's'} - 1 free = ${dmgDays})`)
-                      } else {
-                        alert(`No damage - day 1 is free.`)
-                      }
+                    const kind = prompt('Apply environmental damage:\n\n1 = Falling (3 WP+RP per 10 ft)\n2 = Drowning (3 WP+RP per round past hold-breath window: 6 + PHY AMod)')?.trim()
+                    if (kind !== '1' && kind !== '2') return
+                    let dmg = { wp: 0, rp: 0 }
+                    let label = ''
+                    let damageJson: Record<string, unknown> = { characterId: c.id }
+                    if (kind === '1') {
+                      const ft = parseInt(prompt('How many feet fallen?', '10') ?? '', 10)
+                      if (!Number.isFinite(ft) || ft <= 0) return
+                      dmg = fallingDamage(ft)
+                      label = `${c.name} fell ${ft} ft (-${dmg.wp} WP, -${dmg.rp} RP)`
+                      damageJson = { ...damageJson, feetFallen: ft, wpDealt: dmg.wp, rpDealt: dmg.rp }
+                    } else {
+                      const rounds = parseInt(prompt('How many rounds submerged?', '7') ?? '', 10)
+                      if (!Number.isFinite(rounds) || rounds < 0) return
+                      const phyAmod = c.data?.rapid?.PHY ?? 0
+                      dmg = drowningDamage(phyAmod, rounds)
+                      label = dmg.wp === 0
+                        ? `${c.name} held breath ${rounds} rounds (within ${6 + phyAmod}-round window; no damage)`
+                        : `${c.name} drowning - ${rounds} rounds submerged (-${dmg.wp} WP, -${dmg.rp} RP)`
+                      damageJson = { ...damageJson, submergedRounds: rounds, phyAmod, wpDealt: dmg.wp, rpDealt: dmg.rp }
+                    }
+                    onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg.wp))
+                    onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmg.rp))
+                    if (campaignIdProp) {
+                      try {
+                        const { user } = await getCachedAuth()
+                        if (user) await insertRollLog({
+                          campaign_id: campaignIdProp, user_id: user.id, character_name: c.name,
+                          label, die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                          outcome: kind === '1' ? 'falling' : 'drowning', damage_json: damageJson,
+                        })
+                      } catch (e) { console.error('[env-damage] log insert failed:', e) }
                     }
                   }} style={btn('#c0392b', '#f5a89a')}>Env. Damage</button>
                   {/* Infection - single button that does the right thing
@@ -620,52 +630,6 @@ function CharacterCardImpl({
                       }
                     }
                   }} style={btn('#5a2e5a', '#d48bd4')} title="Roll Infection / progress sick state">Infection</button>
-                  <button onClick={async () => {
-                    // Env damage picker - GM picks Falling or Drowning, prompts for the
-                    // amount, applies WP+RP damage with the standard mortal-wound auto-fill.
-                    // Subsistence is NOT here - it auto-drains via the campaign-clock tick.
-                    if (!localState) return
-                    const kind = prompt('Apply environmental damage:\n\n1 = Falling (3 WP+RP per 10 ft)\n2 = Drowning (3 WP+RP per round past hold-breath window: 6 + PHY AMod)')?.trim()
-                    if (kind !== '1' && kind !== '2') return
-                    let dmg = { wp: 0, rp: 0 }
-                    let label = ''
-                    let damageJson: Record<string, unknown> = { characterId: c.id }
-                    if (kind === '1') {
-                      const ft = parseInt(prompt('How many feet fallen?', '10') ?? '', 10)
-                      if (!Number.isFinite(ft) || ft <= 0) return
-                      dmg = fallingDamage(ft)
-                      label = `${c.name} fell ${ft} ft (-${dmg.wp} WP, -${dmg.rp} RP)`
-                      damageJson = { ...damageJson, feetFallen: ft, wpDealt: dmg.wp, rpDealt: dmg.rp }
-                    } else {
-                      const rounds = parseInt(prompt('How many rounds submerged?', '7') ?? '', 10)
-                      if (!Number.isFinite(rounds) || rounds < 0) return
-                      const phyAmod = c.data?.rapid?.PHY ?? 0
-                      dmg = drowningDamage(phyAmod, rounds)
-                      label = dmg.wp === 0
-                        ? `${c.name} held breath ${rounds} rounds (within ${6 + phyAmod}-round window; no damage)`
-                        : `${c.name} drowning - ${rounds} rounds submerged (-${dmg.wp} WP, -${dmg.rp} RP)`
-                      damageJson = { ...damageJson, submergedRounds: rounds, phyAmod, wpDealt: dmg.wp, rpDealt: dmg.rp }
-                    }
-                    const newWP = Math.max(0, localState.wp_current - dmg.wp)
-                    const newRP = Math.max(0, localState.rp_current - dmg.rp)
-                    onStatUpdate?.(localState.id, 'wp_current', newWP)
-                    onStatUpdate?.(localState.id, 'rp_current', newRP)
-                    if (campaignIdProp) {
-                      try {
-                        const { user } = await getCachedAuth()
-                        if (user) {
-                          await insertRollLog({
-                            campaign_id: campaignIdProp, user_id: user.id, character_name: c.name,
-                            label, die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-                            outcome: kind === '1' ? 'falling' : 'drowning',
-                            damage_json: damageJson,
-                          })
-                        }
-                      } catch (e) {
-                        console.error('[env-damage] log insert failed:', e)
-                      }
-                    }
-                  }} style={btn('#3a2a10', '#d4a87f')} title="Apply Falling or Drowning damage (Subsistence auto-drains via clock)">Env Dmg</button>
                   <button onClick={async () => {
                     // Travel push - GM enters total hours traveled; if > 8 the
                     // character loses 1 RP per push-hour, the campaign clock
