@@ -6,6 +6,36 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-15 09:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 06:07 UTC 2026-07-15)
+
+**Drift:**
+- HOPED-FOR unchanged (34-56 days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path.
+- Stale-open todos (appear shipped since last pulse -- large batch, needs cleanup pass):
+  - #30 viewer-vs-attacker H1/H2 -> fde0f7a (2026-07-12)
+  - #31 insight reroll double damage H3 -> ab9c149 (2026-07-12)
+  - #33 Pristine degrades H5 -> c0d1e3d (2026-07-12)
+  - #34 sickness Day-0 stress pip H8 -> c0d1e3d (2026-07-12)
+  - #35 Community 13-member boundary H9 -> 5879d39 (2026-07-12)
+  - #38 CDP rollback H11 -> d331a67 (2026-07-13)
+  - #41 CampaignPins shared channel H14 -> 989030f (2026-07-14)
+  - #21 lobby roster on join -> 989030f (2026-07-14)
+  - #22 character sheet damage live -> 1a8161e (2026-07-14)
+  - #24 NPC ammo surfaced -> 58943ba (2026-07-14)
+  - #37 Reload undefined/free ammo -> bb61ae8/481b925 (2026-07-13)
+  - #43 Bulk Upload Thriver gate -> 4c031fa (2026-07-14)
+
+**Action:** todo.md cleanup -- 12+ HIGH items appear shipped by the beta500 batch. Verify and check off so the list reflects reality before next session.
+
+---
+
 ## 2026-07-15 06:05 UTC
 
 **Status:** DRIFT (unchanged from 00:05)
