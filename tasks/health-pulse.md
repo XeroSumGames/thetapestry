@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-16 12:04 UTC
+
+**Status:** DRIFT (unchanged from 09:04)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 06:07 UTC 2026-07-16)
+
+**Drift:**
+- HOPED-FOR chronic (30+ days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path. Beta-500 dry-run target date (2026-07-01) passed without resolution.
+- Stale-open todos unchanged: line 37 (reload NaN bug) + line 41 (CampaignPins shared topic) both shipped but still `[ ]`.
+
+**Action:** todo.md cleanup - check off shipped lines 37 + 41; decide if HOPED-FOR items need explicit Beta-500 dry-run scheduling.
+
+---
+
 ## 2026-07-16 09:04 UTC
 
 **Status:** DRIFT (unchanged from 00:05)
