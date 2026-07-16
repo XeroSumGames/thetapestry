@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-16 09:04 UTC
+
+**Status:** DRIFT (unchanged from 00:05)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 00:07 UTC 2026-07-16)
+
+**Drift:**
+- HOPED-FOR unchanged (36+ days): vehicle popout broadcasts, Stress Check 12-string (8 strings: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path.
+- Stale-open (same as 00:05): lines 37 + 41 shipped, not checked off.
+- Possible new stale-open: line 21 "newly-joined player" -- shipped as `9998f86` step 5/6; open item's specific `character_id not null` filter fix on `:1544` may be a second angle not yet addressed.
+
+**Action:** todo.md cleanup pass flagged 5+ consecutive pulses without resolution -- verify + check off shipped HIGHs before next session.
+
+---
+
 ## 2026-07-16 00:05 UTC
 
 **Status:** DRIFT (unchanged from 21:05)
