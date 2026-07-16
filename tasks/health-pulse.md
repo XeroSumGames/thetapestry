@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-16 18:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 15:07 UTC 2026-07-16)
+
+**Drift:**
+- HOPED-FOR chronic (30+ days, no git activity last 3 days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path.
+- Stale-open todos confirmed fixed in code but still `[ ]` in todo.md:
+  - **H3** insight reroll double damage -- fix confirmed at `page.tsx:5040` (Xero canon 2026-07-13; "restore pre-hit state, reapply"); todo line 31 still `[ ]`.
+  - **H5** upkeep Pristine degrades on Wild/High-Insight -- fix confirmed in `lib/upkeep.ts` (Math.min clamp, test passing); todo line 33 still `[ ]`.
+  - **H11** CampaignPins + CampaignMap share topic -- fixed by `989030f` (H14 patch, moved sidebar to `campaign_pins_sidebar_${id}`); todo line 41 still `[ ]`.
+- Genuine open HIGH: H8 CharacterCard.tsx:1293/1275 Rest/Travel calls advanceClock per-character (shared clock multiplication); H4 Cover Fire no-op; myEntry misattribution; CDPdeduct-no-rollback; give-to-NPC un-awaited; Bulk Upload no Thriver gate.
+
+**Action:** Mark H3/H5/H11 as `[x]` shipped in todo.md. HOPED-FOR chronic: schedule explicit Beta-500 dry-run before 2026-07-01 target (already past -- reschedule or drop).
+
+---
+
 ## 2026-07-16 15:06 UTC
 
 **Status:** DRIFT
