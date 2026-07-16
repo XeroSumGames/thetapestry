@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-16 00:05 UTC
+
+**Status:** DRIFT (unchanged from 21:05)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 21:06 UTC 2026-07-15)
+
+**Drift:**
+- HOPED-FOR unchanged (36+ days): vehicle popout broadcasts (realtime section), Stress Check 12-string (8 strings: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE).
+- Stale-open todo newly confirmed: CharacterCard reload button NaN bug (todo.md line 37) IS shipped -- `4fb1aea` Gate 2 combat holes; `weapon.reloads ?? 0` in place at `:971`. Still marked `[ ]`.
+- Previously confirmed stale: CampaignPins shared-topic bug (todo.md line 41) shipped `989030f`.
+- No new commits to roll-helpers.ts/roll-outcomes.ts addressing the stress-string gap.
+
+**Action:** Same cleanup pass needed -- verify + check off shipped HIGH todos (at minimum lines 37 and 41) before next session.
+
+---
+
 ## 2026-07-15 21:05 UTC
 
 **Status:** DRIFT (unchanged from 18:05)
