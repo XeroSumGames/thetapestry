@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-16 15:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 12:09 UTC 2026-07-16)
+
+**Drift:**
+- HOPED-FOR chronic (30+ days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path.
+- Stale-open HIGH todos (fixed in git but still marked `[ ]` in todo.md):
+  - **H3** insight reroll double-damage → fixed `ab9c149` (2026-07-16)
+  - **H5** upkeep Pristine degrades on Wild/High-Insight → fixed `c0d1e3d`
+  - **H8** sickness Day-0 mortal drop skips Stress pip → fixed `c0d1e3d`
+  - **H11** CDP deduct-then-apply no rollback → fixed `d331a67`
+  - **H14** CampaignPins + CampaignMap shared realtime channel → fixed `989030f`
+
+**Action:** todo.md CURRENT OPEN needs audit pass — at least 5 HIGH items still marked open are already shipped. HOPED-FOR chronic items need explicit scheduling before Beta-500.
+
+---
+
 ## 2026-07-16 15:05 UTC
 
 **Status:** DRIFT (unchanged from 12:04)
