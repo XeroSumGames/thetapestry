@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-16 15:05 UTC
+
+**Status:** DRIFT (unchanged from 12:04)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 09:07 UTC 2026-07-16)
+
+**Drift:**
+- HOPED-FOR chronic (30+ days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path. Drain target (2026-07-01 Beta-500 dry-run) passed without resolution.
+- Stale-open todos: lines 20/21/22/41 all shipped (Cover Fire step 13, lobby roster step 5, char-sheet realtime step 11, pins shared topic) -- still marked [ ] in todo.md.
+
+**Action:** same as 12:04 -- todo.md CURRENT OPEN needs a cleanup pass to check off shipped items; HOPED-FOR needs explicit scheduling.
+
+---
+
 ## 2026-07-16 12:04 UTC
 
 **Status:** DRIFT (unchanged from 09:04)
