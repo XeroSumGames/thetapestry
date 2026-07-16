@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-16 21:04 UTC
+
+**Status:** DRIFT (unchanged gates/CI; 18:04 H16 correction)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 18:08 UTC 2026-07-16)
+
+**Drift:**
+- HOPED-FOR chronic (30+ days, no git activity since last run): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path.
+- Stale-open todos confirmed fixed in code but still `[ ]` in todo.md:
+  - **H3** insight reroll double damage -- confirmed fixed (18:04 run); todo line 31 still `[ ]`.
+  - **H5** upkeep Pristine degrades on Wild/High-Insight -- confirmed fixed (18:04 run); todo line 33 still `[ ]`.
+  - **H11** CampaignPins + CampaignMap shared topic -- confirmed fixed (18:04 run); todo line 41 still `[ ]`.
+  - **H16** Bulk Upload no Thriver gate -- **NEW correction vs 18:04 run** (18:04 listed as "genuine open"); `app/tools/token-creator/page.tsx` has page-level `if (!isThriver)` gate + tab hidden (shipped `4c031fa` 2026-07-13); todo line 43 still `[ ]`.
+- Genuine open HIGH (verified): H8 CharacterCard Rest/Travel advances shared clock per-character; H4 Cover Fire no-op; myEntry viewer-vs-attacker misattribution; CDP deduct-no-rollback; give-to-NPC/community/vehicle un-awaited RPC gap.
+
+**Action:** Mark H3/H5/H11/H16 as `[x]` shipped in todo.md. HOPED-FOR chronic: reschedule Beta-500 dry-run (2026-07-01 target passed).
+
+---
+
 ## 2026-07-16 18:04 UTC
 
 **Status:** DRIFT
