@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-17 00:05 UTC
+
+**Status:** DRIFT (same as 21:04 run - no new commits since health-pulse commit)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-16 21:07 UTC)
+
+**Drift:**
+- HOPED-FOR chronic (31+ days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path.
+- Stale-open todos (confirmed fixed, still `[ ]`): H3 insight reroll double damage, H5 upkeep Pristine degrades, H11 CampaignPins shared topic, H16 Bulk Upload Thriver gate.
+
+**Action:** Same as 21:04 run - mark H3/H5/H11/H16 as `[x]` in todo.md. HOPED-FOR chronic: reschedule Beta-500 dry-run (2026-07-01 target passed).
+
+---
+
 ## 2026-07-16 21:04 UTC
 
 **Status:** DRIFT (unchanged gates/CI; 18:04 H16 correction)
