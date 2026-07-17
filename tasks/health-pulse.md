@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-17 21:04 UTC
+
+**Status:** DRIFT (same chronic drift - no new commits since 18:04 run)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-17 18:06 UTC)
+
+**Drift:**
+- HOPED-FOR chronic (31+ days): vehicle popout broadcasts, Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die AWARD path.
+- Stale-open todos (confirmed fixed in code, still [ ]): H11 CampaignPins shared topic (campaign_pins_sidebar in code), H16 Bulk Upload Thriver gate (isThriver gate exists in code, H16 line item may be stale), H3 insight reroll double damage, H5 upkeep Pristine degrades.
+
+**Action:** Same as prior runs - clean up stale [ ] items in todo.md (H11 is confirmed shipped). HOPED-FOR drain overdue - needs a focused playtest targeting vehicle popout + Stress Check strings.
+
+---
+
 ## 2026-07-17 18:04 UTC
 
 **Status:** DRIFT (same as 15:07 run - only commit since then is the prior health-pulse)
