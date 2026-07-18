@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-18 00:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all pass
+
+**Drift:**
+- HOPED-FOR (32+ days, no playtest update): Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - drain target was Beta-500 dry-run
+- HOPED-FOR (32+ days): FI Insight Die AWARD path (rolling doubles -> insight_dice +1) - never fired in live play; need ~36 rolls to expect one double
+- HOPED-FOR (32+ days): Vehicle popout broadcasts (vehicle_updated / firing_arc_toggle) - awaiting ride at a playtest
+- Stale-as-open todo: `[HIGH] CampaignPins + CampaignMap share campaign_pins_${id}` - FIXED 2026-07-13 (CampaignPins moved to `campaign_pins_sidebar_${id}`, code confirmed). Mark shipped.
+- Stale-as-open todo: `[HIGH] token-creator Bulk Upload tab no Thriver gate` - FIXED (full `if (!isThriver) return` guard added at line ~607, whole tool gated). Mark shipped.
+
+**Action:** Close the two stale-open audit items in todo.md; schedule a playtest to drain vehicle popout broadcasts + watch for Stress 12-string and FI Insight Die doubles.
+
+---
+
 ## 2026-07-17 21:04 UTC
 
 **Status:** DRIFT (same chronic drift - no new commits since 18:04 run)
