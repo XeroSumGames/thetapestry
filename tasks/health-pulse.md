@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-18 21:04 UTC
+
+**Status:** DRIFT (same as 18:03 run - no new commits)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-18T18:06 UTC)
+
+**Drift:**
+- HOPED-FOR (chronic): Vehicle popout broadcasts (waiting since 2026-05-24). Stress Check 12-string - 8 uncaptured strings. FI Insight Die award path (never fired in live play).
+- Stale-open todos (6th+ consecutive flag, no action taken): H16/H11/Reload confirmed fixed in code but todo.md not updated. Cover Fire -2 CMod (page.tsx :4574/:2423) remains genuinely open HIGH.
+
+**Action:** Same as 18:03 - mark H16/H11/Reload [x] in todo.md; Cover Fire CMod still needs a fix in HP lane.
+
+---
+
 ## 2026-07-18 18:03 UTC
 
 **Status:** DRIFT (same as 12:07 run - no new commits since then)
