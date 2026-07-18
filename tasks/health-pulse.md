@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-18 12:07 UTC
+
+**Status:** DRIFT (same chronic drift - no new commits since 06:05 run)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-18T06:07 UTC)
+
+**Drift:**
+- HOPED-FOR (chronic, no code change in 3+ days): Vehicle popout broadcasts (Section B, waiting since 2026-05-24). Stress Check 12-string - 8 uncaptured strings (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). FI Insight Die award path (rolling doubles).
+- Stale-open todos (4th+ consecutive run flagging, still unaddressed): H16 Bulk Upload Thriver gate (confirmed fixed 2026-07-13 - full `if (!isThriver)` guard at app/tools/token-creator/page.tsx:608). H11 CampaignPins shared topic (confirmed fixed 2026-07-13 - moved to `campaign_pins_sidebar_${id}`). Reload button NaN bug (confirmed fixed 2026-07-13 - normalizes `weapon.reloads ?? 0`).
+
+**Action:** Close H11/H16/Reload stale todos in todo.md (all three confirmed fixed in code); schedule playtest targeting vehicle popout + Stress Check strings.
+
+---
+
 ## 2026-07-18 06:05 UTC
 
 **Status:** DRIFT
