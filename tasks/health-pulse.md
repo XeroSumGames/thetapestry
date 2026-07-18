@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-18 18:03 UTC
+
+**Status:** DRIFT (same as 12:07 run - no new commits since then)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-18T12:10 UTC)
+
+**Drift:**
+- HOPED-FOR (chronic, 3+ days no code change): Vehicle popout broadcasts (waiting since 2026-05-24). Stress Check 12-string - 8 uncaptured strings (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). FI Insight Die award path (rolling doubles, never fired in live play).
+- Stale-open todos (5th+ consecutive run - action not yet taken): H16 Bulk Upload Thriver gate, H11 CampaignPins shared topic, Reload button NaN bug - all confirmed fixed in code. The only genuinely open HIGH bug in this cluster: Cover Fire -2 CMod (page.tsx aim_bonus write at :2423 still resets the -2 before it applies).
+
+**Action:** todo.md cleanup needed - mark H16/H11/Reload [x] (all confirmed fixed); Cover Fire CMod remains a real open HIGH. Schedule playtest for vehicle popout + Stress Check strings.
+
+---
+
 ## 2026-07-18 12:07 UTC
 
 **Status:** DRIFT (same chronic drift - no new commits since 06:05 run)
