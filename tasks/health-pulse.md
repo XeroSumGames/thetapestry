@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-18 06:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-18T00:07 UTC)
+
+**Drift:**
+- STALE-TODO: `CharacterCard.tsx:1080` Reload button NaN bug (HIGH open todo) appears FIXED - line 965-971 now normalizes `weapon.reloads ?? 0` and all button refs use the normalized value; git log shows `481b925` (ammo fix 2026-07-13) + `1a450b9` (roadmap docs mark reload/loadout fixes shipped). Audit-correction needed: mark the todo `[x]`.
+- HOPED-FOR (chronic, no code change in 3 days): Vehicle popout broadcasts (Section B, waiting for playtest since 2026-05-24). Stress Check 12-string narrative - 8 uncaptured strings (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE). FI Insight Die award path (rolling doubles - never fired in live play).
+- NOTE: Confidence Ledger in debug-handoff.md says 875 tests/48 files; suite now reports 924/54 - ledger stale by ~49 tests.
+
+**Action:** Mark Reload button todo `[x]` (already fixed); schedule Stress/FI/Vehicle HOPED-FOR for next playtest verification pass.
+
+---
+
 ## 2026-07-18 00:04 UTC
 
 **Status:** DRIFT
