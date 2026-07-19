@@ -22,8 +22,11 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { createClient } from '../supabase-browser'
 import { getCachedAuth } from '../auth-cache'
 
-/** Past this much inactivity a present user is reported idle, not active. */
-export const IDLE_MS = 20 * 60 * 1000
+/** Past this much inactivity a present user is reported idle, not active.
+ *  1 hour (Xero, 2026-07-14) - long enough that someone mid-session who steps
+ *  away from the keyboard still reads as around, short enough that a tab left
+ *  open overnight or for weeks does not. */
+export const IDLE_MS = 60 * 60 * 1000
 /** At most one re-track per this interval, however much the user moves. */
 const ACTIVITY_THROTTLE_MS = 60 * 1000
 /** Re-evaluate idle/active on a timer so status decays without presence events. */
