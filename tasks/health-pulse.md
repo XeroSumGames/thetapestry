@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-19 21:03 UTC
+
+**Status:** DRIFT (13th+ consecutive flag - same items, 2 new commits presence-only)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-19T18:06 UTC)
+
+**Drift:**
+- HOPED-FOR (33+ days): Stress Check 12-string - 8 uncaptured (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE); FI Insight Die award path (doubles never fired live); Vehicle popout broadcasts.
+- Stale-open todos (confirmed shipped but unchecked): H11 reload `?? 0` fix (CharacterCard.tsx:971) + H16 Bulk Upload Thriver gate (tools/token-creator/page.tsx:608) + H14 CampaignPins sidebar topic (components/CampaignPins.tsx:180).
+- Cover Fire -2 CMod (page.tsx:4574/2423) confirmed genuine open HIGH - wipes penalty before it applies.
+- New commits since last pulse (2): presence idle-threshold tuning only - no impact on any flagged item.
+
+**Action:** 13th flag, no change. Deliberate decision needed: defer HOPED-FOR to post-KS + mark H11/H14/H16 [x] in todo.md. Cover Fire CMod is the highest-impact unassigned active HIGH.
+
+---
+
 ## 2026-07-19 18:05 UTC
 
 **Status:** DRIFT (12th+ consecutive flag - same items, no new commits to affected areas)
