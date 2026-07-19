@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-19 09:03 UTC
+
+**Status:** DRIFT (same as 06:05 run - no new code commits)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-19T06:06 UTC)
+
+**Drift:**
+- HOPED-FOR (chronic, 30+ days): Vehicle popout broadcasts (since 2026-05-24). Stress Check 12-string - 8 uncaptured (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE). FI Insight Die award path (doubles never fired in live play).
+- Stale-open todos (9th+ consecutive flag): H11 (Reload `CharacterCard.tsx:971` `?? 0` confirmed fixed) + H16 (Bulk Upload `app/tools/token-creator/page.tsx:608` `!isThriver` gate confirmed fixed) - need [x] in todo.md.
+- Cover Fire -2 CMod (`page.tsx:4578`) remains genuine open HIGH - bug persists.
+
+**Action:** 9th flag with no action taken. Mark H11 + H16 [x] in todo.md; assign Cover Fire CMod fix to HP lane.
+
+---
+
 ## 2026-07-19 06:05 UTC
 
 **Status:** DRIFT (same as 00:04 run - no new commits)
