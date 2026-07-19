@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-19 18:05 UTC
+
+**Status:** DRIFT (12th+ consecutive flag - same items, no new commits to affected areas)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-19T15:10 UTC)
+
+**Drift:**
+- HOPED-FOR (33+ days, last playtest 2026-06-16, past 7/1 drain deadline): Stress Check 12-string - 8 strings uncaptured (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE); FI Insight Die award path (never fired in live play); Vehicle popout broadcasts.
+- Stale-open todos (same as prior pulses): CharacterCard.tsx shared-clock bug (H12) + Bulk Upload Thriver gate (H13) still [ ] in todo.md despite prior pulse flagging possible fix evidence. Cover Fire -2 CMod (page.tsx:4574/:2423) confirmed open HIGH.
+- Note: this pulse entry uses ASCII hyphens only (per open todo item about em-dash violations in health-pulse.md).
+
+**Action:** 12+ flags, no change. These items need a dedicated playtest pass or a deliberate "defer to post-KS" decision to stop flagging them. Cover Fire CMod is the highest-impact unassigned active HIGH.
+
+---
+
 ## 2026-07-19 15:03 UTC
 
 **Status:** DRIFT (11th+ consecutive flag - same items, no new commits)
