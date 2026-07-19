@@ -5,7 +5,6 @@ import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { installDebugLog, setDebugContext } from '../lib/debug-log'
 import Sidebar from './Sidebar'
-import GlobalPresence from './GlobalPresence'
 
 // Pages that ghosts (unauthenticated users) can view
 const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random', '/campfire', '/press']
@@ -160,7 +159,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     // identically regardless of auth state - no need to blank-screen them
     // while the getCachedAuth round-trip completes.
     if (NO_SIDEBAR_PAGES.includes(pathname)) {
-      return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner /><GlobalPresence />{children}</div>
+      return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner />{children}</div>
     }
     return <div style={{ flex: 1, background: '#0f0f0f' }} />
   }
@@ -206,7 +205,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname) || FULL_WIDTH_PATTERN.test(pathname)
 
   if (hideSidebar) {
-    return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner /><GlobalPresence />{children}</div>
+    return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner />{children}</div>
   }
 
   return (

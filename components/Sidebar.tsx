@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../lib/auth/roles'
+import { useGlobalPresence } from '../lib/realtime/useGlobalPresence'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NotificationBell from './NotificationBell'
@@ -60,7 +61,8 @@ export default function Sidebar() {
   // the global_presence channel's user_id keys → profiles.username.
   const [presentUsernames, setPresentUsernames] = useState<string[]>([])
   const [presenceHover, setPresenceHover] = useState(false)
-  const presenceRef = useRef<any>(null)
+  // Thrivers get the named roster; everyone else just sees the count.
+  const [showRoster, setShowRoster] = useState(false)
   // Delta-cache id -> username so a presence 'sync' only queries profiles for
   // ids we haven't resolved yet (scale: every join/leave platform-wide fires a
   // sync; the old code re-queried ALL present ids each time). Plus a debounce
@@ -88,48 +90,42 @@ export default function Sidebar() {
       }
       setLoaded(true)
 
-      // Global presence - track who's online across the platform.
-      // For Thrivers, also resolve the present user_ids → usernames so
-      // the hover popup can show the roster. Survivors only need the
-      // count, so we skip the username lookup for them.
-      const isThriver = roleIsThriver(profile)
-      presenceRef.current = supabase.channel('global_presence', { config: { presence: { key: user.id } } })
-      presenceRef.current.on('presence', { event: 'sync' }, () => {
-        const ids = Object.keys(presenceRef.current.presenceState())
-        // Count is cheap and wanted immediately - no debounce.
-        setOnlineCount(ids.length)
-        if (!isThriver) { setPresentUsernames([]); return }
-        // Debounce + delta-resolve the username roster. Collapses a burst of
-        // syncs into one query, and only fetches ids not already cached.
-        if (presenceDebounceRef.current) clearTimeout(presenceDebounceRef.current)
-        presenceDebounceRef.current = setTimeout(async () => {
-          const cache = usernameCacheRef.current
-          const missing = ids.filter(id => !cache.has(id))
-          if (missing.length > 0) {
-            const { data: rows } = await supabase.from('profiles').select('id, username').in('id', missing)
-            for (const r of (rows ?? [])) cache.set((r as any).id, (r as any).username as string)
-          }
-          // Build the roster from cache for the currently-present ids only, so
-          // someone who left drops off even though their name stays cached.
-          const names = ids
-            .map(id => cache.get(id))
-            .filter((n): n is string => !!n)
-            .sort((a, b) => a.localeCompare(b))
-          setPresentUsernames(names)
-        }, 1200)
-      })
-      presenceRef.current.subscribe(async (status: string) => {
-        if (status === 'SUBSCRIBED') {
-          await presenceRef.current.track({ user_id: user.id })
-        }
-      })
+      // Presence itself is owned by the app-root PresenceProvider (one channel
+      // for the whole app); this component only records whether to resolve the
+      // username roster (Thrivers) or just show the count.
+      setShowRoster(roleIsThriver(profile))
     }
     load()
     return () => {
       if (presenceDebounceRef.current) clearTimeout(presenceDebounceRef.current)
-      if (presenceRef.current) supabase.removeChannel(presenceRef.current)
     }
   }, [])
+
+  // Roster from the shared presence provider. `activeIds` excludes anyone idle
+  // past IDLE_MS, so a tab left open for weeks no longer reads as "online".
+  const { activeIds } = useGlobalPresence()
+  useEffect(() => {
+    setOnlineCount(activeIds.length)
+    if (!showRoster) { setPresentUsernames([]); return }
+    // Debounce + delta-resolve usernames: collapse a burst of presence syncs
+    // into one query and only fetch ids not already cached.
+    if (presenceDebounceRef.current) clearTimeout(presenceDebounceRef.current)
+    presenceDebounceRef.current = setTimeout(async () => {
+      const cache = usernameCacheRef.current
+      const missing = activeIds.filter(id => !cache.has(id))
+      if (missing.length > 0) {
+        const { data: rows } = await supabase.from('profiles').select('id, username').in('id', missing)
+        for (const r of (rows ?? [])) cache.set((r as any).id, (r as any).username as string)
+      }
+      // Build from cache for the CURRENTLY-active ids only, so someone who left
+      // (or went idle) drops off even though their name stays cached.
+      setPresentUsernames(activeIds
+        .map(id => cache.get(id))
+        .filter((n): n is string => !!n)
+        .sort((a, b) => a.localeCompare(b)))
+    }, 1200)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIds, showRoster])
 
   if (!loaded) return null
   const isGuest = !username

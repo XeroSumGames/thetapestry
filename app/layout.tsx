@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import LayoutShell from "../components/LayoutShell";
+import { PresenceProvider } from "../lib/realtime/useGlobalPresence";
 import VisitLogger from "../components/VisitLogger";
 import PlaytestRecorder from "../components/PlaytestRecorder";
 
@@ -122,7 +123,12 @@ export default function RootLayout({
       <body style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f0f', margin: 0, padding: 0, fontFamily: 'Carlito, sans-serif', fontSize: '15px' }}>
         <VisitLogger />
         <PlaytestRecorder />
-        <LayoutShell>{children}</LayoutShell>
+        {/* One global_presence channel for the whole app, mounted at the root so
+            it survives every route change - two components handing the channel
+            back and forth on navigation used to drop users off the roster. */}
+        <PresenceProvider>
+          <LayoutShell>{children}</LayoutShell>
+        </PresenceProvider>
       </body>
     </html>
   )
