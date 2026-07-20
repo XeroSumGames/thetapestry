@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-20 21:04 UTC
+
+**Status:** DRIFT (19th consecutive flag - same items, no change)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all pass (latest 2026-07-20T18:07Z)
+
+**Drift:**
+- HOPED-FOR >34 days stale (last noted 2026-06-16, Test Bed Session 24): Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die award path, vehicle popout broadcasts. Drain target for Stress strings was Beta-500 dry-run before 2026-07-01 - now 19 days past that deadline.
+- Stale-open todo: line 37 (CharacterCard.tsx:1080 Reload NaN) - FIXED (see CharacterCard.tsx:971 `reloads ?? 0`; confirmed by health-pulse 486fd7d). Close it.
+- Cover Fire CMod (todo line 32, H4) still genuinely open - confirmed in Gate 2 commit 4fb1aea message: "Remaining Gate 2: H4 (Cover Fire, live migration)".
+
+**Action:** Beta-500 path: H4 (Cover Fire) is the blocking HIGH in Gate 2; Stress Check strings + FI Insight Die + vehicle popout are 5+ weeks unverified - schedule a Beta-500 dry-run or explicitly defer past launch.
+
+---
+
 ## 2026-07-20 18:05 UTC
 
 **Status:** DRIFT (18th consecutive flag - same items, no change)
