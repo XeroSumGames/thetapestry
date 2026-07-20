@@ -212,15 +212,21 @@ export default function GMScreen() {
     }
 
     function onMove(ev: MouseEvent) {
-      if (!dragRef.current) return
-      const dx = ev.clientX - dragRef.current.startX
-      const dy = ev.clientY - dragRef.current.startY
+      // Capture the drag state into a local. The setLayout updater below runs
+      // DEFERRED (React batches it), and a mouseup can fire onUp() -> null the
+      // ref before it does; reading dragRef.current!.key inside the updater then
+      // threw "Cannot read properties of null (reading 'key')" (Sentry). The
+      // local `drag` stays valid regardless.
+      const drag = dragRef.current
+      if (!drag) return
+      const dx = ev.clientX - drag.startX
+      const dy = ev.clientY - drag.startY
       setLayout(prev => ({
         ...prev,
-        [dragRef.current!.key]: {
-          ...prev[dragRef.current!.key],
-          x: Math.max(0, dragRef.current!.origX + dx),
-          y: Math.max(0, dragRef.current!.origY + dy),
+        [drag.key]: {
+          ...prev[drag.key],
+          x: Math.max(0, drag.origX + dx),
+          y: Math.max(0, drag.origY + dy),
         },
       }))
     }
