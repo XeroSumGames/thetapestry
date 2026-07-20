@@ -490,7 +490,8 @@ CREATE TABLE public.initiative_order (
   coordinate_bonus integer NOT NULL DEFAULT 0,
   grappled_by text,
   hidden_from_players boolean NOT NULL DEFAULT false,
-  pending_action_loss boolean NOT NULL DEFAULT false
+  pending_action_loss boolean NOT NULL DEFAULT false,
+  incoming_cmod integer NOT NULL DEFAULT 0
 );
 
 CREATE TABLE public.lfg_interests (

@@ -147,6 +147,14 @@ describe('buildCmodBreakdown - source-labeled CMod terms', () => {
     expect(b.terms).toContainEqual({ label: 'CMod', value: -1 })
     expect(b.total).toBe(1)
   })
+  it('shows the Cover Fire CMod term when incoming (H4), drops it at zero', () => {
+    const b = buildCmodBreakdown({ incomingCmod: -2, aim: 1 })
+    expect(b.terms).toContainEqual({ label: 'Cover Fire CMod', value: -2 })
+    expect(b.total).toBe(-1)
+    expect(buildCmodBreakdown({ incomingCmod: 0 }).terms).not.toContainEqual(
+      expect.objectContaining({ label: 'Cover Fire CMod' }),
+    )
+  })
 })
 
 describe('resolveTargetDefense - target MDM/RDM on the to-hit roll', () => {
@@ -253,8 +261,27 @@ describe('computeAttackCmod - itemized auto CMod for the prefill + dropdown', ()
     const { net, sources } = computeAttackCmod('Goon', { weaponName: 'Assault Rifle', conditionCmod: -1 }, ctx)
     const sum = (sources.weaponCondition ?? 0) + (sources.aim ?? 0) + (sources.coordinatedEffort ?? 0)
       + (sources.coordinate ?? 0) + (sources.sameTarget ?? 0) + (sources.targetDefense ?? 0)
-      + (sources.grappledTarget ?? 0)
+      + (sources.grappledTarget ?? 0) + (sources.incomingCmod ?? 0)
     expect(net).toBe(sum)
+  })
+  it('H4 Cover Fire: incoming_cmod on the attacker row applies -2 to their attack', () => {
+    const ctx: AttackCmodCtx = {
+      ...baseCtx,
+      initiative: [{ character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 0, incoming_cmod: -2 }],
+    }
+    const { net, sources } = computeAttackCmod('Goon', rifle, ctx)
+    expect(sources.incomingCmod).toBe(-2)
+    expect(net).toBe(-5) // -2 suppressed - 3 RDM
+  })
+  it('H4 Cover Fire stacks: two suppressors leave incoming_cmod at -4', () => {
+    const ctx: AttackCmodCtx = {
+      ...baseCtx,
+      initiative: [{ character_name: 'Attacker', character_id: 'c1', is_active: true, aim_bonus: 0, incoming_cmod: -4 }],
+    }
+    expect(computeAttackCmod('Goon', rifle, ctx).sources.incomingCmod).toBe(-4)
+  })
+  it('incomingCmod is absent (not 0) when the attacker was not suppressed', () => {
+    expect(computeAttackCmod('Goon', rifle, baseCtx).sources.incomingCmod).toBeUndefined()
   })
   it('grappled target adds +1 CMod (held target cannot dodge)', () => {
     const ctx: AttackCmodCtx = {

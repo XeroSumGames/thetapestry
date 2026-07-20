@@ -1794,6 +1794,7 @@ export type Database = {
           has_cover: boolean
           hidden_from_players: boolean
           id: string
+          incoming_cmod: number
           inspired_this_round: boolean
           is_active: boolean | null
           is_npc: boolean | null
@@ -1822,6 +1823,7 @@ export type Database = {
           has_cover?: boolean
           hidden_from_players?: boolean
           id?: string
+          incoming_cmod?: number
           inspired_this_round?: boolean
           is_active?: boolean | null
           is_npc?: boolean | null
@@ -1850,6 +1852,7 @@ export type Database = {
           has_cover?: boolean
           hidden_from_players?: boolean
           id?: string
+          incoming_cmod?: number
           inspired_this_round?: boolean
           is_active?: boolean | null
           is_npc?: boolean | null

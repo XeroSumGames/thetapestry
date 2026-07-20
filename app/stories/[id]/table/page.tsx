@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
+import { canCoverFire, resolveCoverFireShooter, applyCoverFire } from '../../../../lib/cover-fire'
 import { CAMPAIGN_COLUMNS } from '../../../../lib/data/campaigns'
 import { activeSceneId } from '../../../../lib/data/scenes'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
@@ -2197,7 +2198,7 @@ export default function TablePage() {
         // winded combatants 1 action instead of 2) could read it. The flag
         // is cleared correctly inside `activateUpdate` when the combatant's
         // turn actually arrives.
-        initUpdates.push(supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, coordinate_target: null, coordinate_bonus: 0, is_active: false }).eq('id', entry.id))
+        initUpdates.push(supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, coordinate_target: null, coordinate_bonus: 0, is_active: false, incoming_cmod: 0 }).eq('id', entry.id))
       }
 
       // Log new round initiative
@@ -2269,7 +2270,7 @@ export default function TablePage() {
 
     const nextId = order[nextIdx].id
     const activation = activateUpdate(order[nextIdx])
-    const deactivation = { is_active: false, actions_remaining: 0, aim_bonus: 0 }
+    const deactivation = { is_active: false, actions_remaining: 0, aim_bonus: 0, incoming_cmod: 0 } // incoming_cmod: 0 = clear Cover Fire penalty at the target's turn END (H4)
 
     // OPTIMISTIC TURN-FLIP: apply the post-write state to local initiative NOW
     // so the turn changes instantly instead of waiting ~0.7-3.6s for two
@@ -4576,13 +4577,11 @@ export default function TablePage() {
     await clearAimIfActive(activeEntry.id)
 
     if (action === 'Cover Fire') {
-      // SRD: Successful attack → -2 CMod to target's next action
-      const newBonus = (targetEntry.aim_bonus ?? 0) - 2
-      const { data: cfRows, error: cfErr } = await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId).select('id, aim_bonus')
-      if (cfErr) reportSupabaseError(cfErr, 'applySocialAction:cover-fire-update')
-      else if (!cfRows || cfRows.length === 0) console.error('[applySocialAction] SILENT RLS FAIL - Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
-      else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-      await consumeAction(activeEntry.id, `${activeEntry.character_name} - Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
+      // H4: -2 CMod to target's next action + spend a round; logic in lib/cover-fire (guard = stale-click safety, button disabled otherwise).
+      const shooter = resolveCoverFireShooter(activeEntry, entries, campaignNpcs)
+      if (!canCoverFire(shooter.weapon, shooter.ammoCurrent)) { setSocialTarget(null); return }
+      await applyCoverFire({ supabase, targetEntryId, targetIncoming: targetEntry.incoming_cmod ?? 0, shooter, setInitiativeOrder, setEntries, setCampaignNpcs, setRosterNpcs, onError: reportSupabaseError, broadcast: () => initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} }) })
+      await consumeAction(activeEntry.id, `${activeEntry.character_name} - Cover Fire → ${targetEntry.character_name} (-2 CMod, 1 round)`)
     } else if (action === 'Inspire') {
       // SRD: Inspiration check → target gains +1 Combat Action. Once per round.
       if (targetEntry.inspired_this_round) {
@@ -5903,6 +5902,7 @@ export default function TablePage() {
               npcForWeapon?.skills?.weapon?.ammoCurrent ??
               null
             const outOfAmmo = !!w && !isMelee && !!w.clip && w.clip > 0 && w.category !== 'explosive' && ammoCurrent !== null && ammoCurrent <= 0
+            const coverFireReady = canCoverFire(w, ammoCurrent) // H4: needs a loaded ranged weapon (spends a round)
             // Explosive throw gate - explosives are one-use consumables tracked
             // by qty on the slot (not the clip/ammo system). Block the throw when
             // the carry count hits 0, mirroring the ammo gate. Legacy explosives
@@ -6095,9 +6095,10 @@ export default function TablePage() {
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setShowCoordinateModal(true); setCoordinateSelection('') }}
                   style={actBtn('#242424', '#f5f2ee', '#3a3a3a')}>Coordinate</button>
 
-                {/* ── COVER FIRE - opens social-target picker (no roll, auto-applies) ── */}
-                <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Cover Fire' ? null : { action: 'Cover Fire' }) }}
-                  style={actBtn(socialTarget?.action === 'Cover Fire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Cover Fire' ? '#7fc458' : '#f5f2ee', socialTarget?.action === 'Cover Fire' ? '#2d5a1b' : '#3a3a3a')}>Cover Fire</button>
+                {/* ── COVER FIRE - social-target picker; gated on a loaded ranged weapon (H4: spends a round). ── */}
+                <button disabled={!coverFireReady} onClick={coverFireReady ? () => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Cover Fire' ? null : { action: 'Cover Fire' }) } : undefined}
+                  title={!coverFireReady ? `${w?.name ?? 'Weapon'} - Cover Fire needs a loaded ranged weapon (Reload via Ready Weapon)` : undefined}
+                  style={!coverFireReady ? disabledBtn('#242424', '#f5f2ee', '#3a3a3a') : actBtn(socialTarget?.action === 'Cover Fire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Cover Fire' ? '#7fc458' : '#f5f2ee', socialTarget?.action === 'Cover Fire' ? '#2d5a1b' : '#3a3a3a')}>Cover Fire{!coverFireReady ? ' - no ammo' : ''}</button>
 
                 {/* ── DEFEND: +2 defensive modifier for next incoming attack ── */}
                 <button onClick={async () => {

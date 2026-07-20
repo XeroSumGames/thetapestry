@@ -99,6 +99,10 @@ export interface CmodSources {
   vehicleCoverLabel?: string
   /** +1 when the target is currently grappled (held target can't dodge). Canon ruling 2026-06-01. */
   grappledTarget?: number
+  /** Incoming CMod carried on the ATTACKER's own initiative row - currently
+   *  Cover Fire's -2, written when they were suppressed. It survives their
+   *  activation and applies to their action, then clears at their turn end. */
+  incomingCmod?: number
   range?: number
   sick?: number
   insight?: number
@@ -127,6 +131,7 @@ export function buildCmodBreakdown(s: CmodSources): { terms: CmodTerm[]; total: 
     { label: s.targetDefenseLabel || 'Target defense', value: s.targetDefense ?? 0 },
     { label: s.vehicleCoverLabel || 'Vehicle cover RDM', value: s.vehicleCover ?? 0 },
     { label: 'Grappled target CMod', value: s.grappledTarget ?? 0 },
+    { label: 'Cover Fire CMod', value: s.incomingCmod ?? 0 },
     { label: 'Range CMod', value: s.range ?? 0 },
     { label: 'Sick CMod', value: s.sick ?? 0 },
     { label: 'Insight CMod', value: s.insight ?? 0 },
@@ -178,6 +183,7 @@ export interface CmodInitEntry {
   coordinate_bonus?: number | null
   defense_bonus?: number | null
   grappled_by?: string | null
+  incoming_cmod?: number | null
 }
 export interface CoordEffortState { participantIds: string[]; totalParticipants: number; leadCmod: number }
 
@@ -265,13 +271,19 @@ export function computeAttackCmod(
   const cover = !isMelee ? resolveVehicleCover(targetName, ctx) : null
   // +1 CMod vs a grappled target (held target can't dodge). Canon ruling 2026-06-01.
   const grappledTarget = ctx.initiative.some(e => e.character_name === targetName && e.grappled_by) ? 1 : 0
+  // Cover Fire (H4): the -2 lives on the ATTACKER's own initiative row
+  // (incoming_cmod), written when they were suppressed. It survived their
+  // activation (activateUpdate does not touch it) so it bites their action
+  // now, then nextTurn clears it at their turn end. Already signed (-2).
+  const incomingCmod = activeEntry?.incoming_cmod ?? 0
   const sources: CmodSources = {
     weaponCondition, aim, coordinatedEffort, coordinate, sameTarget,
     targetDefense: -def.value, targetDefenseLabel: def.label,
     ...(cover ? { vehicleCover: -cover.bonus, vehicleCoverLabel: `Vehicle cover RDM (${cover.vehicleName}, size ${cover.size})` } : {}),
     ...(grappledTarget ? { grappledTarget } : {}),
+    ...(incomingCmod ? { incomingCmod } : {}),
   }
-  const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value - (cover?.bonus ?? 0) + grappledTarget
+  const net = weaponCondition + aim + coordinatedEffort + coordinate + sameTarget - def.value - (cover?.bonus ?? 0) + grappledTarget + incomingCmod
   return { net, sources }
 }
 
