@@ -31,12 +31,16 @@ runs pass, "stable" is unproven.
 
 ## GATE 2 - Last combat-correctness holes (code; all specced)
 
-- [ ] **2.1 (M) H4 Cover Fire is a no-op that costs an action.** Spec in
-      roadmap: new `initiative_order.incoming_cmod` column (live migration +
-      baseline mirror + types), Cover Fire writes -2 + spends a round of ammo
-      (Xero ruled yes to both), `computeAttackCmod` adds the labeled term,
-      cleared at the target's turn END (not activation). `page.tsx:4574`,
-      `lib/table-roll-context.ts:240`.
+- [x] **2.1 SHIPPED 2026-07-20 (`6e16ac06`) - H4 Cover Fire is a no-op that costs an action.**
+      Live migration `initiative_order.incoming_cmod` (applied + verified in
+      information_schema, baseline + types mirrored). Cover Fire writes -2 to the
+      target's incoming_cmod (survives activation, cleared at the target's turn
+      END in nextTurn) + spends a round of the shooter's ammo + is gated on a
+      loaded ranged weapon. `computeAttackCmod` adds the "Cover Fire CMod" term.
+      Orchestration in `lib/cover-fire.ts`; +6 unit tests. LIVE 2-CLIENT VERIFY
+      OWED: `tasks/coverfire-h4-verify-testplan-2026-07-20.xlsx`. Open canon
+      nuance flagged: -2 clears at turn END so it hits all of the target's next-
+      turn actions (per 2.1 spec), not strictly the single next action.
 - [ ] **2.2 (M) H10 Rest/Travel multiply the world clock by party size.**
       Xero ruling: "moving time affects everyone." Redesign: one party-rest
       advances the clock ONCE and recovers all party PCs (drainers already
