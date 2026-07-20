@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-20 06:06 UTC
+
+**Status:** DRIFT (14th consecutive flag - same items, no change)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-19T21:08 UTC)
+
+**Drift:**
+- HOPED-FOR (34+ days): Stress Check 12-string - 8 uncaptured (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE); FI Insight Die award path (doubles never fired live); Vehicle popout broadcasts.
+- Stale-open todos (confirmed shipped but unchecked): H11 reload fix + H16 Bulk Upload Thriver gate + H14 CampaignPins sidebar topic.
+- Cover Fire -2 CMod (page.tsx:4574/2423) still highest-impact unassigned active HIGH.
+
+**Action:** 14th flag, no movement. Same call as pulse 13: deliberate defer decision on HOPED-FOR items + mark H11/H14/H16 [x] in todo.md.
+
+---
+
 ## 2026-07-19 21:03 UTC
 
 **Status:** DRIFT (13th+ consecutive flag - same items, 2 new commits presence-only)
