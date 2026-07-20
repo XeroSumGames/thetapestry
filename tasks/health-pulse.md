@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-20 15:07 UTC
+
+**Status:** DRIFT (17th consecutive flag - same items, no change)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [924 passed / 54 files - OK]
+
+**Audit:** npm audit [clean - 0 high/critical]
+
+**CI:** last 5 runs all success (latest 2026-07-20T12:09 UTC)
+
+**Drift:**
+- HOPED-FOR (35+ days): Stress Check 12-string (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE); FI Insight Die award path; Vehicle popout broadcasts.
+- Stale-open todos (same): H11/H14/H16 confirmed shipped but still [ ] in todo.md.
+- Cover Fire -2 CMod (page.tsx:4574/2423) still highest-impact open HIGH.
+
+**Action:** 17th flag, nothing new. No commits since presence tune (531e37a). Same as 16th: defer HOPED-FOR to Beta-500 dry-run; mark H11/H14/H16 [x] in todo.md when convenient.
+
+---
+
 ## 2026-07-20 12:07 UTC
 
 **Status:** DRIFT (16th consecutive flag - same items, no change)
