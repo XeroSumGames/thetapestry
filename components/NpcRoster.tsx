@@ -1089,61 +1089,68 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
           onClose={() => setShowPortraitPicker(false)}
         />
       )}
-      {isGM && <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-        <button onClick={openAdd}
-          style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-          + NPC
-        </button>
-        {combatActive && availableForCombat.length > 0 && (
-          <button onClick={() => { setCombatPickerIds(new Set()); setShowCombatPicker(true) }}
-            style={{ padding: '2px 8px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            + Combat
+      {isGM && (() => {
+        // Compact toolbar: + NPC (+ Combat in combat) stay labeled buttons;
+        // everything else collapses to small icon buttons to kill the
+        // 6-buttons-across-3-rows clutter. tbIcon mirrors the folder eye style.
+        const tbIcon = (bg: string, border: string, color: string, disabled = false) => ({
+          width: '28px', height: '26px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          background: bg, border: `1px solid ${border}`, borderRadius: '3px', color, fontSize: '14px',
+          cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1, flexShrink: 0, lineHeight: 1,
+        })
+        const eyeSvg = (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }} aria-hidden="true">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        )
+        return (
+        <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <button onClick={openAdd}
+            style={{ padding: '4px 12px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            + NPC
           </button>
-        )}
-        {npcs.length > 0 && (() => {
-          const noPlayers = !pcEntries || pcEntries.length === 0
-          const allRevealed = !noPlayers && npcs.every(n => revealedNpcIds.has(n.id))
-          return (
-            <button
-              onClick={() => allRevealed ? hideAllNpcs() : revealAllNpcs()}
-              disabled={noPlayers}
-              title={noPlayers ? 'Add players to reveal NPCs to' : undefined}
-              style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: noPlayers ? 'not-allowed' : 'pointer', opacity: noPlayers ? 0.5 : 1 }}>
-              {allRevealed ? 'Hide All' : 'Show All'}
+          {combatActive && availableForCombat.length > 0 && (
+            <button onClick={() => { setCombatPickerIds(new Set()); setShowCombatPicker(true) }}
+              style={{ padding: '4px 10px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              + Combat
             </button>
-          )
-        })()}
-        {/* Cross-folder panic hide. Distinct from the Show/Hide toggle:
-            always hides, every folder, both the RLS gate AND the per-PC
-            reveal rows AND scene tokens. One click. Use mid-session
-            when players walk into the wrong scene and you need every
-            NPC off their screen NOW. */}
-        {npcs.length > 0 && (
-          <button onClick={() => panicHideAll()}
-            title="Hide every NPC across every folder, including RLS gate + per-PC reveals + scene tokens"
-            style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>
-            🚨 Hide All
-          </button>
-        )}
-        {npcs.length > 1 && (
-          <button
-            onClick={() => { setSelectMode(s => !s); setSelectedIds(new Set()) }}
-            title={selectMode ? 'Exit multi-select' : 'Multi-select for bulk Hide/Reveal across folders'}
-            style={{ padding: '2px 8px', background: selectMode ? '#10202e' : 'transparent', border: `1px solid ${selectMode ? '#3a5a7a' : '#3a3a3a'}`, borderRadius: '3px', color: selectMode ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            {selectMode ? '✓ Selecting' : 'Select'}
-          </button>
-        )}
-        <div style={{ flex: 1 }} />
-        <button onClick={() => setShowAnimalPicker(true)}
-          title="Spawn an animal from the canonical bestiary (CRB p.194)"
-          style={{ padding: '2px 8px', background: '#1a2a10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-          🐺 Animal
-        </button>
-        <button onClick={openLibrary}
-          style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-          Library
-        </button>
-      </div>}
+          )}
+          <div style={{ flex: 1 }} />
+          {/* Show/Hide all NPCs to players - green eye = all shown, red = not */}
+          {npcs.length > 0 && (() => {
+            const noPlayers = !pcEntries || pcEntries.length === 0
+            const allRevealed = !noPlayers && npcs.every(n => revealedNpcIds.has(n.id))
+            return (
+              <button onClick={() => allRevealed ? hideAllNpcs() : revealAllNpcs()} disabled={noPlayers}
+                title={noPlayers ? 'Add players to reveal NPCs to' : (allRevealed ? 'All NPCs shown to players - click to hide all' : 'Reveal all NPCs to players')}
+                style={tbIcon(allRevealed ? '#1a2e10' : '#242424', allRevealed ? '#2d5a1b' : '#3a3a3a', allRevealed ? '#7fc458' : '#c0392b', noPlayers)}>
+                {eyeSvg}
+              </button>
+            )
+          })()}
+          {/* Panic hide: one click, every folder, RLS + per-PC reveals + tokens. */}
+          {npcs.length > 0 && (
+            <button onClick={() => panicHideAll()}
+              title="Panic hide: remove every NPC across every folder from players (RLS gate + per-PC reveals + scene tokens)"
+              style={tbIcon('#2a1210', '#c0392b', '#f5a89a')}>🚨</button>
+          )}
+          {npcs.length > 1 && (
+            <button onClick={() => { setSelectMode(s => !s); setSelectedIds(new Set()) }}
+              title={selectMode ? 'Exit multi-select' : 'Multi-select for bulk Hide/Reveal across folders'}
+              style={tbIcon(selectMode ? '#10202e' : '#242424', selectMode ? '#3a5a7a' : '#3a3a3a', selectMode ? '#7ab3d4' : '#cce0f5')}>
+              {selectMode ? '✓' : '☑'}
+            </button>
+          )}
+          <button onClick={() => setShowAnimalPicker(true)}
+            title="Spawn an animal from the canonical bestiary (CRB p.194)"
+            style={tbIcon('#1a2a10', '#2d5a1b', '#7fc458')}>🐺</button>
+          <button onClick={openLibrary}
+            title="Add an NPC from the library"
+            style={tbIcon('#1a1a2e', '#2e2e5a', '#7ab3d4')}>📚</button>
+        </div>
+        )
+      })()}
       {/* Search & filter - GM only */}
       {isGM && npcs.length > 3 && (
         <div style={{ padding: '4px 10px 6px' }}>
