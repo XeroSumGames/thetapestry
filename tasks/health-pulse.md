@@ -6,6 +6,23 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-21 09:04 UTC
+
+**Status:** RED (vulns persist from 06:06 entry -- no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [2 high, 0 critical] -- same as 06:06; both in eslint (dev-only; no prod exposure)
+- `brace-expansion` HIGH + `js-yaml` HIGH -- see 06:06 entry for full detail + fix command
+
+**CI:** 5 runs today all pass (latest 2026-07-21T02:30 UTC) -- active ship day
+
+**Drift:** Same 3 HOPED-FOR items (vehicle popout broadcasts, Stress 12-string, FI Insight Die) -- no code change. No new stale-open todos.
+
+**Action:** `npm audit fix` from 06:06 still not run. Schedule or defer explicitly.
+
+---
+
 ## 2026-07-21 06:06 UTC
 
 **Status:** RED+DRIFT
