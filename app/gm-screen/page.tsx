@@ -128,7 +128,7 @@ const EMPTY_SESSION_ZERO: { heading: string; body: string }[] = [
 
 // ---------------------------------------------------------------------------
 
-type CardKey = 'outcomes' | 'combat-actions' | 'range-bands' | 'weapon-condition' | 'cmods' | 'healing' | 'skills-attrs' | 'gm-notes'
+type CardKey = 'outcomes' | 'combat-actions' | 'range-bands' | 'weapon-condition' | 'cmods' | 'healing' | 'skills-attrs' | 'gm-notes' | 'scratch'
 type Category = 'combat' | 'reference' | 'notes'
 type Filter = 'all' | Category
 
@@ -148,6 +148,7 @@ const CARD_META: { key: CardKey; title: string; category: Category }[] = [
   { key: 'healing', title: 'Healing & Recovery', category: 'reference' },
   { key: 'skills-attrs', title: 'Skills -> Attributes', category: 'reference' },
   { key: 'gm-notes', title: 'GM Notes', category: 'notes' },
+  { key: 'scratch', title: 'Scratch Pad', category: 'notes' },
 ]
 const CARD_KEYS = CARD_META.map(m => m.key)
 const CATEGORY_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.category])) as Record<CardKey, Category>
@@ -167,6 +168,7 @@ const DEFAULT_POSITIONS: Record<CardKey, CardPos> = {
   'weapon-condition': { x: 864,  y: 480, w: 424, h: 212 },
   'healing':          { x: 864,  y: 704, w: 424, h: 273 },
   'gm-notes':         { x: 1296, y: 0,   w: 589, h: 605 },
+  'scratch':          { x: 1296, y: 624, w: 589, h: 320 },
 }
 
 const GRID = 8
@@ -193,16 +195,15 @@ function ScratchPad({ campaignId }: { campaignId: string }) {
     saveTimer.current = setTimeout(() => { void saveScratch(campaignId, v) }, 600)
   }
   return (
-    <div style={{ marginBottom: 12, borderBottom: '1px solid #2e2e2e', paddingBottom: 12 }}>
-      <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 4 }}>Scratch Pad</div>
+    <div>
       <div style={{ fontSize: '13px', color: '#6a6a6a', marginBottom: 6, lineHeight: 1.4 }}>On-the-fly notes. Added to the session summary when you End Session, then cleared.</div>
       <textarea
         value={text ?? ''}
         onChange={e => onChange(e.target.value)}
         disabled={text === null}
         placeholder={text === null ? 'Loading...' : 'Jot notes here during play...'}
-        rows={6}
-        style={{ width: '100%', boxSizing: 'border-box', background: '#0f0f0f', color: '#f5f2ee', border: '1px solid #3a3a3a', borderRadius: 4, padding: 8, fontFamily: 'Carlito, sans-serif', fontSize: '14px', resize: 'vertical', minHeight: 90 }}
+        rows={10}
+        style={{ width: '100%', boxSizing: 'border-box', background: '#0f0f0f', color: '#f5f2ee', border: '1px solid #3a3a3a', borderRadius: 4, padding: 8, fontFamily: 'Carlito, sans-serif', fontSize: '14px', resize: 'vertical', minHeight: 140 }}
       />
     </div>
   )
@@ -265,14 +266,16 @@ function cardBody(key: CardKey, campaignId: string): React.ReactNode {
           ))}
         </div>
       )
+    case 'scratch':
+      // Its own panel. Live-campaign only; the card header supplies the title.
+      return campaignId ? <ScratchPad campaignId={campaignId} /> : (
+        <div style={{ fontSize: '13px', color: '#7ab3d4', lineHeight: 1.4, fontFamily: 'Carlito, sans-serif' }}>
+          Open the GM Screen from a story to jot on-the-fly notes here - they are added to the session summary when you End Session.
+        </div>
+      )
     case 'gm-notes':
-      // Scratch pad FIRST so it's always visible at the top of the card - it
-      // was previously below GmNotes and a long notes list buried it.
       return campaignId ? (
-        <>
-          <ScratchPad campaignId={campaignId} />
-          <GmNotes campaignId={campaignId} />
-        </>
+        <GmNotes campaignId={campaignId} />
       ) : (
         <div style={{ fontFamily: 'Carlito, sans-serif' }}>
           <div style={{ fontSize: '13px', color: '#7ab3d4', marginBottom: '8px', lineHeight: 1.4 }}>
