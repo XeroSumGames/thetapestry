@@ -154,21 +154,20 @@ const CARD_KEYS = CARD_META.map(m => m.key)
 const CATEGORY_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.category])) as Record<CardKey, Category>
 const TITLE_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.title])) as Record<CardKey, string>
 
-// Default freeform arrangement: two columns, with Conditional Modifiers placed
-// directly beneath Outcomes in the left column (Xero 2026-07-20).
-// The baked-in STANDARD arrangement (Xero 2026-07-20) - also seeded into
-// gm_screen_standard_layout, so this is just the fallback when that row is
-// somehow absent. Editing is Thriver-only; everyone else sees this locked.
+// The FINAL locked-in standard arrangement (Xero 2026-07-20), captured verbatim
+// from the live gm_screen_standard_layout row. This is the canonical source of
+// truth; the DB row mirrors it, and it is the fallback if that row is absent.
+// Editing is Thriver-only; everyone else sees this locked.
 const DEFAULT_POSITIONS: Record<CardKey, CardPos> = {
   'outcomes':         { x: 0,    y: 0,   w: 424, h: 265 },
   'cmods':            { x: 0,    y: 280, w: 424, h: 334 },
   'range-bands':      { x: 0,    y: 624, w: 212, h: 212 },
-  'weapon-condition': { x: 0,    y: 848, w: 212, h: 212 },
-  'combat-actions':   { x: 440,  y: 0,   w: 413, h: 822 },
+  'weapon-condition': { x: 168,  y: 624, w: 260, h: 212 },
+  'combat-actions':   { x: 440,  y: 0,   w: 413, h: 835 },
   'skills-attrs':     { x: 864,  y: 0,   w: 424, h: 472 },
-  'healing':          { x: 864,  y: 704, w: 424, h: 273 },
-  'gm-notes':         { x: 1296, y: 0,   w: 589, h: 605 },
-  'scratch':          { x: 1296, y: 624, w: 589, h: 320 },
+  'healing':          { x: 864,  y: 480, w: 424, h: 273 },
+  'scratch':          { x: 1296, y: 0,   w: 595, h: 320 },
+  'gm-notes':         { x: 1294, y: 328, w: 598, h: 540 },
 }
 
 const GRID = 8

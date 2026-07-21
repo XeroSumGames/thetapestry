@@ -38,5 +38,5 @@ CREATE POLICY "thriver writes standard layout" ON public.gm_screen_standard_layo
 -- Seed with the arrangement Xero laid out (captured from gm_screen_layouts).
 INSERT INTO public.gm_screen_standard_layout (id, state) VALUES (
   1,
-  '{"positions":{"outcomes":{"x":0,"y":0,"w":424,"h":265},"cmods":{"x":0,"y":280,"w":424,"h":334},"range-bands":{"x":0,"y":624,"w":424,"h":212},"combat-actions":{"x":440,"y":0,"w":413,"h":822},"skills-attrs":{"x":864,"y":0,"w":424,"h":472},"weapon-condition":{"x":864,"y":480,"w":424,"h":212},"healing":{"x":864,"y":704,"w":424,"h":273},"gm-notes":{"x":1296,"y":0,"w":589,"h":605}},"collapsed":[],"filter":"all"}'::jsonb
+  '{"positions":{"outcomes":{"x":0,"y":0,"w":424,"h":265},"cmods":{"x":0,"y":280,"w":424,"h":334},"range-bands":{"x":0,"y":624,"w":212,"h":212},"weapon-condition":{"x":168,"y":624,"w":260,"h":212},"combat-actions":{"x":440,"y":0,"w":413,"h":835},"skills-attrs":{"x":864,"y":0,"w":424,"h":472},"healing":{"x":864,"y":480,"w":424,"h":273},"scratch":{"x":1296,"y":0,"w":595,"h":320},"gm-notes":{"x":1294,"y":328,"w":598,"h":540}},"collapsed":[],"filter":"all"}'::jsonb
 ) ON CONFLICT (id) DO NOTHING;
