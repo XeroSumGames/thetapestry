@@ -8,6 +8,43 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-07-21 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (2 NEW HIGH + 3 carry-overs), rate-limit / DoS (carry-over), dependency drift
+
+**Sections clean this cycle:** auth/role gates (guardrail: 353 files, 0 violations), RLS gaps (all mutated tables have matching RLS SQL files in `sql/_baseline/`), file uploads (avatar: 5MB cap + image-only + resize-to-JPEG; war-stories: 10MB cap via `prepareUpload` + filename sanitization + contentType check; tactical-maps + session-attachments: size + MIME validated per stability-audit M1 2026-05-30), secrets exposure (no committed .env files, no hardcoded tokens in source), injection/XSS (`dangerouslySetInnerHTML` in `app/layout.tsx:56` is a static inline script — not user input; `innerHTML` in `app/stories/[id]/table/page.tsx:7958` sets a hardcoded static string on image error — not user input), permission boundaries (moderate pages gate on `roleIsThriver(profile)` from `lib/auth/roles.ts`; `isGM` computed as `gm_user_id === user.id` is a UI-display pattern, not a server boundary — RLS is the actual security layer).
+
+### npm audit (moderate+)
+
+**NEW HIGH (both have non-breaking fixes available):**
+- `brace-expansion` 1.1.13 — HIGH — CVSS 5.3 — "DoS via exponential-time expansion of consecutive non-expanding {} groups" — transitive (via eslint / typescript-eslint chain) — fix: non-breaking bump available (`fix=True`)
+- `js-yaml` 4.2.0 — HIGH — CVSS 7.5 — "YAML merge-key chains can force quadratic CPU consumption" — transitive — fix: non-breaking bump available (`fix=True`)
+
+**CARRY-OVER (unchanged):**
+- `postcss` 8.4.31 — moderate — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — fix: blocked on next major upgrade — low runtime risk (build-time only)
+- `next` — moderate — isDirect: true — via postcss chain — fix: breaking major downgrade advisory (spurious; hold)
+- `@sentry/nextjs` >=6.3.6 — moderate — isDirect: true — via next chain — fix: breaking downgrade advisory (spurious; hold)
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` — GET, unauthenticated — DB ping cached 10s — **no HTTP-level rate limit — 9th consecutive audit carry-over** — Upstash sliding window (10 req/min per IP) needed before paid launch.
+
+### Dependency drift
+
+(`npm outdated` returned results with N/A current versions — sandbox build; versions from lockfile where available.)
+
+- `@supabase/supabase-js` — 2.100.1 installed → ~2.110.8 latest — **9th consecutive audit carry-over** — auth-adjacent; changelog review before bump.
+- `@supabase/ssr` — 0.9.0 installed → 0.12.0 latest — **9th consecutive audit carry-over** — auth-adjacent staleness rising.
+- `@sentry/nextjs` — 10.x installed → 10.67.0 latest — bump clears advisory chain.
+- `@upstash/ratelimit` — 2 major versions behind per `npm outdated` — rate-limit-adjacent; review before bump.
+
+**Top 3 priorities:**
+1. `brace-expansion` + `js-yaml` — both HIGH with non-breaking fixes available; run `npm audit fix --package-lock-only` and inspect the diff, then `npm install` to pull clean versions. DoS risk at scale.
+2. `app/api/health/route.ts` — 9 audits deferred on HTTP rate limit; add Upstash 10/min sliding window before paid launch.
+3. `@supabase/supabase-js` 2.100.1 → ~2.110.8 and `@supabase/ssr` 0.9.0 → 0.12.0 — both 9 audits deferred; auth-adjacent staleness is the main accumulating risk.
+
+---
+
 ## 2026-07-14 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (carry-overs), rate-limit / DoS (1 closed, 1 carry-over), dependency drift
