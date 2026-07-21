@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-21 18:00 UTC
+
+**Status:** RED (vulns persist - 5th consecutive flag; Puffer security audit now formally corroborates + fix command documented)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [2 high, 0 critical] - brace-expansion DoS (CVSS 5.3) + js-yaml quadratic CPU (CVSS 7.5); both dev/build-only (eslint chain); both have non-breaking fixes
+
+**CI:** last 5 runs all success (latest security-audit commit abe9b90 at 2026-07-21T16:26 UTC)
+
+**New since 15:05:** 1 commit - `abe9b90` Puffer weekly security audit; formally documents these 2 HIGH as NEW + provides exact fix command. See `tasks/security-audit.md`.
+
+**Drift:** Same 3 chronic HOPED-FOR items (all >30 days without playtest):
+- Stress 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+- FI Insight Die award path (doubles -> pool increment; never fired in live play)
+- Vehicle popout broadcasts (Section B; >55 days)
+
+**Action:** Puffer security audit at `tasks/security-audit.md` has the exact fix: `npm audit fix --package-lock-only && npm install`. 5th flag on same 2 HIGH vulns - run the fix or mark deferred explicitly. Both are dev/build-only (no prod exposure), but flagged as DoS risk at scale.
+
+---
+
 ## 2026-07-21 15:05 UTC
 
 **Status:** RED (vulns persist - 4th consecutive flag since 06:06)
