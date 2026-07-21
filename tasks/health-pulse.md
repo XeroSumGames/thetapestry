@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-21 12:06 UTC
+
+**Status:** RED (vulns persist from 09:04 entry - no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [2 high, 0 critical] - brace-expansion + js-yaml; same as 09:04; both dev/build only
+
+**CI:** last 5 runs all success (latest 2026-07-21T09:07 UTC)
+
+**New since 09:04:** 2 NPC panel commits (a5d714d green/red eye icon, 4dc0733 Show/Hide refactor); all gates pass.
+
+**Drift:** Same 3 HOPED-FOR items (Stress 12-string, FI Insight Die, vehicle popout) - no code change, no playtest.
+
+**Action:** `npm audit fix` still pending from 06:06 entry. Schedule or explicitly defer.
+
+---
+
 ## 2026-07-21 09:04 UTC
 
 **Status:** RED (vulns persist from 06:06 entry -- no new findings)
