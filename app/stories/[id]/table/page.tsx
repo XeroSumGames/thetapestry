@@ -5633,6 +5633,10 @@ export default function TablePage() {
           'GM Tools',
           [
             {
+              label: 'GM Screen',
+              onClick: () => openPopout(`/gm-screen?c=${id}`, `gm-screen-${id}`, { w: 900, h: 700 }),
+            },
+            {
               // GM Notes popout - comprehensive story overview window:
               // plot beats, scenes, NPC list, pins. Same popout the
               // GM Notes button on /stories/[id] opens. Lives in GM
@@ -5744,10 +5748,6 @@ export default function TablePage() {
               // hour over the limit until they rest or drop something.
               label: 'Time',
               onClick: () => { setAdvanceTimeHours(1); setShowAdvanceTimeModal(true) },
-            },
-            {
-              label: 'GM Screen',
-              onClick: () => openPopout(`/gm-screen?c=${id}`, `gm-screen-${id}`, { w: 900, h: 700 }),
             },
             {
               label: 'Observer Link',
