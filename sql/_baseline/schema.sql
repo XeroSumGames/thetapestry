@@ -494,6 +494,12 @@ CREATE TABLE public.initiative_order (
   incoming_cmod integer NOT NULL DEFAULT 0
 );
 
+CREATE TABLE public.gm_screen_layouts (
+  user_id uuid NOT NULL,
+  state jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
 CREATE TABLE public.lfg_interests (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   post_id uuid NOT NULL,
@@ -1352,6 +1358,10 @@ ALTER TABLE public.initiative_order ADD CONSTRAINT initiative_order_campaign_id_
 
 ALTER TABLE public.initiative_order ADD CONSTRAINT initiative_order_pkey PRIMARY KEY (id);
 
+ALTER TABLE public.gm_screen_layouts ADD CONSTRAINT gm_screen_layouts_pkey PRIMARY KEY (user_id);
+
+ALTER TABLE public.gm_screen_layouts ADD CONSTRAINT gm_screen_layouts_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 ALTER TABLE public.lfg_interests ADD CONSTRAINT lfg_interests_interested_user_id_fkey FOREIGN KEY (interested_user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 ALTER TABLE public.lfg_interests ADD CONSTRAINT lfg_interests_pkey PRIMARY KEY (id);
@@ -2032,6 +2042,8 @@ ALTER TABLE public.forum_thread_reactions ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.forum_threads ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.gm_screen_layouts ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.initiative_order ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.lfg_interests ENABLE ROW LEVEL SECURITY;
@@ -2685,6 +2697,8 @@ CREATE POLICY "GM deletes initiative" ON public.initiative_order AS PERMISSIVE F
   WHERE ((c.id = initiative_order.campaign_id) AND (c.gm_user_id = auth.uid())))));
 
 CREATE POLICY initiative_order_thriver_bypass ON public.initiative_order AS PERMISSIVE FOR ALL TO public USING (is_thriver()) WITH CHECK (is_thriver());
+
+CREATE POLICY "own gm layout" ON public.gm_screen_layouts AS PERMISSIVE FOR ALL TO public USING ((auth.uid() = user_id)) WITH CHECK ((auth.uid() = user_id));
 
 CREATE POLICY lfg_int_delete_author ON public.lfg_interests AS PERMISSIVE FOR DELETE TO public USING ((EXISTS ( SELECT 1
    FROM lfg_posts p

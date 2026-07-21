@@ -1,21 +1,38 @@
 'use client'
 
 // Skip Next's static prerender entirely. /gm-screen mounts a Supabase
-// client (via the GmNotes panel) and reads useSearchParams() - both
-// patterns that have hit prerender-time failures on Vercel even with
-// the env wired correctly. The popout is always opened from a story
-// header, never crawled, so dynamic rendering is the right call.
+// client (via the GmNotes panel + the layout persistence) and reads
+// useSearchParams() - both patterns that have hit prerender-time failures on
+// Vercel even with the env wired correctly. The popout is always opened from a
+// story header, never crawled, so dynamic rendering is the right call.
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamicImport from 'next/dynamic'
+import {
+  DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext, useSortable, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { loadGmScreenLayout, saveGmScreenLayout } from '../../lib/data/gm-screen-layout'
 
-// Client-only import - GmNotes pulls in @supabase/ssr's browser
-// client at module load. Even with force-dynamic above, keeping this
-// out of the server bundle is cheap insurance and shrinks the SSR
-// payload for the path that doesn't need it.
+// Client-only import - GmNotes pulls in @supabase/ssr's browser client at
+// module load. Even with force-dynamic above, keeping this out of the server
+// bundle is cheap insurance and shrinks the SSR payload for the path that
+// doesn't need it.
 const GmNotes = dynamicImport(() => import('../../components/GmNotes'), { ssr: false })
+
+// ---------------------------------------------------------------------------
+// Reference data (static). Redesign 2026-07-20: the free-float drag engine
+// (raw mousemove/mouseup + a mutable dragRef + a deferred setLayout updater
+// that threw a null-deref on mouseup) is gone. Cards now live in a dnd-kit
+// sortable grid: drag-to-reorder with grid snap, collapse per card, auto-fit
+// reflow, filter chips, and a per-GM saved layout (lib/data/gm-screen-layout).
+// ---------------------------------------------------------------------------
 
 const OUTCOMES = [
   { roll: '1+1', label: 'Low Insight', color: '#c0392b', desc: 'Critical failure. +1 Insight Die. Weapon jam possible.' },
@@ -31,7 +48,7 @@ const COMBAT_ACTIONS = [
   { name: 'Attack', cost: 1, desc: 'Roll weapon skill. Damage on success.' },
   { name: 'Charge', cost: 2, desc: 'Move 20ft + melee/unarmed attack.' },
   { name: 'Coordinate', cost: 1, desc: 'Tactics roll. Allies in Close get +2 CMod vs target.' },
-  { name: 'Cover Fire', cost: 1, desc: '-2 CMod to enemy\'s next action.' },
+  { name: 'Cover Fire', cost: 1, desc: "-2 CMod to enemy's next action. Spends a round of ammo." },
   { name: 'Defend', cost: 1, desc: '+2 defensive mod vs next attack. Clears after one hit.' },
   { name: 'Distract', cost: 1, desc: 'Steal 1 action from target.' },
   { name: 'Fire from Cover', cost: 2, desc: 'Attack from cover. Keep defense bonus.' },
@@ -104,402 +121,301 @@ const SKILLS_MAP = [
   { skill: 'Weaponsmith', attr: 'DEX' },
 ]
 
-type BoxKey = 'outcomes' | 'combat-actions' | 'range-bands' | 'weapon-condition' | 'cmods' | 'healing' | 'skills-attrs' | 'gm-notes'
+// EMPTY / Session Zero example shown in the GM Notes card when the screen is
+// opened standalone (no ?c=<campaign>). Source: sql/empty-seed.sql. This is a
+// stand-in for the planned Campaign Builder, which will let a GM author their
+// own GM Notes / NPCs / pins as seeded content (roadmap, tasks/todo.md).
+const EMPTY_SESSION_ZERO: { heading: string; body: string }[] = [
+  {
+    heading: 'The setup - Battersby Farm',
+    body: 'It has been almost a year since the dog flu. The party are friends, family, or acquaintances of David Battersby, waiting out the pandemic on his third-generation farm near the Maryland / Delaware border. One of the tractors just broke and needs an arc welder. David knows of a garage nearby - the party takes his truck and leaves after breakfast. This is where Empty begins.',
+  },
+  {
+    heading: "Stansfield's Gas Station",
+    body: "Owned by Errol and Martina Stansfield for ~15 years; both died at home within days of each other. Secluded, so it sits untouched - store largely intact but contents expired. Inside is Becky; she and Dylan arrived the night before. Dylan is out hunting and returns shortly after the party meets Becky, down to 3 bullets (more ammo in Becky's bag on the counter; a shotgun with 2 shells in their truck).",
+  },
+  {
+    heading: 'Becky (late 20s)',
+    body: 'Long red hair, easy smile, calm and insightful. Complication: Loss. Motivation: Find Safety. Friendly and articulate but never answers directly - buys time for Dylan, mirrors whatever mood he sets on arrival. If Dylan is killed or incapacitated she surrenders immediately, overwhelmed with grief, and will not stop the party taking her belongings.',
+  },
+  {
+    heading: 'Dylan (early 30s)',
+    body: 'Short hair, tattoos, wears a holster. Charming, furtive, smart like a fox. Complication: Dark Secret. Motivation: To Take Advantage. Two modes - PEACEFUL (desperate to join a group, offers skills/knowledge) or HOSTILE (views survivors as marks, may tail the party home to rob them). Pulls his gun if negotiations fail. Grapple +3; will grab the weakest player as a hostage if outnumbered.',
+  },
+  {
+    heading: 'The map - eight key locations',
+    body: '(1) Entrance - park the truck. (2) Abandoned car - unlocked, dead battery, nothing of value. (3) Dylan\'s bike - saddlebags of survival gear. (4) Main entrance - door bell rings unless Wild Success on Stealth. (5) Breakroom - pullout couch, instant noodles. (6) Rear fire escape - unlocked, heavy, noisy. (7) Workshop - arc welder + a tow truck that starts first try. (8) Side fire escape - same as 6.',
+  },
+]
 
-interface BoxLayout { x: number; y: number; w: number; h: number }
+// ---------------------------------------------------------------------------
 
-const DEFAULT_LAYOUT: Record<BoxKey, BoxLayout> = {
-  'outcomes':         { x: 0,   y: 0,   w: 430, h: 175 },
-  'combat-actions':   { x: 440, y: 0,   w: 430, h: 460 },
-  'range-bands':      { x: 0,   y: 185, w: 430, h: 155 },
-  'weapon-condition': { x: 0,   y: 350, w: 430, h: 155 },
-  'cmods':            { x: 0,   y: 515, w: 430, h: 240 },
-  'healing':          { x: 440, y: 470, w: 430, h: 200 },
-  'skills-attrs':     { x: 440, y: 680, w: 430, h: 380 },
-  // GM Notes - only renders when /gm-screen?c=<campaignId>. Default
-  // position fills the col-1 dead space below CMods so the canvas
-  // height stays the same as before (driven by skills-attrs at 1060).
-  'gm-notes':         { x: 0,   y: 765, w: 430, h: 295 },
+type CardKey = 'outcomes' | 'combat-actions' | 'range-bands' | 'weapon-condition' | 'cmods' | 'healing' | 'skills-attrs' | 'gm-notes'
+type Category = 'combat' | 'reference' | 'notes'
+type Filter = 'all' | Category
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'combat', label: 'Combat' },
+  { key: 'reference', label: 'Reference' },
+  { key: 'notes', label: 'GM Notes' },
+]
+
+// Locked default order + each card's filter category.
+const CARD_META: { key: CardKey; title: string; category: Category }[] = [
+  { key: 'outcomes', title: 'Outcomes', category: 'reference' },
+  { key: 'combat-actions', title: 'Combat Actions', category: 'combat' },
+  { key: 'cmods', title: 'Conditional Modifiers', category: 'combat' },
+  { key: 'range-bands', title: 'Range Bands', category: 'combat' },
+  { key: 'weapon-condition', title: 'Weapon Condition', category: 'combat' },
+  { key: 'healing', title: 'Healing & Recovery', category: 'reference' },
+  { key: 'skills-attrs', title: 'Skills -> Attributes', category: 'reference' },
+  { key: 'gm-notes', title: 'GM Notes', category: 'notes' },
+]
+const DEFAULT_ORDER = CARD_META.map(m => m.key)
+const CATEGORY_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.category])) as Record<CardKey, Category>
+const TITLE_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.title])) as Record<CardKey, string>
+
+const sectionHeading: React.CSSProperties = { fontSize: '15px', color: '#c0392b', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }
+const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Carlito, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
+
+function cardBody(key: CardKey, campaignId: string): React.ReactNode {
+  switch (key) {
+    case 'outcomes':
+      return OUTCOMES.map(o => (
+        <div key={o.label} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
+          <span style={{ ...cellStyle, color: o.color, fontWeight: 700, minWidth: '36px' }}>{o.roll}</span>
+          <span style={{ ...cellStyle, color: o.color, fontWeight: 700, minWidth: '100px' }}>{o.label}</span>
+          <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{o.desc}</span>
+        </div>
+      ))
+    case 'combat-actions':
+      return COMBAT_ACTIONS.map(a => (
+        <div key={a.name} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '2px' }}>
+          <span style={{ ...cellStyle, fontWeight: 700, color: '#f5f2ee', minWidth: '90px' }}>{a.name}</span>
+          <span style={{ ...cellStyle, color: a.cost === 2 ? '#EF9F27' : '#7fc458', minWidth: '16px', textAlign: 'center' }}>{a.cost}</span>
+          <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{a.desc}</span>
+        </div>
+      ))
+    case 'range-bands':
+      return RANGE_BANDS.map(r => (
+        <div key={r.band} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
+          <span style={{ ...cellStyle, color: r.color, fontWeight: 700, minWidth: '70px' }}>{r.band}</span>
+          <span style={{ ...cellStyle, color: '#f5f2ee' }}>{r.range}</span>
+        </div>
+      ))
+    case 'weapon-condition':
+      return CONDITIONS.map(c => (
+        <div key={c.cond} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
+          <span style={{ ...cellStyle, color: c.color, fontWeight: 700, minWidth: '70px' }}>{c.cond}</span>
+          <span style={{ ...cellStyle, color: c.color }}>{c.cmod}</span>
+        </div>
+      ))
+    case 'cmods':
+      return CMODS.map(c => (
+        <div key={c.source} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
+          <span style={{ ...cellStyle, color: '#f5f2ee', fontWeight: 700, minWidth: '90px' }}>{c.source}</span>
+          <span style={{ ...cellStyle, color: '#7fc458' }}>{c.mod}</span>
+        </div>
+      ))
+    case 'healing':
+      return HEALING.map(h => (
+        <div key={h.type} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
+          <span style={{ ...cellStyle, color: '#f5f2ee', fontWeight: 700, minWidth: '130px' }}>{h.type}</span>
+          <span style={{ ...cellStyle, color: '#f5f2ee' }}>{h.rate}</span>
+        </div>
+      ))
+    case 'skills-attrs':
+      return (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
+          {SKILLS_MAP.map(s => (
+            <div key={s.skill} style={{ display: 'flex', gap: '4px', alignItems: 'baseline' }}>
+              <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{s.skill}</span>
+              <span style={{ ...cellStyle, color: '#7ab3d4', fontWeight: 700, minWidth: '30px' }}>{s.attr}</span>
+            </div>
+          ))}
+        </div>
+      )
+    case 'gm-notes':
+      // Live notes for a real table; the EMPTY Session Zero example standalone.
+      return campaignId ? <GmNotes campaignId={campaignId} /> : (
+        <div style={{ fontFamily: 'Carlito, sans-serif' }}>
+          <div style={{ fontSize: '13px', color: '#7ab3d4', marginBottom: '8px', lineHeight: 1.4 }}>
+            Example content from the <strong>Empty</strong> starter (Session Zero). Open the GM Screen from a story to load that story&rsquo;s live notes here instead.
+          </div>
+          {EMPTY_SESSION_ZERO.map(s => (
+            <div key={s.heading} style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '14px', color: '#f5f2ee', fontWeight: 700, marginBottom: '2px' }}>{s.heading}</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.5 }}>{s.body}</div>
+            </div>
+          ))}
+        </div>
+      )
+  }
 }
 
-const STORAGE_LAYOUT = 'gmscreen.layout.v1'
-const STORAGE_LOCKED = 'gmscreen.locked.v1'
-const STORAGE_HIDDEN = 'gmscreen.hidden.v1'
-
-const sectionHeading: React.CSSProperties = { fontSize: '15px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }
-const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Carlito, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
+function SortableCard({ cardKey, campaignId, collapsed, onToggle }: {
+  cardKey: CardKey; campaignId: string; collapsed: boolean; onToggle: (k: CardKey) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cardKey })
+  const isNotes = cardKey === 'gm-notes'
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined,
+    opacity: isDragging ? 0.85 : 1,
+    background: '#191919',
+    border: '1px solid ' + (isDragging ? '#4a6a8a' : '#2e2e2e'),
+    borderRadius: '4px',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    alignSelf: 'start',
+  }
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderBottom: collapsed ? 'none' : '1px solid #2e2e2e', background: '#151515' }}>
+        <button
+          {...attributes} {...listeners}
+          aria-label="Drag to reorder"
+          title="Drag to reorder"
+          style={{ cursor: 'grab', background: 'transparent', border: 'none', color: '#6a6a6a', fontSize: '16px', lineHeight: 1, padding: '0 2px', touchAction: 'none' }}
+        >&#x2237;&#x2237;</button>
+        <div style={{ ...sectionHeading, flex: 1 }}>{TITLE_OF[cardKey]}</div>
+        <button
+          onClick={() => onToggle(cardKey)}
+          aria-label={collapsed ? 'Expand' : 'Collapse'}
+          title={collapsed ? 'Expand' : 'Collapse'}
+          style={{ background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3, color: '#cce0f5', width: 24, height: 24, cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}
+        >{collapsed ? '▸' : '▾'}</button>
+      </div>
+      {!collapsed && (
+        <div style={{ padding: isNotes ? '8px 10px 10px' : '6px 12px 10px', overflow: 'auto', maxHeight: isNotes ? undefined : '480px' }}>
+          {cardBody(cardKey, campaignId)}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function GMScreen() {
   const searchParams = useSearchParams()
-  // /gm-screen?c=<campaign-id> - present when launched from a story's
-  // header. Drives the GM Notes panel below; without it, that panel
-  // renders a placeholder ("open from a story").
+  // /gm-screen?c=<campaign-id> - present when launched from a story's header.
+  // Drives the live GM Notes panel; without it the GM Notes card shows the
+  // Empty Session Zero example.
   const campaignId = searchParams?.get('c') ?? ''
-  const [layout, setLayout] = useState<Record<BoxKey, BoxLayout>>(DEFAULT_LAYOUT)
-  const [locked, setLocked] = useState<boolean>(true)
-  // Per-box hide. The × in each title bar adds the box key here so the
-  // user can declutter to just the panels they care about. Persisted in
-  // localStorage; Reset Layout clears it so everything comes back.
-  const [hiddenBoxes, setHiddenBoxes] = useState<Set<BoxKey>>(new Set())
-  const [hydrated, setHydrated] = useState(false)
-  const boxRefs = useRef<Partial<Record<BoxKey, HTMLDivElement | null>>>({})
-  const dragRef = useRef<{ key: BoxKey; startX: number; startY: number; origX: number; origY: number } | null>(null)
 
+  const [order, setOrder] = useState<CardKey[]>(DEFAULT_ORDER)
+  const [collapsed, setCollapsed] = useState<Set<CardKey>>(new Set())
+  const [filter, setFilter] = useState<Filter>('all')
+  const [hydrated, setHydrated] = useState(false)
+
+  // Load the per-GM saved layout once on mount. Missing row / signed-out /
+  // pre-migration table all resolve to null -> defaults.
   useEffect(() => {
-    try {
-      const savedLayout = localStorage.getItem(STORAGE_LAYOUT)
-      if (savedLayout) {
-        const parsed = JSON.parse(savedLayout)
-        if (parsed && typeof parsed === 'object') {
-          setLayout(prev => ({ ...prev, ...parsed }))
-        }
+    let alive = true
+    ;(async () => {
+      const saved = await loadGmScreenLayout()
+      if (!alive) { return }
+      if (saved) {
+        // Reconcile saved order with the current card set: keep known keys in
+        // their saved order, then append any cards added since (so a new card
+        // never gets orphaned by an old saved layout).
+        const known = new Set(DEFAULT_ORDER)
+        const savedOrder = saved.order.filter((k): k is CardKey => known.has(k as CardKey))
+        const merged = [...savedOrder, ...DEFAULT_ORDER.filter(k => !savedOrder.includes(k))]
+        setOrder(merged)
+        setCollapsed(new Set(saved.collapsed.filter((k): k is CardKey => known.has(k as CardKey))))
+        if (FILTERS.some(f => f.key === saved.filter)) setFilter(saved.filter as Filter)
       }
-      const savedLock = localStorage.getItem(STORAGE_LOCKED)
-      if (savedLock !== null) setLocked(savedLock === 'true')
-      const savedHidden = localStorage.getItem(STORAGE_HIDDEN)
-      if (savedHidden) {
-        const arr = JSON.parse(savedHidden)
-        if (Array.isArray(arr)) setHiddenBoxes(new Set(arr as BoxKey[]))
-      }
-    } catch {}
-    setHydrated(true)
+      setHydrated(true)
+    })()
+    return () => { alive = false }
   }, [])
 
+  // Persist (debounced) whenever the layout changes, but only after hydration
+  // so the initial load doesn't immediately write defaults back.
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (!hydrated) return
-    try { localStorage.setItem(STORAGE_LAYOUT, JSON.stringify(layout)) } catch {}
-  }, [layout, hydrated])
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      void saveGmScreenLayout({ order, collapsed: Array.from(collapsed), filter })
+    }, 600)
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
+  }, [order, collapsed, filter, hydrated])
 
-  useEffect(() => {
-    if (!hydrated) return
-    try { localStorage.setItem(STORAGE_LOCKED, String(locked)) } catch {}
-  }, [locked, hydrated])
+  const sensors = useSensors(
+    // 6px activation distance so a click on the chevron / a tap doesn't start a
+    // drag; the library owns the whole drag lifecycle now (no hand-rolled
+    // mousemove/mouseup, so the old null-deref crash class is gone).
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
-  useEffect(() => {
-    if (!hydrated) return
-    try { localStorage.setItem(STORAGE_HIDDEN, JSON.stringify(Array.from(hiddenBoxes))) } catch {}
-  }, [hiddenBoxes, hydrated])
-
-  useEffect(() => {
-    if (!hydrated) return
-    const observers: ResizeObserver[] = []
-    ;(Object.keys(boxRefs.current) as BoxKey[]).forEach(key => {
-      const el = boxRefs.current[key]
-      if (!el) return
-      const ro = new ResizeObserver(() => {
-        const w = el.offsetWidth
-        const h = el.offsetHeight
-        setLayout(prev => {
-          if (prev[key].w === w && prev[key].h === h) return prev
-          return { ...prev, [key]: { ...prev[key], w, h } }
-        })
-      })
-      ro.observe(el)
-      observers.push(ro)
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    setOrder(prev => {
+      const from = prev.indexOf(active.id as CardKey)
+      const to = prev.indexOf(over.id as CardKey)
+      if (from < 0 || to < 0) return prev
+      return arrayMove(prev, from, to)
     })
-    return () => observers.forEach(o => o.disconnect())
-  }, [hydrated, locked])
-
-  function startDrag(key: BoxKey, e: React.MouseEvent) {
-    if (locked) return
-    e.preventDefault()
-    dragRef.current = {
-      key,
-      startX: e.clientX,
-      startY: e.clientY,
-      origX: layout[key].x,
-      origY: layout[key].y,
-    }
-
-    function onMove(ev: MouseEvent) {
-      // Capture the drag state into a local. The setLayout updater below runs
-      // DEFERRED (React batches it), and a mouseup can fire onUp() -> null the
-      // ref before it does; reading dragRef.current!.key inside the updater then
-      // threw "Cannot read properties of null (reading 'key')" (Sentry). The
-      // local `drag` stays valid regardless.
-      const drag = dragRef.current
-      if (!drag) return
-      const dx = ev.clientX - drag.startX
-      const dy = ev.clientY - drag.startY
-      setLayout(prev => ({
-        ...prev,
-        [drag.key]: {
-          ...prev[drag.key],
-          x: Math.max(0, drag.origX + dx),
-          y: Math.max(0, drag.origY + dy),
-        },
-      }))
-    }
-
-    function onUp() {
-      dragRef.current = null
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
   }
 
-  function resetLayout() {
-    if (!confirm('Reset all panels to default layout? (Restores any hidden panels too.)')) return
-    setLayout(DEFAULT_LAYOUT)
-    setHiddenBoxes(new Set())
-  }
-
-  function hideBox(key: BoxKey) {
-    setHiddenBoxes(prev => {
+  function toggleCollapse(k: CardKey) {
+    setCollapsed(prev => {
       const next = new Set(prev)
-      next.add(key)
+      if (next.has(k)) next.delete(k); else next.add(k)
       return next
     })
   }
 
-  // Canvas extents drive the absolute-positioned area's width/height.
-  // Hidden boxes are excluded so closing a far-positioned panel collapses
-  // the empty space instead of leaving a giant scrollable margin.
-  const visibleLayouts = (Object.entries(layout) as [BoxKey, BoxLayout][])
-    .filter(([k]) => !hiddenBoxes.has(k))
-    .map(([, l]) => l)
-  const canvasWidth = visibleLayouts.length > 0 ? Math.max(...visibleLayouts.map(l => l.x + l.w)) + 12 : 600
-  const canvasHeight = visibleLayouts.length > 0 ? Math.max(...visibleLayouts.map(l => l.y + l.h)) + 12 : 400
-
-  function boxStyle(key: BoxKey): React.CSSProperties {
-    const { x, y, w, h } = layout[key]
-    return {
-      position: 'absolute',
-      left: x,
-      top: y,
-      width: w,
-      height: h,
-      minWidth: 220,
-      minHeight: 90,
-      background: '#1a1a1a',
-      border: locked ? '1px solid #2e2e2e' : '1px solid #4a6a8a',
-      borderRadius: '4px',
-      overflow: 'auto',
-      resize: locked ? 'none' : 'both',
-      // display:none on hidden boxes hides them while keeping refs +
-      // localStorage-persisted layout intact, so Reset Layout can bring
-      // them straight back without re-hydrating from defaults.
-      display: hiddenBoxes.has(key) ? 'none' : 'flex',
-      flexDirection: 'column',
-      boxSizing: 'border-box',
-    }
+  function resetLayout() {
+    setOrder(DEFAULT_ORDER)
+    setCollapsed(new Set())
+    setFilter('all')
   }
 
-  function dragHandleStyle(): React.CSSProperties {
-    return {
-      cursor: locked ? 'default' : 'move',
-      padding: '8px 12px 6px',
-      borderBottom: '1px solid #2e2e2e',
-      userSelect: 'none',
-      background: locked ? 'transparent' : '#22303d',
-      flexShrink: 0,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '8px',
-    }
-  }
+  const visible = order.filter(k => filter === 'all' || CATEGORY_OF[k] === filter)
 
-  // Close × in the title bar of each box. stopPropagation so the click
-  // doesn't trigger drag start; the parent's onMouseDown is set on the
-  // whole title bar. Visible regardless of locked state - declutter is
-  // a separate concern from edit-layout mode.
-  function closeBtn(key: BoxKey): React.ReactNode {
-    return (
-      <button
-        onMouseDown={e => e.stopPropagation()}
-        onClick={e => { e.stopPropagation(); hideBox(key) }}
-        title="Hide this panel - Reset Layout brings it back"
-        aria-label="Hide panel"
-        style={{
-          width: 22, height: 22, padding: 0,
-          background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3,
-          color: '#cce0f5', fontSize: 13, fontFamily: 'Carlito, sans-serif',
-          lineHeight: 1, cursor: 'pointer', flexShrink: 0,
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#2a1210'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#c0392b'; (e.currentTarget as HTMLButtonElement).style.color = '#f5a89a' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#3a3a3a'; (e.currentTarget as HTMLButtonElement).style.color = '#cce0f5' }}
-      >
-        ×
-      </button>
-    )
-  }
-
-  const bodyStyle: React.CSSProperties = { padding: '6px 12px 10px', overflow: 'auto', flex: 1 }
-
-  const toolbarBtn = (active: boolean): React.CSSProperties => ({
-    height: 28,
-    padding: '0 12px',
-    fontFamily: 'Carlito, sans-serif',
-    fontSize: 13,
-    background: active ? '#22303d' : '#1a1a1a',
+  const chipStyle = (active: boolean): React.CSSProperties => ({
+    height: 30, padding: '0 14px', fontFamily: 'Carlito, sans-serif', fontSize: 13,
+    background: active ? '#22303d' : '#151515',
     color: active ? '#f5f2ee' : '#cce0f5',
     border: '1px solid ' + (active ? '#4a6a8a' : '#3a3a3a'),
-    borderRadius: 4,
-    cursor: 'pointer',
-    letterSpacing: '.06em',
-    textTransform: 'uppercase',
+    borderRadius: 4, cursor: 'pointer', letterSpacing: '.06em', textTransform: 'uppercase',
   })
 
   return (
     <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', padding: '12px', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '8px', flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>GM Screen</div>
-        <div style={{ fontSize: '15px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Xero Sum Engine SRD v1.1</div>
+        <div style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>GM Screen</div>
+        <div style={{ fontSize: '15px', color: '#c0392b', letterSpacing: '.06em', textTransform: 'uppercase' }}>Xero Sum Engine SRD v1.1</div>
         <div style={{ flex: 1 }} />
-        {!locked && (
-          <div style={{ fontSize: 13, color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
-            Drag the title bar to move · Drag the bottom-right corner to resize
-          </div>
-        )}
-        <button onClick={() => setLocked(l => !l)} style={toolbarBtn(!locked)}>
-          {locked ? '🔒 Locked' : '✎ Editing'}
-        </button>
-        <button onClick={resetLayout} style={toolbarBtn(false)}>Reset Layout</button>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {FILTERS.map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)} style={chipStyle(filter === f.key)}>{f.label}</button>
+          ))}
+        </div>
+        <button onClick={resetLayout} style={chipStyle(false)}>Reset</button>
       </div>
 
-      <div style={{ position: 'relative', width: canvasWidth, height: canvasHeight }}>
-
-        {/* Outcomes */}
-        <div ref={el => { boxRefs.current['outcomes'] = el }} style={boxStyle('outcomes')}>
-          <div onMouseDown={e => startDrag('outcomes', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>Outcomes</div>
-            {closeBtn('outcomes')}
-          </div>
-          <div style={bodyStyle}>
-            {OUTCOMES.map(o => (
-              <div key={o.label} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
-                <span style={{ ...cellStyle, color: o.color, fontWeight: 700, minWidth: '36px' }}>{o.roll}</span>
-                <span style={{ ...cellStyle, color: o.color, fontWeight: 700, minWidth: '100px' }}>{o.label}</span>
-                <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{o.desc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Combat Actions */}
-        <div ref={el => { boxRefs.current['combat-actions'] = el }} style={boxStyle('combat-actions')}>
-          <div onMouseDown={e => startDrag('combat-actions', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>Combat Actions</div>
-            {closeBtn('combat-actions')}
-          </div>
-          <div style={bodyStyle}>
-            {COMBAT_ACTIONS.map(a => (
-              <div key={a.name} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '2px' }}>
-                <span style={{ ...cellStyle, fontWeight: 700, color: '#f5f2ee', minWidth: '90px' }}>{a.name}</span>
-                <span style={{ ...cellStyle, color: a.cost === 2 ? '#EF9F27' : '#7fc458', minWidth: '16px', textAlign: 'center' }}>{a.cost}</span>
-                <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{a.desc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Range Bands */}
-        <div ref={el => { boxRefs.current['range-bands'] = el }} style={boxStyle('range-bands')}>
-          <div onMouseDown={e => startDrag('range-bands', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>Range Bands</div>
-            {closeBtn('range-bands')}
-          </div>
-          <div style={bodyStyle}>
-            {RANGE_BANDS.map(r => (
-              <div key={r.band} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
-                <span style={{ ...cellStyle, color: r.color, fontWeight: 700, minWidth: '70px' }}>{r.band}</span>
-                <span style={{ ...cellStyle, color: '#f5f2ee' }}>{r.range}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Weapon Condition */}
-        <div ref={el => { boxRefs.current['weapon-condition'] = el }} style={boxStyle('weapon-condition')}>
-          <div onMouseDown={e => startDrag('weapon-condition', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>Weapon Condition</div>
-            {closeBtn('weapon-condition')}
-          </div>
-          <div style={bodyStyle}>
-            {CONDITIONS.map(c => (
-              <div key={c.cond} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
-                <span style={{ ...cellStyle, color: c.color, fontWeight: 700, minWidth: '70px' }}>{c.cond}</span>
-                <span style={{ ...cellStyle, color: c.color }}>{c.cmod}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CMod Bonuses */}
-        <div ref={el => { boxRefs.current['cmods'] = el }} style={boxStyle('cmods')}>
-          <div onMouseDown={e => startDrag('cmods', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>Conditional Modifiers</div>
-            {closeBtn('cmods')}
-          </div>
-          <div style={bodyStyle}>
-            {CMODS.map(c => (
-              <div key={c.source} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
-                <span style={{ ...cellStyle, color: '#f5f2ee', fontWeight: 700, minWidth: '90px' }}>{c.source}</span>
-                <span style={{ ...cellStyle, color: '#7fc458' }}>{c.mod}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Healing & Recovery */}
-        <div ref={el => { boxRefs.current['healing'] = el }} style={boxStyle('healing')}>
-          <div onMouseDown={e => startDrag('healing', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>Healing & Recovery</div>
-            {closeBtn('healing')}
-          </div>
-          <div style={bodyStyle}>
-            {HEALING.map(h => (
-              <div key={h.type} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '3px' }}>
-                <span style={{ ...cellStyle, color: '#f5f2ee', fontWeight: 700, minWidth: '130px' }}>{h.type}</span>
-                <span style={{ ...cellStyle, color: '#f5f2ee' }}>{h.rate}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Skills → Attributes */}
-        <div ref={el => { boxRefs.current['skills-attrs'] = el }} style={boxStyle('skills-attrs')}>
-          <div onMouseDown={e => startDrag('skills-attrs', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>Skills → Attributes</div>
-            {closeBtn('skills-attrs')}
-          </div>
-          <div style={bodyStyle}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
-              {SKILLS_MAP.map(s => (
-                <div key={s.skill} style={{ display: 'flex', gap: '4px', alignItems: 'baseline' }}>
-                  <span style={{ ...cellStyle, color: '#f5f2ee', flex: 1 }}>{s.skill}</span>
-                  <span style={{ ...cellStyle, color: '#7ab3d4', fontWeight: 700, minWidth: '30px' }}>{s.attr}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* GM Notes - same component the chat-window panel uses. The
-            inner GmNotes element handles its own scroll, so we drop the
-            page-level bodyStyle padding and let it take the full panel
-            height. Only renders when ?c=<campaignId> was supplied. */}
-        <div ref={el => { boxRefs.current['gm-notes'] = el }} style={boxStyle('gm-notes')}>
-          <div onMouseDown={e => startDrag('gm-notes', e)} style={dragHandleStyle()}>
-            <div style={sectionHeading}>GM Notes</div>
-            {closeBtn('gm-notes')}
-          </div>
-          <div style={{ overflow: 'auto', flex: 1, padding: '6px 10px 10px' }}>
-            {campaignId ? (
-              <GmNotes campaignId={campaignId} />
-            ) : (
-              <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, padding: '8px 4px' }}>
-                Open the GM Screen from a story&rsquo;s header to load that story&rsquo;s notes here.
-              </div>
-            )}
-          </div>
-        </div>
-
+      <div style={{ fontSize: 13, color: '#6a6a6a', marginBottom: '10px' }}>
+        Drag the &#x2237;&#x2237; handle to reorder. Chevron collapses a card. Your layout saves to your account.
       </div>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={visible} strategy={rectSortingStrategy}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '12px', alignItems: 'start' }}>
+            {visible.map(k => (
+              <SortableCard key={k} cardKey={k} campaignId={campaignId} collapsed={collapsed.has(k)} onToggle={toggleCollapse} />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   )
 }
