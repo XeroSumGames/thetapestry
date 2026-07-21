@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-21 15:05 UTC
+
+**Status:** RED (vulns persist - 4th consecutive flag since 06:06)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [2 high, 0 critical] - brace-expansion + js-yaml; unremediated since 06:06; both dev/build only
+
+**CI:** last 5 runs all success (latest 2026-07-21T13:13 UTC)
+
+**New since 12:06:** 1 commit - `cfa7456` NPC panel toolbar consolidation (6 buttons -> 1 row icons); gates pass, CI green.
+
+**Drift:** Same 3 chronic HOPED-FOR items (Stress 12-string, FI Insight Die, vehicle popout) - no change.
+
+**Action:** `npm audit fix` still not run. Run it or explicitly defer - this is the 4th flag on the same issue.
+
+---
+
 ## 2026-07-21 12:06 UTC
 
 **Status:** RED (vulns persist from 09:04 entry - no new findings)
