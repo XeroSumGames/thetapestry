@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-21 06:06 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed]
+
+**Audit:** npm audit [2 high, 0 critical] -- NEW (was clean last run)
+- `brace-expansion` HIGH: DoS via exponential {} expansion -- via @typescript-eslint + glob (dev/build only; fix available)
+- `js-yaml` HIGH: DoS via YAML merge-key chains -- via eslint -> @eslint/eslintrc (dev/build only; fix available)
+- Both are transitive, build-time only, not runtime/prod. Fix: `npm audit fix` or update eslint.
+
+**CI:** last 5 runs all pass (latest 2026-07-20T23:37 UTC)
+
+**Drift:**
+- HOPED-FOR (35 days stale, last verified Test Bed Session 24 2026-06-16): Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE); FI Insight Die award path; vehicle popout broadcasts. Stress strings drain target was 2026-07-01 -- 20 days overdue.
+- No new stale-open todos found; 585b3a3 closed 9 HIGH items correctly; H4 (Cover Fire) now [x] in todo.
+
+**Action:** Run `npm audit fix --dry-run` to confirm non-breaking; if safe, run `npm audit fix` and commit. HOPED-FOR drain still needs a playtest or deliberate deferral decision.
+
+---
+
 ## 2026-07-20 21:04 UTC
 
 **Status:** DRIFT (19th consecutive flag - same items, no change)
