@@ -193,7 +193,7 @@ function ScratchPad({ campaignId }: { campaignId: string }) {
     saveTimer.current = setTimeout(() => { void saveScratch(campaignId, v) }, 600)
   }
   return (
-    <div style={{ marginTop: 12, borderTop: '1px solid #2e2e2e', paddingTop: 10 }}>
+    <div style={{ marginBottom: 12, borderBottom: '1px solid #2e2e2e', paddingBottom: 12 }}>
       <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 4 }}>Scratch Pad</div>
       <div style={{ fontSize: '13px', color: '#6a6a6a', marginBottom: 6, lineHeight: 1.4 }}>On-the-fly notes. Added to the session summary when you End Session, then cleared.</div>
       <textarea
@@ -266,10 +266,12 @@ function cardBody(key: CardKey, campaignId: string): React.ReactNode {
         </div>
       )
     case 'gm-notes':
+      // Scratch pad FIRST so it's always visible at the top of the card - it
+      // was previously below GmNotes and a long notes list buried it.
       return campaignId ? (
         <>
-          <GmNotes campaignId={campaignId} />
           <ScratchPad campaignId={campaignId} />
+          <GmNotes campaignId={campaignId} />
         </>
       ) : (
         <div style={{ fontFamily: 'Carlito, sans-serif' }}>
