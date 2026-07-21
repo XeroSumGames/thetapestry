@@ -156,15 +156,18 @@ const TITLE_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.title])) as Rec
 // Default freeform arrangement: two columns, with Conditional Modifiers placed
 // directly beneath Outcomes in the left column (Xero 2026-07-20).
 const COL2 = 440
+// Two columns; CMods directly beneath Outcomes (Xero 2026-07-20). y offsets
+// leave room for each card's FULL content height (cards auto-grow to show
+// everything by default), so the initial layout does not overlap.
 const DEFAULT_POSITIONS: Record<CardKey, CardPos> = {
   'outcomes':         { x: 0,    y: 0,   w: 424 },
-  'cmods':            { x: 0,    y: 200, w: 424 },
-  'range-bands':      { x: 0,    y: 464, w: 424 },
-  'weapon-condition': { x: 0,    y: 632, w: 424 },
+  'cmods':            { x: 0,    y: 256, w: 424 },
+  'range-bands':      { x: 0,    y: 576, w: 424 },
+  'weapon-condition': { x: 0,    y: 768, w: 424 },
   'combat-actions':   { x: COL2, y: 0,   w: 424 },
-  'healing':          { x: COL2, y: 480, w: 424 },
-  'skills-attrs':     { x: COL2, y: 704, w: 424 },
-  'gm-notes':         { x: 0,    y: 800, w: 864 },
+  'healing':          { x: COL2, y: 560, w: 424 },
+  'skills-attrs':     { x: COL2, y: 816, w: 424 },
+  'gm-notes':         { x: 0,    y: 984, w: 864 },
 }
 
 const GRID = 8
@@ -251,34 +254,41 @@ function cardBody(key: CardKey, campaignId: string): React.ReactNode {
 function FreeformCard({ cardKey, campaignId, pos, collapsed, onToggle, onMeasure }: {
   cardKey: CardKey; campaignId: string; pos: CardPos; collapsed: boolean
   onToggle: (k: CardKey) => void
-  onMeasure: (k: CardKey, width: number, height: number) => void
+  onMeasure: (k: CardKey, width: number, height: number | null) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: cardKey })
   const elRef = useRef<HTMLDivElement | null>(null)
   const setRefs = useCallback((node: HTMLDivElement | null) => { setNodeRef(node); elRef.current = node }, [setNodeRef])
 
-  // Report size so the parent can (a) persist a horizontal CSS resize and
-  // (b) size the canvas tall enough to scroll to the lowest card.
+  // Report size so the parent can persist a CSS resize (width + height) and
+  // size the canvas. Height is reported as null while collapsed so the header-
+  // only height never gets saved as the card's real height.
   useEffect(() => {
     const el = elRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => onMeasure(cardKey, el.offsetWidth, el.offsetHeight))
+    const ro = new ResizeObserver(() => onMeasure(cardKey, el.offsetWidth, collapsed ? null : el.offsetHeight))
     ro.observe(el)
     return () => ro.disconnect()
-  }, [cardKey, onMeasure])
+  }, [cardKey, onMeasure, collapsed])
 
   const style: React.CSSProperties = {
     position: 'absolute', left: pos.x, top: pos.y, width: pos.w,
+    // Explicit height only when expanded AND the GM has sized it; otherwise auto
+    // so the card grows to show ALL its content (no scroll cap).
+    height: (!collapsed && pos.h) ? pos.h : undefined,
     transform: CSS.Translate.toString(transform),
     zIndex: isDragging ? 20 : 1,
     background: '#191919', border: '1px solid ' + (isDragging ? '#4a6a8a' : '#2e2e2e'),
     borderRadius: 4, overflow: 'hidden', boxSizing: 'border-box',
-    minWidth: 260, resize: collapsed ? 'none' : 'horizontal',
+    display: 'flex', flexDirection: 'column',
+    minWidth: 260, minHeight: 44,
+    // Drag the corner to resize both ways; content scrolls if you make it short.
+    resize: collapsed ? 'none' : 'both',
   }
   const isNotes = cardKey === 'gm-notes'
   return (
     <div ref={setRefs} style={style}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderBottom: collapsed ? 'none' : '1px solid #2e2e2e', background: '#151515' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderBottom: collapsed ? 'none' : '1px solid #2e2e2e', background: '#151515', flexShrink: 0 }}>
         <button {...attributes} {...listeners} aria-label="Drag to move" title="Drag to move"
           style={{ cursor: 'grab', background: 'transparent', border: 'none', color: '#6a6a6a', fontSize: '16px', lineHeight: 1, padding: '0 2px', touchAction: 'none' }}>&#x2237;&#x2237;</button>
         <div style={{ ...sectionHeading, flex: 1 }}>{TITLE_OF[cardKey]}</div>
@@ -286,7 +296,7 @@ function FreeformCard({ cardKey, campaignId, pos, collapsed, onToggle, onMeasure
           style={{ background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3, color: '#cce0f5', width: 24, height: 24, cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}>{collapsed ? '▸' : '▾'}</button>
       </div>
       {!collapsed && (
-        <div style={{ padding: isNotes ? '8px 10px 10px' : '6px 12px 10px', overflow: 'auto', maxHeight: isNotes ? '520px' : '460px' }}>
+        <div style={{ padding: isNotes ? '8px 10px 10px' : '6px 12px 10px', overflow: 'auto', flex: 1, minHeight: 0 }}>
           {cardBody(cardKey, campaignId)}
         </div>
       )}
@@ -302,7 +312,6 @@ export default function GMScreen() {
   const [collapsed, setCollapsed] = useState<Set<CardKey>>(new Set())
   const [filter, setFilter] = useState<Filter>('all')
   const [hydrated, setHydrated] = useState(false)
-  const [heights, setHeights] = useState<Record<string, number>>({})
   const canvasRef = useRef<HTMLDivElement | null>(null)
 
   // Load per-GM layout once. Missing row / signed-out / pre-migration -> defaults.
@@ -353,15 +362,18 @@ export default function GMScreen() {
     })
   }
 
-  // A card's CSS horizontal resize changed its width -> persist it. Height is
-  // tracked only to size the canvas. Guarded so the observer doesn't loop.
-  const handleMeasure = useCallback((key: CardKey, width: number, height: number) => {
+  // A card's CSS resize changed its size -> persist width and (when expanded)
+  // height. Guarded by a >=2px delta so re-applying the persisted size doesn't
+  // loop the observer. height === null means collapsed; leave the saved height.
+  const handleMeasure = useCallback((key: CardKey, width: number, height: number | null) => {
     setPositions(prev => {
       const p = prev[key]
-      if (!p || Math.abs(width - p.w) < 2) return prev
-      return { ...prev, [key]: { ...p, w: width } }
+      if (!p) return prev
+      const wChanged = Math.abs(width - p.w) >= 2
+      const hChanged = height != null && (p.h == null || Math.abs(height - p.h) >= 2)
+      if (!wChanged && !hChanged) return prev
+      return { ...prev, [key]: { ...p, ...(wChanged ? { w: width } : {}), ...(hChanged ? { h: height } : {}) } }
     })
-    setHeights(prev => (prev[key] === height ? prev : { ...prev, [key]: height }))
   }, [])
 
   const toggleCollapse = useCallback((k: CardKey) => {
@@ -380,7 +392,7 @@ export default function GMScreen() {
   }
 
   const visible = CARD_KEYS.filter(k => filter === 'all' || CATEGORY_OF[k] === filter)
-  const canvasHeight = Math.max(400, ...visible.map(k => positions[k].y + (heights[k] ?? 200))) + 24
+  const canvasHeight = Math.max(400, ...visible.map(k => positions[k].y + (positions[k].h ?? 280))) + 24
 
   const chipStyle = (active: boolean): React.CSSProperties => ({
     height: 30, padding: '0 14px', fontFamily: 'Carlito, sans-serif', fontSize: 13,

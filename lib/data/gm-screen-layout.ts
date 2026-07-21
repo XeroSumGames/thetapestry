@@ -8,7 +8,9 @@
 import { db } from './db'
 import type { Json } from '../database.types'
 
-export interface CardPos { x: number; y: number; w: number }
+// h is optional: unset = auto-height (card grows to show all its content); a
+// number = a height the GM set by dragging the card's corner (content scrolls).
+export interface CardPos { x: number; y: number; w: number; h?: number }
 export interface GmScreenState {
   positions: Record<string, CardPos>
   collapsed: string[]
@@ -35,7 +37,7 @@ export async function loadGmScreenLayout(): Promise<GmScreenState | null> {
   const positions: Record<string, CardPos> = {}
   const rawPos = s.positions
   if (rawPos && typeof rawPos === 'object' && !Array.isArray(rawPos)) {
-    for (const [k, v] of Object.entries(rawPos)) if (isPos(v)) positions[k] = { x: v.x, y: v.y, w: v.w }
+    for (const [k, v] of Object.entries(rawPos)) if (isPos(v)) positions[k] = { x: v.x, y: v.y, w: v.w, ...(typeof v.h === 'number' ? { h: v.h } : {}) }
   }
   const collapsed = Array.isArray(s.collapsed) ? s.collapsed.filter((x): x is string => typeof x === 'string') : []
   const filter = typeof s.filter === 'string' ? s.filter : 'all'
