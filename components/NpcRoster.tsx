@@ -1587,7 +1587,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                             title={allRevealed
                               ? `Shown to players - click to hide all ${folderNpcs.length}`
                               : `Hidden - click to place + reveal all ${folderNpcs.length} to players`}
-                            style={iconBtn(allRevealed ? '#1a2e10' : '#2a1210', allRevealed ? '#2d5a1b' : '#7a1f16', allRevealed ? '#7fc458' : '#c0392b')}>{allRevealed ? '👁' : '🙈'}</button>
+                            style={iconBtn(allRevealed ? '#1a2e10' : '#2a1210', allRevealed ? '#2d5a1b' : '#7a1f16', allRevealed ? '#7fc458' : '#c0392b')}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }} aria-hidden="true">
+                              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
                           </div>
                         )
                       })()}
