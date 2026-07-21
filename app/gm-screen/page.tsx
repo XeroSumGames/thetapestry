@@ -1,37 +1,32 @@
 'use client'
 
-// Skip Next's static prerender entirely. /gm-screen mounts a Supabase
-// client (via the GmNotes panel + the layout persistence) and reads
-// useSearchParams() - both patterns that have hit prerender-time failures on
-// Vercel even with the env wired correctly. The popout is always opened from a
-// story header, never crawled, so dynamic rendering is the right call.
+// Skip Next's static prerender entirely. /gm-screen mounts a Supabase client
+// (via the GmNotes panel + layout persistence) and reads useSearchParams() -
+// both patterns that have hit prerender-time failures on Vercel. The popout is
+// always opened from a story header, never crawled, so dynamic is right.
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamicImport from 'next/dynamic'
-import {
-  DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  SortableContext, useSortable, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable'
+import { DndContext, PointerSensor, useSensor, useSensors, useDraggable, type DragEndEvent } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { loadGmScreenLayout, saveGmScreenLayout } from '../../lib/data/gm-screen-layout'
+import { loadGmScreenLayout, saveGmScreenLayout, type CardPos } from '../../lib/data/gm-screen-layout'
 
 // Client-only import - GmNotes pulls in @supabase/ssr's browser client at
-// module load. Even with force-dynamic above, keeping this out of the server
-// bundle is cheap insurance and shrinks the SSR payload for the path that
-// doesn't need it.
+// module load. Keeping it out of the server bundle shrinks the SSR payload.
 const GmNotes = dynamicImport(() => import('../../components/GmNotes'), { ssr: false })
 
 // ---------------------------------------------------------------------------
-// Reference data (static). Redesign 2026-07-20: the free-float drag engine
-// (raw mousemove/mouseup + a mutable dragRef + a deferred setLayout updater
-// that threw a null-deref on mouseup) is gone. Cards now live in a dnd-kit
-// sortable grid: drag-to-reorder with grid snap, collapse per card, auto-fit
-// reflow, filter chips, and a per-GM saved layout (lib/data/gm-screen-layout).
+// Redesign 2026-07-20: the hand-rolled free-float drag engine (raw mousemove/
+// mouseup + a mutable dragRef + a deferred setLayout updater that threw a
+// null-deref on mouseup, 66bea03f) is gone. Cards drag freely on a dnd-kit
+// canvas - dnd-kit owns the drag lifecycle, so that crash class cannot recur -
+// snapping to an 8px grid on drop and clamped so they can't leave the canvas.
+// Position (x/y/width) + collapsed + filter save per-GM to gm_screen_layouts.
+// NOTE (accepted tradeoff): freeform placement allows overlap and does not
+// responsively reflow (react-grid-layout, which auto-packs, calls the removed
+// findDOMNode and crashes on React 19) - same behavior as the old screen.
 // ---------------------------------------------------------------------------
 
 const OUTCOMES = [
@@ -121,31 +116,14 @@ const SKILLS_MAP = [
   { skill: 'Weaponsmith', attr: 'DEX' },
 ]
 
-// EMPTY / Session Zero example shown in the GM Notes card when the screen is
-// opened standalone (no ?c=<campaign>). Source: sql/empty-seed.sql. This is a
-// stand-in for the planned Campaign Builder, which will let a GM author their
-// own GM Notes / NPCs / pins as seeded content (roadmap, tasks/todo.md).
+// EMPTY / Session Zero example shown in the GM Notes card standalone (no ?c=).
+// Source: sql/empty-seed.sql. Stand-in for the planned Campaign Builder.
 const EMPTY_SESSION_ZERO: { heading: string; body: string }[] = [
-  {
-    heading: 'The setup - Battersby Farm',
-    body: 'It has been almost a year since the dog flu. The party are friends, family, or acquaintances of David Battersby, waiting out the pandemic on his third-generation farm near the Maryland / Delaware border. One of the tractors just broke and needs an arc welder. David knows of a garage nearby - the party takes his truck and leaves after breakfast. This is where Empty begins.',
-  },
-  {
-    heading: "Stansfield's Gas Station",
-    body: "Owned by Errol and Martina Stansfield for ~15 years; both died at home within days of each other. Secluded, so it sits untouched - store largely intact but contents expired. Inside is Becky; she and Dylan arrived the night before. Dylan is out hunting and returns shortly after the party meets Becky, down to 3 bullets (more ammo in Becky's bag on the counter; a shotgun with 2 shells in their truck).",
-  },
-  {
-    heading: 'Becky (late 20s)',
-    body: 'Long red hair, easy smile, calm and insightful. Complication: Loss. Motivation: Find Safety. Friendly and articulate but never answers directly - buys time for Dylan, mirrors whatever mood he sets on arrival. If Dylan is killed or incapacitated she surrenders immediately, overwhelmed with grief, and will not stop the party taking her belongings.',
-  },
-  {
-    heading: 'Dylan (early 30s)',
-    body: 'Short hair, tattoos, wears a holster. Charming, furtive, smart like a fox. Complication: Dark Secret. Motivation: To Take Advantage. Two modes - PEACEFUL (desperate to join a group, offers skills/knowledge) or HOSTILE (views survivors as marks, may tail the party home to rob them). Pulls his gun if negotiations fail. Grapple +3; will grab the weakest player as a hostage if outnumbered.',
-  },
-  {
-    heading: 'The map - eight key locations',
-    body: '(1) Entrance - park the truck. (2) Abandoned car - unlocked, dead battery, nothing of value. (3) Dylan\'s bike - saddlebags of survival gear. (4) Main entrance - door bell rings unless Wild Success on Stealth. (5) Breakroom - pullout couch, instant noodles. (6) Rear fire escape - unlocked, heavy, noisy. (7) Workshop - arc welder + a tow truck that starts first try. (8) Side fire escape - same as 6.',
-  },
+  { heading: 'The setup - Battersby Farm', body: 'Almost a year since the dog flu. The party are friends/family of David Battersby, waiting out the pandemic on his farm near the Maryland / Delaware border. A tractor broke and needs an arc welder; David knows of a garage nearby. The party takes his truck after breakfast. This is where Empty begins.' },
+  { heading: "Stansfield's Gas Station", body: "Owned by Errol and Martina Stansfield ~15 years; both died at home within days. Secluded, so it sits untouched - store intact but contents expired. Inside is Becky; she and Dylan arrived the night before. Dylan is out hunting and returns soon after the party meets Becky, down to 3 bullets (more in Becky's bag on the counter; a shotgun with 2 shells in their truck)." },
+  { heading: 'Becky (late 20s)', body: 'Long red hair, easy smile, calm and insightful. Complication: Loss. Motivation: Find Safety. Friendly but never answers directly - buys time for Dylan, mirrors his mood on arrival. If Dylan dies or is incapacitated she surrenders, overwhelmed with grief, and will not stop the party taking her belongings.' },
+  { heading: 'Dylan (early 30s)', body: 'Short hair, tattoos, wears a holster. Charming, furtive, smart like a fox. Complication: Dark Secret. Motivation: To Take Advantage. Two modes - PEACEFUL (wants to join a group, offers skills) or HOSTILE (views survivors as marks, may tail the party home). Pulls his gun if talks fail. Grapple +3; grabs the weakest player as a hostage if outnumbered.' },
+  { heading: 'The map - eight key locations', body: '(1) Entrance - park the truck. (2) Abandoned car - dead battery, nothing of value. (3) Dylan\'s bike - saddlebags of survival gear. (4) Main entrance - door bell rings unless Wild Success on Stealth. (5) Breakroom - pullout couch, instant noodles. (6) Rear fire escape - unlocked, heavy, noisy. (7) Workshop - arc welder + a tow truck that starts first try. (8) Side fire escape - same as 6.' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -161,7 +139,6 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'notes', label: 'GM Notes' },
 ]
 
-// Locked default order + each card's filter category.
 const CARD_META: { key: CardKey; title: string; category: Category }[] = [
   { key: 'outcomes', title: 'Outcomes', category: 'reference' },
   { key: 'combat-actions', title: 'Combat Actions', category: 'combat' },
@@ -172,9 +149,27 @@ const CARD_META: { key: CardKey; title: string; category: Category }[] = [
   { key: 'skills-attrs', title: 'Skills -> Attributes', category: 'reference' },
   { key: 'gm-notes', title: 'GM Notes', category: 'notes' },
 ]
-const DEFAULT_ORDER = CARD_META.map(m => m.key)
+const CARD_KEYS = CARD_META.map(m => m.key)
 const CATEGORY_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.category])) as Record<CardKey, Category>
 const TITLE_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.title])) as Record<CardKey, string>
+
+// Default freeform arrangement: two columns, with Conditional Modifiers placed
+// directly beneath Outcomes in the left column (Xero 2026-07-20).
+const COL2 = 440
+const DEFAULT_POSITIONS: Record<CardKey, CardPos> = {
+  'outcomes':         { x: 0,    y: 0,   w: 424 },
+  'cmods':            { x: 0,    y: 200, w: 424 },
+  'range-bands':      { x: 0,    y: 464, w: 424 },
+  'weapon-condition': { x: 0,    y: 632, w: 424 },
+  'combat-actions':   { x: COL2, y: 0,   w: 424 },
+  'healing':          { x: COL2, y: 480, w: 424 },
+  'skills-attrs':     { x: COL2, y: 704, w: 424 },
+  'gm-notes':         { x: 0,    y: 800, w: 864 },
+}
+
+const GRID = 8
+const snap = (v: number) => Math.round(v / GRID) * GRID
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
 const sectionHeading: React.CSSProperties = { fontSize: '15px', color: '#c0392b', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }
 const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Carlito, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
@@ -237,7 +232,6 @@ function cardBody(key: CardKey, campaignId: string): React.ReactNode {
         </div>
       )
     case 'gm-notes':
-      // Live notes for a real table; the EMPTY Session Zero example standalone.
       return campaignId ? <GmNotes campaignId={campaignId} /> : (
         <div style={{ fontFamily: 'Carlito, sans-serif' }}>
           <div style={{ fontSize: '13px', color: '#7ab3d4', marginBottom: '8px', lineHeight: 1.4 }}>
@@ -254,44 +248,45 @@ function cardBody(key: CardKey, campaignId: string): React.ReactNode {
   }
 }
 
-function SortableCard({ cardKey, campaignId, collapsed, onToggle }: {
-  cardKey: CardKey; campaignId: string; collapsed: boolean; onToggle: (k: CardKey) => void
+function FreeformCard({ cardKey, campaignId, pos, collapsed, onToggle, onMeasure }: {
+  cardKey: CardKey; campaignId: string; pos: CardPos; collapsed: boolean
+  onToggle: (k: CardKey) => void
+  onMeasure: (k: CardKey, width: number, height: number) => void
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cardKey })
-  const isNotes = cardKey === 'gm-notes'
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: cardKey })
+  const elRef = useRef<HTMLDivElement | null>(null)
+  const setRefs = useCallback((node: HTMLDivElement | null) => { setNodeRef(node); elRef.current = node }, [setNodeRef])
+
+  // Report size so the parent can (a) persist a horizontal CSS resize and
+  // (b) size the canvas tall enough to scroll to the lowest card.
+  useEffect(() => {
+    const el = elRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => onMeasure(cardKey, el.offsetWidth, el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [cardKey, onMeasure])
+
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : undefined,
-    opacity: isDragging ? 0.85 : 1,
-    background: '#191919',
-    border: '1px solid ' + (isDragging ? '#4a6a8a' : '#2e2e2e'),
-    borderRadius: '4px',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    boxSizing: 'border-box',
-    alignSelf: 'start',
+    position: 'absolute', left: pos.x, top: pos.y, width: pos.w,
+    transform: CSS.Translate.toString(transform),
+    zIndex: isDragging ? 20 : 1,
+    background: '#191919', border: '1px solid ' + (isDragging ? '#4a6a8a' : '#2e2e2e'),
+    borderRadius: 4, overflow: 'hidden', boxSizing: 'border-box',
+    minWidth: 260, resize: collapsed ? 'none' : 'horizontal',
   }
+  const isNotes = cardKey === 'gm-notes'
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setRefs} style={style}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderBottom: collapsed ? 'none' : '1px solid #2e2e2e', background: '#151515' }}>
-        <button
-          {...attributes} {...listeners}
-          aria-label="Drag to reorder"
-          title="Drag to reorder"
-          style={{ cursor: 'grab', background: 'transparent', border: 'none', color: '#6a6a6a', fontSize: '16px', lineHeight: 1, padding: '0 2px', touchAction: 'none' }}
-        >&#x2237;&#x2237;</button>
+        <button {...attributes} {...listeners} aria-label="Drag to move" title="Drag to move"
+          style={{ cursor: 'grab', background: 'transparent', border: 'none', color: '#6a6a6a', fontSize: '16px', lineHeight: 1, padding: '0 2px', touchAction: 'none' }}>&#x2237;&#x2237;</button>
         <div style={{ ...sectionHeading, flex: 1 }}>{TITLE_OF[cardKey]}</div>
-        <button
-          onClick={() => onToggle(cardKey)}
-          aria-label={collapsed ? 'Expand' : 'Collapse'}
-          title={collapsed ? 'Expand' : 'Collapse'}
-          style={{ background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3, color: '#cce0f5', width: 24, height: 24, cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}
-        >{collapsed ? '▸' : '▾'}</button>
+        <button onClick={() => onToggle(cardKey)} aria-label={collapsed ? 'Expand' : 'Collapse'} title={collapsed ? 'Expand' : 'Collapse'}
+          style={{ background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3, color: '#cce0f5', width: 24, height: 24, cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}>{collapsed ? '▸' : '▾'}</button>
       </div>
       {!collapsed && (
-        <div style={{ padding: isNotes ? '8px 10px 10px' : '6px 12px 10px', overflow: 'auto', maxHeight: isNotes ? undefined : '480px' }}>
+        <div style={{ padding: isNotes ? '8px 10px 10px' : '6px 12px 10px', overflow: 'auto', maxHeight: isNotes ? '520px' : '460px' }}>
           {cardBody(cardKey, campaignId)}
         </div>
       )}
@@ -301,32 +296,29 @@ function SortableCard({ cardKey, campaignId, collapsed, onToggle }: {
 
 export default function GMScreen() {
   const searchParams = useSearchParams()
-  // /gm-screen?c=<campaign-id> - present when launched from a story's header.
-  // Drives the live GM Notes panel; without it the GM Notes card shows the
-  // Empty Session Zero example.
   const campaignId = searchParams?.get('c') ?? ''
 
-  const [order, setOrder] = useState<CardKey[]>(DEFAULT_ORDER)
+  const [positions, setPositions] = useState<Record<CardKey, CardPos>>(DEFAULT_POSITIONS)
   const [collapsed, setCollapsed] = useState<Set<CardKey>>(new Set())
   const [filter, setFilter] = useState<Filter>('all')
   const [hydrated, setHydrated] = useState(false)
+  const [heights, setHeights] = useState<Record<string, number>>({})
+  const canvasRef = useRef<HTMLDivElement | null>(null)
 
-  // Load the per-GM saved layout once on mount. Missing row / signed-out /
-  // pre-migration table all resolve to null -> defaults.
+  // Load per-GM layout once. Missing row / signed-out / pre-migration -> defaults.
   useEffect(() => {
     let alive = true
     ;(async () => {
       const saved = await loadGmScreenLayout()
-      if (!alive) { return }
+      if (!alive) return
       if (saved) {
-        // Reconcile saved order with the current card set: keep known keys in
-        // their saved order, then append any cards added since (so a new card
-        // never gets orphaned by an old saved layout).
-        const known = new Set(DEFAULT_ORDER)
-        const savedOrder = saved.order.filter((k): k is CardKey => known.has(k as CardKey))
-        const merged = [...savedOrder, ...DEFAULT_ORDER.filter(k => !savedOrder.includes(k))]
-        setOrder(merged)
-        setCollapsed(new Set(saved.collapsed.filter((k): k is CardKey => known.has(k as CardKey))))
+        const known = new Set<string>(CARD_KEYS)
+        // Merge: saved position per known key wins; unknown keys ignored; any
+        // card missing from the save keeps its default (never orphaned).
+        const merged = { ...DEFAULT_POSITIONS }
+        for (const [k, p] of Object.entries(saved.positions)) if (known.has(k)) merged[k as CardKey] = p
+        setPositions(merged)
+        setCollapsed(new Set(saved.collapsed.filter((k): k is CardKey => known.has(k))))
         if (FILTERS.some(f => f.key === saved.filter)) setFilter(saved.filter as Filter)
       }
       setHydrated(true)
@@ -334,52 +326,61 @@ export default function GMScreen() {
     return () => { alive = false }
   }, [])
 
-  // Persist (debounced) whenever the layout changes, but only after hydration
-  // so the initial load doesn't immediately write defaults back.
+  // Persist (debounced) after hydration so the initial load doesn't echo back.
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (!hydrated) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
-      void saveGmScreenLayout({ order, collapsed: Array.from(collapsed), filter })
+      void saveGmScreenLayout({ positions, collapsed: Array.from(collapsed), filter })
     }, 600)
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
-  }, [order, collapsed, filter, hydrated])
+  }, [positions, collapsed, filter, hydrated])
 
-  const sensors = useSensors(
-    // 6px activation distance so a click on the chevron / a tap doesn't start a
-    // drag; the library owns the whole drag lifecycle now (no hand-rolled
-    // mousemove/mouseup, so the old null-deref crash class is gone).
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
+  // 6px activation so a click on the chevron / a resize-grab does not drag.
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
   function handleDragEnd(e: DragEndEvent) {
-    const { active, over } = e
-    if (!over || active.id === over.id) return
-    setOrder(prev => {
-      const from = prev.indexOf(active.id as CardKey)
-      const to = prev.indexOf(over.id as CardKey)
-      if (from < 0 || to < 0) return prev
-      return arrayMove(prev, from, to)
+    const key = e.active.id as CardKey
+    const cw = canvasRef.current?.offsetWidth ?? 4000
+    setPositions(prev => {
+      const p = prev[key]
+      if (!p) return prev
+      const nx = clamp(snap(p.x + e.delta.x), 0, Math.max(0, cw - p.w))
+      const ny = Math.max(0, snap(p.y + e.delta.y))
+      if (nx === p.x && ny === p.y) return prev
+      return { ...prev, [key]: { ...p, x: nx, y: ny } }
     })
   }
 
-  function toggleCollapse(k: CardKey) {
+  // A card's CSS horizontal resize changed its width -> persist it. Height is
+  // tracked only to size the canvas. Guarded so the observer doesn't loop.
+  const handleMeasure = useCallback((key: CardKey, width: number, height: number) => {
+    setPositions(prev => {
+      const p = prev[key]
+      if (!p || Math.abs(width - p.w) < 2) return prev
+      return { ...prev, [key]: { ...p, w: width } }
+    })
+    setHeights(prev => (prev[key] === height ? prev : { ...prev, [key]: height }))
+  }, [])
+
+  const toggleCollapse = useCallback((k: CardKey) => {
     setCollapsed(prev => {
       const next = new Set(prev)
-      if (next.has(k)) next.delete(k); else next.add(k)
+      if (next.has(k)) next.delete(k)
+      else next.add(k)
       return next
     })
-  }
+  }, [])
 
   function resetLayout() {
-    setOrder(DEFAULT_ORDER)
+    setPositions(DEFAULT_POSITIONS)
     setCollapsed(new Set())
     setFilter('all')
   }
 
-  const visible = order.filter(k => filter === 'all' || CATEGORY_OF[k] === filter)
+  const visible = CARD_KEYS.filter(k => filter === 'all' || CATEGORY_OF[k] === filter)
+  const canvasHeight = Math.max(400, ...visible.map(k => positions[k].y + (heights[k] ?? 200))) + 24
 
   const chipStyle = (active: boolean): React.CSSProperties => ({
     height: 30, padding: '0 14px', fontFamily: 'Carlito, sans-serif', fontSize: 13,
@@ -404,17 +405,15 @@ export default function GMScreen() {
       </div>
 
       <div style={{ fontSize: 13, color: '#6a6a6a', marginBottom: '10px' }}>
-        Drag the &#x2237;&#x2237; handle to reorder. Chevron collapses a card. Your layout saves to your account.
+        Drag the &#x2237;&#x2237; handle to move a card anywhere (snaps to a grid). Drag a card&rsquo;s right edge to widen it. Chevron collapses it. Your layout saves to your account.
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={visible} strategy={rectSortingStrategy}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '12px', alignItems: 'start' }}>
-            {visible.map(k => (
-              <SortableCard key={k} cardKey={k} campaignId={campaignId} collapsed={collapsed.has(k)} onToggle={toggleCollapse} />
-            ))}
-          </div>
-        </SortableContext>
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div ref={canvasRef} style={{ position: 'relative', width: '100%', height: canvasHeight }}>
+          {visible.map(k => (
+            <FreeformCard key={k} cardKey={k} campaignId={campaignId} pos={positions[k]} collapsed={collapsed.has(k)} onToggle={toggleCollapse} onMeasure={handleMeasure} />
+          ))}
+        </div>
       </DndContext>
     </div>
   )
