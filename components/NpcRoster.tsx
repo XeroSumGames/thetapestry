@@ -1521,11 +1521,11 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       onDragEnd={() => { setDragFolderId(null); setDragOverFolderId(null) }}
                       onClick={() => toggleFolder(folderName)}
                       onDoubleClick={e => { e.stopPropagation(); setRenamingFolder(folderName); setRenameValue(folderName) }}
-                      style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', background: dragOverFolderId === folderName ? '#242424' : 'transparent', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', cursor: 'pointer', borderRadius: '3px', background: dragOverFolderId === folderName ? '#242424' : 'transparent', borderBottom: '1px solid #212121', userSelect: 'none' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = dragOverFolderId === folderName ? '#242424' : 'transparent')}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '13px', color: '#f5f2ee', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: '13px', color: '#6a6a6a', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         {renamingFolder === folderName ? (
                           <input value={renameValue} onChange={e => setRenameValue(e.target.value)}
                             onBlur={() => renameFolder(folderName, renameValue)}
@@ -1541,13 +1541,21 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       {folderNpcs.length > 0 && (() => {
                         const folderIds = folderNpcs.map(n => n.id)
                         const allRevealed = folderIds.every(id => revealedNpcIds.has(id))
-                        const label = allRevealed ? 'Hide' : 'Show'
                         const unplaced = npcIdsOnMap
                           ? folderNpcs.filter(n => !npcIdsOnMap.has(n.id))
                           : folderNpcs
                         const allOnMap = unplaced.length === 0
+                        // Compact icon buttons on the header row - replaces the two
+                        // full-width Map + Show/Hide bars that made a long roster a
+                        // wall of colour. Same handlers; 📍 = place/unmap on the
+                        // tactical map, eye = reveal/hide to players.
+                        const iconBtn = (bg: string, border: string, color: string) => ({
+                          width: '26px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          background: bg, border: `1px solid ${border}`, borderRadius: '3px', color, fontSize: '13px',
+                          cursor: 'pointer', flexShrink: 0, lineHeight: 1, padding: 0,
+                        })
                         return (
-                          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', paddingLeft: '18px' }}>
+                          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                           {onPlaceFolderOnMap && (
                             <button onClick={async e => {
                               e.stopPropagation()
@@ -1559,11 +1567,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                               onTacticalRefresh?.()
                             }}
                               title={allOnMap
-                                ? `Unmap all ${folderNpcs.length} NPCs (archive tokens; reveal state unchanged)`
-                                : `Place ${unplaced.length} unplaced NPC${unplaced.length === 1 ? '' : 's'} on the map (no reveal)`}
-                              style={{ flex: 1, padding: '1px 8px', background: allOnMap ? '#1a1a1a' : '#10202e', border: `1px solid ${allOnMap ? '#3a3a3a' : '#3a5a7a'}`, borderRadius: '2px', color: allOnMap ? '#cce0f5' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
-                              {allOnMap ? 'Unmap' : 'Map'}
-                            </button>
+                                ? `On the map - click to unmap all ${folderNpcs.length} (archive tokens; reveal state unchanged)`
+                                : `Click to place ${unplaced.length} unplaced NPC${unplaced.length === 1 ? '' : 's'} on the map (no reveal)`}
+                              style={iconBtn(allOnMap ? '#10202e' : '#1a1a1a', allOnMap ? '#3a5a7a' : '#3a3a3a', allOnMap ? '#7ab3d4' : '#cce0f5')}>📍</button>
                           )}
                           <button onClick={async e => {
                             e.stopPropagation()
@@ -1579,11 +1585,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                             onTacticalRefresh?.()
                           }}
                             title={allRevealed
-                              ? `Hide all ${folderNpcs.length} NPCs (vanish from every map; positions preserved)`
-                              : `Place + reveal all ${folderNpcs.length} NPCs (visible to GM + players)`}
-                            style={{ flex: 1, padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
-                            {label}
-                          </button>
+                              ? `Shown to players - click to hide all ${folderNpcs.length}`
+                              : `Hidden - click to place + reveal all ${folderNpcs.length} to players`}
+                            style={iconBtn(allRevealed ? '#1a2e10' : '#2a1210', allRevealed ? '#2d5a1b' : '#7a1f16', allRevealed ? '#7fc458' : '#c0392b')}>{allRevealed ? '👁' : '🙈'}</button>
                           </div>
                         )
                       })()}
