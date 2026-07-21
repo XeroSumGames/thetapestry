@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-21 21:00 UTC
+
+**Status:** RED+DRIFT (vuln count up from 2 to 3; same chronic HOPED-FOR drift)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [3 high, 0 critical]
+- brace-expansion DoS (CVSS 5.3) - build-only, persists
+- js-yaml quadratic CPU (CVSS 7.5) - build-only, persists
+- fast-uri host confusion / IDN canonicalization (CVSS 7.5, I:H) -- **NEW** -- chain: @sentry/nextjs -> webpack -> ajv -> fast-uri@3.1.2 (fix: >=3.1.3)
+
+**CI:** last 5 runs all success (latest 2026-07-21T18:07 UTC)
+
+**Drift:** Same 3 chronic HOPED-FOR items, no git activity in last 3 days:
+- Stress 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+- FI Insight Die award path (doubles -> pool increment; never fired in live play)
+- Vehicle popout broadcasts (Section B; now >55 days)
+
+**Action:** fast-uri@3.1.2 is a new HIGH (build-only, integrity-class). All 3 cleared by one pass: `npm audit fix --package-lock-only && npm install`. `tasks/security-audit.md` documents the prior 2; fast-uri is additive. Run before Beta-500.
+
+---
+
 ## 2026-07-21 18:00 UTC
 
 **Status:** RED (vulns persist - 5th consecutive flag; Puffer security audit now formally corroborates + fix command documented)
