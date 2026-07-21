@@ -494,10 +494,23 @@ CREATE TABLE public.initiative_order (
   incoming_cmod integer NOT NULL DEFAULT 0
 );
 
+CREATE TABLE public.gm_scratch (
+  campaign_id uuid NOT NULL,
+  text text NOT NULL DEFAULT ''::text,
+  updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
 CREATE TABLE public.gm_screen_layouts (
   user_id uuid NOT NULL,
   state jsonb NOT NULL DEFAULT '{}'::jsonb,
   updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
+CREATE TABLE public.gm_screen_standard_layout (
+  id integer NOT NULL DEFAULT 1,
+  state jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT gm_screen_standard_single_row CHECK ((id = 1))
 );
 
 CREATE TABLE public.lfg_interests (
@@ -1358,7 +1371,13 @@ ALTER TABLE public.initiative_order ADD CONSTRAINT initiative_order_campaign_id_
 
 ALTER TABLE public.initiative_order ADD CONSTRAINT initiative_order_pkey PRIMARY KEY (id);
 
+ALTER TABLE public.gm_scratch ADD CONSTRAINT gm_scratch_pkey PRIMARY KEY (campaign_id);
+
+ALTER TABLE public.gm_scratch ADD CONSTRAINT gm_scratch_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE;
+
 ALTER TABLE public.gm_screen_layouts ADD CONSTRAINT gm_screen_layouts_pkey PRIMARY KEY (user_id);
+
+ALTER TABLE public.gm_screen_standard_layout ADD CONSTRAINT gm_screen_standard_layout_pkey PRIMARY KEY (id);
 
 ALTER TABLE public.gm_screen_layouts ADD CONSTRAINT gm_screen_layouts_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
@@ -2042,7 +2061,11 @@ ALTER TABLE public.forum_thread_reactions ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.forum_threads ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.gm_scratch ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.gm_screen_layouts ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.gm_screen_standard_layout ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.initiative_order ENABLE ROW LEVEL SECURITY;
 
@@ -2699,6 +2722,12 @@ CREATE POLICY "GM deletes initiative" ON public.initiative_order AS PERMISSIVE F
 CREATE POLICY initiative_order_thriver_bypass ON public.initiative_order AS PERMISSIVE FOR ALL TO public USING (is_thriver()) WITH CHECK (is_thriver());
 
 CREATE POLICY "own gm layout" ON public.gm_screen_layouts AS PERMISSIVE FOR ALL TO public USING ((auth.uid() = user_id)) WITH CHECK ((auth.uid() = user_id));
+
+CREATE POLICY "gm scratch own campaign" ON public.gm_scratch AS PERMISSIVE FOR ALL TO public USING ((EXISTS ( SELECT 1 FROM campaigns c WHERE ((c.id = gm_scratch.campaign_id) AND (c.gm_user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1 FROM campaigns c WHERE ((c.id = gm_scratch.campaign_id) AND (c.gm_user_id = auth.uid())))));
+
+CREATE POLICY "read standard layout" ON public.gm_screen_standard_layout AS PERMISSIVE FOR SELECT TO public USING (true);
+
+CREATE POLICY "thriver writes standard layout" ON public.gm_screen_standard_layout AS PERMISSIVE FOR ALL TO public USING (is_thriver()) WITH CHECK (is_thriver());
 
 CREATE POLICY lfg_int_delete_author ON public.lfg_interests AS PERMISSIVE FOR DELETE TO public USING ((EXISTS ( SELECT 1
    FROM lfg_posts p

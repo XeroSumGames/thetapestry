@@ -27,6 +27,20 @@ export function getCampaignClock(id: string) {
   return db().from('campaigns').select('clock').eq('id', id).maybeSingle()
 }
 
+/**
+ * Fold the campaign's GM scratch pad (gm_scratch table) into a session summary
+ * and clear it. Returns the typed summary plus the scratch (under a "GM scratch
+ * notes" heading), or null when both are empty. Called from endSession so the
+ * on-the-fly notes land in sessions.gm_summary and the pad starts fresh.
+ */
+export async function foldGmScratch(campaignId: string, typedSummary: string): Promise<string | null> {
+  const { data } = await db().from('gm_scratch').select('text').eq('campaign_id', campaignId).maybeSingle()
+  const scratch = (data?.text ?? '').trim()
+  if (scratch) await db().from('gm_scratch').update({ text: '' }).eq('campaign_id', campaignId)
+  const typed = (typedSummary ?? '').trim()
+  return [typed, scratch ? `GM scratch notes:\n${scratch}` : ''].filter(Boolean).join('\n\n') || null
+}
+
 /** Count of GM-owned campaigns for a user. Returns {count, error}. */
 export function countGmCampaigns(userId: string) {
   return db().from('campaigns').select('id', { count: 'exact', head: true }).eq('gm_user_id', userId)

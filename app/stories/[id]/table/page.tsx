@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
 import { canCoverFire, resolveCoverFireShooter, applyCoverFire } from '../../../../lib/cover-fire'
-import { CAMPAIGN_COLUMNS } from '../../../../lib/data/campaigns'
+import { CAMPAIGN_COLUMNS, foldGmScratch } from '../../../../lib/data/campaigns'
 import { activeSceneId } from '../../../../lib/data/scenes'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
@@ -3485,7 +3485,7 @@ export default function TablePage() {
         if (sessionRow) {
           await supabase.from('sessions').update({
             ended_at: now,
-            gm_summary: sessionSummary.trim() || null,
+            gm_summary: await foldGmScratch(id, sessionSummary),
             next_session_notes: nextSessionNotes.trim() || null,
             cliffhanger: sessionCliffhanger.trim() || null,
             session_log: sessionLog || null,  // Y11-e RLA-S: captured roll-log digest

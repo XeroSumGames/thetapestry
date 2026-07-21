@@ -1,15 +1,14 @@
-// Per-GM GM Screen layout persistence: freeform card positions (x/y/width),
-// collapsed set, and active filter. ONE row per user in gm_screen_layouts
-// (RLS: own row only), so a GM's arrangement follows their account across every
-// table and device - not the per-browser localStorage the old screen used. The
-// state is a jsonb blob so its shape can evolve without a migration. All errors
-// swallow to defaults: signed-out, missing row, or a missing table all yield
-// null and the page falls back to DEFAULT_POSITIONS.
+// GM Screen persistence (Xero 2026-07-20 model):
+//  - ONE shared STANDARD layout (gm_screen_standard_layout, single row id=1).
+//    Everyone reads it; only Thrivers write it (RLS + client gate). This is the
+//    canonical GM Screen arrangement - it replaces the earlier per-GM table.
+//  - Per-campaign SCRATCH pad (campaigns.gm_scratch): on-the-fly GM notes, any
+//    GM of the campaign can edit; folded into the session summary at End Session.
+// All reads swallow errors to defaults (signed-out / missing row -> null/'').
 import { db } from './db'
 import type { Json } from '../database.types'
+import { isThriver } from '../auth/roles'
 
-// h is optional: unset = auto-height (card grows to show all its content); a
-// number = a height the GM set by dragging the card's corner (content scrolls).
 export interface CardPos { x: number; y: number; w: number; h?: number }
 export interface GmScreenState {
   positions: Record<string, CardPos>
@@ -24,15 +23,8 @@ function isPos(v: unknown): v is CardPos {
     && typeof (v as CardPos).w === 'number'
 }
 
-export async function loadGmScreenLayout(): Promise<GmScreenState | null> {
-  const supabase = db()
-  const { data: auth } = await supabase.auth.getUser()
-  const user = auth?.user
-  if (!user) return null
-  const { data, error } = await supabase
-    .from('gm_screen_layouts').select('state').eq('user_id', user.id).maybeSingle()
-  if (error || !data) return null
-  const s = data.state as Record<string, unknown> | null
+function parseState(raw: unknown): GmScreenState | null {
+  const s = raw as Record<string, unknown> | null
   if (!s || typeof s !== 'object' || Array.isArray(s)) return null
   const positions: Record<string, CardPos> = {}
   const rawPos = s.positions
@@ -44,13 +36,43 @@ export async function loadGmScreenLayout(): Promise<GmScreenState | null> {
   return { positions, collapsed, filter }
 }
 
-export async function saveGmScreenLayout(state: GmScreenState): Promise<void> {
+/** The shared standard layout (id=1). Null when missing -> page uses its baked default. */
+export async function loadStandardLayout(): Promise<GmScreenState | null> {
+  const { data, error } = await db().from('gm_screen_standard_layout').select('state').eq('id', 1).maybeSingle()
+  if (error || !data) return null
+  return parseState(data.state)
+}
+
+/** Write the shared standard. RLS restricts this to Thrivers; a non-Thriver
+ *  write simply errors and is swallowed (the UI also gates on isThriver). */
+export async function saveStandardLayout(state: GmScreenState): Promise<void> {
+  await db().from('gm_screen_standard_layout').upsert(
+    { id: 1, state: state as unknown as Json, updated_at: new Date().toISOString() },
+    { onConflict: 'id' },
+  )
+}
+
+/** Is the signed-in user a Thriver (may edit the standard layout)? */
+export async function isCurrentUserThriver(): Promise<boolean> {
   const supabase = db()
   const { data: auth } = await supabase.auth.getUser()
   const user = auth?.user
-  if (!user) return
-  await supabase.from('gm_screen_layouts').upsert(
-    { user_id: user.id, state: state as unknown as Json, updated_at: new Date().toISOString() },
-    { onConflict: 'user_id' },
+  if (!user) return false
+  const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  return isThriver(data?.role ?? null)
+}
+
+// The campaign's on-the-fly GM scratch lives in its own GM-only table
+// (gm_scratch, RLS-gated to the campaign's GM) - NOT on the world-readable
+// campaigns table, which would leak it to players.
+export async function loadScratch(campaignId: string): Promise<string> {
+  const { data } = await db().from('gm_scratch').select('text').eq('campaign_id', campaignId).maybeSingle()
+  return data?.text ?? ''
+}
+
+export async function saveScratch(campaignId: string, text: string): Promise<void> {
+  await db().from('gm_scratch').upsert(
+    { campaign_id: campaignId, text, updated_at: new Date().toISOString() },
+    { onConflict: 'campaign_id' },
   )
 }

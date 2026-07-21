@@ -1876,6 +1876,32 @@ export type Database = {
           },
         ]
       }
+      gm_scratch: {
+        Row: {
+          campaign_id: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          text?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gm_scratch_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gm_screen_layouts: {
         Row: {
           state: Json
@@ -1891,6 +1917,24 @@ export type Database = {
           state?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      gm_screen_standard_layout: {
+        Row: {
+          id: number
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          state?: Json
+          updated_at?: string
         }
         Relationships: []
       }

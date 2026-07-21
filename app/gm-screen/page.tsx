@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation'
 import dynamicImport from 'next/dynamic'
 import { DndContext, PointerSensor, useSensor, useSensors, useDraggable, type DragEndEvent } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { loadGmScreenLayout, saveGmScreenLayout, type CardPos } from '../../lib/data/gm-screen-layout'
+import { loadStandardLayout, saveStandardLayout, isCurrentUserThriver, loadScratch, saveScratch, type CardPos } from '../../lib/data/gm-screen-layout'
 
 // Client-only import - GmNotes pulls in @supabase/ssr's browser client at
 // module load. Keeping it out of the server bundle shrinks the SSR payload.
@@ -155,19 +155,18 @@ const TITLE_OF = Object.fromEntries(CARD_META.map(m => [m.key, m.title])) as Rec
 
 // Default freeform arrangement: two columns, with Conditional Modifiers placed
 // directly beneath Outcomes in the left column (Xero 2026-07-20).
-const COL2 = 440
-// Two columns; CMods directly beneath Outcomes (Xero 2026-07-20). y offsets
-// leave room for each card's FULL content height (cards auto-grow to show
-// everything by default), so the initial layout does not overlap.
+// The baked-in STANDARD arrangement (Xero 2026-07-20) - also seeded into
+// gm_screen_standard_layout, so this is just the fallback when that row is
+// somehow absent. Editing is Thriver-only; everyone else sees this locked.
 const DEFAULT_POSITIONS: Record<CardKey, CardPos> = {
-  'outcomes':         { x: 0,    y: 0,   w: 424 },
-  'cmods':            { x: 0,    y: 256, w: 424 },
-  'range-bands':      { x: 0,    y: 576, w: 424 },
-  'weapon-condition': { x: 0,    y: 768, w: 424 },
-  'combat-actions':   { x: COL2, y: 0,   w: 424 },
-  'healing':          { x: COL2, y: 560, w: 424 },
-  'skills-attrs':     { x: COL2, y: 816, w: 424 },
-  'gm-notes':         { x: 0,    y: 984, w: 864 },
+  'outcomes':         { x: 0,    y: 0,   w: 424, h: 265 },
+  'cmods':            { x: 0,    y: 280, w: 424, h: 334 },
+  'range-bands':      { x: 0,    y: 624, w: 424, h: 212 },
+  'combat-actions':   { x: 440,  y: 0,   w: 413, h: 822 },
+  'skills-attrs':     { x: 864,  y: 0,   w: 424, h: 472 },
+  'weapon-condition': { x: 864,  y: 480, w: 424, h: 212 },
+  'healing':          { x: 864,  y: 704, w: 424, h: 273 },
+  'gm-notes':         { x: 1296, y: 0,   w: 589, h: 605 },
 }
 
 const GRID = 8
@@ -176,6 +175,38 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 
 const sectionHeading: React.CSSProperties = { fontSize: '15px', color: '#c0392b', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }
 const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Carlito, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
+
+// On-the-fly GM notes, stored per-campaign (campaigns.gm_scratch). Folded into
+// the session's gm_summary at End Session (in the table page), then cleared.
+// Any GM of the campaign may edit (RLS gates who can actually write).
+function ScratchPad({ campaignId }: { campaignId: string }) {
+  const [text, setText] = useState<string | null>(null) // null = still loading
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    let alive = true
+    loadScratch(campaignId).then(t => { if (alive) setText(t) })
+    return () => { alive = false }
+  }, [campaignId])
+  function onChange(v: string) {
+    setText(v)
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => { void saveScratch(campaignId, v) }, 600)
+  }
+  return (
+    <div style={{ marginTop: 12, borderTop: '1px solid #2e2e2e', paddingTop: 10 }}>
+      <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 4 }}>Scratch Pad</div>
+      <div style={{ fontSize: '13px', color: '#6a6a6a', marginBottom: 6, lineHeight: 1.4 }}>On-the-fly notes. Added to the session summary when you End Session, then cleared.</div>
+      <textarea
+        value={text ?? ''}
+        onChange={e => onChange(e.target.value)}
+        disabled={text === null}
+        placeholder={text === null ? 'Loading...' : 'Jot notes here during play...'}
+        rows={6}
+        style={{ width: '100%', boxSizing: 'border-box', background: '#0f0f0f', color: '#f5f2ee', border: '1px solid #3a3a3a', borderRadius: 4, padding: 8, fontFamily: 'Carlito, sans-serif', fontSize: '14px', resize: 'vertical', minHeight: 90 }}
+      />
+    </div>
+  )
+}
 
 function cardBody(key: CardKey, campaignId: string): React.ReactNode {
   switch (key) {
@@ -235,7 +266,12 @@ function cardBody(key: CardKey, campaignId: string): React.ReactNode {
         </div>
       )
     case 'gm-notes':
-      return campaignId ? <GmNotes campaignId={campaignId} /> : (
+      return campaignId ? (
+        <>
+          <GmNotes campaignId={campaignId} />
+          <ScratchPad campaignId={campaignId} />
+        </>
+      ) : (
         <div style={{ fontFamily: 'Carlito, sans-serif' }}>
           <div style={{ fontSize: '13px', color: '#7ab3d4', marginBottom: '8px', lineHeight: 1.4 }}>
             Example content from the <strong>Empty</strong> starter (Session Zero). Open the GM Screen from a story to load that story&rsquo;s live notes here instead.
@@ -251,8 +287,8 @@ function cardBody(key: CardKey, campaignId: string): React.ReactNode {
   }
 }
 
-function FreeformCard({ cardKey, campaignId, pos, collapsed, onToggle, onMeasure }: {
-  cardKey: CardKey; campaignId: string; pos: CardPos; collapsed: boolean
+function FreeformCard({ cardKey, campaignId, pos, collapsed, editable, onToggle, onMeasure }: {
+  cardKey: CardKey; campaignId: string; pos: CardPos; collapsed: boolean; editable: boolean
   onToggle: (k: CardKey) => void
   onMeasure: (k: CardKey, width: number, height: number | null) => void
 }) {
@@ -282,15 +318,17 @@ function FreeformCard({ cardKey, campaignId, pos, collapsed, onToggle, onMeasure
     borderRadius: 4, overflow: 'hidden', boxSizing: 'border-box',
     display: 'flex', flexDirection: 'column',
     minWidth: 260, minHeight: 44,
-    // Drag the corner to resize both ways; content scrolls if you make it short.
-    resize: collapsed ? 'none' : 'both',
+    // Thrivers drag the corner to resize both ways; locked for everyone else.
+    resize: (editable && !collapsed) ? 'both' : 'none',
   }
   const isNotes = cardKey === 'gm-notes'
   return (
     <div ref={setRefs} style={style}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderBottom: collapsed ? 'none' : '1px solid #2e2e2e', background: '#151515', flexShrink: 0 }}>
-        <button {...attributes} {...listeners} aria-label="Drag to move" title="Drag to move"
-          style={{ cursor: 'grab', background: 'transparent', border: 'none', color: '#6a6a6a', fontSize: '16px', lineHeight: 1, padding: '0 2px', touchAction: 'none' }}>&#x2237;&#x2237;</button>
+        {editable && (
+          <button {...attributes} {...listeners} aria-label="Drag to move" title="Drag to move"
+            style={{ cursor: 'grab', background: 'transparent', border: 'none', color: '#6a6a6a', fontSize: '16px', lineHeight: 1, padding: '0 2px', touchAction: 'none' }}>&#x2237;&#x2237;</button>
+        )}
         <div style={{ ...sectionHeading, flex: 1 }}>{TITLE_OF[cardKey]}</div>
         <button onClick={() => onToggle(cardKey)} aria-label={collapsed ? 'Expand' : 'Collapse'} title={collapsed ? 'Expand' : 'Collapse'}
           style={{ background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3, color: '#cce0f5', width: 24, height: 24, cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: 'Carlito, sans-serif' }}>{collapsed ? '▸' : '▾'}</button>
@@ -312,14 +350,17 @@ export default function GMScreen() {
   const [collapsed, setCollapsed] = useState<Set<CardKey>>(new Set())
   const [filter, setFilter] = useState<Filter>('all')
   const [hydrated, setHydrated] = useState(false)
+  const [isThriver, setIsThriver] = useState(false) // only Thrivers may edit the standard
   const canvasRef = useRef<HTMLDivElement | null>(null)
 
-  // Load per-GM layout once. Missing row / signed-out / pre-migration -> defaults.
+  // Load the shared STANDARD layout + whether this user may edit it. Missing
+  // row / signed-out -> the baked default.
   useEffect(() => {
     let alive = true
     ;(async () => {
-      const saved = await loadGmScreenLayout()
+      const [saved, thriver] = await Promise.all([loadStandardLayout(), isCurrentUserThriver()])
       if (!alive) return
+      setIsThriver(thriver)
       if (saved) {
         const known = new Set<string>(CARD_KEYS)
         // Merge: saved position per known key wins; unknown keys ignored; any
@@ -335,16 +376,18 @@ export default function GMScreen() {
     return () => { alive = false }
   }, [])
 
-  // Persist (debounced) after hydration so the initial load doesn't echo back.
+  // Persist the standard (debounced) after hydration - THRIVERS ONLY. A non-
+  // Thriver's local tweaks (transient collapse/filter) never write; RLS would
+  // reject the write anyway, this just avoids the pointless attempt.
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    if (!hydrated) return
+    if (!hydrated || !isThriver) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
-      void saveGmScreenLayout({ positions, collapsed: Array.from(collapsed), filter })
+      void saveStandardLayout({ positions, collapsed: Array.from(collapsed), filter })
     }, 600)
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
-  }, [positions, collapsed, filter, hydrated])
+  }, [positions, collapsed, filter, hydrated, isThriver])
 
   // 6px activation so a click on the chevron / a resize-grab does not drag.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
@@ -413,17 +456,19 @@ export default function GMScreen() {
             <button key={f.key} onClick={() => setFilter(f.key)} style={chipStyle(filter === f.key)}>{f.label}</button>
           ))}
         </div>
-        <button onClick={resetLayout} style={chipStyle(false)}>Reset</button>
+        {isThriver && <button onClick={resetLayout} style={chipStyle(false)}>Reset</button>}
       </div>
 
-      <div style={{ fontSize: 13, color: '#6a6a6a', marginBottom: '10px' }}>
-        Drag the &#x2237;&#x2237; handle to move a card anywhere (snaps to a grid). Drag a card&rsquo;s right edge to widen it. Chevron collapses it. Your layout saves to your account.
+      <div style={{ fontSize: '13px', color: '#6a6a6a', marginBottom: '10px' }}>
+        {isThriver
+          ? <>Editing the <strong style={{ color: '#cce0f5' }}>standard</strong> layout. Drag the &#x2237;&#x2237; handle to move a card (snaps to a grid); drag a card&rsquo;s corner to resize; chevron collapses it. Changes apply for everyone.</>
+          : <>Standard GM Screen layout (locked). Use the chevrons to collapse cards; open from a story for that game&rsquo;s notes + scratch pad.</>}
       </div>
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div ref={canvasRef} style={{ position: 'relative', width: '100%', height: canvasHeight }}>
           {visible.map(k => (
-            <FreeformCard key={k} cardKey={k} campaignId={campaignId} pos={positions[k]} collapsed={collapsed.has(k)} onToggle={toggleCollapse} onMeasure={handleMeasure} />
+            <FreeformCard key={k} cardKey={k} campaignId={campaignId} pos={positions[k]} collapsed={collapsed.has(k)} editable={isThriver} onToggle={toggleCollapse} onMeasure={handleMeasure} />
           ))}
         </div>
       </DndContext>
