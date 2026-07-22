@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-22 06:05 UTC
+
+**Status:** RED+DRIFT (same conditions as 00:07 entry - no change)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [5 high, 0 critical] - unchanged from prior entry
+- sharp (PROD) + next via sharp+postcss (PROD-path) - still unpatched
+- brace-expansion, js-yaml, fast-uri - build-only, still unpatched
+
+**CI:** last 5 runs all success (latest 2026-07-22T00:08:25Z)
+
+**Drift:**
+- Stress 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - drain target was 2026-07-01; now 21 days overdue
+- FI Insight Die award path (doubles -> pool increment) - never fired live; >36 days in HOPED-FOR
+- Vehicle popout broadcasts (Section B) - >58 days in HOPED-FOR
+
+**Stale-todo audit confirms valid:**
+- `page.tsx:3106` `setInterval(refetchVehicles, 3000)` still present (open todo to remove it)
+- `CampaignMap.tsx:650-651` fingerprint still hashes `allPins` not `visible` (open todo confirmed)
+
+**Action:** sharp+next PROD-path vulns are the highest priority item. Five consecutive pulses with no remediation. Run `npm install sharp@^0.35.0` (or add `overrides.sharp` in package.json) and commit. Stress 12-string is now past its own deadline - route to the next Beta-500 dry-run pass or explicitly park.
+
+---
+
 ## 2026-07-22 00:07 UTC
 
 **Status:** RED+DRIFT (5 high vulns - up from 3; 2 new are PROD-path; chronic HOPED-FOR drift)
