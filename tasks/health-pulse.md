@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-22 00:07 UTC
+
+**Status:** RED+DRIFT (5 high vulns - up from 3; 2 new are PROD-path; chronic HOPED-FOR drift)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [5 high, 0 critical]
+- brace-expansion DoS (CVSS 5.3) - build/eslint chain, persists
+- js-yaml quadratic CPU (CVSS 7.5) - build/eslint chain, persists
+- fast-uri host confusion (CVSS 7.5) - build/sentry chain, persists
+- **NEW: sharp@0.34.5** - libvips CVE-2026-33327/33328/35590/35591 (CVSS unscored, CWE-1395) - PROD dep (next image optimization). Fix: `npm install sharp@^0.35.0 --save-dev` to force-override, or await next update.
+- **NEW: next (transitive)** - flagged HIGH via sharp+postcss chains; same fix as sharp.
+
+**CI:** last 5 runs all success (latest 2026-07-21T21:07 UTC)
+
+**Drift:** 3 chronic HOPED-FOR items, no git activity in last 3 days:
+- Stress 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - >36 days no playtest drain
+- FI Insight Die award path (doubles -> pool increment; never fired in live play) - >36 days
+- Vehicle popout broadcasts (Section B) - >58 days
+
+**Action:** sharp libvips CVEs are PROD-path (image optimization). Override with `npm install sharp@^0.35.0` + commit updated package-lock, OR add an overrides entry in package.json. Higher urgency than the build-only vulns. All 5 high vulns persist from prior entries - needs a decision: fix now or explicitly park with a target date.
+
+---
+
 ## 2026-07-21 21:00 UTC
 
 **Status:** RED+DRIFT (vuln count up from 2 to 3; same chronic HOPED-FOR drift)
