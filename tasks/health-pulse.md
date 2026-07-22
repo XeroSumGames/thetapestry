@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-22 09:05 UTC
+
+**Status:** RED+DRIFT (same conditions as 06:05 entry - no change; 6th consecutive RED pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [5 high, 0 critical] - unchanged
+- sharp (PROD) + next via sharp+postcss (PROD-path) - still unpatched
+- brace-expansion, js-yaml, fast-uri - build-only, still unpatched
+
+**CI:** last 5 runs all success (latest 2026-07-22T06:08:54Z)
+
+**Drift:** same 3 chronic HOPED-FOR items, no new git activity:
+- Stress 12-string narrative - drain target was 2026-07-01; now 22 days overdue
+- FI Insight Die award path - >36 days in HOPED-FOR
+- Vehicle popout broadcasts (Section B) - >59 days in HOPED-FOR
+
+**Action:** No change from 06:05 - sharp PROD-path vulns and Stress 12-string overdue. See 06:05 entry for remediation steps.
+
+---
+
 ## 2026-07-22 06:05 UTC
 
 **Status:** RED+DRIFT (same conditions as 00:07 entry - no change)
