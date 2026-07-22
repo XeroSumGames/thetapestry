@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-22 18:05 UTC
+
+**Status:** DRIFT (gates green; 2 HIGH vulns remain; HOPED-FOR items aging)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [2 high, 0 critical] -- improvement: commit 2521ba4 (upgrade next 16.2.6->16.2.11) resolved brace-expansion/js-yaml/fast-uri; down from 5 HIGH
+- sharp@0.34.5 (PROD): libvips CVE-2026-33327/33328/35590/35591; fix: upgrade sharp to >=0.35.0
+- next (PROD-path via sharp dep): same chain
+
+**CI:** last 5 runs all success (latest 2026-07-22T15:31:45Z)
+
+**Drift (HOPED-FOR -- all >36 days since last playtest coverage, last updated 2026-06-16):**
+- vehicle popout broadcasts (Section B): no git activity last 3 days on vehicle paths; still HOPED-FOR
+- stress-check 12-string narrative: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured; drain target Beta-500 dry-run still owed
+- FI Insight Die award path: insight_dice +1 at useRollResolution.ts:264 never fired in live play
+
+**Stale-todo scan:** 2 confirmed-open items verified still present (no false alarms):
+- vehicles 3s poll: page.tsx:3106 setInterval(refetchVehicles, 3000) still present
+- broken-weapon alert(): page.tsx:6012-6014 still using browser alert()
+
+**Action:** run `npm install sharp@latest` (0.35.0 fixes the libvips CVE chain); verify tsc+tests green; push. HOPED-FOR items need a playtest pass to drain.
+
+---
+
 ## 2026-07-22 15:05 UTC
 
 **Status:** RED+DRIFT (8th consecutive flagged pulse - conditions identical to 12:08; no remediation yet)
