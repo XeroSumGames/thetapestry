@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-22 15:05 UTC
+
+**Status:** RED+DRIFT (8th consecutive flagged pulse - conditions identical to 12:08; no remediation yet)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [5 high, 0 critical] - unchanged
+- sharp (PROD) + next via sharp+postcss (PROD-path) - unpatched; libvips CVE-2026-33327/33328/35590/35591
+- brace-expansion (DoS, direct fix available), js-yaml (CPU DoS), fast-uri (host confusion) - build-only
+
+**CI:** last 5 runs all success (latest 2026-07-22T12:09:26Z)
+
+**Drift:** same 3 chronic HOPED-FOR items, no new git activity:
+- Stress 12-string narrative (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV) - drain target was 2026-07-01; 22 days overdue
+- FI Insight Die award path (insight_dice +1 on doubles) - >36 days in HOPED-FOR
+- Vehicle popout broadcasts (Section B) - >59 days in HOPED-FOR
+
+**Stale-todo:** alert() at page.tsx:6012-6014 and vehicles poll at page.tsx:3106 both confirmed still open.
+
+**Action:** 8 pulses, no change. sharp PROD-path is the highest-priority unresolved item. Stress 12-string needs an explicit call: schedule for Beta-500 dry-run or park it.
+
+---
+
 ## 2026-07-22 12:08 UTC
 
 **Status:** RED+DRIFT (no change from 09:05 - 7th consecutive flagged pulse)
