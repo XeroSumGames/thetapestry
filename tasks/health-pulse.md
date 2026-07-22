@@ -6,6 +6,31 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-22 21:05 UTC
+
+**Status:** DRIFT (unchanged from 18:05 pulse - no remediation yet)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [2 high, 0 critical] - same 2 HIGH as 18:05
+- sharp@0.34.5 (PROD): libvips CVE-2026-33327/33328/35590/35591; fix: upgrade sharp to >=0.35.0
+- next (PROD-path via sharp dep): same chain; fix available (upgrade next -> pulls patched sharp)
+
+**CI:** last 5 runs all success (latest 2026-07-22T18:08:49Z)
+
+**Drift (HOPED-FOR -- no new git activity since 18:05):**
+- vehicle popout broadcasts (Section B): still HOPED-FOR, >59 days
+- stress-check 12-string narrative: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: insight_dice +1 at useRollResolution.ts:264 never fired in live play
+
+**Stale-todo:** both confirmed-open items unchanged:
+- vehicles 3s poll: page.tsx:3106 setInterval(refetchVehicles, 3000) still present
+- broken-weapon alert(): page.tsx:6012-6014 still using browser alert()
+
+**Action:** same as 18:05 - upgrade sharp (>=0.35.0) to close the libvips CVE chain; HOPED-FOR needs a playtest pass to drain.
+
+---
+
 ## 2026-07-22 18:05 UTC
 
 **Status:** DRIFT (gates green; 2 HIGH vulns remain; HOPED-FOR items aging)
