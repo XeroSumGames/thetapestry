@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-23 21:06 UTC
+
+**Status:** RED+DRIFT (unchanged from 18:05 pulse - no code commits since then)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [3 high, 0 critical] - same as 18:05: postcss XSS+file-read HIGH, sharp libvips CVE chain HIGH, next transitive HIGH. No change.
+
+**CI:** last 5 runs all success (latest 2026-07-23T18:06:46Z)
+
+**Drift (HOPED-FOR - no change):**
+- vehicle popout broadcasts (Section B): >60 days, no git activity
+- stress-check 12-string narrative: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: useRollResolution.ts:264 never fired in live play
+
+**Action:** same as prior pulse - postcss arbitrary-file-read + sharp libvips CVEs are the open HIGH items before Beta-500; no new developments this cycle.
+
+---
+
 ## 2026-07-23 18:05 UTC
 
 **Status:** RED+DRIFT - audit escalated (3 HIGH, was 2)
