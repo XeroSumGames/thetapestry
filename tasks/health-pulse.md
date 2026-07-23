@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-23 18:05 UTC
+
+**Status:** RED+DRIFT - audit escalated (3 HIGH, was 2)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [3 high, 0 critical] - UP from 2 HIGH last pulse. Newly flagged:
+- `postcss` HIGH: XSS via unescaped `</style>` in CSS stringify + arbitrary file read via sourceMappingURL
+- `sharp` HIGH: libvips CVE chain (CVE-2026-33327/33328/35590/35591) - unchanged
+- `next` HIGH: bundles both postcss + sharp (transitive); fix requires major next version bump
+
+**CI:** last 5 runs all success (latest 2026-07-23T15:08:29Z)
+
+**Drift (HOPED-FOR - all >3 days, no git activity):**
+- vehicle popout broadcasts (Section B): >60 days, still HOPED-FOR
+- stress-check 12-string narrative: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: insight_dice +1 at useRollResolution.ts:264 never fired in live play
+
+**Stale-todo (confirmed still open):**
+- CharacterCard Rest/Travel per-character calls advance shared clock (HIGH bug)
+- page.tsx:6013 broken-weapon gate uses alert()
+- page.tsx:3106 vehicles 3s poll still present
+
+**Action:** postcss arbitrary-file-read is a new HIGH worth review before Beta-500. Run `npm audit` for the exact advisory IDs and assess whether any input path reaches it server-side.
+
+---
+
 ## 2026-07-23 15:06 UTC
 
 **Status:** RED+DRIFT (unchanged from 12:06 pulse - no remediation)
