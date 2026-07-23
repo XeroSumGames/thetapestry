@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-23 12:06 UTC
+
+**Status:** RED+DRIFT (unchanged from 09:06 pulse - no remediation)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [2 high, 0 critical] - same sharp libvips CVE chain; fix: upgrade sharp >=0.35.0
+
+**CI:** last 5 runs all success (latest 2026-07-23T09:07:57Z)
+
+**Drift (HOPED-FOR - all >3 days, no git activity):**
+- vehicle popout broadcasts (Section B): >60 days, still HOPED-FOR
+- stress-check 12-string narrative: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: insight_dice +1 at useRollResolution.ts:264 never fired in live play
+
+**Stale-todo:** vehicles 3s poll and broken-weapon alert() confirmed still open, unchanged.
+
+**Action:** upgrade sharp >=0.35.0 to close the libvips CVE chain; HOPED-FOR needs playtest pass.
+
+---
+
 ## 2026-07-23 09:06 UTC
 
 **Status:** RED+DRIFT (unchanged from 06:06 pulse - no remediation)
