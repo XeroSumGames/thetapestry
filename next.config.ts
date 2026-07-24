@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
       // the /ape-log dashboard. Stable production alias, not the hashed URL.
       { source: '/space1999', destination: 'https://space1999generator.vercel.app' },
       { source: '/space1999/:path*', destination: 'https://space1999generator.vercel.app/:path*' },
+      // dredd-generator: same pattern - its own repo
+      // (github.com/XeroSumGames/dredd-generator), proxied so /dredd-generator
+      // runs on THIS origin and its beacon posts page='/dredd-generator' to
+      // log-visit for the /dredd-generator-log dashboard. Stable production
+      // alias, not the hashed URL.
+      { source: '/dredd-generator', destination: 'https://dredd-generator.vercel.app' },
+      { source: '/dredd-generator/:path*', destination: 'https://dredd-generator.vercel.app/:path*' },
     ]
   },
 };
