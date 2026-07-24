@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>NPC Panel Redesign v1</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d0d0d; color: #f5f2ee; font-family: Carlito, 'Segoe UI', sans-serif; padding: 28px; }
+  h1 { font-size: 20px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+  .sub { color: #8a8a8a; font-size: 14px; margin-bottom: 24px; }
+  .stage { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; }
+  .col { }
+  .col h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #cce0f5; margin-bottom: 10px; }
+  .panel { width: 272px; background: #141414; border: 1px solid #2a2a2a; border-radius: 6px; padding: 10px; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 14px; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 10px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+  .tabs span { color: #6a6a6a; cursor: pointer; }
+  .tabs .on { color: #f5f2ee; font-weight: 700; border-bottom: 2px solid #c0392b; padding-bottom: 8px; margin-bottom: -9px; }
+
+  /* generic button */
+  .btn { font-family: inherit; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; border-radius: 3px; padding: 6px 10px; cursor: pointer; background: #242424; border: 1px solid #3a3a3a; color: #f5f2ee; }
+  .btn.g { background: #1a2e10; border-color: #2d5a1b; color: #7fc458; }
+  .btn.r { background: #2a1210; border-color: #7a1f16; color: #f5a89a; }
+  .btn.b { background: #1a1a2e; border-color: #2e2e5a; color: #7ab3d4; }
+  .btn.red { background: #7a1f16; border-color: #c0392b; color: #f5a89a; }
+
+  .search { width: 100%; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; color: #c9c9c9; font-size: 13px; padding: 7px 9px; margin: 8px 0; font-family: inherit; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { font-size: 13px; text-transform: uppercase; letter-spacing: .03em; padding: 3px 8px; border-radius: 3px; background: #242424; border: 1px solid #3a3a3a; color: #b8b8b8; cursor: pointer; }
+
+  /* BEFORE group with heavy bar */
+  .grpB { border: 1px solid #2a2a2a; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .grpB .hd { display: flex; align-items: center; gap: 6px; padding: 8px 10px; font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .grpB .ct { margin-left: auto; color: #7fc458; font-weight: 700; }
+  .bar { display: block; text-align: center; padding: 7px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; cursor: pointer; }
+  .bar.show { background: #16290c; color: #7fc458; border-top: 1px solid #2d5a1b; }
+  .bar.hide { background: #2a1210; color: #f5a89a; border-top: 1px solid #7a1f16; }
+
+  /* AFTER group: light header + eye toggle */
+  .grpA { display: flex; align-items: center; gap: 8px; padding: 9px 8px; border-bottom: 1px solid #212121; cursor: pointer; }
+  .grpA .car { color: #6a6a6a; font-size: 11px; width: 10px; }
+  .grpA .nm { font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #f5f2ee; }
+  .grpA .ct { margin-left: auto; font-size: 13px; color: #8a8a8a; min-width: 18px; text-align: right; }
+  .eye { width: 26px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; font-size: 14px; cursor: pointer; }
+  .eye.on { color: #7fc458; }
+  .eye.off { color: #c0392b; }
+
+  .ico { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: #242424; border: 1px solid #3a3a3a; border-radius: 3px; color: #cce0f5; font-size: 15px; cursor: pointer; }
+  .note { margin-top: 26px; max-width: 560px; }
+  .note h3 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #cce0f5; margin-bottom: 8px; }
+  .note li { font-size: 14px; line-height: 1.7; color: #d8d8d8; margin-bottom: 6px; list-style: none; }
+  .note li b { color: #7fc458; font-weight: 700; }
+  .row { display: flex; gap: 6px; }
+</style>
+</head>
+<body>
+  <h1>NPC Panel &mdash; Redesign v1</h1>
+  <div class="sub">Same features, ~60% less visual weight. Left = today. Right = proposed.</div>
+
+  <div class="stage">
+
+    <!-- BEFORE -->
+    <div class="col">
+      <h2>Before</h2>
+      <div class="panel">
+        <div class="tabs"><span>Pins</span><span class="on">NPCs</span><span>Assets</span><span>GM&nbsp;Notes</span></div>
+        <div class="row" style="margin-bottom:6px"><button class="btn red">+ NPC</button><button class="btn g">Show All</button></div>
+        <div class="row" style="margin-bottom:6px"><button class="btn red">Hide All</button><button class="btn g">Select</button></div>
+        <div class="row" style="margin-bottom:6px"><button class="btn g">🐾 Animal</button><button class="btn b">Library</button></div>
+        <input class="search" placeholder="Search NPCs...">
+        <div class="chips" style="margin-bottom:4px"><span class="chip">Friendly</span><span class="chip">Goon</span><span class="chip">Foe</span></div>
+        <div class="chips"><span class="chip">Antagonist</span><span class="chip">Active</span><span class="chip">Dead</span></div>
+        <div class="grpB"><div class="hd">&#9654; Town Council <span class="ct">2</span></div><span class="bar show">Show</span></div>
+        <div class="grpB"><div class="hd">&#9654; District Deputies <span class="ct">1</span></div><span class="bar show">Show</span></div>
+        <div class="grpB"><div class="hd">&#9654; Uncategorized <span class="ct">20</span></div><span class="bar show">Show</span></div>
+        <div class="grpB"><div class="hd">&#9654; West Gate <span class="ct" style="color:#f5a89a">3</span></div><span class="bar hide">Hide</span></div>
+      </div>
+    </div>
+
+    <!-- AFTER -->
+    <div class="col">
+      <h2>After</h2>
+      <div class="panel">
+        <div class="tabs"><span>Pins</span><span class="on">NPCs</span><span>Assets</span><span>GM&nbsp;Notes</span></div>
+
+        <div class="row" style="align-items:center; margin-bottom:8px">
+          <button class="btn red" style="flex:1; text-align:left">+ NPC</button>
+          <span class="ico" title="Add from library">📚</span>
+          <span class="ico" title="Add animal">🐾</span>
+          <span class="ico" title="Select multiple">☑</span>
+          <span class="ico" title="Show / hide all">👁</span>
+        </div>
+
+        <input class="search" placeholder="Search NPCs...">
+
+        <div class="chips">
+          <span class="chip">Friendly</span><span class="chip">Goon</span><span class="chip">Foe</span><span class="chip">Antagonist</span>
+          <span style="width:1px;background:#333;margin:2px 3px"></span>
+          <span class="chip">Active</span><span class="chip">Dead</span>
+        </div>
+
+        <div style="margin-top:10px; border-top:1px solid #212121">
+          <div class="grpA"><span class="car">&#9660;</span><span class="nm">Town Council</span><span class="ct">2</span><span class="eye on" title="Shown on map">&#128065;</span></div>
+          <div class="grpA"><span class="car">&#9660;</span><span class="nm">District Deputies</span><span class="ct">1</span><span class="eye on" title="Shown on map">&#128065;</span></div>
+          <div class="grpA"><span class="car">&#9654;</span><span class="nm">Uncategorized</span><span class="ct">20</span><span class="eye on" title="Shown on map">&#128065;</span></div>
+          <div class="grpA"><span class="car">&#9660;</span><span class="nm">West Gate</span><span class="ct">3</span><span class="eye off" title="Hidden from map &mdash; click to show">&#128584;</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note">
+    <h3>What changed</h3>
+    <ul>
+      <li><b>Actions: 6 buttons in 3 rows &rarr; 1 row.</b> Only <i>+ NPC</i> stays a full button (the thing you do most). Library, Animal, Select, and Show/Hide-all collapse to small icons. Show-all / Hide-all live behind the eye icon (or a tiny menu) instead of two loud bars.</li>
+      <li><b>The per-group Show/Hide bars are gone.</b> Each group now carries one small eye on its header row &mdash; green = shown on the map, red/muted = hidden. Click it to toggle. That single change removes most of the color noise.</li>
+      <li><b>Filters stay but tighten to one wrapped row,</b> with a thin divider splitting disposition (Friendly/Goon/Foe/Antagonist) from status (Active/Dead) so the two axes read as separate.</li>
+      <li><b>Group rows are now light dividers, not boxed cards</b> &mdash; denser, easier to scan a long list, and the count sits quietly on the right.</li>
+    </ul>
+  </div>
+</body>
+</html>

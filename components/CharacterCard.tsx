@@ -6,6 +6,7 @@ import { createClient } from '../lib/supabase-browser'
 import { insertRollLog } from '../lib/data/roll-log'
 import { advance as advanceClock } from '../lib/campaign-clock'
 import { computeRestRecovery } from '../lib/rest'
+import { partyRest } from '../lib/data/party-rest'
 import { fallingDamage, drowningDamage } from '../lib/env-damage'
 import { travelPushCost } from '../lib/travel'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -520,9 +521,9 @@ function CharacterCardImpl({
                   (green community-palette) so it reads as a paired
                   bond surface. */}
               <button onClick={() => setShowApprentice(true)} style={btn('#1a2e10', '#7fc458')}>Apprentice</button>
-              {/* GM-action trio (Reduce Stress / Env. Damage / Rest)
-                  is gated on canEdit + localState because they only
-                  make sense in a campaign session. */}
+              {/* GM-action buttons: Reduce Stress / Env. Damage / Infection
+                  are gated on canEdit (editability scope). Travel & Rest are
+                  GM-only (isGM gate) because they move the campaign clock. */}
               {canEdit && localState && (
                 <>
                   <button onClick={() => {
@@ -604,11 +605,17 @@ function CharacterCardImpl({
                             const dc = Math.max(1, 4 + phyAmod)
                             onStatUpdate(localState.id, 'wp_current', 0)
                             onStatUpdate(localState.id, 'death_countdown', dc as any)
+                            // Entering WP=0 from sickness also adds 1 Stress pip.
+                            if ((localState.wp_current ?? 0) > 0) {
+                              onStatUpdate(localState.id, 'stress', Math.min(5, (localState.stress ?? 0) + 1))
+                            }
                             setCheckNotice(`${c.name} has progressed to Mortally Wounded. Death countdown: ${dc} rounds.`)
                           }
                           // Clear infection state regardless.
                           onStatUpdate?.(localState.id, 'infection_state', null as any)
                           onStatUpdate?.(localState.id, 'infection_lasting_risk', false as any)
+                          onStatUpdate?.(localState.id, 'infection_days_left', null as any)
+                          onStatUpdate?.(localState.id, 'infection_severity', null as any)
                           onStatUpdate?.(localState.id, 'infection_started_at', null as any)
                           onStatUpdate?.(localState.id, 'infection_infected_by', null as any)
                         }
@@ -630,11 +637,18 @@ function CharacterCardImpl({
                       }
                     }
                   }} style={btn('#5a2e5a', '#d48bd4')} title="Roll Infection / progress sick state">Infection</button>
+                </>
+              )}
+              {/* Travel & Rest move the campaign clock, so they're GM-only.
+                  Xero ruled: "moving time affects everyone" - use party-level
+                  clock advance + per-PC recovery (no per-character clock calls). */}
+              {isGM && localState && (
+                <>
                   <button onClick={async () => {
                     // Travel push - GM enters total hours traveled; if > 8 the
                     // character loses 1 RP per push-hour, the campaign clock
                     // advances by those hours, and a tagged feed row writes.
-                    // Per-PC like Rest; the GM clicks per character after a haul.
+                    // TODO H10: fold into party-travel orchestration like party-rest.
                     if (!localState) return
                     const hoursStr = prompt('How many hours of contiguous travel?\n\n(8h = no cost; each hour past 8 drains 1 RP)', '8')?.trim()
                     if (!hoursStr) return
@@ -645,25 +659,29 @@ function CharacterCardImpl({
                     onStatUpdate?.(localState.id, 'rp_current', newRP)
                     if (campaignIdProp) {
                       try {
-                        await advanceClock(campaignIdProp, hours)
-                        const { user } = await getCachedAuth()
-                        if (user) {
-                          const label = cost.rp === 0
-                            ? `${c.name} traveled ${hours} hours (within the 8h soft cap; no RP cost)`
-                            : `${c.name} pushed travel ${hours} hours (-${cost.rp} RP for ${cost.pushHours} hour${cost.pushHours === 1 ? '' : 's'} past the 8h cap)`
-                          await insertRollLog({
-                            campaign_id: campaignIdProp, user_id: user.id, character_name: c.name,
-                            label, die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-                            outcome: 'travel',
-                            damage_json: { characterId: c.id, hours, pushHours: cost.pushHours, rpDealt: cost.rp },
-                          })
+                        const result = await advanceClock(campaignIdProp, hours)
+                        if (result) {
+                          const { user } = await getCachedAuth()
+                          if (user) {
+                            const label = cost.rp === 0
+                              ? `${c.name} traveled ${hours} hours (within the 8h soft cap; no RP cost)`
+                              : `${c.name} pushed travel ${hours} hours (-${cost.rp} RP for ${cost.pushHours} hour${cost.pushHours === 1 ? '' : 's'} past the 8h cap)`
+                            await insertRollLog({
+                              campaign_id: campaignIdProp, user_id: user.id, character_name: c.name,
+                              label, die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                              outcome: 'travel',
+                              damage_json: { characterId: c.id, hours, pushHours: cost.pushHours, rpDealt: cost.rp },
+                            })
+                          }
+                        } else {
+                          alert('Failed to advance campaign clock')
                         }
                       } catch (e) {
                         console.error('[travel] clock advance / log insert failed:', e)
                       }
                     }
-                  }} style={btn('#10283a', '#7fb3d4')} title="Apply travel hours (push past 8h costs RP; advances the clock)">Travel</button>
-                  <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')}>Rest</button>
+                  }} style={btn('#10283a', '#7fb3d4')} title="Apply travel hours (push past 8h costs RP; advances the clock) - GM only">Travel</button>
+                  <button onClick={() => setShowRestModal(true)} style={btn('#2d5a1b', '#7fc458')} title="Rest the party - GM only">Rest</button>
                 </>
               )}
               {/* Evolution - opens the Character Evolution / CDP
@@ -1208,8 +1226,9 @@ function CharacterCardImpl({
 
       {showRestModal && localState && (
         <ModalBackdrop onClose={() => setShowRestModal(false)} zIndex={10001} opacity={0.9} padding="1rem">
-          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
-            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Rest & Heal</div>
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '360px' }}>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Party Rest</div>
+            <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem' }}>Rests the entire party at once. Clock advances once, all drainers settle once, every PC recovers from their own state.</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem' }}>How much time has passed resting?</div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
               <div style={{ flex: 1 }}>
@@ -1245,6 +1264,7 @@ function CharacterCardImpl({
               const rpCap = r.isSick ? Math.floor(localState.rp_max / 2) : localState.rp_max
               return totalHours > 0 ? (
                 <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', padding: '8px', background: '#242424', borderRadius: '3px' }}>
+                  <div style={{ marginBottom: '4px', color: '#cce0f5', fontSize: '13px' }}>Preview for {c.name} (all PCs recover similarly from their own state):</div>
                   <div>WP healed: <span style={{ color: '#c0392b', fontWeight: 700 }}>+{r.wpHeal}</span> ({r.wasMortal ? '1 per 2 days' : '1 per day'})</div>
                   <div>RP recovered: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>+{r.rpGain}</span> (1 per hour{r.isSick ? `, sick cap ${rpCap}` : ''})</div>
                   {r.stressDrop > 0 && <div>Stress reduced: <span style={{ color: '#EF9F27', fontWeight: 700 }}>-{r.stressDrop}</span> (1 per 8h)</div>}
@@ -1257,44 +1277,42 @@ function CharacterCardImpl({
               <button onClick={async () => {
                 const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
                 if (totalHours <= 0) { setShowRestModal(false); return }
-                // All four-track recovery math lives in lib/rest.ts (pure,
-                // unit-tested). WP rate, sick RP cap, and Stress cooling-off
-                // are computed there so the preview + apply never diverge.
-                const { wpHeal, newWP, rpGain, newRP, stressDrop, newStress, wasMortal, isSick } =
-                  computeRestRecovery(localState, totalHours, restRestful)
-                onStatUpdate?.(localState.id, 'wp_current', newWP)
-                onStatUpdate?.(localState.id, 'rp_current', newRP)
-                if (stressDrop > 0) onStatUpdate?.(localState.id, 'stress', newStress)
-                // Advance the campaign clock by the rested duration so all the
-                // time-based drainers fire (pending heals, rations, subsistence,
-                // infection) and a System "Time advances Nh" row shows in feed.
-                // Then write a Rest-specific row so players see what the patient
-                // recovered. Best-effort: never block the heal on a clock error.
-                if (campaignIdProp) {
-                  try {
-                    await advanceClock(campaignIdProp, totalHours)
-                    const { user } = await getCachedAuth()
-                    if (user) {
-                      const hoursText = totalHours === 1 ? '1 hour' : `${totalHours} hours`
-                      const recovered = [`+${rpGain} RP`, `+${wpHeal} WP`, stressDrop > 0 ? `-${stressDrop} Stress` : null].filter(Boolean).join(', ')
-                      await insertRollLog({
-                        campaign_id: campaignIdProp,
-                        user_id: user.id,
-                        character_name: c.name,
-                        label: `${c.name} rested ${hoursText} (${recovered})`,
-                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-                        outcome: 'rest',
-                        damage_json: { characterId: c.id, hours: totalHours, wpHeal, rpHeal: rpGain, stressDrop, wasMortal, wasSick: isSick },
-                      })
-                    }
-                  } catch (e) {
-                    console.error('[rest] clock advance / log insert failed:', e)
+                if (!campaignIdProp) { alert('No campaign ID'); return }
+                // Orchestrate party rest: advance clock once (drainers settle),
+                // read fresh state for all PCs, compute & apply recovery for each.
+                // partyRest handles all sequencing to avoid races with drainers.
+                try {
+                  const result = await partyRest(campaignIdProp, totalHours, restRestful)
+                  if (result.error) {
+                    alert(`Rest failed: ${result.error}`)
+                    setShowRestModal(false)
+                    return
                   }
+                  // Log a single party rest event + summary of all recoveries.
+                  const { user } = await getCachedAuth()
+                  if (user && result.clock) {
+                    const hoursText = totalHours === 1 ? '1 hour' : `${totalHours} hours`
+                    const summaryParts = result.recoveries.map(r =>
+                      `${r.name} (+${r.wpHeal} WP, +${r.rpGain} RP${r.stressDrop > 0 ? `, -${r.stressDrop} Stress` : ''})`,
+                    )
+                    await insertRollLog({
+                      campaign_id: campaignIdProp,
+                      user_id: user.id,
+                      character_name: 'System',
+                      label: `Party rested ${hoursText}: ${summaryParts.join('; ')}`,
+                      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+                      outcome: 'party_rest',
+                      damage_json: { hours: totalHours, restful: restRestful, partyCount: result.recoveries.length },
+                    })
+                  }
+                } catch (e) {
+                  console.error('[party-rest] failed:', e)
+                  alert(`Rest failed: ${String(e)}`)
                 }
                 setShowRestModal(false)
                 setRestHours(0); setRestDays(0); setRestWeeks(0); setRestRestful(true)
               }}
-                style={{ flex: 2, padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Apply Healing</button>
+                style={{ flex: 2, padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Rest Party</button>
             </div>
           </div>
         </ModalBackdrop>

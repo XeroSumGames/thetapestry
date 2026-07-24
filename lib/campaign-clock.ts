@@ -56,6 +56,10 @@ function hoursBetween(a: ClockState, b: ClockState): number {
 // disable the button during the await to prevent double-clicks.
 export async function advance(campaignId: string, hours: number): Promise<ClockState | null> {
   if (hours <= 0) return readClock(campaignId)
+  if (!Number.isInteger(hours)) {
+    console.error('[campaign-clock] advance called with fractional hours:', hours)
+    return readClock(campaignId)
+  }
   const supabase = createClient()
   // Compare-and-set with retry so two concurrent advances (GM double-tab, a
   // retry, or the campaign-sheet +8h racing the table's Advance Time) can't
