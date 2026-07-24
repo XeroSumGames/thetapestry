@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-24 15:05 UTC
+
+**Status:** RED+DRIFT (no change since 12:08 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [3 high, 0 critical] - postcss XSS+file-read HIGH, sharp libvips CVE chain HIGH, next transitive HIGH. All via next package; need major version upgrade to resolve.
+
+**CI:** last 5 runs all success (latest 2026-07-24T12:10:24Z)
+
+**Drift:**
+- vehicle popout broadcasts (Section B): >60 days unplaytested, no code changes
+- stress-check 12-string: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: useRollResolution.ts:264 never fired in live play
+- Stale todos confirmed still open: broken-weapon alert() (page.tsx:6013), vehicles 3s poll (page.tsx:3106)
+
+**Action:** same persistent items - 3 HIGH vulns via next (major upgrade needed) + 3 HOPED-FOR items needing playtest. No new developments this cycle.
+
+---
+
 ## 2026-07-24 12:08 UTC
 
 **Status:** RED+DRIFT (no change since 09:09 UTC)
