@@ -16,27 +16,27 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      // apegenerator lives in its own repo (github.com/XeroSumGames/apegenerator)
-      // per AGENTS.md; proxy /apegenerator to its Vercel deployment so the public
-      // URL is unchanged and the page runs on THIS origin - its visit beacon then
-      // posts page='/apegenerator' to log-visit, which the /ape-log dashboard reads.
-      // Use the stable production alias (never the per-build hashed URL, which is
-      // behind Vercel's auth wall and changes every deploy).
-      { source: '/apegenerator', destination: 'https://apegenerator.vercel.app' },
-      { source: '/apegenerator/:path*', destination: 'https://apegenerator.vercel.app/:path*' },
-      // space1999generator: same pattern - its own repo
-      // (github.com/XeroSumGames/space1999generator), proxied so /space1999 runs
-      // on THIS origin and its beacon posts page='/space1999' to log-visit for
-      // the /ape-log dashboard. Stable production alias, not the hashed URL.
-      { source: '/space1999', destination: 'https://space1999generator.vercel.app' },
-      { source: '/space1999/:path*', destination: 'https://space1999generator.vercel.app/:path*' },
-      // dredd-generator: same pattern - its own repo
-      // (github.com/XeroSumGames/dredd-generator), proxied so /dredd-generator
-      // runs on THIS origin and its beacon posts page='/dredd-generator' to
-      // log-visit for the /dredd-generator-log dashboard. Stable production
-      // alias, not the hashed URL.
+      // dredd-generator stays proxied here too (it is also served on thetable).
+      // Its own repo (github.com/XeroSumGames/dredd-generator); the page runs on
+      // THIS origin so its beacon posts page='/dredd-generator' to log-visit for
+      // the /dredd-generator-log dashboard. Stable production alias, not the hash.
       { source: '/dredd-generator', destination: 'https://dredd-generator.vercel.app' },
       { source: '/dredd-generator/:path*', destination: 'https://dredd-generator.vercel.app/:path*' },
+    ]
+  },
+  async redirects() {
+    return [
+      // apegenerator and space1999 moved to their permanent home on
+      // thetable.xerosumgames.com (the always-free Xero Sum Games property).
+      // Redirect old links so they keep working. Analytics are unaffected: each
+      // generator's beacon still posts page='/apegenerator' | '/space1999' to
+      // log-visit (CORS is '*'), which the /ape-log and /space1999-log dashboards
+      // read regardless of origin. Temporary (307) for now; promote to permanent
+      // once it has settled.
+      { source: '/apegenerator', destination: 'https://thetable.xerosumgames.com/apegenerator', permanent: false },
+      { source: '/apegenerator/:path*', destination: 'https://thetable.xerosumgames.com/apegenerator/:path*', permanent: false },
+      { source: '/space1999', destination: 'https://thetable.xerosumgames.com/space1999', permanent: false },
+      { source: '/space1999/:path*', destination: 'https://thetable.xerosumgames.com/space1999/:path*', permanent: false },
     ]
   },
 };
