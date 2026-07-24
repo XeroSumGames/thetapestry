@@ -183,23 +183,37 @@ Deno.serve(async (req) => {
     const isNewVisitor = visitNumber === 1
     if (isNewVisitor && !isBot && RESEND_API_KEY && THRIVER_EMAIL && !isSuppressedCity) {
       const isGhost = !vUserId
-      const locationParts = [vCity, vRegion, vCountry].filter(Boolean)
-      const location = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown'
-      const siteLabel = vSite ? vSite.charAt(0).toUpperCase() + vSite.slice(1) : 'The Tapestry'
+      const location = [vCity, vRegion, vCountry].filter(Boolean).join(', ') || 'Unknown'
+      const locShort = [vCity, vCountry].filter(Boolean).join(', ')
 
-      const subject = isGhost
-        ? `[${siteLabel}] New Visitor${locationParts.length > 0 ? ' - ' + [vCity, vCountry].filter(Boolean).join(', ') : ''}`
-        : `[${siteLabel}] Survivor Active${locationParts.length > 0 ? ' - ' + [vCity, vCountry].filter(Boolean).join(', ') : ''}`
+      // Which SITE was hit, in plain brand terms. site is set by the beacon or
+      // inferred from Origin above; fall back to the umbrella brand.
+      const SITE_NAMES: Record<string, string> = {
+        tapestry: 'The Tapestry', tableau: 'The Tableau', table: 'The Table',
+      }
+      const siteLabel = (vSite && SITE_NAMES[vSite]) || 'Xero Sum Games'
+
+      const kind = isGhost ? 'New Visitor' : 'Signed-in User'
+      const subject = `[${siteLabel}] ${kind}${locShort ? ' - ' + locShort : ''}`
 
       const now = new Date().toLocaleString('en-US', {
         weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
       })
 
-      const deviceLine = `Device: ${vDevice}${vBrowser ? ' / ' + vBrowser : ''}${vOs ? ' / ' + vOs : ''}`
-      const visitLine = `Visit number: first visit from this IP.`
+      const device = `${vDevice}${vBrowser ? ' / ' + vBrowser : ''}${vOs ? ' / ' + vOs : ''}`
+      const pageLine = vFullPath && vFullPath !== vPage ? `${vPage}  (${vFullPath})` : (vPage ?? 'unknown')
 
-      const body = `A ${isGhost ? 'visitor just arrived at' : 'survivor is active on'} ${siteLabel}.\n\nPage: ${vPage}\nLocation: ${location}\n${deviceLine}\nTime: ${now}\nReferrer: ${vReferrer || 'Direct'}\nSession: ${vSession?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
+      const body = [
+        `Site:     ${siteLabel}`,
+        `Page:     ${pageLine}`,
+        `Visitor:  ${isGhost ? 'New (first visit from this IP)' : 'Signed-in user'}`,
+        `Location: ${location}`,
+        `Device:   ${device}`,
+        `Referrer: ${vReferrer || 'Direct'}`,
+        `Time:     ${now}`,
+        `Session:  ${vSession?.slice(0, 8) ?? 'unknown'}`,
+      ].join('\n')
 
       const sendEmail = async () => {
         try {
@@ -210,7 +224,7 @@ Deno.serve(async (req) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              from: 'The Tapestry <noreply@distemperverse.com>',
+              from: 'Xero Sum Games <noreply@distemperverse.com>',
               to: 'xerosumstudio@gmail.com',
               subject,
               text: body,
