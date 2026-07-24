@@ -97,7 +97,16 @@ Deno.serve(async (req) => {
 
     // Enrichment fields (2026-07-24). All optional + nullable; older beacons that
     // don't send them just log null. site distinguishes tapestry/tableau/table.
-    const vSite = clip(site, 16)
+    // If the beacon didn't send a site, infer it from the request Origin - this
+    // tags every caller (the static generators + not-yet-updated apps) correctly
+    // with zero client changes. An explicit body.site always wins.
+    let vSite = clip(site, 16)
+    if (!vSite) {
+      const origin = (req.headers.get('origin') ?? req.headers.get('referer') ?? '').toLowerCase()
+      if (origin.includes('thetable.xerosumgames.com')) vSite = 'table'
+      else if (origin.includes('thetableau.xerosumgames.com')) vSite = 'tableau'
+      else if (origin.includes('distemperverse.com')) vSite = 'tapestry'
+    }
     const vFullPath = clip(full_path, 512)
     const vLang = clip(language, 32)
     const vScreenW = int(screen_w)
