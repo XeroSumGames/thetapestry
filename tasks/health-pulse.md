@@ -6,6 +6,32 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-24 18:06 UTC
+
+**Status:** RED+DRIFT (vulns + HOPED-FOR unchanged; 4 new commits landed since 15:05 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [3 high, 0 critical] - postcss XSS+file-read HIGH, sharp libvips CVE chain HIGH, next transitive HIGH. Unchanged.
+
+**CI:** last 5 runs all success (latest 2026-07-24T17:38:32Z)
+
+**New commits since last pulse:**
+- `a08ae6c` fix(H10): Party Rest + Travel GM-gating + race-condition hardening -- closes HIGH bug-audit item; Rest now advances clock once (not once-per-PC); GM-gated; sickness Day-0 Stress pip fixed; Travel logs roll back on clock-advance failure
+- `75d3080` feat(dredd-generator): proxy /dredd-generator + Thriver-only visitor dashboard
+- `9b7b836` Redirect /apegenerator + /space1999 to their new home on thetable
+- `4706761` Analytics: enrich visitor_logs (device/UTM/dwell) + unified site column
+
+**Drift:**
+- vehicle popout broadcasts (Section B): >60 days unplaytested, no code changes
+- stress-check 12-string: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: useRollResolution.ts:264 never fired in live play
+- Stale todos still open: broken-weapon alert() (page.tsx:5994 area), vehicles 3s poll (page.tsx:3090 area), CampaignMap fingerprint
+
+**Action:** H10 Rest/Travel fix is the notable ship -- verify it at the table (party rest once, clock advances once, all PCs recover). Persistent: 3 HIGH vulns (next major upgrade) + 3 HOPED-FOR items need a playtest run.
+
+---
+
 ## 2026-07-24 15:05 UTC
 
 **Status:** RED+DRIFT (no change since 12:08 UTC)
