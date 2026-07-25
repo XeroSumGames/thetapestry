@@ -63,6 +63,18 @@ Deno.serve(async (req) => {
     })
     if (error) return json({ ok: false, error: 'insert_failed' }, 500)
 
+    // Also capture the reporter's email into the launch mailing list (Xero's
+    // request), tagged source='report-issue' + site=<generator> so it's
+    // distinguishable from real launch signups in /mailinglist. Best-effort.
+    if (vEmail) {
+      await supabase
+        .from('launch_signups')
+        .upsert(
+          { email: vEmail, site: vSource || 'report', source: 'report-issue' },
+          { onConflict: 'email,site', ignoreDuplicates: true }
+        )
+    }
+
     const response = json({ ok: true })
 
     if (RESEND_API_KEY) {
