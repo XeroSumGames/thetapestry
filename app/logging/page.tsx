@@ -11,6 +11,7 @@ interface VisitorLog {
   id: string
   session_id: string
   page: string
+  site?: string | null
   referrer: string | null
   is_ghost: boolean
   ip_address: string | null
@@ -36,6 +37,7 @@ export default function LoggingPage() {
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'visitors' | 'events'>('visitors')
+  const [site, setSite] = useState<'all' | 'tapestry' | 'tableau' | 'table'>('all')
   const [visitors, setVisitors] = useState<VisitorLog[]>([])
   const [visitorFilter, setVisitorFilter] = useState('')
   const [excludeTerms, setExcludeTerms] = useState<string[]>([])
@@ -56,6 +58,7 @@ export default function LoggingPage() {
   const [uniqueCountries, setUniqueCountries] = useState(0)
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
+  const markerLayerRef = useRef<any>(null)
 
   useEffect(() => {
     async function load() {
@@ -69,6 +72,13 @@ export default function LoggingPage() {
         const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
         const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
+        // Site filter: 'all' = no filter; 'tapestry' also includes legacy rows
+        // logged before the site column existed (site IS NULL).
+        const applySite = (q: any) =>
+          site === 'all' ? q
+            : site === 'tapestry' ? q.or('site.eq.tapestry,site.is.null')
+            : q.eq('site', site)
+
         const [
           { data: vData, count: vCount },
           { data: eData, count: eCount },
@@ -79,12 +89,12 @@ export default function LoggingPage() {
           { count: pp },
           { count: pn },
         ] = await Promise.all([
-          supabase.from('visitor_logs').select('id, page, user_id, is_ghost, ip_address, ip_hash, country_code, region, city, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
+          applySite(supabase.from('visitor_logs').select('id, page, site, user_id, is_ghost, ip_address, ip_hash, country_code, region, city, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(100)),
           supabase.from('user_events').select('id, user_id, event_type, metadata, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
           supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', d7),
           supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', d30),
           supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('session_status', 'active'),
-          supabase.from('visitor_logs').select('id', { count: 'exact', head: true }).eq('is_ghost', true).gte('created_at', d7),
+          applySite(supabase.from('visitor_logs').select('id', { count: 'exact', head: true }).eq('is_ghost', true).gte('created_at', d7)),
           supabase.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
           supabase.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         ])
@@ -96,7 +106,7 @@ export default function LoggingPage() {
         setPendingNpcs(pn ?? 0)
 
         // Top pages - resolve campaign UUIDs to names
-        const { data: visitRows } = await supabase.from('visitor_logs').select('page').gte('created_at', d7)
+        const { data: visitRows } = await applySite(supabase.from('visitor_logs').select('page').gte('created_at', d7))
         const pageCounts: Record<string, number> = {}
         for (const row of visitRows ?? []) pageCounts[row.page] = (pageCounts[row.page] ?? 0) + 1
         const topRaw = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10)
@@ -142,7 +152,7 @@ export default function LoggingPage() {
         }
         setEventCount(eCount ?? 0)
         // Fetch visitor map data - grouped by ip_hash
-        const { data: mapRows } = await supabase.rpc('get_visitor_map_data')
+        const { data: mapRows } = await supabase.rpc('get_visitor_map_data', site === 'all' ? {} : { p_site: site })
         if (mapRows) {
           setVisitorMapData(mapRows)
           setUniqueVisitors(mapRows.length)
@@ -154,21 +164,31 @@ export default function LoggingPage() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [site])
 
-  // Render visitor map
+  // Render visitor map. Inits once, then re-draws its markers whenever the data
+  // changes (e.g. switching the site filter) via a dedicated marker layer.
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current || visitorMapData.length === 0) return
-    async function initMap() {
+    if (!mapRef.current) return
+    let cancelled = false
+    async function render() {
       const L = (await import('leaflet')).default
       await import('leaflet/dist/leaflet.css')
-      if (!mapRef.current || mapInstanceRef.current) return
+      if (cancelled || !mapRef.current) return
 
-      const map = L.map(mapRef.current, { center: [20, 0], zoom: 2, zoomControl: true, minZoom: 2 })
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CARTO', maxZoom: 19,
-      }).addTo(map)
+      let map = mapInstanceRef.current
+      if (!map) {
+        map = L.map(mapRef.current, { center: [20, 0], zoom: 2, zoomControl: true, minZoom: 2 })
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; CARTO', maxZoom: 19,
+        }).addTo(map)
+        mapInstanceRef.current = map
+        markerLayerRef.current = L.layerGroup().addTo(map)
+        setTimeout(() => map.invalidateSize(), 100)
+      }
 
+      const layer = markerLayerRef.current
+      layer.clearLayers()
       visitorMapData.forEach(v => {
         if (!v.lat || !v.lng) return
         const size = Math.min(20, 6 + Math.floor(v.visit_count / 2))
@@ -189,13 +209,11 @@ export default function LoggingPage() {
             </div>
           </div>
         `)
-        marker.addTo(map)
+        marker.addTo(layer)
       })
-
-      mapInstanceRef.current = map
-      setTimeout(() => map.invalidateSize(), 100)
     }
-    initMap()
+    render()
+    return () => { cancelled = true }
   }, [visitorMapData])
 
   function formatDateTime(iso: string) {
@@ -239,6 +257,31 @@ export default function LoggingPage() {
         </div>
         <div style={{ flex: 1 }} />
         <Link href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</Link>
+      </div>
+
+      {/* Site selector - which property's logs to view */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {([
+          ['all', 'All Sites', '#8a8a8a'],
+          ['tapestry', 'The Tapestry', '#c0392b'],
+          ['tableau', 'The Tableau', '#7ab3d4'],
+          ['table', 'The Table', '#b8873f'],
+        ] as const).map(([key, label, color]) => {
+          const active = site === key
+          return (
+            <button key={key} onClick={() => setSite(key)} style={{
+              padding: '8px 16px',
+              border: `1px solid ${active ? color : '#3a3a3a'}`,
+              borderLeft: `4px solid ${color}`,
+              background: active ? '#242424' : '#1a1a1a',
+              color: active ? '#f5f2ee' : '#cce0f5',
+              borderRadius: '3px', cursor: 'pointer',
+              fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+              letterSpacing: '.06em', textTransform: 'uppercase',
+              fontWeight: active ? 700 : 400,
+            }}>{label}</button>
+          )
+        })}
       </div>
 
       {/* Stat cards */}
@@ -361,7 +404,10 @@ export default function LoggingPage() {
                 return haystack.includes(visitorFilter.trim().toLowerCase())
               }).map(v => (
                 <div key={v.id} style={{ display: 'flex', padding: '6px 12px', borderBottom: '1px solid #2e2e2e', alignItems: 'center' }}>
-                  <div style={{ flex: 2, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.page}</div>
+                  <div style={{ flex: 2, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                    {v.site && <span style={{ fontSize: '13px', padding: '0 6px', borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '.04em', color: '#0d0d0d', fontWeight: 700, flexShrink: 0, background: v.site === 'tableau' ? '#7ab3d4' : v.site === 'table' ? '#b8873f' : '#c0392b' }}>{v.site}</span>}
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.page}</span>
+                  </div>
                   <div style={{ flex: 1, fontSize: '13px', color: v.username ? '#7fc458' : '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {v.username ?? (v.is_ghost ? 'Ghost' : 'User')}
                   </div>
