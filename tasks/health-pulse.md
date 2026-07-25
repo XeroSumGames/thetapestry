@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-25 15:06 UTC
+
+**Status:** RED+DRIFT (unchanged from 12:06 UTC; 2 new commits landed, both CI green)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - unchanged (postcss XSS+file-read; sharp libvips CVE-2026-33327/28/35590/91; minimatch+brace-expansion DoS via ESLint dev-dep chain)
+
+**CI:** last 5 runs all success (latest: "Add launch-list + report-issue" 14:15 UTC, "Add launch-signup capture" 13:56 UTC)
+
+**Drift:** same as 12:06 UTC - no remediation taken
+- H10 stale-todo: CharacterCard Rest/Travel GM-gating fix (`a08ae6c`) still `- [ ]` in todo.md
+- vehicle popout broadcasts (Section B): >60 days, no code change
+- stress-check 12-string: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: useRollResolution.ts:264 never fired in live play
+
+**Action:** No new action - conditions identical to 12:06 UTC. Mark H10 todo [x]; 12 HIGH audit chain persists.
+
+---
+
 ## 2026-07-25 12:06 UTC
 
 **Status:** RED+DRIFT (no change from 09:03 UTC)
