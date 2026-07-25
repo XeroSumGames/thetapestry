@@ -6,6 +6,33 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-25 00:07 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] -- ESCALATED from 3 HIGH (previous pulse).
+- New chain: minimatch + brace-expansion HIGH, cascading to 8 ESLint packages
+  (@eslint/config-array, @eslint/eslintrc, eslint, eslint-config-next,
+  eslint-plugin-import, eslint-plugin-jsx-a11y, eslint-plugin-react, minimatch)
+- Existing: postcss XSS+file-read, sharp libvips CVE chain (unchanged)
+- Note: minimatch/ESLint chain is dev-dep only; runtime risk is the existing postcss/sharp
+
+**CI:** last 5 runs all success (latest 2026-07-24T22:45:28Z)
+
+**Drift:**
+- vehicle popout broadcasts (Section B): >60 days unplaytested, no code changes
+- stress-check 12-string: 8 strings uncaptured (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) -- deferred to Beta-500
+- FI Insight Die award path: useRollResolution.ts:264 never fired in live play
+- Stale-todo: item 40 [HIGH-HP] Rest/Travel clock fix -- `a08ae6c` landed it 2026-07-24; still `- [ ]` in todo.md -- audit-correction needed
+
+**Action:** Audit escalated 3->12 HIGH; new minimatch/brace-expansion chain is dev-only risk but worth a check (`npm audit` details above). Mark todo item 40 complete (H10 shipped).
+
+- Note: this pulse entry uses ASCII hyphens only (per todo item 67 re em-dash rule in health-pulse.md)
+
+---
+
 ## 2026-07-24 18:06 UTC
 
 **Status:** RED+DRIFT (vulns + HOPED-FOR unchanged; 4 new commits landed since 15:05 UTC)
