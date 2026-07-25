@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-25 09:03 UTC
+
+**Status:** RED+DRIFT (unchanged from 00:07 UTC - same conditions persist)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same chain as 00:07 UTC (postcss XSS+file-read+path-traversal, sharp libvips CVE-2026-33327, minimatch/brace-expansion DoS via ESLint chain - dev-only; runtime risk is postcss+sharp)
+
+**CI:** last 5 runs all success (latest 2026-07-25T03:15:31Z)
+
+**Drift:** same as 00:07 UTC - no remediation taken:
+- H10 stale-todo: `a08ae6c` landed 2026-07-24, Rest/Travel GM-gating fix, still `- [ ]` in todo.md
+- vehicle popout broadcasts (Section B): ~61 days, no code change
+- stress-check 12-string: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- FI Insight Die award path: useRollResolution.ts:264 never fired in live play
+
+**Action:** Same as 00:07 UTC - mark H10 todo [x]; 12 HIGH audit chain unresolved.
+
+---
+
 ## 2026-07-25 00:07 UTC
 
 **Status:** RED+DRIFT
