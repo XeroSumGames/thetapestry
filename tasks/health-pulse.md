@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-25 21:04 UTC
+
+**Status:** RED+DRIFT (unchanged from 18:06 UTC; 0 new commits since last pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - unchanged (postcss XSS+file-read; sharp libvips CVE-2026-33327/28/35590/91; fix requires Next.js major bump)
+
+**CI:** last 5 runs all success (latest: 18:07 UTC)
+
+**Drift:** unchanged from 18:06 UTC - no code changes
+- vehicle popout broadcasts (Section B): >60 days HOPED-FOR, no code activity
+- stress-check 12-string: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE still uncaptured
+- FI Insight Die award path: useRollResolution.ts:264 never fired in live play
+
+**Action:** No new findings. Outstanding: 12 HIGH audit (postcss XSS + sharp libvips CVEs) - decision needed on Next.js major upgrade path before Beta-500.
+
+---
+
 ## 2026-07-25 18:06 UTC
 
 **Status:** RED+DRIFT (unchanged from 15:06 UTC; 1 new commit `485c71c` report-issue/launch_signups, no remediation)
