@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-26 09:04 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - RETURNED after 06:04 UTC clearing; advisories oscillating (postcss XSS+file-read; sharp libvips CVEs). No package changes between 06:04 and now. Advisory DB is unstable - the 06:04 "cleared" was not a real fix. Actual fix still requires Next.js major bump (see 00:06 entry).
+
+**CI:** last 5 runs all success (latest: 2026-07-26 06:07 UTC)
+
+**Drift:**
+- vehicle popout broadcasts (Section B): >60 days HOPED-FOR, no code activity in 3 days
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): still HOPED-FOR, no code activity
+- FI Insight Die award path (useRollResolution.ts:264): still HOPED-FOR, never fired in live play
+
+**Action:** (1) 12 HIGH audit oscillating - the 06:04 "cleared" was advisory-DB noise; Next.js major bump is still the real fix path (decision needed before Beta-500). (2) H10 CharacterCard clock bug flagged as shipped at 06:04 but todo.md still has it open - HP needs to mark [x].
+
+---
+
 ## 2026-07-26 06:04 UTC
 
 **Status:** DRIFT
