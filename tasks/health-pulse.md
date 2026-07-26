@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-26 18:05 UTC
+
+**Status:** RED+DRIFT (unchanged from 15:07 UTC - no code commits between runs)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same ESLint/minimatch/brace-expansion dev-dep chain; not runtime.
+
+**CI:** last 5 runs all success (latest: 2026-07-26 15:07 UTC)
+
+**Drift:** unchanged from 15:07 UTC
+- vehicle popout broadcasts (Section B): >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): still HOPED-FOR
+- FI Insight Die award path (useRollResolution.ts:264): never fired in live play
+- H10 stale-todo: CharacterCard Rest/Travel still marked [ ] in todo.md; fix shipped `a08ae6c` (2026-07-24)
+
+**Action:** No new findings. Outstanding: (1) Next.js bump to clear 12 HIGH audit before Beta-500. (2) Mark H10 [SHIPPED] in todo.md.
+
+---
+
 ## 2026-07-26 15:07 UTC
 
 **Status:** RED+DRIFT (unchanged from 12:05 UTC - no code commits since)
