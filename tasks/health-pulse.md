@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-26 06:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [0 high, 0 critical] -- CLEARED (was 12 HIGH at 00:06 UTC; postcss/sharp advisories no longer flagged by npm registry -- no package change in this window, advisory database updated server-side)
+
+**CI:** last 5 runs all success (latest: 2026-07-26 00:08 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity in 3 days
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): still HOPED-FOR
+- FI Insight Die award path (useRollResolution.ts:264): never fired in live play
+- STALE TODO: "[HIGH - HP] CharacterCard.tsx:1293/:680 per-character Rest/Travel advances shared clock" is still marked [ ] open in todo.md, but commit a08ae6c (2026-07-24) "fix(H10): Party Rest + Travel GM-gating + race-condition hardening" explicitly resolves it (Bug A: Per-PC Rest multiplying clock by party size). Needs audit mark [x] + [SHIPPED] in todo.
+
+**Action:** (1) Mark H10 CharacterCard clock bug [SHIPPED] in todo.md -- it shipped 2026-07-24. (2) 12 HIGH audit is now gone -- no action needed. (3) 3 HOPED-FOR items remain unverified; drain target still Beta-500 dry-run.
+
+---
+
 ## 2026-07-26 00:06 UTC
 
 **Status:** RED+DRIFT (unchanged from 21:04 UTC; only new commit is the health-pulse commit itself)
