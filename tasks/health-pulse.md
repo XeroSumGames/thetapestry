@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-26 21:03 UTC
+
+**Status:** RED+DRIFT (unchanged from 18:05 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same ESLint/minimatch/brace-expansion dev-dep chain; not runtime.
+
+**CI:** last 5 runs all success (latest: 2026-07-26 18:08 UTC)
+
+**Drift:**
+- vehicle popout broadcasts (Section B): >60 days HOPED-FOR, no code activity (pending 2026-05-25 Minnie playtest that never closed out)
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): still HOPED-FOR in Confidence Ledger
+- H10 stale-todo: CharacterCard Rest/Travel fix shipped `a08ae6c` (2026-07-24) per commit msg; todo.md still shows open [ ] - needs [x] mark
+
+**Action:** (1) Decision needed on Next.js bump to clear 12 HIGH audit before Beta-500. (2) Mark H10 [x SHIPPED 2026-07-24] in todo.md. (3) Vehicle popout HOPED-FOR is >60 days stale - schedule a deliberate 2-client verify or downgrade to known gap.
+
+---
+
 ## 2026-07-26 18:05 UTC
 
 **Status:** RED+DRIFT (unchanged from 15:07 UTC - no code commits between runs)
