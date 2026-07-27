@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-27 00:07 UTC
+
+**Status:** DRIFT (no code changes since 21:03 UTC; all gates clean)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - ESLint/minimatch/brace-expansion dev-dep chain + next via postcss/sharp (build-time, not runtime user-facing). Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-26T21:07 UTC)
+
+**Drift:**
+- vehicle popout broadcasts (Section B): >60 days HOPED-FOR, no code activity; pending a deliberate 2-client verify that hasn't happened
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): still HOPED-FOR in Confidence Ledger; drain target is Beta-500 dry-run
+- H10 stale-todo: CharacterCard Rest/Travel fix confirmed shipped `a08ae6c` (2026-07-24); todo.md still shows [ ] open - needs [x] mark
+
+**Action:** Same as 21:03 UTC - no new fires. Persistent: (1) Mark H10 [SHIPPED] in todo.md. (2) Vehicle popout >60-day HOPED-FOR - schedule or downgrade.
+
+---
+
 ## 2026-07-26 21:03 UTC
 
 **Status:** RED+DRIFT (unchanged from 18:05 UTC)
