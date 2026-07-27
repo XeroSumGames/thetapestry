@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-27 21:05 UTC
+
+**Status:** DRIFT (unchanged from 18:06 UTC entry - 7th flag today, no new commits)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same as prior entries; production-dep HIGH: postcss (XSS + path traversal CVEs), sharp (libvips CVE-2026-33327/33328/35590/35591). Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-27T18:10 UTC)
+
+**Drift:** (no movement since 18:06 entry)
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): HOPED-FOR, untouched
+- H10 [CharacterCard Rest/Travel]: confirmed shipped a08ae6c 2026-07-24; todo.md checkbox still [ ]
+
+**Action:** No change since 18:06. Mark H10 [x] in todo.md. Vehicle popout + stress-check strings need a playtest window or explicit defer to post-KS.
+
+---
+
 ## 2026-07-27 18:06 UTC
 
 **Status:** DRIFT (unchanged from 15:08 UTC entry - same 3 items, no new issues)
