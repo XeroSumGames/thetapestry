@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-27 12:14 UTC
+
+**Status:** DRIFT (no code changes since 09:11 UTC CI run; all gates clean)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - ESLint/minimatch/brace-expansion dev-dep chain + next via postcss/sharp. Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-27T09:11 UTC)
+
+**Drift:** (unchanged from 09:08 UTC)
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): HOPED-FOR, untouched
+- H10 [CharacterCard Rest/Travel] confirmed shipped a08ae6c 2026-07-24; todo.md still shows [ ] open
+
+**Action:** Persistent - same 3 items. (1) Mark H10 [x] in todo.md. (2) Vehicle popout >60-day HOPED-FOR - schedule 2-client verify or move to known-gap.
+
+---
+
 ## 2026-07-27 09:08 UTC
 
 **Status:** DRIFT (no code changes since 06:12 UTC; all gates clean)
