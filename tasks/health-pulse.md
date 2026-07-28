@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-28 15:12 UTC
+
+**Status:** DRIFT (x12+ consecutive - same 3 items unchanged, no code commits since 09:09 UTC entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - persistent: eslint chain (dev-only), postcss XSS/path-traversal, sharp libvips CVEs. Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-28T12:25 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR, untouched
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+
+**Action:** 12+ consecutive DRIFT flags on same 3 items. Explicit scheduling decision needed - assign to next playtest session or defer to post-KS in todo.md.
+
+---
+
 ## 2026-07-28 12:24 UTC
 
 **Status:** DRIFT (x11+ consecutive - same 3 items, no commits since 09:09 UTC entry)
