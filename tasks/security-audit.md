@@ -8,6 +8,45 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-07-28 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (new brace-expansion advisory, eslint chain HIGH), rate-limit / DoS (carry-over), dependency drift (carry-over)
+
+**Closed since last audit (2026-07-21):**
+- `js-yaml` HIGH CVSS 7.5 (quadratic DoS in YAML merge keys) — **GONE from npm audit** — resolved.
+
+**Sections clean this cycle:** auth/role gates (guardrail: 356 files, 0 violations; raw `.role` accesses confirmed display-only or routed through `roleIsThriver()`), RLS gaps (all mutated tables have matching RLS SQL files in `sql/_baseline/`), file uploads (all paths confirmed through `prepareUpload` — avatar: `prepareUpload('account-avatars', ...)` at account/page.tsx:116 before resize; war-stories, session-attachments, tactical-maps: all via `prepareUpload`), secrets exposure (no committed .env files; edge functions use `Deno.env.get()` only — no hardcoded values), injection/XSS (`dangerouslySetInnerHTML` in `app/layout.tsx:56` is a static inline script; `innerHTML` in `app/stories/[id]/table/page.tsx:7958` sets a hardcoded static string — neither user-controlled), SQL injection (no raw SQL string concatenation found), permission boundaries (no novel raw-role-comparison shapes; `getProfileRole()` helpers in lib/ fetch raw role from DB then callers use `roleIsThriver()` canonical helper).
+
+### npm audit (moderate+)
+
+**NEW HIGH (brace-expansion OOM advisory — escalation of prior CVSS 5.3 finding):**
+- `brace-expansion` <=5.0.7 — HIGH — CVSS 7.5 — GHSA-mh99-v99m-4gvg — "DoS via unbounded expansion length causing OOM process crash" — transitive (via minimatch -> eslint chain) — fix: breaking (eslint@10.8.0 / eslint-config-next major version bump required). All dev deps only; no runtime exposure.
+- Full eslint chain affected: `eslint` (direct), `eslint-config-next` (direct), `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, `eslint-plugin-react`, `minimatch`, `@eslint/config-array`, `@eslint/eslintrc` — all HIGH via same brace-expansion root.
+
+**CARRY-OVER (unchanged):**
+- `postcss` 8.4.31 — moderate — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — fix: blocked on breaking next major downgrade — low runtime risk (build-time only)
+- `next` — moderate — isDirect: true — via postcss chain — fix: spurious breaking downgrade advisory — hold
+- `@sentry/nextjs` >=6.3.6 — moderate — isDirect: true — via next chain — fix: spurious downgrade advisory — hold
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` — GET, unauthenticated — DB ping cached 10s (per-instance only, not shared across serverless instances) — **no HTTP-level rate limit — 10th consecutive audit carry-over** — Upstash sliding window (10 req/min per IP) needed before paid launch.
+
+### Dependency drift
+
+- `@supabase/supabase-js` — 2.100.1 installed → 2.111.0 latest — **10th consecutive audit carry-over** — auth-adjacent; changelog review before bump.
+- `@supabase/ssr` — 0.9.0 installed → 0.12.4 latest — **10th consecutive audit carry-over** — auth-adjacent staleness rising.
+- `@sentry/nextjs` — installed → 10.68.0 latest — bump clears advisory chain; minor versions behind.
+- `@upstash/ratelimit` — behind (2.0.8 latest) — rate-limiting surface; review before bump.
+- `@upstash/redis` — behind (1.38.0 latest) — pairs with ratelimit dep.
+
+**Top 3 priorities:**
+1. `app/api/health/route.ts` — 10 audits deferred; add Upstash 10/min sliding window. Hard deadline: before paid launch. DB cache is in place but HTTP flood is still unthrottled.
+2. `@supabase/supabase-js` 2.100.1 → 2.111.0 and `@supabase/ssr` 0.9.0 → 0.12.4 — 10 audits deferred; auth-adjacent staleness is the accumulating risk vector.
+3. `brace-expansion` CVSS 7.5 OOM — new severity escalation; fix is a breaking eslint major bump (eslint@10 + eslint-config-next upgrade). Dev-only risk, but CVSS 7.5 warrants scheduling. Plan the eslint upgrade; test lint pipeline after.
+
+---
+
 ## 2026-07-21 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (2 NEW HIGH + 3 carry-overs), rate-limit / DoS (carry-over), dependency drift
