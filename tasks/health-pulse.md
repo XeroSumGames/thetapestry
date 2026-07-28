@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-28 21:05 UTC
+
+**Status:** DRIFT (x14+ consecutive - same 3 HOPED-FOR items, no code movement since 16:27 UTC security-audit commit)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same persistent: eslint/minimatch/brace-expansion chain (dev-only DoS), postcss XSS, sharp libvips CVEs (CVE-2026-33327/28/35590/91). Documented in tasks/security-audit.md (45a1e03). No change.
+
+**CI:** last 5 runs all success (latest: 2026-07-28T18:08 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR, untouched since 2026-06-16
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+
+**Stale-todo spot check:** alert() at page.tsx:6013-6015 (broken-weapon/ammo/throws gates) - confirmed still present. Vehicles 3s poll at page.tsx:3106 - confirmed still present. Both match open todo entries, no shipping evidence.
+
+**Action:** 14+ consecutive DRIFT flags, identical items. Action item from prior entries still pending: formally schedule these 3 HOPED-FOR items for the next playtest session OR defer to post-KS in todo.md.
+
+---
+
 ## 2026-07-28 18:04 UTC
 
 **Status:** DRIFT (x13+ consecutive - same 3 items; security-audit.md updated 16:27 UTC by Puffer noting brace-expansion CVSS 7.5 advisory)
