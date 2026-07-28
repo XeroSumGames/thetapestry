@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-28 00:14 UTC
+
+**Status:** DRIFT (unchanged from 2026-07-27 21:05 UTC - same 3 items, no new commits since)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same persistent items: eslint chain (dev-only) + postcss XSS/path-traversal CVEs + sharp libvips CVEs. Unchanged for days.
+
+**CI:** last 5 runs all success (latest: 2026-07-27T21:07 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE): HOPED-FOR, untouched
+- H10 [CharacterCard Rest/Travel]: confirmed shipped a08ae6c 2026-07-24; todo.md checkbox still [ ] - needs manual [x]
+
+**Action:** These 3 items have been flagged 8+ consecutive pulses. Either assign them to the next playtest window or explicitly defer to post-KS. Mark H10 [x] in todo.md.
+
+---
+
 ## 2026-07-27 21:05 UTC
 
 **Status:** DRIFT (unchanged from 18:06 UTC entry - 7th flag today, no new commits)
