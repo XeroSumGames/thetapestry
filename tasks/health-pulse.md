@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-28 06:12 UTC
+
+**Status:** DRIFT (unchanged from 00:14 UTC - no commits since then)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same persistent items: eslint chain (dev-only) + postcss + sharp CVEs
+
+**CI:** last 5 runs all success (latest: 2026-07-28T00:16 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: >60 days HOPED-FOR, no activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR, untouched
+- stale-todo: health-pulse em-dash todo (todo.md ~line 67) appears resolved - current pulse entries already use ASCII hyphens; verify and mark [x] if confirmed
+
+**Action:** 9+ consecutive DRIFT flags on same 3 items. Assign to next playtest or defer post-KS. Close em-dash todo if resolved.
+
+---
+
 ## 2026-07-28 00:14 UTC
 
 **Status:** DRIFT (unchanged from 2026-07-27 21:05 UTC - same 3 items, no new commits since)
