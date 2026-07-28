@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
 // Health-check endpoint for uptime monitors (Pingdom, StatusCake, etc).
 // Pre-launch audit R5. Returns 200 when the app + Supabase DB are both
@@ -12,12 +14,11 @@ import { createClient } from '@supabase/supabase-js'
 // count is computed (the value was never read) - head + limit(1) keeps it O(1).
 //
 // DB-amplification guard (stability-audit 2026-06-29, M-1): this endpoint is
-// unauthenticated and unthrottled, so a flood of probes could amplify into a
-// flood of DB round-trips. A short in-memory success cache collapses that to
-// at most one DB ping per warm instance per CACHE_TTL_MS. ONLY success is
-// cached - a failing or over-TTL probe always re-checks the DB, so a real
-// outage still surfaces on the very next poll. The success response shape is
-// byte-identical cached vs live, so uptime monitors see no contract change.
+// unauthenticated, so a flood of probes could amplify into a flood of DB
+// round-trips. Two guards:
+//   1. In-memory success cache (10s TTL per instance) collapses per-instance load.
+//   2. Upstash sliding-window rate limit (10 req/min per IP) closes the HTTP
+//      flood surface across all instances (security-audit 2026-07-28 fix).
 //
 // Output shape:
 //   { status: 'ok' | 'degraded', checks: { db: 'ok' | 'fail' }, ms: <int>, ts: <ISO> }
@@ -32,8 +33,48 @@ export const revalidate = 0
 const CACHE_TTL_MS = 10_000
 let cachedOkAt = 0  // epoch ms of the last successful DB ping (0 = none yet)
 
-export async function GET() {
+// 10 req/min per IP is generous for any legitimate uptime monitor (most ping
+// every 1-5 min) while blocking flood attempts. Fails open if Upstash is
+// misconfigured - the DB cache is the primary amplification guard.
+let _ratelimit: Ratelimit | null | undefined
+function getRatelimit(): Ratelimit | null {
+  if (_ratelimit !== undefined) return _ratelimit
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) { _ratelimit = null; return null }
+  _ratelimit = new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(10, '60 s'),
+    prefix: 'health',
+    analytics: false,
+  })
+  return _ratelimit
+}
+
+function getClientIp(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for')
+  if (xff) return xff.split(',')[0].trim()
+  return req.headers.get('x-real-ip') || 'unknown'
+}
+
+export async function GET(req: NextRequest) {
   const start = Date.now()
+
+  const limiter = getRatelimit()
+  if (limiter) {
+    try {
+      const { success, reset } = await limiter.limit(getClientIp(req))
+      if (!success) {
+        const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
+        return NextResponse.json(
+          { status: 'degraded', checks: { db: 'skip' }, ms: 0, ts: new Date().toISOString() },
+          { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
+        )
+      }
+    } catch {
+      // Upstash error - fail open, DB cache is still in place.
+    }
+  }
 
   // Serve a recent healthy result without touching the DB.
   if (cachedOkAt && start - cachedOkAt < CACHE_TTL_MS) {
