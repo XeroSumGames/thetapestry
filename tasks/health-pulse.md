@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-28 18:04 UTC
+
+**Status:** DRIFT (x13+ consecutive - same 3 items; security-audit.md updated 16:27 UTC by Puffer noting brace-expansion CVSS 7.5 advisory)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same persistent: eslint/minimatch/brace-expansion chain (dev-only DoS), postcss XSS, sharp libvips CVEs (CVE-2026-33327/28/35590/91). Documented in tasks/security-audit.md (commit 45a1e03).
+
+**CI:** last 5 runs all success (latest: 2026-07-28T16:28 UTC, post security-audit commit)
+
+**Drift:**
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR, untouched since 2026-06-16
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+
+**Action:** Same 3 drift items x13+ consecutive with no code movement. Needs explicit scheduling - assign to next playtest session or formally defer to post-KS in todo.md.
+
+---
+
 ## 2026-07-28 15:12 UTC
 
 **Status:** DRIFT (x12+ consecutive - same 3 items unchanged, no code commits since 09:09 UTC entry)
