@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-29 06:09 UTC
+
+**Status:** DRIFT (x16 consecutive - same 3 HOPED-FOR items, no code movement since prior entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same persistent: eslint/minimatch/brace-expansion (dev-only DoS), postcss XSS, sharp libvips CVEs. Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-29T05:18 UTC - new pass since prior entry)
+
+**Drift:**
+- vehicle popout broadcasts: >60 days HOPED-FOR, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR since 2026-06-16, untouched
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+
+**Action:** x16 consecutive same drift - no new signal. Action from prior entries still pending: assign these 3 items to next playtest or formally defer to post-KS in todo.md.
+
+---
+
 ## 2026-07-29 00:05 UTC
 
 **Status:** DRIFT (x15 consecutive - same 3 HOPED-FOR items unchanged; security fix 260bc92 shipped post-last-pulse but covers health-route/supabase/sentry, not drift items)
