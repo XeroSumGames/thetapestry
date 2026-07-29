@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
       // the /dredd-generator-log dashboard. Stable production alias, not the hash.
       { source: '/dredd-generator', destination: 'https://dredd-generator.vercel.app' },
       { source: '/dredd-generator/:path*', destination: 'https://dredd-generator.vercel.app/:path*' },
+      // walkingdead-rpg (The Walking Dead Universe RPG, Year Zero Engine). Own repo
+      // (github.com/XeroSumGames/walkingdead-rpg); runs on THIS origin so its beacon
+      // posts page='/walkingdead-rpg' to log-visit for the /walkingdead-rpg-log
+      // dashboard. Stable production alias, not the hash.
+      { source: '/walkingdead-rpg', destination: 'https://walkingdead-rpg.vercel.app' },
+      { source: '/walkingdead-rpg/:path*', destination: 'https://walkingdead-rpg.vercel.app/:path*' },
     ]
   },
   async redirects() {
