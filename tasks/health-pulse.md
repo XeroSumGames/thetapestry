@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-29 18:05 UTC
+
+**Status:** DRIFT (x20 consecutive - same 3 HOPED-FOR items, no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same carry-overs (eslint/minimatch/brace-expansion dev-only DoS, postcss XSS, sharp libvips CVEs). Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-29T15:08 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: HOPED-FOR >60 days, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR since 2026-06-16, untouched
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+- [todo audit confirm] broken-weapon alert() still at page.tsx:6013; vehicles 3s poll still at page.tsx:3106; both confirmed open
+
+**Action:** x20 same drift - no new action. Schedule 3 HOPED-FOR items for next playtest cycle.
+
+---
+
 ## 2026-07-29 15:05 UTC
 
 **Status:** DRIFT (x19 consecutive - same 3 HOPED-FOR items, no new findings)
