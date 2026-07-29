@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-29 12:08 UTC
+
+**Status:** DRIFT (x18 consecutive - same 3 HOPED-FOR items; CORRECTION: 2 prior "may have shipped" todos confirmed still open)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same carry-overs (eslint/minimatch/brace-expansion dev-only DoS, postcss XSS, sharp libvips CVEs). Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-29T09:07 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: HOPED-FOR >60 days, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR since 2026-06-16, untouched
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+- [todo audit CORRECTION] broken-weapon `alert()` confirmed still at page.tsx:6013-6015 - NOT shipped; x17 false-positive
+- [todo audit CORRECTION] vehicles 3s poll confirmed still at page.tsx:3106 - NOT shipped; x17 false-positive
+
+**Action:** x18 same drift. Broken-weapon alert + vehicles poll both still open - x17 misreported them as shipped. Assign 3 HOPED-FOR items to next playtest; fix alert()+poll in HP lane when bandwidth opens.
+
+---
+
 ## 2026-07-29 09:05 UTC
 
 **Status:** DRIFT (x17 consecutive - same 3 HOPED-FOR items; 2 stale todos may have shipped)
