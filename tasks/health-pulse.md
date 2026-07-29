@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-29 09:05 UTC
+
+**Status:** DRIFT (x17 consecutive - same 3 HOPED-FOR items; 2 stale todos may have shipped)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [928 passed / 54 files]
+
+**Audit:** npm audit [12 high, 0 critical] - same carry-overs (eslint/minimatch/brace-expansion dev-only DoS, postcss XSS, sharp libvips CVEs). Unchanged.
+
+**CI:** last 5 runs all success (latest: 2026-07-29T06:08 UTC)
+
+**Drift:**
+- vehicle popout broadcasts: HOPED-FOR >60 days, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR since 2026-06-16, untouched
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+- [todo audit] broken-weapon `alert()` (was page.tsx:5994) - no `alert(` in page.tsx now; likely shipped, mark done
+- [todo audit] vehicles 3s poll (was page.tsx:3090) - no `setInterval/refetchVehicles` in page.tsx now; likely shipped, mark done
+
+**Action:** x17 same drift - new signal: 2 todos appear shipped (broken-weapon alert + vehicles poll). Verify + mark done. Assign 3 HOPED-FOR items to next playtest or defer to post-KS.
+
+---
+
 ## 2026-07-29 06:09 UTC
 
 **Status:** DRIFT (x16 consecutive - same 3 HOPED-FOR items, no code movement since prior entry)
