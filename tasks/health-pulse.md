@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-30 15:09 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** 12 HIGH, 0 critical
+- Production-affecting: `postcss` (XSS via unescaped </style> + arbitrary file read via sourceMappingURL), `sharp` (4 libvips CVEs: CVE-2026-33327/33328/35590/35591), `next` (via both)
+- Dev-only (no runtime risk): `minimatch`/`brace-expansion` DoS via eslint ecosystem
+
+**CI:** Last 5 runs all SUCCESS (2026-07-30)
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no git activity in 3+ days; drain target was Beta-500 dry-run
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no git activity in 3+ days; awaiting playtest confirm
+- HOPED-FOR: FI Insight Die AWARD (rolling doubles) - no git activity in 3+ days; never fired in live play
+- Stale todo confirmed open: vehicles 3s poll `page.tsx:3108` setInterval still present (routed HP 2026-06-29)
+- Stale todo confirmed open: broken-weapon `alert()` `page.tsx:6015` still present (routed HP 2026-07-06)
+
+**Action:** Upgrade `sharp` + `next` to patch available versions (postcss/sharp CVEs are the only production-path HIGHs); the eslint HIGHs are dev-only and can wait.
+
+---
+
 ## 2026-07-30 12:07 UTC
 
 **Status:** DRIFT (x25 consecutive - same 3 HOPED-FOR items, no new findings)
