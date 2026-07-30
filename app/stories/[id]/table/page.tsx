@@ -77,6 +77,8 @@ import { queuePendingHeal } from '../../../../lib/campaign-clock'
 import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { sceneTokenPositions, updateToken as updateSceneToken, revealInitiativeEntry, makeTokenVisibleByNpc, setInitiativeActions, setGrappledBy, setInitiativePendingActionLoss } from '../../../../lib/data/tactical'
 import { applyDamageToPc, applyDamageToNpc, disarmAndDrop } from '../../../../lib/data/combat'
+import { reloadPcWeapon, reloadNpcWeapon } from '../../../../lib/data/weapon-reload'
+import { chooseUnjamSkill } from '../../../../lib/combat/unjam-skill'
 import { playChatPing } from '../../../../lib/sound'
 import { claimToggleLock } from '../../../../lib/toggle-lock'
 import { useSceneNav } from './useSceneNav'
@@ -9594,11 +9596,19 @@ export default function TablePage() {
         }
 
         async function doReload() {
-          if (!charEntry || !canReload || !primaryW) return
+          if (!canReload || !primaryW || !primary) return
           const reloaded = { ...primary, ammoCurrent: primaryW.clip, reloads: Math.max(0, (primary.reloads ?? 0) - 1) }
-          const newData = { ...charData, weaponPrimary: reloaded }
-          await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
-          setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
+          if (charEntry) {
+            const { newData } = await reloadPcWeapon(charEntry.character.id, charData, reloaded)
+            setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
+          } else if (npcForWeapon) {
+            // NPC reload was a no-op before (the PC-only guard bailed on every NPC).
+            const { newSkills } = await reloadNpcWeapon(npcForWeapon.id, npcForWeapon.skills, reloaded)
+            setCampaignNpcs(prev => prev.map(n => n.id === npcForWeapon.id ? { ...n, skills: newSkills } as any : n))
+            setRosterNpcs(prev => prev.map(n => n.id === npcForWeapon.id ? { ...n, skills: newSkills } as any : n))
+          } else {
+            return
+          }
           clearAimIfActive(active.id)
           consumeAction(active.id, `${active.character_name} - Reload ${primary.weaponName}`)
           setShowReadyWeaponModal(false)
@@ -9607,39 +9617,18 @@ export default function TablePage() {
         async function doUnjam() {
           if (!primary || !canUnjam) return
           const isMelee = primaryW?.category === 'melee'
-          // Pick best skill: Tinkerer, Weaponsmith, or Ranged/Melee Combat
-          const combatSkill = isMelee ? 'Melee Combat' : 'Ranged Combat'
-          const attrForCombat = isMelee ? 'PHY' : 'DEX'
-          let bestSkill = combatSkill
-          let bestAttr = attrForCombat
-          let bestLevel = 0
-          const getLevel = (skillName: string) => {
-            if (charEntry) {
-              return charEntry.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
-            }
-            if (npcForWeapon) {
-              const npcSkills: any[] = Array.isArray(npcForWeapon.skills?.entries) ? npcForWeapon.skills.entries : []
-              return npcSkills.find((s: any) => s.name === skillName)?.level ?? 0
-            }
-            return 0
-          }
-          const rapid = charEntry ? (charEntry.character.data?.rapid ?? {}) : { RSN: npcForWeapon?.reason ?? 0, ACU: npcForWeapon?.acumen ?? 0, PHY: npcForWeapon?.physicality ?? 0, INF: npcForWeapon?.influence ?? 0, DEX: npcForWeapon?.dexterity ?? 0 }
-          const candidates = [
-            { skill: 'Tinkerer', attr: 'DEX' },
-            { skill: 'Weaponsmith', attr: 'DEX' },
-            { skill: combatSkill, attr: attrForCombat },
-          ]
-          for (const c of candidates) {
-            const lvl = getLevel(c.skill)
-            if (lvl > bestLevel) { bestLevel = lvl; bestSkill = c.skill; bestAttr = c.attr }
-          }
-          const amod = (rapid as any)[bestAttr] ?? 0
+          const { skill, amod, level } = chooseUnjamSkill(
+            isMelee,
+            charEntry ? (charEntry.character.data?.skills ?? []) : null,
+            charEntry ? (charEntry.character.data?.rapid ?? {}) : null,
+            npcForWeapon,
+          )
           clearAimIfActive(active.id)
           // Melee weapons don't "jam" - they malfunction (bent, stuck, fouled).
           // Roll request label distinguishes so the executeRoll handler picks the
           // right narrative and compactRollSummary renders the right verb.
           const verb = isMelee ? 'Repair' : 'Unjam'
-          handleRollRequest(`${verb} - ${primary.weaponName} (${bestSkill})`, amod, bestLevel)
+          handleRollRequest(`${verb} - ${primary.weaponName} (${skill})`, amod, level)
           actionPreConsumedRef.current = true
           await consumeAction(active.id)
           setShowReadyWeaponModal(false)
