@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-30 09:12 UTC
+
+**Status:** DRIFT (x24 consecutive - same 3 HOPED-FOR items, no new findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** npm audit [12 high, 0 critical] - carry-overs unchanged (eslint/minimatch/brace-expansion dev-only, postcss XSS, sharp libvips CVEs)
+
+**CI:** last 5 runs all success (latest: 2026-07-30T06:13 UTC - new since last entry)
+
+**Drift:**
+- vehicle popout broadcasts: HOPED-FOR >60 days, no code activity
+- stress-check 12-string (HEAL/UNJAM/REPAIR/GI/Group/DRIVE/BREW/NAV): HOPED-FOR since 2026-06-16, untouched
+- FI Insight Die award path: HOPED-FOR since 2026-06-16, untouched
+- [todo stale audit] health-pulse template em-dash fix (todo.md open item) appears already applied - current template uses ASCII hyphens; 1 residual em-dash in the file is from pre-fix entries. Todo item candidate for closing.
+
+**Action:** x24 same drift - these 3 items need a deliberate playtest pass, not more automated checks. No code action from this run.
+
+---
+
 ## 2026-07-30 06:12 UTC
 
 **Status:** DRIFT (x23 consecutive - same 3 HOPED-FOR items, no new findings)
