@@ -24,7 +24,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, getInviteCode, type SupaCre
 // label has the canonical "<grappler> grapples / fails / no clear" shape.
 
 const RUN = `[E2E ${Date.now().toString(36)}]`
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const GRAPPLE_OUTCOMES = ['Grappled!', 'Failed - 1 RP', 'No clear victor'] as const
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 

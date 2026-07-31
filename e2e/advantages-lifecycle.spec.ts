@@ -13,7 +13,7 @@ import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCre
 // dice flow. The consume path (PATCH consumed_at) mirrors what executeRoll
 // does when a player uses their advantage on a roll.
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32'
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f'
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('Advantage lifecycle contract', () => {

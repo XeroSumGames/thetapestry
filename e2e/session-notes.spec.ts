@@ -11,7 +11,7 @@ import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCre
 // needed in between). The modal has two "End Session" buttons - the first opens
 // the modal (GM tools bar), the second submits it (modal footer).
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('Session notes - End Session modal contract', () => {

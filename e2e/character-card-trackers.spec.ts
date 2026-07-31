@@ -14,7 +14,7 @@ import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCre
 //   Therefore the first text-content +/- button in the page DOM when the overlay
 //   is open is the Stress section's ±, which renders before Insight/CDP/Morality.
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('CharacterCard - live stress tracker (GM overlay)', () => {
@@ -64,10 +64,13 @@ test.describe('CharacterCard - live stress tracker (GM overlay)', () => {
                    wp_current: 10, wp_max: 10, rp_current: 6, rp_max: 6, stress: 0 } },
       )
 
-      // Resolve character name for portrait-button selector.
-      const charRow = await (await gm.request.get(
+      // Resolve character name for portrait-button selector. Read as the OWNER
+      // (marv): the characters world-read policy was dropped 2026-06-22 (659183b4),
+      // and the GM's scoped read races the just-applied campaign_members link;
+      // the owner SELECT policy is unconditional, so read marv's own character.
+      const charRow = await (await pl.request.get(
         `${SUPABASE_URL}/rest/v1/characters?id=eq.${MARV_CHAR}&select=name`,
-        { headers: H(gmCreds!) },
+        { headers: H(plCreds!) },
       )).json() as Array<{ name: string }>
       const marvName = charRow?.[0]?.name
       expect(marvName, 'could not resolve marv character name').toBeTruthy()

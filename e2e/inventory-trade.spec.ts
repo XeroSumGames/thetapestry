@@ -24,7 +24,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 
 const RUN = Date.now().toString(36)
 // THE ARENA character ids (verified against the live roster 2026-05-24/25).
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32'  // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f'  // marv: "Mikey Shevik"
 const PERCY_CHAR = '549df590-37f6-46e5-93cb-5f920b913035' // percy: "Frankie Gibblets"
 const SHEET = `/character-sheet?c=${CAMPAIGN_ID}&char=${MARV_CHAR}`
 

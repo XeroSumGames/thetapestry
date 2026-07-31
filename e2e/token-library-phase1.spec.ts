@@ -25,10 +25,10 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 //   Test 3 - Full file upload + DB write (requires real image bytes + upload slot)
 //
 // Auth: acts as marv (a player) for sheet/edit tests; GM for the Populate test.
-// Stable test character: marv "Cree Blaine" (31300132-c808-4711-9936-13def2e1ce32),
+// Stable test character: marv "Mikey Shevik" (54982e08-1dc9-49c9-b916-3ea86e02126f),
 // THE ARENA campaign (35ed2133-498a-43d2-bbd6-21da05233af2).
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const SHEET_URL = `/character-sheet?c=${CAMPAIGN_ID}&char=${MARV_CHAR}`
 const EDIT_URL  = `/characters/${MARV_CHAR}/edit`
 
@@ -131,15 +131,18 @@ test.describe('Token Library Ph1 - Test 4: portrait bank picker loads without er
     }
   })
 
-  // Structural guard: the is_private column is present in PortraitBankPicker's
-  // query (.eq('is_private', false)). This is a static source check - no network
-  // needed. If the column is removed from the query the filter is silently gone
-  // and all private portraits would leak into the picker.
+  // Structural guard: the is_private filter is present in PortraitBankPicker's
+  // query. The filter was refactored from `.eq('is_private', false)` to a richer
+  // `.or('is_private.eq.false,and(is_private.eq.true,created_by.eq.<userId>)')`
+  // (public portraits + the viewer's own private ones), so we assert the
+  // `is_private.eq.false` predicate is still present. This is a static source
+  // check - no network needed. If it disappears the filter is silently gone and
+  // all private portraits would leak into the picker.
   test('PortraitBankPicker source uses is_private=false filter (static source guard)', () => {
     const src = readFileSync(join(process.cwd(), 'components', 'PortraitBankPicker.tsx'), 'utf8')
     expect(
-      src.includes("eq('is_private', false)"),
-      'PortraitBankPicker must filter portrait_bank with .eq(\'is_private\', false) - the is_private column filter is missing',
+      src.includes('is_private.eq.false'),
+      'PortraitBankPicker must filter portrait_bank on is_private.eq.false - the is_private column filter is missing',
     ).toBe(true)
   })
 })

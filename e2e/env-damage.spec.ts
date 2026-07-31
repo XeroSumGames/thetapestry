@@ -4,10 +4,10 @@ import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCre
 
 // Env Dmg (environmental damage) contract net.
 //
-// Tests the "Env Dmg" button (brown, CharacterCard.tsx:597-642) which is the
-// CURRENT path: two prompt() dialogs -> WP+RP update -> insertRollLog.
-// Distinct from the old "Env. Damage" button (red, :509-539) which uses alert()
-// and does NOT call insertRollLog.
+// Tests the consolidated "Env. Damage" button (CharacterCard.tsx:576) which is
+// the single canon path: two prompt() dialogs -> WP+RP update -> insertRollLog
+// with outcome='falling'. (The old dual brown "Env Dmg" / red "Env. Damage"
+// split was collapsed into this one button.)
 //
 // Falling damage formula: fallingDamage(10) = { wp: 3, rp: 3 }.
 // Starting state: wp_current=10, rp_current=6.
@@ -16,7 +16,7 @@ import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCre
 // Dialog handling: page.on('dialog') fires for both prompt() calls in sequence.
 // The handler accepts '1' (Falling) on the first call and '10' (feet) on the second.
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('CharacterCard - Env Dmg (Falling) contract', () => {
@@ -97,10 +97,10 @@ test.describe('CharacterCard - Env Dmg (Falling) contract', () => {
         }
       })
 
-      // "Env Dmg" (no period, brown) is the current path with insertRollLog.
-      // "Env. Damage" (with period, red) is the legacy path without insertRollLog.
-      // Substring 'Env Dmg' uniquely identifies the correct button.
-      await gm.getByRole('button', { name: 'Env Dmg' }).first().click()
+      // The two env-damage buttons were consolidated into ONE "Env. Damage"
+      // button (CharacterCard.tsx:576, locked button-order slot) that uses CANON
+      // math (lib/env-damage) AND calls insertRollLog with outcome='falling'.
+      await gm.getByRole('button', { name: 'Env. Damage', exact: true }).first().click()
 
       // Poll REST: wp_current should drop from 10 to 7 (10 ft = 3 WP damage).
       await expect.poll(async () => {

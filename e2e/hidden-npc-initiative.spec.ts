@@ -20,7 +20,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, getInviteCode, type SupaCre
 // it requires a scene + token setup beyond this fixture. That remains MANUAL.
 
 const RUN = `[E2E ${Date.now().toString(36)}]`
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32'
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f'
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('Hidden NPC multi-client visibility (HP ac27b8a)', () => {
