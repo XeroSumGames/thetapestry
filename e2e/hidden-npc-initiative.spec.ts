@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, resolveCreds, getInviteCode, type SupaCreds } from './_teardown'
 
 // Hidden NPC multi-client visibility spec (HP ac27b8a, 2026-05-31).
 //
@@ -49,11 +49,7 @@ test.describe('Hidden NPC multi-client visibility (HP ac27b8a)', () => {
       campaignId = gm.url().split('/stories/')[1]
       expect(campaignId, 'no campaign id in landing URL').toBeTruthy()
 
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId, gmCreds!)
       expect(inviteCode, 'campaign has no invite_code').toBeTruthy()
 
       // marv joins.
