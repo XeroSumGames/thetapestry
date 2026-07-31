@@ -25,8 +25,10 @@ test.describe('Section A1 - combat start GM -> player', () => {
 
       // Combat requires an active session. Clear any leftover combat, then
       // ensure a session is open (if one already is, the button reads "End
-      // Session" and this no-ops).
-      await gm.getByRole('button', { name: /end combat/i }).first().click().catch(() => {})
+      // Session" and this no-ops). Rename (2026-06+): the end-combat button is
+      // now "End the Moment"; /end combat/i silently matched nothing and left
+      // the Arena stuck in-combat, hiding the "Into the Moment" start button.
+      await gm.getByRole('button', { name: /end the moment/i }).first().click().catch(() => {})
       await gm.waitForTimeout(500)
       await gm.getByRole('button', { name: /start session/i }).first().click().catch(() => {})
       await gm.waitForTimeout(1200)
@@ -50,7 +52,7 @@ test.describe('Section A1 - combat start GM -> player', () => {
       await expect(pl.getByText(/in the moment/i).first()).toBeVisible({ timeout: 25_000 })
     } finally {
       if (started) {
-        await gm.getByRole('button', { name: /end combat/i }).first().click().catch(() => {})
+        await gm.getByRole('button', { name: /end the moment/i }).first().click().catch(() => {})
       }
       await gmCtx.close()
       await plCtx.close()
