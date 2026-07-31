@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-31 15:05 UTC
+
+**Status:** DRIFT (x29 consecutive - unchanged from 09:05 UTC entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** npm audit [12 high, 0 critical] - unchanged (next + sharp are runtime-path CVEs; eslint/minimatch/brace-expansion dev-only)
+
+**CI:** last 5 runs all SUCCESS (latest: 2026-07-31T09:07 UTC)
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (B section) - stale since 2026-06-16, no code change in last 3 days
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR FI Insight Die award path (doubles -> +1 pool) - stale since 2026-06-16, never fired in live play
+
+**Action:** No new findings since 09:05 entry. Top unresolved: upgrade next + sharp to close runtime CVEs.
+
+---
+
 ## 2026-07-31 09:05 UTC
 
 **Status:** DRIFT (x28 consecutive - unchanged from 00:06 UTC entry)
