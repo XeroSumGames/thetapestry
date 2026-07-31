@@ -501,6 +501,22 @@ export default function TablePage() {
   const [sharedSceneId, setSharedSceneId] = useState<string | null>(null)
   // Transient "✓ Shared" flash on the Share Map button after click.
   const [shareMapFlash, setShareMapFlash] = useState(false)
+  // Transient in-combat validation notice - replaces browser alert() on
+  // combat-action gates (Broken weapon / empty clip / no weapon readied /
+  // nothing left to throw). Auto-dismisses. Seq ref keys the toast so an
+  // identical repeated message still re-triggers the render + timer.
+  // (no-browser-dialogs rule: feedback_no_browser_dialogs.)
+  const combatNoticeSeq = useRef(0)
+  const [combatNotice, setCombatNotice] = useState<{ text: string; id: number } | null>(null)
+  function flashCombatNotice(text: string) {
+    combatNoticeSeq.current += 1
+    setCombatNotice({ text, id: combatNoticeSeq.current })
+  }
+  useEffect(() => {
+    if (!combatNotice) return
+    const t = setTimeout(() => setCombatNotice(null), 2800)
+    return () => clearTimeout(t)
+  }, [combatNotice])
   // Ref-mirror so the realtime broadcast handler at subscription time
   // doesn't capture a stale `tacticalShared`. Used by the
   // `scene_activated` listener to decide whether a GM scene switch
@@ -6011,10 +6027,10 @@ export default function TablePage() {
 
                 {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
-                  if (!w || !weaponData) { alert('No weapon readied.'); return }
-                  if (isBroken) { alert(`${w.name} is Broken and can't be used. Repair it (Upkeep Check) before firing.`); return }
-                  if (outOfAmmo) { alert(`${w.name} is empty. Reload via Ready Weapon before firing again.`); return }
-                  if (outOfThrows) { alert(`${w.name} - none left to throw.`); return }
+                  if (!w || !weaponData) { flashCombatNotice('No weapon readied.'); return }
+                  if (isBroken) { flashCombatNotice(`${w.name} is Broken and can't be used. Repair it (Upkeep Check) before firing.`); return }
+                  if (outOfAmmo) { flashCombatNotice(`${w.name} is empty. Reload via Ready Weapon before firing again.`); return }
+                  if (outOfThrows) { flashCombatNotice(`${w.name} - none left to throw.`); return }
                   const rapid = charEntry?.character.data?.rapid ?? {}
                   const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
                   const attrKey = isMelee ? 'PHY' : (w.skill === 'Ranged Combat' ? 'DEX' : 'ACU')
@@ -8078,6 +8094,27 @@ export default function TablePage() {
           })
         })()}
       </div>
+
+      {/* Transient combat-action notice (in-table, replaces alert()). Amber
+          warning chrome matching the "Aimed" combat chips; auto-dismisses. */}
+      {combatNotice && (
+        <div
+          key={combatNotice.id}
+          role="status"
+          aria-live="polite"
+          onClick={() => setCombatNotice(null)}
+          style={{
+            position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)',
+            zIndex: 10000, maxWidth: '440px',
+            padding: '9px 16px', borderRadius: '4px',
+            background: '#2a2010', border: '1px solid #5a4a1b',
+            color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.5)', cursor: 'pointer',
+            textAlign: 'center', letterSpacing: '.01em',
+          }}>
+          {combatNotice.text}
+        </div>
+      )}
 
       {/* Character sheet overlay - draggable floating window */}
       {syncedSelectedEntry && sheetMode === 'overlay' && (
