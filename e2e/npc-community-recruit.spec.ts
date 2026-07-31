@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // NPC recruitment contract: an NPC revealed to the party (via npc_relationships)
 // can be recruited into a community during an active session. The GM clicks
@@ -51,11 +51,7 @@ test.describe('NPC community recruitment contract', () => {
       campaignId = gm.url().split('/stories/')[1]
 
       // Marv joins + wires PC + seeds character_states.
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId!, gmCreds!)
       expect(inviteCode, 'no invite_code').toBeTruthy()
 
       await pl.goto('/stories/join', { waitUntil: 'domcontentloaded' })

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // Campaign Pin visibility contract: the GM controls pin visibility via the
 // campaign_pins.revealed boolean. The app filters player-visible pins at the
@@ -42,11 +42,7 @@ test.describe('Campaign Pins - visibility toggle contract', () => {
       campaignId = gm.url().split('/stories/')[1]
 
       // Marv joins (so marv has SELECT access to campaign_pins via campaign membership RLS).
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId!, gmCreds!)
       expect(inviteCode, 'no invite_code').toBeTruthy()
 
       await pl.goto('/stories/join', { waitUntil: 'domcontentloaded' })

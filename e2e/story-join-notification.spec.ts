@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // Player-join notification contract: when a player accepts an invite code,
 // the DB trigger on_player_joined fires (AFTER INSERT ON campaign_members) and
@@ -46,11 +46,7 @@ test.describe('Player-join notification contract', () => {
       campaignId = gm.url().split('/stories/')[1]
 
       // Fetch invite code.
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId!, gmCreds!)
       expect(inviteCode, 'no invite_code').toBeTruthy()
 
       // Marv joins by invite code (triggers the on_player_joined DB trigger).

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { AUTH, canAuth, ACCOUNTS } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // Ch6 - Story lifecycle: GM creates a story (setting picker) -> it lands in My
 // Stories with a 6-char invite code; a player joins by code -> the join persists
@@ -62,15 +62,17 @@ test.describe('Ch6 - Story lifecycle (create / join-by-code / leave)', () => {
       campaignId = gm.url().split('/stories/')[1]
       expect(campaignId, 'no campaign id in landing URL').toBeTruthy()
 
-      // Invite code persisted + exactly 6 chars (campaigns.invite_code).
-      const campRes = await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code,gm_user_id`,
-        { headers: { apikey: creds!.anonKey, Authorization: `Bearer ${creds!.accessToken}` } },
-      )
-      const camp = (await campRes.json())[0] as { invite_code: string; gm_user_id: string }
-      const inviteCode = camp.invite_code
+      // Invite code persisted + exactly 6 chars (campaigns.invite_code). The
+      // invite_code column is no longer directly readable (PII revoke 2026-06-29);
+      // read it via the sanctioned get_campaign_invite_code RPC (getInviteCode).
+      const inviteCode = await getInviteCode(gm, campaignId!, creds!)
       expect(inviteCode, 'campaign has no invite_code').toBeTruthy()
       expect(inviteCode).toHaveLength(6)
+      // gm_user_id is still directly readable; only invite_code was revoked.
+      const camp = (await (await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=gm_user_id`,
+        { headers: { apikey: creds!.anonKey, Authorization: `Bearer ${creds!.accessToken}` } },
+      )).json())[0] as { gm_user_id: string }
 
       // Appears in My Stories with its invite code (Ch6.1).
       await gm.goto('/stories', { waitUntil: 'domcontentloaded' })
