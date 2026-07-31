@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-07-31 21:04 UTC
+
+**Status:** DRIFT (x31 - same 3 HOPED-FOR; audit improved 12->4 high)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - DOWN from 12 high. Remaining: brace-expansion, next, postcss, sharp. Several dev-only highs (eslint/minimatch etc.) resolved automatically (dep tree update?).
+
+**CI:** last 5 runs all SUCCESS (latest: 2026-07-31T18:06 UTC)
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (section B) - stale since 2026-06-16, no code change in area
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR FI Insight Die award path (doubles -> +1 pool) - stale since 2026-06-16, never fired live
+
+**Todo spot-check:** alert() broken-weapon gate (page.tsx still present), vehicles 3s poll (page.tsx:3108 still present), window.prompt in recorder (PlaytestRecorder.tsx:355 still present). All confirmed still open.
+
+**Action:** Audit improvement is passive/automatic - nothing to do. Remaining 4 highs: `next` + `sharp` are runtime-path (real); `postcss` + `brace-expansion` are build-time only. Pin or upgrade `next` + `sharp` when a maintenance window opens.
+
+---
+
 ## 2026-07-31 18:06 UTC
 
 **Status:** DRIFT (x30 consecutive - unchanged from 15:05 UTC entry)
