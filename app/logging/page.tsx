@@ -41,9 +41,14 @@ export default function LoggingPage() {
   const [visitors, setVisitors] = useState<VisitorLog[]>([])
   const [visitorFilter, setVisitorFilter] = useState('')
   const [excludeTerms, setExcludeTerms] = useState<string[]>([])
+  const [includeTerms, setIncludeTerms] = useState<string[]>([])
   const [events, setEvents] = useState<UserEvent[]>([])
   const [eventFilter, setEventFilter] = useState('')
   const [eventExcludeTerms, setEventExcludeTerms] = useState<string[]>([])
+  const [eventIncludeTerms, setEventIncludeTerms] = useState<string[]>([])
+  // Shared toggle - which chip list Enter adds to. One preference for both
+  // tabs since only one tab is visible at a time.
+  const [filterMode, setFilterMode] = useState<'exclude' | 'include'>('exclude')
   const [visitorCount, setVisitorCount] = useState(0)
   const [eventCount, setEventCount] = useState(0)
   const [signups7d, setSignups7d] = useState(0)
@@ -363,25 +368,48 @@ export default function LoggingPage() {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && visitorFilter.trim()) {
                     const term = visitorFilter.trim().toLowerCase()
-                    if (!excludeTerms.includes(term)) setExcludeTerms(prev => [...prev, term])
+                    if (filterMode === 'exclude') {
+                      if (!excludeTerms.includes(term)) setExcludeTerms(prev => [...prev, term])
+                    } else {
+                      if (!includeTerms.includes(term)) setIncludeTerms(prev => [...prev, term])
+                    }
                     setVisitorFilter('')
                   }
                 }} />
-              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
+              <button onClick={() => setFilterMode(m => m === 'exclude' ? 'include' : 'exclude')}
+                title="Click to switch what Enter does"
+                style={{ padding: '4px 10px', background: filterMode === 'include' ? '#0f1a2e' : '#2a1210', border: `1px solid ${filterMode === 'include' ? '#2e2e5a' : '#c0392b'}`, borderRadius: '3px', color: filterMode === 'include' ? '#7ab3d4' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                Enter = {filterMode === 'include' ? 'Include' : 'Exclude'}
+              </button>
             </div>
-            {excludeTerms.length > 0 && (
+            {(includeTerms.length > 0 || excludeTerms.length > 0) && (
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
-                {excludeTerms.map(term => (
-                  <button key={term} onClick={() => setExcludeTerms(prev => prev.filter(t => t !== term))}
-                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {term} <span style={{ fontSize: '13px' }}>×</span>
+                {includeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Including:</span>
+                  {includeTerms.map(term => (
+                    <button key={term} onClick={() => setIncludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setIncludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
                   </button>
-                ))}
-                <button onClick={() => setExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
-                  Clear All
-                </button>
+                </>)}
+                {excludeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px', marginLeft: includeTerms.length > 0 ? '10px' : 0 }}>Excluding:</span>
+                  {excludeTerms.map(term => (
+                    <button key={term} onClick={() => setExcludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setExcludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
+                  </button>
+                </>)}
               </div>
             )}
           </div>
@@ -400,6 +428,7 @@ export default function LoggingPage() {
               {visitors.filter(v => {
                 const haystack = [v.username, v.ip_address, v.page, v.city, v.country_code].filter(Boolean).join(' ').toLowerCase()
                 if (excludeTerms.some(term => haystack.includes(term))) return false
+                if (includeTerms.length > 0 && !includeTerms.some(term => haystack.includes(term))) return false
                 if (!visitorFilter.trim()) return true
                 return haystack.includes(visitorFilter.trim().toLowerCase())
               }).map(v => (
@@ -432,25 +461,48 @@ export default function LoggingPage() {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && eventFilter.trim()) {
                     const term = eventFilter.trim().toLowerCase()
-                    if (!eventExcludeTerms.includes(term)) setEventExcludeTerms(prev => [...prev, term])
+                    if (filterMode === 'exclude') {
+                      if (!eventExcludeTerms.includes(term)) setEventExcludeTerms(prev => [...prev, term])
+                    } else {
+                      if (!eventIncludeTerms.includes(term)) setEventIncludeTerms(prev => [...prev, term])
+                    }
                     setEventFilter('')
                   }
                 }} />
-              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
+              <button onClick={() => setFilterMode(m => m === 'exclude' ? 'include' : 'exclude')}
+                title="Click to switch what Enter does"
+                style={{ padding: '4px 10px', background: filterMode === 'include' ? '#0f1a2e' : '#2a1210', border: `1px solid ${filterMode === 'include' ? '#2e2e5a' : '#c0392b'}`, borderRadius: '3px', color: filterMode === 'include' ? '#7ab3d4' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                Enter = {filterMode === 'include' ? 'Include' : 'Exclude'}
+              </button>
             </div>
-            {eventExcludeTerms.length > 0 && (
+            {(eventIncludeTerms.length > 0 || eventExcludeTerms.length > 0) && (
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
-                {eventExcludeTerms.map(term => (
-                  <button key={term} onClick={() => setEventExcludeTerms(prev => prev.filter(t => t !== term))}
-                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {term} <span style={{ fontSize: '13px' }}>×</span>
+                {eventIncludeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Including:</span>
+                  {eventIncludeTerms.map(term => (
+                    <button key={term} onClick={() => setEventIncludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setEventIncludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
                   </button>
-                ))}
-                <button onClick={() => setEventExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
-                  Clear All
-                </button>
+                </>)}
+                {eventExcludeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px', marginLeft: eventIncludeTerms.length > 0 ? '10px' : 0 }}>Excluding:</span>
+                  {eventExcludeTerms.map(term => (
+                    <button key={term} onClick={() => setEventExcludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setEventExcludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
+                  </button>
+                </>)}
               </div>
             )}
           </div>
@@ -468,6 +520,7 @@ export default function LoggingPage() {
               {events.filter(e => {
                 const haystack = [e.username, e.event_type, e.metadata ? JSON.stringify(e.metadata) : ''].filter(Boolean).join(' ').toLowerCase()
                 if (eventExcludeTerms.some(term => haystack.includes(term))) return false
+                if (eventIncludeTerms.length > 0 && !eventIncludeTerms.some(term => haystack.includes(term))) return false
                 if (!eventFilter.trim()) return true
                 return haystack.includes(eventFilter.trim().toLowerCase())
               }).map(e => (
