@@ -2552,10 +2552,20 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               style={{ fontSize: '13px', color: '#7ab3d4', background: '#0f1a2e', border: '1px solid #2e2e5a', padding: '1px 6px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>⏳ Temporary</span>
                           )}
                           {isCommunity && (
+                          isGM ? (
                           <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
                             style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                           </select>
+                          ) : (
+                          // Labor-role reassignment is GM-only (2026-08-01 - the
+                          // RLS behind this was fully open to any campaign member
+                          // until tonight; this control never had an isGM gate
+                          // either). Players see their/others' role as read-only.
+                          <span style={{ width: '110px', padding: '4px 6px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            {ROLE_LABEL[m.role]}
+                          </span>
+                          )
                           )}
                           {m.character_id && pcUserMap[m.character_id] && pcUserMap[m.character_id] !== myUserId && (
                             <a href={`/messages?dm=${pcUserMap[m.character_id]}`} title="Send message"
