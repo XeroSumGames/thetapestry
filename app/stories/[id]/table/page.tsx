@@ -7291,21 +7291,29 @@ export default function TablePage() {
                   .filter((n: any) => n.status !== 'dead')
                   .map((n: any) => ({ id: n.id, name: n.name }))}
                 onGiveItemToNpc={async (item: InventoryItem, targetNpcId: string, qty: number) => {
-                  // Mirrors onGiveItem but writes to campaign_npcs.
-                  // Filters apply on the recipient list above so non-GM
-                  // players can't see hidden NPCs as targets.
+                  // Atomic RPC (give_item_character_to_npc): decrements the
+                  // giver PC's inventory AND credits the NPC in one
+                  // transaction. The old code here only wrote the receiver
+                  // side (InventoryPanel's own giver-decrement is skipped for
+                  // non-'pc' targets per its own comment, so nothing else
+                  // ever decremented the giver - free items, per the
+                  // 2026-08-01 audit). Filters apply on the recipient list
+                  // above so non-GM players can't see hidden NPCs as targets.
+                  const { error } = await supabase.rpc('give_item_character_to_npc', {
+                    p_giver_character_id: syncedSelectedEntry.character.id,
+                    p_target_npc_id: targetNpcId,
+                    p_item_name: item.name,
+                    p_item_custom: item.custom ?? false,
+                    p_qty: qty,
+                  })
+                  if (error) { alert(`Give to NPC failed: ${error.message}`); return }
+                  await loadEntries(id)
                   const targetNpc: any = campaignNpcs.find((n: any) => n.id === targetNpcId)
-                  if (!targetNpc) return
-                  const targetInv: InventoryItem[] = Array.isArray(targetNpc.inventory) ? targetNpc.inventory : []
+                  const targetInv: InventoryItem[] = Array.isArray(targetNpc?.inventory) ? targetNpc.inventory : []
                   const existing = targetInv.find((i: InventoryItem) => i.name === item.name && (i.custom ?? false) === (item.custom ?? false))
                   const newTargetInv = existing
                     ? targetInv.map((i: InventoryItem) => i === existing ? { ...i, qty: (i.qty ?? 1) + qty } : i)
                     : [...targetInv, { ...item, qty }]
-                  const { error } = await supabase.from('campaign_npcs').update({ inventory: newTargetInv }).eq('id', targetNpcId)
-                  if (error) { alert(`Give to NPC failed: ${error.message}`); return }
-                  // Local state patch + token-refresh broadcast so other
-                  // GMs / players see the NPC's new inventory without a
-                  // manual refresh.
                   setCampaignNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
                   setRosterNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
                   setViewingNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
@@ -7313,65 +7321,58 @@ export default function TablePage() {
                 }}
                 otherCommunities={(pcCommunityMemberships[syncedSelectedEntry.character.id] ?? [])}
                 onGiveItemToCommunity={async (item: InventoryItem, targetCommunityId: string, qty: number) => {
-                  // Deposit to community_stockpile_items. Stack-merge
-                  // by (name, custom): UPDATE qty if a row already
-                  // exists, else INSERT. The unique index on
-                  // (community_id, name, custom) catches the race.
-                  const { data: existing, error: readErr } = await supabase
-                    .from('community_stockpile_items')
-                    .select('id, qty')
-                    .eq('community_id', targetCommunityId)
-                    .eq('name', item.name)
-                    .eq('custom', item.custom)
-                    .maybeSingle()
-                  if (readErr) { alert(`Stockpile read failed: ${readErr.message}`); return }
-                  if (existing) {
-                    const newQty = ((existing as any).qty ?? 0) + qty
-                    const { error } = await supabase
-                      .from('community_stockpile_items')
-                      .update({ qty: newQty })
-                      .eq('id', (existing as any).id)
-                    if (error) { alert(`Deposit failed: ${error.message}`); return }
-                  } else {
-                    const { error } = await supabase.from('community_stockpile_items').insert({
-                      community_id: targetCommunityId,
-                      name: item.name, qty, enc: item.enc, rarity: item.rarity,
-                      notes: item.notes, custom: item.custom,
-                    })
-                    if (error) { alert(`Deposit failed: ${error.message}`); return }
-                  }
+                  // Atomic RPC (give_item_character_to_community): decrements
+                  // the giver PC's inventory AND deposits into the stockpile
+                  // in one transaction, with FOR UPDATE row locking on the
+                  // stockpile item. The old read-then-write here raced two
+                  // concurrent deposits/withdrawals on the same item row
+                  // (both read the same stale qty, both write the same
+                  // absolute value - lost update, per the 2026-08-01 audit).
+                  const { error } = await supabase.rpc('give_item_character_to_community', {
+                    p_giver_character_id: syncedSelectedEntry.character.id,
+                    p_target_community_id: targetCommunityId,
+                    p_item_name: item.name,
+                    p_item_custom: item.custom ?? false,
+                    p_qty: qty,
+                    p_item_enc: item.enc,
+                    p_item_rarity: item.rarity,
+                    p_item_notes: item.notes,
+                  })
+                  if (error) { alert(`Deposit failed: ${error.message}`); return }
+                  await loadEntries(id)
                 }}
                 otherVehicles={vehicles.map(v => ({ id: v.id, name: v.name ?? 'Vehicle' }))}
                 onGiveItemToVehicle={async (item: InventoryItem, targetVehicleId: string, qty: number) => {
-                  // Stash in campaigns.vehicles[N].cargo. Stack-merge
-                  // by (name, custom) to mirror the existing
-                  // community-stockpile pattern: if the cargo array
-                  // already has the same item, bump qty; else push a
-                  // new row. Whole vehicles[] is then written back to
-                  // the campaigns.vehicles jsonb in one update.
-                  const targetIdx = vehicles.findIndex(v => v.id === targetVehicleId)
-                  if (targetIdx < 0) { alert('Vehicle not found.'); return }
-                  const target = vehicles[targetIdx]
-                  const cargo = Array.isArray(target.cargo) ? [...target.cargo] : []
-                  const existingIdx = cargo.findIndex(c => c.name === item.name && (c.custom ?? false) === (item.custom ?? false))
-                  if (existingIdx >= 0) {
-                    cargo[existingIdx] = { ...cargo[existingIdx], qty: (cargo[existingIdx].qty ?? 0) + qty }
-                  } else {
-                    cargo.push({ name: item.name, enc: item.enc, rarity: item.rarity, notes: item.notes, qty, custom: !!item.custom })
-                  }
-                  setVehicles(vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v))
-                  // RPC instead of direct UPDATE so non-GM members succeed
-                  // (post-playtest Q3 scope A, 2026-05-19). Direct UPDATE is
-                  // RLS-blocked for non-GM; the RPC is SECURITY DEFINER +
-                  // member-authorized. Send only the changed field (cargo) -
-                  // the RPC merges server-side, so a concurrent client's
-                  // write to any OTHER field isn't clobbered.
-                  const { error } = await supabase.rpc('update_vehicle_in_campaign', {
+                  // Atomic RPC (give_item_character_to_vehicle): decrements
+                  // the giver PC's inventory AND stashes it in the vehicle's
+                  // cargo in one transaction (locks the campaigns row for the
+                  // vehicles jsonb, same as update_vehicle_in_campaign). The
+                  // old code here never decremented the giver directly -
+                  // that happened via InventoryPanel's own separate onUpdate
+                  // call, racing independently against this write with no
+                  // coordination (per the 2026-08-01 audit).
+                  const { error } = await supabase.rpc('give_item_character_to_vehicle', {
+                    p_giver_character_id: syncedSelectedEntry.character.id,
                     p_campaign_id: id,
-                    p_vehicle_id: target.id,
-                    p_patch: { cargo },
+                    p_vehicle_id: targetVehicleId,
+                    p_item_name: item.name,
+                    p_item_custom: item.custom ?? false,
+                    p_qty: qty,
                   })
                   if (error) { alert(`Stash failed: ${error.message}`); return }
+                  await loadEntries(id)
+                  const targetIdx = vehicles.findIndex(v => v.id === targetVehicleId)
+                  if (targetIdx >= 0) {
+                    const target = vehicles[targetIdx]
+                    const cargo = Array.isArray(target.cargo) ? [...target.cargo] : []
+                    const existingIdx = cargo.findIndex(c => c.name === item.name && (c.custom ?? false) === (item.custom ?? false))
+                    if (existingIdx >= 0) {
+                      cargo[existingIdx] = { ...cargo[existingIdx], qty: (cargo[existingIdx].qty ?? 0) + qty }
+                    } else {
+                      cargo.push({ name: item.name, enc: item.enc, rarity: item.rarity, notes: item.notes, qty, custom: !!item.custom })
+                    }
+                    setVehicles(vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v))
+                  }
                 }}
                 onInventoryChange={(newInventory: InventoryItem[]) => {
                   // Patch our entries state so the new inventory persists when
