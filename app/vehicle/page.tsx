@@ -385,19 +385,36 @@ export default function VehiclePage() {
     }
   }
 
+  // Synchronous in-flight guard for applyDamage/adjustWp (same pattern as
+  // rollCheck in useVehicleCheck.tsx) - a very fast double-click before
+  // React re-renders could fire both before either commits. Lower
+  // severity than a rolled check (both calls read the same stale
+  // vehicle.wp_current and compute the same idempotent target, so
+  // update_vehicle_in_campaign's merge doesn't double-apply damage per
+  // se), but still closes the gap for defense-in-depth and avoids a
+  // wasted duplicate network round-trip (per the 2026-08-01 audit).
+  const wpActionInFlightRef = useRef(false)
+
   async function applyDamage() {
-    if (!vehicle || !campaignId || !myUserId) return
-    const built = buildVehicleDamageLog({ vehicle, amount: dmgAmount, campaignId, userId: myUserId })
-    if (!built) return
-    await updateVehicle({ ...vehicle, wp_current: built.newWp })
-    await insertRollLog(built.row)
-    setDmgAmount('')
+    if (!vehicle || !campaignId || !myUserId || wpActionInFlightRef.current) return
+    wpActionInFlightRef.current = true
+    try {
+      const built = buildVehicleDamageLog({ vehicle, amount: dmgAmount, campaignId, userId: myUserId })
+      if (!built) return
+      await updateVehicle({ ...vehicle, wp_current: built.newWp })
+      await insertRollLog(built.row)
+      setDmgAmount('')
+    } finally {
+      wpActionInFlightRef.current = false
+    }
   }
 
   // Quick ±1 WP buttons - use the same log shape as applyDamage so the
   // roll feed shows every WP change, not just ones typed into the field.
   async function adjustWp(delta: number) {
-    if (!vehicle || !campaignId || !myUserId) return
+    if (!vehicle || !campaignId || !myUserId || wpActionInFlightRef.current) return
+    wpActionInFlightRef.current = true
+    try {
     if (delta < 0) {
       const built = buildVehicleDamageLog({ vehicle, amount: -delta, campaignId, userId: myUserId })
       if (!built) return
@@ -415,6 +432,9 @@ export default function VehiclePage() {
         outcome: 'vehicle_repair',
         damage_json: { vehicleId: vehicle.id, vehicleName: vehicle.name, checkKind: 'repair', amount: delta },
       })
+    }
+    } finally {
+      wpActionInFlightRef.current = false
     }
   }
 

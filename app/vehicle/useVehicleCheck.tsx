@@ -7,7 +7,7 @@
 // the pre-extraction inline version; the page now just calls openCheck()
 // from its buttons and renders the returned `modal`.
 
-import { useState, type CSSProperties } from 'react'
+import { useState, useRef, type CSSProperties } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Vehicle } from '../../components/VehicleCard'
 import { insertRollLog } from '../../lib/data/roll-log'
@@ -130,6 +130,13 @@ export function useVehicleCheck({
   setBrewingSuppliesError,
 }: UseVehicleCheckParams) {
   const [check, setCheck] = useState<CheckState | null>(null)
+  // Synchronous in-flight guard for rollCheck (same pattern as
+  // consumeActionInFlightRef in the table page) - setCheck({rolling:true})
+  // is an async React state update, so two very fast clicks on Roll
+  // before the disabled prop's next render could both pass the
+  // !check.rolling check and both roll/apply damage (per the 2026-08-01
+  // audit). A plain ref is checked+set synchronously, closing that window.
+  const rollingRef = useRef(false)
 
   async function openCheck(kind: CheckKind, weaponIdx?: number) {
     if (!vehicle) return
@@ -395,6 +402,13 @@ export function useVehicleCheck({
   // time-cost).
   async function rollCheck() {
     if (!check || !vehicle || !campaignId || !myUserId) return
+    // Synchronous re-entry guard - setCheck({rolling:true}) below is an
+    // async React state update, so two very fast clicks on Roll before
+    // the button's disabled prop reflects it could both pass this
+    // function's initial checks and both roll + apply damage/effects
+    // (per the 2026-08-01 audit). Checked+set here, before any async
+    // work, closes that window; cleared in the finally below.
+    if (rollingRef.current) return
     // Brew check guard (Q4-d, 2026-05-19): block when no brewing
     // supplies on hand. UI disables the button via canBrew(), but
     // a stale client could still fire this - defense in depth. The
@@ -405,6 +419,8 @@ export function useVehicleCheck({
       setBrewingSuppliesError('No brewing materials on hand - click Gather Materials first.')
       return
     }
+    rollingRef.current = true
+    try {
     setBrewingSuppliesError(null)
     setCheck({ ...check, rolling: true })
     const die1 = Math.floor(Math.random() * 6) + 1
@@ -647,6 +663,9 @@ export function useVehicleCheck({
     }
 
     setCheck({ ...check, rolling: false, result: { die1, die2, total, outcome } })
+    } finally {
+      rollingRef.current = false
+    }
   }
 
   // ── The shared <RollModal> mount ──
