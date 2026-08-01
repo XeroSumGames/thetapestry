@@ -43,7 +43,12 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
-      testIgnore: /auth\.setup\.ts/,
+      testIgnore: /(auth\.setup|global\.teardown)\.ts/,
+      // Sweep leftover [E2E] campaigns after the suite (pass or fail). See
+      // e2e/global.teardown.ts - catch-all for orphans from runs that threw
+      // before their per-spec finally could delete the campaign.
+      teardown: 'cleanup',
     },
+    { name: 'cleanup', testMatch: /global\.teardown\.ts/ },
   ],
 })
