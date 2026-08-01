@@ -76,75 +76,75 @@ export async function decrementInitiativeAction(
   args: DecrementArgs
 ): Promise<DecrementResult> {
   const cost = args.cost ?? 1
+  let loggedOnce = false
+  let lastEntry: any = null
+  let lastRemaining = 0
 
-  // Resolve the entry we're decrementing.
-  let entry: any = null
-  if (args.entryId) {
-    const { data, error } = await supabase
-      .from('initiative_order')
-      .select('*')
-      .eq('id', args.entryId)
-      .single()
-    if (error) return { ok: false, newRemaining: 0, reachedZero: false, entry: null, error: error.message }
-    entry = data
-  } else {
-    const { data, error } = await supabase
-      .from('initiative_order')
-      .select('*')
-      .eq('campaign_id', args.campaignId)
-      .eq('is_active', true)
-      .maybeSingle()
-    if (error) return { ok: false, newRemaining: 0, reachedZero: false, entry: null, error: error.message }
-    if (!data) return { ok: false, newRemaining: 0, reachedZero: false, entry: null, error: 'no active entry' }
-    entry = data
-  }
-
-  const remaining = entry.actions_remaining ?? 0
-  if (remaining < cost) {
-    return {
-      ok: false,
-      newRemaining: remaining,
-      reachedZero: false,
-      entry,
-      error: `insufficient actions: ${remaining} < ${cost}`,
+  // Compare-and-set with retry (same pattern as lib/campaign-clock.ts
+  // advance()): a plain read-then-write here had no guard against a
+  // different client decrementing the SAME entry between the read and the
+  // write (e.g. the table page and a vehicle popout tab controlling the
+  // same seat) - both could read the same actions_remaining and both write
+  // the same decremented value, double-spending or under-spending an
+  // action and potentially never reaching 0 to advance the turn.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    let entry: any = null
+    if (args.entryId) {
+      const { data, error } = await supabase.from('initiative_order').select('*').eq('id', args.entryId).single()
+      if (error) return { ok: false, newRemaining: 0, reachedZero: false, entry: null, error: error.message }
+      entry = data
+    } else {
+      const { data, error } = await supabase
+        .from('initiative_order')
+        .select('*')
+        .eq('campaign_id', args.campaignId)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (error) return { ok: false, newRemaining: 0, reachedZero: false, entry: null, error: error.message }
+      if (!data) return { ok: false, newRemaining: 0, reachedZero: false, entry: null, error: 'no active entry' }
+      entry = data
     }
-  }
 
-  const newRemaining = remaining - cost
+    const remaining = entry.actions_remaining ?? 0
+    if (remaining < cost) {
+      return { ok: false, newRemaining: remaining, reachedZero: false, entry, error: `insufficient actions: ${remaining} < ${cost}` }
+    }
+    const newRemaining = remaining - cost
 
-  // Optional action-feed log entry. Best-effort - failure here doesn't roll
-  // back the decrement; we'd rather have a missing log line than a stuck turn.
-  if (args.actionLabel) {
-    try {
-      await supabase.from('roll_log').insert({
-        campaign_id: args.campaignId,
-        user_id: args.userId ?? null,
-        character_name: entry.character_name,
-        label: args.actionLabel,
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
-        outcome: OUTCOME.action,
-      })
-    } catch { /* swallow */ }
-  }
+    // Optional action-feed log entry - only once, not per retry attempt.
+    if (args.actionLabel && !loggedOnce) {
+      loggedOnce = true
+      try {
+        await supabase.from('roll_log').insert({
+          campaign_id: args.campaignId,
+          user_id: args.userId ?? null,
+          character_name: entry.character_name,
+          label: args.actionLabel,
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+          outcome: OUTCOME.action,
+        })
+      } catch { /* swallow */ }
+    }
 
-  // Persist the decrement. Use .select() so a silent RLS rejection
-  // (0 rows updated, no error) is distinguishable from a real update.
-  const { data: updData, error: updErr } = await supabase
-    .from('initiative_order')
-    .update({ actions_remaining: newRemaining })
-    .eq('id', entry.id)
-    .select('id, actions_remaining')
-  if (updErr) {
-    return { ok: false, newRemaining: remaining, reachedZero: false, entry, error: updErr.message }
+    // Persist the decrement, guarded on the value just read. 0 rows back
+    // could mean the guard lost the race (retry) or a genuine RLS denial
+    // (distinguished by re-reading below).
+    const { data: updData, error: updErr } = await supabase
+      .from('initiative_order')
+      .update({ actions_remaining: newRemaining })
+      .eq('id', entry.id).eq('actions_remaining', remaining)
+      .select('id, actions_remaining')
+    if (updErr) {
+      return { ok: false, newRemaining: remaining, reachedZero: false, entry, error: updErr.message }
+    }
+    if (updData && updData.length > 0) {
+      return { ok: true, newRemaining, reachedZero: newRemaining <= 0, entry }
+    }
+    // Lost the race - loop and re-read. If this was actually an RLS denial
+    // (not a concurrent write), the re-read will show the SAME
+    // actions_remaining every attempt and we'll exhaust retries below.
+    lastEntry = entry
+    lastRemaining = remaining
   }
-  if (!updData || updData.length === 0) {
-    return { ok: false, newRemaining: remaining, reachedZero: false, entry, error: 'silent RLS fail (0 rows)' }
-  }
-
-  return {
-    ok: true,
-    newRemaining,
-    reachedZero: newRemaining <= 0,
-    entry,
-  }
+  return { ok: false, newRemaining: lastRemaining, reachedZero: false, entry: lastEntry, error: 'too much contention or silent RLS fail (0 rows after 5 attempts)' }
 }

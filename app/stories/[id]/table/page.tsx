@@ -2370,25 +2370,50 @@ export default function TablePage() {
     }
     consumeActionInFlightRef.current.add(entryId)
     try {
-    // Re-fetch from DB to avoid stale state
-    const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
-    if (freshErr) reportSupabaseError(freshErr, 'consumeAction:fetch')
-    const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
-    trace('consumeAction', {
-      called: true,
-      entryId,
-      character: entry?.character_name,
-      actions_before: entry?.actions_remaining,
-      cost,
-      label: actionLabel,
-      call_site_via_stack: new Error().stack?.split('\n').slice(2, 5).join(' | '),
-    })
-    if (!entry) { trace('consumeAction', { skipped: 'no entry found, bailing' }); return }
-    if ((entry.actions_remaining ?? 0) < cost) { trace('consumeAction', { skipped: 'insufficient actions', actions_remaining: entry.actions_remaining, cost }); return }
-    const newRemaining = (entry.actions_remaining ?? 0) - cost
-    trace('consumeAction', { wrote_actions_remaining: { from: entry.actions_remaining, to: newRemaining } })
+    // Compare-and-set with retry (same pattern as lib/campaign-clock.ts
+    // advance()): the in-flight ref above only blocks a double-fire from
+    // THIS tab. A different client controlling the same combatant (e.g.
+    // the table page and a vehicle popout tab on the same seat) could
+    // still read the same actions_remaining and both write the same
+    // decrement - double-spending or under-spending an action, or never
+    // reaching 0 to advance the turn. Each attempt re-reads and only
+    // writes if the count is still what it read.
+    let entry: any = null
+    let newRemaining = 0
+    let clearAim = false
+    let won = false
+    for (let attempt = 0; attempt < 5 && !won; attempt++) {
+      const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
+      if (freshErr) reportSupabaseError(freshErr, 'consumeAction:fetch')
+      entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
+      trace('consumeAction', {
+        called: true, entryId, character: entry?.character_name, actions_before: entry?.actions_remaining, cost, label: actionLabel,
+        call_site_via_stack: new Error().stack?.split('\n').slice(2, 5).join(' | '),
+      })
+      if (!entry) { trace('consumeAction', { skipped: 'no entry found, bailing' }); return }
+      if ((entry.actions_remaining ?? 0) < cost) { trace('consumeAction', { skipped: 'insufficient actions', actions_remaining: entry.actions_remaining, cost }); return }
+      const actionsBefore = entry.actions_remaining ?? 0
+      newRemaining = actionsBefore - cost
+      // Clear aim bonus after a roll (no actionLabel = called from
+      // closeRollModal). Clear BOTH aim_bonus (the numeric +N CMod) and
+      // aim_active (the "Aimed - Attack or lose it" badge).
+      clearAim = !actionLabel && entry.aim_bonus > 0
+      trace('consumeAction', { wrote_actions_remaining: { from: actionsBefore, to: newRemaining } })
 
-    // Log the action to game feed
+      const { error: updErr, data: updData } = await supabase.from('initiative_order')
+        .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0, aim_active: false } : {}) })
+        .eq('id', entryId).eq('actions_remaining', actionsBefore)
+        .select('id, actions_remaining')
+      trace('consumeAction', { update: true, entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
+      if (updErr) { reportSupabaseError(updErr, 'consumeAction:update'); return }
+      won = !!updData && updData.length > 0
+    }
+    if (!won) {
+      console.error('[consumeAction] too much contention or silent RLS fail - 0 rows after 5 attempts. entryId:', entryId)
+      return
+    }
+
+    // Log the action to game feed - once, after the decrement has landed.
     if (actionLabel) {
       const { error: actionLogErr } = await insertRollLog({
         campaign_id: id,
@@ -2399,27 +2424,6 @@ export default function TablePage() {
         outcome: OUTCOME.action,
       })
       if (actionLogErr) reportSupabaseError(actionLogErr, 'consumeAction:action-log-insert')
-    }
-
-    // Clear aim bonus after a roll (no actionLabel = called from closeRollModal).
-    // Clear BOTH aim_bonus (the numeric +N CMod) and aim_active (the "Aimed -
-    // Attack or lose it" badge). Previously only aim_bonus was cleared, so
-    // the badge lingered after the attack even though the bonus was already
-    // consumed - visually misleading.
-    const clearAim = !actionLabel && entry.aim_bonus > 0
-
-    // Always persist the new action count to DB first - if nextTurn fails or
-    // races, the DB is at least consistent with "this combatant is spent".
-    // `.select()` so a silent RLS rejection (0 rows affected, no error) is
-    // distinguishable from a real update.
-    const { error: updErr, data: updData } = await supabase.from('initiative_order')
-      .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0, aim_active: false } : {}) })
-      .eq('id', entryId)
-      .select('id, actions_remaining')
-    trace('consumeAction', { update: true, entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
-    if (updErr) reportSupabaseError(updErr, 'consumeAction:update')
-    if (!updErr && (!updData || updData.length === 0)) {
-      console.error('[consumeAction] SILENT RLS FAIL - 0 rows updated, no error. entryId:', entryId)
     }
 
     if (newRemaining <= 0) {
