@@ -9,6 +9,7 @@ import CharacterCard, { LiveState } from '../../components/CharacterCard'
 import ProgressionLog, { LogEntry } from '../../components/ProgressionLog'
 import { resizeImage } from '../../lib/image-utils'
 import { uploadCharacterPortrait, removeCharacterPortrait } from '../../lib/data/character-portrait'
+import { updateCharacterDataField } from '../../lib/data/characters'
 
 export default function CharacterSheetPage() {
   const supabase = createClient()
@@ -215,7 +216,11 @@ export default function CharacterSheetPage() {
         <button onClick={async () => {
           if (!character) return
           setNotesSaving(true)
-          await supabase.from('characters').update({ data: { ...character.data, session_notes: notes } }).eq('id', character.id)
+          // Fresh-read + merge (not the in-memory character.data snapshot) so
+          // this save can't silently revert a concurrent change from another
+          // tab/session - same class of bug as the 2026-08-01 character-editor
+          // data-wipe fix.
+          await updateCharacterDataField(character.id, { session_notes: notes })
           setNotesSaving(false)
         }} disabled={notesSaving}
           style={{ marginTop: '6px', padding: '6px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: notesSaving ? 'not-allowed' : 'pointer', opacity: notesSaving ? 0.5 : 1 }}>
@@ -232,9 +237,9 @@ export default function CharacterSheetPage() {
             canEdit={isMySheet || isGM}
             compact={false}
             onUpdate={async (newLog: LogEntry[]) => {
-              const newData = { ...character.data, progression_log: newLog }
-              await supabase.from('characters').update({ data: newData }).eq('id', character.id)
-              setCharacter({ ...character, data: newData })
+              // Fresh-read + merge - see the Session Notes save above for why.
+              const { error } = await updateCharacterDataField(character.id, { progression_log: newLog })
+              if (!error) setCharacter((prev: any) => prev ? { ...prev, data: { ...prev.data, progression_log: newLog } } : prev)
             }}
           />
         </div>

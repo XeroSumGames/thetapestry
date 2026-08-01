@@ -19,6 +19,7 @@ import NpcCard from './NpcCard'
 import ApprenticeCreationWizard from './ApprenticeCreationWizard'
 import type { CampaignNpc } from './NpcRoster'
 import { fetchApprenticeNpc } from '../lib/data/community'
+import { updateCharacterDataField } from '../lib/data/characters'
 import { openPopout } from '../lib/popout'
 import RollModal, { type RollResult } from './RollModal'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
@@ -268,7 +269,11 @@ function CharacterCardImpl({
     // the old weapon until the next loadEntries. Same pattern as
     // onInventoryChange added for the + From Catalog bug.
     onWeaponChange?.(slot, data)
-    await supabase.from('characters').update({ data: { ...latestDataRef.current, [slot]: data } }).eq('id', c.id)
+    // Fresh-read + merge (not the latestDataRef snapshot, which only tracks
+    // prop changes and goes stale on a page with no realtime subscription,
+    // e.g. /characters) so this write can't clobber a concurrent change from
+    // another tab/session - same class as the 2026-08-01 character-editor fix.
+    await updateCharacterDataField(c.id, { [slot]: data })
   }
 
   function changeWeapon(slot: 'weaponPrimary' | 'weaponSecondary', weaponName: string) {
@@ -1160,9 +1165,9 @@ function CharacterCardImpl({
               canEdit={canEdit}
               compact={true}
               onUpdate={async (newLog) => {
-                const newData = { ...latestDataRef.current, progression_log: newLog }
-                latestDataRef.current = newData
-                await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+                // Fresh-read + merge - see saveWeapon above for why.
+                latestDataRef.current = { ...latestDataRef.current, progression_log: newLog }
+                await updateCharacterDataField(c.id, { progression_log: newLog })
               }}
             />
           </div>
@@ -1183,9 +1188,9 @@ function CharacterCardImpl({
           onUpdate={async (newInventory) => {
             // Optimistic local update first - the panel reads from this.
             setInventoryState(newInventory)
-            const newData = { ...latestDataRef.current, inventory: newInventory }
-            latestDataRef.current = newData
-            const { error } = await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+            latestDataRef.current = { ...latestDataRef.current, inventory: newInventory }
+            // Fresh-read + merge - see saveWeapon above for why.
+            const { error } = await updateCharacterDataField(c.id, { inventory: newInventory })
             if (error) {
               console.error('[inventory] DB update failed:', error.message)
               alert(`Failed to save inventory: ${error.message}`)
