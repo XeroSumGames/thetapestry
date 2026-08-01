@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-01 06:07 UTC
+
+**Status:** RED+DRIFT (persists from 00:04 entry - unresolved after 6h)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - brace-expansion, next, postcss, sharp. Unchanged.
+
+**CI:** FAILURE x2 in last 5 runs. Latest: 2026-08-01T00:06:19Z (run on health-pulse commit a815d80). Failing step: Architecture ratchet. Error: `app/stories/[id]/table/page.tsx` grew 11114 -> 11165 (+51 lines, past the 25-line grace). Root commit: ca83fd4 "fix(combat): in-table toast for Attack gates, drop browser alert()". TSC + Vitest skipped because arch:check fails first - those gates are dark while this persists.
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (section B) - stale since 2026-06-16, no code touches
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR FI Insight Die award path (doubles -> +1 pool) - stale since 2026-06-16
+
+**Action:** UNRESOLVED since 00:04 entry. HP must extract code from table/page.tsx OR re-baseline (`node scripts/check-arch.mjs --save`) if the +51 LOC is intentional. Every push to main will keep failing CI until fixed.
+
+---
+
 ## 2026-08-01 00:04 UTC
 
 **Status:** RED+DRIFT
