@@ -1,5 +1,7 @@
 import type { Json } from '../database.types'
 import { db } from './db'
+import { mergeWizardEdit } from '../xse-engine'
+import type { XSECharacter } from '../xse-schema'
 
 /** Create a character row for a user. Returns {data: {id, name, portrait_url}, error}. */
 export function createCharacterForUser(userId: string, name: string, data: unknown, portraitUrl?: string | null) {
@@ -49,4 +51,31 @@ export async function updateCharacterDataField(charId: string, patch: Record<str
   const base = (existing.data && typeof existing.data === 'object' && !Array.isArray(existing.data)) ? existing.data as Record<string, Json> : {}
   const merged: Json = { ...base, ...patch as Record<string, Json> }
   return db().from('characters').update({ data: merged }).eq('id', charId)
+}
+
+/**
+ * Save an edit from the classic character wizard. buildCharacter() output
+ * is built from a blank template, so it must never be written wholesale -
+ * fresh-reads the row and merges only the wizard-owned fields (via
+ * mergeWizardEdit) before writing name/data/portrait_url back together.
+ * 2026-08-01 audit: the previous inline wholesale write silently reset
+ * inventory/progression_log/session_notes/lastingWounds/relationships/
+ * cdp/insightDice/stressLevel/breakingPoint on every save.
+ */
+export async function saveWizardCharacterEdit(
+  charId: string,
+  character: XSECharacter,
+  fallbackName: string,
+  portraitUrl: string | null,
+) {
+  const { data: existing, error: readErr } = await db().from('characters').select('data').eq('id', charId).single()
+  if (readErr || !existing) {
+    return { data: null, error: readErr ?? { message: `character ${charId} not found`, details: '', hint: '', code: 'PGRST116', name: 'PostgrestError' } as any }
+  }
+  const base = (existing.data && typeof existing.data === 'object' && !Array.isArray(existing.data)) ? existing.data as Record<string, Json> : {}
+  const merged = mergeWizardEdit(base, character) as Json
+  return db()
+    .from('characters')
+    .update({ name: character.name || fallbackName, data: merged, portrait_url: portraitUrl })
+    .eq('id', charId)
 }
