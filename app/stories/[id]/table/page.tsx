@@ -7359,17 +7359,17 @@ export default function TablePage() {
                   } else {
                     cargo.push({ name: item.name, enc: item.enc, rarity: item.rarity, notes: item.notes, qty, custom: !!item.custom })
                   }
-                  const newVehicles = vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v)
-                  setVehicles(newVehicles)
+                  setVehicles(vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v))
                   // RPC instead of direct UPDATE so non-GM members succeed
                   // (post-playtest Q3 scope A, 2026-05-19). Direct UPDATE is
                   // RLS-blocked for non-GM; the RPC is SECURITY DEFINER +
-                  // member-authorized.
-                  const updated = newVehicles[targetIdx]
+                  // member-authorized. Send only the changed field (cargo) -
+                  // the RPC merges server-side, so a concurrent client's
+                  // write to any OTHER field isn't clobbered.
                   const { error } = await supabase.rpc('update_vehicle_in_campaign', {
                     p_campaign_id: id,
-                    p_vehicle_id: updated.id,
-                    p_new_vehicle: updated as any,
+                    p_vehicle_id: target.id,
+                    p_patch: { cargo },
                   })
                   if (error) { alert(`Stash failed: ${error.message}`); return }
                 }}
@@ -7913,13 +7913,16 @@ export default function TablePage() {
                                 RPC since direct campaigns.update is GM-RLS-blocked. */}
                             <VehicleCard vehicle={v} campaignId={id} canEdit={true}
                               onClickInline={() => { setSelectedEntry(null); setSheetPos(null); setSelectedVehicleId(v.id) }}
-                              onUpdate={async (updated: Vehicle) => {
-                                const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
-                                setVehicles(newVehicles)
+                              onUpdate={async (patch) => {
+                                setVehicles(vehicles.map(vv => vv.id === patch.id ? { ...vv, ...patch } : vv))
+                                // patch is already narrow (id + only the changed
+                                // fields) - the RPC merges server-side, so a
+                                // concurrent client's write to a different field
+                                // survives instead of being clobbered.
                                 const { error } = await supabase.rpc('update_vehicle_in_campaign', {
                                   p_campaign_id: id,
-                                  p_vehicle_id: updated.id,
-                                  p_new_vehicle: updated as any,
+                                  p_vehicle_id: patch.id,
+                                  p_patch: patch,
                                 })
                                 if (error) {
                                   reportSupabaseError(error as any, 'vehicle-asset-update')

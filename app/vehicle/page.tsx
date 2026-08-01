@@ -307,6 +307,7 @@ export default function VehiclePage() {
   const fuelPct = vehicle.fuel_max > 0 ? vehicle.fuel_current / vehicle.fuel_max : 0
 
   async function updateVehicle(updated: Vehicle) {
+    const prev = vehicle
     setVehicle(updated)
     if (!campaignId) return
     // Route through update_vehicle_in_campaign RPC instead of a direct
@@ -317,10 +318,31 @@ export default function VehiclePage() {
     // its vehicles state, and TacticalMap kept rendering aboard
     // tokens. The RPC is SECURITY DEFINER + authorized by campaign
     // membership, with a narrow swap-one-vehicle scope.
+    //
+    // Diff against last-known state and send ONLY the fields that
+    // actually changed. Every call site builds `updated` as
+    // `{ ...vehicle, someField: x }` (a full snapshot of local, possibly
+    // stale state plus one changed field) - sending that whole object
+    // would make the RPC's merge degrade back into a full replace, silently
+    // reverting a concurrent client's write to any OTHER field (lost-update
+    // race - the exact bug this fix closes). The RPC merges (jsonb `||`),
+    // it no longer replaces, so a narrow patch here is what actually makes
+    // that safe.
+    const patch: Record<string, any> = {}
+    if (prev) {
+      for (const key of Object.keys(updated) as (keyof Vehicle)[]) {
+        if (JSON.stringify((updated as any)[key]) !== JSON.stringify((prev as any)[key])) {
+          patch[key as string] = (updated as any)[key]
+        }
+      }
+    } else {
+      Object.assign(patch, updated)
+    }
+    if (Object.keys(patch).length === 0) return
     const { error } = await supabase.rpc('update_vehicle_in_campaign', {
       p_campaign_id: campaignId,
       p_vehicle_id: updated.id,
-      p_new_vehicle: updated as any,
+      p_patch: patch,
     })
     if (error) {
       console.error('[vehicle-popout] updateVehicle RPC failed:', error.message)
