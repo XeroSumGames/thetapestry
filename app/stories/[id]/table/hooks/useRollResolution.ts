@@ -1164,7 +1164,7 @@ export function useRollResolution(deps: RollResolutionDeps) {
               // locally - a rare multi-victim edge case, not the common one.
               if (nWP === 0 && curWP > 0 && curInsight > 0) {
                 const update: any = { rp_current: nRP, updated_at: nowIso }
-                tableUpdates.push(updateCharacterState(job.pc.stateId, update))
+                tableUpdates.push(Promise.resolve(updateCharacterState(job.pc.stateId, update)))
                 pcLocalPatches.set(job.pc.stateId, update)
                 blastInsightSave = {
                   stateId: job.pc.stateId, targetName: job.pc.character.name, targetUserId: job.pc.userId,
