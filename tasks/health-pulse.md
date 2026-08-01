@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-01 09:03 UTC
+
+**Status:** RED+DRIFT (persists - 3rd consecutive health-pulse with unresolved arch ratchet breach)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - brace-expansion, next, postcss, sharp. Unchanged.
+
+**CI:** FAILURE x3 in last 5 runs (latest: 2026-08-01T06:07Z). All fail at Architecture ratchet: `app/stories/[id]/table/page.tsx` grew 11114 -> 11165 (+51 lines, past the 25-line grace). Health-pulse commits are now also triggering CI failures - the ratchet blocks every push to main until resolved. Root: `ca83fd4` + `693f813` (bug fixes that legitimately added LOC). TSC + Vitest remain dark (skipped by CI when arch:check fails).
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (section B) - stale since 2026-06-16, no code touches
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR FI Insight Die award path (doubles -> +1 pool) - stale since 2026-06-16, never fired live
+
+**Action:** HP: run `node scripts/check-arch.mjs --save` to re-baseline at 11165 (growth was intentional bug fixes) OR extract code to bring LOC below 11114. Every push to main fails CI until this is done. Escalating - 9h unresolved.
+
+---
+
 ## 2026-08-01 06:07 UTC
 
 **Status:** RED+DRIFT (persists from 00:04 entry - unresolved after 6h)
