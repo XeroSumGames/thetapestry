@@ -139,15 +139,25 @@ export async function stampModuleIdOnPregens(campaignId: string, moduleId: strin
 }
 
 /** Insert pregens cloned from a module snapshot into pregen_library. */
-export function insertClonedPregens(rows: Array<{
-  campaign_id: string
-  module_id: string
-  name: string
-  data: any
-  portrait_url: string | null
-  author_id: null
-  moderation_status: string
-  approved_at: string
-}>) {
-  return db().from('pregen_library').insert(rows as any)
+/**
+ * Clone pregens from a module snapshot into a campaign's pregen_library as
+ * pre-approved official pregens (author_id: null, moderation_status:
+ * 'approved'). pregen_library_insert's RLS unconditionally requires
+ * author_id = auth.uid(), which a null author_id can never satisfy for any
+ * caller - the direct-insert version of this (a raw .insert() with
+ * author_id: null) deterministically fails under RLS for every caller.
+ * Routes through a SECURITY DEFINER RPC that re-implements the real
+ * authorization check (caller must GM the target campaign) inline instead.
+ * 2026-08-01 audit.
+ */
+export function cloneModulePregensIntoCampaign(
+  campaignId: string,
+  moduleId: string,
+  pregens: Array<{ name: string; data: any; portrait_url: string | null }>,
+) {
+  return db().rpc('clone_module_pregens_into_campaign', {
+    p_campaign_id: campaignId,
+    p_module_id: moduleId,
+    p_pregens: pregens as any,
+  })
 }

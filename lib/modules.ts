@@ -6,11 +6,13 @@
 // cloneModuleIntoCampaign. Cloned rows carry source_module_* pointers
 // so Phase B can diff+merge upstream updates without re-cloning.
 //
-// No RPC / stored procedure - everything runs through the supabase-js
-// client so RLS applies. The clone is not atomic at the DB level; if a
-// later step fails the caller is expected to surface the error and
-// leave the partial state visible (same pattern the existing setting
-// seed pipeline in /app/campaigns/new uses).
+// Everything runs through the supabase-js client so RLS applies, except
+// pregen cloning (step 5.5), which needs a SECURITY DEFINER RPC - RLS
+// cannot express "insert with author_id: null" for any caller (2026-08-01).
+// The clone is not atomic at the DB level; if a later step fails the
+// caller is expected to surface the error and leave the partial state
+// visible (same pattern the existing setting seed pipeline in
+// /app/campaigns/new uses).
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getCachedAuth } from './auth-cache'
@@ -19,7 +21,7 @@ import { fetchAllRows } from './supabase-paginate'
 import {
   loadPregensByCampaignForSnapshot,
   stampModuleIdOnPregens,
-  insertClonedPregens,
+  cloneModulePregensIntoCampaign,
 } from './data/pregens'
 
 // ── Shapes that a module snapshot carries ──────────────────────
@@ -507,21 +509,19 @@ export async function cloneModuleIntoCampaign(
 
   // 5.5. Pregens → pregen_library. Clone each pregen from the snapshot
   // as an approved official pregen on the new campaign so they appear
-  // in the story-page picker immediately on clone.
+  // in the story-page picker immediately on clone. pregen_library_insert's
+  // RLS requires author_id = auth.uid(), which a null (official-pregen)
+  // author_id can never satisfy - routed through a SECURITY DEFINER RPC
+  // that re-checks GM-of-target-campaign inline instead (2026-08-01 audit).
   if (snapshot.pregens && snapshot.pregens.length > 0) {
-    const pregenRows = (snapshot.pregens as any[]).map((p: any) => ({
-      campaign_id: campaignId,
-      module_id: source_module_id,
+    const pregenPayload = (snapshot.pregens as any[]).map((p: any) => ({
       name: p.name,
       data: p.data,
       portrait_url: p.portrait_url ?? null,
-      author_id: null,
-      moderation_status: 'approved',
-      approved_at: new Date().toISOString(),
     }))
-    const { error: prErr } = await insertClonedPregens(pregenRows)
+    const { error: prErr } = await cloneModulePregensIntoCampaign(campaignId, source_module_id, pregenPayload)
     if (prErr) throw new Error(`pregens: ${prErr.message}`)
-    counts.pregens = pregenRows.length
+    counts.pregens = pregenPayload.length
   }
 
   // 6. Subscription record. Duplicates the (campaign, module) pair
