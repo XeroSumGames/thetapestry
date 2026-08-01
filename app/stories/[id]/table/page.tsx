@@ -4552,10 +4552,18 @@ export default function TablePage() {
 
   // Assembles the AttackCmodCtx from current component state for the prefill
   // and the target-dropdown onChange (the only two computeAttackCmod callers).
-  function cmodCtx(): AttackCmodCtx {
+  // labelOverride: the prefill call site (handleRollRequest) computes this
+  // ctx in the SAME synchronous call as setPendingRoll(), before React
+  // re-renders - reading pendingRoll?.label there would see the PREVIOUS
+  // roll's label, wrongly gating (or wrongly allowing) the Coordinated
+  // Effort bonus in computeAttackCmod's `!pendingLabel.startsWith('Group
+  // Check - ')` check (per the 2026-08-01 audit). Pass the label being set
+  // up right now; the dropdown onChange call site (already-settled state,
+  // a separate render cycle) omits it and reads pendingRoll as before.
+  function cmodCtx(labelOverride?: string): AttackCmodCtx {
     return {
       entries, npcs: campaignNpcs, tokens: mapTokens, initiative: initiativeOrder, vehicles: vehicles.map((v: any) => ({ name: v.name, size: v.size })),
-      userId, pendingLabel: pendingRoll?.label ?? '', coordEffort: coordEffortRef.current,
+      userId, pendingLabel: labelOverride ?? pendingRoll?.label ?? '', coordEffort: coordEffortRef.current,
     }
   }
 
@@ -4777,7 +4785,7 @@ export default function TablePage() {
       // Itemized CMod (incl. NPC-target defense on the to-hit roll, Q1=b) via
       // the shared computeAttackCmod so the prefill and the dropdown onChange
       // stay in lockstep.
-      const { net, sources } = computeAttackCmod(chosenTarget, weapon, cmodCtx())
+      const { net, sources } = computeAttackCmod(chosenTarget, weapon, cmodCtx(label))
       cmodSourcesRef.current = sources
       setCmod(String(net))
       const autoRange = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, chosenTarget)
