@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-01 15:08 UTC
+
+**Status:** DRIFT (arch ratchet CI blockage CLEARED - 4 consecutive passes as of 14:59 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - brace-expansion (independently fixable), next/postcss/sharp (require major Next.js version bump). Unchanged.
+
+**CI:** last failure: https://github.com/XeroSumGames/thetapestry/actions/runs/30703395923 2026-08-01T14:15Z (tsc, commit 61677df, recovered within 33 min - 4 subsequent successes). Prior arch-ratchet breach chain from the 12:07 entry is CLEARED.
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (Section B) - stale 3+ days, no git activity
+- HOPED-FOR Cover Fire -2 CMod 2-client verify - owed since 2026-07-20 (12 days)
+- HOPED-FOR GM Screen interactive verify (drag/collapse/filter persist) - owed since 2026-07-20 (12 days)
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale 3+ days
+- HOPED-FOR FI Insight Die award path (doubles -> +1 pool) - stale 3+ days, never fired live
+- todo open: CampaignMap fingerprint hashes allPins (line 651) - GM editing hidden pins churns player maps
+- todo open: 3s vehicles poll (page.tsx:3129) - scale liability at Beta-500 (~167 req/s)
+
+**Action:** CI blockage cleared. Schedule Cover Fire + GM Screen 2-client verify (12 days overdue). Plan brace-expansion fix (low-risk, independent). CampaignMap fingerprint is low-risk fix (hash visible not allPins).
+
+---
+
 ## 2026-08-01 12:07 UTC
 
 **Status:** RED+DRIFT (4th consecutive health-pulse, 12h+ unresolved - escalating)
