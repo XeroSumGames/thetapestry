@@ -5,7 +5,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
-import { getCampaignModuleCover, setMemberObserver } from '../../../lib/data/campaigns'
+import { getCampaignModuleCover } from '../../../lib/data/campaigns'
 import { SETTINGS } from '../../../lib/settings'
 
 export default function JoinByCodePage() {
@@ -42,12 +42,14 @@ export default function JoinByCodePage() {
     setJoining(true)
     const { user } = await getCachedAuth()
     if (!user) { router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`); return }
-    const { error } = await supabase.from('campaign_members').insert({ campaign_id: campaign.id, user_id: user.id })
-    if (error && error.code !== '23505') { setStatus('error'); return }
-    // This is a PLAYER invite link. If they were already seated as an observer,
-    // a bare re-join left them stuck invisible - explicitly downgrade to player.
-    if (error?.code === '23505') await setMemberObserver(campaign.id, user.id, false)
-    if (!error) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
+    // Server-side validates the code and performs the membership insert
+    // atomically (join_campaign_by_invite_code) - a raw table insert can no
+    // longer join an arbitrary campaign_id regardless of code possession.
+    // This is a PLAYER invite link, so observer=false reconciles a stale
+    // observer seat back to player on re-join (matches prior behavior).
+    const { data, error } = await supabase.rpc('join_campaign_by_invite_code', { p_code: code, p_observer: false }).single()
+    if (error || !data) { setStatus('error'); return }
+    logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
     router.push(`/stories/${campaign.id}`)
   }
 

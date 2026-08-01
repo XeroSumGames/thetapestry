@@ -25,6 +25,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE campaign_npcs;
 ALTER PUBLICATION supabase_realtime ADD TABLE campaign_pins;
 ALTER PUBLICATION supabase_realtime ADD TABLE campaigns;
 ALTER PUBLICATION supabase_realtime ADD TABLE character_states;
+ALTER PUBLICATION supabase_realtime ADD TABLE characters;
 ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE community_members;
 ALTER PUBLICATION supabase_realtime ADD TABLE community_stockpile_items;
@@ -39,5 +40,5 @@ ALTER PUBLICATION supabase_realtime ADD TABLE scene_tokens;
 ALTER PUBLICATION supabase_realtime ADD TABLE tactical_scenes;
 ALTER PUBLICATION supabase_realtime ADD TABLE whispers;
 
--- Verify (should return exactly the 21 names above):
+-- Verify (should return exactly the 22 names above):
 -- select tablename from pg_publication_tables where pubname='supabase_realtime' order by 1;
