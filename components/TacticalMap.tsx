@@ -4290,6 +4290,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                             else next.add(key)
                             return next
                           })
+                          // Broadcast so other already-connected clients (GM
+                          // and any player with the map open) flip the same
+                          // arc, matching the /vehicle popout's own toggle
+                          // (which already broadcasts firing_arc_toggle).
+                          // Before this fix, toggling from inside the map
+                          // was local-only - a GM using this button and a
+                          // player watching the popout could see different
+                          // arc states with nothing to reconcile them (per
+                          // the 2026-08-01 audit). Known remaining gap: arc
+                          // state still isn't DB-persisted, so a client that
+                          // opens/refreshes the map mid-session starts from
+                          // an empty Set regardless of this fix.
+                          tacticalChannelRef.current?.send({ type: 'broadcast', event: 'firing_arc_toggle', payload: { vehicleName: tok.name, weaponIdx: i } })
                         }}
                         title={`Toggle firing arc - ${w.arc_degrees}° at mount ${w.mount_angle}°`}
                         style={{ padding: '2px 6px', background: active ? '#2a1a3e' : '#1a1a2e', border: `1px solid ${active ? '#c4a7f0' : '#2e2e5a'}`, borderRadius: '2px', color: active ? '#c4a7f0' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
