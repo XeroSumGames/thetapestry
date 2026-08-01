@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-01 12:07 UTC
+
+**Status:** RED+DRIFT (4th consecutive health-pulse, 12h+ unresolved - escalating)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - brace-expansion, next, postcss, sharp. Unchanged.
+
+**CI:** FAILURE x4 in last 5 runs. Latest: 2026-08-01T09:06Z. All fail: arch ratchet - `app/stories/[id]/table/page.tsx` grew 11114 -> 11165 (+51 lines, past 25-line grace). Root commits: `ca83fd4` + `693f813` (combat bug fixes). Every push to main fails CI. TSC + Vitest remain dark while arch:check blocks them.
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (Section B) - stale 3+ days, no code activity
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale 3+ days
+- HOPED-FOR FI Insight Die award path (doubles -> +1 pool) - stale 3+ days, never fired live
+
+**Action:** CRITICAL - 4 consecutive CI failures. Run `node scripts/check-arch.mjs --save` to re-baseline at 11165 (the +51 LOC came from legitimate bug fixes). Every push blocked until this is done.
+
+---
+
 ## 2026-08-01 09:03 UTC
 
 **Status:** RED+DRIFT (persists - 3rd consecutive health-pulse with unresolved arch ratchet breach)
