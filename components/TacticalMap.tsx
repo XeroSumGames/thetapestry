@@ -6,7 +6,7 @@ import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-cont
 import {
   campaignScenes, insertScene, updateScene, deactivateOtherScenes, deactivateAllScenes,
   sceneTokens, updateToken, insertTokens, deleteToken, deleteTokensForScene, campaignVehiclesOnly,
-  campaignInitiativeOrder, toggleWallSegmentDoor,
+  campaignInitiativeOrder, toggleWallSegmentDoor, updateSceneColumnCAS,
 } from '../lib/data/tactical'
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { trace } from '../lib/playtest-recorder'
@@ -376,6 +376,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [wallsLocal, setWallsLocal] = useState<WallSegment[]>([])
   const wallsLocalRef = useRef<WallSegment[]>([])
   useEffect(() => { wallsLocalRef.current = wallsLocal }, [wallsLocal])
+  // Last server-observed `walls` - the CAS "expected" baseline (see scheduleWallsPersist).
+  const wallsBaseRef = useRef<WallSegment[]>([])
   const [wallDrawStart, setWallDrawStart] = useState<{ x: number; y: number } | null>(null)
   const [wallDrawHover, setWallDrawHover] = useState<{ x: number; y: number } | null>(null)
   const wallsPendingSaveRef = useRef<number | null>(null)
@@ -386,6 +388,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [fogLocal, setFogLocal] = useState<Record<string, boolean>>({})
   const fogLocalRef = useRef<Record<string, boolean>>({})
   useEffect(() => { fogLocalRef.current = fogLocal }, [fogLocal])
+  // Same CAS baseline as wallsBaseRef, for fog_state.
+  const fogBaseRef = useRef<Record<string, boolean>>({})
   const initiativeOrderRef = useRef<any[]>(initiativeOrder)
   useEffect(() => { initiativeOrderRef.current = initiativeOrder }, [initiativeOrder])
   // Direct ref-load avoids the prop-chain race that left move-follow stale on turn-change.
@@ -440,6 +444,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (!scene) return
     const incoming = (scene.fog_state ?? {}) as Record<string, boolean>
     setFogLocal(incoming)
+    fogBaseRef.current = incoming
   }, [scene?.id, scene?.fog_state])
 
   // Same reconcile for wall segments. Authoring is click-based (not
@@ -453,6 +458,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const incoming = (scene.walls ?? []) as WallSegment[]
     const cleaned = cleanupOverlappingWalls(incoming)
     setWallsLocal(cleaned)
+    wallsBaseRef.current = incoming // CAS baseline for the next persist
     if (isGM && cleaned.length !== incoming.length) {
       // Persist async - the local mirror is already correct.
       wallsLocalRef.current = cleaned
@@ -541,7 +547,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     wallsPendingSaveRef.current = window.setTimeout(async () => {
       wallsPendingSaveRef.current = null
-      await updateScene(sceneId, { walls: wallsLocalRef.current as any })
+      const next = wallsLocalRef.current
+      // CAS against the last-observed server value - closes the 2-GM-
+      // session race where a later full-array write silently clobbers an
+      // earlier one it never saw (2026-08-01 audit). Empty `data` = lost
+      // the race; the reconcile effect resyncs from the winner's realtime echo.
+      const { data, error } = await updateSceneColumnCAS(sceneId, 'walls', wallsBaseRef.current, next as any)
+      if (error) { console.error('[TM] walls persist failed:', error.message); return }
+      if (!data || data.length === 0) {
+        console.error('[TM] walls persist lost a concurrent-edit race - dropped')
+        showToggleLabel((scene.grid_cols ?? 20) / 2, (scene.grid_rows ?? 15) / 2, 'Scene edited elsewhere - retry your change')
+        return
+      }
+      wallsBaseRef.current = next
     }, 200)
   }
 
@@ -627,7 +645,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       // Strip any keys whose value is false so the column stays sparse.
       const sparse: Record<string, boolean> = {}
       for (const k of Object.keys(payload)) if (payload[k]) sparse[k] = true
-      await updateScene(sceneId, { fog_state: sparse })
+      // Compare-and-set - same race as scheduleWallsPersist above, same fix.
+      const expected = fogBaseRef.current
+      const { data, error } = await updateSceneColumnCAS(sceneId, 'fog_state', expected, sparse)
+      if (error) { console.error('[TM] fog persist failed:', error.message); return }
+      if (!data || data.length === 0) {
+        console.error('[TM] fog persist lost a concurrent-edit race - dropped, will resync from realtime')
+        return
+      }
+      fogBaseRef.current = sparse
     }, 300)
   }
 

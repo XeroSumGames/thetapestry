@@ -25,6 +25,34 @@ export function insertScene(row: Insert<'tactical_scenes'>) {
 export function updateScene(id: string, patch: Update<'tactical_scenes'>) {
   return db().from('tactical_scenes').update(patch).eq('id', id)
 }
+/**
+ * Compare-and-set write for a single tactical_scenes jsonb column
+ * (walls / fog_state). The bulk wall-authoring paths (draw/delete/rect/
+ * fog paint) build a whole new array/object client-side and write it
+ * back wholesale - two GM-privileged sessions (main tab + popout, or two
+ * co-GMs) editing within the same debounce window can silently clobber
+ * each other, since the second write is built from a snapshot that never
+ * saw the first one land. `.eq(column, expected)` makes the UPDATE only
+ * match if nothing changed the column since the caller last observed it -
+ * atomic at the DB level (single round trip, real WHERE clause, not a
+ * separate read-then-write). `.select('id')` forces the response to
+ * report which rows actually matched: an empty array means the CAS lost
+ * the race - the caller did NOT get overwritten by this call, and should
+ * NOT update its own "last known" baseline. 2026-08-01 audit follow-up.
+ */
+export function updateSceneColumnCAS(
+  id: string,
+  column: 'walls' | 'fog_state',
+  expected: unknown,
+  next: unknown,
+) {
+  return db()
+    .from('tactical_scenes')
+    .update({ [column]: next } as any)
+    .eq('id', id)
+    .eq(column, expected as any)
+    .select('id')
+}
 /** Toggle a single door/window segment open or closed. Works for any campaign
  *  member (not just the GM) - the RPC enforces membership server-side.
  *  Replaces the player-side scheduleWallsPersist() which was gated on isGM. */
