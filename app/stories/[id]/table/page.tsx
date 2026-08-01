@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
-import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
+import { getCampaignNpcs, getCampaignNpcById } from '../../../../lib/data/campaign-npcs'
+import { getCharacterStateById } from '../../../../lib/data/character-states'
 import { canCoverFire, resolveCoverFireShooter, applyCoverFire } from '../../../../lib/cover-fire'
 import { CAMPAIGN_COLUMNS, foldGmScratch } from '../../../../lib/data/campaigns'
 import { activeSceneId } from '../../../../lib/data/scenes'
@@ -5102,8 +5103,18 @@ export default function TablePage() {
         if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetEntry.character.name)
         const phy = targetEntry.character.data?.rapid?.PHY ?? 0
         const ls = targetEntry.liveState
-        const eb = baseline?.targetKind === 'pc' && baseline.id === targetEntry.stateId ? baseline
-          : { wp: ls.wp_current, rp: ls.rp_current, deathCountdown: ls.death_countdown ?? 0, incapRounds: ls.incap_rounds ?? 0, stress: ls.stress ?? 0 }
+        // No baseline means the original roll missed (nothing was applied),
+        // so the reroll's damage is the first hit on this target - re-fetch
+        // fresh state instead of trusting the closure, same fix as the
+        // initial-hit path (a concurrent hit between the miss and this
+        // reroll click would otherwise be overwritten - lost-update race).
+        let eb = { wp: ls.wp_current, rp: ls.rp_current, deathCountdown: ls.death_countdown ?? 0, incapRounds: ls.incap_rounds ?? 0, stress: ls.stress ?? 0 }
+        if (baseline?.targetKind === 'pc' && baseline.id === targetEntry.stateId) {
+          eb = baseline
+        } else {
+          const { data: freshState } = await getCharacterStateById(targetEntry.stateId)
+          if (freshState) eb = { wp: freshState.wp_current, rp: freshState.rp_current, deathCountdown: freshState.death_countdown ?? 0, incapRounds: freshState.incap_rounds ?? 0, stress: freshState.stress ?? 0 }
+        }
         const tNewWP = Math.max(0, eb.wp - finalWP)
         const tNewRP = Math.max(0, eb.rp - finalRP)
         const mortalNow = tNewWP === 0 && eb.wp > 0
@@ -5128,8 +5139,15 @@ export default function TablePage() {
       } else if (targetNpcObj) {
         if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetNpcObj.name)
         const npcPhy = targetNpcObj.physicality ?? 0
-        const eb = baseline?.targetKind === 'npc' && baseline.id === targetNpcObj.id ? baseline
-          : { wp: targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10, rp: targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6, deathCountdown: (targetNpcObj as any).death_countdown ?? 0, incapRounds: (targetNpcObj as any).incap_rounds ?? 0 }
+        // No baseline means the original roll missed - re-fetch fresh state
+        // instead of trusting the closure (same lost-update fix as above).
+        let eb = { wp: targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10, rp: targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6, deathCountdown: (targetNpcObj as any).death_countdown ?? 0, incapRounds: (targetNpcObj as any).incap_rounds ?? 0 }
+        if (baseline?.targetKind === 'npc' && baseline.id === targetNpcObj.id) {
+          eb = baseline
+        } else {
+          const { data: freshNpc } = await getCampaignNpcById(targetNpcObj.id)
+          if (freshNpc) eb = { wp: freshNpc.wp_current ?? targetNpcObj.wp_max ?? 10, rp: freshNpc.rp_current ?? targetNpcObj.rp_max ?? 6, deathCountdown: freshNpc.death_countdown ?? 0, incapRounds: freshNpc.incap_rounds ?? 0 }
+        }
         const tNewWP = Math.max(0, eb.wp - finalWP)
         const tNewRP = Math.max(0, eb.rp - finalRP)
         const mortalNow = tNewWP === 0 && eb.wp > 0

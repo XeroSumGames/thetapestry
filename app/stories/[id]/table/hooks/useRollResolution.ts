@@ -22,7 +22,7 @@ import { rollDamage, calculateDamage, type ArmorPiece, type AttackerCategory } f
 import { computeBlastSplash, mortalWoundCountdown, buildCmodBreakdown, computeAttackCmod, type CmodSources, type AttackCmodCtx } from '../../../../../lib/table-roll-context'
 import { insertRollLog } from '../../../../../lib/data/roll-log'
 import { setGrappledBy } from '../../../../../lib/data/tactical'
-import { updateCampaignNpc } from '../../../../../lib/data/campaign-npcs'
+import { updateCampaignNpc, getCampaignNpcById } from '../../../../../lib/data/campaign-npcs'
 import { applyDamageToPc, applyDamageToNpc, type DamageContext } from '../../../../../lib/data/combat'
 import { trace } from '../../../../../lib/playtest-recorder'
 import { queuePendingHeal } from '../../../../../lib/campaign-clock'
@@ -790,14 +790,20 @@ export function useRollResolution(deps: RollResolutionDeps) {
         }
       } else if (targetNpc) {
         // NPC target - use campaign_npcs
-        const npcWP = targetNpc.wp_current ?? targetNpc.wp_max ?? 10
-        const npcRP = targetNpc.rp_current ?? targetNpc.rp_max ?? 6
+        // Re-fetch fresh HP from DB to avoid stale closure values (same M7
+        // fix the PC branch above already has - targetNpc comes from the
+        // campaignNpcs React cache, which a concurrent attacker's hit may
+        // not have landed in yet under normal network latency, causing a
+        // lost-update when two clients damage the same NPC near-simultaneously).
+        const { data: freshNpc } = await getCampaignNpcById(targetNpc.id)
+        const npcWP = freshNpc?.wp_current ?? targetNpc.wp_current ?? targetNpc.wp_max ?? 10
+        const npcRP = freshNpc?.rp_current ?? targetNpc.rp_current ?? targetNpc.rp_max ?? 6
         // Snapshot pre-hit state for the reroll-replaces-original path.
         if (damageResult) damageResult.rerollBaseline = {
           targetKind: 'npc', id: targetNpc.id,
           wp: npcWP, rp: npcRP,
-          deathCountdown: (targetNpc as any).death_countdown ?? 0,
-          incapRounds: (targetNpc as any).incap_rounds ?? 0,
+          deathCountdown: freshNpc?.death_countdown ?? (targetNpc as any).death_countdown ?? 0,
+          incapRounds: freshNpc?.incap_rounds ?? (targetNpc as any).incap_rounds ?? 0,
           stress: 0,
         }
         const newWP = Math.max(0, npcWP - finalWP)

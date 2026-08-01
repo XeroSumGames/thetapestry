@@ -36,3 +36,8 @@ export async function getPartyCharacterStates(campaignId: string) {
 export function updateCharacterState(id: string, patch: Update<'character_states'>) {
   return db().from('character_states').update(patch).eq('id', id)
 }
+
+/** One character_states row by id. Drop-in for the inline select-single. */
+export function getCharacterStateById(id: string) {
+  return db().from('character_states').select('*').eq('id', id).maybeSingle()
+}

@@ -4241,7 +4241,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   if (!veh?.id || !campaignId) return null
                   return (
                     <button onClick={() => {
-                        const url = `/vehicle?campaign=${campaignId}&vehicle=${veh.id}`
+                        const url = `/vehicle?c=${campaignId}&v=${veh.id}`
                         window.open(url, `vehicle_${veh.id}`, 'width=560,height=900,scrollbars=yes,resizable=yes')
                       }}
                       title="Open the vehicle sheet in a popout window"
