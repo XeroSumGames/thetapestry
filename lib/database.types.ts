@@ -4143,6 +4143,10 @@ export type Database = {
         Args: { p_campaign_id: string }
         Returns: string
       }
+      get_campaign_module_cover: {
+        Args: { p_campaign_id: string }
+        Returns: string
+      }
       get_latest_messages_for_conversations: {
         Args: { conv_ids: string[] }
         Returns: {

@@ -76,17 +76,16 @@ export function getUserRole(userId: string) {
 /**
  * Fetch the cover_image_url from the first active module subscription for
  * a campaign. Used to inherit the /rumors module's cover image into the
- * story page hero when the campaign has no custom cover of its own.
+ * story page hero when the campaign has no custom cover of its own, and
+ * on the pre-membership join page's invite card. Routed through a
+ * SECURITY DEFINER RPC (2026-08-01) rather than a raw module_subscriptions
+ * read - that table's RLS is scoped to campaign GM/member/module-author/
+ * Thriver (a join-page visitor is none of those yet), and the RPC only
+ * ever returns this one non-sensitive field, not the whole row.
  */
 export async function getCampaignModuleCover(campaignId: string): Promise<string | null> {
-  const { data } = await db()
-    .from('module_subscriptions' as any)
-    .select('modules:module_id(cover_image_url)')
-    .eq('campaign_id', campaignId)
-    .eq('status', 'active')
-    .maybeSingle()
-  const modRow = (data as any)?.modules
-  return (Array.isArray(modRow) ? modRow[0] : modRow)?.cover_image_url ?? null
+  const { data } = await db().rpc('get_campaign_module_cover', { p_campaign_id: campaignId })
+  return data ?? null
 }
 
 /**
