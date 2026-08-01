@@ -2817,14 +2817,22 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (d < bestSegDist) { bestSegDist = d; bestSegId = w.id }
       }
       if (bestSegId) {
+        // Same RPC + per-kind default as the plain left-click segment
+        // toggle below (2026-05-31 fix) - this alt+right-click gesture
+        // used to call scheduleWallsPersist() directly, which is
+        // isGM-only and fires no broadcast, so a player's own toggle
+        // never reached other clients (2026-08-01 audit).
+        const targetSeg = wallsLocalRef.current.find(w => w.id === bestSegId)
+        const kindDefault = targetSeg?.kind === 'door' ? false : true
+        const nextOpen = !(targetSeg?.door_open ?? kindDefault)
         setWallsLocal(prev => {
-          const next = prev.map(w => w.id === bestSegId
-            ? { ...w, door_open: !(w.door_open ?? (w.kind === 'window' ? false : true)) }
-            : w)
+          const next = prev.map(w => w.id === bestSegId ? { ...w, door_open: nextOpen } : w)
           wallsLocalRef.current = next
           return next
         })
-        scheduleWallsPersist()
+        toggleWallSegmentDoor(scene.id, bestSegId, nextOpen).then(({ error }) => {
+          if (error) console.error('[TM] door toggle RPC failed:', error.message)
+        })
         return
       }
       // 2) Fall through to object TOKEN under the cursor - only doors
