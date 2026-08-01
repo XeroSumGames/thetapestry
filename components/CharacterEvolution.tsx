@@ -34,7 +34,7 @@ import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../li
 import { appendProgressionEntry } from '../lib/progression-log'
 import { OUTCOME } from '../lib/roll-outcomes'
 import { insertRollLog } from '../lib/data/roll-log'
-import { updateCharacterState } from '../lib/data/character-states'
+import { updateCharacterState, getCharacterStateById } from '../lib/data/character-states'
 import { makeCharacterEvolutionSpend } from '../lib/damage-payload'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
@@ -214,20 +214,41 @@ export default function CharacterEvolution({
     }
     setSaving(true)
     setError(null)
-    // Track whether the CDP debit landed so a later failure in this same save
-    // can refund it - otherwise a failed raise write ate the CDP with no
-    // stat change (deduct-then-apply, no rollback).
+    // Track the balance the successful deduction was based on (for refund
+    // on a later failure) - not the stale cdpBalance prop, which the CAS
+    // loop below may have already found out of date.
     let cdpDeducted = false
+    let preDeductCdp = cdpBalance
     try {
-      const newCdp = cdpBalance - pending.cost
       // 1) Deduct CDP from the per-campaign character_states row.
       //    Master PC's CDP fuels both their own and the Apprentice's
       //    growth, per Distemper CRB §08 p.21.
-      const { error: stErr } = await supabase
-        .from('character_states')
-        .update({ cdp: newCdp, updated_at: new Date().toISOString() })
-        .eq('id', stateId)
-      if (stErr) throw new Error(`deduct CDP: ${stErr.message}`)
+      //
+      // Compare-and-set with retry (same pattern as lib/campaign-clock.ts
+      // advance()): cdpBalance is a snapshot from when the modal opened, so
+      // a blind `SET cdp = cdpBalance - cost` could silently overwrite a
+      // GM award or another spend that landed in the meantime (both writes
+      // "succeed", the DB ends up reflecting only whichever wrote last,
+      // even though both raises applied - a lost update, per the
+      // 2026-08-01 audit). Each attempt re-reads and only writes if the
+      // balance is still what it read.
+      let newCdp = cdpBalance
+      let won = false
+      for (let attempt = 0; attempt < 5 && !won; attempt++) {
+        const { data: fresh } = await getCharacterStateById(stateId)
+        const currentCdp = (fresh as any)?.cdp ?? cdpBalance
+        if (currentCdp < pending.cost) throw new Error(`Not enough CDP - balance is now ${currentCdp}, need ${pending.cost}. Close and reopen to refresh.`)
+        newCdp = currentCdp - pending.cost
+        const { data: updated, error: stErr } = await supabase
+          .from('character_states')
+          .update({ cdp: newCdp, updated_at: new Date().toISOString() })
+          .eq('id', stateId).eq('cdp', currentCdp)
+          .select('id')
+        if (stErr) throw new Error(`deduct CDP: ${stErr.message}`)
+        won = !!updated && updated.length > 0
+        if (won) preDeductCdp = currentCdp
+      }
+      if (!won) throw new Error('Could not deduct CDP - too much contention, try again.')
       cdpDeducted = true
 
       // 2) Apply the raise. Forks by target - PC writes to
@@ -386,7 +407,7 @@ export default function CharacterEvolution({
       // Refund the CDP if it was debited but the raise then failed, so the
       // player doesn't lose points for a raise that never applied.
       if (cdpDeducted) {
-        try { await updateCharacterState(stateId, { cdp: cdpBalance, updated_at: new Date().toISOString() }) } catch { /* best-effort refund */ }
+        try { await updateCharacterState(stateId, { cdp: preDeductCdp, updated_at: new Date().toISOString() }) } catch { /* best-effort refund */ }
       }
       setError(err?.message ?? 'unknown error')
     } finally {

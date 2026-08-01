@@ -9,6 +9,7 @@
 
 import { OUTCOME } from '../../../../../lib/roll-outcomes'
 import { insertRollLog } from '../../../../../lib/data/roll-log'
+import { getCharacterStateById } from '../../../../../lib/data/character-states'
 
 interface CdpModalProps {
   open: boolean
@@ -67,8 +68,23 @@ export function CdpModal({
             for (const stateId of cdpRecipients) {
               const entry = entries.find(e => e.stateId === stateId)
               if (!entry?.liveState) continue
-              const newCdp = Math.min(10, (entry.liveState.cdp ?? 0) + cdpAmount)
-              await supabase.from('character_states').update({ cdp: newCdp, updated_at: new Date().toISOString() }).eq('id', stateId)
+              // Compare-and-set with retry (same pattern as
+              // lib/campaign-clock.ts advance()): entry.liveState.cdp is a
+              // React-state snapshot, so a blind write here could silently
+              // overwrite a player's own spend that landed in the meantime
+              // (both writes "succeed", only whichever wrote last sticks -
+              // per the 2026-08-01 audit).
+              let won = false
+              for (let attempt = 0; attempt < 5 && !won; attempt++) {
+                const { data: fresh } = await getCharacterStateById(stateId)
+                const currentCdp = (fresh as any)?.cdp ?? entry.liveState.cdp ?? 0
+                const newCdp = Math.min(10, currentCdp + cdpAmount)
+                const { data: updated } = await supabase.from('character_states')
+                  .update({ cdp: newCdp, updated_at: new Date().toISOString() })
+                  .eq('id', stateId).eq('cdp', currentCdp)
+                  .select('id')
+                won = !!updated && updated.length > 0
+              }
               // Auto-log to progression log
               const charData = entry.character.data ?? {}
               const progLog = charData.progression_log ?? []
