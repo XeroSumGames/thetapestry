@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-01 00:04 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [934 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - brace-expansion, next (via postcss), postcss, sharp. Unchanged from prior entry.
+
+**CI:** FAILURE - run 1598 (2026-07-31T21:40 UTC). Commit: `ca83fd4` "fix(combat): in-table toast for Attack gates, drop browser alert()". Failing step: Architecture ratchet (LOC ceilings). Error: `app/stories/[id]/table/page.tsx` grew 11114 -> 11165 (+51 lines, past the 25-line grace). All other CI steps (font-sizes, role-literals, em-dash, preview-sync guardrails) PASS. TSC + Vitest were skipped because arch:check failed first.
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (section B) - stale since 2026-06-16, no code change
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR FI Insight Die award path (doubles -> +1 pool) - stale since 2026-06-16, never fired live
+
+**Action:** CI RED since ca83fd4. HP: extract code from table/page.tsx to bring it below the ratchet ceiling, OR re-baseline with `node scripts/check-arch.mjs --save` if the growth is intentional. Ratchet ceiling was 11114; file is now 11165. The arch:check does NOT run in the local pre-commit hook, only in CI.
+
+---
+
 ## 2026-07-31 21:04 UTC
 
 **Status:** DRIFT (x31 - same 3 HOPED-FOR; audit improved 12->4 high)
