@@ -10912,98 +10912,30 @@ export default function TablePage() {
               // instead of a silent dev-console throw.
               try {
                 const charId = myEntry.character.id
-                const newPcInv: InventoryItem[] = structuredClone(pcInventory)
-                for (const g of pcGives) {
-                  const idx = newPcInv.findIndex(i => i.name === g.name && i.custom === g.custom)
-                  if (idx >= 0) {
-                    newPcInv[idx].qty -= g.selectedQty
-                    if (newPcInv[idx].qty <= 0) newPcInv.splice(idx, 1)
-                  }
-                }
-                for (const r of pcGets) {
-                  const idx = newPcInv.findIndex(i => i.name === r.name && i.custom === r.custom)
-                  if (idx >= 0) newPcInv[idx].qty += r.selectedQty
-                  else newPcInv.push({ ...r, qty: r.selectedQty })
-                }
-                // PC write
-                const { error: charErr } = await supabase
-                  .from('characters')
-                  .update({ data: { ...charData, inventory: newPcInv } })
-                  .eq('id', charId)
-                if (charErr) throw new Error(`PC inventory write failed: ${charErr.message}`)
-                setEntries(prev => prev.map(e => e.character.id === charId
-                  ? { ...e, character: { ...e.character, data: { ...e.character.data, inventory: newPcInv } } }
-                  : e))
-                // Target write
+                // Atomic RPC (apply_barter_trade): locks the PC (and, for an
+                // NPC target, the NPC) row FOR UPDATE, verifies BOTH sides
+                // have enough of what they're giving up, and writes
+                // everything in one transaction. The old code wrote the PC
+                // side first and the target side second with no rollback -
+                // a mid-flow failure (NPC deleted on another client, RLS
+                // denial, a stockpile row vanishing) half-applied the deal
+                // (per the 2026-08-01 audit).
+                const { error: tradeErr } = await supabase.rpc('apply_barter_trade', {
+                  p_pc_character_id: charId,
+                  p_target_kind: tradeTarget!.kind,
+                  p_target_id: tradeTarget!.id,
+                  p_pc_gives: pcGives,
+                  p_pc_gets: pcGets,
+                })
+                if (tradeErr) throw new Error(tradeErr.message)
+                await loadEntries(id)
                 if (tradeTarget!.kind === 'npc') {
-                  const npc: any = campaignNpcs.find((n: any) => n.id === tradeTarget!.id)
-                  if (!npc) throw new Error('NPC vanished mid-trade')
-                  const newNpcInv: InventoryItem[] = structuredClone(npc.inventory ?? [])
-                  for (const r of pcGets) {
-                    const idx = newNpcInv.findIndex(i => i.name === r.name && i.custom === r.custom)
-                    if (idx >= 0) {
-                      newNpcInv[idx].qty -= r.selectedQty
-                      if (newNpcInv[idx].qty <= 0) newNpcInv.splice(idx, 1)
-                    }
+                  const { data: cnpcs } = await getCampaignNpcs(id)
+                  if (cnpcs) {
+                    setCampaignNpcs(cnpcs)
+                    setRosterNpcs(cnpcs)
                   }
-                  for (const g of pcGives) {
-                    const idx = newNpcInv.findIndex(i => i.name === g.name && i.custom === g.custom)
-                    if (idx >= 0) newNpcInv[idx].qty += g.selectedQty
-                    else newNpcInv.push({ ...g, qty: g.selectedQty })
-                  }
-                  const { error: npcErr } = await supabase.from('campaign_npcs')
-                    .update({ inventory: newNpcInv })
-                    .eq('id', tradeTarget!.id)
-                  if (npcErr) throw new Error(`NPC inventory write failed: ${npcErr.message}`)
-                  setCampaignNpcs(prev => prev.map((n: any) => n.id === tradeTarget!.id ? { ...n, inventory: newNpcInv } : n))
-                  setRosterNpcs(prev => prev.map((n: any) => n.id === tradeTarget!.id ? { ...n, inventory: newNpcInv } : n))
                   initChannelRef.current?.send({ type: 'broadcast', event: 'npc_inventory_changed', payload: { npcId: tradeTarget!.id } })
-                } else {
-                  // Community stockpile target. PC gets items decrement
-                  // existing stockpile rows (delete if qty hits 0); PC
-                  // gives items insert/upsert by (name, custom). Each
-                  // step is error-checked - a mid-loop failure now
-                  // throws so the user sees it instead of leaving the
-                  // stockpile in a half-applied state.
-                  const communityId = tradeTarget!.id
-                  for (const r of pcGets) {
-                    const { data: existing, error: selErr } = await supabase
-                      .from('community_stockpile_items')
-                      .select('id, qty')
-                      .eq('community_id', communityId).eq('name', r.name).eq('custom', r.custom)
-                      .maybeSingle()
-                    if (selErr) throw new Error(`Stockpile read failed: ${selErr.message}`)
-                    if (!existing) continue
-                    const remaining = ((existing as any).qty ?? 0) - r.selectedQty
-                    if (remaining <= 0) {
-                      const { error: delErr } = await supabase.from('community_stockpile_items').delete().eq('id', (existing as any).id)
-                      if (delErr) throw new Error(`Stockpile delete failed: ${delErr.message}`)
-                    } else {
-                      const { error: updErr } = await supabase.from('community_stockpile_items').update({ qty: remaining }).eq('id', (existing as any).id)
-                      if (updErr) throw new Error(`Stockpile update failed: ${updErr.message}`)
-                    }
-                  }
-                  for (const g of pcGives) {
-                    const { data: existing, error: selErr } = await supabase
-                      .from('community_stockpile_items')
-                      .select('id, qty')
-                      .eq('community_id', communityId).eq('name', g.name).eq('custom', g.custom)
-                      .maybeSingle()
-                    if (selErr) throw new Error(`Stockpile read failed: ${selErr.message}`)
-                    if (existing) {
-                      const { error: updErr } = await supabase.from('community_stockpile_items')
-                        .update({ qty: ((existing as any).qty ?? 0) + g.selectedQty })
-                        .eq('id', (existing as any).id)
-                      if (updErr) throw new Error(`Stockpile update failed: ${updErr.message}`)
-                    } else {
-                      const { error: insErr } = await supabase.from('community_stockpile_items').insert({
-                        community_id: communityId,
-                        name: g.name, qty: g.selectedQty, enc: g.enc, rarity: g.rarity,
-                        notes: g.notes, custom: g.custom,
-                      })
-                      if (insErr) throw new Error(`Stockpile insert failed: ${insErr.message}`)
-                    }
-                  }
                 }
                 // Single roll-log summary.
                 const giveStr = pcGives.map(g => `${g.name}×${g.selectedQty}`).join(', ') || '(nothing)'
