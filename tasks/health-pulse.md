@@ -6,6 +6,35 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-01 18:05 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical]
+- brace-expansion 5.0.7 (PATCHABLE -> 5.0.8, DoS via unbounded expansion)
+- sharp 0.34.5 (PATCHABLE -> 0.35.0, inherited libvips CVE-2026-33327/33328/35590/35591)
+- postcss 8.4.31 (no patch available <=8.5.17 - path traversal via sourceMappingURL + XSS; build-time risk)
+- next (transitive via postcss + sharp)
+
+**CI:** 2 failures in last 5 runs (recovered - 3 successes since)
+- https://github.com/XeroSumGames/thetapestry/actions/runs/30707274927 2026-08-01T16:03Z (security: forum cross-campaign injection fix)
+- https://github.com/XeroSumGames/thetapestry/actions/runs/30707326077 2026-08-01T16:04Z (security: DM spam vector fix)
+- Most recent run GREEN: https://github.com/XeroSumGames/thetapestry/actions/runs/30708936054
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts (vehicle_updated/firing_arc_toggle) - unverified 3+ days
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - unverified 3+ days
+- HOPED-FOR Cover Fire -2 CMod 2-client verify - owed ~13 days (2026-07-20)
+- HOPED-FOR GM Screen interactive verify (drag/collapse/filter persist) - owed ~13 days
+- todo open: CampaignMap fingerprint hashes allPins not visible (components/CampaignMap.tsx:650) - confirmed still present
+- todo open: 3s vehicles poll (page.tsx:3129) - setInterval 3000ms still live
+
+**Action:** Patch brace-expansion + sharp (low-risk, independent of Next.js). Postcss has no patch yet - monitor. Schedule Cover Fire + GM Screen 2-client verify (13 days overdue). CI failures were on security fix commits and self-recovered - review those 2 runs to confirm they were transient.
+
+---
+
 ## 2026-08-01 15:08 UTC
 
 **Status:** DRIFT (arch ratchet CI blockage CLEARED - 4 consecutive passes as of 14:59 UTC)
