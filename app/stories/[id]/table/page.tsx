@@ -4570,6 +4570,7 @@ export default function TablePage() {
   async function handleInsightSave(spend: boolean) {
     if (!insightSavePrompt) return
     const { stateId, phyAmod, insightDice } = insightSavePrompt
+    const targetEntryForActions = entries.find(e => e.stateId === stateId)
     if (spend) {
       // Trade ALL Insight Dice per SRD, regain 1 WP and 1 RP
       await supabase.from('character_states').update({
@@ -4592,6 +4593,24 @@ export default function TablePage() {
           label: `😰 ${targetEntry.character.name} gains a Stress from being Mortally Wounded`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
         })
+      }
+    }
+    // Zero actions + auto-advance if this combatant is the active one -
+    // matches the direct mortal-wound path (useRollResolution.ts), which
+    // does this "so combat doesn't stall on a downed-but-still-active
+    // combatant" (SMOKE-1). This modal-driven path never did (per the
+    // 2026-08-01 audit) - a self-attack that triggers the Insight-Trade
+    // save left the wounded/survived combatant still active with actions
+    // to spend, stalling the round either way (spend or decline).
+    if (combatActive && targetEntryForActions) {
+      const initEntry = initiativeOrder.find(e => e.character_id === targetEntryForActions.character.id)
+      if (initEntry) {
+        await setInitiativeActions(initEntry.id, 0)
+        if (initEntry.is_active) {
+          await nextTurn()
+        }
+        await loadInitiative(id)
+        initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       }
     }
     setInsightSavePrompt(null)

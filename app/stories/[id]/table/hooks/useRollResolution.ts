@@ -24,6 +24,7 @@ import { insertRollLog } from '../../../../../lib/data/roll-log'
 import { setGrappledBy } from '../../../../../lib/data/tactical'
 import { updateCampaignNpc, getCampaignNpcById } from '../../../../../lib/data/campaign-npcs'
 import { applyDamageToPc, applyDamageToNpc, type DamageContext } from '../../../../../lib/data/combat'
+import { updateCharacterState } from '../../../../../lib/data/character-states'
 import { trace } from '../../../../../lib/playtest-recorder'
 import { queuePendingHeal } from '../../../../../lib/campaign-clock'
 import { reportSupabaseError } from '../../../../../lib/supabase-errors'
@@ -1142,14 +1143,36 @@ export function useRollResolution(deps: RollResolutionDeps) {
           const activeInit = combatActive ? initiativeOrder.find(e => e.is_active) : null
           let activeDownedByBlast = false
 
+          let blastInsightSave: any = null
           for (const job of jobs) {
             if (job.kind === 'pc') {
               const fresh = stateById.get(job.pc.stateId)
               const curWP = fresh?.wp_current ?? job.pc.liveState.wp_current
               const curRP = fresh?.rp_current ?? job.pc.liveState.rp_current
               const curStress = fresh?.stress ?? job.pc.liveState.stress ?? 0
+              const curInsight = fresh?.insight_dice ?? job.pc.liveState.insight_dice ?? 0
               const nWP = Math.max(0, curWP - job.splashWP)
               const nRP = Math.max(0, curRP - job.splashRP)
+              // Same Insight-Trade save the single-target hit path offers
+              // (currentInsight > 0 at the moment WP would first hit 0) -
+              // blast damage skipped this entirely before, applying the
+              // mortal wound immediately with no save opportunity (per the
+              // 2026-08-01 audit). Only defer the WP write for a victim who
+              // actually qualifies; other blast victims apply normally in
+              // this same batch. If multiple victims qualify from one
+              // blast, only the last one processed surfaces the modal
+              // locally - a rare multi-victim edge case, not the common one.
+              if (nWP === 0 && curWP > 0 && curInsight > 0) {
+                const update: any = { rp_current: nRP, updated_at: nowIso }
+                tableUpdates.push(updateCharacterState(job.pc.stateId, update))
+                pcLocalPatches.set(job.pc.stateId, update)
+                blastInsightSave = {
+                  stateId: job.pc.stateId, targetName: job.pc.character.name, targetUserId: job.pc.userId,
+                  newWP: nWP, newRP: nRP, phyAmod: job.pc.character.data?.rapid?.PHY ?? 0, insightDice: curInsight,
+                }
+                blastTargets.push(`${job.pc.character.name} (${job.rangeBand}): ${job.splashWP} WP, ${job.splashRP} RP`)
+                continue
+              }
               const update: any = { wp_current: nWP, rp_current: nRP, updated_at: nowIso }
               let splashStressReason: string | null = null
               if (nWP === 0 && curWP > 0) {
@@ -1206,6 +1229,16 @@ export function useRollResolution(deps: RollResolutionDeps) {
             ? insertRollLog(stressLogRows)
             : Promise.resolve(null)
           await Promise.all([...tableUpdates, stressLogInsert])
+
+          // Surface the Insight-Trade save (if a blast victim qualified) the
+          // same way the single-target path does: show the modal on the
+          // owning player's own client, broadcast so their client picks it
+          // up even if this roll was executed by someone else (a GM rolling
+          // the blast).
+          if (blastInsightSave) {
+            if (blastInsightSave.targetUserId === userId) setInsightSavePrompt(blastInsightSave)
+            initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound', payload: blastInsightSave })
+          }
 
           // Apply local patches in one setState per slice (was: setState
           // inside the loop, N re-renders).
