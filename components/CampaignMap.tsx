@@ -7,6 +7,7 @@ import { osrmCoordsParam, waypointLabel, parseLatLng } from '../lib/campaign-rou
 import { wrapBroadcast, wrapDbChange } from '../lib/sentry-realtime'
 import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import { useHiddenPins } from '../lib/use-hidden-pins'
+import { openPopout } from '../lib/popout'
 
 interface CampaignPin {
   id: string
@@ -706,7 +707,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const npcSection = npcsHere.length === 0 ? '' :
         `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;">
            <div style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:3px;">Also Here</div>
-           ${npcsHere.map(n => `<div style="font-size:15px;color:#f5f2ee;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
+           ${npcsHere.map(n => `<div class="cm-npc-link" data-npc-id="${escapeHtml(n.id)}" title="Open ${escapeHtml(n.name)}" style="font-size:15px;color:#7ab3d4;cursor:pointer;text-decoration:underline;${n.status === 'dead' ? 'opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
          </div>`
       const popupHtml =
         `<div style="font-family:Carlito,sans-serif;min-width:180px;">` +
@@ -716,6 +717,23 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           npcSection +
         `</div>`
       const marker = leaflet.marker([pin.lat, pin.lng], { icon, draggable: isGM }).bindPopup(popupHtml)
+      // Make the "Also Here" NPC names clickable -> open the NPC's sheet
+      // popout (same surface the roster's per-NPC button uses). Wired on
+      // popupopen because the popup is an HTML string, not React; uses
+      // node.onclick (not addEventListener) so re-opening never double-
+      // binds. Players only ever see revealed NPCs here (filtered at
+      // loadPins), and gm=0 renders the player view - no leak.
+      marker.on('popupopen', (e: any) => {
+        const el = e?.popup?.getElement?.()
+        if (!el) return
+        el.querySelectorAll('.cm-npc-link[data-npc-id]').forEach((node: any) => {
+          node.onclick = (ev: Event) => {
+            ev.stopPropagation()
+            const npcId = node.getAttribute('data-npc-id')
+            if (npcId) openPopout(`/npc-sheet?c=${campaignId}&npc=${npcId}&gm=${isGM ? 1 : 0}`, `npc-${npcId}`, { w: 571, h: 400 })
+          }
+        })
+      })
       // Pin markers swallow the click before the map sees it, so the
       // map-level alt-ping and measure-tool handlers never fire when a
       // pin sits where you want to gesture. Strip bindPopup's auto-

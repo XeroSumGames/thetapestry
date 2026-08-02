@@ -210,6 +210,10 @@ export interface CampaignNpc {
   equipment: { name: string; damage?: number; roll?: string; notes?: string }[] | null
   inventory?: { name: string; qty: number; enc?: number; rarity?: string; notes?: string; custom?: boolean }[] | null
   folder: string | null
+  // Map pin this NPC is stationed at (campaign_pins.id). Lets players
+  // click the pin and open the NPC. Written by the roster's Location
+  // dropdown (GM-only) and by module/seed import.
+  campaign_pin_id: string | null
   hidden_from_players?: boolean
   // Lasting wounds rolled from Table 12 (Distemper Quickstart / canon
   // §06) on a failed Lasting Damage Check. jsonb on the DB side -
@@ -290,6 +294,7 @@ const emptyForm = {
   weapon: null as any,
   weapon2: null as any,
   folder: '' as string,
+  campaign_pin_id: null as string | null,
   // GM-authored inventory - items the player will see when looting
   // this NPC via 🎒 Search Remains. Distinct from `equipment` (the
   // weapon/armor block), and separate from skills.
@@ -310,6 +315,22 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   const [npcStatusFilter, setNpcStatusFilter] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  // Campaign map pins for the edit form's Location dropdown (GM only).
+  // Refetched when the form opens so a pin added mid-session appears.
+  const [pins, setPins] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    if (!isGM || !showForm) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase
+        .from('campaign_pins')
+        .select('id, name')
+        .eq('campaign_id', campaignId)
+        .order('name', { ascending: true })
+      if (!cancelled) setPins((data ?? []) as { id: string; name: string }[])
+    })()
+    return () => { cancelled = true }
+  }, [isGM, showForm, campaignId])
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showPortraitPicker, setShowPortraitPicker] = useState(false)
@@ -501,6 +522,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       weapon: npc.skills?.weapon ?? null,
       weapon2: npc.skills?.weapon2 ?? null,
       folder: npc.folder ?? '',
+      campaign_pin_id: npc.campaign_pin_id ?? null,
     })
     setEditingId(npc.id)
     setShowForm(true)
@@ -545,6 +567,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       complication: form.complication || null,
       three_words: form.threeWords.filter(w => w),
       folder: form.folder.trim() || null,
+      campaign_pin_id: form.campaign_pin_id || null,
       // Strip empty rows the GM may have left while editing - name
       // is the only required field; an item with no name isn't real.
       inventory: form.inventoryEntries.filter(it => it.name.trim()),
@@ -2022,6 +2045,27 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   style={{ width: '100px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
             </div>
+
+            {/* Location (map pin) - GM only. Links this NPC to a campaign
+                pin so players can click the pin and open the NPC. The
+                campaign_npcs UPDATE RLS is NOT GM-scoped (any campaign
+                member can write campaign_pin_id), so this control is gated
+                to isGM client-side - Puffer flag 2026-08-02. */}
+            {isGM && (
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Location (map pin)</div>
+                <select value={form.campaign_pin_id ?? ''} onChange={e => setForm(f => ({ ...f, campaign_pin_id: e.target.value || null }))}
+                  style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                  <option value="">Not on the map</option>
+                  {pins.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                {pins.length === 0 && (
+                  <div style={{ fontSize: '13px', color: '#888', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>No map pins yet - add pins on the campaign map first.</div>
+                )}
+              </div>
+            )}
 
             {/* Player-visible description - shows on PlayerNpcCard
                 whenever this NPC's tile is opened by a PC. Distinct
