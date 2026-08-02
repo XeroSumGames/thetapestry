@@ -38,8 +38,11 @@ in flight: `tasks/COMMS.md`.
   session (arrives as a labeled turn, processed once that session's
   in-flight work finishes), and a spoke replies the same way back to the
   hub's session id. `list_sessions` finds a lane's live session id by
-  title/cwd. Xero doesn't have to manually carry every SHA hand-off -
-  that only happens if a session isn't reachable this way for some reason.
+  title/cwd. **Xero does not relay between sessions, ever, unless he
+  explicitly says to** (confirmed 2026-08-02, after he redirected a lane
+  that asked him to pass something along back to using this channel
+  directly) - always use `send_message` yourself, never write "or have
+  Xero relay it" as a fallback in a hand-off message.
 - **Why graduated, not everything through the hub:** even with direct
   session messaging, hub review of every commit has a real cost
   independent of how the SHA gets there - reading a diff carefully takes
