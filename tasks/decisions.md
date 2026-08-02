@@ -10,6 +10,16 @@ Newest first.
 
 ---
 
+## 2026-08-02 (correction, same day): cross-session coordination is direct via `mcp__ccd_session_mgmt__send_message`, not manually relayed by Xero
+
+**Correction to the entry immediately below** ("Puffer Fish becomes the review/merge hub"), specifically Alternative B's claim that "these are separate Claude chats that cannot message each other - Xero is the only relay." Xero corrected this directly: the hub tells the other chats what to do and they respond back to the hub - he doesn't carry messages between them. Verified: `mcp__ccd_session_mgmt__send_message` delivers a message directly into another session (found via `list_sessions`, matched by title/cwd - "Tapestry | HP" and "Tapestry | E2E" were both live, running sessions). Used it to deliver the actual hub/spoke rollout message to both lanes in the same turn as writing this correction.
+
+**Does this overturn the graduated-gate conclusion (option C)?** No - kept per below, but the STATED REASON changes. The original doc claimed blanket gating (option B) would fail because it would turn Xero into "a full-time message bus." That's not the real cost anymore - direct session messaging removes the human-relay bottleneck entirely. The reason graduated still wins: hub review of every commit has a real cost independent of how the SHA arrives - reading a diff carefully takes time regardless of transport, and gating everything would slow Hunt & Peck's high-frequency shipping in proportion to volume, not risk. That's the corrected justification for option C; the original entry below is left as-written per this file's own append-only rule (already pushed before the correction landed).
+
+**What would change our mind:** if review-latency-at-volume turns out to be a non-issue in practice (the hub keeps up fine even reviewing everything), blanket gating becomes viable and strictly safer - worth revisiting after a few weeks of real hub-and-spoke usage, not re-litigating from first principles again.
+
+---
+
 ## 2026-08-02: Puffer Fish becomes the review/merge hub for SQL/RLS/hot-file work; Hunt & Peck and E2E become spokes
 
 **Decision:** Tapestry's three-lane model moves from "all three chats push to `main` directly" to a hub-and-spoke model, adapted from the pattern Xero ran on TheTableau's Puffer Fish hub. Puffer Fish is the hub - the only chat that reviews, merges, and pushes SQL/RLS/shared-hot-file work to `main`. Hunt & Peck and Playwright/E2E are spokes: each still works in its own worktree/branch (unchanged), still self-ships pure UI/feature/spec-only work exactly as before, but hands the hub a commit SHA for anything SQL/RLS or hub-flagged-hot-file. Live hub claim + retirement rule: `tasks/HUB-LIVE.md`. Open questions/decisions in flight: `tasks/COMMS.md`. Full mechanics: `tasks/lane-protocol.md` "Hub & Spoke model" section.

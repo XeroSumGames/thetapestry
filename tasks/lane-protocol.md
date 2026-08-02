@@ -30,16 +30,27 @@ in flight: `tasks/COMMS.md`.
   a spoke hands off a SHA rather than assuming self-ship is fine - **the
   hub reviews the actual diff, not just the spoke's summary**, before
   confirming a merge, especially for anything SECURITY DEFINER or RLS.
-- **Why graduated, not everything through the hub:** these are separate
-  Claude chats that cannot message each other directly - Xero is the only
-  relay (see "What this protocol CANNOT do" below). Gating every single
-  commit through hub review would make every Hunt & Peck fix wait on a
-  manual SHA hand-off + review round-trip, turning Xero into a full-time
-  message bus for low-stakes changes. Gating the risky category (SQL/RLS)
-  captures the real value - tonight's 2026-08-01 audit found ~40 bugs
-  shipped with zero review, several CRITICAL, one bug shape (moderation
-  self-approval) recurring across 7 unrelated tables - without adding
-  latency to routine UI shipping.
+- **Cross-session coordination is direct, not manually relayed.** Verified
+  2026-08-02 (corrects the "these chats cannot message each other" claim
+  in the original "What this protocol CANNOT do" section below, written
+  2026-05-24 before this tool was in use): the hub uses
+  `mcp__ccd_session_mgmt__send_message` to deliver directly into a spoke's
+  session (arrives as a labeled turn, processed once that session's
+  in-flight work finishes), and a spoke replies the same way back to the
+  hub's session id. `list_sessions` finds a lane's live session id by
+  title/cwd. Xero doesn't have to manually carry every SHA hand-off -
+  that only happens if a session isn't reachable this way for some reason.
+- **Why graduated, not everything through the hub:** even with direct
+  session messaging, hub review of every commit has a real cost
+  independent of how the SHA gets there - reading a diff carefully takes
+  time regardless of transport. Gating EVERYTHING would slow Hunt & Peck's
+  high-frequency day-to-day shipping in proportion to volume, not risk (a
+  button color change doesn't carry the same risk as an RLS policy).
+  Gating the risky category (SQL/RLS/hot-files) captures the real value -
+  the 2026-08-01 audit found ~40 bugs shipped with zero review, several
+  CRITICAL, one bug shape (moderation self-approval) recurring across 7
+  unrelated tables - without slowing routine UI shipping proportionally
+  more than the risk warrants.
 - **Reproduce before claiming fixed.** A spoke reproduces an issue for
   real (not just by reading code) before handing the hub a SHA. Gate
   locally first (tsc/tests/arch/font/role/em-dash - the existing
@@ -219,8 +230,16 @@ Tapestry has already independently learned the hard way, where it applies:
 
 ## What this protocol CANNOT do
 
-Be honest: these chats are separate Claude instances that cannot message each
-other. Harmony depends on ALL THREE being given the same kickoff instructions
+**Correction (2026-08-02):** the line below originally said these chats
+"cannot message each other" - that was wrong, or at least became wrong.
+`mcp__ccd_session_mgmt__send_message` delivers directly into another
+session (see "Cross-session coordination" above); `list_sessions` finds
+the target by title/cwd. Kept the original text below for the history -
+the remaining point (harmony still depends on every lane actually reading
+this file, and ceremony has a real cost for a solo dev) still holds
+regardless of transport mechanism.
+
+Be honest: harmony depends on ALL THREE being given the same kickoff instructions
 pointing at this file. A convention only one lane follows is not a convention.
 And for a solo dev, more ceremony than the above is overhead you have to maintain
 x3 - the worktree split (top) and the 2->3 doc update (below) are the real wins;
