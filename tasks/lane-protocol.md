@@ -1,4 +1,4 @@
-# Lane Protocol - three parallel Claude chats (2026-05-24)
+# Lane Protocol - three parallel Claude chats (2026-05-24, hub/spoke model added 2026-08-02)
 
 How the three always-on chats stay harmonious. Drafted by the Playwright/E2E
 lane after a session that hit every coordination failure mode first-hand
@@ -8,6 +8,46 @@ the "Proposed operating-mode.md edit" at the bottom is the diff to apply.
 
 Companion to `tasks/operating-mode.md` ("Multi-chat lanes" section, which still
 describes only TWO lanes and should be updated - see bottom).
+
+---
+
+## Hub & Spoke model (2026-08-02) - governs everything below
+
+Adapted from the pattern Xero validated running TheTableau's Puffer Fish hub.
+**Puffer Fish is the hub; Hunt & Peck and Playwright/E2E are spokes.**
+Live claim + retirement rule: `tasks/HUB-LIVE.md`. Open questions / decisions
+in flight: `tasks/COMMS.md`.
+
+- **Hub (Puffer Fish) is the only chat that reviews, merges, and pushes
+  SQL/RLS/shared-hot-file work to `main`.** It owns integration and
+  cross-file reconciliation for that category of change, and applies
+  anything touching the live database after its own review pass.
+- **Graduated gate, not a blanket one.** Pure UI/feature work in Hunt &
+  Peck's own files can still self-ship straight to `main` exactly like
+  before - the hub gate is specifically for SQL/RLS/`sql/`-touching work
+  and anything in a file the hub has flagged as hot/shared. E2E's spec
+  work is almost purely additive and stays self-ship too. When in doubt,
+  a spoke hands off a SHA rather than assuming self-ship is fine - **the
+  hub reviews the actual diff, not just the spoke's summary**, before
+  confirming a merge, especially for anything SECURITY DEFINER or RLS.
+- **Why graduated, not everything through the hub:** these are separate
+  Claude chats that cannot message each other directly - Xero is the only
+  relay (see "What this protocol CANNOT do" below). Gating every single
+  commit through hub review would make every Hunt & Peck fix wait on a
+  manual SHA hand-off + review round-trip, turning Xero into a full-time
+  message bus for low-stakes changes. Gating the risky category (SQL/RLS)
+  captures the real value - tonight's 2026-08-01 audit found ~40 bugs
+  shipped with zero review, several CRITICAL, one bug shape (moderation
+  self-approval) recurring across 7 unrelated tables - without adding
+  latency to routine UI shipping.
+- **Reproduce before claiming fixed.** A spoke reproduces an issue for
+  real (not just by reading code) before handing the hub a SHA. Gate
+  locally first (tsc/tests/arch/font/role/em-dash - the existing
+  pre-commit suite already does this).
+- **Never infer who's hub from who spoke most recently** - always read
+  `tasks/HUB-LIVE.md`. Writing a handoff = immediate retirement; the next
+  hub claim overwrites that file and pings every lane, not just the
+  active one.
 
 ---
 
@@ -84,6 +124,11 @@ does today - it works but is fiddly; per-lane worktrees retire the fiddliness.
   don't panic. Never force-push `main`. Never `--no-verify`.
 - The pre-commit hook + gates (tsc, font, role-literal, em-dash, preview-sync,
   arch ratchet, unit tests) run regardless of lane and catch cross-lane breakage.
+- **Under the hub model (above):** this section still describes how EACH
+  chat pushes its own commits (the hub pushes its own reviewed work AND
+  a spoke's cherry-picked SHA the same way). What changed is who's
+  authorized to push SQL/RLS/hot-file spoke work directly - that now
+  routes through the hub first rather than a spoke self-pushing it.
 
 ## Shared-doc discipline (`todo.md`, `lessons.md` - the only files all 3 write)
 
@@ -125,6 +170,52 @@ logged anywhere?" never has to be asked again. (Playwright's own
 `playwright-report/index.html` is gitignored + overwritten each run - a throwaway
 view of the last run only, NOT the record.) Mirrored in memory
 `reference_e2e_results_dashboard`.
+
+## Hard-earned rules (adapted from TheTableau's hub, 2026-08-02)
+
+General principles that held up running a hub there - not TheTableau's
+specific bugs, which don't transfer. Cross-referenced against what
+Tapestry has already independently learned the hard way, where it applies:
+
+- **A silent refusal is a bug.** Every guard that blocks an action (an RLS
+  policy, a disabled button, a trigger that no-ops) must surface WHY, or
+  it just looks broken. Tapestry's own version of this: the 2026-08-01
+  audit found several places where a write silently affected 0 rows with
+  no error surfaced to the caller (`tasks/lessons.md`, duplicate-policy
+  entries) - the fix pattern is the same, make the block loud.
+- **Verify second-hand claims by reading the live thing yourself before
+  repeating them - including your own past inferences.** Don't let a
+  plausible-sounding pattern-match stand in for evidence. This is already
+  a standing Tapestry rule (`feedback_accuracy_over_confidence` /
+  `feedback_check_before_quoting_scope` in memory) - the hub model just
+  raises the stakes, since the hub is now vouching for a spoke's diff
+  before merge, not just its own work.
+- **Shared checkout hazard, if it ever comes up:** if multiple sessions
+  share one working directory (not the current worktree-per-lane setup,
+  but worth remembering if that ever changes), stash-dance before every
+  commit and never assume a "stale" reading proves anything without
+  checking the actual mechanism - Tapestry already has its own worktree
+  freshness lesson for this (`tasks/lessons.md`, "Worktree freshness -
+  check the gap before claiming synced").
+- **Don't fight a working pipeline that isn't actually broken.**
+  Cross-check via multiple independent signals (Vercel dashboard, a fresh
+  `curl -sI`, actual deploy logs) before concluding infra is down - a
+  misread cache header or a stale local assumption reads identically to a
+  real outage and wastes a long detour either way.
+- **File ownership is explicit and defensible.** A lane that finds a bug
+  outside its own files flags it (with a ready patch if the fix is small)
+  rather than editing blind - the hub or the real owner takes it. This is
+  the existing tiebreaker rule above, restated for the hub context: a
+  spoke that spots something hub-owned (SQL/RLS/operating docs) writes it
+  up for the hub instead of touching it directly.
+- **Don't pick the first/only-known element of a set when more than one
+  could legitimately exist - resolve by an actual key, not by assuming
+  cardinality.** TheTableau hit this twice from the same root cause
+  (picking `array[0]` when a set could have multiple live members).
+  Tapestry's nearest miss: the audit's repeated finding that a single
+  UPDATE policy assumed "the caller editing their own row" when RLS
+  actually let ANY campaign member match - same class of "assumed a
+  narrower set than what's actually reachable."
 
 ## What this protocol CANNOT do
 

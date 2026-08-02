@@ -172,17 +172,17 @@ Honest about the limits so we don't fool ourselves:
 
 ## Multi-chat lanes
 
-Tapestry runs across THREE always-on Claude chats by deliberate split (2026-05-24; was a two-lane split through 2026-05-23):
+Tapestry runs across THREE always-on Claude chats by deliberate split (2026-05-24; was a two-lane split through 2026-05-23). As of 2026-08-02 this is a **hub-and-spoke model**, adapted from the pattern Xero validated on TheTableau's Puffer Fish hub:
 
-- **Hunt & Peck** - tactical bug fixes, feature ships, narrative tweaks, modal migrations, day-to-day shipping. The only lane that edits app code (`app/`, `components/`, `lib/`, incl. the table page).
-- **Puffer Fish** - architecture, risk, audit, security, observability, scaffolding. Owns stability/security audits, the operating docs (operating-mode / debug-handoff / handoff), Risk Register triage, SQL/RLS/trigger changes, lessons + decisions infrastructure. Doc-first; load-bearing refactors only when explicitly assigned.
-- **Playwright / E2E** - the automated acceptance suite and its plans (`e2e/`, `playwright.config.ts`, coverage map, test plans, results dashboard). Almost purely additive; reads app code, rarely edits it; runs against prod. Surfaces regressions + findings and ROUTES them to the owning lane rather than fixing cross-lane.
+- **Puffer Fish (hub)** - architecture, risk, audit, security, observability, scaffolding. Owns stability/security audits, the operating docs (operating-mode / debug-handoff / handoff / lane-protocol), Risk Register triage, SQL/RLS/trigger changes, lessons + decisions infrastructure. **Is now the only lane that reviews, merges, and pushes SQL/RLS/shared-hot-file work to `main`** - see "Hub & Spoke model" in `tasks/lane-protocol.md` for the graduated gate (pure UI/feature work in Hunt & Peck's own files still self-ships; SQL/RLS/hot-file work routes through the hub). Live hub claim: `tasks/HUB-LIVE.md`.
+- **Hunt & Peck (spoke)** - tactical bug fixes, feature ships, narrative tweaks, modal migrations, day-to-day shipping. The only lane that edits app code (`app/`, `components/`, `lib/`, incl. the table page). Self-ships UI/feature work as before; hands the hub a SHA for anything SQL/RLS/hot-file-adjacent.
+- **Playwright / E2E (spoke)** - the automated acceptance suite and its plans (`e2e/`, `playwright.config.ts`, coverage map, test plans, results dashboard). Almost purely additive; reads app code, rarely edits it; runs against prod. Surfaces regressions + findings and ROUTES them to the owning lane rather than fixing cross-lane. Self-ships spec-only work as before.
 
-Coordination is via the shared substrate (commits, `todo.md`, `lessons.md`, `debug-handoff.md`, `handoff.md`, and the live board `active-lanes.md`) - never direct messages; no chat sees another's in-flight thinking. Setup + conventions live in `tasks/lane-protocol.md` (worktree-per-lane, shared-doc discipline, tiebreaker, the E2E safety net). Rebase conflicts on push are the accepted cost of parallel work; each lane handles its own rebase. Both the Handoff accuracy contract and `scripts/start-session.sh` staleness reporting still apply.
+Coordination is via the shared substrate (commits, `todo.md`, `lessons.md`, `debug-handoff.md`, `handoff.md`, `tasks/HUB-LIVE.md`, `tasks/COMMS.md`, and the live board `active-lanes.md`) - never direct messages; no chat sees another's in-flight thinking; Xero is the manual relay between chats. Setup + conventions live in `tasks/lane-protocol.md` (worktree-per-lane, the hub/spoke model, shared-doc discipline, tiebreaker, the E2E safety net, hard-earned rules). Rebase conflicts on push are the accepted cost of parallel work. Both the Handoff accuracy contract and `scripts/start-session.sh` staleness reporting still apply.
 
-**Tiebreaker when unsure which lane owns a request:** test/coverage -> E2E; structure/risk/security/SQL/operating-docs -> Puffer Fish; specific user-facing fix/feature -> Hunt & Peck; if it belongs to another lane, write a `todo.md` line and let that lane pick it up rather than cross-editing its hot files.
+**Tiebreaker when unsure which lane owns a request:** test/coverage -> E2E; structure/risk/security/SQL/operating-docs -> Puffer Fish (hub-gated regardless of which lane touches it); specific user-facing fix/feature -> Hunt & Peck (self-ships unless it touches a hub-flagged hot file); if it belongs to another lane, write a `todo.md` line and let that lane pick it up rather than cross-editing its hot files.
 
-The earlier MEMORY.md entry `process_multi_chat_tracks` (and the prior two-lane prose here) are superseded by this three-lane split. Memory entry to be refreshed accordingly.
+The earlier MEMORY.md entry `process_multi_chat_tracks` (and the prior two-lane prose here) are superseded by this three-lane split, itself now superseded in its "all three push directly" framing by the 2026-08-02 hub/spoke model. Memory entries to be refreshed accordingly.
 
 ---
 

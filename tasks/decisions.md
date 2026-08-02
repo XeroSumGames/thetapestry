@@ -10,6 +10,23 @@ Newest first.
 
 ---
 
+## 2026-08-02: Puffer Fish becomes the review/merge hub for SQL/RLS/hot-file work; Hunt & Peck and E2E become spokes
+
+**Decision:** Tapestry's three-lane model moves from "all three chats push to `main` directly" to a hub-and-spoke model, adapted from the pattern Xero ran on TheTableau's Puffer Fish hub. Puffer Fish is the hub - the only chat that reviews, merges, and pushes SQL/RLS/shared-hot-file work to `main`. Hunt & Peck and Playwright/E2E are spokes: each still works in its own worktree/branch (unchanged), still self-ships pure UI/feature/spec-only work exactly as before, but hands the hub a commit SHA for anything SQL/RLS or hub-flagged-hot-file. Live hub claim + retirement rule: `tasks/HUB-LIVE.md`. Open questions/decisions in flight: `tasks/COMMS.md`. Full mechanics: `tasks/lane-protocol.md` "Hub & Spoke model" section.
+
+**Why:** the 2026-08-01 full-codebase audit (3 waves, ~50 fixes total across two sessions) found a large volume of real, live, unreviewed CRITICAL bugs - most strikingly, the same "moderation self-approval" bug shape (a clamp existed on INSERT but not UPDATE, letting content authors self-approve their own pending submissions) recurred independently across 7 unrelated tables over months of unreviewed commits. That's the exact failure class a merge-time review gate exists to catch before it ships, not months later in an audit.
+
+**Alternatives considered:**
+- A. Keep all three lanes pushing directly to `main`, rely on the existing pre-commit gate suite (tsc/tests/arch/font/role/em-dash) + periodic audits to catch drift. Zero added latency, but this IS the status quo that let 7 instances of the same bug ship - the pre-commit suite has no concept of "does this RLS policy actually do what its name claims."
+- B. Gate EVERY commit from every lane through hub review, no exceptions. Maximum safety, but these are separate Claude chats that cannot message each other - Xero is the only relay. Blanket gating would make him a full-time message bus for routine UI fixes too, adding real friction to Hunt & Peck's day-to-day shipping cadence for no proportional safety gain (a button color change doesn't carry the same risk as an RLS policy).
+- C. Graduated gate - hub review required for SQL/RLS/hot-file work only, spokes self-ship everything else (chosen). Captures the real value (every RLS/SQL change gets a second set of eyes before going live) without slowing down the high-frequency, lower-stakes work.
+
+**Why C won:** matches where tonight's actual damage was concentrated (SQL/RLS, not UI) and keeps the relay cost proportional to risk. Puffer Fish already has the deepest SQL/RLS/security context of the three lanes by design, so it's the natural reviewer for that category specifically, not a new burden invented for the hub role.
+
+**What would change our mind:** if the graduated boundary itself turns out to leak (a Hunt & Peck "pure UI" change that actually touches RLS-adjacent logic slips through self-ship and causes a real incident), tighten the hot-file list rather than reverting to blanket gating - the failure mode to watch for is scope-creep in the OTHER direction (the hub becoming a bottleneck that gets bypassed informally, which would be worse than not having the gate at all).
+
+---
+
 ## 2026-07-01: lib/weapons.ts is the single source of truth for weapon DATA; lib/xse-schema.ts derives its weapon catalogs from it
 
 **Decision:** `lib/weapons.ts` (the runtime catalog the game actually uses) is the single source of truth for weapon data. `lib/xse-schema.ts`'s `MELEE_WEAPONS` + `RANGED_WEAPONS` are now DERIVED from it (`RUNTIME_*.map(toMeleeWeapon/toRangedWeapon)` via a damage-string + trait parser), instead of being a second hand-maintained copy. To change weapon data, edit `lib/weapons.ts` only.
