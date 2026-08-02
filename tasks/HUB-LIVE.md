@@ -24,9 +24,11 @@ other kind of work gets dispatched to a spoke.
   real (not just by reading code) before claiming it's fixed.
 
 Coordination substrate: this file (who's hub), `tasks/COMMS.md` (open
-questions / decisions / test-plan routing), `tasks/active-lanes.md` (live
-status board), commits, `todo.md`, `lessons.md` - same shared-doc
-discipline as before, see `tasks/lane-protocol.md`.
+questions / decisions / test-plan routing - owned by the dedicated Comms
+channel, `tasks/lane-protocol.md` "Comms channel" section),
+`tasks/active-lanes.md` (live status board), commits, `todo.md`,
+`lessons.md` - same shared-doc discipline as before, see
+`tasks/lane-protocol.md`.
 
 ## Retirement rule
 

@@ -1,11 +1,16 @@
 # COMMS.md - open questions, test plans, decisions in flight
 
-Single source of truth for "what's open, what's answered" across the three
-lanes. Route decisions through this file instead of asking Xero (or each
-other) in scattered chat messages that the other two lanes never see. The
-hub (`tasks/HUB-LIVE.md`) is responsible for keeping this current and
-resolving OPEN items into ANSWERED, but any lane can add an OPEN item -
-don't wait for the hub to notice something needs asking.
+Single source of truth for "what's open, what's answered" across all four
+sessions. Route decisions through this file instead of asking Xero (or
+each other) in scattered chat messages the others never see.
+
+**Owned by the dedicated Comms channel** (`tasks/lane-protocol.md`,
+"Comms channel" section, added 2026-08-02) - Comms is responsible for
+keeping this current, verifying an OPEN item is actually
+reachable/testable before packaging it as a test plan, and resolving
+items into ANSWERED. Any session can still add an OPEN item directly -
+don't wait for Comms to notice something needs asking - Comms picks it
+up from there.
 
 **This is not a duplicate of `tasks/active-lanes.md`** (that's "who's
 touching what file right now") or `tasks/decisions.md` (that's the

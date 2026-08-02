@@ -10,6 +10,21 @@ Newest first.
 
 ---
 
+## 2026-08-02: add a dedicated Comms channel as the 4th session, matching TheTableau
+
+**Decision:** Tapestry gains a fourth always-on session, "Tapestry | Comms," adapted from the pattern already running on TheTableau. Comms owns `tasks/COMMS.md` and `tasks/The Tapestry Smoke Testing.xlsx` - it's the channel for anything needing Xero's live/manual attention (test plans, open questions only he can answer), verifying a lane's work is actually reachable/testable before packaging it and pinging him, rather than each lane separately interrupting him with unverified asks. Comms owns no code/SQL/specs. Full role: `tasks/lane-protocol.md` "Comms channel" section.
+
+**Why:** Xero explicitly asked to mirror TheTableau's setup, where he'd already validated the pattern. The concrete gap it closes: today, any of the three code/SQL/spec lanes that ships something needing a live verify pings Xero directly and hopes the test plan it hands him is actually complete/reachable - there's no single place tracking what's been asked, what's answered, or whether an ask was pre-verified before reaching him. Comms centralizes that.
+
+**Alternatives considered:**
+- A. Keep test-plan/question routing ad hoc per lane (status quo). Zero setup cost, but this is exactly the gap Xero is asking to close - no single source of truth for "what's open, what's answered," and no verification step before a test plan lands on his desk.
+- B. Fold the Comms role into the hub (Puffer Fish) instead of a separate session. Fewer sessions to manage, but conflates two different jobs - the hub reviews code/SQL diffs, Comms verifies testability and owns Xero-facing packaging. Mixing them risks the hub's review backlog blocking test-plan delivery or vice versa.
+- C. Dedicated 4th session (chosen), matching TheTableau's validated pattern exactly.
+
+**What would change our mind:** if Comms turns out to be a redundant hop for things Xero would rather hear about immediately and directly (this doc's own note: Comms does NOT replace everyday lane-to-Xero contact, only the formal test-plan/open-question category) - watch for that boundary blurring in practice and narrow Comms' scope further if it does.
+
+---
+
 ## 2026-08-02 (correction, same day): cross-session coordination is direct via `mcp__ccd_session_mgmt__send_message`, not manually relayed by Xero
 
 **Correction to the entry immediately below** ("Puffer Fish becomes the review/merge hub"), specifically Alternative B's claim that "these are separate Claude chats that cannot message each other - Xero is the only relay." Xero corrected this directly: the hub tells the other chats what to do and they respond back to the hub - he doesn't carry messages between them. Verified: `mcp__ccd_session_mgmt__send_message` delivers a message directly into another session (found via `list_sessions`, matched by title/cwd - "Tapestry | HP" and "Tapestry | E2E" were both live, running sessions). Used it to deliver the actual hub/spoke rollout message to both lanes in the same turn as writing this correction.

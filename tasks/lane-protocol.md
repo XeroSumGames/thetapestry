@@ -1,6 +1,6 @@
-# Lane Protocol - three parallel Claude chats (2026-05-24, hub/spoke model added 2026-08-02)
+# Lane Protocol - four parallel Claude chats (2026-05-24, hub/spoke model + Comms channel added 2026-08-02)
 
-How the three always-on chats stay harmonious. Drafted by the Playwright/E2E
+How the always-on chats stay harmonious. Drafted by the Playwright/E2E
 lane after a session that hit every coordination failure mode first-hand
 (shared-working-tree clobbers, a duplicated todo section, repeated rebases).
 Routed to Puffer Fish (owns `operating-mode.md` + coordination scaffolding) -
@@ -63,9 +63,51 @@ in flight: `tasks/COMMS.md`.
   hub claim overwrites that file and pings every lane, not just the
   active one.
 
+## Comms channel (2026-08-02) - the 4th session
+
+A dedicated chat (title "Tapestry | Comms" by convention, matching
+TheTableau's "Tableau | Comms"), adapted from the pattern proven there.
+**Comms owns everything that needs Xero's live/manual attention -
+test plans and open questions - so the hub and spokes don't each
+separately interrupt him.**
+
+- **Owns:** `tasks/COMMS.md` (open questions / decisions in flight / the
+  ANSWERED log - was a shared file any lane could edit before Comms
+  existed; Comms is now its primary maintainer) and
+  `tasks/The Tapestry Smoke Testing.xlsx` (the one living test workbook -
+  every test ask is a new tab in this same file, never a new file, see
+  `reference_e2e_results_dashboard`-adjacent convention in memory).
+- **Does NOT own:** code, SQL, specs - those stay with Puffer Fish / Hunt
+  & Peck / Playwright-E2E exactly as before. Comms is coordination-only.
+- **The loop:** a lane ships something that needs a live/manual verify ->
+  hands it to Comms via direct session message (not to Xero directly) ->
+  Comms **confirms it's actually reachable/testable first** (not blocked
+  by auth, a half-built feature, or a stale deploy - verify before
+  packaging, don't just relay the lane's claim) -> packages it as a new
+  tab in the Smoke Testing workbook, matching the established
+  Item/description/pass-fail/notes format -> pings Xero -> logs the
+  result back into `COMMS.md`'s ANSWERED log and notifies the requesting
+  lane via session message.
+- **Open questions route the same way:** if the hub or a spoke has a
+  question only Xero can answer (a product/vision call, not something a
+  lane can decide on its own), it goes to Comms as an OPEN item instead
+  of interrupting Xero directly in whatever chat happens to be active -
+  Comms tracks it, gets the answer, updates ANSWERED, and notifies
+  whoever was waiting.
+- **Coordinates via the same direct session messaging as the hub/spokes**
+  (`mcp__ccd_session_mgmt__send_message`, target found with
+  `list_sessions`) - Xero does not relay for Comms either, same rule as
+  everywhere else in this document.
+- **This does NOT mean lanes stop talking to Xero directly for
+  everything** - day-to-day questions, status, and anything not a formal
+  test-plan-or-open-question stay exactly as they are today. Comms exists
+  to take the recurring "does this need to go to Xero, and is it actually
+  ready" ceremony off every lane's plate, not to become a mandatory relay
+  for all human contact.
+
 ---
 
-> **All three lanes align to ONE anchor: [tasks/north-star.md](north-star.md)** - the validated vision. Its whole purpose is to keep the lanes moving the SAME direction with no contradictions or overlaps. Read it, prioritize against it, and lead every handoff with it. (Goal now: TheTapestry stable/polished/fun for the 9/1 Kickstarter; billing ~10/1 post-KS.)
+> **All four sessions align to ONE anchor: [tasks/north-star.md](north-star.md)** - the validated vision. Its whole purpose is to keep everyone moving the SAME direction with no contradictions or overlaps. Read it, prioritize against it, and lead every handoff with it. (Goal now: TheTapestry stable/polished/fun for the 9/1 Kickstarter; billing ~10/1 post-KS.)
 
 ## The three lanes
 
