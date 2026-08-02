@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-02 15:04 UTC
+
+**Status:** DRIFT (state unchanged from 12:07 - CI now confirmed; vulns + HOPED-FOR still open)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - brace-expansion DoS, postcss XSS, sharp libvips CVEs, next via those two
+
+**CI:** last 5 runs all SUCCESS (confirmed via GitHub API this run; was "skipped" in prior entries)
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts - stale 47+ days, no recent playtest confirmation
+- HOPED-FOR stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale 47+ days
+- HOPED-FOR FI Insight Die award path (roll doubles -> +1 insight die) - never fired in live play
+- todo open: CampaignMap fingerprint hashes allPins not visible subset (CampaignMap.tsx:650-656)
+- todo open: 3s vehicles poll (page.tsx:3129) - setInterval 3000ms still live
+
+**Action:** postcss XSS (HIGH) is the most urgent npm item for a web app - worth a focused npm audit fix pass. HOPED-FOR items need next playtest session to drain. CI is green; no code emergency.
+
+---
+
 ## 2026-08-02 12:07 UTC
 
 **Status:** DRIFT (state unchanged from 09:03 - no new commits, no new issues)
