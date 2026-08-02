@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-02 00:06 UTC
+
+**Status:** DRIFT (state unchanged from 21:04 entry - no new commits, no new signal)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - same as 21:04 (brace-expansion, postcss, sharp, next)
+
+**CI:** last 5 runs all pass (most recent: 2026-08-01 21:06 UTC)
+
+**Drift:**
+- HOPED-FOR vehicle popout broadcasts - stale, no git activity
+- HOPED-FOR stress-check 12-string narrative (HEAL/UNJAM/REPAIR/etc.) - stale
+- HOPED-FOR Cover Fire -2 CMod 2-client verify + GM Screen interactive verify - stale
+- todo open: CampaignMap fingerprint hashes allPins not visible (CampaignMap.tsx:656) - still live
+- todo open: 3s vehicles poll (page.tsx:3129) - setInterval 3000ms still live
+
+**Action:** Carry from 21:04 entry. No new issues.
+
+---
+
 ## 2026-08-01 21:04 UTC
 
 **Status:** DRIFT (state unchanged from 18:05 entry - no new signal)
