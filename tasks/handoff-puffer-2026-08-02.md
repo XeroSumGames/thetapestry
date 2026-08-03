@@ -83,9 +83,23 @@ as a claim to re-verify from git/disk, per the Handoff accuracy contract.**
    `forum_threads`/`war_stories`/`lfg_posts`/`whispers`, matching the
    existing `modules` pattern. `database.types.ts` regenerated. **UI half
    also SHIPPED by HP** - commit `a750f516` "fix(campfire): anonymized
-   (null) authors no longer break feed name lookups", landed on `main`
-   while this handoff was being written. This whole item is DONE -
-   nothing further needed, just noting it for completeness.
+   (null) authors no longer break feed name lookups". Top-level tables
+   are fully DONE, schema + UI.
+   **FOLLOW-UP (also done):** while shipping the UI, HP caught that a
+   null in a PostgREST `.in('id', authorIds)` returns HTTP 400 and fails
+   the WHOLE query, not a graceful per-row degrade - fixed across all the
+   feed pages + whispers(MapView) + settings. HP also correctly flagged
+   that the reply tables (`forum_replies`/`lfg_post_replies`/
+   `war_story_replies`) have their OWN separate `author_user_id` FK,
+   independent of `thread_id`, which was STILL `CASCADE` - a replier
+   (not the thread author) deleting their account still hard-deleted
+   their own reply out of someone else's surviving thread. Same
+   nullable + `SET NULL` fix applied, commit `944b9e2b`, live + verified,
+   types regenerated, tsc/arch/tests green. **UI half of THIS piece
+   (InlineRepliesPanel.tsx assumes non-null reply authors) handed back to
+   HP, not yet confirmed shipped as of this edit** - check `git log` on
+   `main` for a commit touching `InlineRepliesPanel.tsx` after
+   `944b9e2b` to see if it landed.
 6. Comms also relayed Xero's decision on `portrait-bank` confidentiality
    - **THIS IS THE IN-FLIGHT TASK, see below, NOT STARTED.**
 
