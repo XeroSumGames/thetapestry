@@ -32,6 +32,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'
 import { wrapDbChange } from '../lib/sentry-realtime'
+import { reportSupabaseError } from '../lib/supabase-errors'
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -404,7 +405,7 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
     }
 
     if (!messageBody.trim()) return
-    await supabase.from('chat_messages').insert({
+    const { error } = await supabase.from('chat_messages').insert({
       campaign_id: campaignId,
       user_id: userId,
       character_name: characterName,
@@ -412,6 +413,13 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
       is_whisper: isWhisper,
       recipient_user_id: recipientUserId,
     })
+    if (error) {
+      // The message never reached the feed. Surface it (console + Sentry) and
+      // KEEP the typed input so the player can retry instead of silently
+      // losing what they wrote. Was: result discarded + input cleared always.
+      reportSupabaseError(error, 'TableChat.send')
+      return
+    }
     setInput('')
   }
 
