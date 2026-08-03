@@ -1642,7 +1642,7 @@ export type Database = {
       }
       forum_replies: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -1650,7 +1650,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -1658,7 +1658,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -2058,7 +2058,7 @@ export type Database = {
       }
       lfg_post_replies: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -2066,7 +2066,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -2074,7 +2074,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -3795,7 +3795,7 @@ export type Database = {
       }
       war_story_replies: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -3803,7 +3803,7 @@ export type Database = {
           war_story_id: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -3811,7 +3811,7 @@ export type Database = {
           war_story_id: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
