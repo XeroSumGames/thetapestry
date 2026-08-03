@@ -247,7 +247,19 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
       if (!document.hidden) refetch()
     }
     document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
+    // Low-frequency reconcile poll: subscribe catch-up + visibilitychange
+    // both fire only on (re)mount / tab-return, so a tab left OPEN and
+    // FOCUSED that drops a single postgres_changes roll event would miss
+    // it until the next resubscribe - a player silently never sees a roll.
+    // A 30s visible-only poll closes that gap (the realtime sub still
+    // delivers the common case sub-second; the poll is only the
+    // guarantee). refetch's own refetchSeqRef guard drops any stale
+    // overlap. Mirrors the shipped CampaignMap pin reconcile poll.
+    const reconcile = setInterval(() => { if (!document.hidden) refetch() }, 30000)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      clearInterval(reconcile)
+    }
   }, [campaignId, refetch])
 
   // Apply Coord Effort chain collapse before exposing. Memoized on

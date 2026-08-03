@@ -166,7 +166,18 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
       if (!document.hidden) refetch()
     }
     document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
+    // Low-frequency reconcile poll: subscribe catch-up + visibilitychange
+    // both fire only on (re)mount / tab-return, so a tab left OPEN and
+    // FOCUSED that drops a single postgres_changes chat event would miss
+    // that message until the next resubscribe. A 30s visible-only poll
+    // closes that gap (realtime still delivers the common case sub-second;
+    // the poll is only the guarantee). refetch's refetchSeqRef guard drops
+    // any stale overlap. Mirrors the shipped CampaignMap pin reconcile poll.
+    const reconcile = setInterval(() => { if (!document.hidden) refetch() }, 30000)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      clearInterval(reconcile)
+    }
   }, [campaignId, refetch])
 
   return { messages, clear, refetch }
