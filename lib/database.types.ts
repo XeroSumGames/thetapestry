@@ -1711,7 +1711,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
-          author_user_id: string
+          author_user_id: string | null
           body: string
           campaign_id: string | null
           category: string
@@ -1731,7 +1731,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           campaign_id?: string | null
           category: string
@@ -1751,7 +1751,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           campaign_id?: string | null
           category?: string
@@ -2095,7 +2095,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -2113,7 +2113,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -2131,7 +2131,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -3701,7 +3701,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           attachments: Json
-          author_user_id: string
+          author_user_id: string | null
           body: string
           campaign_id: string | null
           created_at: string
@@ -3719,7 +3719,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           attachments?: Json
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           campaign_id?: string | null
           created_at?: string
@@ -3737,7 +3737,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           attachments?: Json
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           campaign_id?: string | null
           created_at?: string
@@ -3830,19 +3830,19 @@ export type Database = {
       }
       whispers: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           content: string
           created_at: string
           id: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           content: string
           created_at?: string
           id?: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           content?: string
           created_at?: string
           id?: string
