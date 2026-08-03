@@ -6,6 +6,32 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-03 00:06 UTC
+
+**Status:** DRIFT (6 new commits since 21:07 UTC pulse, all gates green, drift carried)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - unchanged (brace-expansion DoS, postcss XSS, sharp libvips CVEs)
+
+**CI:** gh unavailable in sandbox - skipped
+
+**New since last pulse:**
+- `82941f1` fix(security): campaign_npcs.hidden_from_players writable by any member, not just GM - RLS tightened, live
+- `39df49c` feat(npcs): NPC-to-map-pin linking + click-pin-opens-sheet
+- 5x docs commits (Comms lane, hub-and-spoke model, lane-protocol)
+
+**Drift (carried):**
+- HOPED-FOR stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale 52+ days
+- HOPED-FOR FI Insight Die award path (roll doubles -> +1 insight die) - never fired in live play
+- HOPED-FOR vehicle popout broadcasts - `8c1d358` fixed firing-arc toggle (Aug 1); 2-client confirm still owed
+- todo open: CampaignMap fingerprint hashes allPins not visible subset (CampaignMap.tsx:651)
+- todo open: 3s vehicles poll (page.tsx:3129) - setInterval 3000ms still live
+
+**Action:** Security fix `82941f1` is live - verify no NPC hidden-from-players regression at next session. postcss XSS (HIGH) most urgent npm item. HOPED-FOR items drain at next playtest.
+
+---
+
 ## 2026-08-02 21:05 UTC
 
 **Status:** DRIFT (state unchanged from 18:04 - no new commits, no new issues)
