@@ -25,6 +25,8 @@ remembering, it gets its own entry in `decisions.md` too.
 
 ## OPEN
 
+- **[2026-08-03, Puffer Fish] portrait-bank fix needs re-scoping - option (a) is bigger than framed.** Portrait URLs get baked permanently into `characters.data.photoDataUrl` / `campaign_npcs.portrait_url` / `scene_tokens.portrait_url` at pick-time (confirmed in `StepXero.tsx`, `NpcRoster.tsx`, `CampaignPins.tsx`, `token-creator`). Signed URLs expire (minutes-hours) - if baked in at pick-time, portraits go silently dead weeks later, including for characters/NPCs created BEFORE this ships. Real fix (either option): store the storage PATH, resolve a fresh signed URL at render-time everywhere a portrait displays, plus migrate every already-created row's baked-in URL. Under (a) (bucket-wide private), BOTH public and private portraits need this. Under (b) (separate bucket for private only), only private portraits need it - public bank stays plain `getPublicUrl()` forever, zero expiry risk. **Needs: confirm (a) knowing it's now a full portrait-reference redesign + migration, or reconsider given the corrected scope.** Puffer Fish is NOT implementing until re-confirmed.
+
 
 ---
 
