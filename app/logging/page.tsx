@@ -222,6 +222,44 @@ export default function LoggingPage() {
     return () => clearTimeout(handle)
   }, [visitorFilter, site])
 
+  // Server-side User Events search - same capped-100 bug as the visitor
+  // search above, same fix. username lives on profiles, so resolve matching
+  // user_ids first, then .or() ilike on event_type OR user_id.in(...). NOTE:
+  // metadata is jsonb and PostgREST can't ilike a whole-column text cast, so a
+  // term that appears ONLY inside a metadata payload stays window-bounded
+  // (the client haystack below still matches it within the returned set) -
+  // full metadata search across all rows is what the deferred SQL search RPC
+  // would add. Debounced + seq-guarded; empty term restores the newest 100.
+  const eventSearchMountRef = useRef(false)
+  const eventSearchSeqRef = useRef(0)
+  useEffect(() => {
+    if (!eventSearchMountRef.current) { eventSearchMountRef.current = true; return }
+    const term = eventFilter.trim().toLowerCase().replace(/[,()"*%\\]/g, '')
+    const handle = setTimeout(async () => {
+      const seq = ++eventSearchSeqRef.current
+      let q = supabase.from('user_events').select('id, user_id, event_type, metadata, created_at').order('created_at', { ascending: false }).limit(term ? 500 : 100)
+      if (term) {
+        const { data: users } = await supabase.from('profiles').select('id').ilike('username', `%${term}%`).limit(500)
+        const uids = (users ?? []).map((u: any) => u.id)
+        const parts = [`event_type.ilike.*${term}*`]
+        if (uids.length) parts.push(`user_id.in.(${uids.join(',')})`)
+        q = q.or(parts.join(','))
+      }
+      const { data } = await q
+      if (seq !== eventSearchSeqRef.current) return // superseded by a newer search
+      const rows = data ?? []
+      const rUids = [...new Set(rows.map((e: any) => e.user_id).filter(Boolean))]
+      let nameMap: Record<string, string> = {}
+      if (rUids.length) {
+        const { data: profs } = await supabase.from('profiles').select('id, username').in('id', rUids)
+        nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+      }
+      if (seq !== eventSearchSeqRef.current) return
+      setEvents(rows.map((e: any) => ({ ...e, username: nameMap[e.user_id] ?? 'Unknown' })))
+    }, 300)
+    return () => clearTimeout(handle)
+  }, [eventFilter])
+
   // Render visitor map. Inits once, then re-draws its markers whenever the data
   // changes (e.g. switching the site filter) via a dedicated marker layer.
   useEffect(() => {
