@@ -259,8 +259,13 @@ export default function CampaignsPage() {
         </div>
       )}
 
+      {/* Running as GM | Playing In - two columns side by side on wide
+          viewports, auto-stacked below ~680px (each column needs >=340px).
+          Grid auto-fit means a single present section fills the full width. */}
+      {(gmCampaigns.length > 0 || playerCampaigns.length > 0) && (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', alignItems: 'start', marginBottom: '2rem' }}>
       {gmCampaigns.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
+        <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
             Running as GM
           </div>
@@ -336,6 +341,8 @@ export default function CampaignsPage() {
             ))}
           </div>
         </div>
+      )}
+      </div>
       )}
 
       <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '8px' }}>
