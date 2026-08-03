@@ -300,31 +300,21 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         </div>
       )}
 
-      {/* Skills - clickable */}
-      {(skillEntries.length > 0 || onRoll) && (
-        <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', marginBottom: '4px' }}>
-          {skillEntries.filter(s => s.name).map((s, i) => (
-            <span key={i} onClick={() => handleSkillRoll(s.name, s.level)}
-              style={{ fontSize: '13px', padding: '0 4px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: s.level > 0 ? '#7fc458' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
-              {s.name} {sgn(s.level)}
+      {/* Skills - clickable. Full skill list (all of SKILL_ATTR), so the GM
+          can make ANY check from the sheet; untrained skills default to +0
+          (grey), trained ones highlighted green. handleSkillRoll no-ops when
+          onRoll is absent, so this stays a plain read-only list off the table. */}
+      <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', marginBottom: '4px' }}>
+        {Object.keys(SKILL_ATTR).sort().map(name => {
+          const level = getSkillLevel(name)
+          return (
+            <span key={name} onClick={() => handleSkillRoll(name, level)}
+              style={{ fontSize: '13px', padding: '0 4px', background: level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: level > 0 ? '#7fc458' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
+              {name} {sgn(level)}
             </span>
-          ))}
-          {onRoll && (() => {
-            const existing = new Set(skillEntries.map(s => s.name))
-            const combatSkills = [
-              { name: 'Melee Combat', label: 'Melee' },
-              { name: 'Ranged Combat', label: 'Ranged' },
-              { name: 'Demolitions', label: 'Demolitions' },
-            ].filter(s => !existing.has(s.name))
-            return combatSkills.map(s => (
-              <span key={s.name} onClick={() => handleSkillRoll(s.name, getSkillLevel(s.name))}
-                style={{ fontSize: '13px', padding: '0 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>
-                {s.label} {sgn(getSkillLevel(s.name))}
-              </span>
-            ))
-          })()}
-        </div>
-      )}
+          )
+        })}
+      </div>
 
       {/* GM Notes - truncated */}
       {npc.notes && (
