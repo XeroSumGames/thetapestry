@@ -104,7 +104,13 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     return []
   })
 
+  // Stale-drop guard: loadPins has several concurrent triggers (postgres_
+  // changes, pins_changed broadcast, SUBSCRIBED, visibility, and now the
+  // reconcile poll). Without this, a slow reload can resolve AFTER a newer
+  // one and clobber fresher pins. Standing pattern (decisions.md).
+  const loadSeqRef = useRef(0)
   async function loadPins() {
+    const seq = ++loadSeqRef.current
     let query = supabase
       .from('campaign_pins')
       .select('*')
@@ -114,6 +120,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     const { data } = await query
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
+    if (seq !== loadSeqRef.current) return // superseded by a newer load
     setPins(data ?? [])
     setLoading(false)
   }
@@ -190,8 +197,16 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     pinsChannelRef.current = ch
     function handleVisibility() { if (!document.hidden) void loadPins() }
     document.addEventListener('visibilitychange', handleVisibility)
+    // Low-frequency reconcile poll: the triggers above fire only on
+    // (re)mount / (re)subscribe / tab-return, so a tab left OPEN and
+    // FOCUSED that drops both the postgres_changes event AND the fire-and-
+    // forget pins_changed broadcast shows a stale pin set until refresh.
+    // A 30s visible-only poll closes that gap; loadPins's loadSeqRef guard
+    // drops stale overlap. Standing pattern (decisions.md).
+    const reconcile = setInterval(() => { if (!document.hidden) void loadPins() }, 30000)
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility)
+      clearInterval(reconcile)
       supabase.removeChannel(ch)
       pinsChannelRef.current = null
     }
