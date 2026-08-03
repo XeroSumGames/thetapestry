@@ -6,6 +6,38 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-03 06:12 UTC
+
+**Status:** RED+DRIFT (4 HIGH npm audit vulns; HOPED-FOR items carried)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical]
+- HIGH: postcss - XSS via unescaped `</style>`, path traversal + arbitrary file read via sourceMappingURL
+- HIGH: sharp - libvips CVE-2026-33327/33328/35590/35591
+- HIGH: next - depends on both above
+- HIGH: brace-expansion - DoS via unbounded expansion (OOM crash)
+
+**CI:** gh unavailable in sandbox - skipped
+
+**New since last pulse (00:06 UTC, 20 commits):**
+- `15a8ab2` fix(portrait-bank): private portraits now RLS-enforced - were served from public CDN (security fix)
+- `cecc19c`/`944b9e2`/`4404dcb`/`a750f51` fix(account): self-delete no longer cascades forum/war-story/campfire/reply content
+- `59405c7` perf(table): vehicles poll 3s -> 30s visible-tabs-only (CLOSES prior drift item)
+- `ffcb33a`/`d16b85b` fix(realtime): reconcile poll added to CampaignPins, PlayerNotes, RollsFeed, TableChat
+
+**Drift (carried):**
+- HOPED-FOR stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale 52+ days, no code touch
+- HOPED-FOR vehicle popout broadcasts - no 2-client playtest confirmation
+- HOPED-FOR FI Insight Die award path (roll doubles -> +1 insight die) - never fired in live play
+- todo open: CampaignMap fingerprint hashes `allPins` not `visible` subset (CampaignMap.tsx:651) - CONFIRMED still unresolved
+- todo open: [MED] Newly-joined player not visible to GM without refresh (page.tsx:1544)
+- todo open: [MED] Players get no pin popup at all (CampaignMap player path)
+
+**Action:** Portrait-bank security fix is notable - private portraits were accessible via public CDN URL before `15a8ab2`; verify no broken portrait loads in next session. postcss XSS (HIGH) is the most actionable npm item - check if `next` update is available. HOPED-FOR items drain at next playtest.
+
+---
+
 ## 2026-08-03 00:06 UTC
 
 **Status:** DRIFT (6 new commits since 21:07 UTC pulse, all gates green, drift carried)
