@@ -82,10 +82,10 @@ as a claim to re-verify from git/disk, per the Handoff accuracy contract.**
    `author_user_id` nullable + `ON DELETE SET NULL` on
    `forum_threads`/`war_stories`/`lfg_posts`/`whispers`, matching the
    existing `modules` pattern. `database.types.ts` regenerated. **UI half
-   handed to HP directly** (session message, not yet confirmed done by
-   them) - checked the display sites first, all 5 campfire feed pages
-   already do `nameMap[x] ?? 'Unknown'`, so it's verification + maybe a
-   wording tweak to 'Anonymous', not a from-scratch build.
+   also SHIPPED by HP** - commit `a750f516` "fix(campfire): anonymized
+   (null) authors no longer break feed name lookups", landed on `main`
+   while this handoff was being written. This whole item is DONE -
+   nothing further needed, just noting it for completeness.
 6. Comms also relayed Xero's decision on `portrait-bank` confidentiality
    - **THIS IS THE IN-FLIGHT TASK, see below, NOT STARTED.**
 
