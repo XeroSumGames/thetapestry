@@ -89,6 +89,12 @@ export default function CampaignPage() {
   const [myCharacters, setMyCharacters] = useState<Character[]>([])
   const [selectedCharId, setSelectedCharId] = useState<string>('')
   const [assigning, setAssigning] = useState(false)
+  // Surfaced when a character-assignment write fails. Previously the three
+  // assign paths did `if (!error) { ...update state... }` with no else, so an
+  // RLS / constraint / trigger failure on that write was invisible - no
+  // message, no console.error - and looked exactly like "the button did
+  // nothing" (cost real debugging time on the 2026-08-03 RLS-recursion bug).
+  const [assignError, setAssignError] = useState<string | null>(null)
   const [assignedCharName, setAssignedCharName] = useState<string>('')
   const [assignedPortrait, setAssignedPortrait] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -245,6 +251,7 @@ export default function CampaignPage() {
   async function handleAssignCharacter() {
     if (!selectedCharId || !userId) return
     setAssigning(true)
+    setAssignError(null)
     const { error } = await supabase.from('campaign_members')
       .update({ character_id: selectedCharId })
       .eq('campaign_id', id)
@@ -258,6 +265,9 @@ export default function CampaignPage() {
       }
       const mems = await fetchMembersWithProfiles(supabase, id)
       setMembers(mems)
+    } else {
+      console.error('[handleAssignCharacter] assign failed:', error.message)
+      setAssignError(`Could not assign that survivor: ${error.message}`)
     }
     setAssigning(false)
   }
@@ -265,6 +275,7 @@ export default function CampaignPage() {
   async function handleSelectPregen(seed: PregenSeed) {
     if (!userId || !campaign || creatingPregen) return
     setCreatingPregen(true)
+    setAssignError(null)
     try {
       const char = buildCharacterFromPregen(seed)
       const { data: created, error: charErr } = await supabase
@@ -286,6 +297,9 @@ export default function CampaignPage() {
         setShowPregens(false)
         const mems = await fetchMembersWithProfiles(supabase, id)
         setMembers(mems)
+      } else {
+        console.error('[selectPregen] assign failed:', assignErr.message)
+        setAssignError(`Survivor created but could not be assigned: ${assignErr.message}`)
       }
     } finally {
       setCreatingPregen(false)
@@ -295,6 +309,7 @@ export default function CampaignPage() {
   async function handleSelectLibraryPregen(row: { id: string; name: string; data: any; portrait_url?: string | null }) {
     if (!userId || !campaign || creatingLibraryPregen) return
     setCreatingLibraryPregen(row.id)
+    setAssignError(null)
     try {
       const { data: created, error: charErr } = await createCharacterForUser(userId, row.name, row.data, row.portrait_url)
       if (charErr || !created) { console.error('[LibraryPregen] character create error:', charErr?.message); return }
@@ -307,6 +322,9 @@ export default function CampaignPage() {
         setShowPregens(false)
         const mems = await fetchMembersWithProfiles(supabase, id)
         setMembers(mems)
+      } else {
+        console.error('[selectPregen] assign failed:', assignErr.message)
+        setAssignError(`Survivor created but could not be assigned: ${assignErr.message}`)
       }
     } finally {
       setCreatingLibraryPregen(null)
@@ -715,6 +733,11 @@ export default function CampaignPage() {
                     {assigning ? 'Saving...' : 'Assign'}
                   </button>
                 </div>
+                {assignError && (
+                  <div role="alert" style={{ marginTop: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+                    {assignError}
+                  </div>
+                )}
               </div>
 
               <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>Create new survivor</div>
