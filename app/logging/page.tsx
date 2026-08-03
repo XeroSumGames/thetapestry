@@ -48,7 +48,6 @@ export default function LoggingPage() {
   const [eventIncludeTerms, setEventIncludeTerms] = useState<string[]>([])
   // Shared toggle - which chip list Enter adds to. One preference for both
   // tabs since only one tab is visible at a time.
-  const [filterMode, setFilterMode] = useState<'exclude' | 'include'>('exclude')
   const [visitorCount, setVisitorCount] = useState(0)
   const [eventCount, setEventCount] = useState(0)
   const [signups7d, setSignups7d] = useState(0)
@@ -453,22 +452,16 @@ export default function LoggingPage() {
           <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input value={visitorFilter} onChange={e => setVisitorFilter(e.target.value)} placeholder="Search..."
-                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && visitorFilter.trim()) {
-                    const term = visitorFilter.trim().toLowerCase()
-                    if (filterMode === 'exclude') {
-                      if (!excludeTerms.includes(term)) setExcludeTerms(prev => [...prev, term])
-                    } else {
-                      if (!includeTerms.includes(term)) setIncludeTerms(prev => [...prev, term])
-                    }
-                    setVisitorFilter('')
-                  }
-                }} />
-              <button onClick={() => setFilterMode(m => m === 'exclude' ? 'include' : 'exclude')}
-                title="Click to switch what Enter does"
-                style={{ padding: '4px 10px', background: filterMode === 'include' ? '#0f1a2e' : '#2a1210', border: `1px solid ${filterMode === 'include' ? '#2e2e5a' : '#c0392b'}`, borderRadius: '3px', color: filterMode === 'include' ? '#7ab3d4' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                Enter = {filterMode === 'include' ? 'Include' : 'Exclude'}
+                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }} />
+              <button onClick={() => { const term = visitorFilter.trim().toLowerCase(); if (term && !includeTerms.includes(term)) setIncludeTerms(prev => [...prev, term]); setVisitorFilter('') }}
+                title="Add the search text as an Include filter"
+                style={{ padding: '4px 10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Include
+              </button>
+              <button onClick={() => { const term = visitorFilter.trim().toLowerCase(); if (term && !excludeTerms.includes(term)) setExcludeTerms(prev => [...prev, term]); setVisitorFilter('') }}
+                title="Add the search text as an Exclude filter"
+                style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Exclude
               </button>
             </div>
             {(includeTerms.length > 0 || excludeTerms.length > 0) && (
@@ -546,22 +539,16 @@ export default function LoggingPage() {
           <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input value={eventFilter} onChange={e => setEventFilter(e.target.value)} placeholder="Search..."
-                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && eventFilter.trim()) {
-                    const term = eventFilter.trim().toLowerCase()
-                    if (filterMode === 'exclude') {
-                      if (!eventExcludeTerms.includes(term)) setEventExcludeTerms(prev => [...prev, term])
-                    } else {
-                      if (!eventIncludeTerms.includes(term)) setEventIncludeTerms(prev => [...prev, term])
-                    }
-                    setEventFilter('')
-                  }
-                }} />
-              <button onClick={() => setFilterMode(m => m === 'exclude' ? 'include' : 'exclude')}
-                title="Click to switch what Enter does"
-                style={{ padding: '4px 10px', background: filterMode === 'include' ? '#0f1a2e' : '#2a1210', border: `1px solid ${filterMode === 'include' ? '#2e2e5a' : '#c0392b'}`, borderRadius: '3px', color: filterMode === 'include' ? '#7ab3d4' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                Enter = {filterMode === 'include' ? 'Include' : 'Exclude'}
+                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }} />
+              <button onClick={() => { const term = eventFilter.trim().toLowerCase(); if (term && !eventIncludeTerms.includes(term)) setEventIncludeTerms(prev => [...prev, term]); setEventFilter('') }}
+                title="Add the search text as an Include filter"
+                style={{ padding: '4px 10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Include
+              </button>
+              <button onClick={() => { const term = eventFilter.trim().toLowerCase(); if (term && !eventExcludeTerms.includes(term)) setEventExcludeTerms(prev => [...prev, term]); setEventFilter('') }}
+                title="Add the search text as an Exclude filter"
+                style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Exclude
               </button>
             </div>
             {(eventIncludeTerms.length > 0 || eventExcludeTerms.length > 0) && (
