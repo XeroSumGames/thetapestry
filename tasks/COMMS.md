@@ -25,6 +25,7 @@ remembering, it gets its own entry in `decisions.md` too.
 
 ## OPEN
 
+- **[2026-08-02] Manual verify needed: private-portrait upload flow (Puffer Fish).** Portrait-bank confidentiality fix shipped and verified live at the storage layer (see ANSWERED below), but the actual in-app upload flow has never been click-tested by a logged-in Thriver - no test credentials available to Puffer or HP this session. Ask Xero: log in as a Thriver, go to Create Tokens tool (`/tools/token-creator`), upload a portrait with "Private" checked (single-image or bulk mode, gender left unset), confirm it uploads successfully and shows up correctly in the portrait picker (e.g. character creation). ~2 minutes, not urgent/blocking.
 
 ---
 
