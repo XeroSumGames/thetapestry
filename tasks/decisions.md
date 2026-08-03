@@ -10,6 +10,21 @@ Newest first.
 
 ---
 
+## 2026-08-02: 30s visible-tab-only reconcile poll is the standing pattern for realtime dropped-event fallback; budget ceiling set at Beta-500 scale
+
+**Decision:** every realtime feed (postgres_changes subscribe) gets a low-frequency (30s), visible-and-focused-tab-only reconcile poll as a fallback for the rare dropped/missed event, guarded by a `refetchSeqRef`-style sequence guard so the poll never fights a fresher subscribe-driven refetch. Already shipped on CampaignMap, the pin/vehicle polls, and now (HP, `d16b85b1`) RollsFeed + TableChat. Approved as hub: proceed with the same pattern on CampaignPins despite it being realtime-hot - the pattern's safeguards (visible-only, seq-guarded, 30s floor) are what make it safe at that criticality, not a reason to withhold it.
+
+**Alternatives considered:**
+- A. No fallback poll - trust `postgres_changes` subscriptions never drop events. Rejected: the GrumpyBattersby incident is the proof this happens in practice (tab backgrounded/foregrounded, network blip, reconnect race).
+- B. Aggressive poll (5-10s) for faster catch-up. Rejected: multiplies req/s for a rare-edge-case safety net with no proportionate benefit - the dropped-event window this guards against is measured in minutes of a backgrounded tab, not seconds.
+- C. 30s, visible-and-focused-tab-only, seq-guarded (this). Matches the existing accepted pattern, keeps aggregate load low, doesn't compete with normal subscribe-driven updates.
+
+**Why C won:** consistency with prior art (CampaignMap, pins/vehicles) plus the actual failure mode (a tab that WAS backgrounded and missed one event) only needs a slow safety net, not a fast one. At Beta-500 scale, RollsFeed+TableChat's addition is ~34 req/s total, visible-tabs-only - trivial against Supabase's normal request budget and the same order of magnitude as the polls already accepted.
+
+**What would change our mind:** if the NUMBER of features carrying this poll keeps growing (CampaignPins next, PlayerNotes under review) such that the aggregate req/s across all of them starts becoming a real fraction of Beta-500's total request budget, that's the trigger to stop approving per-feature and do one consolidated pass (a single shared low-frequency reconcile heartbeat instead of N independent per-feature pollers, or a real presence-based push mechanism). Not there yet - this entry sets the ceiling to watch, not a current problem.
+
+---
+
 ## 2026-08-02: add a dedicated Comms channel as the 4th session, matching TheTableau
 
 **Decision:** Tapestry gains a fourth always-on session, "Tapestry | Comms," adapted from the pattern already running on TheTableau. Comms owns `tasks/COMMS.md` and `tasks/The Tapestry Smoke Testing.xlsx` - it's the channel for anything needing Xero's live/manual attention (test plans, open questions only he can answer), verifying a lane's work is actually reachable/testable before packaging it and pinging him, rather than each lane separately interrupting him with unverified asks. Comms owns no code/SQL/specs. Full role: `tasks/lane-protocol.md` "Comms channel" section.
