@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-03 21:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - count UP from 4
+- NEW: HIGH fast-uri - host confusion via backslash authority introducer
+- HIGH: postcss - XSS via unescaped `</style>` + sourceMappingURL path traversal
+- HIGH: sharp - libvips CVE-2026-33327/33328/35590/35591
+- HIGH: next (depends on postcss + sharp), brace-expansion DoS
+
+**CI:** 3 failures in last 5 runs (20:47-20:57 UTC cluster) - circular RLS: campaign_members <-> characters. Resolved: last 2 runs green (21:00-21:01 UTC, commits 89e6598 + f95a11f).
+
+**Drift (carried):**
+- HOPED-FOR stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - 48+ days
+- HOPED-FOR vehicle popout broadcasts - 2-client confirm still owed
+- HOPED-FOR FI Insight Die award path - never fired live
+
+**Action:** New fast-uri HIGH vuln since last pulse - check sub-dep update. CI failure cluster at 20:47-20:57 UTC was circular RLS on campaign_members <-> characters; fix landed at 8d3b52b and held.
+
+---
+
 ## 2026-08-03 18:05 UTC
 
 **Status:** RED+DRIFT (unchanged from 15:07 UTC - no code commits since last entry)
