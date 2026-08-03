@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-03 09:11 UTC
+
+**Status:** RED+DRIFT (unchanged from 06:12 pulse - no new commits)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [4 high, 0 critical] - unchanged
+- HIGH: postcss XSS + arbitrary file read via sourceMappingURL
+- HIGH: sharp libvips CVE-2026-33327/33328/35590/35591
+- HIGH: next (depends on both above), brace-expansion DoS
+
+**CI:** Last 5 runs all success (confirmed via GitHub MCP - previous pulse had skipped this step)
+
+**Drift (carried, no change):**
+- HOPED-FOR stress-check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - 48+ days, drain at Beta-500 dry-run
+- HOPED-FOR FI Insight Die award path (roll doubles -> +1 insight die) - never fired live
+- HOPED-FOR vehicle popout broadcasts - 2-client confirm still owed
+- todo open: [MED] Newly-joined player not visible to GM without refresh
+- todo open: [MED] Players get no pin popup at all
+
+**Action:** No change since 06:12 pulse. postcss XSS remains most urgent npm item - check if `next` upgrade is available.
+
+---
+
 ## 2026-08-03 06:12 UTC
 
 **Status:** RED+DRIFT (4 HIGH npm audit vulns; HOPED-FOR items carried)
