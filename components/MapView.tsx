@@ -138,7 +138,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   // Whispers - public message wall. Distinct from the in-table /whisper
   // chat command (private DM). Anyone signed-in posts; Thrivers can
   // hard-delete. Schema in sql/whispers.sql; RLS enforces both.
-  const [whispers, setWhispers] = useState<{ id: string; author_user_id: string; content: string; created_at: string; author_username?: string }[]>([])
+  const [whispers, setWhispers] = useState<{ id: string; author_user_id: string | null; content: string; created_at: string; author_username?: string }[]>([])
   const [whisperDraft, setWhisperDraft] = useState('')
   const [postingWhisper, setPostingWhisper] = useState(false)
   const [deletingWhisperId, setDeletingWhisperId] = useState<string | null>(null)
@@ -424,14 +424,16 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       const { data } = await loadWhispersFeed()
       if (cancelled || !data) return
       // Resolve author usernames for any ids not already cached.
-      const missingIds = [...new Set(data.map((w: any) => w.author_user_id).filter((id: string) => !usernames[id]))]
+      // Skip null (anonymized/deleted authors) - a null in the profiles
+      // .in() lookup 400s the whole query and blanks every name.
+      const missingIds = [...new Set(data.map((w: any) => w.author_user_id).filter((id: string) => id && !usernames[id]))]
       let nameMap = { ...usernames }
       if (missingIds.length > 0) {
         const { data: profs } = await profileUsernames(missingIds)
         for (const p of (profs ?? []) as any[]) nameMap[p.id] = p.username
         setUsernames(nameMap)
       }
-      setWhispers(data.map((w: any) => ({ ...w, author_username: nameMap[w.author_user_id] })))
+      setWhispers(data.map((w: any) => ({ ...w, author_username: w.author_user_id == null ? 'Anonymous' : (nameMap[w.author_user_id] ?? 'Unknown') })))
     }
     loadWhispersRef.current = () => { void loadWhispers() }
     loadWhispers()

@@ -31,7 +31,7 @@ const CATEGORY_ACCENT: Record<Category, string> = {
 
 interface Thread {
   id: string
-  author_user_id: string
+  author_user_id: string | null
   category: Category
   title: string
   body: string
@@ -81,7 +81,7 @@ export default function Forums2Page() {
       .select('*')
     const list = (rows ?? []) as Thread[]
     if (list.length === 0) { setThreads([]); setLoading(false); setReactions({}); return }
-    const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(t => t.author_user_id).filter((x): x is string => !!x)))
     const ids = list.map(t => t.id)
     const [profsRes, reactRes, authRes] = await Promise.all([
       supabase.from('profiles').select('id, username').in('id', authorIds),
@@ -91,7 +91,7 @@ export default function Forums2Page() {
     const nameMap = Object.fromEntries((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
     setThreads(list.map(t => ({
       ...t,
-      author_username: nameMap[t.author_user_id] ?? 'Unknown',
+      author_username: t.author_user_id == null ? 'Anonymous' : (nameMap[t.author_user_id] ?? 'Unknown'),
     })))
     setReactions(aggregateReactions(reactRes.data ?? [], 'thread_id', authRes.user?.id ?? null))
     setLoading(false)

@@ -26,7 +26,9 @@ type Kind = 'gm_seeking_players' | 'player_seeking_game'
 
 interface LfgPost {
   id: string
-  author_user_id: string
+  // Nullable at runtime: account self-deletion anonymizes the author
+  // (FK ON DELETE SET NULL), so the post survives with a null author.
+  author_user_id: string | null
   kind: Kind
   title: string
   body: string
@@ -265,7 +267,7 @@ export default function LfgPage() {
       setLoading(false)
       return
     }
-    const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(p => p.author_user_id).filter((x): x is string => !!x)))
     // Pre-launch audit R7. Previously this fetched every lfg_interests
     // row visible via RLS in one unbounded query - at scale (10k posts +
     // power authors with hundreds of interest replies each) that fails.
@@ -314,7 +316,7 @@ export default function LfgPage() {
     })
     setMyInterests(myInts)
     setInterestsByPost(byPost)
-    setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown', author_avatar_url: avatarMap[p.author_user_id] ?? null })))
+    setPosts(list.map(p => ({ ...p, author_username: p.author_user_id == null ? 'Anonymous' : (nameMap[p.author_user_id] ?? 'Unknown'), author_avatar_url: p.author_user_id == null ? null : (avatarMap[p.author_user_id] ?? null) })))
     // Reaction hydration for the visible posts.
     const ids = list.map(p => p.id)
     if (ids.length > 0) {
@@ -350,14 +352,14 @@ export default function LfgPage() {
     const list = (rows ?? []) as LfgPost[]
     setHasMore(false)
     if (list.length === 0) { setPosts([]); setSearching(false); return }
-    const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(p => p.author_user_id).filter((x): x is string => !!x)))
     const { data: profs } = await supabase
       .from('profiles')
       .select('id, username, avatar_url')
       .in('id', authorIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
     const avatarMap: Record<string, string | null> = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
-    setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown', author_avatar_url: avatarMap[p.author_user_id] ?? null })))
+    setPosts(list.map(p => ({ ...p, author_username: p.author_user_id == null ? 'Anonymous' : (nameMap[p.author_user_id] ?? 'Unknown'), author_avatar_url: p.author_user_id == null ? null : (avatarMap[p.author_user_id] ?? null) })))
     const ids = list.map(p => p.id)
     if (ids.length > 0) {
       const { data: reactRows } = await supabase
@@ -386,14 +388,14 @@ export default function LfgPage() {
     const list = (postRows ?? []) as LfgPost[]
     setHasMore(list.length === PAGE_SIZE)
     if (list.length === 0) { setLoadingMore(false); return }
-    const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(p => p.author_user_id).filter((x): x is string => !!x)))
     const { data: profs } = await supabase
       .from('profiles')
       .select('id, username, avatar_url')
       .in('id', authorIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
     const avatarMap: Record<string, string | null> = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
-    setPosts(prev => [...prev, ...list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown', author_avatar_url: avatarMap[p.author_user_id] ?? null }))])
+    setPosts(prev => [...prev, ...list.map(p => ({ ...p, author_username: p.author_user_id == null ? 'Anonymous' : (nameMap[p.author_user_id] ?? 'Unknown'), author_avatar_url: p.author_user_id == null ? null : (avatarMap[p.author_user_id] ?? null) }))])
     const ids = list.map(p => p.id)
     if (ids.length > 0) {
       const { data: reactRows } = await supabase
