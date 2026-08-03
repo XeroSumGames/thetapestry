@@ -31,6 +31,25 @@ export default function NpcSheetPage() {
   const [isGM, setIsGM] = useState(gmHint === '1')
   const [userId, setUserId] = useState<string | null>(null)
   useEffect(() => { (async () => { const { user } = await getCachedAuth(); setUserId(user?.id ?? null) })() }, [])
+  // The viewer's own character in this campaign. Drives PlayerNpcCard's
+  // First Impression CMod AND the private "My Notes" textarea - both gate on
+  // viewingCharacterId, which this route never fetched, so a player saw
+  // neither. Same lookup as app/stories/[id]/page.tsx.
+  const [myCharId, setMyCharId] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    if (!campaignId || !userId) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase
+        .from('campaign_members')
+        .select('character_id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', userId)
+        .maybeSingle()
+      if (!cancelled) setMyCharId((data as any)?.character_id ?? undefined)
+    })()
+    return () => { cancelled = true }
+  }, [campaignId, userId])
 
   // Lightweight ad-hoc roll for the GM popout. The table page's roll
   // pipeline (hooks/useRollResolution) is welded to its live combat /
@@ -114,7 +133,7 @@ export default function NpcSheetPage() {
     if (typeof window === 'undefined') return
     if (!window.opener) return  // not actually a popout
     try {
-      window.resizeTo(isGM ? 571 : 140, isGM ? 400 : 140)
+      window.resizeTo(isGM ? 571 : 540, isGM ? 400 : 600)
     } catch { /* some browsers block resizeTo on already-shown windows; harmless */ }
   }, [loading, isGM])
 
@@ -179,7 +198,7 @@ export default function NpcSheetPage() {
           // (see startNpcRoll / resolveNpcRoll above).
         />
       ) : (
-        <PlayerNpcCard npc={npc} onClose={() => window.close()} />
+        <PlayerNpcCard npc={npc} onClose={() => window.close()} viewingCharacterId={myCharId} />
       )}
       {roll && (
         <RollModal
