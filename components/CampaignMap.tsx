@@ -47,6 +47,7 @@ interface PinNpc {
   campaign_pin_id: string | null
   npc_type: string | null
   status: string
+  hidden_from_players: boolean | null
 }
 
 function escapeHtml(s: string): string {
@@ -638,7 +639,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const seq = ++loadSeqRef.current
     const [{ data: pinData }, { data: npcData }] = await Promise.all([
       supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId),
-      supabase.from('campaign_npcs').select('id, name, campaign_pin_id, npc_type, status').eq('campaign_id', campaignId),
+      supabase.from('campaign_npcs').select('id, name, campaign_pin_id, npc_type, status, hidden_from_players').eq('campaign_id', campaignId),
     ])
     if (seq !== loadSeqRef.current) return // superseded by a newer call
     const allPins = pinData ?? []
@@ -658,10 +659,16 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     setPins(visible)
 
     // Group NPCs by pin, filtering out NPCs hidden from non-GM players.
+    // Gate on campaign_npcs.hidden_from_players (the GM's per-NPC map-
+    // visibility flag), NOT revealedNpcIds - that's the per-CHARACTER First
+    // Impression social gate ("has THIS PC formally met THIS NPC"), the wrong
+    // shape for "who is stationed at this location". Using it meant a
+    // GM-visible NPC still showed nothing in the pin popup until every player
+    // had a First Impression roll with it (bug found 2026-08-03).
     const npcsByPin: Record<string, PinNpc[]> = {}
     ;(npcData ?? []).forEach((n: PinNpc) => {
       if (!n.campaign_pin_id) return
-      if (!isGM && revealedNpcIds && !revealedNpcIds.has(n.id)) return
+      if (!isGM && n.hidden_from_players) return
       ;(npcsByPin[n.campaign_pin_id] ??= []).push(n)
     })
 
