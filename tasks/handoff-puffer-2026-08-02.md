@@ -96,10 +96,13 @@ as a claim to re-verify from git/disk, per the Handoff accuracy contract.**
    their own reply out of someone else's surviving thread. Same
    nullable + `SET NULL` fix applied, commit `944b9e2b`, live + verified,
    types regenerated, tsc/arch/tests green. **UI half of THIS piece
-   (InlineRepliesPanel.tsx assumes non-null reply authors) handed back to
-   HP, not yet confirmed shipped as of this edit** - check `git log` on
-   `main` for a commit touching `InlineRepliesPanel.tsx` after
-   `944b9e2b` to see if it landed.
+   SHIPPED (HP, commit `4404dcbd`, self-ship)** -
+   `InlineRepliesPanel.tsx` got the same treatment: null-filtered
+   `.in()`, 'Anonymous' vs 'Unknown' display, interface made
+   `string | null`. tsc/tests/gates green. **The account-deletion
+   anonymize feature is now complete end-to-end** - top-level tables +
+   all 3 reply tables, schema + UI, nothing owed. `tasks/todo.md` and
+   `tasks/COMMS.md` updated to match.
 6. Comms also relayed Xero's decision on `portrait-bank` confidentiality
    - **THIS IS THE IN-FLIGHT TASK, see below, NOT STARTED.**
 
