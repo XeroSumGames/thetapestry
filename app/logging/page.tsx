@@ -171,6 +171,57 @@ export default function LoggingPage() {
     load()
   }, [site])
 
+  // Server-side visitor search. The initial load() only pulls the newest 100
+  // rows, and filtering the search box against that capped snapshot meant a
+  // user whose last logged visit had scrolled past row 100 returned ZERO hits
+  // even though the tab count showed 11k+ rows (Xero hit this searching for a
+  // live "Online Now" user - presence is a separate system with no dependency
+  // on visitor_logs, so their last logged visit can be arbitrarily old). When
+  // a term is typed, query the DB directly instead: username lives on profiles
+  // (not visitor_logs), so resolve matching user_ids first, then ilike across
+  // the visitor_logs columns OR user_id in that set. The include/exclude chips
+  // still refine client-side on top of the returned set. Debounced + seq-
+  // guarded (fast typing can't let a slow response clobber a newer one); an
+  // empty term restores the newest 100.
+  const searchMountRef = useRef(false)
+  const searchSeqRef = useRef(0)
+  useEffect(() => {
+    if (!searchMountRef.current) { searchMountRef.current = true; return }
+    // Strip PostgREST-reserved + wildcard chars so the term is a safe literal
+    // substring in the .or() filter (PostgREST parameterizes values, so this
+    // is about not breaking the filter grammar, not SQL injection).
+    const term = visitorFilter.trim().toLowerCase().replace(/[,()"*%\\]/g, '')
+    const handle = setTimeout(async () => {
+      const seq = ++searchSeqRef.current
+      const COLS = 'id, page, site, user_id, is_ghost, ip_address, ip_hash, country_code, region, city, created_at'
+      const applySite = (q: any) =>
+        site === 'all' ? q : site === 'tapestry' ? q.or('site.eq.tapestry,site.is.null') : q.eq('site', site)
+      let q = applySite(supabase.from('visitor_logs').select(COLS).order('created_at', { ascending: false }).limit(term ? 500 : 100))
+      if (term) {
+        const { data: users } = await supabase.from('profiles').select('id').ilike('username', `%${term}%`).limit(500)
+        const uids = (users ?? []).map((u: any) => u.id)
+        // Columns kept in sync with the client haystack (below) so a
+        // server match is never hidden by the client re-filter. (username
+        // is matched via the user_id.in set resolved above.)
+        const parts = [`page.ilike.*${term}*`, `city.ilike.*${term}*`, `country_code.ilike.*${term}*`, `ip_address.ilike.*${term}*`]
+        if (uids.length) parts.push(`user_id.in.(${uids.join(',')})`)
+        q = q.or(parts.join(','))
+      }
+      const { data } = await q
+      if (seq !== searchSeqRef.current) return // superseded by a newer search
+      const rows = data ?? []
+      const rUids = [...new Set(rows.filter((v: any) => v.user_id).map((v: any) => v.user_id))]
+      let nameMap: Record<string, string> = {}
+      if (rUids.length) {
+        const { data: profs } = await supabase.from('profiles').select('id, username').in('id', rUids)
+        nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+      }
+      if (seq !== searchSeqRef.current) return
+      setVisitors(rows.map((v: any) => ({ ...v, username: v.user_id ? nameMap[v.user_id] : undefined })))
+    }, 300)
+    return () => clearTimeout(handle)
+  }, [visitorFilter, site])
+
   // Render visitor map. Inits once, then re-draws its markers whenever the data
   // changes (e.g. switching the site filter) via a dedicated marker layer.
   useEffect(() => {
