@@ -104,13 +104,23 @@ as a claim to re-verify from git/disk, per the Handoff accuracy contract.**
    all 3 reply tables, schema + UI, nothing owed. `tasks/todo.md` and
    `tasks/COMMS.md` updated to match.
 6. Comms also relayed Xero's decision on `portrait-bank` confidentiality
-   - **THIS IS THE IN-FLIGHT TASK, see below, NOT STARTED.**
+   - **SHIPPED, see below.** All 10 steps from the original plan
+   completed in this session after this handoff was first written.
 
-## IN-FLIGHT TASK: portrait-bank confidentiality fix - option (b), NOT YET IMPLEMENTED
+## DONE: portrait-bank confidentiality fix - option (b), SHIPPED 2026-08-02
 
-**Nothing has been written for this yet - no code, no SQL. This section
-is the full plan, written from investigation already done, so the next
-session can execute directly without re-investigating from scratch.**
+**Everything below this line was the original plan, written before any
+of it was implemented. All of it is now done - kept verbatim as the
+record of what was built and why, not as remaining work.** Final state:
+`portrait-bank-private` bucket live (public:false, own-uid RLS),
+`uploadPrivatePortrait()` signs a 10-year URL at upload time instead of
+calling `getPublicUrl()`, all 4 existing rows/objects migrated and
+verified live (old URL 400s, new bucket rejects unsigned access, new
+signed URL serves the correct image), old bucket's dead policies
+dropped, tsc/font/role/em-dash/arch/937-tests green, commit `15a8ab2d`
+on `main`. The one thing NOT done: a live click-test of the upload flow
+as a logged-in Thriver (no test credentials available this session) -
+flagged in `tasks/COMMS.md`/`tasks/todo.md` for a manual pass.
 
 ### The original bug (write-side already fixed 2026-08-01)
 
