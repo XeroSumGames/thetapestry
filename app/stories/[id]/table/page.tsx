@@ -3108,7 +3108,14 @@ export default function TablePage() {
   //   1. localStorage 'storage' event - browser-native, OTHER tab only
   //   2. BroadcastChannel - browser-native, OTHER context only
   //   3. window 'focus' - whenever this tab regains focus
-  //   4. 3-second polling - last-resort guarantee
+  //   4. 30-second polling, VISIBLE tabs only - last-resort guarantee.
+  //      Cut from 3s -> 30s + visibility-gated (2026-08-02, scale): a 3s
+  //      poll on every mounted table client is ~167 req/s of SELECT
+  //      vehicles at Beta-500 (500 clients), almost all pure idle waste
+  //      since a popout is rarely open. A backgrounded tab skips the poll
+  //      and re-syncs immediately via 'focus' when re-shown, so the net
+  //      still holds; worst-case popout-sync staleness on a focused tab is
+  //      30s (path 1/2 normally beat it to it).
   // Whatever fires first wins; refetchVehicles is idempotent.
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -3126,7 +3133,7 @@ export default function TablePage() {
       bc = new BroadcastChannel(channelName)
       bc.onmessage = () => { void refetchVehicles() }
     } catch { bc = null }
-    const pollId = window.setInterval(() => { void refetchVehicles() }, 3000)
+    const pollId = window.setInterval(() => { if (document.visibilityState === 'visible') void refetchVehicles() }, 30000)
     window.addEventListener('storage', onStorage)
     window.addEventListener('focus', onFocus)
     return () => {
