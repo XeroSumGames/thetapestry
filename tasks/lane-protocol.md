@@ -88,21 +88,28 @@ separately interrupt him.**
   Item/description/pass-fail/notes format -> pings Xero -> logs the
   result back into `COMMS.md`'s ANSWERED log and notifies the requesting
   lane via session message.
-- **Open questions route the same way:** if the hub or a spoke has a
-  question only Xero can answer (a product/vision call, not something a
-  lane can decide on its own), it goes to Comms as an OPEN item instead
-  of interrupting Xero directly in whatever chat happens to be active -
-  Comms tracks it, gets the answer, updates ANSWERED, and notifies
-  whoever was waiting.
+- **Every question for Xero routes through Comms - no exceptions, no
+  "this one's small enough to just ask inline" carve-out.** (Corrected
+  2026-08-03, superseding the exception previously written here - Xero's
+  own words: "if you have questions (ever, on anything) they should be
+  routed to the comms channel. i go there ONLY to answer questions which
+  get lost in your stream of consciousness.") This applies even when
+  Xero is actively present and chatting in the lane that has the
+  question - the point isn't reachability, it's that he manages four
+  parallel chats and needs ONE place to check for anything needing his
+  input, not a scan through a technical session's live narration to find
+  a buried question. A quick clarifying question ("which map did you
+  mean") gets the exact same treatment as a formal product/vision call -
+  it goes to Comms as an OPEN item, Comms tracks it, gets the answer,
+  updates ANSWERED, and notifies whoever was waiting.
 - **Coordinates via the same direct session messaging as the hub/spokes**
   (`mcp__ccd_session_mgmt__send_message`, target found with
   `list_sessions`) - Xero does not relay for Comms either, same rule as
   everywhere else in this document.
-- **This does NOT mean lanes stop talking to Xero directly for
-  everything** - day-to-day questions, status, and anything not a formal
-  test-plan-or-open-question stay exactly as they are today. Comms exists
-  to take the recurring "does this need to go to Xero, and is it actually
-  ready" ceremony off every lane's plate, not to become a mandatory relay
+- **What this does NOT change:** status updates, reporting completed
+  work, and answering a question Xero himself just asked directly all
+  stay exactly as they are - this rule is specifically about a lane
+  originating a question FOR Xero, not about replying to him.
   for all human contact.
 
 ---
