@@ -694,7 +694,7 @@ export default function CampaignPage() {
                   {rejoining ? 'Rejoining...' : 'Rejoin session'}
                 </button>
               )}
-              {!amObserver && (
+              {!amObserver && campaign?.gm_user_id !== userId && (
                 <button onClick={handleObserve} disabled={observing || !inviteCode}
                   title="Join silently as an observer and go watch the table (no survivor, no combat slot)"
                   style={{ padding: '11px 22px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: observing || !inviteCode ? 'not-allowed' : 'pointer', opacity: observing || !inviteCode ? 0.6 : 1 }}>
