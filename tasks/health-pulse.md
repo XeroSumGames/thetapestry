@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-04 06:10 UTC
+
+**Status:** RED
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - same vulns as prior entries (brace-expansion, fast-uri, postcss, sharp, next)
+
+**CI:** 5/5 last runs FAILED - https://github.com/XeroSumGames/thetapestry/actions/runs/30873776684
+- Failing check: `check-arch` (arch ratchet)
+- Error: `.from outside lib/data: 922 -> 924 (+2)`
+- Root: commit `8416290` (reconcile net on 5 table channels, 2026-08-03 21:03 MT) added 2 inline `.from()` calls inside `app/stories/[id]/table/page.tsx` (`resyncMembers` + `reloadCampaignNpcs` extracted helpers - both call `.from` directly instead of routing through `lib/data/`)
+- First failure: 2026-08-04 02:59 UTC (5 consecutive, still failing)
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts (Section B) - no git activity in 3 days on `lib/realtime/` or vehicle-adjacent code; still awaiting playtest confirmation
+- HOPED-FOR: Stress Check 12-string narrative (8 strings uncaptured) - no activity on `lib/roll-helpers.ts` in 3 days
+
+**Action:** HP lane - move `resyncMembers` and `reloadCampaignNpcs` reads out of `page.tsx` into `lib/data/` OR re-baseline (`node scripts/check-arch.mjs --save`) if the inline placement is intentional. CI has been red for 3+ hours.
+
+---
+
 ## 2026-08-04 00:07 UTC
 
 **Status:** DRIFT (no change from 2026-08-03 21:06 UTC entry)
