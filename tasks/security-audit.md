@@ -8,6 +8,47 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-08-04 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (2 new HIGH advisories), rate-limit / DoS (carry-over), dependency drift (carry-over)
+
+**Closed since last audit (2026-07-28):** nothing new closed this cycle.
+
+**Sections clean this cycle:** auth/role gates (guardrail: 360 files, 0 violations; `profile.role` at `app/vehicle/page.tsx:117` is a comment, not a check; `isThriverUser` at `app/ape-log/page.tsx:50` is confirmed to internally call `isThriver` from `lib/auth/roles`), RLS gaps (advisory — no DB access from sandbox; sql/ has extensive RLS coverage across all tables touched in app code; no new tables found without matching SQL files), file uploads (all paths confirmed through `prepareUpload` — avatar, war-stories, session-attachments, tactical-maps; portrait-bank and NPC portraits upload canvas-rendered JPEG blobs, not raw user files — type/size bounded by canvas pipeline), secrets exposure (no committed .env/.env.local files; no hardcoded tokens or API keys found in source), injection/XSS (`dangerouslySetInnerHTML` at `app/layout.tsx:56` is a static inline script — not user-controlled; `innerHTML` at `app/stories/[id]/table/page.tsx:8056` sets a hardcoded static 'GM' label — not user-controlled; no SQL string concatenation patterns found), permission boundaries (all `isThriver`/`isGM` checks route through canonical helpers from `lib/auth/roles.ts`; no novel raw-role-comparison shapes found).
+
+### npm audit (moderate+)
+
+**NEW HIGH:**
+- `fast-uri` — HIGH — CVSS 7.5 — "host confusion via backslash authority introducer" — transitive — fix: available
+- `sharp` — HIGH — CVSS listed as 0 (preliminary/pending) — "inherited libvips vulnerabilities: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591" — transitive — fix: available
+
+**SEVERITY CHANGE (was moderate, now HIGH in npm output):**
+- `postcss` — HIGH — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — fix: available (may require next major bump) — low runtime risk (build-time only; app does not process user CSS at runtime)
+- `next` — HIGH — isDirect: true — via postcss chain — fix: available (breaking advisory; hold pending next upgrade path)
+
+**CARRY-OVER (unchanged):**
+- `brace-expansion` <=5.0.7 — HIGH — CVSS 7.5 — DoS via unbounded expansion OOM — transitive via eslint chain (dev-only) — fix: breaking eslint major bump
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` — GET, unauthenticated — DB ping cached 10s — **no HTTP-level rate limit — 11th consecutive audit carry-over** — Upstash sliding window (10 req/min per IP) needed before paid launch.
+
+### Dependency drift
+
+(Major-version drift: `npm outdated` returned no packages ≥2 major versions behind this cycle.)
+
+- `@supabase/supabase-js` — 2.100.1 installed → 2.111.0 latest — **11th consecutive audit carry-over** — auth-adjacent; changelog review before bump.
+- `@supabase/ssr` — 0.9.0 installed → 0.12.4 latest — **11th consecutive audit carry-over** — auth-adjacent staleness rising.
+- `@upstash/ratelimit` — behind (2.0.8 latest) — rate-limiting surface; review before bump.
+- `@upstash/redis` — behind (1.38.0 latest) — pairs with ratelimit dep.
+
+**Top 3 priorities:**
+1. `sharp` HIGH — libvips CVEs (CVE-2026-33327/33328/35590/35591) — NEW — fix available; run `npm audit fix` scoped to sharp; image-processing lib with runtime exposure.
+2. `fast-uri` HIGH CVSS 7.5 — NEW host-confusion vulnerability — fix available; transitive but CVSS warrants prompt patching.
+3. `app/api/health/route.ts` — 11 audits deferred; Upstash 10/min sliding window is a 20-line fix, hard deadline before paid launch.
+
+---
+
 ## 2026-07-28 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (new brace-expansion advisory, eslint chain HIGH), rate-limit / DoS (carry-over), dependency drift (carry-over)
