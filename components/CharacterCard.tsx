@@ -138,6 +138,9 @@ interface Props {
   onPlaceOnMap?: () => void
   inline?: boolean
   campaignId?: string
+  // Campaign setting - gates setting-specific sheet UI (e.g. the District
+  // Zero "BB's" wallet). Threaded from the table page's campaign.setting.
+  setting?: string
   otherCharacters?: { id: string; name: string }[]
   onGiveItem?: (item: InventoryItem, targetCharId: string, qty: number) => void
   // PC ↔ NPC trade - when both are passed, the InventoryPanel's "Give"
@@ -176,6 +179,7 @@ function CharacterCardImpl({
   onPlaceOnMap,
   inline = false,
   campaignId: campaignIdProp,
+  setting,
   otherCharacters,
   onGiveItem,
   otherNpcs,
@@ -274,6 +278,19 @@ function CharacterCardImpl({
     // e.g. /characters) so this write can't clobber a concurrent change from
     // another tab/session - same class as the 2026-08-01 character-editor fix.
     await updateCharacterDataField(c.id, { [slot]: data })
+  }
+
+  // District Zero "BB's" wallet (Bullets & Batteries, each = 1 credit). Manual
+  // counter persisted to character.data.wallet, gated to district_zero. The two
+  // physical denominations are kept separate (each has other DZ uses) with a
+  // derived BB's total the future trade/vendor flow can spend against.
+  const [walletBB, setWalletBB] = useState<{ bullets: number; batteries: number }>(() => {
+    const w = (c.data as any)?.wallet
+    return { bullets: Math.max(0, w?.bullets ?? 0), batteries: Math.max(0, w?.batteries ?? 0) }
+  })
+  async function saveWallet(next: { bullets: number; batteries: number }) {
+    setWalletBB(next)
+    await updateCharacterDataField(c.id, { wallet: next })
   }
 
   function changeWeapon(slot: 'weaponPrimary' | 'weaponSecondary', weaponName: string) {
@@ -1143,6 +1160,44 @@ function CharacterCardImpl({
               )
             })}
           </div>
+          {/* District Zero "BB's" wallet - Bullets & Batteries currency (each
+              = 1 credit). Only shown in a district_zero campaign. Mirrors the
+              Ammo (click-to-set pip) + Clips (-/+ growing pip) chrome. */}
+          {setting === 'district_zero' && (
+            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2e2e2e' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 700, flexShrink: 0 }}>Wallet</span>
+                <span style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', fontWeight: 700, flexShrink: 0 }}>{walletBB.bullets + walletBB.batteries} BB&apos;s</span>
+                <span style={{ fontSize: '13px', color: '#8a8a8a', fontFamily: 'Carlito, sans-serif' }}>Bullets &amp; Batteries, 1 credit each</span>
+              </div>
+              {([
+                { key: 'bullets' as const, label: 'Bullets', color: '#EF9F27' },
+                { key: 'batteries' as const, label: 'Batteries', color: '#7ab3d4' },
+              ]).map(({ key, label, color }) => {
+                const val = walletBB[key]
+                const pipCount = Math.min(Math.max(10, val), 20)
+                const clickable = canEdit && val <= 20
+                return (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', width: '64px', flexShrink: 0 }}>{label}</span>
+                    <button onClick={() => canEdit && val > 0 && saveWallet({ ...walletBB, [key]: val - 1 })} disabled={!canEdit || val <= 0}
+                      style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && val > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && val > 0 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0, flexShrink: 0 }}>-</button>
+                    <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
+                      {Array.from({ length: pipCount }).map((_, i) => (
+                        <div key={i}
+                          onClick={() => { if (!clickable) return; saveWallet({ ...walletBB, [key]: i < val ? i : i + 1 }) }}
+                          title={clickable ? 'Click to set' : undefined}
+                          style={{ width: '8px', height: '12px', borderRadius: '1px', background: i < val ? color : '#242424', border: `1px solid ${i < val ? color : '#3a3a3a'}`, cursor: clickable ? 'pointer' : 'default', transition: 'background 0.1s' }} />
+                      ))}
+                    </div>
+                    <button onClick={() => canEdit && saveWallet({ ...walletBB, [key]: val + 1 })} disabled={!canEdit}
+                      style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0, flexShrink: 0 }}>+</button>
+                    <span style={{ fontSize: '13px', color, fontFamily: 'Carlito, sans-serif', fontWeight: 700, flexShrink: 0 }}>{val}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
           {/* Encumbrance tracker */}
           {(() => {
             const inv: InventoryItem[] = c.data?.inventory ?? []

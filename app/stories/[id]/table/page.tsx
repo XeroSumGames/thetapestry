@@ -7255,6 +7255,7 @@ export default function TablePage() {
             }}>
               <CharacterCard
                 campaignId={id}
+                setting={campaign?.setting}
                 character={syncedSelectedEntry.character}
                 liveState={syncedSelectedEntry.liveState}
                 canEdit={gmLike || syncedSelectedEntry.userId === userId}
@@ -8217,6 +8218,7 @@ export default function TablePage() {
             </div>
             <CharacterCard
               campaignId={id}
+              setting={campaign?.setting}
               character={syncedSelectedEntry.character}
               liveState={syncedSelectedEntry.liveState}
               canEdit={gmLike || syncedSelectedEntry.userId === userId}
