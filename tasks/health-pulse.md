@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-04 09:06 UTC
+
+**Status:** RED (persisting - 6h since first failure)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files], arch:check [FAIL - .from +2]
+
+**Audit:** npm audit [5 high, 0 critical] - unchanged (brace-expansion, fast-uri, postcss, sharp, next)
+
+**CI:** 5/5 runs FAILED - https://github.com/XeroSumGames/thetapestry/actions/runs/30883191054
+- Same failure as 06:10 entry: `check-arch` `.from outside lib/data: 922 -> 924 (+2)`
+- First failure: 2026-08-04 03:02 UTC. Still blocked 6h later.
+- Offending calls: `resyncMembers` + `reconcile` in `app/stories/[id]/table/page.tsx` (commit `8416290`)
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts - no activity on vehicle-adjacent code in 3+ days
+- HOPED-FOR: Stress Check 12-string (8 strings) - no activity on `lib/roll-helpers.ts` in 3+ days
+
+**Action:** HP lane - move the 2 inline `.from()` calls (resyncMembers/reconcile) into lib/data/ OR re-baseline if intentional. CI has been red 6h.
+
+---
+
 ## 2026-08-04 06:10 UTC
 
 **Status:** RED
