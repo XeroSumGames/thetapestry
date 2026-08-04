@@ -38,19 +38,20 @@ export default function JoinByCodePage() {
     find()
   }, [code])
 
-  async function handleJoin() {
+  async function handleJoin(asObserver = false) {
     setJoining(true)
     const { user } = await getCachedAuth()
     if (!user) { router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`); return }
     // Server-side validates the code and performs the membership insert
     // atomically (join_campaign_by_invite_code) - a raw table insert can no
     // longer join an arbitrary campaign_id regardless of code possession.
-    // This is a PLAYER invite link, so observer=false reconciles a stale
-    // observer seat back to player on re-join (matches prior behavior).
-    const { data, error } = await supabase.rpc('join_campaign_by_invite_code', { p_code: code, p_observer: false }).single()
-    if (error || !data) { setStatus('error'); return }
-    logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
-    router.push(`/stories/${campaign.id}`)
+    // "Join Story" (asObserver=false, the default) reconciles a stale observer
+    // seat back to player on re-join; "Join as Observer" (asObserver=true)
+    // joins as a silent watcher and lands at the table, not the lobby.
+    const { data, error } = await supabase.rpc('join_campaign_by_invite_code', { p_code: code, p_observer: asObserver }).single()
+    if (error || !data) { setStatus('error'); setJoining(false); return }
+    if (!asObserver) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
+    router.push(asObserver ? `/stories/${campaign.id}/table` : `/stories/${campaign.id}`)
   }
 
   if (status === 'loading') return (
@@ -125,9 +126,15 @@ export default function JoinByCodePage() {
           )}
 
           {/* CTA */}
-          <button onClick={handleJoin} disabled={joining}
+          <button onClick={() => handleJoin(false)} disabled={joining}
             style={{ width: '100%', padding: '14px', background: joining ? '#7a1f16' : '#c0392b', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 700, cursor: joining ? 'not-allowed' : 'pointer', opacity: joining ? 0.7 : 1, transition: 'background .15s' }}>
             {joining ? 'Joining...' : 'Join Story'}
+          </button>
+
+          {/* Secondary, quieter option - join to watch silently instead of play. */}
+          <button onClick={() => handleJoin(true)} disabled={joining}
+            style={{ width: '100%', marginTop: '10px', padding: '9px', background: 'transparent', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.05em', cursor: joining ? 'not-allowed' : 'pointer', opacity: joining ? 0.6 : 1 }}>
+            Just want to watch? Join as Observer
           </button>
 
           <div style={{ marginTop: '14px', textAlign: 'center', fontSize: '13px', color: '#5a5a5a' }}>
