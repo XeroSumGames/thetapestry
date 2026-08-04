@@ -89,6 +89,7 @@ export default function CampaignPage() {
   const [myCharacters, setMyCharacters] = useState<Character[]>([])
   const [selectedCharId, setSelectedCharId] = useState<string>('')
   const [assigning, setAssigning] = useState(false)
+  const [observing, setObserving] = useState(false)
   // Surfaced when a character-assignment write fails. Previously the three
   // assign paths did `if (!error) { ...update state... }` with no else, so an
   // RLS / constraint / trigger failure on that write was invisible - no
@@ -356,6 +357,24 @@ export default function CampaignPage() {
     if (!confirm('Leave this story?')) return
     await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
     router.push('/stories')
+  }
+
+  // Join THIS campaign as a silent observer and go straight to the table -
+  // saves building a /stories/join?code=X&observer=1 URL by hand. Reuses the
+  // already-resolved inviteCode + the same RPC/destination as the observer
+  // path in app/stories/join/page.tsx.
+  async function handleObserve() {
+    if (!inviteCode || observing) return
+    setObserving(true)
+    const { data, error } = await supabase
+      .rpc('join_campaign_by_invite_code', { p_code: inviteCode, p_observer: true })
+      .single()
+    if (error || !data) {
+      console.error('[handleObserve] join-as-observer failed:', error?.message)
+      setObserving(false)
+      return
+    }
+    router.push(`/stories/${id}/table`)
   }
 
   // GM-or-Thriver: cull a member from the campaign. Deletes their
@@ -673,6 +692,13 @@ export default function CampaignPage() {
                 <button onClick={handleRejoin} disabled={rejoining}
                   style={{ padding: '11px 22px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rejoining ? 'not-allowed' : 'pointer', opacity: rejoining ? 0.6 : 1 }}>
                   {rejoining ? 'Rejoining...' : 'Rejoin session'}
+                </button>
+              )}
+              {!gmLike && !amObserver && (
+                <button onClick={handleObserve} disabled={observing || !inviteCode}
+                  title="Join silently as an observer and go watch the table (no survivor, no combat slot)"
+                  style={{ padding: '11px 22px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: observing || !inviteCode ? 'not-allowed' : 'pointer', opacity: observing || !inviteCode ? 0.6 : 1 }}>
+                  {observing ? 'Joining...' : 'Observe'}
                 </button>
               )}
               {!gmLike && (
