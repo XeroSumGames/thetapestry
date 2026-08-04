@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-04 15:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - unchanged (brace-expansion, fast-uri, postcss, sharp, next)
+
+**CI:** RECOVERED - latest run SUCCESS 12:37 UTC (https://github.com/XeroSumGames/thetapestry/actions/runs/30909922607). 4 of 5 prior runs failed (arch ratchet, now fixed by e9f19c0 re-baseline). Arch ratchet RED incident CLOSED.
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts (Section B) - no vehicle-adjacent commits in 3+ days; awaiting a playtest
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no activity on roll-helpers in 3+ days; drain target is Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (doubles -> pool increment) - no activity on useRollResolution in 3+ days; trigger is rare (~2.8% per roll)
+- npm HIGH vulns: 5 persistent HIGH, 0 critical - no action taken in 3+ days
+
+**Action:** CI green; no gate failures. HOPED-FOR items are stable drift, not blockers. If vehicle popout is reachable in next playtest, close the Section B item.
+
+---
+
 ## 2026-08-04 12:09 UTC
 
 **Status:** RED (3rd consecutive entry - arch ratchet unresolved at 9h)
