@@ -1564,34 +1564,50 @@ export default function TablePage() {
     // safe to race the event-driven one.
     reconcile: () => loadEntries(id),
   })
+  // Shared refetch helpers so both the realtime handler AND the reconcile
+  // catch-up run identical logic. These channels were MISSED when the
+  // reconcile net was first wired (only table_ got one), so a whole-socket
+  // reconnect (~3x during the 2026-08-03 2h08m session, e.g. on auth-token
+  // refresh) resumed listening but never re-synced whatever changed during
+  // the gap - the mechanism behind the "trouble showing/hiding Melissa &
+  // Billy" NPC-reveal report. All refetch fns already seq-guard internally.
+  const resyncMembers = async () => {
+    const { data: refreshedMembers } = await supabase
+      .from('campaign_members')
+      .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
+      .eq('campaign_id', id)
+      .not('character_id', 'is', null)
+    if (refreshedMembers && refreshedMembers.length > 0) await ensureCharacterStates(id, refreshedMembers as any[])
+    await loadEntries(id)
+  }
+  const reloadCampaignNpcs = async () => {
+    const { data: cnpcs } = await getCampaignNpcs(id)
+    if (cnpcs) {
+      setCampaignNpcs(cnpcs)
+      setRosterNpcs(cnpcs.filter((n: any) => { if (n.status !== 'active') return false; const wp = n.wp_current ?? n.wp_max ?? 10; return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }))
+    }
+  }
   useCampaignChannel(id, {
     channelName: `members_${id}`,
-    postgres: [{
-      label: 'campaign_members:*', event: '*', table: 'campaign_members', filter: `campaign_id=eq.${id}`,
-      handler: async () => {
-        const { data: refreshedMembers } = await supabase
-          .from('campaign_members')
-          .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
-          .eq('campaign_id', id)
-          .not('character_id', 'is', null)
-        if (refreshedMembers && refreshedMembers.length > 0) await ensureCharacterStates(id, refreshedMembers as any[])
-        await loadEntries(id)
-      },
-    }],
+    postgres: [{ label: 'campaign_members:*', event: '*', table: 'campaign_members', filter: `campaign_id=eq.${id}`, handler: resyncMembers }],
+    reconcile: resyncMembers,
   })
+  const applyCampaignRow = (row: any) => {
+    setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
+    setSessionCount(row.session_count ?? 0)
+    syncRollLogSession(row.session_status)  // Y11-e
+    setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
+    if (Array.isArray(row.vehicles)) setVehicles(row.vehicles)
+  }
   useCampaignChannel(id, {
     channelName: `campaign_${id}`,
-    postgres: [{
-      label: 'campaigns:UPDATE', event: 'UPDATE', table: 'campaigns', filter: `id=eq.${id}`,
-      handler: (payload: any) => {
-        const row = payload.new
-        setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
-        setSessionCount(row.session_count ?? 0)
-        syncRollLogSession(row.session_status)  // Y11-e
-        setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
-        if (Array.isArray(row.vehicles)) setVehicles(row.vehicles)
-      },
-    }],
+    postgres: [{ label: 'campaigns:UPDATE', event: 'UPDATE', table: 'campaigns', filter: `id=eq.${id}`, handler: (payload: any) => applyCampaignRow(payload.new) }],
+    // Handler applies an UPDATE payload directly (no refetch), so the reconcile
+    // needs to re-read the row and reapply the same fields after a gap.
+    reconcile: async () => {
+      const { data: row } = await supabase.from('campaigns').select('session_status, session_count, session_started_at, vehicles').eq('id', id).maybeSingle()
+      if (row) applyCampaignRow(row)
+    },
   })
   useCampaignChannel(id, {
     channelName: `campaign_npcs_${id}`,
@@ -1609,19 +1625,15 @@ export default function TablePage() {
           setViewingNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } as CampaignNpc : n))
           return
         }
-        void (async () => {
-          const { data: cnpcs } = await getCampaignNpcs(id)
-          if (cnpcs) {
-            setCampaignNpcs(cnpcs)
-            setRosterNpcs(cnpcs.filter((n: any) => { if (n.status !== 'active') return false; const wp = n.wp_current ?? n.wp_max ?? 10; return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }))
-          }
-        })()
+        void reloadCampaignNpcs()
       },
     }],
+    reconcile: reloadCampaignNpcs,
   })
   useCampaignChannel(id, {
     channelName: `community_members_${id}`,
     postgres: [{ label: 'community_members:*', event: '*', table: 'community_members', filter: `campaign_id=eq.${id}`, handler: () => loadPlayerNpcCommunityMap(id) }],
+    reconcile: () => loadPlayerNpcCommunityMap(id),
   })
   useCampaignChannel(id, {
     channelName: `reveals_${id}`,
@@ -1632,6 +1644,13 @@ export default function TablePage() {
         else if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
       },
     }],
+    // Catch-up: npc_relationships.revealed drives who a player sees revealed;
+    // a dropped event during a socket cycle was the "Melissa & Billy won't
+    // show/hide" friction. Same call the handler makes.
+    reconcile: () => {
+      if (gmLikeRef.current) loadRevealedNpcs(null, campaignNpcs)
+      else if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
+    },
   })
 
   useEffect(() => {
