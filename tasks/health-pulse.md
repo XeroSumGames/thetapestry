@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-04 12:09 UTC
+
+**Status:** RED (3rd consecutive entry - arch ratchet unresolved at 9h)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - unchanged
+
+**CI:** 5/5 runs FAILED - https://github.com/XeroSumGames/thetapestry/actions/runs/30895004193
+- Failing step: `Architecture ratchet` - `.from outside lib/data: 922 -> 924 (+2)`
+- Root: commit `8416290` added 2 inline `.from()` calls (`resyncMembers` + `reconcile`) directly in `app/stories/[id]/table/page.tsx` instead of routing through `lib/data/`
+- First failure: 2026-08-04 03:02 UTC. Now 9h blocked. No fix committed yet.
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts - no vehicle-adjacent commits in 3+ days
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR etc.) - no activity in 3+ days
+- HOPED-FOR: FI Insight Die award path - no activity on `lib/useRollResolution.ts` in 3+ days
+
+**Action:** ESCALATING - 3 consecutive RED pulses. HP lane: move the 2 `.from()` reads into `lib/data/` (e.g. `lib/data/members.ts` + `lib/data/npcs.ts`) OR re-baseline intentionally with `node scripts/check-arch.mjs --save`. CI cannot stay red into Beta-500 prep.
+
+---
+
 ## 2026-08-04 09:06 UTC
 
 **Status:** RED (persisting - 6h since first failure)
