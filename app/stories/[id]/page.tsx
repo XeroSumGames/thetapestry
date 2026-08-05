@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { reportSupabaseError } from '../../../lib/supabase-errors'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
 import { loginPathForCurrent } from '../../../lib/login-redirect'
@@ -355,7 +356,8 @@ export default function CampaignPage() {
     if (!userId || !campaign) return
     if (campaign.gm_user_id === userId) return
     if (!confirm('Leave this story?')) return
-    await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
+    const { error } = await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
+    if (error) { reportSupabaseError(error, 'stories[id].handleLeave'); return }
     router.push('/stories')
   }
 

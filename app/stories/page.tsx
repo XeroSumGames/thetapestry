@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { reportSupabaseError } from '../../lib/supabase-errors'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -304,7 +305,8 @@ export default function CampaignsPage() {
                       ? `WARNING: This is the template for "${templateOf}". Deleting it disconnects the published module from its source - you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.`
                       : undefined
                     if (!confirmDeleteByName(c.name, warning)) return
-                    await supabase.from('campaigns').delete().eq('id', c.id)
+                    const { error } = await supabase.from('campaigns').delete().eq('id', c.id)
+                    if (error) { reportSupabaseError(error, 'stories.deleteCampaign'); return }
                     setGmCampaigns(prev => prev.filter(x => x.id !== c.id))
                   }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
                 </div>
@@ -335,7 +337,7 @@ export default function CampaignsPage() {
                   <a href={`/stories/${c.id}/table`} target="_blank" rel="noreferrer" style={{ padding: '5px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
                   <a href={`/stories/${c.id}`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Story Page</a>
                   <button onClick={() => { const code = inviteCodes[c.id]; if (!code) { alert('No invite code available.'); return } navigator.clipboard.writeText(`${window.location.origin}/join/${code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
-                  <button onClick={async () => { if (!confirm(`Leave ${c.name}?`)) return; await supabase.from('campaign_members').delete().eq('campaign_id', c.id).eq('user_id', userId!); setPlayerCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Leave</button>
+                  <button onClick={async () => { if (!confirm(`Leave ${c.name}?`)) return; const { error } = await supabase.from('campaign_members').delete().eq('campaign_id', c.id).eq('user_id', userId!); if (error) { reportSupabaseError(error, 'stories.leaveCampaign'); return } setPlayerCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Leave</button>
                 </div>
               </div>
             ))}

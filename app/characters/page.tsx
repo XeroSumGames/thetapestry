@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import CharacterCard from '../../components/CharacterCard'
 import { createTestCharacter } from '../../scripts/create-test-character'
 import { updateCharacterDataField } from '../../lib/data/characters'
+import { reportSupabaseError } from '../../lib/supabase-errors'
 import { loadAuthorPregens } from '../../lib/data/pregens'
 
 interface CharacterRow {
@@ -96,7 +97,8 @@ export default function CharactersPage() {
   async function handleDuplicate(c: CharacterRow) {
     const { user } = await getCachedAuth()
     if (!user) return
-    await supabase.from('characters').insert({ user_id: user.id, name: `Copy of ${c.name}`, data: c.data })
+    const { error } = await supabase.from('characters').insert({ user_id: user.id, name: `Copy of ${c.name}`, data: c.data })
+    if (error) { reportSupabaseError(error, 'characters.handleDuplicate'); return }
     const { data } = await supabase
       .from('characters').select('id, name, created_at, data')
       .eq('user_id', user.id).order('created_at', { ascending: false })

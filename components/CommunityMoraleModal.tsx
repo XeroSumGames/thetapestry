@@ -29,6 +29,7 @@ import type { Community, Member } from '../lib/types/community'
 import { combinedMemberCount, COMMUNITY_THRESHOLD } from '../lib/community-stage'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { OUTCOME } from '../lib/roll-outcomes'
+import { reportSupabaseError } from '../lib/supabase-errors'
 
 // Phase C - Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
@@ -514,7 +515,11 @@ export default function CommunityMoraleModal({
     const now = new Date().toISOString()
 
     // 1) Insert Fed + Clothed resource checks
-    await supabase.from('community_resource_checks').insert([
+    // Errors on these finalize writes were fully swallowed (no try/catch on
+    // the whole fn) - the week's records could silently not land while the
+    // modal reported success. Surface each (observability sweep Batch 1). Not
+    // made transactional here - that atomicity is a separate (Puffer) pass.
+    const { error: rcErr } = await supabase.from('community_resource_checks').insert([
       {
         community_id: community.id, kind: 'fed', week_number: newWeek,
         rolled_by_user_id: userId,
@@ -532,6 +537,7 @@ export default function CommunityMoraleModal({
         cmod_for_next_morale: outcomeToMoraleCmod(clothed.outcome),
       },
     ])
+    if (rcErr) reportSupabaseError(rcErr, 'CommunityMorale.resourceChecks')
 
     // 2) Insert Morale check with full slot snapshot + role distribution
     // snapshot for the Phase D dashboard's role-coverage-over-time chart.
@@ -554,7 +560,7 @@ export default function CommunityMoraleModal({
     const retentionSucceeded = !!retention?.survived
     const reallyDissolves = willDissolve && !retentionSucceeded
 
-    await supabase.from('community_morale_checks').insert({
+    const { error: mcErr } = await supabase.from('community_morale_checks').insert({
       community_id: community.id,
       week_number: newWeek,
       rolled_by_user_id: userId,
@@ -567,14 +573,16 @@ export default function CommunityMoraleModal({
       members_after: reallyDissolves ? 0 : membersAfter,
       role_snapshot: roleSnap,
     })
+    if (mcErr) reportSupabaseError(mcErr, 'CommunityMorale.moraleCheck')
 
     // 3) Apply member consequence
     if (reallyDissolves) {
       // All members marked left with reason=dissolved; community status flips.
-      await supabase.from('community_members')
+      const { error: dissErr } = await supabase.from('community_members')
         .update({ left_at: now, left_reason: 'dissolved' })
         .eq('community_id', community.id)
         .is('left_at', null)
+      if (dissErr) reportSupabaseError(dissErr, 'CommunityMorale.dissolveMembers')
     } else if (departureIds.length > 0) {
       const reasonByPct: Record<number, string> = { 0.25: 'morale_25', 0.50: 'morale_50', 0.75: 'morale_75' }
       const pct = outcomeToDeparturePct(morale.outcome)
@@ -671,12 +679,13 @@ export default function CommunityMoraleModal({
     const nextStatus: 'forming' | 'active' | 'dissolved' = reallyDissolves
       ? 'dissolved'
       : (community.status === 'forming' ? 'active' : community.status)
-    await supabase.from('communities').update({
+    const { error: commErr } = await supabase.from('communities').update({
       week_number: newWeek,
       consecutive_failures: finalConsFailures,
       status: nextStatus,
       ...(reallyDissolves ? { dissolved_at: now, leader_user_id: null, leader_npc_id: null } : {}),
     }).eq('id', community.id)
+    if (commErr) reportSupabaseError(commErr, 'CommunityMorale.updateCommunity')
 
     if (reallyDissolves && community.homestead_pin_id) {
       await supabase.from('campaign_pins').update({ revealed: false }).eq('id', community.homestead_pin_id)

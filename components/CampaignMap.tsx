@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { reportSupabaseError } from '../lib/supabase-errors'
 import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
@@ -884,7 +885,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     // Append new pins at the end of the existing sort order.
     const { data: maxRow } = await supabase.from('campaign_pins').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
     const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
-    const { data } = await supabase.from('campaign_pins').insert({
+    const { data, error } = await supabase.from('campaign_pins').insert({
       campaign_id: campaignId,
       name: pinForm.name.trim(),
       lat: newPin.lat,
@@ -896,6 +897,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       revealed: isGM,
       sort_order: nextSort,
     }).select().single()
+
+    if (error || !data) {
+      // Don't show the "submitted" confirmation / reset the form for a pin
+      // that never saved (was: error dropped, success notice shown regardless).
+      reportSupabaseError(error, 'CampaignMap.savePin')
+      setSaving(false)
+      return
+    }
 
     if (data && attachments.length > 0) {
       for (const file of attachments) {

@@ -14,6 +14,7 @@
 // See tasks/spec-campaign-sheet.md for the locked rules.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { reportSupabaseError } from '../../lib/supabase-errors'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { wrapBroadcast, wrapDbChange } from '../../lib/sentry-realtime'
@@ -536,13 +537,14 @@ export default function CampaignSheetPage() {
           startCanonDay={startCanonDay}
           onClose={() => setEditClockModal(false)}
           onSubmit={async (next) => {
-            await supabase
+            const { error } = await supabase
               .from('campaigns')
               .update({
                 clock: { canon_day: next.canonDay, hour: next.hour },
                 start_canon_day: next.startCanonDay,
               })
               .eq('id', campaignId)
+            if (error) { reportSupabaseError(error, 'campaign-sheet.editClock'); return }
             setClockState({ canon_day: next.canonDay, hour: next.hour })
             setStartCanonDay(next.startCanonDay)
             setEditClockModal(false)

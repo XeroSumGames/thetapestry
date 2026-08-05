@@ -6,6 +6,7 @@
 //    GM of the campaign can edit; folded into the session summary at End Session.
 // All reads swallow errors to defaults (signed-out / missing row -> null/'').
 import { db } from './db'
+import { reportSupabaseError } from '../supabase-errors'
 import type { Json } from '../database.types'
 import { isThriver } from '../auth/roles'
 
@@ -71,8 +72,11 @@ export async function loadScratch(campaignId: string): Promise<string> {
 }
 
 export async function saveScratch(campaignId: string, text: string): Promise<void> {
-  await db().from('gm_scratch').upsert(
+  // Debounced background autosave - a swallowed error meant GM scratch notes
+  // appeared to persist but were lost on reload with no signal anywhere.
+  const { error } = await db().from('gm_scratch').upsert(
     { campaign_id: campaignId, text, updated_at: new Date().toISOString() },
     { onConflict: 'campaign_id' },
   )
+  if (error) reportSupabaseError(error, 'gm-screen-layout.saveScratch')
 }
