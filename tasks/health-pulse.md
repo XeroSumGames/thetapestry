@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-05 06:07 UTC
+
+**Status:** DRIFT (carry-forward - no new failures since prior entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - all 5 fixable; same set as prior entries (brace-expansion, fast-uri, next, postcss, sharp). Security-audit commit 158cd9f logged the 2 newest CVEs (sharp libvips, fast-uri host confusion).
+
+**CI:** last 5 runs - 3 SUCCESS / 2 FAILURE. Most recent SUCCESS 2026-08-04T16:26:57Z. The 2 failures (12:11+09:08 UTC 2026-08-04) are the arch-ratchet incident already closed in the prior entry. CI is GREEN.
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts (Section B) - no vehicle-adjacent commits in 3+ days; awaiting playtest
+- HOPED-FOR: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no activity on roll-helpers in 3+ days; drain target is Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (doubles -> pool increment) - no recent activity; trigger is rare (~2.8% per roll)
+- npm HIGH vulns: 5 persistent HIGH, 0 critical - no action taken; all 5 have fix_available=true
+
+**Action:** No new action vs prior entry. If Beta-500 prep is starting, a focused `npm audit fix` pass before launch would close all 5 HIGH vulns.
+
+---
+
 ## 2026-08-04 15:06 UTC
 
 **Status:** DRIFT
