@@ -188,11 +188,11 @@ export default function CampaignsPage() {
   }
 
   if (loading) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>Loading...</div>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>Loading...</div>
   )
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
@@ -261,13 +261,15 @@ export default function CampaignsPage() {
       )}
 
       {/* Running as GM | Playing In - two columns on wide viewports, auto-
-          stacked on narrow. 300px basis (not 340): the page wrapper is
-          maxWidth 720px + 1rem padding (~688px inner), and 340*2 + 24px gap =
-          704 overflowed that, so it could never reach 2 columns at any size;
-          300*2 + 24 = 624 fits (fixed 2026-08-04). Grid auto-fit means a single
-          present section fills the full width. */}
+          stacked on narrow. Page wrapper widened to maxWidth 1100px
+          (2026-08-05, Xero: "make each column wider" - the cards were
+          cramped at the old 720px page width) specifically so this grid has
+          room to run wide columns instead of the tightest basis that would
+          still technically reach 2 columns. 420px basis + 1fr means each
+          column stretches to ~500px+ on a full-width viewport. Grid auto-fit
+          means a single present section fills the full width. */}
       {(gmCampaigns.length > 0 || playerCampaigns.length > 0) && (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', alignItems: 'start', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.5rem', alignItems: 'start', marginBottom: '2rem' }}>
       {gmCampaigns.length > 0 && (
         <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
