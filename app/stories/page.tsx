@@ -264,7 +264,11 @@ export default function CampaignsPage() {
           viewports, auto-stacked below ~680px (each column needs >=340px).
           Grid auto-fit means a single present section fills the full width. */}
       {(gmCampaigns.length > 0 || playerCampaigns.length > 0) && (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', alignItems: 'start', marginBottom: '2rem' }}>
+      {/* 300px basis (not 340) so two columns actually fit inside the page's
+          own maxWidth:720px + 1rem padding (~688px inner): 300*2 + 24px gap =
+          624 <= 688. At 340 the 704px minimum exceeded the inner width, so the
+          grid could never reach 2 columns at any window size (fixed 2026-08-04). */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', alignItems: 'start', marginBottom: '2rem' }}>
       {gmCampaigns.length > 0 && (
         <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
