@@ -25,7 +25,6 @@ remembering, it gets its own entry in `decisions.md` too.
 
 ## OPEN
 
-- **[2026-08-03] UX call: NPC card - map-pin click vs roster click (Hunt & Peck, playtest item 4).** Clicking an NPC via a map pin opens the separate `/npc-sheet` popout window, which lacks the First Impression / Recruit flows the NPC roster's inline card has (the popout is a separate React tree without the table page's state). Two ways to make them consistent: **(a)** port those flows into the popout (heavier - like tonight's roll-path work), or **(b)** make a pin-click open the SAME inline card the roster uses instead of a popout window (unifies them for ~free, but changes the pin-click UX from "new window" to "in-page overlay"). **Ask Xero: (a) or (b)?** (HP leans (b) - unifies both surfaces with less code.) Not urgent, backlog.
 ---
 
 ## ANSWERED
@@ -33,6 +32,7 @@ remembering, it gets its own entry in `decisions.md` too.
 *(dated log, newest first - move an item here the moment it's resolved,
 don't let this file's OPEN section accumulate stale asks)*
 
+- **[2026-08-04] NPC card - map-pin click vs roster click - Xero picked a THIRD option, not (a) or (b) as posed.** Both click paths (map pin AND roster list) should open the `/npc-sheet` popout - i.e. standardize the ROSTER click to also open the popout, not the other way around. The popout's content needs to reach parity with everything currently shown in the roster's inline row (interactive First Impression roll, Recruit button, etc.), not just the read-only badges + My Notes it shows today (Xero attached a screenshot of the current popout as the layout reference to build on). Routed to Hunt & Peck.
 - **[2026-08-04] Onboarding video (step 7 of the first-timer tour) - Xero: needs to be made, no existing video to reuse.** Details/scope to follow from Xero. Routed to Puffer Fish; keep the placeholder slot in HP's build until the video itself is ready.
 - **[2026-08-04] Observability sweep "Batch 1" - Xero: yes, green-lit.** Routed to Hunt & Peck to ship.
 - **[2026-08-03] Manual verify: private-portrait upload flow - packaged and delivered.** Puffer Fish's OPEN ask (click-test the in-app upload flow as a logged-in Thriver) was packaged as the "Portrait Bank 2026-08-03" tab in the smoke testing workbook and delivered to Xero. Not yet run; the workbook tab is now the tracking record for this, not this file.
