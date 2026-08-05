@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-05 12:10 UTC
+
+**Status:** DRIFT (carry-forward - no new failures)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - same set (brace-expansion, fast-uri, next, postcss, sharp). All fix_available=true.
+
+**CI:** gh not authenticated in sandbox - skipped. Prior entry (09:06) confirmed 4/5 green; no reason to expect regression.
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts (Section B) - no vehicle-adjacent commits in 3+ days; awaiting playtest
+- HOPED-FOR: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no activity; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (doubles -> pool increment) - no activity; trigger rare (~2.8%/roll)
+- npm HIGH vulns: 5 persistent, unchanged
+
+**Action:** No new action. Same signals as prior two entries. Vulns remain the only actionable item pre-Beta-500.
+
+---
+
 ## 2026-08-05 09:06 UTC
 
 **Status:** DRIFT (carry-forward - no new failures since prior entry)
