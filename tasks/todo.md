@@ -8,6 +8,9 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
+### 🆕 OPEN 2026-08-05 - CommunityMoraleModal.finalizeAndSave has no transaction (flagged by HP, observability Batch 1)
+`finalizeAndSave()` (components/CommunityMoraleModal.tsx:509+) runs a sequence of independent writes across several tables with no atomicity - `community_resource_checks` insert, `community_morale_checks` insert, `community_members` updates (dissolve + another), a temp-rows drain loop, `communities` update, `campaign_pins` update, `world_communities` update. HP's Batch 1 added error surfacing to each (so a failure is now visible instead of silent), but did NOT make the sequence atomic - a mid-sequence failure still leaves a genuine partial-state mess (e.g. morale check recorded but the community's resource/member state never updated). Real bug class, not urgent (needs a Thriver/community-cycle event to trigger, not everyday play) - fixing it properly means wrapping the sequence in a `SECURITY DEFINER` RPC (same pattern as `join_campaign_by_invite_code`) so it's one transaction. My lane (SQL/RPC), whenever it's worth the lift - needs a careful read of the full function before touching it, this isn't a quick patch.
+
 ### 🆕 OPEN 2026-08-03 - Playtest feedback (District Zero Session 3, "super positive, for the most part")
 Xero's notes from tonight, plus two recorder dumps (2h08m main session + a short session-management one). Diagnosed one cross-cutting finding from the dump before triaging (see item 2/5 below). Numbering matches Xero's own list.
 
