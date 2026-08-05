@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-05 21:06 UTC
+
+**Status:** DRIFT (carry-forward + transient CI failure)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - brace-expansion, fast-uri, next, postcss, sharp (unchanged, all fix_available=true)
+
+**CI:** 1 failure in last 5 runs - run 31034513064 (18:23 UTC, commit 13eb920 "fix(stories): My Stories two-column grid" introduced broken JSX comment, caught by CI). Next commit (ac9775f, 18:24 UTC) patched it. Latest run (6bf04b1d, 18:25 UTC) SUCCESS - current HEAD is green.
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts (Section B) - no code activity in 3+ days; awaiting playtest
+- HOPED-FOR: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code activity; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (doubles) - no code activity
+
+**Action:** CI transient - already self-healed. Vulns remain the standing pre-Beta-500 action item (npm audit fix or manual review of brace-expansion/fast-uri/next/postcss/sharp). No new stale todos found.
+
+---
+
 ## 2026-08-05 18:09 UTC
 
 **Status:** DRIFT (carry-forward - unchanged from 15:09 entry)
