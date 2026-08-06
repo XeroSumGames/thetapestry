@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-06 18:09 UTC
+
+**Status:** DRIFT + CI-INFRA
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - unchanged (brace-expansion, fast-uri, next, postcss, sharp)
+
+**CI:** Most recent run FAILED (2026-08-06 15:08 UTC) — https://github.com/XeroSumGames/thetapestry/actions/runs/31114428410
+- **Root cause: GitHub infrastructure outage, NOT a code regression.** "Failed to resolve action download info. Error: Service Unavailable / Internal Server Error" — runner couldn't download action definitions. No steps ran. Prior 4 runs all SUCCESS.
+- No action needed on the codebase; re-run CI or wait for the next push to confirm green.
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (8 strings: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — no code activity in 3+ days; drain target Beta-500 dry-run
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — no code activity in 3+ days; awaiting playtest confirmation
+- HOPED-FOR: Broadcast catch-up gap (PlayerNotes, npc-sheet, campaign-sheet) — `fix(realtime)` 2026-08-03 added reconcile net to 5 table channels, but these 3 specific broadcast-only subs unverified
+
+**Action:** CI failure is a GitHub outage — no code fix needed. Watch for the next push to auto-rerun and confirm green.
+
+---
+
 ## 2026-08-06 15:09 UTC
 
 **Status:** DRIFT (carry-forward - unchanged from 12:10 UTC entry)
