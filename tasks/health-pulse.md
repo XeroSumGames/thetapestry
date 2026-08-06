@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-06 00:05 UTC
+
+**Status:** DRIFT (carry-forward - unchanged from 21:06 UTC entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [5 high, 0 critical] - brace-expansion, fast-uri, next, postcss, sharp (unchanged, all fix_available=true)
+
+**CI:** 4/5 recent runs SUCCESS; 1 failure (run 31034513064, 18:23 UTC 2026-08-05, already self-healed; reported in prior entry). Latest run 22:29 UTC SUCCESS.
+
+**Drift:**
+- HOPED-FOR: vehicle popout broadcasts (Section B) - no code activity in 3+ days; awaiting playtest
+- HOPED-FOR: Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code activity; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (doubles) - no code activity
+
+**Action:** No new signals since 21:06 entry. Vulns remain the standing pre-Beta-500 action item.
+
+---
+
 ## 2026-08-05 21:06 UTC
 
 **Status:** DRIFT (carry-forward + transient CI failure)
