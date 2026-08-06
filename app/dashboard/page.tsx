@@ -45,11 +45,11 @@ export default function DashboardPage() {
       trackGhostConversion()
       const { data: profile } = await supabase.from('profiles').select('username, role, onboarded').eq('id', user.id).single()
        if (profile) {
-        // First-visit welcome - replaces the trap-the-user `/welcome`
-        // redirect that was disabled in playtest #12. Now it's a
-        // dismissible modal on the dashboard; any dismiss flips
-        // onboarded=true so it doesn't reappear. /firsttimers stays
-        // available as a re-readable reference page.
+        // First-visit welcome - the stepped tour modal, shown once when
+        // onboarded=false; any dismiss flips onboarded=true so it doesn't
+        // reappear. /welcome is the replayable version (same tour, ungated)
+        // plus the reference page. (The old /firsttimers forced gate that
+        // trapped new users in playtest #12 has been deleted.)
         if (!profile.onboarded) setShowWelcome(true)
         setUsername(profile.username)
         const { count } = await countGmCampaigns(user.id)

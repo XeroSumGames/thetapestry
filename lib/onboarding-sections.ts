@@ -1,11 +1,9 @@
-// Single source for the onboarding sections shown in both the stepped
-// WelcomeModal (first-visit tour on /dashboard) and the static /firsttimers
-// reference page. Update here to keep both surfaces in sync.
+// Single source for the onboarding sections shown in the stepped WelcomeModal
+// (the first-visit tour on /dashboard + the replayable tour on /welcome).
 //
-// `key` is a stable id the stepped WelcomeModal uses to pull a specific
-// section into a given step (and to override its title for the tour) without
-// depending on array order or the display title. /firsttimers just maps the
-// whole array in order, so `key` is inert there.
+// `key` is a stable id the WelcomeModal uses to pull a specific section into a
+// given step (and to override its title for the tour) without depending on
+// array order or the display title.
 
 export interface OnboardingSection {
   key: string

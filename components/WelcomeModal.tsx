@@ -13,9 +13,9 @@ import { onboardingSection, type OnboardingSection } from '../lib/onboarding-sec
 // navigate away, so there is no "march through all steps" gate here. Skip and
 // the X are always available, and backdrop/ESC always dismiss.
 //
-// Content comes from lib/onboarding-sections.ts (shared with the static
-// /firsttimers reference page); the welcome pitch (step 1) and the video slot
-// (last step) are modal-only. Step order matches Xero's 2026-08-04 spec:
+// Content comes from lib/onboarding-sections.ts; the welcome pitch (step 1)
+// and the video slot (last step) are modal-only. Step order matches Xero's
+// 2026-08-04 spec:
 // Welcome -> Dashboard -> Your Characters -> Campfire -> Your Pins -> Video.
 
 interface Props {

@@ -1,10 +1,28 @@
 'use client'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { getCachedAuth } from '../../lib/auth-cache'
+import { createClient } from '../../lib/supabase-browser'
+import WelcomeModal from '../../components/WelcomeModal'
 
-// "A Guide to the Tapestry" - the reference hub for returning users.
-// First-time users land at /firsttimers instead. The standard left sidebar
-// is provided by LayoutShell (see NO_SIDEBAR_PAGES - /welcome is NOT in it).
+// "A Guide to the Tapestry" - the reference hub AND the replayable home of the
+// stepped welcome tour (WelcomeModal). Visiting /welcome opens the tour on
+// mount (ungated by profiles.onboarded - that flag only gates the automatic
+// first-login trigger on /dashboard), so it's a "watch it again" entry point.
+// It's skippable, and the static reference cards below stay as the backdrop
+// once dismissed. Sidebar provided by LayoutShell.
 export default function WelcomePage() {
+  const supabase = createClient()
+  const [showTour, setShowTour] = useState(true)
+  const [username, setUsername] = useState('')
+  useEffect(() => {
+    (async () => {
+      const { user } = await getCachedAuth()
+      if (!user) return
+      const { data } = await supabase.from('profiles').select('username').eq('id', user.id).maybeSingle()
+      setUsername((data as any)?.username ?? '')
+    })()
+  }, [])
 
   // ---- Shared styles ----
   const card: React.CSSProperties = {
@@ -58,6 +76,8 @@ export default function WelcomePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflowY: 'auto' }}>
 
+      {showTour && <WelcomeModal username={username} onClose={() => setShowTour(false)} />}
+
       {/* Hero */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '3.5rem 1.5rem 2rem', textAlign: 'center' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', letterSpacing: '.2em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '10px' }}>
@@ -69,8 +89,11 @@ export default function WelcomePage() {
         <div style={{ fontSize: '16px', color: '#cce0f5', maxWidth: '640px', margin: '0 auto', lineHeight: 1.7 }}>
           Come back here whenever you need a refresher on what lives where. There is a link to each section of the platform along with a note on what it&apos;s for and how to get the most out of it.
         </div>
-        <div style={{ fontSize: '13px', color: '#8a8a8a', marginTop: '14px' }}>
-          New here? Start with <Link href="/firsttimers" style={{ color: '#cce0f5', textDecoration: 'underline' }}>Welcome to the DistemperVerse</Link>.
+        <div style={{ marginTop: '16px' }}>
+          <button onClick={() => setShowTour(true)}
+            style={{ padding: '8px 20px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer' }}>
+            &#9654; Take the tour
+          </button>
         </div>
         <div style={{ width: '60px', height: '2px', background: '#c0392b', margin: '2rem auto 0' }} />
       </div>

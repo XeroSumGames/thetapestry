@@ -53,7 +53,7 @@ export default function SignupPage() {
   const supabase = createClient()
 
   // Capture `?redirect=/path` so an invite link that bounces a logged-out
-  // user through signup ends at the original target, not `/firsttimers`.
+  // user through signup ends at the original target, not the generic welcome.
   // Users invited to a specific campaign skip the generic welcome page.
   useEffect(() => { setRedirect(readSafeRedirect()) }, [])
 
