@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-06 21:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [6 high, 0 critical] — **+1 new high vs 18:09 entry:** `js-yaml` added (was 5: brace-expansion, fast-uri, next, postcss, sharp; now 6)
+
+**CI:** Most recent run SUCCESS (2026-08-06 18:12 UTC) — CI recovered from the 15:08 GitHub infrastructure outage noted in prior entry. Last 5: 4 success / 1 failure (that failure = GH infra, no code regression).
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — no code touch on `lib/roll-helpers.ts` / `lib/roll-outcomes.ts` in 3+ days
+- HOPED-FOR: FI Insight Die award path (`useRollResolution.ts:264`) — no code touch in 3+ days; never fired in live play
+- HOPED-FOR: Vehicle popout broadcasts (Section B) — no code touch on vehicle components in 3+ days; awaiting playtest
+
+**Action:** Investigate `js-yaml` high vuln (new this run). HOPED-FOR items need playtest or backlog prioritization before Beta-500.
+
+---
+
 ## 2026-08-06 18:09 UTC
 
 **Status:** DRIFT + CI-INFRA
