@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-07 06:09 UTC
+
+**Status:** DRIFT (carry-forward - unchanged from 00:06 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [6 high, 0 critical] - brace-expansion, fast-uri, js-yaml, next, postcss, sharp (unchanged)
+
+**CI:** Last 5 runs: 4 success / 1 failure (the 2026-08-06 15:08 GitHub infra outage, already logged). Newest run: 2026-08-07 00:08 UTC = SUCCESS. CI fully green.
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3+ days; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (`useRollResolution.ts:264`) - no code touch in 3+ days; never fired in live play
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no code touch in 3+ days; awaiting playtest
+
+**Action:** No new issues. Same 6 high vulns + 3 HOPED-FOR items pending. No action needed beyond prior entries.
+
+---
+
 ## 2026-08-07 00:06 UTC
 
 **Status:** DRIFT (carry-forward - unchanged from 21:06 UTC entry)
