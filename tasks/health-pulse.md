@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-07 09:05 UTC
+
+**Status:** DRIFT (carry-forward - unchanged from 06:09 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [6 high, 0 critical] - brace-expansion (DoS), fast-uri (host confusion), js-yaml (DoS), postcss (XSS + file read), sharp (CVE-2026-33327), next (via postcss+sharp). All have fixes available.
+
+**CI:** Last 5 runs: 4 success / 1 failure. Most recent: 2026-08-07 06:12 UTC = SUCCESS (new since last entry). The 2026-08-06 15:08 failure was GitHub runner setup ("Set up job"), not a code regression.
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3+ days; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (`useRollResolution.ts:264`) - no code touch in 3+ days; never fired in live play
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no code touch in 3+ days; awaiting playtest
+
+**Action:** 6 high vulns have fixes available - run `npm audit fix` (or review `npm audit` for breaking changes) when stable. HOPED-FOR items need a playtest pass before Beta-500.
+
+---
+
 ## 2026-08-07 06:09 UTC
 
 **Status:** DRIFT (carry-forward - unchanged from 00:06 UTC)
