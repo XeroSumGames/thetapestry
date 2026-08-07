@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-07 15:11 UTC
+
+**Status:** DRIFT (carry-forward - unchanged from 12:12 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [6 high, 0 critical] - brace-expansion, fast-uri, js-yaml, next, postcss, sharp. Unchanged.
+
+**CI:** Last 5 runs all success (2026-08-06T18:12 - 2026-08-07T12:30 UTC). CI now fully clean (prior entry had 1 infra-outage failure, now aged out).
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3+ days; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (`useRollResolution.ts:264`) - never fired in live play; no code touch in 3+ days
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no code touch in 3+ days; awaiting playtest
+
+**Action:** No new issues. 6 high audit vulns (next/sharp/postcss/js-yaml/fast-uri/brace-expansion) remain unresolved - worth a dedicated pass before Beta-500. 3 HOPED-FOR items pending playtest coverage.
+
+---
+
 ## 2026-08-07 12:12 UTC
 
 **Status:** DRIFT (carry-forward - unchanged from 09:05 UTC)
