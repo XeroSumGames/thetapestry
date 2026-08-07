@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-07 12:12 UTC
+
+**Status:** DRIFT (carry-forward - unchanged from 09:05 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [6 high, 0 critical] - same vulns as prior entries. NOTE: npm audit endpoint returning 400 (endpoint being retired per npm notice) - future runs may need `--json` workaround or manual advisory check.
+
+**CI:** Last 5 runs: 4 success / 1 failure (2026-08-06 15:08 GitHub infra outage, not code). Most recent: 2026-08-07 09:08 UTC = SUCCESS. CI clean.
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3+ days; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (`useRollResolution.ts:264`) - no code touch in 3+ days; never fired in live play
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no code touch in 3+ days; awaiting playtest
+
+**Action:** No new issues. npm audit endpoint deprecation worth watching - may affect future audit steps. Same 6 high vulns + 3 HOPED-FOR items pending.
+
+---
+
 ## 2026-08-07 09:05 UTC
 
 **Status:** DRIFT (carry-forward - unchanged from 06:09 UTC)
