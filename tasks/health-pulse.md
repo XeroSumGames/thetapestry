@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-08 00:07 UTC
+
+**Status:** DRIFT (new high vuln + 3 HOPED-FOR carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - NEW: nanoid (loops indefinitely on zero/negative size). Existing: brace-expansion, fast-uri, js-yaml, next (indirect), postcss, sharp. Up from 6 last run.
+
+**CI:** Last 5 runs all success (2026-08-07T09:08 - 2026-08-07T21:08 UTC). Clean.
+
+**Drift:**
+- NEW HIGH VULN: nanoid - "non-secure generators loop indefinitely with negative size" and "custom generators loop indefinitely when size is zero". Added to audit this run.
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch; drain target Beta-500 dry-run
+- HOPED-FOR: FI Insight Die award path (`useRollResolution.ts:264`) - never fired in live play; no code touch
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - awaiting playtest; no code touch
+
+**Action:** New: nanoid high vuln appeared - run `npm audit` to confirm fix availability, then `npm audit fix` if safe. 7 total high vulns (postcss XSS/path-traversal, sharp libvips, nanoid, js-yaml, brace-expansion, fast-uri) worth a batch `npm audit fix` pass before Beta-500.
+
+---
+
 ## 2026-08-07 21:07 UTC
 
 **Status:** DRIFT (carry-forward - unchanged from 18:05 UTC)
