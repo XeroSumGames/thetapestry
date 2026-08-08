@@ -237,15 +237,16 @@ export default function Sidebar() {
           "THE TAPESTRY" heading right above it reads as redundant. The
           user-header above already provides its own borderBottom, so no
           explicit {divider} is needed here. */}
-      <Link href="/welcome"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>A Guide to the Tapestry</Link>
-      <Link href="/map"         style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</Link>
-      <Link href="/characters"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</Link>
-      <Link href="/stories"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</Link>
-      <Link href="/stories/join" style={linkStyle('#7ab3d4')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Join a Story</Link>
-      <Link href="/communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</Link>
-      <Link href="/campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
-      <Link href="/rumors"   style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rumors</Link>
-      <Link href="/rules"    style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Rules</Link>
+      <Link href="/dashboard?tour=1" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>A Guide to the Tapestry</Link>
+      <Link href="/map"         data-tour="dashboard" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</Link>
+      <Link href="/characters"  data-tour="dashboard survivors" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</Link>
+      <Link href="/stories"     data-tour="dashboard stories" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</Link>
+      <Link href="/stories/join" data-tour="dashboard" style={linkStyle('#7ab3d4')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Join a Story</Link>
+      <Link href="/communities" data-tour="dashboard communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</Link>
+      <Link href="/campfire" data-tour="dashboard campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
+      <Link href="/rumors"   data-tour="dashboard rumors" style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rumors</Link>
+      <Link href="/rules"    data-tour="dashboard" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Rules</Link>
+      <Link href="/quick-reference" data-tour="dashboard" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Reference</Link>
       {/* External link out to the brand site. New tab + rel=noreferrer
           since it leaves the app entirely. Same visual treatment as
           the in-app links so the sidebar stays uniform. */}
@@ -263,17 +264,16 @@ export default function Sidebar() {
 
       {/* Survivors - character creation paths */}
       <div style={sectionHeading}>Survivors</div>
-      <Link href="/creating-a-character" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</Link>
-      {/* Random (under 2 min, paradigm-built) is the lit/default path for
-          newcomers; Backstory is the full-custom deep dive, no longer the lone
-          highlighted default (T3-3 onboarding - don't lead first-timers into
-          the hardest path). */}
-      <Link href="/characters/random"    style={linkStyle('#7fc458')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</Link>
-      <Link href="/characters/quick"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</Link>
-      <Link href="/characters/new"       style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</Link>
-      <Link href="/characters/paradigms"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Paradigms</Link>
+      <Link href="/creating-a-character" data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</Link>
+      {/* Order 2026-08-06 (Xero): Backstory leads since the onboarding tour
+          marks it [Recommended]; Quick then Random follow, Paradigms last.
+          Supersedes the earlier T3-3 "Random first" onboarding call. */}
+      <Link href="/characters/new"       data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</Link>
+      <Link href="/characters/quick"     data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</Link>
+      <Link href="/characters/random"    data-tour="characters" style={linkStyle('#7fc458')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</Link>
+      <Link href="/characters/paradigms"  data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Paradigms</Link>
       {roleIsThriver(userRole) && (
-        <Link href="/pregens" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Pregens</Link>
+        <Link href="/pregens" data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Pregens</Link>
       )}
 
       {divider}

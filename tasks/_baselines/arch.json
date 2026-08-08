@@ -6,11 +6,11 @@
     "components/CampaignCommunity.tsx": 3129,
     "components/NpcRoster.tsx": 2346,
     "app/vehicle/page.tsx": 1459,
-    "components/MapView.tsx": 2041,
+    "components/MapView.tsx": 2137,
     "app/moderate/page.tsx": 1772
   },
   "seamLeakage": {
-    "fromOutsideData": 924,
+    "fromOutsideData": 922,
     "channelOutsideRealtime": 18
   },
   "prodConsole": 0

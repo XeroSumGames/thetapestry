@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { trackGhostConversion } from '../../lib/events'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -37,6 +37,24 @@ export default function DashboardPage() {
   const [skipToWorld, setSkipToWorld] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const searchParams = useSearchParams()
+
+  // "A Guide to the Tapestry" (sidebar) links here with ?tour=1 so the replayable
+  // tour runs over the LIVE dashboard - its per-step arrows point at real sidebar
+  // elements, so it must sit on top of the actual page, not /welcome's static
+  // reference cards. Reactive to the param (not just mount) so clicking the link
+  // while already on /dashboard still opens it.
+  const tourRequested = searchParams.get('tour') === '1'
+  useEffect(() => {
+    if (tourRequested) setShowWelcome(true)
+  }, [tourRequested])
+
+  // Closing the tour clears the ?tour=1 param so a refresh doesn't reopen it.
+  // (The first-login auto-open path has no param, so this is a no-op there.)
+  function closeWelcome() {
+    setShowWelcome(false)
+    if (tourRequested) router.replace('/dashboard', { scroll: false })
+  }
 
   useEffect(() => {
     async function load() {
@@ -47,9 +65,10 @@ export default function DashboardPage() {
        if (profile) {
         // First-visit welcome - the stepped tour modal, shown once when
         // onboarded=false; any dismiss flips onboarded=true so it doesn't
-        // reappear. /welcome is the replayable version (same tour, ungated)
-        // plus the reference page. (The old /firsttimers forced gate that
-        // trapped new users in playtest #12 has been deleted.)
+        // reappear. The same tour is replayable ungated via ?tour=1 (the
+        // sidebar "A Guide to the Tapestry" link). (The old /firsttimers forced
+        // gate that trapped new users in playtest #12 has been deleted, and the
+        // /welcome reference page it linked has now been retired too.)
         if (!profile.onboarded) setShowWelcome(true)
         setUsername(profile.username)
         const { count } = await countGmCampaigns(user.id)
@@ -90,10 +109,13 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Ghost landing - show the map directly, ghost wall triggers on interaction
+  // Ghost landing - show the map directly, ghost wall triggers on interaction.
+  // Still honor ?tour=1 so the sidebar "A Guide to the Tapestry" link opens the
+  // tour for logged-out visitors too (step 1 is the pitch - good for conversion).
   if (!username) return (
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
       <MapView embedded showSidebar />
+      {showWelcome && <WelcomeModal username={username} onClose={closeWelcome} />}
     </div>
   )
 
@@ -105,7 +127,7 @@ export default function DashboardPage() {
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <MapView embedded showSidebar />
       </div>
-      {showWelcome && <WelcomeModal username={username} onClose={() => setShowWelcome(false)} />}
+      {showWelcome && <WelcomeModal username={username} onClose={closeWelcome} />}
     </div>
   )
 
@@ -176,7 +198,7 @@ export default function DashboardPage() {
       </div>
 
       {showWelcome && (
-        <WelcomeModal username={username} onClose={() => setShowWelcome(false)} />
+        <WelcomeModal username={username} onClose={closeWelcome} />
       )}
     </div>
   )
@@ -190,7 +212,7 @@ export default function DashboardPage() {
       </div>
 
       {showWelcome && (
-        <WelcomeModal username={username} onClose={() => setShowWelcome(false)} />
+        <WelcomeModal username={username} onClose={closeWelcome} />
       )}
 
     </div>

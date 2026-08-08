@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { prepareUpload } from '../lib/safe-upload'
+import { useDragPosition } from '../lib/use-drag-position'
 import { getCachedAuth } from '../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { logFirstEvent, logEvent } from '../lib/events'
@@ -133,7 +134,41 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [thriverUserIds, setThriverUserIds] = useState<Set<string>>(new Set())
   const [pinAttachments, setPinAttachments] = useState<Record<string, { name: string; url: string }[]>>({})
   const [pinsVisible, setPinsVisible] = useState(true)
-  const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign' | 'whispers'>('public')
+  const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'whispers'>('public')
+
+  // --- World Events timeline auto-play ---------------------------------
+  // Walks the timeline folder pin by pin, flying to each and expanding it
+  // for TIMELINE_STEP_MS before moving on. Stops at the end, or when the
+  // user clicks stop / switches tab / leaves the map.
+  const TIMELINE_STEP_MS = 10000
+  const [timelinePlaying, setTimelinePlaying] = useState(false)
+  const timelineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function stopTimeline() {
+    if (timelineTimerRef.current) { clearTimeout(timelineTimerRef.current); timelineTimerRef.current = null }
+    setTimelinePlaying(false)
+  }
+
+  function playTimeline(orderedPins: Pin[]) {
+    if (orderedPins.length === 0) return
+    stopTimeline()
+    setTimelinePlaying(true)
+    let i = 0
+    const step = () => {
+      const p = orderedPins[i]
+      if (!p) { stopTimeline(); return }
+      setExpandedPinId(p.id)
+      flyToPin(p)
+      i += 1
+      timelineTimerRef.current = setTimeout(step, TIMELINE_STEP_MS)
+    }
+    step()
+  }
+
+  // Stop the walkthrough on tab switch and on unmount so the timer can't
+  // keep flying the map around under a panel the user has navigated away from.
+  useEffect(() => { stopTimeline() }, [sidebarTab])
+  useEffect(() => () => { if (timelineTimerRef.current) clearTimeout(timelineTimerRef.current) }, [])
   const [campaignPins, setCampaignPins] = useState<{ id: string; name: string; notes: string | null; lat: number; lng: number; category: string; campaign_name: string }[]>([])
   // Whispers - public message wall. Distinct from the in-table /whisper
   // chat command (private DM). Anyone signed-in posts; Thrivers can
@@ -199,6 +234,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
+  // Edit Pin panel is draggable - it is tall enough to run off the bottom of
+  // a short screen, and it sits over the map the user is trying to see.
+  const { pos: editPinPos, onHandleMouseDown: onEditPinHandleMouseDown } = useDragPosition()
   const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '', cmod_active: false, cmod_impact: '', cmod_radius_km: '', cmod_label: '', parent_pin_id: '' })
   // Address autocomplete (Nominatim) state for the Edit Pin modal.
   // Mirrors the world-map address-search bar at the top - type 3+ chars
@@ -410,8 +448,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   // Re-render map markers when folder visibility or auth state changes
   useEffect(() => { if (mapInstanceRef.current) loadPins() }, [hiddenFolders, userId])
-  // Load campaign pins when tab switches to campaign
-  useEffect(() => { if (sidebarTab === 'campaign' && userId) loadCampaignPins() }, [sidebarTab, userId])
+  // Load campaign pins when tab switches to My Pins (they share that tab now)
+  useEffect(() => { if (sidebarTab === 'mine' && userId) loadCampaignPins() }, [sidebarTab, userId])
 
   // Load whispers when the tab is selected; subscribe to realtime so a
   // new post from another user shows up without a refresh. Cleanup
@@ -477,6 +515,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     }
     setDeletingWhisperId(null)
   }
+  // Campaign sections on the My Pins tab collapse like the category folders
+  // do. Tracked as COLLAPSED rather than expanded so the default (empty set)
+  // leaves them all open.
+  const [collapsedCampaigns, setCollapsedCampaigns] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set()
+    try { return new Set(JSON.parse(localStorage.getItem('tapestry_collapsed_campaigns') ?? '[]')) } catch { return new Set() }
+  })
+
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
       try { const saved = localStorage.getItem('tapestry_folder_state'); if (saved) return new Set(JSON.parse(saved)) } catch {}
@@ -937,7 +983,19 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!mapInstanceRef.current) return
     const zoom = (pin.category === 'world_event' || pin.category === 'settlement') ? 8 : 14
     mapInstanceRef.current.flyTo([pin.lat, pin.lng], zoom, { duration: 1.2 })
-    setTimeout(() => markersRef.current[pin.id]?.openPopup(), 1300)
+    setTimeout(() => {
+      const marker = markersRef.current[pin.id]
+      if (!marker) return
+      // A marker swallowed by a cluster is not on the map, so openPopup()
+      // silently does nothing - this is why pins in dense areas (e.g. the
+      // US east coast) opened no popup while isolated ones worked.
+      // zoomToShowLayer expands the cluster first, then we open the popup.
+      const cluster = clusterGroupRef.current
+      if (cluster?.zoomToShowLayer) {
+        try { cluster.zoomToShowLayer(marker, () => marker.openPopup()); return } catch {}
+      }
+      marker.openPopup()
+    }, 1300)
   }
 
   async function handleSavePin() {
@@ -1343,13 +1401,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 <span style={{ ...LABEL_STYLE_TIGHT }}>Pins</span>
                 <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
               </div>
-              <div style={{ position: 'relative', marginBottom: '6px' }}>
-                <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
-                  style={{ width: '100%', padding: '5px 8px', paddingRight: pinSearch ? '26px' : '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
-                {pinSearch && (
-                  <button onClick={() => setPinSearch('')} style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#5a5a5a', cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: '0 2px' }}>✕</button>
-                )}
-              </div>
               {!userId && (
                 <div onClick={() => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('tapestry-ghost-wall')) }}
                   style={{ marginBottom: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', fontStyle: 'italic' }}>
@@ -1360,14 +1411,23 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             {/* Tabs */}
             {userId && (
               <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
-                {(['public', 'mine', 'campaign', 'whispers'] as const).map(tab => (
-                  <button key={tab} onClick={() => setSidebarTab(tab)}
-                    style={{ flex: 1, padding: '6px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    {tab === 'public' ? 'Public' : tab === 'mine' ? 'My Pins' : tab === 'campaign' ? 'Campaign' : 'Whispers'}
+                {(['public', 'mine', 'whispers'] as const).map(tab => (
+                  <button key={tab} onClick={() => setSidebarTab(tab)} data-tour={tab === 'public' ? 'world' : tab === 'mine' ? 'pins' : tab === 'whispers' ? 'whispers' : undefined}
+                    style={{ flex: 1, padding: '6px 2px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.02em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                    {tab === 'public' ? 'World Events' : tab === 'mine' ? 'My Pins' : 'Whispers'}
                   </button>
                 ))}
               </div>
             )}
+            {/* Search - sits under the tabs so it reads as filtering the
+                list below it rather than the map header above it. */}
+            <div style={{ position: 'relative', padding: '6px 10px', borderBottom: '1px solid #2e2e2e' }}>
+              <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
+                style={{ width: '100%', padding: '5px 8px', paddingRight: pinSearch ? '26px' : '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
+              {pinSearch && (
+                <button onClick={() => setPinSearch('')} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#5a5a5a', cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: '0 2px' }}>✕</button>
+              )}
+            </div>
             {/* Content */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {sidebarTab === 'whispers' ? (
@@ -1423,23 +1483,39 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     ))
                   )}
                 </div>
-              ) : sidebarTab === 'campaign' ? (
-                /* Campaign pins tab */
-                campaignPins.length === 0 ? (
-                  <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>No campaign pins shared with you.</div>
-                ) : (
+              ) : (
+              <>
+              {/* Campaign-shared pins, grouped by campaign. Merged into the
+                  My Pins tab (2026-08-08) - they used to have their own tab.
+                  Rendered above the user's own folder tree, and only when
+                  there are any, so the tab looks unchanged for solo players. */}
+              {sidebarTab === 'mine' && campaignPins.length > 0 && (
                   (() => {
                     const byCampaign: Record<string, typeof campaignPins> = {}
                     for (const p of campaignPins) {
                       if (!byCampaign[p.campaign_name]) byCampaign[p.campaign_name] = []
                       byCampaign[p.campaign_name].push(p)
                     }
-                    return Object.entries(byCampaign).map(([name, cPins]) => (
+                    return Object.entries(byCampaign).map(([name, cPins]) => {
+                      const cOpen = !collapsedCampaigns.has(name)
+                      return (
                       <div key={name}>
-                        <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>
-                          {name}
+                        <div onClick={() => {
+                          setCollapsedCampaigns(prev => {
+                            const next = new Set(prev)
+                            next.has(name) ? next.delete(name) : next.add(name)
+                            if (typeof window !== 'undefined') localStorage.setItem('tapestry_collapsed_campaigns', JSON.stringify([...next]))
+                            return next
+                          })
+                        }}
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', userSelect: 'none', borderBottom: '1px solid #2e2e2e', fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                          <span style={{ fontSize: '13px', width: '12px', textAlign: 'center' }}>{cOpen ? '▼' : '▶'}</span>
+                          <span style={{ flex: 1 }}>{name}</span>
+                          <span style={{ color: '#f5f2ee', fontWeight: 400 }}>{cPins.length}</span>
                         </div>
-                        {cPins.map(p => (
+                        {cOpen && cPins.map(p => (
                           <div key={p.id} onClick={() => {
                             if (expandedPinId === p.id) setExpandedPinId(null)
                             else { setExpandedPinId(p.id); flyToPin({ lat: p.lat, lng: p.lng, category: p.category } as any) }
@@ -1457,12 +1533,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                           </div>
                         ))}
                       </div>
-                    ))
+                      )
+                    })
                   })()
-                )
-              ) : (
-              /* Public / My Pins folder tree */
-              (() => {
+              )}
+              {/* World Events / My Pins folder tree */}
+              {(() => {
                 // Group displayed pins by category - pins with multiple categories appear in multiple folders
                 const folderMap: Record<string, Pin[]> = {}
                 for (const p of displayedPins) {
@@ -1617,6 +1693,24 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                         <span style={{ fontSize: '14px' }}>{cat.emoji}</span>
                         <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{cat.label}</span>
                         <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginRight: '4px' }}>{folderPins.length}</span>
+                        {cat.value === 'world_event' && folderPins.length > 0 && (
+                          <span onClick={e => {
+                            e.stopPropagation()
+                            if (timelinePlaying) { stopTimeline(); return }
+                            // Open the folder so the rows highlight as it walks
+                            setExpandedFolders(prev => {
+                              const next = new Set(prev)
+                              next.add(cat.value)
+                              if (typeof window !== 'undefined') localStorage.setItem('tapestry_folder_state', JSON.stringify([...next]))
+                              return next
+                            })
+                            playTimeline(folderPins)
+                          }}
+                            title={timelinePlaying ? 'Stop the timeline walkthrough' : `Play the timeline - ${Math.round(TIMELINE_STEP_MS / 1000)}s per event`}
+                            style={{ fontSize: '13px', cursor: 'pointer', color: timelinePlaying ? '#c0392b' : '#7fc458', lineHeight: 1, marginRight: '6px' }}>
+                            {timelinePlaying ? '■' : '▶'}
+                          </span>
+                        )}
                         <span onClick={e => {
                           e.stopPropagation()
                           setHiddenFolders(prev => {
@@ -1747,7 +1841,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 })}
                   </>
                 )
-              })()
+              })()}
+              </>
               )}
             </div>
           </div>
@@ -1816,8 +1911,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         )}
 
         {editingPin && (
-  <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '300px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '600px' }}>
-    <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px' }}>Edit Pin</div>
+  <div style={{ position: 'fixed', top: editPinPos ? editPinPos.y : 16, left: editPinPos ? editPinPos.x : 16, zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '440px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '90vw', maxHeight: 'calc(100vh - 32px)' }}>
+    <div onMouseDown={onEditPinHandleMouseDown} title="Drag to move"
+      style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px', cursor: 'move', userSelect: 'none' }}>Edit Pin</div>
     <div style={{ marginBottom: '8px' }}>
       <label style={lbl}>Title</label>
       <input style={inp} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} />
