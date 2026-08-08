@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-08 18:05 UTC
+
+**Status:** RED+DRIFT (carry-forward - no change since 15:06 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged. brace-expansion DoS, fast-uri host confusion, js-yaml CPU DoS, nanoid loop, next/postcss XSS + file read, sharp (4 libvips CVEs).
+
+**CI:** Last 5 runs all success (most recent 2026-08-08T16:11 UTC). Clean.
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - lib/roll-helpers.ts untouched >3 days
+- HOPED-FOR: Vehicle popout broadcasts - no playtest confirmation since 2026-05-25
+- HOPED-FOR: FI Insight Die award path - never fired in live play, untouched >3 days
+
+**Action:** Same as 15:06. `npm audit fix` / dep upgrades before Beta-500 (postcss XSS is sharpest). Next playtest: exercise Stress 12-string + vehicle popout to drain HOPED-FOR.
+
+---
+
 ## 2026-08-08 15:06 UTC
 
 **Status:** DRIFT (carry-forward - no change since 12:05 UTC)
