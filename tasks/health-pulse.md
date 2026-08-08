@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-08 06:06 UTC
+
+**Status:** DRIFT (carry-forward - no change since 00:07 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged since 00:07. brace-expansion, fast-uri, js-yaml, nanoid, next (indirect postcss), postcss, sharp.
+
+**CI:** Last 5 runs all success (2026-08-07T15:10 - 2026-08-08T00:07 UTC). Clean.
+
+**Drift:**
+- HOPED-FOR carry-forward: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR carry-forward: FI Insight Die award path - never fired in live play
+- HOPED-FOR carry-forward: Vehicle popout broadcasts - awaiting next playtest
+
+**Action:** No change since 00:07 entry. Primary action remains: batch `npm audit fix` before Beta-500 (7 high vulns: postcss XSS, sharp libvips CVEs, nanoid, js-yaml, brace-expansion, fast-uri).
+
+---
+
 ## 2026-08-08 00:07 UTC
 
 **Status:** DRIFT (new high vuln + 3 HOPED-FOR carry-forward)
