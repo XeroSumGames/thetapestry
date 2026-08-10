@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-10 21:08 UTC
+
+**Status:** DRIFT (carry-forward - no change since 18:04 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged. brace-expansion DoS, fast-uri host confusion, js-yaml CPU DoS, nanoid loop, next/postcss XSS + path traversal, sharp (4 libvips CVEs).
+
+**CI:** Last 5 runs all success (most recent 2026-08-10T18:06 UTC). Clean.
+
+**Drift:**
+- HOPED-FOR >3 days: vehicle popout broadcasts (Section B) - stale since 2026-06-16, no git activity last 3 days
+- HOPED-FOR >3 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR >3 days: FI Insight Die award path - never fired in live play, stale since 2026-06-16
+
+**Action:** No new findings. Carry-forward. Batch dep upgrades (postcss/sharp) before Beta-500. Next playtest drains HOPED-FOR.
+
+---
+
 ## 2026-08-10 18:04 UTC
 
 **Status:** DRIFT (carry-forward - no change since 15:09 UTC)
