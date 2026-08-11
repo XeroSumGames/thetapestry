@@ -65,7 +65,7 @@ export type TourStep =
     }
 
 // Default modal width in px. Individual steps can override with `width`.
-export const TOUR_WIDTH = 880
+export const TOUR_WIDTH = 1040
 
 // ---- The intro pitch (first screen) -----------------------------------------
 // Edit these paragraphs to change the opening welcome text. The greeting line

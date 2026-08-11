@@ -48,7 +48,7 @@ function renderInline(text: string): React.ReactNode {
 // to the side of the highlighted area so it sits NEAR it (drawing the eye toward
 // it) without covering it.
 function autoModalPos(box: AnchorBox, vw: number, vh: number): DragPosition {
-  const MODAL_W = 640, GAP = 44, MARGIN = 20
+  const MODAL_W = TOUR_WIDTH, GAP = 44, MARGIN = 20
   let x = box.left < vw / 2
     ? Math.min(box.right + GAP, vw - MODAL_W - MARGIN)   // anchor on the left -> modal to its right
     : Math.max(MARGIN, box.left - GAP - MODAL_W)          // anchor on the right -> modal to its left
