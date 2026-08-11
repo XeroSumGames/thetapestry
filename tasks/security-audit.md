@@ -8,6 +8,46 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-08-11 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (2 new HIGH advisories), rate-limit / DoS (carry-over), dependency drift (carry-over)
+
+**Closed since last audit (2026-08-04):** nothing closed this cycle.
+
+**Sections clean this cycle:** auth/role gates (guardrail: 359 files, 0 violations; `profile.role` at `app/vehicle/page.tsx:117` is a comment; `isThriver` state in campfire pages set via `roleIsThriver(profile)` — canonical; community_members `.role === 'gatherer'/'maintainer'/'safety'/'unassigned'` at `app/stories/[id]/community/page.tsx:148-151` are labor-role comparisons, not auth-role checks — correct), RLS gaps (advisory; no DB access from sandbox; `sql/` directory has extensive RLS coverage; no new tables identified without matching SQL files), file uploads (all paths still confirmed through `prepareUpload` helper — size cap, filename sanitization, content-type whitelisting all in place), secrets exposure (no committed .env files; no hardcoded tokens or keys in source), injection/XSS (`dangerouslySetInnerHTML` at `app/layout.tsx:56` is a static inline script — not user-controlled; `innerHTML` at `app/stories/[id]/table/page.tsx:8056` sets a hardcoded 'GM' fallback label in an `onError` handler — static, not user-controlled; no SQL string concatenation patterns found), rate-limit API routes (only 2 routes: `verify-turnstile` has Upstash sliding window + in-memory fallback; `health` carry-over noted below), permission boundaries (all `isThriver`/`isGM` checks confirmed routed through `lib/auth/roles.ts` helpers).
+
+### npm audit (moderate+)
+
+**NEW HIGH:**
+- `js-yaml` — HIGH — CVE-2026-59870 — "Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — fix not backported" — transitive — fix: available (was GONE as of 2026-07-28; reappeared as distinct new advisory)
+- `nanoid` — HIGH — "non-secure generators can loop indefinitely with negative size" — transitive — fix: available
+
+**CARRY-OVER (unchanged from 2026-08-04):**
+- `fast-uri` — HIGH — CVSS 7.5 — host confusion via backslash authority introducer — transitive — fix: available
+- `sharp` — HIGH — libvips CVEs (CVE-2026-33327/33328/35590/35591) — transitive — fix: available
+- `postcss` — HIGH — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — low runtime risk (build-time only)
+- `next` — HIGH — isDirect: true — via postcss chain — fix: available (breaking)
+- `brace-expansion` <=5.0.7 — HIGH — CVSS 7.5 — DoS via OOM — transitive via eslint chain (dev-only) — fix: breaking eslint major bump
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` — GET, unauthenticated — DB ping cached 10s — **no HTTP-level rate limit — 12th consecutive audit carry-over** — Upstash sliding window (10 req/min per IP) needed before paid launch.
+
+### Dependency drift
+
+(Major-version drift: packages show as MISSING in sandbox — no node_modules installed; versions from package.json. `leaflet-control-geocoder` 3.3.1 → 4.0.0, 1 major behind. No priority packages at ≥2 major versions behind.)
+
+- `@supabase/supabase-js` — carry-over — auth-adjacent; changelog review before bump.
+- `@supabase/ssr` — carry-over — auth-adjacent staleness rising (12th consecutive).
+- `@upstash/ratelimit` / `@upstash/redis` — carry-over.
+
+**Top 3 priorities:**
+1. `sharp` HIGH — libvips CVEs still unfixed; image-processing lib with runtime exposure — 2nd consecutive audit.
+2. `js-yaml` HIGH CVE-2026-59870 — NEW re-entry with distinct advisory; fix available; resolve before it compounds.
+3. `app/api/health/route.ts` — 12 audits deferred; unauthenticated DB-ping endpoint; Upstash 10/min sliding window is a 20-line fix, hard deadline before paid launch.
+
+---
+
 ## 2026-08-04 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (2 new HIGH advisories), rate-limit / DoS (carry-over), dependency drift (carry-over)
