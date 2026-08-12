@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
       // dashboard. Stable production alias, not the hash.
       { source: '/walkingdead-rpg', destination: 'https://walkingdead-rpg.vercel.app' },
       { source: '/walkingdead-rpg/:path*', destination: 'https://walkingdead-rpg.vercel.app/:path*' },
+      // traveller-generator (Mongoose Traveller 2nd Edition). Own repo
+      // (github.com/XeroSumGames/traveller-generator); runs on THIS origin so its
+      // beacon posts page='/traveller-generator' to log-visit for the
+      // /traveller-generator-log dashboard. Stable production alias, not the hash.
+      { source: '/traveller-generator', destination: 'https://traveller-generator.vercel.app' },
+      { source: '/traveller-generator/:path*', destination: 'https://traveller-generator.vercel.app/:path*' },
     ]
   },
   async redirects() {
