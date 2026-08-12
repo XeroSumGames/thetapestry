@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-12 09:09 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 7 high, 0 critical -- brace-expansion (DoS), fast-uri (host confusion), js-yaml (CPU DoS), nanoid (infinite loop), postcss (path traversal GHSA-6g55-p6wh-862q / GHSA-r28c-9q8g-f849), sharp (libvips CVEs), next (via postcss + sharp)
+
+**CI:** last 5 runs all pass (latest 2026-08-12T06:11 UTC)
+
+**Drift:**
+- HOPED-FOR stale (no code touch, no playtest evidence): Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) -- drain target was Beta-500 dry-run
+- HOPED-FOR stale: FI Insight Die award path (rolling doubles -> +1 pool increment) -- never fired in live play
+- HOPED-FOR stale: vehicle popout broadcasts (Section B) -- awaiting playtest ride-along
+- Carry-forward from prior pulse: postcss path-traversal HIGH vulns persist unaddressed
+
+**Action:** postcss GHSA-6g55-p6wh-862q / GHSA-r28c-9q8g-f849 (arbitrary .map file read) is the highest-urgency audit item; all others carry forward unchanged.
+
+---
+
 ## 2026-08-12 06:09 UTC
 
 **Status:** DRIFT (carry-forward - no change since 2026-08-12 00:06 UTC)
