@@ -34,6 +34,12 @@ const nextConfig: NextConfig = {
       // /traveller-generator-log dashboard. Stable production alias, not the hash.
       { source: '/traveller-generator', destination: 'https://traveller-generator.vercel.app' },
       { source: '/traveller-generator/:path*', destination: 'https://traveller-generator.vercel.app/:path*' },
+      // 2300ad-generator (2300AD, the Mongoose Traveller setting). Own repo
+      // (github.com/XeroSumGames/2300ad-generator); runs on THIS origin so its beacon
+      // posts page='/2300ad-generator' to log-visit for the /2300ad-generator-log
+      // dashboard. Stable production alias, not the hash.
+      { source: '/2300ad-generator', destination: 'https://2300ad-generator.vercel.app' },
+      { source: '/2300ad-generator/:path*', destination: 'https://2300ad-generator.vercel.app/:path*' },
     ]
   },
   async redirects() {
