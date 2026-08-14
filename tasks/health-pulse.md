@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-14 00:12 UTC
+
+**Status:** DRIFT (new finding + carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged. brace-expansion DoS, fast-uri host confusion, js-yaml CPU DoS, nanoid loop, next/postcss XSS + path-traversal, sharp (4 libvips CVEs). All have fixes available.
+
+**CI:** Last 5 runs all success (most recent 2026-08-13T21:11 UTC). Clean.
+
+**Drift:**
+- NEW CONFIRMED BUG: `CampaignMap.tsx` fingerprint still hashes `allPins` (not `visible`) - GM edits to hidden pins churn every player's map marker rebuild. Todo says "routed HP, verified 2026-07-09 by Puffer" but the fix is NOT in code (L653-658 still uses `allPins`). HP has it queued; flagging because it's been 36+ days and pre-Beta-500 this causes silent map rebuilds for all players on every hidden-pin GM edit.
+- HOPED-FOR >3 days: vehicle popout broadcasts (Section B) - stale since 2026-06-16, no git activity
+- HOPED-FOR >3 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR >3 days: FI Insight Die award path - never fired in live play, stale since 2026-06-16
+
+**Action:** Priority 1 - HP should ship the CampaignMap fingerprint fix (`fingerprint visible not allPins` + reset `clusterGroupRef`/`pinsFingerprintRef` in campaignId cleanup). Priority 2 - batch dep upgrade before Beta-500 (postcss path-traversal sharpest).
+
+---
+
 ## 2026-08-13 21:09 UTC
 
 **Status:** DRIFT (carry-forward - no change since 18:06 UTC)
