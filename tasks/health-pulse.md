@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-16 15:08 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged. See 2026-08-14 00:12 UTC entry for breakdown.
+
+**CI:** Last 5 runs all success (most recent 2026-08-16T12:07 UTC). Clean.
+
+**Drift:**
+- HOPED-FOR >3 days: vehicle popout broadcasts (Section B) - stale since 2026-06-16
+- HOPED-FOR >3 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR >3 days: FI Insight Die award path - stale since 2026-06-16
+- NEW stale-todo: DZ Session 3 item [9] (NPC card popout parity, HP lane) - routed 2026-08-03, 13 days, no git activity on npc-sheet or NpcRoster
+- NEW stale-todo: DZ Session 3 item [2+5] (reconnect frequency investigation, Puffer lane) - routed 2026-08-03, 13 days, no git activity on lib/realtime
+- NEW stale-todo: Batch 2 silent write failures (combat-hot cluster, HP lane) - last git activity 2026-08-04, 12 days, still marked IN PROGRESS
+
+**Action:** Three queued items appear stalled - flag to HP (NPC popout parity + Batch 2) and Puffer (reconnect investigation).
+
+---
+
 ## 2026-08-16 12:06 UTC
 
 **Status:** DRIFT (carry-forward - no change since 09:06 UTC 2026-08-16)
