@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
       // dashboard. Stable production alias, not the hash.
       { source: '/2300ad-generator', destination: 'https://2300ad-generator.vercel.app' },
       { source: '/2300ad-generator/:path*', destination: 'https://2300ad-generator.vercel.app/:path*' },
+      // twilight2000-generator (Twilight: 2000 4th Edition, Free League). Own repo
+      // (github.com/XeroSumGames/twilight2000-generator); runs on THIS origin so its
+      // beacon posts page='/twilight2000-generator' to log-visit for the
+      // /twilight2000-generator-log dashboard. Stable production alias, not the hash.
+      { source: '/twilight2000-generator', destination: 'https://twilight2000-generator.vercel.app' },
+      { source: '/twilight2000-generator/:path*', destination: 'https://twilight2000-generator.vercel.app/:path*' },
     ]
   },
   async redirects() {
