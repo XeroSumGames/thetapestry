@@ -6,6 +6,34 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-17 21:06 UTC
+
+**Status:** DRIFT (new finding: repo scope expansion + carry-forward vulns/HOPED-FOR)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - same 7 as prior runs (brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp).
+
+**CI:** Last 5 runs all success (most recent 2026-08-17T18:05 UTC). Clean.
+
+**New finding - Repo scope expansion:**
+- 3 external-game generator proxies committed directly by Xero:
+  - `7b8186b` Traveller generator proxy + dashboard (2026-08-12)
+  - `c54b39e` 2300AD generator proxy + dashboard (2026-08-12)
+  - `ce00085` Twilight 2000 generator proxy + dashboard (2026-08-16)
+- Pattern: `next.config.ts` rewrites proxy `/game-generator` -> external Vercel app; `app/game-log/` dashboard reads `visitor_logs` for that path; Thriver-gated RLS.
+- These cross AGENTS.md "never mix in unrelated projects" rule. Xero-authored so likely intentional (using Tapestry as a shared XSE platform hub). **If intentional, update AGENTS.md to document the expanded scope** so Claude lanes don't inadvertently flag/remove these files.
+
+**Drift (carry-forward):**
+- HOPED-FOR >60 days: vehicle popout broadcasts (Section B) - stale since 2026-06-16
+- HOPED-FOR >60 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - drain target: Beta-500 dry-run
+- HOPED-FOR >60 days: FI Insight Die award path - stale since 2026-06-16
+- Stale-todo: CampaignMap pin fingerprint still hashes `allPins` not `visible` (routed to HP 2026-07-09, 39 days, unimplemented)
+
+**Action:** Look at the 3 generator-proxy commits. If this is the new XSE hub model, update AGENTS.md to say so. The 7 high vulns and HOPED-FOR items await next playtest / prioritization cycle.
+
+---
+
 ## 2026-08-17 18:04 UTC
 
 **Status:** DRIFT (carry-forward - no change since 15:05 UTC 2026-08-17)
