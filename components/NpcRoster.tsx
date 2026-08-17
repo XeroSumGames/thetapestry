@@ -845,7 +845,21 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   // per-folder Show/Hide buttons delegate here so the npc_relationships +
   // scene_tokens update logic lives in one place.
   async function revealNpcsByIds(npcIds: string[]) {
-    if (!pcEntries || pcEntries.length === 0 || npcIds.length === 0) return
+    if (npcIds.length === 0) return
+    // A reveal with no player characters loaded silently wrote nothing and
+    // looked like a dead button - the GM clicked repeatedly and refreshed.
+    // Say so instead of returning quietly.
+    if (!pcEntries || pcEntries.length === 0) {
+      alert('No player characters are loaded yet, so there is nobody to reveal these NPCs to. Give the table a moment to finish loading and try again.')
+      return
+    }
+    // Flip the RLS gate FIRST. hidden_from_players=true on the NPC row beats
+    // revealed=true on the relationship row, so a reveal that skips this
+    // writes rows the player still cannot read. This used to live only in
+    // revealAllNpcs and quickReveal; the per-card and per-folder Show
+    // buttons skipped it and left NPCs invisible. Doing it here makes every
+    // call site correct by construction.
+    await setNpcsHidden(npcIds, false)
     const { data: existing } = await existingRelationshipsByNpcs(npcIds)
     const seen = new Set<string>((existing ?? []).map((r: any) => `${r.npc_id}|${r.character_id}`))
     const updates = (existing ?? []).map((r: any) => r.id)
@@ -873,6 +887,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   async function hideNpcsByIds(npcIds: string[]) {
     if (npcIds.length === 0) return
+    // Mirror of the reveal path: close the RLS gate as well as clearing the
+    // relationship rows, so Hide then Show cannot leave the two disagreeing.
+    await setNpcsHidden(npcIds, true)
     await hideRelationshipsByNpcs(npcIds)
     setRevealedNpcIds(prev => {
       const next = new Set(prev)
@@ -888,12 +905,8 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   async function revealAllNpcs() {
     const allIds = npcs.map(n => n.id)
-    // Also flip the RLS gate so the per-PC reveal rows aren't fighting
-    // an opposing hidden_from_players=true on the underlying NPC. The
-    // per-NPC quickReveal already does this; without the same write
-    // here, "Show All" left some NPCs invisible to players even after
-    // their relationship row said revealed=true.
-    await setNpcsHidden(allIds, false)
+    // The RLS gate is flipped inside revealNpcsByIds now, so every reveal
+    // path gets it - this used to be the only place that did.
     await revealNpcsByIds(allIds)
   }
 
