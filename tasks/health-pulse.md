@@ -6,6 +6,30 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-17 06:07 UTC
+
+**Status:** DRIFT (carry-forward - no change since 00:06 UTC 2026-08-17)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged. brace-expansion DoS, fast-uri host confusion, js-yaml CPU DoS, nanoid loop, next (HIGH), postcss XSS + path-traversal, sharp (4 libvips CVEs).
+
+**CI:** Last 5 runs all success (most recent 2026-08-17T00:08 UTC). Clean.
+
+**New since last entry:** 0 commits since 00:06 UTC health-pulse. No change.
+
+**Drift:** Unchanged from 00:06 UTC entry.
+- HOPED-FOR >3 days: vehicle popout broadcasts (Section B) - stale since 2026-06-16
+- HOPED-FOR >3 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - stale since 2026-06-16
+- HOPED-FOR >3 days: FI Insight Die award path - stale since 2026-06-16
+- Stale-todo: NPC card popout parity (HP lane) - routed 2026-08-03, 15 days, no git activity
+- Stale-todo: reconnect investigation (Puffer lane) - routed 2026-08-03, 15 days, no git activity
+- Stale-todo: Batch 2 silent write failures (HP lane) - last activity 2026-08-04, 13 days, still open
+
+**Action:** No new findings. Standing drift items are pre-KS backlog. 7 high npm audit vulns unchanged.
+
+---
+
 ## 2026-08-17 00:06 UTC
 
 **Status:** DRIFT (carry-forward - no change since 21:05 UTC 2026-08-16)
