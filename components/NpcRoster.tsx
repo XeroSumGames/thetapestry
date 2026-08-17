@@ -443,7 +443,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   // seam: both postgres subs ride one npc_roster_${campaignId} channel and
   // refetch via loadNpcs (handlers stay fresh via the hook's config ref,
   // so the channel only subscribes once per campaign).
-  useCampaignChannel(campaignId, {
+  const { send: sendRosterBroadcast } = useCampaignChannel(campaignId, {
     channelName: campaignId ? `npc_roster_${campaignId}` : undefined,
     postgres: [
       { label: 'npc_roster:campaign_npcs', event: '*', table: 'campaign_npcs', filter: campaignId ? `campaign_id=eq.${campaignId}` : undefined, handler: () => { loadNpcs() } },
@@ -882,6 +882,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       return next
     })
     await setSceneTokensVisibleByNpcs(npcIds, true)
+    sendRosterBroadcast('npcs_revealed', {})
     void logEvent('npc_revealed', { count: npcIds.length, campaign_id: campaignId })
   }
 
@@ -891,6 +892,13 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     // relationship rows, so Hide then Show cannot leave the two disagreeing.
     await setNpcsHidden(npcIds, true)
     await hideRelationshipsByNpcs(npcIds)
+    // Hide MUST broadcast. postgres_changes is RLS-filtered per subscriber:
+    // revealing moves the row INTO the player's visibility so their
+    // campaign_npcs subscription fires, but hiding moves it OUT, and the
+    // event is filtered away - the player is never told the NPC is gone and
+    // sits on a stale roster until they refresh. This is why Show worked and
+    // Hide did not. The broadcast is not RLS-filtered, so it always lands.
+    sendRosterBroadcast('npcs_revealed', {})
     setRevealedNpcIds(prev => {
       const next = new Set(prev)
       for (const id of npcIds) next.delete(id)
