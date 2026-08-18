@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-18 15:07 UTC
+
+**Status:** DRIFT (CI recovered - arch ratchet fixed; drift items persist)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged
+
+**CI:** RECOVERED. `1110339` "refactor(data): move the observer lookup behind the lib/data seam" landed at ~15:00 UTC. Latest run green: https://github.com/XeroSumGames/thetapestry/actions/runs/32151874271
+- Prior 4 runs (06:08, 09:06, 12:11, 14:59 UTC) all failed - arch ratchet `.from outside lib/data` 924 -> 925 from `bef299e` (sessions feature). Now back to baseline.
+
+**Drift:** Same 3 HOPED-FOR items - all >63 days stale (last playtest 2026-06-16), no commits touching these areas in last 3 days:
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR: FI Insight Die award path (doubles -> insight pool increment)
+- HOPED-FOR: Vehicle popout broadcasts (Section B)
+
+**Action:** CI green - no immediate action needed. Stale HOPED-FOR items need a playtest pass before Beta-500.
+
+---
+
 ## 2026-08-18 12:09 UTC
 
 **Status:** RED (carry-forward - arch ratchet now 3rd consecutive CI failure; 7h unresolved)
