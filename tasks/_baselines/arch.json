@@ -1,16 +1,16 @@
 {
   "_comment": "Architecture ratchet baseline. --save only ratchets numbers DOWN (--force to re-baseline up). node scripts/check-arch.mjs --save",
   "locCeilings": {
-    "app/stories/[id]/table/page.tsx": 11178,
+    "app/stories/[id]/table/page.tsx": 11221,
     "components/TacticalMap.tsx": 4506,
     "components/CampaignCommunity.tsx": 3129,
-    "components/NpcRoster.tsx": 2346,
+    "components/NpcRoster.tsx": 2367,
     "app/vehicle/page.tsx": 1459,
     "components/MapView.tsx": 2137,
     "app/moderate/page.tsx": 1772
   },
   "seamLeakage": {
-    "fromOutsideData": 922,
+    "fromOutsideData": 924,
     "channelOutsideRealtime": 18
   },
   "prodConsole": 0

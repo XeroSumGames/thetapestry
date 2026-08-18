@@ -298,6 +298,7 @@ export default function TablePage() {
   // Sync gmLikeRef every render so listener closures get a fresh read.
   useEffect(() => { gmLikeRef.current = gmLike }, [gmLike])
   const [entries, setEntries] = useState<TableEntry[]>([])
+  const [observers, setObservers] = useState<{ userId: string; username: string }[]>([])
   useEffect(() => { entriesRef.current = entries }, [entries])
   const [gmInfo, setGmInfo] = useState<GmInfo | null>(null)
   const [loading, setLoading] = useState(true)
@@ -1571,6 +1572,24 @@ export default function TablePage() {
   // refresh) resumed listening but never re-synced whatever changed during
   // the gap - the mechanism behind the "trouble showing/hiding Melissa &
   // Billy" NPC-reveal report. All refetch fns already seq-guard internally.
+  // Observers are campaign_members with observer=true. They are deliberately
+  // NOT part of `entries`: that pipeline is driven by character_states and
+  // requires an assigned character, and an observer usually has none - which
+  // is exactly why the GM could not see them. Kept as its own tiny query so
+  // the load-bearing loadEntries path is untouched.
+  const loadObservers = async (campaignId: string) => {
+    const { data: obs } = await supabase
+      .from('campaign_members')
+      .select('user_id')
+      .eq('campaign_id', campaignId)
+      .eq('observer', true)
+    const ids = (obs ?? []).map((o: any) => o.user_id)
+    if (ids.length === 0) { setObservers([]); return }
+    const { data: profs } = await supabase.from('profiles').select('id, username').in('id', ids)
+    const nameById = Object.fromEntries((profs ?? []).map((pr: any) => [pr.id, pr.username]))
+    setObservers(ids.map((uid: string) => ({ userId: uid, username: nameById[uid] ?? 'Unknown' })))
+  }
+
   const resyncMembers = async () => {
     const { data: refreshedMembers } = await supabase
       .from('campaign_members')
@@ -1579,6 +1598,7 @@ export default function TablePage() {
       .not('character_id', 'is', null)
     if (refreshedMembers && refreshedMembers.length > 0) await ensureCharacterStates(id, refreshedMembers as any[])
     await loadEntries(id)
+    await loadObservers(id)
   }
   const reloadCampaignNpcs = async () => {
     const { data: cnpcs } = await getCampaignNpcs(id)
@@ -8065,6 +8085,29 @@ export default function TablePage() {
         </button>
           )
         })()}
+
+        {/* Observers. They hold no character and no character_states row, so
+            they can never appear in `entries` - the GM previously had no way
+            to see who was watching. Green dot = currently connected, from the
+            same presence set that borders the player seats. */}
+        {gmLike && observers.length > 0 && (
+          <div title="People watching this table as observers"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', padding: '4px 8px', marginLeft: '8px', border: '1px solid #2e2e2e', borderRadius: '4px', background: '#141414' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              Observing
+            </span>
+            {observers.map(o => {
+              const online = onlineUserIds.has(o.userId)
+              return (
+                <span key={o.userId} title={online ? 'Connected now' : 'Not currently connected'}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: online ? '#7fc458' : '#3a3a3a', flexShrink: 0 }} />
+                  {o.username}
+                </span>
+              )
+            })}
+          </div>
+        )}
 
         {(() => {
           const slotCount = Math.max(playerEntries.length, 3)
