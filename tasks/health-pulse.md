@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-18 12:09 UTC
+
+**Status:** RED (carry-forward - arch ratchet now 3rd consecutive CI failure; 7h unresolved)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp - all fixable)
+
+**CI:** 3 failures on main today - 04:53, 06:08, 09:06 UTC - all same arch ratchet breach. Latest: https://github.com/XeroSumGames/thetapestry/actions/runs/32119807654
+- Root cause: `bef299e` "feat(sessions): GM can edit session notes" added inline `.from()` outside `lib/data/` - `.from outside lib/data` ratchet count 924 -> 925.
+- No fix commit has landed in 7h. The 09:06 failure was triggered by the health-pulse's own push (health-pulse.md change), confirming main still carries the breach.
+
+**Drift:** Same 3 HOPED-FOR items - all >63 days stale, no playtest activity in last 3 days:
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR: FI Insight Die award path (doubles -> insight pool increment)
+- HOPED-FOR: Vehicle popout broadcasts (Section B)
+
+**Action:** ESCALATING - 3rd CI failure, 7h with no fix. Hunt & Peck: move the inline `.from()` in sessions feature into `lib/data/`, run `npm run arch:check` locally to confirm back to 924, then push.
+
+---
+
 ## 2026-08-18 09:04 UTC
 
 **Status:** RED (carry-forward - arch ratchet still unresolved; 2nd CI failure since 06:06 pulse)
