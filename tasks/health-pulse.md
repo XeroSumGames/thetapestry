@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-18 09:04 UTC
+
+**Status:** RED (carry-forward - arch ratchet still unresolved; 2nd CI failure since 06:06 pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged
+
+**CI:** 2 failures on main today - 04:53 UTC and 06:08 UTC, both same arch ratchet breach. Latest: https://github.com/XeroSumGames/thetapestry/actions/runs/32105648678
+
+**CI failure detail:** `.from outside lib/data`: 924 -> 925 (+1). Introduced by `bef299e` "feat(sessions): GM can edit session notes". Still live on main 3h after first detection. Fix: route the new DB read(s) in the sessions feature through `lib/data/`, then `npm run arch:check` locally to confirm back to 924 before push.
+
+**Drift:** Same 3 HOPED-FOR items as prior entries (vehicle popout broadcasts, Stress Check 12-string, FI Insight Die award - all >63 days stale).
+
+**Action:** Hunt & Peck: fix the inline `.from()` in `bef299e` (sessions feature) -> move into `lib/data/`.
+
+---
+
 ## 2026-08-18 06:06 UTC
 
 **Status:** RED
