@@ -266,15 +266,18 @@ export default function CampaignsPage() {
           cramped at the old 720px page width) specifically so this grid has
           room to run wide columns instead of the tightest basis that would
           still technically reach 2 columns. 420px basis + 1fr means each
-          column stretches to ~500px+ on a full-width viewport. Grid auto-fit
-          means a single present section fills the full width. */}
+          column stretches to ~500px+ on a full-width viewport. Both columns
+          always render (an empty-state card when a list is empty) so the
+          two-column layout holds even when you only GM or only play
+          (2026-08-06, Xero: "even if not playing in a Story, it should always
+          be two columns"). */}
       {(gmCampaigns.length > 0 || playerCampaigns.length > 0) && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.5rem', alignItems: 'start', marginBottom: '2rem' }}>
-      {gmCampaigns.length > 0 && (
-        <div>
+      <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
             Running as GM
           </div>
+          {gmCampaigns.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {gmCampaigns.map(c => {
               const templateOf = templateModules.get(c.id)
@@ -319,14 +322,18 @@ export default function CampaignsPage() {
               )
             })}
           </div>
+          ) : (
+            <div style={{ background: '#141414', border: '1px dashed #2e2e2e', borderRadius: '4px', padding: '1.25rem', fontSize: '13px', color: '#8a8a8a', lineHeight: 1.6 }}>
+              You aren&apos;t running any stories yet. Hit <Link href="/stories/new" style={{ color: '#f5a89a', textDecoration: 'none' }}>New Story</Link> to start one.
+            </div>
+          )}
         </div>
-      )}
 
-      {playerCampaigns.length > 0 && (
-        <div>
+      <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
             Playing In
           </div>
+          {playerCampaigns.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {playerCampaigns.map(c => (
               <div key={c.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #7ab3d4' }}>
@@ -347,8 +354,12 @@ export default function CampaignsPage() {
               </div>
             ))}
           </div>
+          ) : (
+            <div style={{ background: '#141414', border: '1px dashed #2e2e2e', borderRadius: '4px', padding: '1.25rem', fontSize: '13px', color: '#8a8a8a', lineHeight: 1.6 }}>
+              You aren&apos;t playing in any stories yet. <Link href="/stories/join" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Join a Story</Link> with an invite code from your GM.
+            </div>
+          )}
         </div>
-      )}
       </div>
       )}
 
