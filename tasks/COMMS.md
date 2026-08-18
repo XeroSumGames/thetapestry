@@ -25,6 +25,65 @@ remembering, it gets its own entry in `decisions.md` too.
 
 ## OPEN
 
+- **[2026-08-18] Xero's playtest notes, items 2-5 - ASK HIM ONE AT A TIME.**
+  Raised by Puffer Fish. Xero's instruction, verbatim: *"ask me about these,
+  1 at a time, so you can route them where they should go."* He then said
+  *"have Comms ask me the questions."* Item 1 is already answered, do NOT
+  re-ask it. What is needed back per item: build now / todo / needs a design
+  decision from him / not Tapestry at all. Record the outcome here and in
+  `todo.md`, and route to the owning lane.
+
+  **2. pins & NPCs & Assets & GM Notes** (raw)
+  - drag and drop npcs > players to put them in their own folders and/or
+    sort them by role (Deputies, administrators, etc) and/or
+    friendly's/hostiles, etc
+  - what do you see when you open an NPC card?
+  - make a mind map of the NPCs and where they met, their relationships, etc?
+  - campaign sheet - add 'words' to character
+  - logbook where you type - if you typed an @ it would link to an NPC. you
+    could write your own impressions of that character.
+
+  *Puffer note:* this is five unrelated asks under one heading. The
+  foldering, the mind map and the @-mention logbook are three separate
+  features of very different size. Split them before he prioritises or he
+  will be answering about all three at once.
+
+  **3. redesign the 'Character Tab' across the bottom** (raw)
+  - buttons on THE character at the bottom
+  - 1. hand raise, like on teams
+  - 2. a button to INTERJECT
+
+  *Puffer note:* worth asking whether hand-raise and interject are genuinely
+  two mechanics or one. A raised hand the GM then grants is a different
+  thing from a player interrupting directly, and it changes who holds
+  control of the table.
+
+  **4. GM should be able to see all 1st impressions via NPC cards** (raw)
+
+  *Puffer note:* small, and Puffer can just build it. First Impression CMods
+  already live per-PC per-NPC in `npc_relationships` and the player card
+  renders them; the GM's NPC card does not aggregate them. One question for
+  Xero: every PC's CMod listed on the NPC card, or only the non-zero ones?
+
+  **5. Solar panels - EZ bikes** (raw)
+
+  *Puffer note:* uninterpretable as written. May be setting/equipment content
+  rather than software. Ask him plainly what it means before anyone
+  estimates it.
+
+- **[2026-08-18] Tour item 1 - two pieces deferred, schedule with Xero LATER (not now).**
+  He chose to ship the two small fixes immediately (persistent tour, World
+  Events step emphasis - both live in `78cbcffe`). These two remain:
+  - **Fixed modal / moving arrow.** His note: *"keep the text all in the same
+    place, have the arrows move?"* When raising it, flag the cost: every step
+    currently carries its own hand-calibrated `pos`, tuned over a long stretch
+    on 2026-08-18. Pinning the modal discards all of that. Confirm he accepts
+    that before it starts.
+  - **The tour opened over My Stories, not the dashboard, for Jon.** Puffer
+    reads this as a BUG, not a preference - the tour is meant to fire on
+    `/dashboard`. Needs reproducing. Ask Xero whether Jon can reproduce it and
+    what Jon did immediately before it appeared.
+
 ---
 
 ## ANSWERED
