@@ -6,6 +6,7 @@ import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import StoryActionBar from '../../../../components/StoryActionBar'
 import { RollEntry, collapseCoordEffortChains } from '../../../../components/RollsFeed'
+import { reportSupabaseError } from '../../../../lib/supabase-errors'
 
 interface Session {
   id: string
@@ -66,6 +67,12 @@ export default function SessionHistoryPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deactivating, setDeactivating] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [editSession, setEditSession] = useState<Session | null>(null)
+  const [editSummary, setEditSummary] = useState('')
+  const [editCliffhanger, setEditCliffhanger] = useState('')
+  const [editNextNotes, setEditNextNotes] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [fiOpen, setFiOpen] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -133,6 +140,28 @@ export default function SessionHistoryPage() {
     setDeleting(null)
   }
 
+  function openEdit(s: Session) {
+    setEditSession(s)
+    setEditSummary(s.gm_summary ?? '')
+    setEditCliffhanger(s.cliffhanger ?? '')
+    setEditNextNotes(s.next_session_notes ?? '')
+  }
+
+  async function saveEdit() {
+    if (!editSession) return
+    setSavingEdit(true)
+    const patch = {
+      gm_summary: editSummary.trim() || null,
+      cliffhanger: editCliffhanger.trim() || null,
+      next_session_notes: editNextNotes.trim() || null,
+    }
+    const { error } = await supabase.from('sessions').update(patch).eq('id', editSession.id)
+    if (error) { reportSupabaseError(error, 'sessions.editNotes'); setSavingEdit(false); return }
+    setSessions(prev => prev.map(s => s.id === editSession.id ? { ...s, ...patch } : s))
+    setSavingEdit(false)
+    setEditSession(null)
+  }
+
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
@@ -157,6 +186,17 @@ export default function SessionHistoryPage() {
     return '📎'
   }
 
+  // Every First Impression roll across all sessions, collected into one place.
+  // FI rolls carry a "<name> - First Impression (<npc>)" label; RollEntry renders
+  // the full result sentence. Newest session first (sessions is desc-sorted).
+  const firstImpressions = sessions.flatMap(s => {
+    let rows: any[] = []
+    try { const parsed = JSON.parse(s.session_log ?? ''); if (Array.isArray(parsed)) rows = parsed } catch { /* legacy plain-text digest */ }
+    return rows
+      .filter(r => typeof r?.label === 'string' && /(?:-|—)\s*First Impression\b/.test(r.label))
+      .map(r => ({ roll: r, sessionNumber: s.session_number }))
+  })
+
   if (loading) return (
     <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading sessions...</div>
   )
@@ -169,6 +209,29 @@ export default function SessionHistoryPage() {
         Session History
       </div>
       <div style={{ fontSize: '14px', color: '#cce0f5', marginBottom: '1.25rem' }}>{sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
+
+      {/* First Impressions - every FI roll across the campaign, in one place. */}
+      {firstImpressions.length > 0 && (
+        <div style={{ marginBottom: '1.5rem', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden' }}>
+          <button onClick={() => setFiOpen(o => !o)}
+            style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: '#141414', border: 'none', borderBottom: fiOpen ? '1px solid #2e2e2e' : 'none', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>🤝 First Impressions ({firstImpressions.length})</span>
+            <span style={{ color: '#7ab3d4' }}>{fiOpen ? 'Hide' : 'Show'}</span>
+          </button>
+          {fiOpen && (
+            <div style={{ padding: '6px 10px', maxHeight: '420px', overflowY: 'auto' }}>
+              {firstImpressions.map(({ roll, sessionNumber }) => (
+                <div key={roll.id} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                  <span style={{ flexShrink: 0, fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', marginTop: '7px', minWidth: '30px' }}>S{sessionNumber}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <RollEntry r={roll} expandedRollIds={new Set<string>()} toggleExpanded={() => {}} simple={false} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {sessions.length === 0 ? (
         <div style={{ color: '#cce0f5', fontSize: '14px', textAlign: 'center', padding: '2rem' }}>No sessions recorded yet.</div>
@@ -212,13 +275,17 @@ export default function SessionHistoryPage() {
                 )}
 
                 {/* Action buttons */}
-                <div style={{ marginTop: 'auto', padding: '0 12px 10px', display: 'flex', gap: '4px' }}>
+                <div style={{ marginTop: 'auto', padding: '0 12px 10px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                   {hasContent && (
                     <button onClick={() => setExpandedId(isExpanded ? null : s.id)}
-                      style={{ flex: 1, padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ flex: 1, minWidth: '68px', padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       {isExpanded ? 'Collapse' : 'Expand'}
                     </button>
                   )}
+                  <button onClick={() => openEdit(s)}
+                    style={{ padding: '5px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Edit
+                  </button>
                   {isActive && (
                     <button onClick={() => deactivateSession(s.id)} disabled={deactivating === s.id}
                       style={{ padding: '5px 10px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deactivating === s.id ? 'not-allowed' : 'pointer', opacity: deactivating === s.id ? 0.5 : 1 }}>
@@ -281,6 +348,45 @@ export default function SessionHistoryPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {editSession && (
+        <div onClick={() => { if (!savingEdit) setEditSession(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '520px', maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Edit Notes</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1.25rem' }}>Session {editSession.session_number}</div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>What Happened</div>
+              <textarea value={editSummary} onChange={e => setEditSummary(e.target.value)} rows={6}
+                placeholder="Summarise the session - key events, decisions, outcomes."
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>How Did It End?</div>
+              <textarea value={editCliffhanger} onChange={e => setEditCliffhanger(e.target.value)} rows={3}
+                placeholder="The cliffhanger, the last word, anything to remember."
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Notes for Next Session</div>
+              <textarea value={editNextNotes} onChange={e => setEditNextNotes(e.target.value)} rows={4}
+                placeholder="Prep notes, loose threads, things to follow up on."
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setEditSession(null)} disabled={savingEdit}
+                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: savingEdit ? 'not-allowed' : 'pointer' }}>Cancel</button>
+              <button onClick={saveEdit} disabled={savingEdit}
+                style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: savingEdit ? 'not-allowed' : 'pointer', opacity: savingEdit ? 0.6 : 1 }}>
+                {savingEdit ? 'Saving...' : 'Save Notes'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
