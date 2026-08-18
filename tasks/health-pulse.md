@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-18 06:06 UTC
+
+**Status:** RED
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - postcss XSS, sharp libvips CVEs (CVE-2026-33327/33328/35590/35591), fast-uri host confusion, js-yaml CPU DoS, nanoid loop, brace-expansion DoS
+
+**CI:** last failure: https://github.com/XeroSumGames/thetapestry/actions/runs/32100814055 2026-08-18T04:53 (run prior to this pulse); prior 4 runs all pass
+
+**CI failure detail:** arch ratchet - `.from outside lib/data`: 924 -> 925 (+1). Commit `bef299e` "feat(sessions): GM can edit session notes; First Impressions in one panel" added one inline Supabase `.from()` call outside `lib/data/**`. Fix: move the new DB read(s) in the sessions feature into `lib/data/`, then re-run locally with `npm run arch:check` to confirm back to 924.
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - last logged 2026-06-16, no playtest evidence in 63 days
+- HOPED-FOR: FI Insight Die award path (doubles -> insight pool increment) - same, 63 days stale
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - same, 63 days stale
+
+**Action:** CI is red on main - Hunt & Peck should move the inline `.from()` added in `bef299e` into `lib/data/` to fix the arch ratchet.
+
+---
+
 ## 2026-08-18 00:06 UTC
 
 **Status:** DRIFT (carry-forward - no change in drift items since 21:06 UTC 2026-08-17)
