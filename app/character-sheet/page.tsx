@@ -21,6 +21,10 @@ export default function CharacterSheetPage() {
   const [stateId, setStateId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [isGM, setIsGM] = useState(false)
+  // Campaign setting gates setting-specific sheet UI (the District Zero
+  // "BB's" wallet). The table page threads this into CharacterCard; the
+  // popout did not, so the wallet was simply absent here.
+  const [setting, setSetting] = useState<string | undefined>(undefined)
   const [isThriver, setIsThriver] = useState(false)
   const [isMySheet, setIsMySheet] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -45,10 +49,13 @@ export default function CharacterSheetPage() {
 
       // Check GM status + Thriver role in parallel
       const [campRes, profRes] = await Promise.all([
-        campaignId ? supabase.from('campaigns').select('gm_user_id').eq('id', campaignId).single() : Promise.resolve({ data: null }),
+        campaignId ? supabase.from('campaigns').select('gm_user_id, setting').eq('id', campaignId).single() : Promise.resolve({ data: null }),
         supabase.from('profiles').select('role').eq('id', user.id).single(),
       ])
-      if (campRes.data) setIsGM((campRes.data as any).gm_user_id === user.id)
+      if (campRes.data) {
+        setIsGM((campRes.data as any).gm_user_id === user.id)
+        setSetting((campRes.data as any).setting ?? undefined)
+      }
       if (profRes.data) setIsThriver(roleIsThriver(profRes.data))
 
       // Check ownership
@@ -153,6 +160,8 @@ export default function CharacterSheetPage() {
         showButtons={true}
         isMySheet={isMySheet}
         isGM={isGM}
+        setting={setting}
+        campaignId={campaignId ?? undefined}
         onStatUpdate={stateId ? async (_sid: string, field: string, value: number | string | boolean | null) => {
           await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
         } : undefined}
