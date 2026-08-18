@@ -43,6 +43,10 @@
 // let the modal auto-place itself beside the anchor. Capture a position by
 // opening /dashboard?tour=1&cal=1, dragging the modal, and clicking "copy".
 //
+// `emphasis: true` (optional) makes that step's highlight ring pulse, thicker
+// and brighter. Use it when the target is small or sits among lookalikes and
+// the standing ring is easy to miss.
+//
 // `width` (optional) overrides the modal's width in px for that step only.
 // Defaults to TOUR_WIDTH. Use it for steps pinned near the right edge of the
 // screen, where the full-width modal would run off.
@@ -62,6 +66,7 @@ export type TourStep =
       anchor?: string
       pos?: { x: number; y: number }
       width?: number
+      emphasis?: boolean
     }
 
 // Default modal width in px. Individual steps can override with `width`.
@@ -191,6 +196,7 @@ export const TOUR_STEPS: TourStep[] = [
     kind: 'section',
     title: 'World Events',
     anchor: 'world',
+    emphasis: true,
     pos: { x: 937, y: 76 },
     width: 640,
     body: [

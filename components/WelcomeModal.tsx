@@ -8,14 +8,15 @@ import {
 } from '../lib/onboarding-tour'
 
 // First-visit welcome tour. Shown on /dashboard when profiles.onboarded =
-// false; ANY dismissal (Skip, Enter, X, backdrop, ESC) flips onboarded = true
+// false; ANY dismissal (Skip, Enter, X) flips onboarded = true
 // so it doesn't reappear.
 //
 // A STEPPED sequence (Next / Back / Skip), not one long scroll. CRITICAL: every
 // step must stay skippable/dismissible - the old /firsttimers forced redirect
 // was disabled during playtest #12 because it TRAPPED new users who couldn't
 // navigate away, so there is no "march through all steps" gate here. Skip and
-// the X are always available, and backdrop/ESC always dismiss.
+// the X are always available. Backdrop clicks and ESC do NOT dismiss - the
+// tour is persistent until explicitly closed.
 //
 // ALL step order + text lives in lib/onboarding-tour.ts (the one file to edit).
 // This component only renders it. Section steps point an animated arrow + box at
@@ -78,6 +79,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
   // Human-readable label for the calibration readout.
   const stepLabel = current.kind === 'section' ? current.title : current.kind
   const stepWidth = current.kind === 'section' && current.width ? current.width : TOUR_WIDTH
+  const stepEmphasis = current.kind === 'section' && !!current.emphasis
 
   // Measure the anchored sidebar element's live position so the ring + arrow
   // track it (and stay put when the modal is dragged away). Re-measure on step
@@ -146,8 +148,8 @@ export default function WelcomeModal({ username, onClose }: Props) {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') dismiss()
-      else if (e.key === 'ArrowRight') next()
+      // ESC deliberately absent - see the backdrop note above. Skip or X only.
+      if (e.key === 'ArrowRight') next()
       else if (e.key === 'ArrowLeft') back()
     }
     window.addEventListener('keydown', onKey)
@@ -169,7 +171,10 @@ export default function WelcomeModal({ username, onClose }: Props) {
 
   return (
     <div
-      onClick={dismiss}
+      // The backdrop deliberately does NOT dismiss. Clicking slightly off the
+      // modal used to close the whole tour, which read as the guide randomly
+      // vanishing mid-read. Skip / X / Enter The Tapestry are the ways out,
+      // and they are always on screen.
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
         // Light scrim (not a blackout) so the pointed-at sidebar stays readable.
@@ -177,7 +182,11 @@ export default function WelcomeModal({ username, onClose }: Props) {
       }}>
 
       {/* Keyframes for the pointer arrow's horizontal nudge. */}
-      <style>{`@keyframes tourArrowNudge { 0%,100%{ transform: translateX(0) } 50%{ transform: translateX(-9px) } }`}</style>
+      <style>{`@keyframes tourArrowNudge { 0%,100%{ transform: translateX(0) } 50%{ transform: translateX(-9px) } }
+        @keyframes tourRingPulse {
+          0%,100% { box-shadow: 0 0 0 3px rgba(192,57,43,0.30), 0 0 18px rgba(192,57,43,0.60) }
+          50%     { box-shadow: 0 0 0 7px rgba(192,57,43,0.14), 0 0 34px rgba(192,57,43,0.95) }
+        }`}</style>
 
       {/* Ring + arrow pinned to the anchored sidebar link. Rendered outside the
           panel so dragging the panel doesn't move them. pointer-events:none so
@@ -189,8 +198,14 @@ export default function WelcomeModal({ username, onClose }: Props) {
             // clipped off the viewport) and pull the right in a touch.
             position: 'fixed', left: Math.max(6, anchorRect.left), top: anchorRect.top - 4,
             width: Math.max(40, anchorRect.right - 6 - Math.max(6, anchorRect.left)), height: anchorRect.height + 8,
-            border: '2px solid #c0392b', borderRadius: '6px',
-            boxShadow: '0 0 0 3px rgba(192,57,43,0.22), 0 0 18px rgba(192,57,43,0.55)',
+            // `emphasis` steps get a thicker, pulsing ring - for targets that
+            // are small or sit among lookalikes (the map's tab strip) where
+            // the standing ring is easy to miss.
+            border: `${stepEmphasis ? 3 : 2}px solid #c0392b`, borderRadius: '6px',
+            boxShadow: stepEmphasis
+              ? '0 0 0 5px rgba(192,57,43,0.28), 0 0 26px rgba(192,57,43,0.85)'
+              : '0 0 0 3px rgba(192,57,43,0.22), 0 0 18px rgba(192,57,43,0.55)',
+            animation: stepEmphasis ? 'tourRingPulse 1.25s ease-in-out infinite' : undefined,
             pointerEvents: 'none', zIndex: 1001,
           }} />
           <div style={{
