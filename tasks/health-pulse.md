@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-18 00:06 UTC
+
+**Status:** DRIFT (carry-forward - no change in drift items since 21:06 UTC 2026-08-17)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged. brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp.
+
+**CI:** Last 5 runs all success (most recent 2026-08-17T23:52 UTC). 2 NPC fix commits since last pulse, both green.
+
+**New since last entry:** 2 commits - fix(npcs): Hide never reached players (postgres_changes RLS-filtered); per-card/folder Show never opened NPC sheet. Both CI green. No new drift introduced.
+
+**Drift (carry-forward - unchanged from 21:06 entry):**
+- HOPED-FOR >60 days: vehicle popout broadcasts (Section B) - stale since 2026-06-16
+- HOPED-FOR >60 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR >60 days: FI Insight Die award path - stale since 2026-06-16
+- Stale-todo: CampaignMap pin fingerprint hashes allPins not visible (routed HP 2026-07-09, 40+ days)
+
+**Action:** Same as 21:06 entry - the 3 generator-proxy commits and AGENTS.md scope question still unanswered. HOPED-FOR items await next playtest.
+
+---
+
 ## 2026-08-17 21:06 UTC
 
 **Status:** DRIFT (new finding: repo scope expansion + carry-forward vulns/HOPED-FOR)
