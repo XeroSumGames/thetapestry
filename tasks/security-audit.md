@@ -8,6 +8,32 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-08-18 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (all 7 HIGH carry-overs, none new, none resolved)
+
+**Closed since last audit (2026-08-11):** `app/api/health/route.ts` rate-limit carry-over — CLOSED. Code has Upstash 10 req/min sliding window in place (per inline comment: "security-audit 2026-07-28 fix"); prior audit missed the shipped fix. 13th consecutive audit deferred item resolved.
+
+**Sections clean this cycle:** auth/role gates (guardrail: 365 files, 0 violations; community-member `.role === 'gatherer'/'maintainer'/'safety'/'unassigned'` at `app/stories/[id]/community/page.tsx:148-151` are labor-role comparisons, not auth-role checks — correct; `pregenRole === 'thriver'` at `app/characters/[id]/edit/page.tsx:174` traced to DB role check via `roleIsThriver` — canonical), RLS gaps (advisory; no DB access from sandbox; `sql/` has extensive RLS coverage; no new tables without matching SQL files identified), file uploads (all paths through `prepareUpload` helper — avatar, war-stories, session-attachments, tactical-maps, scene-controls; size cap + content-type whitelist + filename sanitization confirmed in `lib/safe-upload.ts`), secrets exposure (no committed `.env` files; no hardcoded tokens or keys in source), injection/XSS (`dangerouslySetInnerHTML` at `app/layout.tsx:56` is a static console.log override — not user-controlled; `innerHTML` at `app/stories/[id]/table/page.tsx:8068` is a hardcoded 'GM' label — static; no SQL string concatenation patterns found), dependency drift (no direct deps ≥2 major versions behind), rate-limit/DoS (both API routes rate-limited — verify-turnstile: Upstash 30/min; health: Upstash 10/min), permission boundaries (all `isThriver`/`isGM` checks route through `lib/auth/roles.ts` helpers; no novel raw-role-comparison shapes found).
+
+### npm audit (moderate+)
+
+**CARRY-OVER (all unchanged from 2026-08-11 — no new, none resolved):**
+- `brace-expansion` <=5.0.7 — HIGH — CVSS 7.5 — DoS via unbounded expansion OOM — transitive via eslint chain (dev-only) — fix: breaking eslint major bump
+- `fast-uri` — HIGH — CVSS 7.5 — host confusion via backslash authority introducer — transitive — fix: available
+- `js-yaml` — HIGH — CVE-2026-59870 — Quadratic CPU in !!omap resolution — transitive — fix: available — 2nd consecutive
+- `nanoid` — HIGH — non-secure generators loop indefinitely with negative size — transitive — fix: available — 2nd consecutive
+- `next` — HIGH — isDirect: true — via postcss + sharp transitive chain — fix: available (may be breaking)
+- `postcss` — HIGH — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — fix: available — low runtime risk (build-time only)
+- `sharp` — HIGH — libvips CVEs (CVE-2026-33327/33328/35590/35591) — transitive — fix: available — 3rd consecutive
+
+**Top 3 priorities:**
+1. `sharp` HIGH (3rd consecutive) — libvips CVEs; runtime image-processing lib; upgrade path needed.
+2. `js-yaml` HIGH CVE-2026-59870 (2nd consecutive) — Quadratic CPU DoS; fix available; resolve before launch.
+3. `next` HIGH (direct dep) — postcss XSS chain; fix available; blocking a broader dep-upgrade pass.
+
+---
+
 ## 2026-08-11 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (2 new HIGH advisories), rate-limit / DoS (carry-over), dependency drift (carry-over)
