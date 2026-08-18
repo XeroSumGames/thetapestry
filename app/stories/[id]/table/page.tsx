@@ -8092,20 +8092,30 @@ export default function TablePage() {
             same presence set that borders the player seats. */}
         {gmLike && observers.length > 0 && (
           <div title="People watching this table as observers"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', padding: '4px 8px', marginLeft: '8px', border: '1px solid #2e2e2e', borderRadius: '4px', background: '#141414' }}>
+            style={{ display: 'flex', flexDirection: 'column', gap: '3px', padding: '4px 8px', marginLeft: '8px', border: '1px solid #2e2e2e', borderRadius: '4px', background: '#141414' }}>
             <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
               Observing
             </span>
-            {observers.map(o => {
-              const online = onlineUserIds.has(o.userId)
-              return (
-                <span key={o.userId} title={online ? 'Connected now' : 'Not currently connected'}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
-                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: online ? '#7fc458' : '#3a3a3a', flexShrink: 0 }} />
-                  {o.username}
-                </span>
-              )
-            })}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {observers.map(o => {
+                const online = onlineUserIds.has(o.userId)
+                const isTarget = whisperTarget?.userId === o.userId
+                return (
+                  <button key={o.userId}
+                    onClick={() => {
+                      // Same toggle the player seats use: click to aim a
+                      // whisper, click again to clear it.
+                      if (isTarget) { setWhisperTarget(null) }
+                      else { setWhisperTarget({ userId: o.userId, characterName: `${o.username} (Observer)` }); setFeedTab('chat') }
+                    }}
+                    title={`${online ? 'Connected now' : 'Not currently connected'} - click to whisper ${o.username}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', padding: '1px 6px', borderRadius: '2px', background: isTarget ? '#2a102a' : 'transparent', border: isTarget ? '1px solid #8b2e8b' : '1px solid transparent' }}>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: online ? '#7fc458' : '#3a3a3a', flexShrink: 0 }} />
+                    {o.username}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 
