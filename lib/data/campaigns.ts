@@ -126,3 +126,26 @@ export function loadGmCampaigns(userId: string) {
     .eq('gm_user_id', userId)
     .order('last_accessed_at', { ascending: false })
 }
+
+/**
+ * Observers on a campaign: campaign_members rows with observer = true, and
+ * the usernames to label them with.
+ *
+ * Deliberately its own call rather than a widening of the table page's
+ * seat query. Seats are built from character_states joined to a member row
+ * that has an assigned character; observers usually have neither, which is
+ * exactly why the GM could not see them.
+ */
+export async function listCampaignObservers(campaignId: string) {
+  const { data: rows, error } = await db()
+    .from('campaign_members')
+    .select('user_id')
+    .eq('campaign_id', campaignId)
+    .eq('observer', true)
+  if (error) return { data: [] as { userId: string; username: string }[], error: error.message }
+  const ids = (rows ?? []).map((r: any) => r.user_id)
+  if (ids.length === 0) return { data: [] as { userId: string; username: string }[] }
+  const { data: profs } = await db().from('profiles').select('id, username').in('id', ids)
+  const nameById = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+  return { data: ids.map((uid: string) => ({ userId: uid, username: nameById[uid] ?? 'Unknown' })) }
+}

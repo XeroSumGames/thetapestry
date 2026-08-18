@@ -4,7 +4,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs, getCampaignNpcById } from '../../../../lib/data/campaign-npcs'
 import { getCharacterStateById } from '../../../../lib/data/character-states'
 import { canCoverFire, resolveCoverFireShooter, applyCoverFire } from '../../../../lib/cover-fire'
-import { CAMPAIGN_COLUMNS, foldGmScratch } from '../../../../lib/data/campaigns'
+import { CAMPAIGN_COLUMNS, foldGmScratch, listCampaignObservers } from '../../../../lib/data/campaigns'
 import { activeSceneId } from '../../../../lib/data/scenes'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
@@ -1578,16 +1578,8 @@ export default function TablePage() {
   // is exactly why the GM could not see them. Kept as its own tiny query so
   // the load-bearing loadEntries path is untouched.
   const loadObservers = async (campaignId: string) => {
-    const { data: obs } = await supabase
-      .from('campaign_members')
-      .select('user_id')
-      .eq('campaign_id', campaignId)
-      .eq('observer', true)
-    const ids = (obs ?? []).map((o: any) => o.user_id)
-    if (ids.length === 0) { setObservers([]); return }
-    const { data: profs } = await supabase.from('profiles').select('id, username').in('id', ids)
-    const nameById = Object.fromEntries((profs ?? []).map((pr: any) => [pr.id, pr.username]))
-    setObservers(ids.map((uid: string) => ({ userId: uid, username: nameById[uid] ?? 'Unknown' })))
+    const { data } = await listCampaignObservers(campaignId)
+    setObservers(data)
   }
 
   const resyncMembers = async () => {
