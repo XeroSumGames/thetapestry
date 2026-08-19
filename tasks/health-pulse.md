@@ -6,6 +6,32 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-19 09:06 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed]
+
+**Audit:** npm audit [7 high, 0 critical] - carry-forward unchanged
+- brace-expansion: DoS (CVE-2026-14257 bypass)
+- fast-uri: host confusion via backslash
+- js-yaml: quadratic CPU (CVE-2026-59870)
+- nanoid: infinite loop on negative/zero size
+- next: inherited (details in prior entries)
+- postcss: XSS + arbitrary file read (sourceMappingURL)
+- sharp: libvips CVE-2026-33327/33328/35590/35591
+
+**CI:** last 5 runs all SUCCESS (latest 06:08 UTC)
+
+**Drift:**
+- HOPED-FOR >3 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no commit since last playtest (Session 63, 2026-06-12)
+- HOPED-FOR >3 days: FI Insight Die award path - never fired in live play, no recent commit
+- HOPED-FOR >3 days: Vehicle popout broadcasts - manual-playtest-only, no recent commit
+
+**Action:** Vulns and HOPED-FOR unchanged from prior pulse - no new action needed unless approaching Beta-500 dry-run window.
+
+---
+
 ## 2026-08-19 06:06 UTC
 
 **Status:** DRIFT (carry-forward - same drift as 00:06 UTC pulse)
