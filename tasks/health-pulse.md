@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-19 18:09 UTC
+
+**Status:** DRIFT (carry-forward - no change since 15:06 UTC pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp)
+
+**CI:** last 5 runs all SUCCESS (latest 15:09 UTC)
+
+**Drift:**
+- HOPED-FOR >64 days: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no recent commits to lib/roll-helpers.ts
+- HOPED-FOR >64 days: FI Insight Die award path (doubles -> insight pool increment) - never fired in live play
+- HOPED-FOR >64 days: Vehicle popout broadcasts (Section B) - no recent commits to VehiclePopout.tsx
+
+**Action:** No new findings. Drift unchanged from prior pulses. Address at next playtest session (HOPED-FOR) or next dep-upgrade pass (7 high vulns, all fixable via npm audit fix).
+
+---
+
 ## 2026-08-19 15:06 UTC
 
 **Status:** DRIFT (carry-forward - no change since 09:06 UTC pulse)
