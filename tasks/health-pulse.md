@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-19 06:06 UTC
+
+**Status:** DRIFT (carry-forward - same drift as 00:06 UTC pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (brace-expansion, fast-uri, js-yaml, nanoid, next via postcss+sharp, postcss XSS+file-read, sharp libvips CVEs)
+
+**CI:** Last 5 runs all SUCCESS (latest: 2026-08-19T00:08 UTC https://github.com/XeroSumGames/thetapestry/actions/runs/32200060063)
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - >64 days, no recent commits
+- HOPED-FOR: FI Insight Die award path (doubles -> insight pool increment) - >64 days, no recent commits
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - >64 days, no recent commits
+
+**Stale-todo:** "Players get no pin popup at all" (2026-07-13 step 18a) - no evidence shipped, still open
+
+**Action:** 7 high vulns are persistent carry-forward; 3 HOPED-FOR items need Beta-500 dry-run pass before 7/1 (already past - flag for next playtest scheduling)
+
+---
+
 ## 2026-08-19 00:06 UTC
 
 **Status:** DRIFT (carry-forward - no change since 15:07 UTC pulse)
