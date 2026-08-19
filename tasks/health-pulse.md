@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-19 00:06 UTC
+
+**Status:** DRIFT (carry-forward - no change since 15:07 UTC pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged carry-forward (brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp)
+
+**CI:** Last 5 runs all SUCCESS (latest: 2026-08-18T18:41 UTC https://github.com/XeroSumGames/thetapestry/actions/runs/32172374090)
+
+**Note:** Pre-commit hook was re-enabled on local machine (2026-08-18, `core.hooksPath` stale path removed, lessons.md updated). CI gate independently green.
+
+**Drift:** Same 3 HOPED-FOR items - all >64 days stale (last playtest 2026-06-16), no commits touching these areas in last 3 days:
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR: FI Insight Die award path (doubles -> insight pool increment)
+- HOPED-FOR: Vehicle popout broadcasts (Section B)
+
+**Action:** No new blockers. Stale HOPED-FOR items need a playtest pass before Beta-500; 7 high vulns are persistent carry-forward (no critical).
+
+---
+
 ## 2026-08-18 15:07 UTC
 
 **Status:** DRIFT (CI recovered - arch ratchet fixed; drift items persist)
