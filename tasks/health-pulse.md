@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-21 09:06 UTC
+
+**Status:** DRIFT (carry-forward + 1 new stale-todo)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp)
+
+**CI:** last 5 runs all success (latest: a994c36 06:07 UTC 2026-08-21, run #1857)
+
+**Drift:**
+- HOPED-FOR >66 days stale (no commits): Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GI/GC/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR >66 days stale (no commits): FI Insight Die award path (doubles -> insight pool increment)
+- HOPED-FOR >89 days stale (no commits): Vehicle popout broadcasts (Section B)
+- 7 high vulns persist (same package list; no commits addressing them)
+- Stale-todo: todo item [6] FOLLOW-UP (b) "wallet won't show on /character-sheet popout" was shipped in commit `88d98c3` (2026-08-18) but prose still says "FOLLOW-UPS (not done)"; mark (b) done
+
+**Action:** drain HOPED-FOR at next playtest; update todo item [6] follow-up (b) to reflect 88d98c3 ship
+
+---
+
 ## 2026-08-21 06:06 UTC
 
 **Status:** DRIFT (carry-forward - no change since 00:05 UTC pulse)
