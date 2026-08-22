@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-22 06:05 UTC
+
+**Status:** DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp)
+
+**CI:** gh not available in sandbox - skipped
+
+**Drift:**
+- HOPED-FOR >69 days stale: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GI/GC/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR >69 days stale: FI Insight Die award path (doubles -> insight pool increment)
+- HOPED-FOR >92 days stale: Vehicle popout broadcasts (Section B)
+- 7 high vulns persist (same package list; no code changes addressing them)
+
+**Action:** carry-forward; drain HOPED-FOR at next playtest; 7 high vulns need a dedicated dep-upgrade pass
+
+---
+
 ## 2026-08-22 00:07 UTC
 
 **Status:** DRIFT (carry-forward)
