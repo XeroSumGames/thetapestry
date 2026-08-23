@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-23 18:04 UTC
+
+**Status:** DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (brace-expansion, fast-uri, js-yaml, nanoid, next/postcss/sharp)
+
+**CI:** last 5 main runs all success (latest: run #1874, 2026-08-23 15:06 UTC)
+
+**Drift:**
+- HOPED-FOR >70 days stale: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GI/GC/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR >70 days stale: FI Insight Die award path (doubles trigger - never fired in live play)
+- HOPED-FOR >70 days stale: vehicle popout broadcasts (Section B - awaiting next playtest)
+- No stale-as-open todo items found newly shipped this pass.
+
+**Action:** DRIFT is a carry-forward; no new regressions. Outstanding: (1) schedule a Beta-500 dry-run to drain the 3 HOPED-FOR items; (2) `npm audit` 7 high vulns unchanged - review when ready (not blocking).
+
+---
+
 ## 2026-08-23 15:04 UTC
 
 **Status:** DRIFT (carry-forward)
