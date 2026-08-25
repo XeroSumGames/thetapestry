@@ -8,6 +8,51 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-08-25 16:30 UTC — weekly audit
+
+**Sections with findings:** npm audit, file uploads (partial), dependency drift
+
+### npm audit (moderate+)
+
+All 7 are HIGH severity, all have fixes available, all are transitive except `next`.
+
+- `next` **HIGH** (direct dep) — vulnerable via `postcss` + `sharp`; range `9.3.4-canary.0 - 16.3.0-preview.10`; fix=true
+- `postcss` **HIGH** (transitive via next) — path traversal via attacker-controlled `sourceMappingURL` in CSS comments (CVSS 7.5 x2); also XSS via unescaped `</style>` in stringify output (CVSS 6.1); fix=true
+- `sharp` **HIGH** (transitive via next) — 4 libvips CVEs: CVE-2026-33327/33328/35590/35591; affects image processing at runtime; fix=true
+- `nanoid` **HIGH** (transitive) — non-secure generators loop indefinitely with zero/negative size (DoS, CVSS 5.9); fix=true
+- `brace-expansion` **HIGH** (transitive) — fix=true
+- `fast-uri` **HIGH** (transitive) — fix=true
+- `js-yaml` **HIGH** (transitive) — fix=true
+
+Run `npm audit fix` in a Hunt & Peck branch to clear; verify build passes and no breaking changes before merging.
+
+### File uploads (partial advisory)
+
+Most upload paths use `prepareUpload()` from `lib/safe-upload` (size cap + filename sanitization + extension-mapped contentType). Paths confirmed safe: `account-avatars`, `war-stories`, `module-covers`, `tactical-maps`, `session-attachments`, `campaign-covers`.
+
+Paths that bypass `prepareUpload`:
+- `lib/data/npc-roster.ts:216` — uploads internally-generated canvas blob directly; hardcoded `contentType: 'image/jpeg'`, no byte-cap at upload layer
+- `lib/data/portrait-bank.ts:35-37, 81-83` — same pattern (internally generated JPEG blobs, no explicit size ceiling at upload layer)
+
+Low urgency (blobs are app-generated, not raw user file input), but no upload-layer size floor means an upstream canvas bug could push oversized blobs silently.
+
+### Dependency drift
+
+Priority packages have minor/patch updates available (0 major versions behind):
+- `next` — pending patch (also the npm-audit vector)
+- `@supabase/supabase-js` latest 2.112.4
+- `@supabase/ssr` latest 0.12.5
+- `react` / `react-dom` latest 19.2.8
+
+Bundle with the audit-fix run.
+
+**Top 3 priorities:**
+1. `sharp` libvips 4 CVEs (runtime image-processing, app accepts user image uploads) — `npm audit fix`
+2. `postcss` path traversal CVSS 7.5 — same `npm audit fix` run
+3. `lib/data/npc-roster.ts:216` + `portrait-bank.ts` — add byte-ceiling guard before upload call (low urgency)
+
+---
+
 ## 2026-08-18 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (all 7 HIGH carry-overs, none new, none resolved)
