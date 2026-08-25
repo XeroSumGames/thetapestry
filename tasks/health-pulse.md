@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-25 18:03 UTC
+
+**Status:** DRIFT (carry-forward + new security audit findings)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (sharp libvips CVEs, postcss path-traversal, nanoid, brace-expansion, fast-uri, js-yaml, next); `npm audit fix` recommended in HP branch
+
+**CI:** last 5 main runs all success (latest: run #1889, 2026-08-25 16:26 UTC)
+
+**Drift:**
+- HOPED-FOR >70 days stale: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GI/GC/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR >70 days stale: FI Insight Die award path (doubles trigger - never fired in live play)
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no commits to vehicle area past 3 days
+- Weekly security audit landed 16:30 UTC today (tasks/security-audit.md) — new upload-layer findings:
+  - `lib/data/npc-roster.ts:216` bypasses `prepareUpload` (no byte-ceiling; canvas blob, app-generated, low urgency)
+  - `lib/data/portrait-bank.ts:35-37, 81-83` same pattern (internally-generated JPEG blobs, no size ceiling)
+  - Patch updates available: next, @supabase/supabase-js 2.112.4, @supabase/ssr 0.12.5, react 19.2.8
+
+**Action:** Run `npm audit fix` in HP branch (top priority: sharp libvips CVEs, postcss path-traversal). Add byte-ceiling guard to npc-roster.ts:216 + portrait-bank.ts upload calls when convenient (low urgency). Bundle dep-patch updates with the audit-fix run.
+
+---
+
 ## 2026-08-25 15:05 UTC
 
 **Status:** DRIFT (carry-forward)
