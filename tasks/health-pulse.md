@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-25 21:05 UTC
+
+**Status:** DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (sharp libvips CVEs, postcss path-traversal, nanoid, brace-expansion, fast-uri, js-yaml, next)
+
+**CI:** last 5 main runs all success (latest: run #1890, 2026-08-25 18:06 UTC)
+
+**Drift:**
+- HOPED-FOR >70 days stale: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GI/GC/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR >70 days stale: FI Insight Die award path (doubles trigger - never fired in live play)
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no commits to vehicle area past 3 days
+- No app/component/lib code changes since 2026-08-21 (health-pulse + security-audit commits only)
+
+**Action:** carry-forward; identical signals to 18:03 entry. Run `npm audit fix` in HP branch (already actioned in 18:03 entry).
+
+---
+
 ## 2026-08-25 18:03 UTC
 
 **Status:** DRIFT (carry-forward + new security audit findings)
