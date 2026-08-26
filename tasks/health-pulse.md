@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-26 18:03 UTC
+
+**Status:** DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (sharp libvips CVEs, postcss XSS, nanoid loop, brace-expansion DoS, fast-uri host confusion, js-yaml DoS, next/postcss)
+
+**CI:** last 5 runs all success (GitHub API verified)
+
+**Drift:**
+- HOPED-FOR >72 days stale: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GI/GC/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR >72 days stale: FI Insight Die award path (doubles trigger - never fired in live play)
+- HOPED-FOR: Vehicle popout broadcasts (Section B) - no commits past 3 days
+- No app/component/lib code changes since 2026-08-19 (7 days); KS deadline 9/1 = 6 days out
+
+**Action:** carry-forward; KS deadline is 6 days out with 7 days of no app commits - attention needed.
+
+---
+
 ## 2026-08-26 15:05 UTC
 
 **Status:** DRIFT (carry-forward)
