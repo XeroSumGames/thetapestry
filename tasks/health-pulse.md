@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-30 21:05 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high: brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp; 0 critical]
+
+**CI:** last 5 runs all pass (MCP verified)
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (8 strings: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) — stale >75 days, no recent touches
+- HOPED-FOR: Realtime vehicle popout broadcasts — stale >75 days, awaiting playtest confirmation
+- HOPED-FOR: FI Insight Die award path — stale >75 days, never fired in live play
+- npm high vulns: 7 high (same carry-forward; 0 critical; no runtime-user-data exposure confirmed)
+- **KS 9/1 = TOMORROW (T-1). No app code commits in 11+ days.**
+
+**Action:** KS eve. App is code-frozen and gates-green. The 3 HOPED-FOR items are pre-KS known gaps (non-blocking for launch). The 7 high npm vulns are build-tool/dep-chain, not exploitable server-side runtime. No new technical blockers found this run.
+
+---
+
 ## 2026-08-30 18:04 UTC
 
 **Status:** DRIFT
