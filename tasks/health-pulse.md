@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-30 18:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high: brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp]
+
+**CI:** last 5 runs all pass (MCP verified)
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (8 strings uncaptured) — stale >3 days, no touches to roll_helpers.ts
+- HOPED-FOR: Realtime vehicle popout broadcasts — stale >3 days, awaiting playtest confirmation
+- HOPED-FOR: Broadcast catch-up gap (PlayerNotes, npc-sheet, campaign-sheet) — stale >3 days
+- **KS 9/1 IS TOMORROW — T-0. No app commits in 10+ days.**
+
+**Action:** KS day is here. Vulns + HOPED-FOR items are known carry-forwards; no new findings. App is code-stable. If Kickstarter launches today/tomorrow, the 7 high vulns (all dev-dep or build-tool, not runtime) are the only outstanding technical risk worth a final call.
+
+---
+
 ## 2026-08-30 15:03 UTC
 
 **Status:** DRIFT (carry-forward)
