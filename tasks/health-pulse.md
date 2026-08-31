@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-31 21:06 UTC
+
+**Status:** DRIFT (carry-forward, no change from 18:08 entry - FINAL pre-KS pulse before 9/1 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged from prior entries
+
+**CI:** gh CLI not available in sandbox - skipped
+
+**Drift:**
+- /publiclanding missing from codebase; next pulse fires at 00:00 UTC = 9/1 (KS launch day)
+- HOPED-FOR stale (all >75 days, no app commits since ~2026-08-21):
+  - Stress 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+  - FI Insight Die award path (doubles -> pool increment never triggered in live play)
+  - Vehicle popout broadcasts (Section B, awaiting next playtest)
+
+**Action:** Unchanged from 18:08. KS is tomorrow - /publiclanding and F1 cold-root decision are the outstanding blockers for the conversion surface.
+
+---
+
 ## 2026-08-31 18:08 UTC
 
 **Status:** DRIFT (carry-forward, no change from 15:08 entry)
