@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-31 15:08 UTC
+
+**Status:** DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged
+
+**CI:** last 5 runs all success
+
+**Drift:**
+- HOPED-FOR stale >3 days (no app commits since at least 2026-08-28):
+  - Stress Check 12-string narrative (8 strings: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+  - FI Insight Die award path (doubles -> pool increment never triggered in live play)
+  - Vehicle popout broadcasts (Section B, awaiting next playtest)
+- /publiclanding still draft/placeholder copy (F2 open); F1 cold-root decision unresolved
+- No app commits in 3+ days; KS launch is 9/1 (tomorrow)
+
+**Action:** KS is T-1 - /publiclanding needs real copy/CTA before launch. Xero decision on F1 (what cold / shows) also outstanding.
+
+---
+
 ## 2026-08-31 12:27 UTC
 
 **Status:** DRIFT
