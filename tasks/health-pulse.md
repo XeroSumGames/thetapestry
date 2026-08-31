@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-31 06:25 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 7 high, 0 critical - brace-expansion (DoS), fast-uri (host confusion), js-yaml (CPU DoS), nanoid (infinite loop), postcss (XSS + path traversal), sharp (libvips CVEs). Carry-forward; no new vulns.
+
+**CI:** last 5 runs all success (health-pulse commits only - no app commits in 3+ days)
+
+**Drift:**
+- HOPED-FOR stale (carry-forward, no app commits since ~2026-08-21):
+  - Stress Check 12-string narrative - 8 uncaptured action types (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+  - Vehicle popout broadcasts (Section B) - awaiting full ride at a playtest
+  - Realtime surfaces not 2-client verified: communities / stockpile / MapView + broadcast catch-up gaps (PlayerNotes, npc-sheet, campaign-sheet)
+- Stale todo - KS-critical: `app/publiclanding` page does NOT exist in codebase. Todo F2 describes it as a "DRAFT placeholder" but there is no file at all. Todo F1 (what does `/` show cold visitors?) also unresolved. KS is 9/1 - TODAY is T-1.
+- Infra todos still open: Vercel Pro, Supabase Pro, Upstash cap, Sentry error budget.
+
+**Action:** KS T-1 - publiclanding page is missing entirely from codebase; F1/F2 are unresolved. Confirm this is intentional (KS links elsewhere) or address now.
+
+---
+
 ## 2026-08-31 00:06 UTC
 
 **Status:** DRIFT
