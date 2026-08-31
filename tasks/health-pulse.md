@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-08-31 12:27 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 7 high, 0 critical - brace-expansion, fast-uri, js-yaml, nanoid, postcss, sharp. Carry-forward; no new vulns.
+
+**CI:** last 5 runs all success (health-pulse commits only - no app commits since ~2026-08-21)
+
+**Drift:**
+- HOPED-FOR carry-forward (no app commits in 10+ days):
+  - Stress Check 12-string narrative - 8 uncaptured action types (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+  - Vehicle popout broadcasts (Section B) - awaiting playtest
+  - Realtime broadcast catch-up gaps (PlayerNotes, npc-sheet, campaign-sheet)
+- KS-critical carry-forward: `app/publiclanding` does NOT exist in codebase. F1/F2 todo items unresolved. KS launches 2026-09-01 (tomorrow, T-1).
+- Infra todos still open: Vercel Pro, Supabase Pro, Upstash cap, Sentry error budget.
+
+**Action:** publiclanding missing from codebase - KS is tomorrow. Confirm intentional (KS links elsewhere?) or ship now.
+
+---
+
 ## 2026-08-31 09:07 UTC
 
 **Status:** DRIFT
