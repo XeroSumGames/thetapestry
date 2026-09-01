@@ -8,6 +8,53 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-09-01 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit
+
+### npm audit (moderate+)
+- `next` HIGH | direct dep | fix: upgrade available | title not reported by npm (internal vuln) | cvss=n/a
+- `brace-expansion` HIGH | transitive | fix: true | DoS via unbounded expansion (OOM crash) | cvss=7.5
+- `fast-uri` HIGH | transitive | fix: true | host confusion via backslash authority introducer | cvss=7.5
+- `js-yaml` HIGH | transitive | fix: true | CVE-2026-59870 — quadratic CPU in !!omap (DoS) | cvss=7.5
+- `nanoid` HIGH | transitive | fix: true | non-secure generators loop indefinitely on negative size | cvss=5.9
+- `postcss` HIGH | transitive | fix: true | XSS via unescaped `</style>` in CSS stringify output | cvss=6.1
+- `sharp` HIGH | transitive | fix: true | inherited libvips CVEs: 2026-33327/33328/35590/35591 | cvss=n/a (composite)
+
+### Auth / role gates
+- CLEAN. `check-role-literals.mjs` scanned 365 files, 0 offenders. All isThriver/isSurvivor/isGhost checks route through `lib/auth/roles`.
+
+### RLS gaps (advisory)
+- Cannot verify from sandbox (no live DB access). Tables with write paths: `profiles`, `characters`, `character_states`, `campaigns`, `campaign_members`, `campaign_pins`, `campaign_npcs`, `campaign_notes`, `community_members`, `community_subscriptions`, `forum_threads`, `forum_replies`, `lfg_posts`, `war_stories`, `map_pins`, `tactical_scenes`. Confirm each has RLS via `npm run check:publication` before next ship.
+
+### File uploads
+- CLEAN. All upload paths route through `prepareUpload()` helper (10 MB cap, extension-mapped content-type, filename sanitization). Confirmed: `war-stories`, `scene-controls-popout`, `stories/[id]/table`. Token-creator uploads use canvas-generated blobs with hardcoded `contentType: 'image/jpeg'` (not user-supplied file type — acceptable).
+
+### Secrets exposure
+- CLEAN. No hardcoded API keys, tokens, or passwords found. No committed `.env` files.
+
+### Injection / XSS patterns
+- `app/layout.tsx:56` — `dangerouslySetInnerHTML` with static hardcoded console.log override script. Input: static (not user-controlled). Safe.
+- `app/stories/[id]/table/page.tsx:8068` — `parent.innerHTML` set to hardcoded GM badge markup. Input: static. Safe.
+- No SQL string concatenation patterns found.
+
+### Dependency drift
+- `npm outdated` returned no output. All direct deps within declared semver ranges. No major-version drift detected.
+
+### Rate-limit / DoS
+- `app/api/health/route.ts` — GET, unauthenticated (intentional for uptime monitors). Upstash sliding-window 10 req/min/IP + graceful fallback. OK.
+- `app/api/auth/verify-turnstile/route.ts` — POST. Upstash + in-memory fallback. OK.
+
+### Permission boundaries
+- CLEAN. All `isGM` checks are ownership comparisons (`userId === gm_user_id`). All `isThriver` checks import from `lib/auth/roles`. No raw role string comparisons found.
+
+**Top 3 priorities (Claude's read):**
+1. `next` (direct dep, HIGH) — update Next.js to latest stable; likely resolves cascade of transitive vulns.
+2. `postcss` (HIGH, XSS) — transitive; resolves when next/postcss updated; confirm `npm audit` clean post-upgrade.
+3. `sharp` libvips CVEs (HIGH, composite) — transitive; upgrade resolves; track separately if image pipeline is active.
+
+---
+
 ## 2026-08-25 16:30 UTC — weekly audit
 
 **Sections with findings:** npm audit, file uploads (partial), dependency drift
