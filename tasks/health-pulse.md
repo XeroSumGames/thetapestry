@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-01 00:06 UTC
+
+**Status:** DRIFT (carry-forward - KS LAUNCH DAY)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp - all fixable via npm audit fix
+
+**CI:** last 5 runs all success (via GitHub MCP)
+
+**Drift:**
+- /publiclanding still missing from codebase - TODAY is 9/1 KS launch day; conversion surface has no dedicated landing page
+- HOPED-FOR stale (>80 days, no app commits since ~2026-08-21):
+  - Stress 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE)
+  - FI Insight Die award path (doubles -> pool increment, never triggered in live play)
+  - Vehicle popout broadcasts (Section B, awaiting next playtest)
+- Vercel Pro upgrade flagged "[NOW]" in todo - commercial-use compliance + deploy reliability
+
+**Action:** KS is live today. /publiclanding and Vercel Pro are the two outstanding conversion/infra items. All code gates are green - codebase is stable.
+
+---
+
 ## 2026-08-31 21:06 UTC
 
 **Status:** DRIFT (carry-forward, no change from 18:08 entry - FINAL pre-KS pulse before 9/1 UTC)
