@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-01 15:08 UTC
+
+**Status:** DRIFT (carry-forward - no new app commits since 12:35 pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp (unchanged)
+
+**CI:** last 5 runs all success (runs 1934-1938, all green)
+
+**Drift (carry-forward - no change since 12:35 pulse):**
+- [SHIP RISK] map chip fix (89883bf, 01:21 UTC) explicitly flagged "NOT VERIFIED IN A BROWSER" - verify shared-view chip at bottom:68px above route banner in a live campaign
+- [SECURITY/PRODUCT] next_session_notes visible to all players via sessions read policy - needs GM-only gate (UI + RLS); Xero product call pending
+- /publiclanding route still missing - KS is live today
+- HOPED-FOR stale (>10 days): Stress 12-string (8 uncaptured strings), FI Insight Die award path, Vehicle popout broadcasts
+- 7 high vulns fixable via `npm audit fix`
+
+**Action:** KS is live. Highest priority: (1) browser-verify the map chip; (2) Xero to decide session-notes visibility.
+
+---
+
 ## 2026-09-01 12:35 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 09:06 pulse)
