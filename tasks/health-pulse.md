@@ -6,6 +6,29 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-01 06:24 UTC
+
+**Status:** DRIFT (KS LAUNCH DAY - 2 new findings since 00:06 pulse)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 0 critical] - unchanged (brace-expansion, fast-uri, js-yaml, nanoid, next, postcss, sharp)
+
+**CI:** last 5 runs all success - runs 1934 + 1935 are new post-midnight ships, both green
+
+**New since 00:06:**
+- **[SHIP RISK]** `fix(map)` (89883bf, 01:21 UTC) explicitly flagged "NOT VERIFIED IN A BROWSER: dev server down." - shared-view chip z-offset fix on KS launch day, blind ship. The commit also self-describes as "NOT the real fix." Worth a manual verify: open a campaign with an active route + trigger GM Share View; confirm the chip appears at bottom:68px above the banner.
+- **[SECURITY/PRODUCT]** `docs(comms)` (1c802b5, 02:01 UTC) surfaced: `sessions` read policy is any-campaign-member, so `next_session_notes` (GM's forward-planning notes for the NEXT session) is currently visible to all players via direct query and the sessions page renders it. Xero's product call on which fields gate to GM-only; needs BOTH a UI gate + RLS/column change. Routed to Comms.
+
+**Drift (carry-forward):**
+- /publiclanding still missing - KS is live now
+- HOPED-FOR stale (no app touches in 3+ days): Stress 12-string, FI Insight Die award, Vehicle popout broadcasts
+- 7 high vulns fixable via `npm audit fix`
+
+**Action:** Two items need eyes today: (1) browser-verify the map chip fix before players hit it; (2) decide which session fields are GM-only and lock them server-side.
+
+---
+
 ## 2026-09-01 00:06 UTC
 
 **Status:** DRIFT (carry-forward - KS LAUNCH DAY)
