@@ -200,6 +200,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // it (vs a straight-line fallback) so flipping the travel-mode
   // dropdown can recompute the ETA without re-hitting OSRM.
   const [routeDistanceMeters, setRouteDistanceMeters] = useState<number | null>(null)
+  // Every bottom-centre map chip is pinned to the same bottom:20px, so any two
+  // visible at once overlap. This flag lets the shared-view chip sit above the
+  // route banner instead of on top of it.
+  const routeBannerUp = routeMode || routeDistanceMeters !== null
   const [routeIsFallback, setRouteIsFallback] = useState(false)
   const [routeShareFlash, setRouteShareFlash] = useState(false)
   useEffect(() => { routeModeRef.current = routeMode }, [routeMode])
@@ -1481,7 +1485,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           Share Route button. Player view when a GM-shared route is active:
           folds the "GM shared a route" label into this banner to avoid two
           overlapping chips at the same bottom position. */}
-      {(routeMode || routeDistanceMeters !== null) && (
+      {routeBannerUp && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,15,40,0.95)', border: `1px solid ${!isGM && sharedToast === 'GM shared a route' ? '#7ab3d4' : '#a855f7'}`, borderRadius: '3px', color: !isGM && sharedToast === 'GM shared a route' ? '#7ab3d4' : '#a855f7', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px', pointerEvents: routeMode ? 'none' : 'auto' }}>
           <span>
             {!isGM && sharedToast === 'GM shared a route'
@@ -1496,8 +1500,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Player view-share chip. Only shown for "GM shared a view" — route
-          shares are folded into the route banner above to avoid overlap. */}
+      {/* Player view-share chip. Only shown for "GM shared a view" - route
+          SHARES are folded into the route banner to avoid overlap, but a
+          shared VIEW can coexist with an active route banner, and both were
+          pinned to bottom:20px so they sat on top of each other. Lift this
+          one above the banner whenever the banner is up. */}
       {sharedToast && !isGM && sharedToast === 'GM shared a view' && (
         lastSharedView ? (
           <button
@@ -1507,11 +1514,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               if (lastSharedView.tile && lastSharedView.tile !== mapLayerRef.current) switchLayer(lastSharedView.tile)
               map.flyTo([lastSharedView.lat, lastSharedView.lng], lastSharedView.zoom, { duration: 0.6 })
             }}
-            style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ position: 'absolute', bottom: routeBannerUp ? '68px' : '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             👁 GM shared a view
           </button>
         ) : (
-          <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: routeBannerUp ? '68px' : '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
             👁 GM shared a view
           </div>
         )
