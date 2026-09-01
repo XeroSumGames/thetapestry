@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-01 18:04 UTC
+
+**Status:** DRIFT (new HIGH vuln since 16:23 security-audit; session-notes CLOSED; map chip still unverified)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [8 high, 0 critical] - `browserslist` HIGH is NEW since today's 16:23 security-audit (OOM via unbounded cache growth + prototype write via attacker-controlled stats JSON)
+
+**CI:** gh unavailable in sandbox
+
+**Drift:**
+- [NEW VULN] `browserslist` HIGH - not in 16:23 security-audit; likely a newly published advisory
+- [SHIP RISK] map chip fix (89883bf, 01:21 UTC) still not browser-verified - shared-view chip bottom:68px above route banner
+- [CLOSED] session-notes player visibility resolved - documented as intentional (4041411)
+- [WEEKLY AUDIT COMMITTED] see tasks/security-audit.md (6db30c8) - 7 HIGH previously counted
+- HOPED-FOR stale: Stress 12-string (8 uncaptured strings), Vehicle popout broadcasts - no git activity past 3 days
+
+**Action:** Verify map chip in browser before next player session; `browserslist` advisory new today.
+
+---
+
 ## 2026-09-01 15:08 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 12:35 pulse)
