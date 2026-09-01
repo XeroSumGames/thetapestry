@@ -10,6 +10,22 @@ Newest first.
 
 ---
 
+## 2026-09-01: session notes are intentionally visible to every player in the campaign - NOT a confidentiality bug
+
+**Decision:** all four GM-authored session fields - `gm_summary`, `cliffhanger`, `next_session_notes`, `session_log` - stay readable by every campaign member. Xero's call, in his words: they should be "publicly viewable... by players in the game, at least."
+
+**Context / why this is written down:** raised as a possible confidentiality gap after the 2026-09-01 playtest, when Xero asked "can players see the session notes?" The answer was yes at both layers: the `sessions` read policy is "any campaign_member OR the GM OR is_thriver()" with no column restriction, and `app/stories/[id]/sessions/page.tsx` renders all four fields with no GM gate. It has the exact shape of the confidentiality bugs already fixed this year (portrait-bank, world_npcs moderation, npc_relationships reveal gating), and `next_session_notes` in particular reads like private forward planning - the field a GM would use for "the informant is lying."
+
+**Alternatives considered:** (a) gate `next_session_notes` to the GM in both UI and RLS, leaving the recap public; (b) gate all four; (c) leave as-is.
+
+**Why (c) won:** Xero wants the table to share the record of what happened and what's coming. Distemper's session notes are a group artefact, not a GM screen. He was shown explicitly that this includes "Notes for Next Session" and chose it anyway.
+
+**Scope boundary:** "players in the game" means campaign members. Non-members and unauthenticated visitors still cannot read `sessions`, and that is intended - this decision does NOT make session notes world-readable. If a public campaign-log feature is ever wanted, that is a separate decision and a separate policy.
+
+**What would change our mind:** a GM wanting a genuinely private planning space. The fix then is a NEW GM-only field rather than reclassifying `next_session_notes`, since by then players will be used to seeing it.
+
+**NOTE TO FUTURE AUDITS:** do not "fix" this. A security or stability audit reading the `sessions` policy cold will flag member-wide read of GM-authored text as a leak. It is deliberate. Cite this entry and move on.
+
 ## 2026-08-02: 30s visible-tab-only reconcile poll is the standing pattern for realtime dropped-event fallback; budget ceiling set at Beta-500 scale
 
 **Decision:** every realtime feed (postgres_changes subscribe) gets a low-frequency (30s), visible-and-focused-tab-only reconcile poll as a fallback for the rare dropped/missed event, guarded by a `refetchSeqRef`-style sequence guard so the poll never fights a fresher subscribe-driven refetch. Already shipped on CampaignMap, the pin/vehicle polls, and now (HP, `d16b85b1`) RollsFeed + TableChat. Approved as hub: proceed with the same pattern on CampaignPins despite it being realtime-hot - the pattern's safeguards (visible-only, seq-guarded, 30s floor) are what make it safe at that criticality, not a reason to withhold it.

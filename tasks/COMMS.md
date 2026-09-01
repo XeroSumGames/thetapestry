@@ -25,13 +25,6 @@ remembering, it gets its own entry in `decisions.md` too.
 
 ## OPEN
 
-- **[2026-09-01] Session notes are visible to PLAYERS, including "Notes for Next Session" - need Xero's call on which fields are GM-only.**
-  Found while answering his post-playtest note "can players see the session notes?". Answer: yes, at both layers.
-  - RLS: the `sessions` read policy is "any campaign_member OR the GM OR a thriver". No column-level restriction, so a player can read `gm_summary`, `cliffhanger`, `next_session_notes` and `session_log` straight from the API.
-  - UI: `app/stories/[id]/sessions/page.tsx` renders all four with no GM gate. "Notes for Next Session" is displayed to everyone.
-  `next_session_notes` is GM planning material - the field a GM would use for "the informant is actually lying" - and it is currently public to the table.
-  **Question for Xero:** which of the four should players see? Likely split is players see `gm_summary` + `cliffhanger` (the recap) and NOT `next_session_notes` (forward planning); `session_log` is probably fine either way since it is a digest of what already happened at the table. Once he picks, Puffer builds it - it needs BOTH a UI gate and an RLS/column change, because hiding it in the UI alone leaves it readable via the API.
-
 - **[2026-09-01] Three post-playtest notes from Xero that Puffer cannot interpret - need his words.**
   1. *"how to call out NPCs in the NPC bar?"* - unclear whether "call out" means summon into the scene, highlight/point at one for players, or something else.
   2. *"first impressions note working?"* - needs a repro. Which part failed: the roll itself, the CMod landing, the +/- chip on the card, or the GM being unable to see them? (The last is already a known gap, queued as item 4 in the 2026-08-18 batch.)
@@ -104,6 +97,8 @@ remembering, it gets its own entry in `decisions.md` too.
 ---
 
 ## ANSWERED
+
+- **[2026-09-01] Session notes visible to players - Xero: INTENDED, leave as-is.** All four fields (`gm_summary`, `cliffhanger`, `next_session_notes`, `session_log`) stay readable by every campaign member. His words: "publicly viewable... by players in the game, at least." No code change - current behaviour already matches. Scope boundary recorded: campaign members only, NOT world-readable. Written up in `decisions.md` 2026-09-01 with a do-not-fix note, because the `sessions` policy read cold looks exactly like the confidentiality bugs we fixed earlier this year and a future audit would otherwise flag it.
 
 *(dated log, newest first - move an item here the moment it's resolved,
 don't let this file's OPEN section accumulate stale asks)*
