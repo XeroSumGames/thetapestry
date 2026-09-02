@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-02 00:06 UTC
+
+**Status:** DRIFT (carry-forward - no new app commits since 21:06 UTC)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [8 high, 0 critical] - unchanged
+
+**CI:** last 5 runs all success (latest: 33559236319)
+
+**Drift (carry-forward - no change since 21:06 UTC):**
+- [SHIP RISK] map chip fix (89883bf) still not browser-verified - shared-view chip bottom:68px above route banner; Kickstarter launched today 9/1
+- HOPED-FOR stale (>3 days): Stress 12-string (8 uncaptured strings), Vehicle popout broadcasts, FI Insight Die award path
+
+**Action:** Browser-verify the shared-view chip map fix; 8 high npm vulns remain open.
+
+---
+
 ## 2026-09-01 21:06 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 18:04 pulse)
