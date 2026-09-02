@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-02 15:06 UTC
+
+**Status:** DRIFT (carry-forward - no new app commits since 89883bf map chip fix)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [8 high, 0 critical] - brace-expansion, browserslist, fast-uri, js-yaml, nanoid, next, postcss, sharp
+
+**CI:** gh unauthenticated in sandbox - skipped
+
+**Drift (carry-forward - unchanged since 12:05 UTC):**
+- [SHIP RISK] map chip fix (89883bf) shipped pre-playtest 9/1, still not browser-verified - day 2 post-KS launch
+- HOPED-FOR stale (>3 days, no git activity): Stress 12-string 8 uncaptured (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE), Vehicle popout broadcasts, FI Insight Die award path
+
+**Action:** Browser-verify the shared-view chip map fix (route banner overlap); 8 high vulns open (npm audit fix when convenient).
+
+---
+
 ## 2026-09-02 12:05 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 89883bf map chip fix)
