@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-03 00:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed, 55 files]
+
+**Audit:** npm audit [8 high, 0 critical] — unchanged from prior pulses
+
+**CI:** last 5 runs all success
+
+**Drift:**
+- Map shared-view chip (`fix(map): 89883bf`) — shipped without browser verify before 9/1 playtest; no playtest confirmation recorded yet (>3 days)
+- Stress Check 12-string narrative — 8 strings uncaptured (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE); HOPED-FOR, no touches in 3 days
+- No new app commits since last pulse; carry-forward only
+
+**Action:** 8 high npm vulns persist — run `npm audit` for details; map chip needs browser verify at next session
+
+---
+
 ## 2026-09-02 21:05 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 89883bf map chip fix)
