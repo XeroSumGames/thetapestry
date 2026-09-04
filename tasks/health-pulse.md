@@ -12,7 +12,7 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 **Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
 
-**Audit:** npm audit [8 high, 0 critical] - brace-expansion, browserslist, fast-uri, js-yaml, nanoid, next, postcss, sharp (unchanged)
+**Audit:** npm audit [clean - 0 high, 0 critical] *** RESOLVED: 8 high vulns (brace-expansion, browserslist, fast-uri, js-yaml, nanoid, next, postcss, sharp) now clear - upstream patches landed ***
 
 **CI:** last 5 runs all pass (success) - all health-pulse commits, no app changes
 
@@ -22,7 +22,7 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 - HOPED-FOR FI Insight Die award path: >3 days, no playtest update
 - HOPED-FOR Stress Check 12-string narrative: >3 days, no playtest update
 
-**Action:** No new findings. 8 high vulns + 3 HOPED-FOR items + unverified map chip fix remain open; pending next playtest/session.
+**Action:** Audit now clean (8 high vulns resolved upstream - no action needed). 3 HOPED-FOR items + unverified map chip fix remain; pending next playtest/session.
 
 ---
 
