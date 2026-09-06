@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-06 09:03 UTC
+
+**Status:** DRIFT (carry-forward - no new app commits since 89883bf 2026-08-31, now 6 days; KS 9/1 passed +5 days)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [8 high, 0 critical] - brace-expansion, browserslist, fast-uri, js-yaml, nanoid, next, postcss, sharp (unchanged)
+
+**CI:** last 5 runs all success (confirmed via GitHub MCP)
+
+**Drift (unchanged):**
+- Map shared-view chip (89883bf, 2026-08-31) shipped; no browser-verify recorded (6+ days)
+- HOPED-FOR vehicle popout broadcasts: no app commits, no playtest update (3+ months open)
+- HOPED-FOR FI Insight Die award path: no code changes, no playtest update
+- HOPED-FOR Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE)
+- KS 9/1 target date passed 5 days ago - launch status unknown; Vercel/Supabase/Upstash upgrades not confirmed
+
+**Action:** Same drift as prior pulses. All gates green. Awaiting Xero input on post-KS status.
+
+---
+
 ## 2026-09-06 06:04 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 89883bf 2026-08-31, now 6 days; KS 9/1 passed +5 days)
