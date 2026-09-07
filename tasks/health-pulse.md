@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-07 21:04 UTC
+
+**Status:** DRIFT (carry-forward - no new app commits since 89883bf 2026-08-31, now 7 days; KS 9/1 passed +7 days)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [8 high, 0 critical] - brace-expansion, browserslist, fast-uri, js-yaml, nanoid, next (via postcss+sharp), postcss (XSS), sharp (CVE-2026-33327 libvips); fix available for next/postcss/sharp
+
+**CI:** last 5 runs all success (all health-pulse commits; no app code run in CI since 2026-08-31)
+
+**Drift (unchanged):**
+- No app commits in 7 days (last: 89883bf 2026-08-31 shared-view map chip)
+- KS 9/1 target passed 7 days ago - launch status unknown; Vercel/Supabase/Upstash upgrades not confirmed in todo
+- HOPED-FOR vehicle popout broadcasts (3+ months open, no playtest drain)
+- HOPED-FOR Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR FI Insight Die award path (doubles trigger, never fired in live play)
+
+**Action:** KS date elapsed - Xero needs to clarify launch status and whether pre-beta infra upgrades (Vercel/Supabase Pro) still apply. 8 high npm vulns (sharp CVE-2026-33327 newest); run `npm audit fix` when development resumes.
+
+---
+
 ## 2026-09-07 18:04 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 89883bf 2026-08-31, now 7 days; KS 9/1 passed +7 days)
