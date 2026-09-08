@@ -6,6 +6,28 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-08 12:20 UTC
+
+**Status:** DRIFT (carry-forward - no new app commits since 89883bf 2026-08-31, now 9 days; KS 9/1 passed +9 days)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [8 high, 0 critical] - brace-expansion, browserslist, fast-uri, js-yaml, nanoid, next, postcss, sharp (unchanged)
+
+**CI:** last 5 runs all success (all health-pulse commits; no app code in CI since 2026-08-31)
+
+**Drift (unchanged):**
+- No app commits in 9 days (last: 89883bf 2026-08-31 shared-view map chip)
+- KS 9/1 target passed 9 days ago - launch/pause status unknown
+- Vercel/Supabase/Upstash/Sentry upgrades still open in todo (pre-Beta-500 blockers)
+- HOPED-FOR vehicle popout broadcasts (3+ months open, no playtest drain)
+- HOPED-FOR Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR FI Insight Die award path (doubles trigger, never fired in live play)
+
+**Action:** Carry-forward. Same as 09:04 UTC. Xero to clarify launch/pause status when available.
+
+---
+
 ## 2026-09-08 09:04 UTC
 
 **Status:** DRIFT (carry-forward - no new app commits since 89883bf 2026-08-31, now 9 days; KS 9/1 passed +9 days)
