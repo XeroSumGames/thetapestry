@@ -8,6 +8,54 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-09-08 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (new vulns this week: browserslist HIGH, @humanfs/node MODERATE, second brace-expansion CVE)
+
+### npm audit (moderate+)
+
+Total: 8 HIGH, 1 MODERATE. All have fixes available. `next` is the only direct dep.
+
+- `next` HIGH | direct | fix=true | range 9.3.4-canary.0 - 16.3.0-preview.10 | inherited via postcss + sharp
+- `brace-expansion` HIGH | transitive | fix=true | **NEW second CVE**: DoS via unbounded intermediate arrays bypassing CVE-2026-14257 mitigation (CVSS 7.5); 3 affected transitive paths
+- `browserslist` HIGH | transitive | fix=true | **NEW**: (1) unbounded memory growth / no cache eviction causing OOM (CVSS 7.5); (2) prototype write via untrusted `browserslist-stats.json` custom stats (CVSS 7.5)
+- `fast-uri` HIGH | transitive | fix=true | host confusion via backslash authority + skipped IDN canonicalization on scheme-relative refs (CVSS 7.5)
+- `js-yaml` HIGH | transitive | fix=true | quadratic CPU in !!omap resolution (DoS, CVSS 7.5)
+- `nanoid` HIGH | transitive | fix=true | non-secure generator infinite loop on negative size (CVSS 5.9)
+- `postcss` HIGH | transitive | fix=true | XSS via unescaped `</style>` + path traversal via sourceMappingURL (CVSS 6.1–7.5)
+- `sharp` HIGH | transitive | fix=true | inherited libvips CVEs: CVE-2026-33327/33328/35590/35591
+- `@humanfs/node` MODERATE | transitive | fix=true | **NEW**: recursive copy follows symlinks and copies data outside source tree (CWE-22, path traversal)
+
+### Auth / role gates
+- CLEAN. `check-role-literals.mjs` scanned 365 files, 0 offenders. All `isThriver` state values set via `roleIsThriver(profile)` from `lib/auth/roles`. Community page `m.role` comparisons confirmed to be NPC community-member roles (not user auth roles).
+
+### RLS gaps (advisory)
+- Cannot verify from sandbox — no live DB access. Same advisory as prior weeks: run `npm run check:publication` pre-ship to confirm RLS coverage on write paths in `profiles`, `characters`, `campaigns`, `community_members`, `forum_threads`, `war_stories`, `tactical_scenes`, etc.
+
+### File uploads
+- CLEAN. All paths confirmed to route through `prepareUpload()`: war-stories, account-avatars, scene-controls, table/page, session-attachments, module-covers (rumors/[id]/edit — confirmed this week). Canvas-generated portrait-bank blobs use hardcoded `image/jpeg` — acceptable (not user-supplied file type).
+
+### Secrets exposure
+- CLEAN. No hardcoded secrets or committed `.env` files.
+
+### Injection / XSS patterns
+- `app/layout.tsx:56` — `dangerouslySetInnerHTML` with static hardcoded console-override script. Input: static. Safe.
+- `app/stories/[id]/table/page.tsx:8068` — `parent.innerHTML` set to hardcoded GM badge markup on image error. Input: static. Safe.
+- No SQL string concatenation patterns found.
+
+### Rate-limit / DoS
+- CLEAN. Both API routes (`/api/health`, `/api/auth/verify-turnstile`) have Upstash distributed sliding-window rate limits. No unprotected endpoints added.
+
+### Permission boundaries
+- CLEAN. All `isThriver` checks in app code use `roleIsThriver` from `lib/auth/roles`. `isThriverUser()` in `lib/data/feature-checklist.ts` fetches profile row and calls `isThriver(data)` — canonical. `pregens/[id]/edit` and `pregens/` use `getUserRole` → `roleIsThriver` pipeline. No novel bypass shapes.
+
+**Top 3 priorities (Claude's read):**
+1. `next` (direct dep, HIGH) — `npm update next` to ≥16.3.1 (non-preview) clears postcss + sharp cascades; has been flagged 3 consecutive weeks, still unaddressed.
+2. `browserslist` (HIGH, NEW) — prototype write via attacker-controlled custom stats file is the more dangerous of the two new CVEs; transitive via next upgrade path.
+3. `brace-expansion` (HIGH) — second CVE now bypasses the mitigation for the first; affects 3 transitive paths; DoS surface.
+
+---
+
 ## 2026-09-01 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit
