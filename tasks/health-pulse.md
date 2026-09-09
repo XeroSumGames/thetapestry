@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-09 21:05 UTC
+
+**Status:** DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 8 high, 1 critical (next.js RCE — unchanged from prior pulses)
+
+**CI:** gh not available in sandbox — skipped
+
+**Drift:**
+- No real app commits in 14d (all commits since 2026-08-26 are health-pulse/audit/docs)
+- HOPED-FOR (>3d, no playtest update): vehicle popout broadcasts, Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE), FI Insight Die award path
+
+**Action:** CRITICAL next.js RCE still unpatched — top priority when coding resumes. HOPED-FOR items need a playtest pass.
+
+---
+
 ## 2026-09-09 18:05 UTC
 
 **Status:** DRIFT (carry-forward - no app commits since 2026-08-31, 13d; KS 9/1 passed +8d)
