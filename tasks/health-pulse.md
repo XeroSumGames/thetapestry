@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-09 00:04 UTC
+
+**Status:** DRIFT (carry-forward - no app commits since 89883bf 2026-08-31, now 11 days; KS 9/1 passed +11d)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 1 critical] - next 16.2.11 CRITICAL: 2 RCE CVEs (GHSA-p293-qw3h-jr36 windows + GHSA-2xp9-vwfh-vxw4 AVIF image), fix at >=16.3.3; also high: brace-expansion, browserslist, fast-uri, js-yaml, nanoid, postcss, sharp. Note: previous 21:05 entry listed next as HIGH - it registers CRITICAL this run; security-audit 2026-09-08 already flagged "next unpatched 3rd consecutive week."
+
+**CI:** last 5 runs all success
+
+**Drift (unchanged from 2026-09-08 21:05):**
+- No app commits in 11 days (last: 89883bf 2026-08-31 shared-view map chip)
+- KS 9/1 target passed 11 days ago - launch/pause status unknown
+- HOPED-FOR vehicle popout broadcasts (3+ months open, no playtest drain)
+- HOPED-FOR Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/GutInstinct/GroupCheck/DRIVE/BREW/NAVIGATE)
+- HOPED-FOR FI Insight Die award path (doubles, never fired in live play)
+
+**Action:** next.js CRITICAL RCE (2 CVEs) - upgrade to 16.3.3+. Already in security-audit 2026-09-08. No new signals beyond carry-forward drift.
+
+---
+
 ## 2026-09-08 21:05 UTC
 
 **Status:** DRIFT (carry-forward - no app commits since 89883bf 2026-08-31, now 10 days; KS 9/1 passed +9d)
