@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-09 18:05 UTC
+
+**Status:** DRIFT (carry-forward - no app commits since 2026-08-31, 13d; KS 9/1 passed +8d)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** npm audit [7 high, 1 critical] - unchanged. CRITICAL: next.js RCE (fix >=16.3.3; installed 16.2.11).
+
+**CI:** last 5 runs all success
+
+**Drift (unchanged from 15:06):**
+- No app commits in 13 days; KS 9/1 passed +8d - active dev status unknown
+- HOPED-FOR: vehicle popout broadcasts, Stress Check 12-string narrative, FI Insight Die award path (all 3+ months old)
+
+**Action:** Carry-forward. Critical next.js RCE unpatched 4+ weeks - `npm i next@^16.3.3` is the fix.
+
+---
+
 ## 2026-09-09 15:06 UTC
 
 **Status:** DRIFT (carry-forward - no app commits since 2026-08-27, 13d; KS 9/1 passed +8d)
