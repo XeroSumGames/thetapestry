@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-10 00:05 UTC
+
+**Status:** DRIFT (carry-forward — day 15 no app commits; KS 9/1 passed +9d)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 8 high, 1 critical — CRITICAL: next.js 16.2.11 has 2 RCE CVEs (GHSA-p293-qw3h-jr36 + GHSA-2xp9-vwfh-vxw4); fix: upgrade to >=16.3.3. High: brace-expansion, browserslist, fast-uri, js-yaml, nanoid, postcss, sharp (+1 high vs prior pulse).
+
+**CI:** gh CLI not available in sandbox — skipped
+
+**Drift:**
+- No real app commits in 15 days (all commits since 2026-08-26 are health-pulse/docs/lessons)
+- HOPED-FOR (3+ months old, no playtest update): vehicle popout broadcasts; Stress Check 12-string narrative; FI Insight Die award path
+
+**Action:** CRITICAL next.js RCE still unpatched (15+ pulses). `npm install next@latest` or `npm install next@16.3.3` to close it. Audit also gained 1 new HIGH this pulse.
+
+---
+
 ## 2026-09-09 21:05 UTC
 
 **Status:** DRIFT (carry-forward)
