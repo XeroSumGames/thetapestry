@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-11 09:04 UTC
+
+**Status:** RED+DRIFT (carry-forward -- same state as 06:14 UTC entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 8 high, 1 critical -- CRITICAL: next.js RCE (`npm install next@16.3.3`). High: brace-expansion, browserslist, fast-uri, js-yaml, nanoid, postcss, sharp.
+
+**CI:** gh CLI not available in sandbox -- skipped
+
+**Drift:**
+- No real app commits in 17d (last: 2026-08-26). KS 9/1 passed +11d.
+- HOPED-FOR (3+ months, no playtest update): vehicle popout broadcasts; Stress Check 12-string narrative; FI Insight Die award path
+
+**Action:** CRITICAL next.js RCE unpatched (24+ pulses). `npm install next@16.3.3`. No app movement in 17d -- KS target passed 11d ago.
+
+---
+
 ## 2026-09-11 06:14 UTC
 
 **Status:** RED+DRIFT (carry-forward -- same state as 00:05 UTC entry)
