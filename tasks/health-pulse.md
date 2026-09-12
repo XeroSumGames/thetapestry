@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-12 09:05 UTC
+
+**Status:** RED+DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 8 high, 1 critical -- CRITICAL: next.js RCE GHSA-p293-qw3h-jr36 + GHSA-2xp9-vwfh-vxw4 (current ^16.2.11; fix: `npm install next@16.3.3`). High: brace-expansion (x2), browserslist, fast-uri, js-yaml, nanoid, postcss, sharp.
+
+**CI:** last 5 runs all success (all health-pulse commits; no app code pushed)
+
+**Drift:**
+- 17d+ no app code commits. KS 9/1 target has passed.
+- HOPED-FOR (no playtest update, 3+ months): vehicle popout broadcasts; Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE); FI Insight Die award path
+
+**Action:** CRITICAL next.js RCE unpatched for 31+ pulses (~96h). Upgrade now: `npm install next@16.3.3`. Zero app commits in 17d -- project appears paused.
+
+---
+
 ## 2026-09-12 06:05 UTC
 
 **Status:** RED+DRIFT (carry-forward -- same state as 2026-09-12 00:05 UTC entry)
