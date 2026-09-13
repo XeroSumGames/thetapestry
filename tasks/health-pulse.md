@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-13 15:03 UTC
+
+**Status:** RED+DRIFT (carry-forward -- 40+ pulses unresolved)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 8 high, 1 critical -- CRITICAL: next.js RCE GHSA-p293-qw3h-jr36 (windows) + GHSA-2xp9-vwfh-vxw4 (AVIF). Fix: `npm install next@16.3.3`. High: brace-expansion (x2), browserslist, fast-uri, js-yaml, nanoid, postcss, sharp.
+
+**CI:** last 5 runs all pass
+
+**Drift:**
+- HOPED-FOR (3+ months, never playtested): vehicle popout broadcasts (Section B, re-arch 2026-05-22), Stress Check 12-string narrative (8 uncovered types), FI Insight Die award path -- no touch since 2026-06-16
+- Last non-health-pulse commit: 2026-09-08 (docs/lessons update, 5d ago); no app/component/lib code commits
+
+**Action:** `npm install next@16.3.3` -- CRITICAL next.js RCE unpatched for 40+ pulse cycles (~5 days). Escalating urgency pre-KS.
+
+---
+
 ## 2026-09-13 12:03 UTC
 
 **Status:** RED+DRIFT (carry-forward -- 39+ pulses unresolved)
