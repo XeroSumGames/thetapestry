@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-13 06:03 UTC
+
+**Status:** RED+DRIFT (carry-forward)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 7 high, 1 critical -- CRITICAL: next.js RCE GHSA-p293-qw3h-jr36 (windows) + GHSA-2xp9-vwfh-vxw4 (AVIF image optimization, any host). Fix: `npm install next@16.3.3`. High: brace-expansion, browserslist, fast-uri, js-yaml, nanoid, postcss, sharp.
+
+**CI:** gh not available in sandbox; skipped.
+
+**Drift:**
+- 18d no app commits. KS 9/1 target has passed (+12d).
+- HOPED-FOR (3+ months, no playtest): vehicle popout broadcasts; Stress Check 12-string (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE); FI Insight Die award path
+
+**Action:** CRITICAL next.js RCE now 37+ pulses unpatched -- includes AVIF image optimization RCE (any host, not windows-only). Run `npm install next@16.3.3`. Zero app commits 18d -- project appears paused.
+
+---
+
 ## 2026-09-13 00:04 UTC
 
 **Status:** RED+DRIFT (carry-forward)
