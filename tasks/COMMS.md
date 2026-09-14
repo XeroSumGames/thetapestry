@@ -39,10 +39,15 @@ assign: **Q9**.
   `todo.md`, and route to the owning lane.
 
   **2. pins & NPCs & Assets & GM Notes** (raw)
-  - drag and drop npcs > players to put them in their own folders and/or
-    sort them by role (Deputies, administrators, etc) and/or
-    friendly's/hostiles, etc
-  - what do you see when you open an NPC card?
+  - **[Q9, partially answered]** drag-and-drop folders/sorting - Xero: the
+    real gap is that PLAYERS (not just the GM) can't drag NPCs into folders
+    or rearrange them today - "it's not user friendly" (screenshot attached,
+    a player's NPC tab with Workshop/Town Council/West Gate folders already
+    populated). Confirms this needs building, for players specifically.
+    Still unanswered from the original 3-part question: (a) should
+    friendly/hostile become an automatic grouping separate from custom
+    folders, or just another folder he names himself; (b) should PLAYER
+    CHARACTERS also get folder/sort treatment, not just NPCs.
   - make a mind map of the NPCs and where they met, their relationships, etc?
   - logbook where you type - if you typed an @ it would link to an NPC. you
     could write your own impressions of that character.
