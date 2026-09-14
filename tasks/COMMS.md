@@ -31,7 +31,6 @@ assign: **Q4**.
 ## OPEN
 
 - **[2026-09-01] Three post-playtest notes from Xero that Puffer cannot interpret - need his words.**
-  2. *"first impressions note working?"* - needs a repro. Which part failed: the roll itself, the CMod landing, the +/- chip on the card, or the GM being unable to see them? (The last is already a known gap, queued as item 4 in the 2026-08-18 batch.)
   3. *"a built in dice roller"* - Tapestry already has one; the roll log fired normally throughout the playtest traces. So this is either a discoverability problem (a player could not find it) or he means something specific, e.g. free-form "roll 2d6" rather than clicking a skill.
 
 - **[2026-09-01] Two notes that are probably NOT software - confirm with Xero before anyone scopes them.**
@@ -72,13 +71,6 @@ assign: **Q4**.
   thing from a player interrupting directly, and it changes who holds
   control of the table.
 
-  **4. GM should be able to see all 1st impressions via NPC cards** (raw)
-
-  *Puffer note:* small, and Puffer can just build it. First Impression CMods
-  already live per-PC per-NPC in `npc_relationships` and the player card
-  renders them; the GM's NPC card does not aggregate them. One question for
-  Xero: every PC's CMod listed on the NPC card, or only the non-zero ones?
-
   **5. Solar panels - EZ bikes** (raw)
 
   *Puffer note:* uninterpretable as written. May be setting/equipment content
@@ -102,6 +94,7 @@ assign: **Q4**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q2] "First impressions note working?" + item 4 (GM NPC-card visibility) - resolved as ONE item, Xero: "I should be able to see all of their FIRST IMPRESSIONS with different player characters" when opening an NPC card.** Screenshot attached of the current `/npc-sheet` popout (George Meeker), which has no First Impression display at all. Answers both: (a) the "not working" report was the known GM-visibility gap, not a roll/CMod/chip bug; (b) item 4's outstanding sub-question - "all" means every PC's CMod listed, not filtered to non-zero. Small build, routed to the hub.
 - **[2026-09-14, Q3] Fog-of-war scene desync - Xero: "go".** Keep the private-prep scene stickiness; HP builds the non-GM-viewer banner ("GM is on a different scene") + DB-hydrate on load/refresh so a new joiner lands on the currently-shared scene. Routed to Hunt & Peck.
 - **[2026-09-14, Q1] "How to call out NPCs in the NPC bar?" - Xero: highlight/point one out so players notice it** (not summon into scene). Routed to the hub.
 - **[2026-09-01] Session notes visible to players - Xero: INTENDED, leave as-is.** All four fields (`gm_summary`, `cliffhanger`, `next_session_notes`, `session_log`) stay readable by every campaign member. His words: "publicly viewable... by players in the game, at least." No code change - current behaviour already matches. Scope boundary recorded: campaign members only, NOT world-readable. Written up in `decisions.md` 2026-09-01 with a do-not-fix note, because the `sessions` policy read cold looks exactly like the confidentiality bugs we fixed earlier this year and a future audit would otherwise flag it.
