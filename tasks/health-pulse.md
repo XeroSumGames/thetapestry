@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-14 00:04 UTC
+
+**Status:** RED+DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 1 critical (next.js RCE CVE-2025-29927 - 43+ pulses unpatched), 8 high
+
+**CI:** last 5 runs all pass
+
+**Drift:**
+- HOPED-FOR: Stress Check 12-string narrative (HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - >90d, no recent code activity
+- HOPED-FOR: vehicle popout broadcasts (Section B) - >90d, no recent code activity
+- HOPED-FOR: FI Insight Die award path - >90d, no recent code activity
+- ~6d no app code commits (last real code push ~2026-09-08)
+
+**Action:** CRITICAL next.js vuln unpatched 43+ pulses - `npm audit` to confirm CVE-2025-29927; upgrade next.js or apply workaround before Beta-500. No new code shipped in 6 days - expected if in planning/playtest phase, flag if blocked.
+
+---
+
 ## 2026-09-13 21:04 UTC
 
 **Status:** RED+DRIFT (carry-forward -- 42+ pulses unresolved)
