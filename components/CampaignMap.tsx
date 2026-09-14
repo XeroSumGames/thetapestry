@@ -85,14 +85,24 @@ const LAYER_OPTIONS: [string, string][] = [
   ['positron', 'Positron'], ['dark', 'Dark'],
 ]
 
-// Travel-mode lookup for the measure tool. mph drives time conversion;
-// emoji is the inline chip glyph; label shows in the dropdown. Add
-// modes here (horseback, boat, etc.) as the campaign evolves.
+// Travel-mode lookup for the measure + route tools. mph drives the ETA / blip
+// pace; emoji is the inline chip glyph; label shows on the speed slider. The
+// six-stop speed range was set by Xero 2026-09-14 (was 3 modes before).
 const TRAVEL_MODES: Record<string, { mph: number; label: string; emoji: string }> = {
-  walking: { mph: 3,  label: 'Walking',  emoji: '🚶' },
-  bicycle: { mph: 10, label: 'Bicycle',  emoji: '🚴' },
-  minnie:  { mph: 22, label: 'Minnie',   emoji: '🚐' },
+  walking: { mph: 3,  label: 'Walking', emoji: '🚶' },
+  bicycle: { mph: 10, label: 'Bike',    emoji: '🚴' },
+  horse:   { mph: 15, label: 'Horse',   emoji: '🐎' },
+  car22:   { mph: 22, label: 'Car',     emoji: '🚗' },
+  car40:   { mph: 40, label: 'Car',     emoji: '🚗' },
+  car70:   { mph: 70, label: 'Car',     emoji: '🚗' },
+  // Legacy alias: 'minnie' (the campaign RV) held the 22 mph slot before the
+  // 2026-09-14 slider rework. Kept so old shared-route broadcasts still resolve
+  // to a valid speed; hidden from the slider (see TRAVEL_MODE_ORDER).
+  minnie:  { mph: 22, label: 'Car',     emoji: '🚗' },
 }
+// The speed slider steps through these in order (slowest -> fastest). The
+// 'minnie' alias is deliberately excluded so it never appears as a stop.
+const TRAVEL_MODE_ORDER: string[] = ['walking', 'bicycle', 'horse', 'car22', 'car40', 'car70']
 
 // Local PIN_CATEGORIES - mirrors lib/pin-categories.ts canonical list
 // as of 2026-05-15. CampaignMap used to carry 'landmark' as a local-
@@ -174,7 +184,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // midpoint of 30-35 from the Mongrels doc, lowered for realism on
   // mixed terrain + fuel conservation).
   // Session-scoped - no localStorage. Defaults to walking.
-  type TravelMode = 'walking' | 'bicycle' | 'minnie'
+  type TravelMode = 'walking' | 'bicycle' | 'horse' | 'car22' | 'car40' | 'car70' | 'minnie'
   const [travelMode, setTravelMode] = useState<TravelMode>('walking')
   const travelModeRef = useRef<TravelMode>('walking')
   useEffect(() => { travelModeRef.current = travelMode }, [travelMode])
@@ -193,6 +203,16 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // Full polyline latlngs after OSRM/fallback resolves - stored so Share
   // Route can broadcast the exact geometry without re-hitting OSRM.
   const routeCoordsRef = useRef<[number, number][] | null>(null)
+  // Travel blip - an animated dot that loops start -> destination along the
+  // plotted route (Xero 2026-09-14). travelLoopMsRef holds the current loop
+  // duration (tied to the selected speed, clamped to a watchable range); the
+  // rAF loop reads it live so dragging the speed slider re-paces the dot
+  // mid-run. travelCumRef caches the polyline's cumulative distances.
+  const [traveling, setTraveling] = useState(false)
+  const travelMarkerRef = useRef<any>(null)
+  const travelRafRef = useRef<number | null>(null)
+  const travelLoopMsRef = useRef(8000)
+  const travelCumRef = useRef<{ pts: { lat: number; lng: number }[]; cum: number[]; total: number } | null>(null)
   const [routeMode, setRouteMode] = useState(false)
   const [routeStatus, setRouteStatus] = useState('')
   const [routeLoading, setRouteLoading] = useState(false)
@@ -200,6 +220,19 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // it (vs a straight-line fallback) so flipping the travel-mode
   // dropdown can recompute the ETA without re-hitting OSRM.
   const [routeDistanceMeters, setRouteDistanceMeters] = useState<number | null>(null)
+  // Keep the travel blip's pace synced to the chosen speed + route length: loop
+  // time = real ETA scaled (1 in-world hour ~ 8 real seconds), clamped to
+  // [4s, 14s] so a 3 mph slog stays watchable and a 70 mph dash still reads as
+  // motion. The rAF loop reads travelLoopMsRef live, so dragging the speed
+  // slider re-paces a running blip.
+  useEffect(() => {
+    if (routeDistanceMeters == null) return
+    const mph = (TRAVEL_MODES[travelMode] ?? TRAVEL_MODES.walking).mph
+    const etaHours = (routeDistanceMeters / 1609.344) / mph
+    travelLoopMsRef.current = Math.min(14000, Math.max(4000, etaHours * 8000))
+  }, [travelMode, routeDistanceMeters])
+  // Cancel any running blip on unmount.
+  useEffect(() => () => { if (travelRafRef.current != null) cancelAnimationFrame(travelRafRef.current) }, [])
   // Every bottom-centre map chip is pinned to the same bottom:20px, so any two
   // visible at once overlap. This flag lets the shared-view chip sit above the
   // route banner instead of on top of it.
@@ -418,6 +451,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // ── Route planner helpers ──────────────────────────────────────
   // Wipe route-tool layers + reset state.
   function clearRoute() {
+    stopTravel()
     const map = mapInstanceRef.current
     routeMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
     routeMarkersRef.current = []
@@ -428,6 +462,60 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     setRouteLoading(false)
     setRouteDistanceMeters(null)
     setRouteIsFallback(false)
+  }
+
+  // ── Travel blip ────────────────────────────────────────────────
+  // Stop + remove the looping dot.
+  function stopTravel() {
+    if (travelRafRef.current != null) { cancelAnimationFrame(travelRafRef.current); travelRafRef.current = null }
+    const map = mapInstanceRef.current
+    if (travelMarkerRef.current) { try { map?.removeLayer(travelMarkerRef.current) } catch {} ; travelMarkerRef.current = null }
+    travelCumRef.current = null
+    setTraveling(false)
+  }
+
+  // Start a dot looping start -> destination along the plotted route. Precomputes
+  // the polyline's cumulative distances, then each frame places the dot at
+  // `progress` of the total length; progress advances by dt / travelLoopMsRef and
+  // wraps to 0 at the destination (start over). Pace comes from the speed slider.
+  function startTravel() {
+    const map = mapInstanceRef.current
+    const coords = routeCoordsRef.current
+    if (!map || !coords || coords.length < 2) return
+    const L = (window as any).L
+    const pts = coords.map(([lat, lng]) => ({ lat, lng }))
+    const cum: number[] = [0]
+    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + haversineMeters(pts[i - 1], pts[i]))
+    const total = cum[cum.length - 1]
+    if (total <= 0) return
+    travelCumRef.current = { pts, cum, total }
+    const mph = (TRAVEL_MODES[travelMode] ?? TRAVEL_MODES.walking).mph
+    travelLoopMsRef.current = Math.min(14000, Math.max(4000, ((total / 1609.344) / mph) * 8000))
+
+    const dotHtml = '<div style="width:14px;height:14px;border-radius:50%;background:#facc15;border:2px solid #fff;box-shadow:0 0 8px 3px rgba(250,204,21,0.85);"></div>'
+    const icon = L.divIcon({ html: dotHtml, className: '', iconSize: [18, 18], iconAnchor: [9, 9] })
+    const marker = L.marker([pts[0].lat, pts[0].lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9600 }).addTo(map)
+    travelMarkerRef.current = marker
+
+    let progress = 0
+    let last = performance.now()
+    const stepFrame = (now: number) => {
+      const c = travelCumRef.current
+      if (!c || !travelMarkerRef.current) return
+      const dt = now - last; last = now
+      progress += dt / Math.max(1, travelLoopMsRef.current)
+      if (progress >= 1) progress -= Math.floor(progress)
+      const target = progress * c.total
+      let i = 1
+      while (i < c.cum.length && c.cum[i] < target) i++
+      const a = c.pts[i - 1], b = c.pts[i] ?? a
+      const segLen = ((c.cum[i] ?? c.total) - c.cum[i - 1]) || 1
+      const t = Math.min(1, Math.max(0, (target - c.cum[i - 1]) / segLen))
+      try { travelMarkerRef.current.setLatLng([a.lat + (b.lat - a.lat) * t, a.lng + (b.lng - a.lng) * t]) } catch {}
+      travelRafRef.current = requestAnimationFrame(stepFrame)
+    }
+    travelRafRef.current = requestAnimationFrame(stepFrame)
+    setTraveling(true)
   }
 
   // Handle a click while route mode is active. The FIRST click drops the
@@ -1299,15 +1387,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           {/* Travel-mode picker reused for route ETA. Same dropdown as
               Measure, just visible when EITHER tool is active. */}
           {routeMode && (
-            <select value={travelMode} onChange={e => setTravelMode(e.target.value as TravelMode)}
-              title="How are the characters traveling? Affects the ETA shown for the route."
-              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #a855f7', background: '#1c0e30', color: '#cce0f5', width: '175px' }}>
-              {Object.entries(TRAVEL_MODES).map(([key, m]) => (
-                <option key={key} value={key} style={{ background: '#0f0f0f', color: '#cce0f5' }}>
-                  {m.emoji} {m.label} ({m.mph} mph)
-                </option>
-              ))}
-            </select>
+            <div title="Travel speed - sets the route ETA and the Travel blip's pace"
+              style={{ ...toolbarCtrl, display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', width: '215px', border: '1px solid #a855f7', background: '#1c0e30', color: '#cce0f5' }}>
+              <span style={{ fontSize: '13px', color: '#cce0f5', whiteSpace: 'nowrap', minWidth: '96px' }}>{TRAVEL_MODES[travelMode].emoji} {TRAVEL_MODES[travelMode].label} · {TRAVEL_MODES[travelMode].mph}mph</span>
+              <input type="range" min={0} max={TRAVEL_MODE_ORDER.length - 1} step={1}
+                value={Math.max(0, TRAVEL_MODE_ORDER.indexOf(travelMode))}
+                onChange={e => setTravelMode(TRAVEL_MODE_ORDER[Number(e.target.value)] as TravelMode)}
+                style={{ flex: 1, minWidth: 0, accentColor: '#a855f7', cursor: 'pointer' }} />
+            </div>
           )}
           {/* Travel-mode picker - appears only while measure mode is
               active. Switching mode recomputes every leg + the TOTAL
@@ -1316,15 +1403,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               Minnie defined in TRAVEL_MODES at the module top.
               Session-scoped (no localStorage). */}
           {measureMode && (
-            <select value={travelMode} onChange={e => setTravelMode(e.target.value as TravelMode)}
-              title="How are the characters traveling? Affects time-of-travel display."
-              style={{ ...toolbarCtrl, padding: '0 6px', textTransform: 'uppercase', border: '1px solid #7ab3d4', background: '#0f1a2e', color: '#cce0f5', width: '175px' }}>
-              {Object.entries(TRAVEL_MODES).map(([key, m]) => (
-                <option key={key} value={key} style={{ background: '#0f0f0f', color: '#cce0f5' }}>
-                  {m.emoji} {m.label} ({m.mph} mph)
-                </option>
-              ))}
-            </select>
+            <div title="Travel speed - sets the measured time-of-travel"
+              style={{ ...toolbarCtrl, display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', width: '215px', border: '1px solid #7ab3d4', background: '#0f1a2e', color: '#cce0f5' }}>
+              <span style={{ fontSize: '13px', color: '#cce0f5', whiteSpace: 'nowrap', minWidth: '96px' }}>{TRAVEL_MODES[travelMode].emoji} {TRAVEL_MODES[travelMode].label} · {TRAVEL_MODES[travelMode].mph}mph</span>
+              <input type="range" min={0} max={TRAVEL_MODE_ORDER.length - 1} step={1}
+                value={Math.max(0, TRAVEL_MODE_ORDER.indexOf(travelMode))}
+                onChange={e => setTravelMode(TRAVEL_MODE_ORDER[Number(e.target.value)] as TravelMode)}
+                style={{ flex: 1, minWidth: 0, accentColor: '#7ab3d4', cursor: 'pointer' }} />
+            </div>
           )}
           {/* SHARE VIEW - GM-only. Snapshots the current map state
               (center, zoom, tile layer) and broadcasts to every other
@@ -1378,6 +1464,17 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               title="Push the current plotted route to every player"
               style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${routeShareFlash ? '#3d1a5e' : '#3a3a3a'}`, background: routeShareFlash ? '#1a0c2e' : 'rgba(15,15,15,.85)', color: routeShareFlash ? '#a855f7' : '#f5f2ee' }}>
               {routeShareFlash ? '✓ Shared' : '🛣 Share Route'}
+            </button>
+          )}
+          {/* TRAVEL - animate a looping dot along the plotted route so the group
+              can see the direction + pace of travel. Toggle on/off; pace tracks
+              the speed slider. */}
+          {routeDistanceMeters !== null && (
+            <button type="button"
+              onClick={() => { if (traveling) stopTravel(); else startTravel() }}
+              title="Play a dot moving along the route (it loops at the destination)"
+              style={{ ...toolbarCtrl, textTransform: 'uppercase', border: `1px solid ${traveling ? '#facc15' : '#3a3a3a'}`, background: traveling ? '#2a2410' : 'rgba(15,15,15,.85)', color: traveling ? '#facc15' : '#f5f2ee' }}>
+              {traveling ? '⏹ Stop' : '▶ Travel'}
             </button>
           )}
           <div style={{ position: 'relative' }}>
