@@ -24,13 +24,11 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q7**.
+assign: **Q8**.
 
 ---
 
 ## OPEN
-
-- **[2026-09-14, Q7] Campaign Sheet page overhaul - how much further does "better tools" go?** Xero's Q6 answer expanded "add words to character" into a fuller critique of the Campaign Sheet page (screenshot attached, District Zero campaign): "this needs an update. there should be better tools." Two concrete pieces already extracted and routed (below) - **this question is only about whatever's left beyond those two.** Does he have specific other tools in mind, or should Puffer/HP audit the page and come back with a punch list for him to react to?
 
 - **[2026-08-18] Xero's playtest notes, items 2-5 - ASK HIM ONE AT A TIME.**
   Raised by Puffer Fish. Xero's instruction, verbatim: *"ask me about these,
@@ -87,6 +85,7 @@ assign: **Q7**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q7] Campaign Sheet punch list - Xero: audit it and bring suggestions, he has ideas but wants to see ours first.** Framing, important: **"right now this sheet provides no real value to the players. I want to change that or remove it."** This is a value-proposition question, not just a bug/feature list - the audit needs to answer "does this page earn its place" before proposing polish. Routed to the hub.
 - **[2026-09-14, Q6] "Campaign sheet - add 'words' to character" - Xero expanded this into two concrete, immediately-routable pieces.**
   1. **BUG - Party Status accuracy:** the Campaign Sheet's Party Status list shows characters who shouldn't be there (named: Mikey Shevik, Cruz Zwick, District Zero campaign). Needs reproducing - check whether they left the party, died, or the list just isn't filtering correctly. Routed to Hunt & Peck.
   2. **FEATURE - NPC cards on the sheet:** the Campaign Sheet should show a small NPC card for every NPC the party has met. Routed to the hub for sizing/design (relates to the item-2 NPC-card work already in flight).
