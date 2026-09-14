@@ -6,6 +6,24 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-14 15:06 UTC
+
+**Status:** RED+DRIFT (carry-forward -- 47+ pulses unresolved)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** 1 critical (next.js RCE GHSA-p293-qw3h-jr36 + GHSA-2xp9-vwfh-vxw4 AVIF; fix: `npm install next@16.3.3`), 8 high (brace-expansion, browserslist, fast-uri, js-yaml, nanoid, postcss, sharp)
+
+**CI:** gh CLI not available - skipped
+
+**Drift:**
+- HOPED-FOR 90d+: Stress Check 12-string (8 uncaptured types), vehicle popout broadcasts (Section B), FI Insight Die award path
+- 7d no app code commits (last non-health-pulse commit 2026-09-08: security-audit + lessons docs)
+
+**Action:** Carry-forward. No new findings. Upgrade next.js to 16.3.3 when development resumes.
+
+---
+
 ## 2026-09-14 12:16 UTC
 
 **Status:** RED+DRIFT (carry-forward -- 46+ pulses unresolved)
