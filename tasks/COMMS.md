@@ -24,11 +24,13 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q9**.
+assign: **Q11**.
 
 ---
 
 ## OPEN
+
+- **[2026-09-14, Q10] Campaign Sheet "Relax" button - what Tactic mechanic should it use?** Currently a placeholder alert. Audit's proposed shape: spend a Tactic to clear a Stress pip - but there's no existing mechanic to reuse (unlike Rest and Eat, which just wire up code that already ships elsewhere). Needs Xero's ruling: which Tactic(s) qualify, and how often can this be used?
 
 - **[2026-08-18] Xero's playtest notes, items 2-5 - ASK HIM ONE AT A TIME.**
   Raised by Puffer Fish. Xero's instruction, verbatim: *"ask me about these,
@@ -81,7 +83,7 @@ assign: **Q9**.
 ## ANSWERED
 
 - **[2026-09-14, Q8] Item 3 (Character Tab redesign) - hand-raise and interject are ONE mechanic, not two - Xero: "one thing".** Build it as a single control: a hand-raise button (like Teams) that IS the interject mechanism, GM-mediated - not two separate buttons/systems. Routed to the hub.
-- **[2026-09-14, Q7] Campaign Sheet punch list - Xero: audit it and bring suggestions, he has ideas but wants to see ours first.** Framing, important: **"right now this sheet provides no real value to the players. I want to change that or remove it."** This is a value-proposition question, not just a bug/feature list - the audit needs to answer "does this page earn its place" before proposing polish. Routed to the hub.
+- **[2026-09-14, Q7] Campaign Sheet punch list - Xero: audit it and bring suggestions, he has ideas but wants to see ours first.** Framing, important: **"right now this sheet provides no real value to the players. I want to change that or remove it."** This is a value-proposition question, not just a bug/feature list - the audit needs to answer "does this page earn its place" before proposing polish. Routed to the hub. **Audit result (hub, `f9db4432`):** VERDICT = keep the page. The "no value" read traces to one thing - 3 of 4 action buttons (Eat, Rest, Relax) are placeholders that just pop a "Phase 3 will do this" alert; the rest of the page (clock, live status, streaming heals, timeline, export log) is real and working. Rest and Eat are normal builds with no ruling needed, routed to HP. Relax needs a Tactic-mechanic ruling - see Q10.
 - **[2026-09-14, Q6] "Campaign sheet - add 'words' to character" - Xero expanded this into two concrete, immediately-routable pieces.**
   1. **BUG - Party Status accuracy:** the Campaign Sheet's Party Status list shows characters who shouldn't be there (named: Mikey Shevik, Cruz Zwick, District Zero campaign). Needs reproducing - check whether they left the party, died, or the list just isn't filtering correctly. Routed to Hunt & Peck.
   2. **FEATURE - NPC cards on the sheet:** the Campaign Sheet should show a small NPC card for every NPC the party has met. Routed to the hub for sizing/design (relates to the item-2 NPC-card work already in flight).
