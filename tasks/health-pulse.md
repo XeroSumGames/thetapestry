@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-14 21:05 UTC
+
+**Status:** DRIFT (RED resolved - 48-pulse critical RCE + /vehicle crash both cleared today)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical) - Next.js 16.2.11 -> 16.3.5 patched critical RCE (353b397, 18:21 UTC)
+
+**CI:** last 5 runs all success
+
+**Drift:**
+- HOPED-FOR 90d+: Stress Check 12-string (8 uncaptured: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3d
+- HOPED-FOR 90d+: vehicle popout broadcasts Section B - React #310 crash fixed today (156b3ae) but broadcast behavior still un-played
+- Stale-todo: health-pulse em/en-dash prompt fix (tasks/todo.md ~line 145) still open as `- [ ]`
+
+**Action:** RED cleared. Next playtest should drain the two HOPED-FOR items; no code action needed now.
+
+---
+
 ## 2026-09-14 18:10 UTC
 
 **Status:** RED+DRIFT (carry-forward -- 48+ pulses unresolved)
